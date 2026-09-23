@@ -69,6 +69,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
   const { sent, error: rawError, fields, about } = await searchParams;
   const t = await getTranslations("Contact");
+  const legal = await getTranslations("Legal");
   const now = new Date();
   // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
   /*
@@ -231,6 +232,10 @@ export default async function ContactPage({ params, searchParams }: Props) {
                       {t("errors.captcha")}
                     </Typography>
                   )}
+                  {/* The same sentence the registration form has under its check (§NNN). */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {legal("botCheckNotice")}
+                  </Typography>
                 </Box>
               )}
 

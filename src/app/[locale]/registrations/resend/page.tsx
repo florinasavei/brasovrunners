@@ -8,7 +8,9 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestRegistrationLinkAction } from "./actions";
 
 type Props = {
@@ -68,12 +70,18 @@ export default async function ResendPage({ params, searchParams }: Props) {
               helperText={t("resend.emailHelp")}
             />
 
-            <Button type="submit" variant="contained">
+            <Button type="submit" variant="contained" sx={TAP_TARGET}>
               {t("resend.submit")}
             </Button>
           </Stack>
         </form>
       )}
+      {/* The notice, under the form that asks for an address (§NNN). */}
+      <Typography variant="body2" sx={{ mt: 2 }}>
+        <Link href="/legal/privacy" style={{ display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight }}>
+          {t("facts.privacy")}
+        </Link>
+      </Typography>
     </Container>
   );
 }

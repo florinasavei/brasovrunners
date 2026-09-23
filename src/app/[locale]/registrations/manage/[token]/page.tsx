@@ -7,6 +7,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import ContactLink from "@/shared/ui/ContactLink";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -183,6 +184,10 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
               {t("manage.action")}
             </Button>
+            {/* What cancelling does not do, where it is done (§NNN): the place goes, the record stays. */}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {t.rich("cancelKeepsRecord", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
+            </Typography>
           </form>
         </Stack>
       )}

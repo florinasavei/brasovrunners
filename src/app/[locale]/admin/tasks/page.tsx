@@ -12,7 +12,7 @@ import { count } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
-import { listPublishedEvents } from "@/modules/events/repository";
+import { listPublishedEvents, listPublishedEventsBetween } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -189,6 +189,17 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club being an NGO does not settle it (`DECISIONS.md` §50).
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
+  /**
+   * The events whose downloaded lists and printed sheets are due for the shredder (§NNN): seven
+   * to thirty days after the start, and only those that took registrations here — an event with
+   * no registrations left nothing on anybody's laptop.
+   */
+  const day = 24 * 60 * 60_000;
+  const raceDaySheetsDue = (
+    await listPublishedEventsBetween(db, locale, new Date(now.getTime() - 30 * day), new Date(now.getTime() - 7 * day))
+  )
+    .filter((event) => event.registrationMode === "INTERNAL")
+    .map((event) => event.title);
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
@@ -257,6 +268,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       staffCount,
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
+      raceDaySheetsDue,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off

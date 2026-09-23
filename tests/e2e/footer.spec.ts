@@ -34,6 +34,8 @@ function controls(page: Page) {
     footer,
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă/i }),
+    // On the bar since §NNN: "GDPR" on a phone, "Confidențialitate" from `sm`.
+    privacy: footer.getByRole("link", { name: /^(GDPR|Confidențialitate)$/ }),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language: footer.getByRole("navigation", { name: "Limbă" }),
     badge: page.getByLabel(/versiunea site-ului|website version/i),
@@ -55,17 +57,21 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
     test(`at ${width}px nothing on the bar overlaps, and every mark takes its tap`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, toggle, marks, language, badge } = controls(page);
+      const { footer, summary, toggle, privacy, marks, language, badge } = controls(page);
       const count = await marks.count();
       test.skip(count === 0, "no social address is configured for this server");
 
       const boxes: Array<[string, Box]> = [
         ["the summary", await boxOf(summary, "the summary")],
         ["the scheme switch", await boxOf(toggle, "the scheme switch")],
+        ["the privacy notice", await boxOf(privacy, "the privacy notice")],
       ];
       // Criterion 11: the switch is the first control on the line, in the bar's own corner.
       expect(boxes[1]![1].x).toBeLessThan(4);
       expect(boxes[1]![1].height).toBeGreaterThanOrEqual(44);
+      // Criterion 6, and §NNN: the notice is reachable from every page without opening anything.
+      expect(boxes[2]![1].height).toBeGreaterThanOrEqual(44);
+      await privacy.click({ trial: true });
 
       for (let i = 0; i < count; i++) {
         const mark = marks.nth(i);
@@ -106,7 +112,8 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
     test.skip(count === 0, "no social address is configured for this server");
 
     await summary.click();
-    const panelLinks = footer.getByRole("link", { name: /GDPR|termeni|înscrierile|scrie-ne/i });
+    // The panel's links, and the privacy notice beside the fold, which wraps under it (§NNN).
+    const panelLinks = footer.getByRole("link", { name: /GDPR|confidențialitate|termeni|înscrierile|scrie-ne/i });
     await expect(panelLinks.first()).toBeVisible();
 
     const boxes: Array<[string, Box]> = [];

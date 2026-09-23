@@ -18,8 +18,15 @@ import { mergeTextSegments, type MergeValues } from "../domain/merge-fields";
 export default function LegalDocumentBody({
   body,
   values,
+  anchorPrefix = "s",
 }: {
   body: unknown;
+  /**
+   * What each heading's id starts with (§NNN): `s1`, `s2`… on a public legal page, so a link can
+   * name a section. A page showing two bodies — the backoffice's RO and EN side by side — gives
+   * each its own prefix, because an id is one element per page.
+   */
+  anchorPrefix?: string;
   /**
    * The blanks to fill, when this is a declaration shown to one person for one event (§225).
    *
@@ -61,8 +68,10 @@ export default function LegalDocumentBody({
     <>
       {sections.map((section, index) => (
         <div key={index}>
+          {/* `#s3` is section 3 (§NNN): a notice, an email or a reply can point at "section 6"
+              and land on it. */}
           {section.heading && (
-            <Typography variant="h2" sx={{ fontSize: "1.25rem", mt: 4, mb: 1 }}>
+            <Typography id={`${anchorPrefix}${index + 1}`} variant="h2" sx={{ fontSize: "1.25rem", mt: 4, mb: 1, scrollMarginTop: 72 }}>
               {inline(section.heading, `h-${index}`)}
             </Typography>
           )}

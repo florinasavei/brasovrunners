@@ -3,7 +3,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
@@ -29,6 +29,7 @@ export default async function TermsPage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Legal");
+  const format = await getFormatter();
   /*
     The text in effect, with the last copy of it behind it (§281). A legal document changes a
     handful of times a year, so a copy of one is as true as the live read in every case but the
@@ -48,6 +49,13 @@ export default async function TermsPage({ params }: Props) {
         <>
           <Typography variant="h1" gutterBottom>
             {document.title}
+          </Typography>
+          {/* The same version line as the privacy notice (§NNN). */}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("inForce", {
+              version: document.version,
+              date: format.dateTime(new Date(document.effectiveAt), { dateStyle: "long" }),
+            })}
           </Typography>
           <LegalDocumentBody body={document.body} />
         </>

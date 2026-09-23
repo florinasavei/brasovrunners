@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import CardLink from "@/shared/ui/CardLink";
+import ContactLink from "@/shared/ui/ContactLink";
 import { GalleryGridSkeleton } from "@/shared/ui/PublicSkeleton";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { headingRule } from "@/theme/surfaces";
@@ -50,8 +51,13 @@ export default async function GalleryPage({ params }: Props) {
       <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
         {t("intro")}
+      </Typography>
+      {/* Photographs are a legitimate-interest processing, so the way to object is said where
+          they are (§NNN): a message, no reason asked. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        {t.rich("photosNotice", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
 
       <Suspense fallback={null}>

@@ -822,6 +822,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    */
   const legalName = composeLegalName(input.firstName, input.lastName);
   const healthNotes = input.healthConsent && input.healthNotes ? input.healthNotes : null;
+  const minor = Boolean(input.birthDate && isMinorOn(input.birthDate, now));
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -849,9 +850,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
      */
     clubName: input.clubMemberDeclared ? CLUB_NAME : (input.clubName ?? null),
     // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
-    guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
-    stravaUrl: input.stravaUrl ?? null,
-    instagramHandle: input.instagramHandle ?? null,
+    guardianName: minor && input.guardianName ? input.guardianName : null,
+    /*
+      Never for a minor (§NNN): the privacy notice says the club keeps no Strava or Instagram
+      of a child, and the form hides the two boxes once the birth date says under eighteen —
+      this is the same rule for a form posted without JavaScript, or typed in before the date.
+      Minor on the day of registering, as the guardian rule above: that is when the consent
+      would be given, and a runner under eighteen at the race is under eighteen today too.
+    */
+    stravaUrl: minor ? null : (input.stravaUrl ?? null),
+    instagramHandle: minor ? null : (input.instagramHandle ?? null),
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,

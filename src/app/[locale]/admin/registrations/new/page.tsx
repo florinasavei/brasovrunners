@@ -180,7 +180,13 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </RecallField>
 
-            <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
+            {/* A disclosure the person has to have asked for (§NNN): unticked unless they said so. */}
+            <Box>
+              <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
+              <Typography variant="body2" color="text.secondary">
+                {t("registrations.listOptInHelp")}
+              </Typography>
+            </Box>
 
             {/* The service refuses the whole registration without this, so the warning is
                 binding rather than decorative — the same rule the live-edit acknowledgement

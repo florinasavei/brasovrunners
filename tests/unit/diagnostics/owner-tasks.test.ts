@@ -30,6 +30,7 @@ const LAUNCHED: OwnerTaskInputs = {
   staffCount: 3,
   inviteKey: { kind: "ok" },
   publishedEventCount: 4,
+  raceDaySheetsDue: [],
   roDomainBound: true,
   storageConfigured: true,
   botCheckConfigured: true,
@@ -120,6 +121,25 @@ describe("owner tasks", () => {
     // The contact form (§149): built; open until the Gmail app password and the recipients exist.
     expect(stateOf({ ...LAUNCHED, contactFormConfigured: false }, "contactForm")).toBe("open");
     expect(stateOf(LAUNCHED, "contactForm")).toBe("done");
+  });
+
+  /*
+    §NNN: the privacy notice promises exported lists and printed race-day sheets are destroyed
+    within 30 days of the event. The system cannot see a spreadsheet on a laptop, so the row is a
+    reminder that exists only while there is something to destroy — and names the events.
+  */
+  it("reminds the club to destroy exports and sheets only while an event is seven to thirty days past", () => {
+    expect(ownerTasks(LAUNCHED).some((task) => task.id === "raceDaySheets")).toBe(false);
+    const due = ownerTasks({ ...LAUNCHED, raceDaySheetsDue: ["Crosul aniversar", "Tura de toamnă"] }).find(
+      (task) => task.id === "raceDaySheets",
+    );
+    expect(due).toMatchObject({ owner: "club", state: "open", kind: "check", detail: "Crosul aniversar, Tura de toamnă" });
+    // Every sentence the row can show exists in both languages, steps included.
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.raceDaySheets;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.length).toBeGreaterThan(0);
+    }
   });
 
   it("leaves every task but the scheduler to the club", () => {

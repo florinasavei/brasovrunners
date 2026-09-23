@@ -371,7 +371,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
       sentence is the point of the icon beside them, so the test matches the beginning of the
       name rather than insisting the name never grew.
     */
-    for (const name of ["Detaliile evenimentului", "Termeni de concurs", "GDPR"]) {
+    for (const name of ["Detaliile evenimentului", "Termeni de concurs", "Confidențialitate"]) {
       const link = page.locator("#main").getByRole("link", { name }).first();
       await expect(link).toBeVisible();
       expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);

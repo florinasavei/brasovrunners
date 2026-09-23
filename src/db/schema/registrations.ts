@@ -306,8 +306,13 @@ export const registrations = pgTable(
      * and this is one participant's refusal within an event that publishes one. Two questions,
      * two columns — folding them together would mean a person who wants to be listed at the
      * start line and not in a permanent results table cannot say so.
+     *
+     * Defaults to **not listed** since §NNN (migration `0060`). Every insert in the code states
+     * the answer the person gave, so the default decides nothing today; it is there so that a row
+     * written any other way — a script, a seed, a future door — is off the public list rather
+     * than on it, which is the direction a disclosure has to fail in.
      */
-    listOptOut: boolean("list_opt_out").notNull().default(false),
+    listOptOut: boolean("list_opt_out").notNull().default(true),
 
     /**
      * The race number on the participant's chest (BR-REQ-038-01, `DECISIONS.md` §65).

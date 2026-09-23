@@ -41,6 +41,7 @@ import {
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -208,6 +209,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     .toISOString()
     .slice(0, 10);
   const t = await getTranslations("Registration");
+  const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
 
@@ -869,7 +871,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
-                  person can skip without the form being any less complete. */}
+                  person can skip without the form being any less complete. Adults only
+                  (§NNN): gone once the birth date says under eighteen, and never stored for a
+                  minor whatever is posted. */}
+              <HiddenForMinor birthDateId={fieldId("birthDate")}>
               <Box component="details" sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.socials")}
@@ -896,6 +901,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+              </HiddenForMinor>
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -1048,6 +1054,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       {t("errors.captcha")}
                     </Typography>
                   )}
+                  {/* Who sees what for the check, where the check is (§NNN): a third party
+                      receives the address and the browser's signals, and the form says so. */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {legal("botCheckNotice")}
+                  </Typography>
                 </Box>
               )}
               {/*
