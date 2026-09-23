@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { signatureNameMatches } from "../domain/signature-name";
 
 /**
- * The signature box on the declaration: the name typed in a hand (§86), and — since §NNN — the
+ * The signature box on the declaration: the name typed in a hand (§86), and — since §314 — the
  * exact name the declaration expects, refused before the press when it is not.
  *
  * ## The browser refuses, the server decides
@@ -111,7 +111,7 @@ export default function SignatureField({
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
   const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
   /*
-    What to do when the name the box wants is itself wrong (§NNN). An adult's registered name is
+    What to do when the name the box wants is itself wrong (§314). An adult's registered name is
     one the club corrects ("Corectează numele") and the same link then signs; a guardian's is not
     — no staff verb edits it (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and
     register the minor again with the right name.

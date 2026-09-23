@@ -18,7 +18,7 @@ import { foldName } from "./name-fold";
  *
  * A guard that cannot be satisfied is a guard that gets removed. Case, whitespace and diacritics
  * are folded away — and the shape of an apostrophe — and nothing else; `name-fold.ts` says why
- * each, and it is shared with the signature on the declaration (§NNN), because two rules asking
+ * each, and it is shared with the signature on the declaration (§314), because two rules asking
  * "is this the same name?" must never give two answers. Without the diacritics the club would
  * be left with rows it is unable to erase.
  *

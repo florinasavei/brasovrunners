@@ -3,7 +3,7 @@ import { foldName } from "@/modules/registrations/domain/name-fold";
 import { expectedSignatureName, signatureNameMatches } from "@/modules/registrations/domain/signature-name";
 
 /**
- * BR-REQ-033-02 criterion 15, §NNN — the signature is the declarant's name, typed exactly.
+ * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, typed exactly.
  *
  * The owner, looking at a signature of "Florin Munca2" under "You registered as Florin Munca":
  * "can I also have this validation here? So I have to type the exact name?" This reverses the
@@ -16,7 +16,7 @@ import { expectedSignatureName, signatureNameMatches } from "@/modules/registrat
  *
  * The browser's live check imports this same function, so these cases are the browser's too.
  */
-describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name", () => {
+describe("BR-REQ-033-02 §314 the signature must be the declarant's exact name", () => {
   it("accepts the name exactly as registered", () => {
     expect(signatureNameMatches("Florin Munca", "Florin Munca")).toBe(true);
   });
@@ -101,7 +101,7 @@ describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name",
   });
 });
 
-describe("BR-REQ-033-02 §NNN §108 whose name the signature must be", () => {
+describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
   it("is the participant's own name for an adult", () => {
     expect(expectedSignatureName({ registeredName: "Florin Munca", guardianName: null })).toBe("Florin Munca");
   });

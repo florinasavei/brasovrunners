@@ -12,7 +12,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-02 criterion 15, §NNN — the signature is the declarant's name, and a signature that
+ * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, and a signature that
  * is not is refused where the acceptance is written, with nothing recorded and the link unspent.
  *
  * Through `consumeAndSignDeclaration`, the function the declaration page's action calls, because
@@ -117,7 +117,7 @@ async function state(registrationId: string) {
   return { status: row.status, acceptances: acceptances.length, spent: tokens.filter((t) => t.usedAt !== null).length, live: tokens.filter((t) => t.usedAt === null && t.invalidatedAt === null).length };
 }
 
-describe("BR-REQ-033-02 §NNN a signature that is not the declarant's name", () => {
+describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
   });

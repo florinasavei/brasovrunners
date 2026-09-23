@@ -1,5 +1,5 @@
 /**
- * A name as somebody types it, folded to what the name *is* (§179, §NNN).
+ * A name as somebody types it, folded to what the name *is* (§179, §314).
  *
  * Two rules ask "is this the same name?" and must never disagree about the answer: the name an
  * Administrator transcribes before erasing a registration (`erase-confirmation.ts`), and the

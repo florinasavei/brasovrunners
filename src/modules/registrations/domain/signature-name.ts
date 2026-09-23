@@ -1,7 +1,7 @@
 import { foldName } from "./name-fold";
 
 /**
- * The signature on the declaration is the declarant's name, typed exactly (§NNN, reversing the
+ * The signature on the declaration is the declarant's name, typed exactly (§314, reversing the
  * "a hint, not a validation" half of §283).
  *
  * The owner, looking at a signature of "Florin Munca2" under "You registered as Florin Munca":

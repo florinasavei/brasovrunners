@@ -41,7 +41,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}`);
   } catch (error) {
     /*
-      The signature is not the declarant's name (§NNN) — its own refusal, never the generic one.
+      The signature is not the declarant's name (§314) — its own refusal, never the generic one.
 
       `?invalid=1` renders "we could not record the signature … your link is fine", written for
       an unticked box; a name refused under it would leave somebody guessing what was wrong. The
@@ -74,7 +74,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
 }
 
 /**
- * What a refused signature brings back to the form (§NNN): these four fields and nothing else.
+ * What a refused signature brings back to the form (§314): these four fields and nothing else.
  * Not `draftValuesOf(form)` — that keeps every posted string, and this form posts the action
  * link's secret, the one value that must never be copied anywhere, sealed or not.
  */

@@ -1062,7 +1062,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
       // The field names, never the values (§14.5): a blank signature is answered on the page as
-      // the signature it is, not as a broken link (§NNN).
+      // the signature it is, not as a broken link (§314).
       [...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "")).filter(Boolean))],
     );
   }
@@ -1089,7 +1089,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     /**
-     * The signature is the declarant's name (§NNN, reversing that half of §283): the name given
+     * The signature is the declarant's name (§314, reversing that half of §283): the name given
      * at registration, or the parent's for a minor (§108) — the name the text above it already
      * prints as the one who declares. Asserted here, in the transaction that writes the
      * acceptance, and not only in the browser that refuses it first: a form with JavaScript off,

@@ -3,7 +3,7 @@ import { mintActionLink, registrationByEmail, registrationStatus, type Registrat
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-033-02 criterion 15, §NNN — the signature on the declaration is the registered name.
+ * BR-REQ-033-02 criterion 15, §314 — the signature on the declaration is the registered name.
  *
  * The owner, looking at the signing form with "Florin Munca2" typed under "You registered as
  * Florin Munca — type the same name": "can I also have this validation here? So I have to type
@@ -16,7 +16,7 @@ import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } 
  * The links the emails would carry are minted in the database (`support/action-link.ts`): the
  * captured emails that hold the real ones live in the server's memory, on purpose.
  */
-test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => {
+test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => {
   // A registration, an email confirmation and a signature: several round trips under load.
   test.describe.configure({ timeout: 90_000 });
 
@@ -138,7 +138,7 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       /*
         The name it wants is said once, under the box, in bold, in the red state — and neither
         sentence twice: the summary does not repeat the mismatch, the box does not repeat what to
-        do about a wrong registered name (§NNN, found in review).
+        do about a wrong registered name (§314, found in review).
       */
       const underBox = plain.locator("#typedName-helper-text");
       await expect(underBox).toContainText("Semnătura trebuie să fie exact numele cu care te-ai înscris");
@@ -187,7 +187,7 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       await expect(plain.locator("#typedName-helper-text")).toContainText("numele părintelui sau tutorelui dat la înscriere");
       await expect(summary).not.toContainText("Semnătura trebuie să fie exact");
       /*
-        §NNN, found in review: the club can correct a participant's name but not a parent's, so
+        §314, found in review: the club can correct a participant's name but not a parent's, so
         the minor's sentence never promises that. It points at what works — "Înscrierile mele",
         to cancel and register again.
       */

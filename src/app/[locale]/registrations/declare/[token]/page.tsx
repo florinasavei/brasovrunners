@@ -120,7 +120,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    */
   const blocked = !context.ok;
   /*
-    `invalid=name` is the signature that was not the declarant's name (§NNN): its own refusal,
+    `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
     said beside the box with the name it wants — never the generic sentence above, which was
     written for an unticked box, and never anything that reads as a broken link.
   */
@@ -184,14 +184,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
 
   /*
-    Whose name the signature must be (§NNN, §108): the parent's for a minor, the participant's
+    Whose name the signature must be (§314, §108): the parent's for a minor, the participant's
     otherwise — the same person the text above names as the declarant.
   */
   const expectedName = registration ? expectedSignatureName(registration) : null;
   const signsForMinor = registration?.guardianName ? registration.registeredName : null;
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
-    Where a parent whose own name was mistyped goes (§NNN, found in review): "Înscrierile mele",
+    Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
     to cancel and register again. The club's "Corectează numele" changes the participant's name
     and nothing else, so the minor's sentence must not promise the correction the adult's does.
   */
@@ -199,7 +199,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
   const canReply = Boolean(env.EMAIL_REPLY_TO);
   /*
-    What the refused press had typed, brought back sealed by the action (§NNN) and read only for
+    What the refused press had typed, brought back sealed by the action (§314) and read only for
     that refusal — a stale draft never fills a form it was not kept for.
 
     Read, not consumed: a Server Component cannot delete a cookie, exactly as for the registration
@@ -275,7 +275,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            The signature was refused on the server (§NNN) — reached with JavaScript off, or past
+            The signature was refused on the server (§314) — reached with JavaScript off, or past
             the browser's own check. Where the redirect lands (`#declaration-errors`), right above
             the form rather than above a page of legal text, focusable and announced like the
             registration form's summary (§47): what was wrong, that nothing was recorded and the
@@ -365,7 +365,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
               {/*
                 The name they registered with — or the parent's, for a minor (§108) — shown in bold,
-                and since §NNN required: the owner, of a signature reading "Florin Munca2", "can I
+                and since §314 required: the owner, of a signature reading "Florin Munca2", "can I
                 also have this validation here? So I have to type the exact name?" This reverses
                 the "hint, not a validation" half of §283; the island refuses a mismatch before
                 the press and `signDeclaration` refuses it regardless. Strings in, never elements
