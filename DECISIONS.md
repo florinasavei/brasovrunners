@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.58-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.59-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.58-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.59-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12810,3 +12810,13 @@ Baseline `BR-V1.57-2026-09-23`.
 **Reverses nothing.** §37 (sandbox first, before the domain existed) described the order of work and is complete; §163's star is unchanged.
 
 Baseline `BR-V1.58-2026-09-23`.
+
+## 308. Changed — the listing card says until when registration is open (2026-09-23)
+
+**Context.** The owner, on 2026-09-23: "I also need to show when registrations are closing on the event card." While a window was ahead, the card already said when it opens (§146, "Înscrierile se deschid pe 1 oct., 09:00"); once it opened, the card said only "Înscrierile sunt deschise" — true, and no help to somebody deciding whether to register tonight or at the weekend. The date the button disappears was on no public surface at all.
+
+**Decision.** While registration is open, the card's last piece reads "Înscrieri deschise până pe 14 nov., 23:59" / "Registration open until 14 Nov, 23:59", in the event's time zone, in the same short form as the opening's sentence. The date is **the instant `registrationState` turns `CLOSED`** — the stated `registration_closes_at`, or the event's start when none is stated (BR-REQ-011-01 criterion 3) — read through one pure helper, `openRegistrationClosing`, beside `upcomingRegistrationOpening`, using the same expression the state uses. So the card's date and the moment the button goes away cannot disagree, and a test pins that at the boundary. Before the window opens the card keeps the opening's sentence (one date at a time); an external, absent, cancelled or completed registration names no closing, whatever its columns hold. A series card reads it for its next date.
+
+**Where it is not, on purpose.** The event page and the listing's featured hero render the full facts, where the registration button and its free places stand for the state; the owner asked for the card. Adding the same line there is one call to the same helper if wanted.
+
+Baseline `BR-V1.59-2026-09-23`.

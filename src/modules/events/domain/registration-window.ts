@@ -80,7 +80,7 @@ export function upcomingRegistrationOpening(event: RegistrationWindowInput, now:
 }
 
 /**
- * Until when an open registration stays open (`DECISIONS.md` §NNN): the instant
+ * Until when an open registration stays open (`DECISIONS.md` §308): the instant
  * `registrationState` turns `CLOSED` — the stated closing, or the event's start when none is
  * stated (BR-REQ-011-01 criterion 3) — while the state is `OPEN`, and null otherwise. The
  * listing card says it ("Înscrieri deschise până pe 14 nov., 23:59"); the owner: "I also need

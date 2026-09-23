@@ -223,7 +223,7 @@ export default async function EventFacts({
     // Two plain lines on a card: no labels, the state of registration as the last piece —
     // and, while the window is ahead, the date it opens rather than "not yet" (§146) — read
     // through the one helper the feed reads it through, never a formula of this file's own.
-    // And while it is open, until when (§NNN) — the same helper family, so the card's date is
+    // And while it is open, until when (§308) — the same helper family, so the card's date is
     // the instant the button goes away.
     const opensAt = upcomingRegistrationOpening(event, now);
     const closesAt = openRegistrationClosing(event, now);
