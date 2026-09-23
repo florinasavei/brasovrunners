@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.58-2026-09-23
+
+- **QA sends real mail through the club's domain, and says so.** QA's Mailgun settings moved from the US sandbox (five confirmed recipients) to `mail.<club domain>` with QA's own sending key; the notice on QA's registration form and "check your email" screen now says the mail is real, tagged `[QA]`, and the registration is not, whenever the allowlist carries the star. QA and production share the domain's daily allowance and its webhooks. `DECISIONS.md` §307.
 ## BR-V1.57-2026-09-23
 
 - **The Neon plan is a setting, and `/devs` and the cost table read the database's month against it.** An Administrator states Free or Launch on `/admin/tasks` → Costuri (audited, one row per environment, Free when unset); on Launch the pages show no 100-CU-hour denominator, no 512 MB ceiling and no red — the hours as an estimated charge at $0.106/CU-hour, the storage at $0.35/GB-month, the period's end and the awake hours — and the Neon cost row becomes a usage estimate at this month's pace beside its daily rate, marked an estimate rather than an invoice; on Free everything reads exactly as before. Every rate lives in one dated catalogue, and `/devs` links to the panel for whoever may open it. The December review is now one select, not a deployment. §306.

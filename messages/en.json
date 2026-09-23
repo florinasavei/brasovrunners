@@ -2089,7 +2089,8 @@
     },
     "deliveryNotice": {
       "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
-      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault."
+      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault.",
+      "everyone": "This is the test site: emails really are sent from here, marked “[QA]” in the subject — but a registration made here is not a real one and holds no place in the race."
     },
     "errors": {
       "title": "The registration could not be submitted",
