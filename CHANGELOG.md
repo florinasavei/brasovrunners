@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.51-2026-09-23
+
+- **Echipa marks who has no sign-in account, and `/admin/tasks` tests the invitation key** — each staff row whose address Zitadel has no account for carries a permanent "No sign-in account" chip with the remedy under the list, and one line above the table says when the accounts could not be checked and why, in Zitadel's words; the board gains "The invitation key", probed with the real user search on every open — green when it finds your account, red ("Not working", a new state) with the Org User Manager step when the key authenticates and sees nobody or is refused, open with the procedure when it is missing, and no verdict when Zitadel did not answer. §297.
+- **The screen after the form greets you by name and says what happens next.** "Aproape gata, Ana!", the event and its date, the address the email went to, three short steps with a picture each, how long the link lives and where to look when nothing arrives — and a way back to the event. On the test site and on a laptop, where no email is actually sent, the form and this screen now say so before anybody waits for one; production says nothing. §298.
 ## BR-V1.50-2026-09-23
 
 - **The programme reads as one thing in the event editor:** the timed rows in "Când și unde" are the programme, and the per-language rich text is now titled "Note sub program" / "Notes under the programme", with a hint under each saying where the other lives; nothing moved or was removed. §294.
