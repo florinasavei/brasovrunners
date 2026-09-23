@@ -33,8 +33,20 @@ export const envSchema = z
      * project. Every absolute URL this application emits derives from this value (§8), so the
      * mismatch meant a locally rendered confirmation link pointed at a port with nothing
      * listening on it, and the developer who clicked it learned nothing about their change.
+     *
+     * A trailing slash is dropped here, once. The value is typed by a person into a dashboard
+     * and `z.url()` accepts `https://host/`; some forty call sites join it as
+     * `${env.APP_BASE_URL}${pathname}`, and with the slash every one of them emitted
+     * `https://host//ro/…` — the sitemap, the `.ics` feed, every link in every email and the
+     * event page's own canonical, which is the address a scraper failed to match to the page
+     * (`events/share-links.ts`). Normalised rather than refused: a slash is a spelling, not an
+     * unsafe combination like the guards below, and a production that will not boot over one
+     * costs more than the character it removes. A base with a path prefix keeps the prefix.
      */
-    APP_BASE_URL: z.url().default("http://localhost:47821"),
+    APP_BASE_URL: z
+      .url()
+      .default("http://localhost:47821")
+      .transform((value) => value.replace(/\/+$/, "")),
     // Optional only until WEEKEND.md step 2 lands the first table; then it is required.
     DATABASE_URL: z.url().optional(),
 
