@@ -204,7 +204,8 @@
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDatesCount": "Upcoming dates ({count})"
+      "allDatesCount": "Upcoming dates ({count})",
+      "fullDescription": "Full event description"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -495,6 +496,8 @@
       "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
+      "seriesRenewsUntil": "Renews itself: the platform creates the dates {weeks} weeks ahead, until {until}.",
+      "seriesRenewsForever": "Renews itself: the platform creates the dates {weeks} weeks ahead, for ever.",
       "seriesEdit": "Edit the next date",
       "seriesDeleteNote": "A series is deleted from the bar above the list: tick it, then “Delete the ticked ones”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
