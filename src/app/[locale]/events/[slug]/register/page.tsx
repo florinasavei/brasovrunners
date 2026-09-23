@@ -1029,6 +1029,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 */
                 awaitsBotCheck={Boolean(siteKey)}
                 botCheckHint={t("botCheckWait")}
+                slowHint={t("submitSlow")}
                 size="large"
                 fullWidth
               />

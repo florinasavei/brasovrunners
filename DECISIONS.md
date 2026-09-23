@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.54-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.55-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.54-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.55-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12740,3 +12740,21 @@ The create page had drifted because it rendered pieces of its own: two stacked "
 Tests: `tests/unit/content/create-page.test.ts` (the pieces, the order on both pages, no video input, every time box native, the location field, the reveal), `tests/integration/cms/crud.test.ts` (a create stores the rich summary's words as the excerpt and the body for both languages), `tests/integration/cms/location-name-per-language.test.ts` (the language's name on the public page and in the notification details, the event's where none was given, absent leaves it, blank clears it, never the other language's), `tests/integration/cms/boundary.test.ts` (the allowlist gains `locationName`).
 
 Baseline `BR-V1.54-2026-09-23`.
+
+## 304. Fixed — a press held for the anti-bot check is sent, not dropped; a slow submit says so (2026-09-23)
+
+**Context.** Amalia, from her laptop, 11:26: "cu autofill nu am reusit nici eu sa ma inscriu … nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe lista." The owner: "fix Amalia's issue ASAP".
+
+**What the database said.** Read-only, QA, three days back: Amalia registered on 2026-09-22 at 14:13, was confirmed, and every message to her — verification, declaration, confirmation, and the cancellation at 17:22 — was `SENT`. So the Mailgun sandbox was not her problem. For 11:26 on the 23rd there is **no registration, no outbox row, no audit row**: whatever she pressed never reached the server. The form has exactly three exits — a red summary, the check-your-email screen, or a request that never returns — and none of them had run.
+
+**What swallowed the press.** §285 made the send button wait for Cloudflare's token: a press made before the token existed was held — `event.preventDefault()`, a sentence under the button, "Se verifică o secundă că nu ești robot — apoi poți trimite" — and when the token landed the sentence simply went away. Nothing sent the form. The person had to press again, and nothing said so. That was tolerable for somebody typing: the token arrives in the half-second between the last field and the button. It is the *normal* case for autofill, which fills the whole form and lets the person press in the same second the widget starts. Amalia's press was held, the sentence vanished, and she read a quiet form as a form that had gone through — "ca si cum m-am inscris".
+
+**Decision.** *The held press is replayed.* `SubmitButton` remembers the early press and, the moment `waiting` turns false — the token arrived, or §285's eight-second valve opened because the widget never answered — calls `form.requestSubmit(button)`: the browser's own submit, with this button as the submitter, so constraint validation and the Server Action run exactly as for a fresh press. Once, and never while a request is in flight. The sentence now promises it: "Verificăm o secundă că nu ești robot — trimitem noi înscrierea imediat ce răspunde; nu mai apăsa."
+
+*A submit that takes too long says so.* `pending` comes from the form's status and lasts as long as the request; a request a proxy swallowed lasts for ever, and the runner beside the label was the only sign — which reads as success. After fifteen seconds a second sentence appears: it is taking longer than usual, wait, and do not press again — a second press would only queue behind the first. The request cannot be cancelled from the button; honesty is what it can offer. The register page passes both sentences; every other `SubmitButton` is unchanged.
+
+**What was rejected.** *Submitting immediately with no token when the person presses early.* The server accepts an `unavailable` verdict on the other defences, so it would work — and it would turn every quick press into a submission that skipped the check, which is the one thing §285 was for. Waiting up to eight seconds and then sending is the same outcome for a blocked widget and the intended one for a working widget. *A browser test.* The unit suite has no DOM; `tests/unit/shared/held-press-is-sent.test.ts` pins the replay, the valve, the slow sentence and both catalogues at source level, and `registration-autofill.spec.ts` keeps proving the autofill path in a browser — where Turnstile is not configured under test, so the wait never engages; the replay is exercised only where a widget exists, which is QA and production.
+
+**Left open.** Whether Amalia's widget ever answered on her laptop is unknown (a work network can block `challenges.cloudflare.com`); either way the press is now sent within eight seconds. Her earlier registration was cancelled by staff on the 22nd, so her retry was a genuine re-registration — the server handles that (§235) and would have emailed her; staff still have no marker for a repeated submission, which is queued separately.
+
+Baseline `BR-V1.55-2026-09-23`.
