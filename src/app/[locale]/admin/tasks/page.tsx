@@ -49,10 +49,7 @@ import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
-import {
-  messagesPerCompletedRegistration,
-  readEmailVolumeToday,
-} from "@/modules/notifications/volume";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
@@ -311,7 +308,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     emailPlanUsdPerMonth: emailPlanCeilings.usdPerMonth,
     emailPeriod: volume.period,
     emailNextPlan: emailNext ? { name: EMAIL_PLANS[emailNext].name, usdPerMonth: EMAIL_PLANS[emailNext].usdPerMonth } : null,
-    messagesPerRegistration: messagesPerCompletedRegistration(volume.archiveConfigured),
+    // The archive copy and the hidden copies of every participant message, priced once in
+    // `volume.ts` so this board and `/admin/emails` cannot disagree about a registration's cost.
+    messagesPerRegistration: volume.messagesPerRegistration,
     hasPaidEvent,
     clubDomainBound,
     jobsHealthy,

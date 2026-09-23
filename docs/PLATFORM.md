@@ -103,7 +103,9 @@ not taken, so the club can see it is not locked in.
 sends **six emails per completed registration** — verify the address, sign the declaration,
 confirmed, the signed declaration as a PDF (`DECISIONS.md` §95), the reminder two days
 before (§81), and the notice to the club that somebody confirmed (§245) — and a waitlisted
-entrant costs two more. So the free plan supports roughly
+entrant costs two more. Every address the club names under "copie ascunsă la emailurile către
+participanți" on `/admin/emails` adds one more per participant message — five per registration
+— and `/admin/emails` and `/admin/tasks` count it. So the free plan supports roughly
 **16 registrations per day**, and a race that
 opens entries to a hundred people exceeds it before lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
 Basic per race, not a permanent subscription.**

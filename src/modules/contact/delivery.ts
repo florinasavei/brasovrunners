@@ -57,7 +57,7 @@ function contactRoute(config: ContactConfig, recipients: ContactRecipients | nul
   // The display name is the club's, quoted by Nodemailer; the address is the Gmail account —
   // Google rewrites any other sender to it anyway. Captured, a placeholder stands in.
   const from = { name: config.EMAIL_FROM_NAME, address: config.CONTACT_SMTP_USER ?? "contact@localhost" };
-  return { from, to, cc: resolved.cc, appEnv: config.APP_ENV };
+  return { from, to, cc: resolved.cc, bcc: resolved.bcc, appEnv: config.APP_ENV };
 }
 
 /** Can a message posted on this deployment reach anybody? The page asks before it shows a form. */
