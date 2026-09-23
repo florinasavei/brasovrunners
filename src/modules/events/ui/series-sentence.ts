@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import type { RepeatRule } from "../domain/repeat";
+import { readRepeatRule, type RepeatRule } from "../domain/repeat";
 import { type EditionDifference, recurrenceOf } from "../domain/series";
 import type { EditionNote } from "./EditionMark";
 import { toWallTimeInput, wallClockWeekday } from "../domain/zoned-time";
@@ -10,6 +10,26 @@ import { toWallTimeInput, wallClockWeekday } from "../domain/zoned-time";
  * "and" come from `Intl`, so the sentence is right in both languages without a table of days;
  * a series with no regular shape is "12 dates, until 14 December".
  */
+/**
+ * Whether a set of dates is a standing series, and until when (§305).
+ *
+ * The backoffice list showed "21 sept. – 16 nov. 2026" for the weekly run — the span of the dates
+ * the job had materialised so far (§122, eight weeks) — and the owner read it as an end date: "I
+ * need to know here that the event is gonna be auto-renewed". The rule lives on the source event
+ * only, and the members carry `repeat_of`; so this looks for the one row that carries a rule and
+ * answers with its `until` — `null` for a series that goes on for ever — or `null` altogether
+ * when no row has one (a set of dates made once, §64, which really does end).
+ *
+ * Pure: hand it the `repeat_rule` columns and get the answer; the sentence is the caller's.
+ */
+export function renewalOf(repeatRules: readonly unknown[]): { until: string | null } | null {
+  for (const raw of repeatRules) {
+    const rule = readRepeatRule(raw);
+    if (rule) return { until: rule.until ?? null };
+  }
+  return null;
+}
+
 /** The rule as a sentence: "În fiecare luni și miercuri, la 18:30" / "Lunar, pe 11" (§122). */
 export async function ruleSentence(rule: RepeatRule, source: { startsAt: Date }, timeZone: string, locale: string): Promise<string> {
   const t = await getTranslations("Event");
