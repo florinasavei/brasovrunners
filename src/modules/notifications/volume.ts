@@ -4,7 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
 import { readClubNotices } from "./club-notices";
-import { declarationArchiveIsConfigured } from "./domain/club-notices";
+import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
 
@@ -40,16 +40,41 @@ import { readEmailPlan } from "./email-plan";
  * `docs/PLATFORM.md` states the arithmetic in prose and
  * `tests/unit/diagnostics/platform-plans.test.ts` holds the two to each other — changing it is
  * a documentation change, not a constant edit.
+ *
+ * Split in two since 2026-09-22, because the club can now ask for a hidden copy of every message
+ * a participant receives and the copy is priced per *participant* message: the five the runner
+ * gets, and the one the club gets, which is not copied again.
  */
-export const MESSAGES_PER_COMPLETED_REGISTRATION = 6;
+export const PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION = 5;
+export const CLUB_MESSAGES_PER_COMPLETED_REGISTRATION = 1;
+export const MESSAGES_PER_COMPLETED_REGISTRATION =
+  PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION + CLUB_MESSAGES_PER_COMPLETED_REGISTRATION;
 
 /**
- * Six when the club's archive mailbox is named (`DECLARATIONS_ARCHIVE_TO`, §99): the archive
- * copy of the declaration is one more message on the same allowance. What the projections
- * below and the task board use; the constant above is the floor without it.
+ * What one registration that completes costs, given what the club has switched on — the one
+ * pure function behind every forecast on `/admin/emails` and `/admin/tasks`.
+ *
+ * - **Seven when the club's archive mailbox is named** (`DECLARATIONS_ARCHIVE_TO` or the setting,
+ *   §99, §244): the archive copy of the declaration is one more message on the same allowance.
+ * - **Plus one per hidden-copy address per participant message** (2026-09-22): every Bcc is an
+ *   envelope recipient Mailgun bills as a message of its own, so two addresses under "copie
+ *   ascunsă la emailurile către participanți" turn a runner's five messages into fifteen. The
+ *   arithmetic is here so the panel that sets the list and the board that forecasts the day
+ *   cannot disagree about what it costs.
+ *
+ * The constant above is the floor with neither.
  */
-export function messagesPerCompletedRegistration(archiveConfigured: boolean): number {
-  return MESSAGES_PER_COMPLETED_REGISTRATION + (archiveConfigured ? 1 : 0);
+export function messagesPerCompletedRegistration(input: {
+  archiveConfigured: boolean;
+  /** How many addresses receive a hidden copy of each participant message. */
+  participantBccCount: number;
+}): number {
+  const perParticipantMessage = 1 + Math.max(0, Math.floor(input.participantBccCount));
+  return (
+    PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION * perParticipantMessage +
+    CLUB_MESSAGES_PER_COMPLETED_REGISTRATION +
+    (input.archiveConfigured ? 1 : 0)
+  );
 }
 
 /**
@@ -97,6 +122,10 @@ export type EmailVolumeToday = {
   remaining: number | null;
   /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */
   archiveConfigured: boolean;
+  /** How many club addresses receive a hidden copy of every participant message (2026-09-22). */
+  participantBccCount: number;
+  /** `messagesPerCompletedRegistration` of the two above: what one completed registration costs today. */
+  messagesPerRegistration: number;
 };
 
 /** The first of the month, UTC, matching the day boundary below. */
@@ -156,16 +185,22 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
 
   const setting = await readEmailPlan(db);
   // One row by primary key, on a table with a handful of rows: the archive mailbox may be a
-  // setting now (§244), and the forecast would otherwise still be reading the environment.
-  const archiveConfigured = declarationArchiveIsConfigured(await readClubNotices(db), env.DECLARATIONS_ARCHIVE_TO);
+  // setting now (§244), and the forecast would otherwise still be reading the environment. The
+  // same row says how many hidden copies each participant message carries.
+  const notices = await readClubNotices(db);
+  const archiveConfigured = declarationArchiveIsConfigured(notices, env.DECLARATIONS_ARCHIVE_TO);
+  const participantBccCount = participantMessageBcc(notices).length;
+  const messagesPerRegistration = messagesPerCompletedRegistration({ archiveConfigured, participantBccCount });
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
 
   return {
     realRegistrations,
     testRegistrations,
-    projectedMessages: (realRegistrations + testRegistrations) * messagesPerCompletedRegistration(archiveConfigured),
+    projectedMessages: (realRegistrations + testRegistrations) * messagesPerRegistration,
     archiveConfigured,
+    participantBccCount,
+    messagesPerRegistration,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,

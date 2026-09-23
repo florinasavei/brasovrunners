@@ -30,21 +30,31 @@ describe("the contact recipients setting", () => {
     [editor] = await db.insert(staffUsers).values({ email: "editor@dev.test", displayName: "Editor", role: "MODERATOR" }).returning();
   });
 
-  it("is nobody until the club says otherwise, and reads back both lists", async () => {
-    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], updatedAt: null });
+  it("is nobody until the club says otherwise, and reads back all three lists", async () => {
+    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], updatedAt: null });
 
-    const saved = await updateContactRecipients(db, admin, { to: ["club@example.com"], cc: ["amalia@example.org"] }, NOW);
-    expect(saved).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], updatedAt: NOW });
-    expect(await readContactRecipients(db)).toMatchObject({ to: ["club@example.com"], cc: ["amalia@example.org"] });
+    const saved = await updateContactRecipients(
+      db,
+      admin,
+      { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] },
+      NOW,
+    );
+    expect(saved).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"], updatedAt: NOW });
+    expect(await readContactRecipients(db)).toMatchObject({
+      to: ["club@example.com"],
+      cc: ["amalia@example.org"],
+      bcc: ["arhiva@example.org"],
+    });
 
     // Who, from what, to what — addresses are shown back on the screen that sets them, so
-    // they may sit in the audit row; the Gmail app password never comes near this table.
+    // they may sit in the audit row; the Gmail app password never comes near this table. The
+    // hidden copies are audited like the others: hidden from the message, never from the club.
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "contact_recipients.changed"));
     expect(audit.actorStaffUserId).toBe(admin.id);
     expect(audit.entityType).toBe("platform_setting");
     expect(audit.metadataJson).toMatchObject({
-      from: { to: [], cc: [] },
-      to: { to: ["club@example.com"], cc: ["amalia@example.org"] },
+      from: { to: [], cc: [], bcc: [] },
+      to: { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] },
     });
 
     // A second change overwrites the one row rather than adding another, and the plan's row
@@ -66,6 +76,12 @@ describe("the contact recipients setting", () => {
       code: "VALIDATION_ERROR",
       fields: ["cc"],
     });
+    await expect(
+      updateContactRecipients(db, admin, { to: ["club@example.com"], cc: [], bcc: ["arhiva at example.org"] }, NOW),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["bcc"],
+    });
     // Nothing of a refused save reaches the table, so the deployment keeps the way out it had.
     expect(await db.select().from(platformSettings)).toHaveLength(0);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
@@ -73,6 +89,16 @@ describe("the contact recipients setting", () => {
 
   it("reads a value it can no longer understand as nobody, which hands the answer to the environment", async () => {
     await db.insert(platformSettings).values({ key: "contactRecipients", value: { to: "club@example.com" }, updatedAt: NOW });
-    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], updatedAt: NOW });
+    expect(await readContactRecipients(db)).toEqual({ to: [], cc: [], bcc: [], updatedAt: NOW });
+  });
+
+  it("reads a row saved before the hidden copies existed as having none (2026-09-22)", async () => {
+    // What §164 wrote: two lists. No migration rewrites a JSON setting; the schema reads it.
+    await db.insert(platformSettings).values({
+      key: "contactRecipients",
+      value: { to: ["club@example.com"], cc: ["amalia@example.org"] },
+      updatedAt: NOW,
+    });
+    expect(await readContactRecipients(db)).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: [], updatedAt: NOW });
   });
 });
