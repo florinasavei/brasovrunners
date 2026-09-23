@@ -10,11 +10,38 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * the declaration is shown to one person for one event and again when it is printed: the
  * template is signed, the fill-ins are recorded beside it, and neither can drift from the other.
  *
- * Six names and no more. Anything else the club wants in the text — the organiser's legal name,
+ * A short, closed list. Anything else the club wants in the text — the organiser's legal name,
  * the rules — is the text's own words. A field with no value renders as the dotted blank the
  * paper form has, which is what a blank declaration printed for the desk should show.
+ *
+ * The identity documents, since a minor's declaration is signed by the minor and the parent
+ * together (§NNN), are three fields that pair with the three names:
+ * - `idDocument` — the **declarant's** (`{{declarant}}`): the adult's own, the parent's for a
+ *   minor. Unchanged, so every text the club already approved reads as it did.
+ * - `participantIdDocument` — the participant's own (`{{participant}}`): the adult's, which is
+ *   the same document as `idDocument`, or the minor's.
+ * - `guardianIdDocument` — the parent's or guardian's (`{{guardian}}`), and like `{{guardian}}`
+ *   an em dash for an adult.
  */
-export const MERGE_FIELDS = ["participant", "declarant", "guardian", "idDocument", "event", "eventDate", "eventLocation", "signedAt"] as const;
+export const MERGE_FIELDS = [
+  "participant",
+  "declarant",
+  "guardian",
+  "idDocument",
+  "participantIdDocument",
+  "guardianIdDocument",
+  "event",
+  "eventDate",
+  "eventLocation",
+  "signedAt",
+] as const;
+
+/**
+ * The fields that name an identity document. A text naming any of them asks for the documents at
+ * signing — one for an adult, the minor's and the parent's for a minor (§95, §NNN); a text naming
+ * none asks for none.
+ */
+export const ID_DOCUMENT_FIELDS = ["idDocument", "participantIdDocument", "guardianIdDocument"] as const;
 
 export type MergeField = (typeof MERGE_FIELDS)[number];
 
@@ -97,6 +124,12 @@ export function mergeFieldsIn(body: unknown): Set<MergeField> {
     }
   }
   return found;
+}
+
+/** Whether a body asks for an identity document at all (`ID_DOCUMENT_FIELDS`). */
+export function asksForIdDocument(body: unknown): boolean {
+  const fields = mergeFieldsIn(body);
+  return ID_DOCUMENT_FIELDS.some((field) => fields.has(field));
 }
 
 export function isMergeField(name: string): name is MergeField {

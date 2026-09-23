@@ -15,6 +15,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
 
   try {
+    const t = await getTranslations({ locale, namespace: "Registrations" });
     const result = await consumeAndSignDeclaration(
       token,
       {
@@ -28,7 +29,15 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
           identitate BV 123456". The kind is translated at this moment, in the language the
           person is signing in, because that is the language of the document they are signing.
         */
-        idDocument: idDocumentFrom(form, await getTranslations({ locale, namespace: "Registrations" })),
+        idDocument: idDocumentFrom(form, t, "idDocument"),
+        /*
+          A minor's own signature and document (§NNN), posted only by the page a minor's
+          registration renders. A box that was on the page and left empty is posted as the empty
+          string, which the service refuses on that box; a box that was never on the page is
+          absent, which an adult's declaration never asks for.
+        */
+        minorTypedName: form.has("minorTypedName") ? String(form.get("minorTypedName") ?? "") : undefined,
+        minorIdDocument: idDocumentFrom(form, t, "minorIdDocument"),
         documentId: String(form.get("documentId") ?? ""),
         contentSha256: String(form.get("contentSha256") ?? ""),
       },
@@ -55,8 +64,17 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       minutes on the person's own browser is a smaller exposure than the declaration keeps them
       for (seven days after the event, §95), and making somebody retype a document number to
       recover from a refusal about their name is friction charged to the wrong field (§286).
+
+      A minor's declaration has two signature boxes (§NNN), and either refused lands here with the
+      same code: the page compares both kept signatures again with the one pure function the
+      service used (`mismatchedSignatures`) and marks whichever is wrong, so the URL still carries
+      a code and nothing else.
     */
-    if (isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes("typedName")) {
+    if (
+      isDomainError(error) &&
+      error.code === "VALIDATION_ERROR" &&
+      (error.fields.includes("typedName") || error.fields.includes("minorTypedName"))
+    ) {
       await stashDraftValues(declarationDraftOf(form), path);
       redirect(`${path}?invalid=name#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
@@ -74,24 +92,38 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
 }
 
 /**
- * What a refused signature brings back to the form (§314): these four fields and nothing else.
- * Not `draftValuesOf(form)` — that keeps every posted string, and this form posts the action
- * link's secret, the one value that must never be copied anywhere, sealed or not.
+ * What a refused signature brings back to the form (§314): these fields and nothing else — the
+ * tick, and for each signer the kind of document, its series and number, and the signature (the
+ * minor's three only on a minor's declaration, §NNN). Not `draftValuesOf(form)` — that keeps
+ * every posted string, and this form posts the action link's secret, the one value that must
+ * never be copied anywhere, sealed or not.
  */
 function declarationDraftOf(form: FormData): Record<string, string> {
   const draft: Record<string, string> = {};
-  for (const name of ["accepted", "idDocumentType", "idDocument", "typedName"]) {
+  for (const name of [
+    "accepted",
+    "idDocumentType",
+    "idDocument",
+    "typedName",
+    "minorIdDocumentType",
+    "minorIdDocument",
+    "minorTypedName",
+  ]) {
     const value = form.get(name);
     if (typeof value === "string" && value !== "") draft[name] = value;
   }
   return draft;
 }
 
-/** The chosen kind and the typed series, as the one string the declaration carries (§283). */
-function idDocumentFrom(form: FormData, t: (key: string) => string): string | undefined {
-  const series = String(form.get("idDocument") ?? "").trim();
+/**
+ * The chosen kind and the typed series, as the one string the declaration carries (§283) — for
+ * the declarant's document (`idDocument`, `idDocumentType`) or a minor's (`minorIdDocument`,
+ * `minorIdDocumentType`, §NNN): the kind's box is the series box's name with `Type` after it.
+ */
+function idDocumentFrom(form: FormData, t: (key: string) => string, field: "idDocument" | "minorIdDocument"): string | undefined {
+  const series = String(form.get(field) ?? "").trim();
   if (series === "") return undefined;
-  const kind = String(form.get("idDocumentType") ?? "");
+  const kind = String(form.get(`${field}Type`) ?? "");
   // An unknown kind is nobody's document: the series alone is what was true before §283, and it
   // is better than a declaration naming a document the person did not choose.
   const known = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"].includes(kind);

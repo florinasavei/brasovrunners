@@ -56,6 +56,23 @@ export const declarationAcceptances = pgTable(
      * has it, and for acceptances recorded before the field existed.
      */
     idDocument: text("id_document"),
+    /**
+     * The minor's own signature and identity document, when a parent or guardian declares for
+     * them (`DECISIONS.md` §NNN, the owner: "I wanna have the ID document of the minor and the
+     * parent, and also 2 signatures!"). A minor's declaration is signed by both: `typed_name` and
+     * `id_document` above stay the **declarant's** — the parent's, as §108 and §314 already made
+     * them — and these two are the child's, typed at the same press against the name the child
+     * was registered under.
+     *
+     * Null for an adult, whose own signature and document are the two columns above, and for a
+     * minor's acceptance recorded before two signatures were asked (one signature, the parent's).
+     * `minor_typed_name` is kept as long as the row (three years, §95); `minor_id_document` is
+     * cleared with `id_document`, seven days after the event (`jobs/retention.ts`). For `PAPER`,
+     * `minor_typed_name` is the minor's registered name — the staff member attests that the paper
+     * carries both signatures — and the document is on the paper, as for `id_document`.
+     */
+    minorTypedName: text("minor_typed_name"),
+    minorIdDocument: text("minor_id_document"),
 
     method: declarationMethod("method").notNull().default("EMAIL_LINK"),
     /** Who recorded a paper signature. Required for `PAPER`, absent otherwise. */

@@ -15,7 +15,7 @@ import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
-import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -30,7 +30,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
-import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
+import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import { dayIn } from "./domain/age";
 import {
@@ -1170,8 +1170,38 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      * What is recorded stays what was typed, casing and diacritics and all: the rule decides
      * whether the signature is accepted, never what it says.
      */
-    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(before))) {
-      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
+    /*
+      A minor's declaration is signed twice at this one press (§NNN): by the parent, in
+      `typedName` as above, and by the minor, in `minorTypedName`, with the name they were
+      registered under. Both are compared here, together, so a press with both wrong is told
+      about both boxes at once — `mismatchedSignatures` is the function the page marks the boxes
+      with, so the refusal and the red boxes name the same ones.
+    */
+    const expected = expectedSignatures(before);
+    const wrongSignatures = mismatchedSignatures(parsed.data, expected);
+    if (wrongSignatures.length > 0) {
+      throw new DomainError("VALIDATION_ERROR", `${wrongSignatures.join(", ")}: the signature is not the name expected`, wrongSignatures);
+    }
+    const signedByMinorToo = expected.minorTypedName !== null;
+
+    /*
+      The identity documents, asked for before anything moves too (§NNN), for the reason the names
+      are: a refusal must never reach the allocator. Which ones the text asks for is read from the
+      version current for this registration's language — the same read the version check below
+      makes, done once — and a text naming any of the three document fields (`asksForIdDocument`)
+      asks for the declarant's document, and for a minor's declaration the minor's as well. Each
+      missing one is named, so the page can say which box.
+    */
+    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", before.locale, now);
+    const needsIdDocument = document ? asksForIdDocument(document.body) : false;
+    if (needsIdDocument) {
+      const missing = [
+        ...(signedByMinorToo && !parsed.data.minorIdDocument ? ["minorIdDocument"] : []),
+        ...(!parsed.data.idDocument ? ["idDocument"] : []),
+      ];
+      if (missing.length > 0) {
+        throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: the declaration names an identity document`, missing);
+      }
     }
 
     // Re-verify the hold is still live at the moment of signing — never trusting that it was
@@ -1189,7 +1219,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       if (current.status === "WAITLISTED") return current; // no declaration requested yet
     }
 
-    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
+    // Read above, before the hold was touched: the registration's language does not change under
+    // the expiry, so it is the version current for `current.locale` too.
     if (!document) {
       throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
     }
@@ -1208,13 +1239,12 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       );
     }
 
-    // The identity document, when the declaration's own text names it (§95): the club hands
-    // out kits against it, so a signature without one is not the declaration the club wrote.
-    const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
-    if (asksForIdDocument && !parsed.data.idDocument) {
-      throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
-    }
-
+    /*
+      The identity documents were required above, when the text names one (§95: the club hands
+      out kits against it, so a signature without one is not the declaration the club wrote), and
+      are stored only then. The minor's signature and document ride on the same row (§NNN): one
+      acceptance, one instant, one text, signed by both.
+    */
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -1222,7 +1252,9 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
-      idDocument: asksForIdDocument ? parsed.data.idDocument : null,
+      idDocument: needsIdDocument ? parsed.data.idDocument : null,
+      minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
+      minorIdDocument: signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null,
       acceptedAt: now,
     });
 
@@ -1369,13 +1401,23 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   if (!document) {
     throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
   }
+  /*
+    Who signed the paper, as the row records it (§NNN). An adult's paper carries one signature:
+    the registered name. A minor's carries two, and the staff member who presses "Confirmă pe
+    hârtie" attests exactly that — the button says so on a minor's row — so the row names both
+    signers the way an online signature would: the parent as the declarant (`typed_name`, the
+    same person `expectedSignatures` wants online) and the minor beside them (`minor_typed_name`).
+    Nobody on staff signs anything; the documents stay on the paper, as they always have.
+  */
+  const signers = expectedSignatures(current);
   await repo.insertDeclarationAcceptance(tx, {
     registrationId: current.id,
     legalDocumentId: document.id,
     declarationVersion: document.version,
     contentSha256: document.contentSha256,
     locale: current.locale,
-    typedName: current.registeredName,
+    typedName: signers.typedName,
+    minorTypedName: signers.minorTypedName,
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
