@@ -3,6 +3,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { COLOR } from "@/theme/brand";
+import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 
 /**
@@ -43,6 +44,11 @@ export type TemplateContent = {
   closing: string;
   /** "Reply to this email with questions" — on every message when the club has a reply address. */
   footer?: string;
+  /**
+   * Who sends this and where the privacy notice is (§323) — the last line of every participant
+   * message: the sentence, then the notice's address in the message's language as a link.
+   */
+  privacy?: { text: string; url: string };
 };
 
 const SIGN_OFF: Record<EmailLocale, string> = {
@@ -80,6 +86,9 @@ export function renderContent(
     content.closing,
     SIGN_OFF[locale],
     ...(content.footer ? ["", content.footer] : []),
+    // The address last, with nothing after it: a text client that links it could take a
+    // trailing full stop into the link (review nit). The HTML part keeps the sentence's stop.
+    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}`] : []),
   ];
 
   /**
@@ -137,6 +146,11 @@ export function renderContent(
       : []),
     paragraph(`${escapeHtml(content.closing)}<br>${escapeHtml(SIGN_OFF[locale])}`),
     ...(content.footer ? [`<p style="margin:0;color:${COLOR.inkMuted};font-size:13px">${escapeHtml(content.footer)}</p>`] : []),
+    ...(content.privacy
+      ? [
+          `<p style="margin:${content.footer ? "8px" : "0"} 0 0;color:${COLOR.inkMuted};font-size:13px">${escapeHtml(content.privacy.text)} <a href="${content.privacy.url}" style="color:${COLOR.blueInk}">${escapeHtml(content.privacy.url)}</a>.</p>`,
+        ]
+      : []),
   ];
 
   return { html: card([htmlParts]), text: textLines.join("\n"), htmlParts, textLines };
@@ -329,6 +343,12 @@ export type TemplateData = {
    */
   eventsUrl?: string;
   contactUrl?: string;
+  /**
+   * The privacy notice (§323), in the language of the half being built. Set by
+   * `buildTemplateContent` itself — each half of a bilingual message points at its own
+   * language's notice — so whatever a caller put here is replaced.
+   */
+  privacyUrl?: string;
   /** The staff invitation (§141): who is invited, as what, by whom, and where to sign in. */
   staffRole?: string;
   inviterName?: string;
@@ -529,8 +549,11 @@ const T = {
       body: (d: TemplateData) => [
         `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
         `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
+        // What the club keeps about its own team (§323), said to the person it is kept about.
+        "Pentru cont folosim Zitadel, cu numele și adresa ta; ce faci în backoffice rămâne în jurnalul clubului, cu numele tău, cel mult trei ani. Detalii în nota de confidențialitate.",
       ],
       action: "Intră în backoffice",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -600,6 +623,11 @@ const T = {
       subject: "[Copie club] ",
       note: "Copie pentru club a mesajului trimis participantului. Legăturile personale, codul QR și atașamentele au fost scoase.",
     },
+    /** Who sends it, and the notice (§323); the address follows the sentence. */
+    privacyFooter: (club: string) => `Primești acest mesaj de la ${club} pentru înscrierea ta. Cum folosim datele tale:`,
+    /** The same for "registration is open" (§146), which answers a request, not a registration. */
+    privacyFooterInterest: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -719,8 +747,10 @@ const T = {
       body: (d: TemplateData) => [
         `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
         `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
+        "Your account is held by Zitadel, with your name and address; what you do in the backoffice stays in the club's log, under your name, for at most three years. Details in the privacy notice.",
       ],
       action: "Open the backoffice",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -805,6 +835,8 @@ const T = {
       subject: "[Club copy] ",
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
     },
+    privacyFooter: (club: string) => `This message comes from ${club} about your registration. How we use your data:`,
+    privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
   },
 } as const;
 
@@ -838,11 +870,14 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
 export function buildTemplateContent(
   messageType: EmailMessageType,
   locale: EmailLocale,
-  data: TemplateData,
+  given: TemplateData,
   actionUrl: string | undefined,
   /** The club's own wording for this message, when it has written some (§247). */
   overrides?: EmailCopy | null,
 ): TemplateContent {
+  // The notice in this half's own language (§323): the Romanian half links /ro/…, the English /en/….
+  const privacyUrl = privacyNoticeUrl(locale);
+  let data: TemplateData = { ...given, privacyUrl };
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
   /*
@@ -950,7 +985,38 @@ export function buildTemplateContent(
     })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
+    privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType)
+      ? undefined
+      : {
+          text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
+          url: privacyUrl,
+        },
   };
+}
+
+/**
+ * The messages that are not to a participant about their own data (§323), and so carry no
+ * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
+ * and the staff invitation says what it keeps about the team in its own body.
+ */
+const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
+  "DECLARATION_ARCHIVE",
+  "CLUB_CONFIRMATION_NOTICE",
+  "STAFF_INVITATION",
+]);
+
+/**
+ * Who the controller is, as the privacy line names it (§323): the club's legal name from the
+ * environment (`CLUB_LEGAL_NAME`, the same fact the legal templates are filled with), else the
+ * club's everyday name. Never a literal of the legal name: the repository is public (§98).
+ */
+function controllerName(): string {
+  return env.CLUB_LEGAL_NAME ?? "Brașov Runners";
+}
+
+/** The privacy notice's address in one language, from `APP_BASE_URL` like every link here (§8). */
+function privacyNoticeUrl(locale: EmailLocale): string {
+  return `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
 }
 
 export function buildOutgoingEmail(params: {

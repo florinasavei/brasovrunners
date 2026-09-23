@@ -56,6 +56,7 @@ export type TaskId =
   | "inviteStaff"
   | "inviteKey"
   | "publishEvents"
+  | "raceDaySheets"
   | "mediaStorage"
   | "botCheck"
   | "declarationArchiveMail"
@@ -74,6 +75,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   inviteStaff: "account",
   inviteKey: "account",
   publishEvents: "text",
+  raceDaySheets: "check",
   mediaStorage: "account",
   botCheck: "account",
   declarationArchiveMail: "decision",
@@ -157,6 +159,14 @@ export type OwnerTaskInputs = {
   inviteKey: InviteKeyState;
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
+  /**
+   * The events with registration on the site that started between seven and thirty days ago,
+   * by title (§323). The privacy notice promises that exported lists and printed race-day sheets
+   * are destroyed within 30 days of the event, and the identity numbers are gone from the
+   * database after seven — so for those three weeks the copies outside it are the club's to
+   * delete, and nothing in the system can see them. The row is the reminder; it goes by itself.
+   */
+  raceDaySheetsDue: readonly string[];
   /**
    * Can this environment store a photo? Derived from the five `R2_*` variables (`env.ts`,
    * `STORAGE_MODE`), so the row reads the environment and never a checklist. Local and test
@@ -266,6 +276,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     owner: "club",
     state: input.publishedEventCount > 0 ? "done" : "open",
   });
+
+  // Only while there is something to destroy (§323): seven to thirty days after an event, open
+  // and never blocking, naming the events. There is no "done" to reach — the system cannot see
+  // a spreadsheet on somebody's laptop — so the row simply leaves when the window closes.
+  if (input.raceDaySheetsDue.length > 0) {
+    push("raceDaySheets", {
+      owner: "club",
+      state: "open",
+      detail: input.raceDaySheetsDue.join(", "),
+    });
+  }
 
   // Not blocking: registrations do not need photos. Open until the bucket exists, because an
   // album page without an upload button is a gallery nobody can fill (BR-REQ-054-01).

@@ -27,12 +27,13 @@ const MARK_TARGET = 44;
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it.
  *
- * Five things share the line, as one flex row that wraps. In the bottom-left corner, the
+ * Six things share the line, as one flex row that wraps. In the bottom-left corner, the
  * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
- * in the header). Then a `<summary>` that opens the rest — the club, the contact, the legal
- * pages — and names them, so a visitor after the privacy notice knows to open it
- * (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are, and the
- * registration form links the notice directly where it matters, BR-REQ-070-01). Then the
+ * in the header). Then a `<summary>` that opens the rest — the club, the contact, the terms —
+ * and names them (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are,
+ * and the registration form links the notice directly where it matters, BR-REQ-070-01). Then
+ * the privacy notice, **outside the disclosure** since §323, so nobody has to open anything to
+ * find how their data is used. Then the
  * social marks — Facebook, Instagram and the Strava club — **outside the disclosure and always
  * visible**, by the owner's instruction on 2026-09-17. And **on a phone the language switcher
  * in the bottom-right corner** (§262: "eventual mutăm selectorul de limbi in dreapta jos") —
@@ -152,8 +153,11 @@ export default async function SiteFooter() {
               // space on the bar toggle the panel.
               width: "fit-content",
               // Never wider than the fold it is in: when the line is short the label is cut
-              // with an ellipsis rather than pushing a mark off the bar.
+              // with an ellipsis rather than pushing a mark off the bar. Its padding counts in
+              // that width (`border-box`): at 320 pixels, beside the privacy link (§323), the fold
+              // is 54 pixels and a content-box summary ran eight pixels onto the link.
               maxWidth: "100%",
+              boxSizing: "border-box",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -175,7 +179,7 @@ export default async function SiteFooter() {
               spacing={2}
               sx={{ flexWrap: "wrap", "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 } }}
             >
-              <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
+              {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
               {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
               <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
@@ -193,6 +197,49 @@ export default async function SiteFooter() {
               </Typography>
             )}
           </Stack>
+        </Box>
+
+        {/*
+          The privacy notice, on the line itself rather than in the fold (§323): a person should
+          find how their data is used from any page without opening anything — GDPR art. 12 asks
+          for the information to be easy to reach, and a closed `<details>` hides it from sight
+          and from the accessibility tree alike. Its own width, never shrunk, like the marks.
+
+          On a phone the line has the switch, the summary, three marks and the language in 320
+          pixels, and "Confidențialitate" alone is a third of it — so there it says "GDPR", the
+          word Romanian sites use for the same link, and the full label from `sm` up. Nothing
+          that names the notice fits: the fold beside it is 54 pixels at 320 with "GDPR", and
+          "Date personale" is some fifty pixels wider, which would leave the summary nothing.
+
+          The link's name is the notice's own at every width (review finding: a screen reader
+          said "GDPR, link"), and it keeps both visible words inside it, so somebody who says
+          what they see to voice control still hits it (WCAG 2.5.3, label in name).
+        */}
+        <Box
+          sx={{
+            flex: "0 0 auto",
+            height: BAR_HEIGHT,
+            display: "flex",
+            alignItems: "center",
+            "& > a": {
+              display: "inline-flex",
+              alignItems: "center",
+              minHeight: BAR_HEIGHT,
+              px: { xs: 0.5, sm: 1 },
+              color: "text.secondary",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+            },
+          }}
+        >
+          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")}>
+            <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+              {legal("privacyLinkShort")}
+            </Box>
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              {legal("privacyLinkLabel")}
+            </Box>
+          </Link>
         </Box>
 
         {social.length > 0 && (

@@ -8,11 +8,12 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { count } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
-import { listPublishedEvents } from "@/modules/events/repository";
+import { listPublishedEvents, listPublishedEventsBetween } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -189,6 +190,38 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club being an NGO does not settle it (`DECISIONS.md` §50).
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
+  /**
+   * The events whose downloaded lists and printed sheets are due for the shredder (§323): seven
+   * to thirty days after the start, and only those that took at least one real registration
+   * here — an event with none (or only TEST rows, §30) left nothing on anybody's laptop. A title
+   * once, however many dates of a series fall in the window (review finding).
+   */
+  const day = 24 * 60 * 60_000;
+  const inShredderWindow = (
+    await listPublishedEventsBetween(db, locale, new Date(now.getTime() - 30 * day), new Date(now.getTime() - 7 * day))
+  ).filter((event) => event.registrationMode === "INTERNAL");
+  const registeredHere =
+    inShredderWindow.length === 0
+      ? new Set<string>()
+      : new Set(
+          (
+            await db
+              .selectDistinct({ eventId: registrations.eventId })
+              .from(registrations)
+              .where(
+                and(
+                  inArray(
+                    registrations.eventId,
+                    inShredderWindow.map((event) => event.id),
+                  ),
+                  eq(registrations.kind, "REAL"),
+                ),
+              )
+          ).map((row) => row.eventId),
+        );
+  const raceDaySheetsDue = [
+    ...new Set(inShredderWindow.filter((event) => registeredHere.has(event.id)).map((event) => event.title)),
+  ];
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
@@ -257,6 +290,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       staffCount,
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
+      raceDaySheetsDue,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off

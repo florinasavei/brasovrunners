@@ -67,9 +67,14 @@ describe("the declaration's merge fields", () => {
           expect(allowed.has(placeholder), `${key} ${locale}: ${placeholder}`).toBe(true);
         }
         // Complete, and short (the owner: "the terms and the GDPR notice should be short"):
-        // a real document, not an outline, and not a treatise either.
+        // a real document, not an outline, and not a treatise either. The privacy notice has
+        // its own ceiling since the GDPR transparency pass (§323; the owner: "we need to inform
+        // people properly on how their data is used"): every item now carries its purpose, its
+        // basis, who sees it and how long it stays, which is what art. 13 asks, and that is
+        // about half as long again as the text it replaced.
+        const ceiling = key === "EVENT_DECLARATION" ? 4000 : key === "PRIVACY_NOTICE" ? 17000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
-        expect(text.length, `${key} ${locale}`).toBeLessThan(key === "EVENT_DECLARATION" ? 4000 : 11000);
+        expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }
     }
   });

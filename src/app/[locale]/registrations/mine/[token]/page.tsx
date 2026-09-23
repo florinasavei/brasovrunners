@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
+import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   cancelFromMyRegistrationsAction,
@@ -196,6 +197,10 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   </Button>
                 </form>
               </Stack>
+              {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {t.rich("cancelKeepsRecord", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
+              </Typography>
 
               {/*
                 The public participant list, the participant's own switch (BR-REQ-039-01;

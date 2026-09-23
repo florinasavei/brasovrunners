@@ -147,7 +147,7 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
+      "note": "Apar aici doar participanții confirmați care au ales să apară pe listă. Te-ai răzgândit? Te scoți dintr-o apăsare, din emailul de confirmare sau din „Înscrierile mele”.",
       "anonymous": "Participant anonim",
       "caption": "Participanții confirmați, în ordinea confirmării.",
       "columnPosition": "#",
@@ -349,7 +349,8 @@
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
       "listOptIn": "Persoana vrea să apară pe lista publică de participanți",
-      "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu.",
+      "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea.",
+      "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu și i-am spus că datele ei le folosește clubul pentru cursă, iar nota de confidențialitate este pe site, jos pe fiecare pagină.",
       "create": "Adaugă înscrierea",
       "viewForEvent": "Vezi înscrierile acestui eveniment",
       "correctName": "Corectează numele",
@@ -710,7 +711,7 @@
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
-      "participantListHelp": "Publică numele persoanelor care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei. Nu se publică adrese de e-mail și nimic despre înscrierile neconfirmate. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o menționeze înainte ca opțiunea să fie bifată.",
+      "participantListHelp": "Publică numele participanților confirmați care au bifat că vor să apară pe listă. Nu se publică adrese de e-mail și nimic despre înscrierile neconfirmate. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o menționeze înainte ca opțiunea să fie pornită.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -1316,6 +1317,18 @@
             "Deschide /admin/events → „Eveniment nou”. Completează tipul, data, locul și titlul în ambele limbi. Salvează.",
             "Apasă „Trimite spre verificare”, apoi „Publică”. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
             "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
+          ]
+        },
+        "raceDaySheets": {
+          "title": "Șterge exporturile și foile tipărite ale evenimentului",
+          "todo": "Au trecut șapte zile de la eveniment: listele descărcate și foile tipărite pentru ziua cursei se distrug acum, cel târziu la 30 de zile de la eveniment — așa promite nota de confidențialitate. Platforma nu le vede, așa că rândul nu se bifează: dispare singur după 30 de zile.",
+          "done": "Nicio listă sau foaie de distrus acum.",
+          "how": [
+            "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
+            "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
+            "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
+            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
+            "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },
         "botCheck": {
@@ -2175,13 +2188,17 @@
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
-    "privacyLinkLabel": "GDPR",
-    "termsLinkLabel": "Termeni de concurs"
+    "privacyLinkLabel": "Confidențialitate",
+    "privacyLinkShort": "GDPR",
+    "privacyLinkName": "Nota de confidențialitate (GDPR)",
+    "termsLinkLabel": "Termeni de concurs",
+    "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",
+    "inForce": "Versiunea {version}, în vigoare din {date}"
   },
   "Registration": {
     "title": "Înscriere: {event}",
     "email": "Adresă de email",
-    "privacyPrefix": "Am citit și sunt de acord cu",
+    "privacyPrefix": "Am citit",
     "privacyLinkLabel": "nota de confidențialitate",
     "listOptIn": "Vreau să apar pe lista de participanți",
     "submit": "Trimite înscrierea",
@@ -2298,7 +2315,7 @@
       "clubName": "Club sau echipă",
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
-      "privacyAcknowledged": "GDPR",
+      "privacyAcknowledged": "Nota de confidențialitate",
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
@@ -2374,18 +2391,18 @@
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
       "terms": "Termeni de concurs",
-      "privacy": "GDPR"
+      "privacy": "Confidențialitate"
     },
-    "socialsHelp": "Dacă vrei să te găsim și să te etichetăm în postările clubului. Nu le publicăm pe site și nu le dăm nimănui.",
+    "socialsHelp": "Opțional. Le folosim doar ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Nu apar pe site. Le poți șterge oricând din „Înscrierile mele”.",
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",
     "instagramHandleHelp": "Cu sau fără @.",
-    "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
+    "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Tu completezi datele copilului și tu dai, în numele lui, acordurile de mai jos (lista publică, informațiile medicale). Emailul și telefonul pot fi ale tale. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
     "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
-    "privacyBanner": "Datele tale nu apar nicăieri pe site. Le vede doar echipa care organizează, pentru această cursă, iar declarația și emailurile merg doar la tine.",
-    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii.",
+    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
     "confidentialNote": "Confidențial. Nu se publică.",
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe organizatorii cursei dacă ai nevoie de ajutor — alergii, un tratament, o afecțiune. O văd doar organizatorii; se șterge la șapte zile după eveniment.",
@@ -2418,6 +2435,7 @@
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
+    "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",
@@ -2431,6 +2449,7 @@
       "accept": "Am citit și accept declarația de mai sus",
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",
+      "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
       "changed": "Declarația a fost actualizată în timp ce o citeai. Nu s-a înregistrat nimic. Mai jos este textul actual — te rugăm să îl citești și să semnezi din nou.",
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
@@ -2440,7 +2459,7 @@
       "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
-      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui.",
+      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân doar primele două și ultimele două caractere); nu păstrăm o copie a actului.",
       "idDocumentPlaceholder": "BV 123456",
       "nextTitle": "Ce urmează",
       "nextConfirmed": [
@@ -2821,6 +2840,7 @@
     "title": "Galerie",
     "loading": "Se încarcă…",
     "intro": "Fotografii de la alergările, concursurile și întâlnirile clubului.",
+    "photosNotice": "La evenimentele clubului se fac fotografii, publicate aici și pe rețelele clubului. Te recunoști și vrei să scoatem o fotografie? <contact>Scrie-ne</contact> și o scoatem, fără să ne spui de ce.",
     "empty": "Nu există încă albume publicate.",
     "backToGallery": "← Toate albumele",
     "photoCount": "{count} fotografii",
@@ -2835,7 +2855,7 @@
     "emailHelp": "Îți răspundem pe această adresă.",
     "message": "Mesajul",
     "messageHelp": "Cel mult 2000 de caractere.",
-    "privacy": "Mesajul ajunge în căsuța clubului; datele nu se folosesc pentru altceva.",
+    "privacy": "Mesajul ajunge ca e-mail în căsuța clubului, la Gmail (Google), unde îl citesc cei din echipă care răspund. Îl folosim doar ca să-ți răspundem și îl ștergem după cel mult 12 luni.",
     "privacyDetails": "Detalii în",
     "privacyLinkLabel": "nota de confidențialitate",
     "submit": "Trimite",

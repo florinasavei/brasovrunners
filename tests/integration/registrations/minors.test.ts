@@ -143,4 +143,42 @@ describe("a minor registered by a parent (§108)", () => {
     expect(declarantValues("Ana Popescu", null, "ro")).toEqual({ declarant: "Ana Popescu", guardian: "—" });
     expect(declarantValues("Maria Popescu", "Ion Popescu", "en").declarant).toBe("Ion Popescu (parent/legal guardian of the minor Maria Popescu)");
   });
+
+  /*
+    BR-REQ-031-04 (§323): the privacy notice says the club keeps no Strava or Instagram of a
+    minor. The form hides the two boxes once the birth date says so; the server is the rule, for
+    a form posted without JavaScript or with values typed before the date was.
+  */
+  it("keeps no Strava or Instagram for a minor, and keeps an adult's", async () => {
+    await approve(db);
+    const event = await createEvent(db);
+    const socials = { stravaUrl: "https://www.strava.com/athletes/12345", instagramHandle: "maria.alearga" };
+
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu", ...socials }), NOW);
+    await submitRegistration(db, event, submission({ email: "adult@example.ro", firstName: "Ana", birthDate: "1990-05-17", ...socials }), NOW);
+
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const minor = rows.find((row) => row.registeredName === "Maria Popescu");
+    const adult = rows.find((row) => row.registeredName === "Ana Popescu");
+    expect(minor?.stravaUrl).toBeNull();
+    expect(minor?.instagramHandle).toBeNull();
+    expect(adult?.stravaUrl).toBe(socials.stravaUrl);
+    expect(adult?.instagramHandle).toBe(socials.instagramHandle);
+  });
+
+  it("decides minor on the day of registering, as the guardian rule does", async () => {
+    await approve(db);
+    const event = await createEvent(db);
+    // Seventeen on 4 September 2026 and eighteen by the race on 11 October: a minor when the
+    // consent would be given, so no socials — and a guardian, by the same rule.
+    await submitRegistration(
+      db,
+      event,
+      submission({ birthDate: "2008-09-20", guardianName: "Ion Popescu", stravaUrl: "https://www.strava.com/athletes/9" }),
+      NOW,
+    );
+    const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(row.guardianName).toBe("Ion Popescu");
+    expect(row.stravaUrl).toBeNull();
+  });
 });
