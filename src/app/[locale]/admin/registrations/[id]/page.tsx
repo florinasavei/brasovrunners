@@ -646,6 +646,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>
+                {/* What the erase cannot reach (§NNN), read before the press as well as after it. */}
+                <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+                  {tr("registrations.eraseLeftovers")}
+                </Typography>
                 {/* The one line that outlives the erasure (§NNN): why, never who. */}
                 <TextField
                   name="reason"

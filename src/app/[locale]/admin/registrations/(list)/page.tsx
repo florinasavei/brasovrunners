@@ -529,6 +529,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.deleteHelp")}
               </Typography>
+              {/* What the erase cannot reach (§NNN), read before the press as well as after it. */}
+              <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+                {t("registrations.eraseLeftovers")}
+              </Typography>
               <TextField
                 name="reason"
                 label={t("registrations.deleteReason")}
@@ -1283,6 +1287,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   {t("registrations.bulkEraseHelp")}
+                </Typography>
+                {/* What the erase cannot reach (§NNN), for each person in the batch. */}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {t("registrations.eraseLeftovers")}
                 </Typography>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "flex-start" } }}>
                   <TextField

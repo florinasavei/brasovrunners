@@ -6,7 +6,7 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import { recordAuditEvent, scrubRegistrationFromAudit } from "@/modules/audit/repository";
+import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -903,9 +903,9 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   await db.transaction(async (tx) => {
     /*
       The trail forgets whom, in the same transaction as the delete (§NNN): every earlier row
-      about this registration loses its participant id, and a name correction its before and
-      after. The deletion's own row above is untouched — its `from` is a status and its reason
-      and number name nobody (§311).
+      about this registration loses its participant id and its typed reason, and a name
+      correction its before and after. The deletion's own row above keeps its reason — its
+      `from` is a status and its reason and number name nobody (§311).
     */
     await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
@@ -919,6 +919,9 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       .from(registrations)
       .where(eq(registrations.participantId, current.participantId));
     if ((remaining?.n ?? 0) === 0) {
+      // A row about the person, not the registration — an access copy made for them — keeps
+      // their uuid in `entity_id`, which the foreign key never reaches (§NNN).
+      await scrubParticipantFromAudit(tx, current.participantId);
       await tx.delete(participants).where(eq(participants.id, current.participantId));
     }
   });

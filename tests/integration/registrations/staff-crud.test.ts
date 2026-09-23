@@ -578,6 +578,11 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
       expect(metadata, `${row.action} keeps the old name`).not.toContain(oldName);
       expect(metadata, `${row.action} keeps the new name`).not.toContain("Numele Corectat");
     }
+    // A reason typed while the person was still somebody goes with them (§NNN): the
+    // cancellation still says it happened, by whom and when, and no longer why.
+    const cancellation = rows.find((row) => row.action === "registration.cancelled_by_staff");
+    expect(cancellation?.metadataJson).not.toHaveProperty("reason");
+    expect(JSON.stringify(rows.map((row) => row.metadataJson))).not.toContain("a asked by phone");
     // The deletion's own row keeps what it is for: the status it was in and the reason (§311).
     const deletion = rows.find((row) => row.action === "registration.deleted_by_staff");
     expect(deletion?.metadataJson).toMatchObject({ from: "CANCELLED", reason: "erasure request" });

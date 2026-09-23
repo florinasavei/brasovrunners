@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { type AuditLog, auditLogs } from "@/db/schema/audit-logs";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -190,11 +190,14 @@ export async function recordAuditEvent<T extends Record<string, unknown>>(
  * had another registration), and a name correction kept the old and the new name in its
  * metadata for three years: the one copy of the name the erasure was asked to remove.
  *
- * So, for one registration: every row loses its `participant_id`, and a name correction loses
- * its `from` and `to`. What stays is who acted, what they did and when — the deletion's own row
- * keeps its status, its reason and its bib number (§311), which name nobody. Called by
- * `eraseRegistration` inside the transaction that deletes the row, so the scrub and the delete
- * land together or not at all.
+ * So, for one registration: every row loses its `participant_id`, a name correction loses its
+ * `from` and `to`, and every earlier row loses its `reason` — a cancellation's, a withdrawal's:
+ * free text somebody typed about this person while they were still somebody, and the helper
+ * under the field asking not to name them is a request, not a guarantee. What stays is who
+ * acted, what they did and when — the deletion's own row keeps its status, its reason and its
+ * bib number (§311), written under that same helper at the moment of erasing, and the one
+ * sentence that says why the rest is gone. Called by `eraseRegistration` inside the transaction
+ * that deletes the row, so the scrub and the delete land together or not at all.
  */
 export async function scrubRegistrationFromAudit<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -203,9 +206,31 @@ export async function scrubRegistrationFromAudit<T extends Record<string, unknow
   const aboutThisRegistration = and(eq(auditLogs.entityType, "registration"), eq(auditLogs.entityId, registrationId));
   await db
     .update(auditLogs)
-    .set({ participantId: null, metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
     .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.name_corrected")));
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'reason')` })
+    .where(and(aboutThisRegistration, ne(auditLogs.action, "registration.deleted_by_staff")));
   await db.update(auditLogs).set({ participantId: null }).where(aboutThisRegistration);
+}
+
+/**
+ * The person, when the erasure took their last registration (§NNN). A row about the person
+ * rather than one registration — `participant.data_exported`, the one kind today — carries
+ * their participant id twice: `participant_id`, which the foreign key nulls when the
+ * participant row goes, and `entity_id`, which no key reaches and would otherwise keep the
+ * deleted person's uuid for three years. Both go, in the transaction that deletes the
+ * participant; the row still says that a file was made, by whom and when, and of how much.
+ */
+export async function scrubParticipantFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  participantId: string,
+): Promise<void> {
+  await db
+    .update(auditLogs)
+    .set({ participantId: null, entityId: null })
+    .where(and(eq(auditLogs.entityType, "participant"), eq(auditLogs.entityId, participantId)));
 }
 
 export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt" | "actorStaffUserId"> & {

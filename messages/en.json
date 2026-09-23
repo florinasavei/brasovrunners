@@ -400,7 +400,7 @@
       "deleteAction": "Delete permanently",
       "deleteConfirm": "I confirm this deletion is permanent",
       "registrationDeleted": "The registration was permanently deleted.",
-      "eraseLeftovers": "Also delete by hand: the person's “Signed declaration” messages in the archive mailbox and its Cc/Bcc copies, their row in any downloaded export, the paper declaration, and their address in Mailgun → Suppressions if it is there.",
+      "eraseLeftovers": "Also delete by hand: the person's “Signed declaration” messages in the archive mailbox and its Cc/Bcc copies, their row in any downloaded export, the paper declaration, and their address in Mailgun → Suppressions if it is there. The database's backups (Neon's restore history) still hold the registration until they expire, at most 7 days later — nothing to do there by hand.",
       "rowActions": "Actions for {name}",
       "clubMemberLabel": "Brașov Runners members",
       "bouncedLabel": "Email",
@@ -1731,7 +1731,7 @@
       "columnHealth": "Health note",
       "present": "checked in",
       "empty": "No confirmed participant yet.",
-      "count": "{count} confirmed participants"
+      "count": "Confirmed participants: {count}"
     },
     "person": {
       "title": "Everything held about a person",

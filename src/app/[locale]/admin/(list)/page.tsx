@@ -391,6 +391,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {saved === "eventErased" && (
           <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
         )}
+        {/* An event erased with everyone on it leaves the same copies outside the database as
+            one erased registration (§NNN): the same list, by hand. */}
+        {saved === "eventErased" && Number(erased) > 0 && (
+          <Alert severity="info" data-testid="erase-leftovers" sx={{ mt: 1 }}>
+            {t("registrations.eraseLeftovers")}
+          </Alert>
+        )}
         {saved &&
           !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>

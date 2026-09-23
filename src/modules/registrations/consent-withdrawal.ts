@@ -67,6 +67,13 @@ export function holdsOptionalData(registration: Holding, field: OptionalDataFiel
 /**
  * The one write. `fields` is what to clear; a group that holds nothing is skipped, and nothing
  * at all is written — not even the audit row — when every named group was already empty.
+ *
+ * One transaction, and the row locked before it is read (§NNN): two presses at once — the
+ * button twice, the manage page and "My registrations" in two tabs — would otherwise both find
+ * the note still there and both write an audit row for one withdrawal, and an audit insert that
+ * failed after the update would leave the data cleared with nothing saying so. With the lock the
+ * second press waits, reads the row the first one committed, finds the group empty and writes
+ * nothing; the clearing and its record land together or not at all.
  */
 export async function clearOptionalData<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -80,37 +87,43 @@ export async function clearOptionalData<T extends Record<string, unknown>>(
     now: Date;
   },
 ): Promise<{ cleared: OptionalDataField[] }> {
-  const current = await findRegistrationById(db, input.registrationId);
-  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(registrations)
+      .where(eq(registrations.id, input.registrationId))
+      .for("update");
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
 
-  const cleared = OPTIONAL_DATA_FIELDS.filter((field) => input.fields.includes(field) && holdsOptionalData(current, field));
-  if (cleared.length === 0) return { cleared };
+    const cleared = OPTIONAL_DATA_FIELDS.filter((field) => input.fields.includes(field) && holdsOptionalData(current, field));
+    if (cleared.length === 0) return { cleared };
 
-  await db
-    .update(registrations)
-    .set({
-      ...(cleared.includes("health") ? { healthNotes: null, healthConsentVersion: null, healthConsentAt: null } : {}),
-      ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null } : {}),
-      ...(cleared.includes("results") ? { resultsNameConsent: false } : {}),
-      updatedAt: input.now,
-    })
-    .where(eq(registrations.id, current.id));
+    await tx
+      .update(registrations)
+      .set({
+        ...(cleared.includes("health") ? { healthNotes: null, healthConsentVersion: null, healthConsentAt: null } : {}),
+        ...(cleared.includes("socials") ? { stravaUrl: null, instagramHandle: null } : {}),
+        ...(cleared.includes("results") ? { resultsNameConsent: false } : {}),
+        updatedAt: input.now,
+      })
+      .where(eq(registrations.id, current.id));
 
-  await recordAuditEvent(db, {
-    actorStaffUserId: input.actorStaffUserId,
-    participantId: current.participantId,
-    action: "registration.consent_withdrawn",
-    entityType: "registration",
-    entityId: current.id,
-    metadata: {
-      fields: cleared,
-      via: input.via,
-      ...(input.reason !== undefined ? { reason: input.reason.trim().slice(0, 500) } : {}),
-    },
-    now: input.now,
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actorStaffUserId,
+      participantId: current.participantId,
+      action: "registration.consent_withdrawn",
+      entityType: "registration",
+      entityId: current.id,
+      metadata: {
+        fields: cleared,
+        via: input.via,
+        ...(input.reason !== undefined ? { reason: input.reason.trim().slice(0, 500) } : {}),
+      },
+      now: input.now,
+    });
+
+    return { cleared };
   });
-
-  return { cleared };
 }
 
 /**

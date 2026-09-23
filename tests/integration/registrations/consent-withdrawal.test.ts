@@ -35,7 +35,9 @@ let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 
 const { issueActionToken } = await import("@/modules/action-tokens/repository");
-const { withdrawFromManageLink, withdrawFromMyRegistrations } = await import("@/modules/registrations/consent-withdrawal");
+const { clearOptionalData, withdrawFromManageLink, withdrawFromMyRegistrations } = await import(
+  "@/modules/registrations/consent-withdrawal"
+);
 const { withdrawOptionalData } = await import("@/modules/registrations/admin-service");
 const { readMyRegistrations } = await import("@/modules/registrations/my-registrations");
 const { readRaceDayContext } = await import("@/modules/registrations/token-actions");
@@ -175,6 +177,25 @@ describe("BR-REQ-031-05 the participant withdraws their own health note and soci
     await withdrawFromManageLink(db, secret, "health", NOW);
 
     expect(await withdrawFromManageLink(db, secret, "health", NOW)).toEqual({ ok: true, cleared: [] });
+    expect(await db.select().from(auditLogs)).toHaveLength(1);
+  });
+
+  /**
+   * §NNN — two presses at once, from two doors, are one withdrawal. Without the lock both read
+   * the note as still there and both wrote a row; with it the second waits for the first and
+   * finds nothing left to clear.
+   */
+  it("records one withdrawal when two presses land together", async () => {
+    const id = await seedRegistration();
+    const press = (via: "MANAGE_LINK" | "MY_REGISTRATIONS") =>
+      clearOptionalData(db, { registrationId: id, fields: ["health"], via, actorStaffUserId: null, now: NOW });
+
+    const results = await Promise.all([press("MANAGE_LINK"), press("MY_REGISTRATIONS")]);
+
+    const cleared = results.map((result) => result.cleared);
+    expect(cleared).toContainEqual(["health"]);
+    expect(cleared).toContainEqual([]);
+    expect((await row(id)).healthNotes).toBeNull();
     expect(await db.select().from(auditLogs)).toHaveLength(1);
   });
 

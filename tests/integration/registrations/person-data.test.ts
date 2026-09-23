@@ -8,6 +8,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import {
   canonicalLookupOf,
   exportPersonData,
@@ -153,6 +154,26 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect([entry.actorStaffUserId, entry.entityType, entry.entityId]).toEqual([admin.id, "participant", participantId]);
     expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, auditRows: 0 });
     expect(JSON.stringify(entry.metadataJson)).not.toMatch(/astm|gmail|Ana/);
+  });
+
+  /**
+   * §NNN — the export's row is about the person, so it carries their uuid in `entity_id` as well
+   * as in `participant_id`. The foreign key nulls only the second when the participant row goes;
+   * erasing the last registration must take the first as well.
+   */
+  it("forgets whose file it was when the erasure takes the person's last registration", async () => {
+    const admin = await staff("ADMIN");
+    await exportPersonData(db, admin, canonicalLookupOf("ana.pop@gmail.com"), NOW);
+
+    await deleteRegistrationByStaff(db, admin, registrationId, "cerere de ștergere", NOW);
+
+    expect(await db.select().from(participants).where(eq(participants.id, participantId))).toHaveLength(0);
+    const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
+    expect([entry.actorStaffUserId, entry.entityType, entry.participantId, entry.entityId]).toEqual([admin.id, "participant", null, null]);
+    // The row still says a file was made, and of how much.
+    expect(entry.metadataJson).toMatchObject({ registrations: 1 });
+    const trail = await db.select().from(auditLogs);
+    expect(JSON.stringify(trail)).not.toContain(participantId);
   });
 
   it.each(["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV"] as const)("is refused to a %s (BR-REQ-060-01)", async (role) => {

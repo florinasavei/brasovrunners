@@ -400,7 +400,7 @@
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
-      "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare.",
+      "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare. Copiile de siguranță ale bazei de date (istoricul de restaurare Neon) mai păstrează înscrierea până expiră, cel mult 7 zile — acolo nu e nimic de șters manual.",
       "rowActions": "Acțiuni pentru {name}",
       "clubMemberLabel": "Membri Brașov Runners",
       "bouncedLabel": "Email",
@@ -1731,7 +1731,7 @@
       "columnHealth": "Notă medicală",
       "present": "prezent",
       "empty": "Niciun participant confirmat încă.",
-      "count": "{count} participanți confirmați"
+      "count": "Participanți confirmați: {count}"
     },
     "person": {
       "title": "Toate datele unei persoane",

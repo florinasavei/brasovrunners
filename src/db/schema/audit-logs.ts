@@ -10,8 +10,10 @@ import { staffUsers } from "./staff-users";
  * except the retention sweep after three years and erasure: the point of the table is to
  * answer "who changed this, and when" months later, about an event that has already happened,
  * to a person who is asking why their place went away. Erasing a registration scrubs its rows
- * of *whom* — the participant id, and a name correction's before and after — and leaves *what*
- * and *who acted* (`audit/repository.ts#scrubRegistrationFromAudit`, §NNN).
+ * of *whom* — the participant id, a name correction's before and after, and the reasons typed
+ * before the erasure — and, with the person's last registration, their id from the rows about
+ * the person; it leaves *what* and *who acted* (`audit/repository.ts#scrubRegistrationFromAudit`
+ * and `#scrubParticipantFromAudit`, §NNN).
  *
  * What must never be written into `metadata_json` (§12.12, repeated here because this is the
  * file somebody will be looking at when they add a field): an email body, a raw token, the
