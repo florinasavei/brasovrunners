@@ -11,6 +11,7 @@ import {
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { PublicEvent } from "../repository";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 /**
  * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §250): the confirmed,
@@ -75,7 +76,8 @@ export default async function StartList({
         borderColor: "divider",
         borderRadius: 2,
         px: 2,
-        "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
+        "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+        ...DISCLOSURE_OPEN_ARROW,
       }}
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>

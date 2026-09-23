@@ -33,6 +33,7 @@ import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
 import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import {
   OPTION_GLYPH_SX,
   OPTION_LABEL_SX,
@@ -86,14 +87,9 @@ const disclosureSx = {
   borderColor: "divider",
   borderRadius: 1,
   px: 2,
-  "& > summary": {
-    cursor: "pointer",
-    // Height from padding, not a flex box: `display: flex` on a <summary> removes the
-    // disclosure triangle in Chrome and Safari, and a group that can fold should look like it.
-    py: 1.5,
-    listStyle: "revert",
-    ...TAP_TARGET,
-  },
+  // The shared summary (§NNN): a flex row with its own arrow on the heading's line.
+  "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+  ...DISCLOSURE_OPEN_ARROW,
 } as const;
 
 /**

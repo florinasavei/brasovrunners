@@ -20,9 +20,46 @@ import { TAP_TARGET } from "./tap-target";
  * The one deliberate exception is the events listing's "other events" heading, which hides
  * its marker from `sm` up because on a wide screen it is always open and is not a control.
  */
+/**
+ * The arrow on the heading's own line (§NNN; the owner, of the editor's "Rezumat" fold: "I would
+ * like this arrow to be aligned with the text", then "same for all accordions").
+ *
+ * The browser's marker is a list-item marker, and a summary whose child is a block — a
+ * Typography heading, a Stack — puts that block on the line *under* the marker, which is how
+ * every section title of the event editor came to sit below its triangle. So the summary is a
+ * flex row now and draws its own arrow: the native marker is hidden (`list-style: none`, the
+ * WebKit pseudo-element, `::marker`), and a CSS triangle in `currentColor` stands before the
+ * text, centred on it, turning a quarter when the fold is open. The warning above about
+ * `display: flex` removing the triangle is answered, not ignored: the triangle is ours now.
+ *
+ * The open turn is written twice because this object is used two ways — directly on a
+ * `component="summary"` (then `details[open] > &` is the summary), and spread under
+ * `"& > summary"` from the `<details>` (then `DISCLOSURE_OPEN_ARROW` at the details level does
+ * it, and the nested rule simply never matches).
+ */
+const ARROW = {
+  content: '""',
+  flex: "none",
+  width: 0,
+  height: 0,
+  borderStyle: "solid",
+  borderWidth: "0.32em 0 0.32em 0.5em",
+  borderColor: "transparent transparent transparent currentColor",
+} as const;
+
+/** Spread into a `<details>`'s `sx`: the arrow turns when the fold is open. */
+export const DISCLOSURE_OPEN_ARROW = { "&[open] > summary::before": { transform: "rotate(90deg)" } } as const;
+
 export const DISCLOSURE_SUMMARY_SX = {
   cursor: "pointer",
-  listStyle: "revert",
+  display: "flex",
+  alignItems: "center",
+  gap: 1,
+  listStyle: "none",
+  "&::-webkit-details-marker": { display: "none" },
+  "&::marker": { content: '""' },
+  "&::before": ARROW,
+  "details[open] > &::before": { transform: "rotate(90deg)" },
   py: 1.25,
   ...TAP_TARGET,
   "&:hover": { textDecoration: "underline" },
@@ -30,7 +67,7 @@ export const DISCLOSURE_SUMMARY_SX = {
 } as const;
 
 /** The same, addressed from the `<details>`: spread into a `Box component="details"`'s `sx`. */
-export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX } as const;
+export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX, ...DISCLOSURE_OPEN_ARROW } as const;
 
 /**
  * The backoffice fold, as a box (`DECISIONS.md` §269 and its follow-up; the owner, looking at
@@ -69,14 +106,10 @@ export const BOXED_DISCLOSURE_SX = {
     ...DISCLOSURE_SUMMARY_SX,
     mx: -2,
     px: 2,
-    // The marker inside the summary's own box, so it sits in the padding and not outside the
-    // border the negative margin just reached. It is what the HTML rendering section says a
-    // summary's marker is anyway (`disclosure-closed inside`); written out so the reset cannot
-    // take it back.
-    listStylePosition: "inside",
     bgcolor: "action.hover",
     borderRadius: "inherit",
   },
+  ...DISCLOSURE_OPEN_ARROW,
   "&[open] > summary": {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
