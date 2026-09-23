@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.52-2026-09-23
+
+- **The footer's marks are tappable on a phone, and Instagram shares the card.** The footer is one wrapping row — Strava, Facebook, Instagram each 44×44, never drawn over the text or the build badge (that is what stopped Amalia's tap). On a phone that can share a file, the Instagram button opens the sharing sheet with the square card; on a computer it stays a download and says so. Two of the evening's four reports turned out not to be the site: the blank Facebook card on QA is QA's `robots.txt` refusing every crawler (production's card is right), and the share buttons were already plain links — a real-iPhone check of the share row stays open. §299.
 ## BR-V1.51-2026-09-23
 
 - **Echipa marks who has no sign-in account, and `/admin/tasks` tests the invitation key** — each staff row whose address Zitadel has no account for carries a permanent "No sign-in account" chip with the remedy under the list, and one line above the table says when the accounts could not be checked and why, in Zitadel's words; the board gains "The invitation key", probed with the real user search on every open — green when it finds your account, red ("Not working", a new state) with the Org User Manager step when the key authenticates and sees nobody or is refused, open with the procedure when it is missing, and no verdict when Zitadel did not answer. §297.
