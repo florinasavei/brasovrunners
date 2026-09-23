@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.49-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.51-2026-09-23 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.49-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.51-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1341,7 +1341,8 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
 | Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |
-| Română / English | Programul evenimentului | kit pickup, briefing, start, cut-offs — each row becomes a calendar entry |
+| Când și unde | Program | kit pickup, briefing, start, cut-offs — one timed row each; every row becomes a calendar entry and is repeated in the reminder. The rows are the programme (§117). Change the event's date and the rows move with it (§295) |
+| Română / English | Note sub program | optional free text that appears beneath the rows on the page — how the kit is collected, the cut-off rules — per language (§294) |
 
 Then **Salvează**, read the page through **Previzualizare**, and press **Publică**. Both
 languages go live together; that is the rule, not a setting.

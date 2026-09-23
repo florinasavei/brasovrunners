@@ -12,7 +12,7 @@ import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
@@ -171,11 +171,11 @@ export default async function EventFieldsForm({
           {/* What the chosen type means, in one line; the comparison of all seven folded beside
               it (§170) — it used to be six lines under the select, whichever type was chosen. */}
           <TypeNote selectName="event.type" initialType={initialType} notes={typeNotes} />
-          <Box component="details" sx={DISCLOSURE_SX}>
+          <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <Typography component="summary" variant="body2">
               {t("editor.typeHelpSummary")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ pb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
               {t("editor.typeHelp")}
             </Typography>
           </Box>
@@ -267,7 +267,8 @@ export default async function EventFieldsForm({
           />
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
-              block. */}
+              block. The caption under the rows names the notes fold in the language panels, so
+              the two are read as one programme and its notes, not two programmes. */}
           <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={initialType}>
             <Stack spacing={1}>
               <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
@@ -276,8 +277,12 @@ export default async function EventFieldsForm({
               <Typography variant="body2" color="text.secondary">
                 {t("editor.programmeHelp")}
               </Typography>
+              {/* The rows follow the start date: `WallTimeField` posts `event.startsAt` as
+                  `event.startsAtDate` and `event.startsAtTime`, and the rows island listens to
+                  the date box by that name, the way `OnlyForType` reads the type select. */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
+                startDateName="event.startsAtDate"
                 labels={{
                   date: t("editor.programmeRows.date"),
                   time: t("editor.programmeRows.time"),
@@ -290,6 +295,9 @@ export default async function EventFieldsForm({
                   empty: t("editor.programmeRows.empty"),
                 }}
               />
+              <Typography variant="caption" color="text.secondary">
+                {t("editor.programmeNotesHint", { panel: t("editor.contentSection"), fold: t("editor.fields.scheduleNotes") })}
+              </Typography>
             </Stack>
           </OnlyForType>
         </Stack>

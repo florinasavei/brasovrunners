@@ -9,6 +9,7 @@ import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -158,7 +159,7 @@ export default async function DeskRow({
             render — which matters on a phone at a start line.
           */}
           {number !== null && number.settled && row.kind === "REAL" && (
-            <Box component="details" sx={{ mt: 1, "& > summary": { cursor: "pointer", minHeight: 44, py: 1 } }}>
+            <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
               <Typography component="summary" variant="body2" color="text.secondary">
                 {t("desk.showBib")}
               </Typography>
