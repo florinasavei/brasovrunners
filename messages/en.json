@@ -166,6 +166,7 @@
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
+      "openUntilShort": "Registration open until {date}",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
