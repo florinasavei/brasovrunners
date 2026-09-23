@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.51-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.52-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.51-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.52-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1292,7 +1292,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given a published article (M5), when it renders, then it contains an `Article` block with `datePublished` and `dateModified`.
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
-8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers, as 44-pixel buttons, the phone's own share sheet where `navigator.share` exists, Facebook, WhatsApp and the same card as a square picture under "Instagram", with "add to calendar" as its own row (2026-09-18, `DECISIONS.md` §90; 2026-09-19, §140).
+8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers, as 44-pixel buttons, the phone's own share sheet where `navigator.share` exists, Facebook, WhatsApp and, under "Instagram", the same card shared through the phone's own sheet where a file can be shared from a coarse pointer — otherwise offered as a download and labelled as one — with "add to calendar" as its own row; and the footer's three social marks are 44×44 items of one wrapping row, never drawn over the text or the build badge at any width (2026-09-18, `DECISIONS.md` §90; 2026-09-19, §140; 2026-09-23, §299).
 9. Given an event not marked as charging a fee, when its block renders, then it carries `isAccessibleForFree: true` and an `Offer` at price `0` in `RON` at the event's own page, valid from its publication; a `PAID` event carries neither; and given an event with co-hosts, then `organizer` is the club followed by each of them as an `Organization` with its page, in the club's own order — and a bare object rather than a list of one when the club hosts alone (2026-09-19, 2026-09-20, `DECISIONS.md` §121, §168).
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
