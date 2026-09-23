@@ -465,6 +465,64 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Astm");
   });
 
+  test("refuses somebody under fourteen on the race day, in the picker and on the server", async ({ page }) => {
+    /*
+      §NNN — "Min age must be 14". The picker's `max` is the latest birth date that is still
+      fourteen on this race's day, computed on the server from the arithmetic it refuses with, so
+      the browser refuses a thirteen-year-old first. Without that — JavaScript off, an old
+      browser, a bot — the server refuses, the summary names the birth date with the rule in a
+      sentence, and every answer comes back (§286).
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    // Said before the first field, and again under the birth date.
+    await expect(page.locator("#main")).toContainText("Participanți de la 14 ani");
+    await expect(page.locator("#main")).toContainText("Vârsta minimă este 14 ani împliniți în ziua cursei");
+
+    const birthDate = page.locator('[name="birthDate"]');
+    const max = await birthDate.getAttribute("max");
+    expect(max, "the picker carries the youngest birth date the race accepts").toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const dayAfter = new Date(`${max}T00:00:00Z`);
+    dayAfter.setUTCDate(dayAfter.getUTCDate() + 1);
+    const thirteen = dayAfter.toISOString().slice(0, 10);
+
+    await fillRequired(page);
+    await birthDate.fill(thirteen);
+    // A minor: the parent's box opens from the date (§188), and is answered, so that the age is
+    // the only thing wrong with this form.
+    await page.locator('[name="guardianName"]').fill("Ion Popescu");
+
+    // The browser refuses first: the date is past the picker's upper bound.
+    expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validity.rangeOverflow)).toBe(true);
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await expect(page.getByRole("heading", { name: /Aproape gata/ })).toHaveCount(0);
+    expect(page.url()).not.toContain("error=");
+
+    // And the server refuses the same, for the submission the browser's check never saw.
+    await page.locator("form").evaluate((form) => {
+      (form as HTMLFormElement).noValidate = true;
+    });
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await page.waitForURL(/error=VALIDATION_ERROR/);
+    expect(page.url()).toContain("birthDate");
+
+    const summary = page.locator("#registration-errors");
+    await expect(summary.getByRole("link", { name: "Data nașterii" })).toBeVisible();
+    await expect(summary).toContainText("Vârsta minimă de participare este 14 ani împliniți în ziua cursei");
+    await expect(birthDate).toHaveAttribute("aria-invalid", "true");
+
+    // Nothing typed is lost — and nothing typed is in the address.
+    await expect(birthDate).toHaveValue(thirteen);
+    await expect(page.locator('[name="lastName"]')).toHaveValue("Popescu");
+    await expect(page.locator('[name="guardianName"]')).toHaveValue("Ion Popescu");
+    await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
+    expect(page.url()).not.toContain(thirteen);
+  });
+
   test("does not render a field name it does not recognize", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

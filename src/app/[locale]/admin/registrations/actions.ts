@@ -17,6 +17,7 @@ import {
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -225,7 +226,15 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
     );
     outcome = { saved: "registrationCreated" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    /*
+      Under fourteen on the race day (§NNN) is the one refusal here about a fact the volunteer
+      typed and can check with the person in front of them, so it says so — the generic "check
+      what you entered" would send them hunting through a form that is correct.
+    */
+    outcome =
+      isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE)
+        ? { error: "UNDER_MINIMUM_AGE" }
+        : outcomeOf(error);
   }
 
   // A failure goes back to the form, which still has the event preselected; a success goes to

@@ -342,6 +342,7 @@
       "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
+      "birthDateMinimumAge": "Optional here. The minimum age is 14 on the day of the race: a date that gives less is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
       "listOptIn": "The person wants to appear on the public participant list",
@@ -573,7 +574,8 @@
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
-      "LEGAL_TERMS_IN_FORCE": "This version of the terms has been in force, so it cannot be deleted: whoever registered in that window accepted it, and a registration does not record which version of the terms it was. You can withdraw it instead — it stays on the record and is offered to nobody."
+      "LEGAL_TERMS_IN_FORCE": "This version of the terms has been in force, so it cannot be deleted: whoever registered in that window accepted it, and a registration does not record which version of the terms it was. You can withdraw it instead — it stays on the record and is offered to nobody.",
+      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet 14 on the day of the race, and 14 is the minimum age to take part. Check the date with them."
     },
     "editor": {
       "eventSection": "Event details",
@@ -2121,6 +2123,7 @@
       "fieldsIntro": "Check these fields:",
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "emergencySame": "The emergency contact needs a different number from yours — nobody can ring your own phone if something happens to you.",
+      "tooYoung": "The minimum age to take part is 14 on the day of the race.",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again.",
@@ -2142,7 +2145,8 @@
     "displayName": "Public display name",
     "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
     "birthDate": "Date of birth",
-    "birthDateHelp": "Age categories are worked out against the day of the race.",
+    "birthDateHelp": "The minimum age is 14 on the day of the race. Age categories are worked out against that day too.",
+    "ageRule": "Participants from age 14; under 18, a parent registers them.",
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Female",

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { isMinorOn } from "./domain/age";
+import { ageOn, isMinorOn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -220,6 +220,46 @@ const guardianRule = (
     });
   }
 };
+
+/**
+ * The marker a refusal for age carries beside `birthDate` (§NNN), in the shape of §231's
+ * `emergencySame`: the field name is what lets the error summary link to the box, and this is
+ * what lets the page say *which* rule refused it — "complete this field correctly" about a real
+ * birth date would be untrue. Not a field, so `parseInvalidFields` drops it from the summary.
+ */
+export const UNDER_MINIMUM_AGE = "tooYoung";
+
+/**
+ * Fourteen on the day of the event (§NNN, `MIN_PARTICIPANT_AGE`).
+ *
+ * A factory, because the rule needs the one thing this schema does not have: the event. The
+ * service knows it (`submitRegistration`) and adds this to whichever schema the caller gets, so
+ * the public form, a staff entry, the desk's walk-in, a restart and a TEST row all meet it
+ * through the one door every registration already passes (`AGENTS.md` §12.6: `kind` decides
+ * nothing here either).
+ *
+ * *Only when a birth date is given.* The public schema always has one; the staff schema may not
+ * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
+ * the person, and refusing the row for a detail nobody was told would lose the registration,
+ * which is the rule that criterion keeps. A malformed date is left to the schema's own message
+ * (`ageOn` answers null), so the summary never gives a second, untrue reason.
+ *
+ * Counted against the day of the event, where the guardian rule above counts against today:
+ * fourteen is about the day somebody runs; eighteen is about who fills the form in.
+ */
+export function minimumAgeRule(eventDay: string) {
+  return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
+    if (!value.birthDate) return;
+    const age = ageOn(value.birthDate, eventDay);
+    if (age === null || age >= MIN_PARTICIPANT_AGE) return;
+    ctx.addIssue({
+      code: "custom",
+      path: ["birthDate"],
+      message: `a participant must be at least ${MIN_PARTICIPANT_AGE} on the day of the event (${eventDay})`,
+    });
+    ctx.addIssue({ code: "custom", path: [UNDER_MINIMUM_AGE], message: "under the minimum age" });
+  };
+}
 
 /**
  * An emergency contact is somebody **else** (`DECISIONS.md` §228).

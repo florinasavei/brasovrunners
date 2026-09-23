@@ -159,7 +159,8 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
     const { row, secret } = await awaitingDeclaration(event, {
       firstName: "Maria",
       lastName: "Popescu",
-      birthDate: "2014-03-02",
+      // Fifteen on the race day: a minor, over the minimum age of fourteen (§NNN).
+      birthDate: "2011-03-02",
       email: "maria@example.ro",
       guardianName: "Ion Popescu",
     });

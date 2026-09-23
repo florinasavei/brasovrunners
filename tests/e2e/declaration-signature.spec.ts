@@ -43,7 +43,10 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       firstName: "Florin",
       lastName: `Munca ${suffix}`,
       email,
-      birthDate: minor ? "2014-05-17" : "1990-05-17",
+      // A minor is fourteen to seventeen since the minimum age (§NNN): fifteen years before this
+      // year is fourteen or fifteen today and on any race day the seed can hold, and still under
+      // eighteen, whatever year the suite runs in.
+      birthDate: minor ? `${new Date().getFullYear() - 15}-05-17` : "1990-05-17",
       city: "Brașov",
       phone: "+40711111111",
       emergencyContactName: "Ion Popescu",
