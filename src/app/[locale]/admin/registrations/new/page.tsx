@@ -107,25 +107,21 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           {fromDesk && <input type="hidden" name="back" value="desk" />}
 
           <Stack spacing={2}>
-            <RecallField
-              select
-              name="eventId"
+            {/* The event and the birth date know about each other (§324): the date box's upper
+                bound is the latest birth date still fourteen on the chosen event's day (§321). */}
+            <StaffEventSelect
               label={t("registrations.event")}
-              defaultValue={eventId ?? events[0].id}
-              required
-            >
-              {events.map((event) => (
-                <MenuItem key={event.id} value={event.id}>
-                  {event.title ?? event.id} ·{" "}
-                  {format.dateTime(event.startsAt, {
-                    timeZone: event.timezone,
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </MenuItem>
-              ))}
-            </RecallField>
+              defaultValue={selectedEventId}
+              events={events.map((event) => ({
+                id: event.id,
+                label: `${event.title ?? event.id} · ${format.dateTime(event.startsAt, {
+                  timeZone: event.timezone,
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}`,
+              }))}
+            />
 
             <RecallField name="firstName" label={rt("firstName")} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
           <RecallField name="lastName" label={rt("lastName")} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
@@ -138,13 +134,22 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
           {/* Optional here too, and when it is given the server counts it (§321): under fourteen on
               the race day is refused, so the field says so before the volunteer presses. */}
-          <RecallField
-            name="birthDate"
-            type="date"
-            label={rt("birthDate")}
-            helperText={t("registrations.birthDateMinimumAge")}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+          <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
+          {/*
+            The parent or guardian (§108), shown when the birth date says under eighteen today —
+            the public form's own island and rule (§188), so a fourteen-to-seventeen-year-old can
+            be entered at the desk with the date rather than refused for a box that was not there
+            (§324). Open whatever the date says when a refusal named it.
+          */}
+          <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={false}>
+            <RecallField
+              name="guardianName"
+              label={rt("guardianName")}
+              helperText={rt("guardianNameHelp")}
+              autoComplete="off"
+              {...textFieldConstraints(staffRegistrationConstraints("guardianName"))}
+            />
+          </GuardianForMinor>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />

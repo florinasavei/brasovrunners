@@ -34,8 +34,8 @@ function controls(page: Page) {
     footer,
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă/i }),
-    // On the bar since §323: "GDPR" on a phone, "Confidențialitate" from `sm`, and named for
-    // the notice at every width, both visible words inside the name (review finding).
+    // On the bar since §323, reading "Confidențialitate" at every width since §324, and named
+    // for the notice, the visible word inside the name (WCAG 2.5.3).
     privacy: footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language: footer.getByRole("navigation", { name: "Limbă" }),
@@ -73,6 +73,8 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       // Criterion 6, and §323: the notice is reachable from every page without opening anything.
       expect(boxes[2]![1].height).toBeGreaterThanOrEqual(44);
       await privacy.click({ trial: true });
+      // §324: it reads as the notice's name on a phone too, never "GDPR" alone.
+      await expect(privacy).toHaveText("Confidențialitate");
 
       for (let i = 0; i < count; i++) {
         const mark = marks.nth(i);
@@ -86,13 +88,19 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       }
       if ((await language.count()) === 1) boxes.push(["the language", await boxOf(language, "the language")]);
 
-      // One line while the fold is closed: every control's centre is on the bar's first 44px.
-      // A wrapping row puts what does not fit on a second line without overlapping anything,
+      // Every control on its intended line while the fold is closed: one line from `sm` (600px)
+      // up; on a phone two, the privacy notice and the language on the second (§324). A
+      // wrapping row puts what does not fit on a further line without overlapping anything,
       // which is exactly the failure a pairwise check would wave through.
       const bar = await boxOf(footer, "the footer");
+      const phone = width < 600;
+      const secondLine = new Set(phone ? ["the privacy notice", "the language"] : []);
       for (const [name, box] of boxes) {
-        expect(Math.abs(box.y + box.height / 2 - (bar.y + 22)), `${name} is on the bar's line at ${width}px`).toBeLessThan(8);
+        const line = secondLine.has(name) ? 66 : 22;
+        expect(Math.abs(box.y + box.height / 2 - (bar.y + line)), `${name} is on the bar's line at ${width}px`).toBeLessThan(8);
       }
+      // And no third line: the bar is one or two tap targets tall, nothing more.
+      expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(phone ? 90 : 46);
 
       if ((await badge.count()) === 1) boxes.push(["the build badge", await boxOf(badge, "the build badge")]);
       expectDisjoint(boxes, width);

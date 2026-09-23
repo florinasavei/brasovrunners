@@ -2199,7 +2199,6 @@
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "Confidențialitate",
-    "privacyLinkShort": "GDPR",
     "privacyLinkName": "Nota de confidențialitate (GDPR)",
     "termsLinkLabel": "Termeni de concurs",
     "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",

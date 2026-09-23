@@ -25,7 +25,9 @@ const SWITCH_WIDTH = 44;
 const MARK_TARGET = 44;
 
 /**
- * The footer: one thin line, with the social marks always on it and everything else behind it.
+ * The footer: one thin line, with the social marks always on it and everything else behind it
+ * — two lines on a phone since §324, where the privacy notice, named as the notice, and the
+ * language share the second (below).
  *
  * Six things share the line, as one flex row that wraps. In the bottom-left corner, the
  * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
@@ -120,11 +122,11 @@ export default async function SiteFooter() {
         <Box
           component="details"
           sx={{
-            // On a phone, whatever the switch, the marks and the language leave: a zero basis,
-            // grown. A wrapping row assigns items to lines by their *hypothetical* size before
-            // anything shrinks, so a fold sized by its summary would push the language onto a
-            // second line at 320px however much it was allowed to shrink — a basis of zero is
-            // the one size that never does. From `sm` up there is room, no language here, and
+            // On a phone, whatever the switch and the marks leave: a zero basis, grown. A
+            // wrapping row assigns items to lines by their *hypothetical* size before anything
+            // shrinks, so a fold sized by its summary would push the marks onto the second line
+            // at 320px however much it was allowed to shrink — a basis of zero is the one size
+            // that never does. From `sm` up there is room, no language here, and
             // the fold is only as wide as its summary, so the marks follow the words rather
             // than sit at the far right, where the build badge floats from `md`.
             flex: { xs: "1 1 0%", sm: "0 1 auto" },
@@ -154,8 +156,8 @@ export default async function SiteFooter() {
               width: "fit-content",
               // Never wider than the fold it is in: when the line is short the label is cut
               // with an ellipsis rather than pushing a mark off the bar. Its padding counts in
-              // that width (`border-box`): at 320 pixels, beside the privacy link (§323), the fold
-              // is 54 pixels and a content-box summary ran eight pixels onto the link.
+              // that width (`border-box`): a content-box summary in a narrow fold ran eight
+              // pixels onto its neighbour (§323).
               maxWidth: "100%",
               boxSizing: "border-box",
               whiteSpace: "nowrap",
@@ -205,19 +207,26 @@ export default async function SiteFooter() {
           for the information to be easy to reach, and a closed `<details>` hides it from sight
           and from the accessibility tree alike. Its own width, never shrunk, like the marks.
 
-          On a phone the line has the switch, the summary, three marks and the language in 320
-          pixels, and "Confidențialitate" alone is a third of it — so there it says "GDPR", the
-          word Romanian sites use for the same link, and the full label from `sm` up. Nothing
-          that names the notice fits: the fold beside it is 54 pixels at 320 with "GDPR", and
-          "Date personale" is some fifty pixels wider, which would leave the summary nothing.
+          It reads as the notice's name at every width, "Confidențialitate" (§324; review
+          finding: a phone said "GDPR", which names a regulation, not the page). On a phone the
+          line already holds the switch, the summary, three marks and the language in 320
+          pixels, and "Confidențialitate" is a third of that — so there the bar takes a second
+          line: the notice at its start and the language in the bottom-right corner (§262),
+          after a zero-height break that fills the first line. From `sm` up it is one line again,
+          the link beside the fold, the break hidden.
 
           The link's name is the notice's own at every width (review finding: a screen reader
-          said "GDPR, link"), and it keeps both visible words inside it, so somebody who says
+          said "GDPR, link"), and it keeps the visible word inside it, so somebody who says
           what they see to voice control still hits it (WCAG 2.5.3, label in name).
         */}
         <Box
+          aria-hidden
+          sx={{ display: { xs: "block", sm: "none" }, order: 2, flexBasis: "100%", height: 0 }}
+        />
+        <Box
           sx={{
             flex: "0 0 auto",
+            order: { xs: 3, sm: 0 },
             height: BAR_HEIGHT,
             display: "flex",
             alignItems: "center",
@@ -225,7 +234,8 @@ export default async function SiteFooter() {
               display: "inline-flex",
               alignItems: "center",
               minHeight: BAR_HEIGHT,
-              px: { xs: 0.5, sm: 1 },
+              // On the phone's second line, under the switch's corner and not glued to the edge.
+              px: { xs: 1.5, sm: 1 },
               color: "text.secondary",
               fontSize: "0.8125rem",
               whiteSpace: "nowrap",
@@ -233,12 +243,7 @@ export default async function SiteFooter() {
           }}
         >
           <Link href="/legal/privacy" aria-label={legal("privacyLinkName")}>
-            <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
-              {legal("privacyLinkShort")}
-            </Box>
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {legal("privacyLinkLabel")}
-            </Box>
+            {legal("privacyLinkLabel")}
           </Link>
         </Box>
 
@@ -250,6 +255,8 @@ export default async function SiteFooter() {
             sx={{
               // Their own width, never shrunk: three 44px targets side by side.
               flex: "0 0 auto",
+              // On a phone, the end of the first line, before the break (§324).
+              order: { xs: 1, sm: 0 },
               // On a phone the free space of the line goes before the marks, so they sit at
               // the right beside the language; from `sm` up they follow the summary.
               ml: { xs: "auto", sm: 1 },
@@ -291,6 +298,8 @@ export default async function SiteFooter() {
           sx={{
             display: { xs: "flex", sm: "none" },
             flex: "0 0 auto",
+            // The second line's far end, beside the privacy notice (§324).
+            order: 4,
             ml: "auto",
             height: BAR_HEIGHT,
             alignItems: "center",
