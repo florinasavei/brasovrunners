@@ -10,7 +10,8 @@ import Typography from "@mui/material/Typography";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
+import { useRecall } from "@/shared/forms/recall";
 import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
 
 /**
@@ -41,7 +42,7 @@ import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
  * still carries the text it was handed, so a save writes the document back unchanged rather than
  * blanking a legal text.
  */
-export default function LegalBodyEditor({
+function LegalBodyEditorIsland({
   name,
   initialText,
   label,
@@ -290,4 +291,16 @@ function Control({
       {text}
     </ToggleButton>
   );
+}
+
+/**
+ * After a refused submit the text comes back as it was typed (`DECISIONS.md` §305): the
+ * recalled text is the starting point, keyed on the answer so the island re-mounts from it.
+ * A legal body runs to tens of kilobytes, which is why this is the action's returned state
+ * and not a cookie.
+ */
+export default function LegalBodyEditor(props: ComponentProps<typeof LegalBodyEditorIsland>) {
+  const recall = useRecall();
+  const recalled = recall.value(props.name);
+  return <LegalBodyEditorIsland key={recall.generation} {...props} initialText={recalled ?? props.initialText} />;
 }

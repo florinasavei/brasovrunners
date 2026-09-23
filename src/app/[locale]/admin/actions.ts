@@ -7,7 +7,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import {
-  createEvent,
+  createEventAndPublish,
   deleteEvent,
   duplicateEvent,
   hardDeleteEvent,
@@ -18,6 +18,9 @@ import {
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
+import { eventFormFieldName } from "@/modules/content/events/form-names";
+import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/ui/CreateAndPublishButton";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
@@ -63,6 +66,12 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
  * Failures come back as an error code in the query string rather than as an exception page.
  * The code is language-neutral (AGENTS.md §14.3) and the backoffice translates it, so no SQL,
  * no stack and no internal message reaches the browser.
+ *
+ * **A form that carries what somebody typed answers a refusal differently** (`DECISIONS.md`
+ * §305): the actions behind `ActionForm` — the event's create and save, adding a colleague,
+ * erasing an event — take `useActionState`'s two arguments and *return* the refusal
+ * (`shared/forms/outcome.ts#refused`) instead of redirecting, so every box comes back filled.
+ * A success still redirects exactly where it always did.
  */
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -96,6 +105,9 @@ function outcomeOf(error: unknown): { error: string } {
 function editorPath(locale: Locale, eventId: string): string {
   return getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } });
 }
+
+/** The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). */
+const eventFormFieldNames = (error: DomainError) => error.fields.map(eventFormFieldName);
 
 /**
  * The whole event row as the form sends it — one reader, so the create form and the edit form
@@ -433,8 +445,12 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
  *
  * `event.expectedVersion` is absent for an Author, who sees no settings panel; the service then
  * writes no event row rather than assuming a version.
+ *
+ * A refusal — a field the browser could not check, a stale version — comes back as the form's
+ * state with every box still filled, the acknowledgement tick included (§305); a save that
+ * went through redirects to the editor with its banner, as it always has.
  */
-export async function saveEventAndTranslationsAction(form: FormData): Promise<void> {
+export async function saveEventAndTranslationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -465,24 +481,47 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
       offered: offered > 0 ? String(offered) : undefined,
     };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
   backTo(path, outcome);
 }
 
-export async function createEventAction(form: FormData): Promise<void> {
+/**
+ * A new event — and, on the second button, published in the same breath (§305; the owner:
+ * "ar trebui sa pot crea si publica dintr-un foc!").
+ *
+ * A refusal returns the form's state so every box comes back as typed (§305): the settings,
+ * both languages with their rich texts, the repeat rule, the programme's rows. Nothing about
+ * the event is in the URL. A create that went through opens the new event's page, as it
+ * always did — with the banner saying whether it was also published, and if not, why not
+ * (`createEventAndPublish` commits the draft and hands back the guard's refusal).
+ */
+export async function createEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
   let createdId: string | undefined;
+  let published = false;
+  let notPublished: string | undefined;
   let repeated = 0;
   let outcome: { error?: string; saved?: string; created?: string } | undefined;
   try {
     const actor = await requireStaff();
+
+    // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
+    // event page offers, made right away. The tick decides whether this event repeats at all
+    // (§170); the cadence only says how. Without it the recurrence fields are hidden, and a
+    // hidden field's value means nothing. Checked before anything is written, so a bad
+    // cadence refuses the whole form with the boxes still filled rather than after a create.
+    const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
+    if (cadence && cadence !== "NONE" && !REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
+      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences", ["repeat.cadence"]);
+    }
+
     // The create form renders the editor's own language panels, so each language is read
     // with the save's reader — the rich summary, the description, the folds — and not a
     // title-slug-excerpt triple of its own that would drift from the editor by the next field.
-    const created = await createEvent(getDb(), {
+    const result = await createEventAndPublish(getDb(), {
       actor,
       fields: {
         ...eventFieldsFrom(form),
@@ -491,38 +530,38 @@ export async function createEventAction(form: FormData): Promise<void> {
           en: translationInputFrom(form, "en"),
         },
       },
+      // The second button's marker: "create and publish". The service asks the role itself.
+      publish: text(form, THEN_FIELD) === THEN_PUBLISH,
     });
-    createdId = created.id;
+    createdId = result.event.id;
+    published = result.published;
+    notPublished = result.refusal?.code;
 
-    // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
-    // event page offers, made right away, as drafts — a new event is a draft, and copies of a
-    // draft are drafts. The list's "publish the ticked ones" takes the whole series live.
-    // The tick decides whether this event repeats at all (§170); the cadence only says how.
-    // Without it the recurrence fields are hidden, and a hidden field's value means nothing.
-    const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
+    // The series, as drafts — or live, when the source has just gone live: the rule's own
+    // `publish` flag is what §122 already does for a published source, and nothing here
+    // knows a second way.
     if (cadence && cadence !== "NONE") {
-      if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
-        throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
-      }
-      const result = await repeatEvent(getDb(), {
+      const series = await repeatEvent(getDb(), {
         actor,
-        eventId: created.id,
-        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: false },
+        eventId: result.event.id,
+        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: published },
       });
-      repeated = result.created;
+      repeated = series.created;
     }
   } catch (error) {
+    // Nothing written yet: the form comes back with everything typed. A create that succeeded
+    // but whose series did not opens the event, with the series' own error, as before.
+    if (!createdId) return refused(error, form, { fieldNames: eventFormFieldNames });
     outcome = outcomeOf(error);
   }
 
-  // A failed create goes back to the form it came from; a successful one opens the new event,
-  // which is where every field the short form did not ask for is filled in. A create that
-  // succeeded but whose series did not opens the event too, with the series' own error.
-  if (outcome && !createdId) backTo(getPathname({ locale, href: "/admin/events/new" }), outcome);
   if (outcome) backTo(editorPath(locale, createdId as string), outcome);
   backTo(editorPath(locale, createdId as string), {
-    saved: "created",
+    saved: published ? "createdPublished" : "created",
     created: repeated > 0 ? String(repeated) : undefined,
+    // Why the second button did not publish: the code, never a word of what was typed. The
+    // editor names what is missing in its own alert (§170).
+    notPublished,
   });
 }
 
@@ -674,13 +713,9 @@ export async function deleteEventAction(form: FormData): Promise<void> {
  * explains what would be destroyed is what the organizer reads the refusal on. On success
  * there is no event to go back to, so the list is where it lands.
  */
-export async function hardDeleteEventAction(form: FormData): Promise<void> {
+export async function hardDeleteEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
-  const erasePath = getPathname({
-    locale,
-    href: { pathname: "/admin/events/[id]/erase", params: { id: eventId } },
-  });
 
   let erased = 0;
   try {
@@ -694,7 +729,9 @@ export async function hardDeleteEventAction(form: FormData): Promise<void> {
     });
     erased = result.registrationsErased;
   } catch (error) {
-    backTo(erasePath, outcomeOf(error));
+    // The reason comes back; the typed title never does (§305) — it is the guard, and it is
+    // meant to be typed again (`NEVER_KEPT`).
+    return refused(error, form);
   }
 
   redirect(
@@ -762,7 +799,8 @@ export async function withdrawInterestAction(form: FormData): Promise<void> {
   backTo(path, outcome);
 }
 
-export async function inviteStaffAction(form: FormData): Promise<void> {
+/** Adding a colleague (§123). A refused address or name comes back in its box (§305). */
+export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
@@ -785,7 +823,7 @@ export async function inviteStaffAction(form: FormData): Promise<void> {
         : ({ kind: "unconfigured" } as const);
     outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   backTo(path, outcome);

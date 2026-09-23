@@ -7,12 +7,36 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
+import { useRecall } from "@/shared/forms/recall";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
+
+/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§305). */
+function recalledRows(names: string[], value: (name: string) => string | undefined): ScheduleRowValue[] {
+  const rows: ScheduleRowValue[] = [];
+  for (const name of names) {
+    const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime|ro|en|place)$/.exec(name);
+    if (!match) continue;
+    const index = Number(match[1]);
+    rows[index] = { ...(rows[index] ?? EMPTY), [match[2]]: value(name) ?? "" };
+  }
+  return rows.filter((row) => row !== undefined);
+}
+
+/**
+ * The programme's rows, coming back as they were typed after a refused submit (§305): the
+ * island below holds the rows in state of its own, so it is keyed on the answer and handed the
+ * recalled rows as its starting point. With nothing recalled this is the island as it was.
+ */
+export default function ScheduleRowsEditor(props: ComponentProps<typeof ScheduleRowsEditorIsland>) {
+  const recall = useRecall();
+  const initial = recall.has ? recalledRows(recall.names(), recall.value) : props.initial;
+  return <ScheduleRowsEditorIsland key={recall.generation} {...props} initial={initial} />;
+}
 
 /**
  * The form's start-date box, by name. The rows and the start date share nothing but the form:
@@ -44,7 +68,7 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
  * box is the one controlled input for that reason; the rest stay uncontrolled. The form still
  * posts whatever is in the boxes — nothing below the form changed.
  */
-export default function ScheduleRowsEditor({
+function ScheduleRowsEditorIsland({
   initial,
   labels,
   startDateName,

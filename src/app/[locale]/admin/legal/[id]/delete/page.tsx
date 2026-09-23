@@ -1,9 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -176,8 +179,15 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
             No dialog and no tick: the confirmation *is* the typed phrase, checked on the server.
             A tick the server does not read would be decoration (BR-REQ-060-01), and the phrase
             carries the version number because every version of this document has the same title.
+
+            A refusal keeps the reason and asks for the phrase again (§305): the phrase is the
+            guard, and a plain `TextField` here is what says so — it is never recalled.
           */}
-          <Box component="form" action={deleteApprovedLegalVersionAction}>
+          <ActionForm
+            action={deleteApprovedLegalVersionAction}
+            messages={await refusalMessages({ typedConfirmation: t("legal.erase.phraseLabel"), reason: t("legal.erase.reasonLabel") })}
+            data-testid="legal-erase-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="versionId" value={version.id} />
             <Stack spacing={2}>
@@ -189,7 +199,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 autoComplete="off"
                 slotProps={{ htmlInput: { maxLength: 100 } }}
               />
-              <TextField
+              <RecallField
                 name="reason"
                 label={t("legal.erase.reasonLabel")}
                 helperText={t("legal.erase.reasonHelp")}
@@ -197,12 +207,16 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
               />
               <Box>
-                <Button type="submit" color="error" variant="contained" sx={{ minHeight: 44 }}>
-                  {t("legal.erase.action")}
-                </Button>
+                <SubmitButton
+                  label={t("legal.erase.action")}
+                  pendingLabel={t("legal.erase.action")}
+                  incompleteHintNamed={t("forms.incompleteFirst")}
+                  color="error"
+                  size="medium"
+                />
               </Box>
             </Stack>
-          </Box>
+          </ActionForm>
         </>
       )}
     </Stack>

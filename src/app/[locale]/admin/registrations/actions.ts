@@ -19,6 +19,7 @@ import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -174,7 +175,12 @@ function optional(form: FormData, key: string): string | undefined {
   return trimmed === "" ? undefined : trimmed;
 }
 
-export async function createRegistrationAction(form: FormData): Promise<void> {
+/**
+ * A registration entered by staff (BR-REQ-037-05). A refusal — a duplicate, a missing relay
+ * tick, an address the service will not take — comes back with every box still filled
+ * (`DECISIONS.md` §305); the event stays selected because it is one of the boxes.
+ */
+export async function createRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -224,56 +230,47 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
     );
     outcome = { saved: "registrationCreated" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // The form comes back as typed, the event still selected (§305).
+    return refused(error, form);
   }
 
-  // A failure goes back to the form, which still has the event preselected; a success goes to
-  // where the new row is visible with the status it actually landed in — the desk, when the
-  // form was opened from there, otherwise the list.
+  // A success goes to where the new row is visible with the status it actually landed in —
+  // the desk, when the form was opened from there, otherwise the list.
   const fromDesk = text(form, "back") === "desk";
-  if (outcome.error) {
-    backTo(getPathname({ locale, href: "/admin/registrations/new" }), {
-      ...outcome,
-      eventId,
-      back: fromDesk ? "desk" : undefined,
-    });
-  }
   if (fromDesk) {
     backTo(getPathname({ locale, href: "/admin/checkin" }), { ...outcome, eventId });
   }
   backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
-export async function correctRegisteredNameAction(form: FormData): Promise<void> {
+/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§305). */
+export async function correctRegisteredNameAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaffRole("ADMIN");
     await correctRegisteredName(getDb(), actor, registrationId, text(form, "registeredName"), new Date());
-    outcome = { saved: "nameCorrected" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form, { fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" ? ["registeredName"] : failure.fields) });
   }
 
-  backTo(detailPath(locale, registrationId), outcome);
+  backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
-export async function cancelRegistrationAction(form: FormData): Promise<void> {
+/** Cancel, with a reason. A refusal keeps the reason typed (§305). */
+export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaffRole("ADMIN");
     await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
-    outcome = { saved: "registrationCancelled" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
-  backTo(detailPath(locale, registrationId), outcome);
+  backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
 }
 
 /**
@@ -434,22 +431,24 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
   redirect(`${returnTo}${separator}saved=registrationsErased&erased=${erased}&failed=${failed}#admin-alert`);
 }
 
-export async function deleteRegistrationAction(form: FormData): Promise<void> {
+/**
+ * Erase, from the registration's own page (BR-REQ-037-06). A refusal keeps the reason and asks
+ * for the "I understand" tick again (§305): the tick is the guard here and is never recalled.
+ */
+export async function deleteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaffRole("ADMIN");
     await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
-    outcome = { saved: "registrationDeleted" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   // Always back to the list, never to the detail page: on success that page describes a row
   // that no longer exists, and a 404 is a poor way to learn a deletion worked.
-  backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
+  backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
 }
 
 /**

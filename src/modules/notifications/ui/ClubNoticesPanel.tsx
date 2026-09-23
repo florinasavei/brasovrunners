@@ -1,11 +1,13 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
 import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -76,10 +78,22 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           {t("emails.clubNotices.readOnly")}
         </Typography>
       ) : (
-      <Box component="form" action={updateClubNoticesAction} sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1.5 }}>
+      {/* A refused list comes back as typed (§305). */}
+      <ActionForm
+        action={updateClubNoticesAction}
+        messages={await refusalMessages({
+          declarationsTo: t("emails.clubNotices.declarationsTo"),
+          declarationsCc: t("emails.clubNotices.declarationsCc"),
+          declarationsBcc: t("emails.clubNotices.declarationsBcc"),
+          confirmationsTo: t("emails.clubNotices.confirmationsTo"),
+          participantsBcc: t("emails.clubNotices.participantsBcc"),
+        })}
+        data-testid="club-notices-form"
+      >
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
-          <TextField
+          <RecallField
             name="declarationsTo"
             label={t("emails.clubNotices.declarationsTo")}
             defaultValue={notices.declarations.to}
@@ -87,7 +101,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             helperText={t("emails.clubNotices.declarationsToHelp")}
             slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false, inputMode: "email" } }}
           />
-          <TextField
+          <RecallField
             name="declarationsCc"
             label={t("emails.clubNotices.declarationsCc")}
             defaultValue={formatAddressList(notices.declarations.cc)}
@@ -99,7 +113,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           <Alert severity="warning" sx={{ py: 0.5 }}>
             {t("emails.clubNotices.bccWarning")}
           </Alert>
-          <TextField
+          <RecallField
             name="declarationsBcc"
             label={t("emails.clubNotices.declarationsBcc")}
             defaultValue={formatAddressList(notices.declarations.bcc)}
@@ -107,7 +121,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             helperText={t("emails.clubNotices.declarationsBccHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
-          <TextField
+          <RecallField
             name="confirmationsTo"
             label={t("emails.clubNotices.confirmationsTo")}
             defaultValue={formatAddressList(notices.confirmations.to)}
@@ -129,7 +143,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           <Alert severity="warning" sx={{ py: 0.5 }}>
             {t("emails.clubNotices.participantsBccWarning")}
           </Alert>
-          <TextField
+          <RecallField
             name="participantsBcc"
             label={t("emails.clubNotices.participantsBcc")}
             defaultValue={formatAddressList(notices.participants.bcc)}
@@ -141,6 +155,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} />
           </Box>
         </Stack>
+      </ActionForm>
       </Box>
       )}
     </Panel>

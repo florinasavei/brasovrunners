@@ -14,13 +14,16 @@ import {
 } from "@/modules/content/pages/service";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
  * The page editor's four writes (BR-REQ-050-03).
  *
  * Same shape as the event editor's actions: every outcome is a redirect carrying a
  * language-neutral code, never a thrown error rendered raw, so `AGENTS.md` §14.3 holds — the
- * code becomes a sentence in the page that receives it.
+ * code becomes a sentence in the page that receives it. The two that carry what somebody
+ * typed — create and save — return a refusal instead of redirecting, so every box comes back
+ * filled (`DECISIONS.md` §305).
  */
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -60,9 +63,8 @@ function readFields(form: FormData) {
   };
 }
 
-export async function createPageAction(form: FormData): Promise<void> {
+export async function createPageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin/pages" });
 
   let pageId: string;
   try {
@@ -70,23 +72,22 @@ export async function createPageAction(form: FormData): Promise<void> {
     const page = await createPage(getDb(), { actor, fields: readFields(form) });
     pageId = page.id;
   } catch (error) {
-    backTo(getPathname({ locale, href: "/admin/pages/new" }), outcomeOf(error));
+    // The form comes back with everything typed, the rich text included (§305).
+    return refused(error, form);
   }
 
   // Straight to the new page's own editor, the way creating an event does: the next thing an
   // organizer wants is to keep writing, not to look at a list.
-  void listPath;
   redirect(
     `${getPathname({ locale, href: { pathname: "/admin/pages/[id]", params: { id: pageId } } })}?saved=created#admin-alert`,
   );
 }
 
-export async function savePageAction(form: FormData): Promise<void> {
+export async function savePageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const pageId = text(form, "pageId");
   const path = getPathname({ locale, href: { pathname: "/admin/pages/[id]", params: { id: pageId } } });
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
     await savePage(getDb(), {
@@ -95,12 +96,11 @@ export async function savePageAction(form: FormData): Promise<void> {
       expectedVersion: Number(text(form, "expectedVersion")),
       fields: readFields(form),
     });
-    outcome = { saved: "page" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
-  backTo(path, outcome);
+  backTo(path, { saved: "page" });
 }
 
 export async function transitionPageAction(form: FormData): Promise<void> {

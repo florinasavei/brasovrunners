@@ -43,6 +43,9 @@ import {
   EDITORIAL_TRANSITION_LABEL,
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
+import ActionForm from "@/shared/forms/ActionForm";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitIconButton from "@/shared/ui/SubmitIconButton";
 import type { ActionIconName } from "@/shared/ui/action-icons";
@@ -74,7 +77,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -128,7 +131,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -253,6 +256,21 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const dateWords = (member: { startsAt: Date; timezone: string }) =>
     format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
+  /**
+   * What "not ready to publish" names, in the words on the screen (§170) — read once, because
+   * the same sentence is the publication panel's alert and, after "create and publish" was
+   * refused, the banner that says what the draft still needs (§305).
+   */
+  const missingDetail = [
+    ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
+    ...incomplete.map(
+      (entry) => `${tSite(`languageName.${entry.locale as "ro" | "en"}`)}: ${entry.missing.map(fieldLabel).join(", ")}`,
+    ),
+  ].join(" · ");
+
+  // The words the save form's refusal summary needs, and the label of every box it can name.
+  const refusal = await refusalMessages(await eventFormFieldLabels());
+
   return (
     <SeriesScopeProvider dates={dateChips} currentId={event.id}>
     <Stack spacing={4}>
@@ -276,8 +294,27 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
           </Alert>
         )}
-        {saved === "created" && created && (
+        {saved === "created" && created && !notPublished && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
+        )}
+        {/* Created and published in one press (§305), the series with it when there is one. */}
+        {saved === "createdPublished" && (
+          <Alert severity="success">
+            {created ? t("editor.createdPublishedWithSeries", { created }) : t("editor.createdPublished")}
+          </Alert>
+        )}
+        {/* Created, but the second button could not publish: the draft stands, and this says
+            exactly what it still needs — §170's words, the same the publication panel uses —
+            or that the role may not publish. Nothing typed was lost. */}
+        {saved === "created" && notPublished && (
+          <Alert severity="warning" data-testid="created-not-published">
+            {notPublished === "FORBIDDEN"
+              ? t("editor.createdNotPublishedRole")
+              : missingDetail
+                ? t("editor.createdNotPublished", { detail: missingDetail })
+                : t("editor.createdNotPublishedOther", { reason: t(`errors.${notPublished}`) })}
+            {created ? ` ${t("editor.createdWithSeries", { created })}` : ""}
+          </Alert>
         )}
         {/* "{created} ediții create." read as a job half done — the owner: "nu e clar cand
             creeze si zice 'urmatoarele 7 serii'". The number is how many dates fit in the next
@@ -301,7 +338,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound"].includes(saved) && !(saved === "created" && created) && !(saved === "event" && offered) && (
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -325,8 +362,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }}
       >
       <Box sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
-      {/* Settings and content: one form, one save. */}
-      <form action={saveEventAndTranslationsAction}>
+      {/* Settings and content: one form, one save — and a refusal that keeps every box (§305). */}
+      <ActionForm action={saveEventAndTranslationsAction} messages={refusal} data-testid="event-save-form">
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={event.id} />
         {/*
@@ -433,13 +470,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   label={t("editor.save")}
                   pendingLabel={t("editor.saving")}
                   incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                  incompleteHintNamed={t("forms.incompleteFirst")}
                   size="medium"
                 />
               </Box>
             </Box>
           )}
         </Stack>
-      </form>
+      </ActionForm>
       </Box>
 
       <Stack spacing={3} sx={{ order: { xs: 1, md: 2 }, minWidth: 0, position: { md: "sticky" }, top: { md: 16 } }}>
@@ -453,17 +491,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
         {live && <Alert severity="warning" sx={{ mb: 2 }}>{t("editor.liveWarning")}</Alert>}
 
-        {(incomplete.length > 0 || missingOnEvent.length > 0) && (
+        {missingDetail && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            {t("editor.incompleteForPublication", {
-              detail: [
-                ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
-                ...incomplete.map(
-                  (entry) =>
-                    `${tSite(`languageName.${entry.locale as "ro" | "en"}`)}: ${entry.missing.map(fieldLabel).join(", ")}`,
-                ),
-              ].join(" · "),
-            })}
+            {t("editor.incompleteForPublication", { detail: missingDetail })}
           </Alert>
         )}
 

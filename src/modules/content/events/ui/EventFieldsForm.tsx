@@ -1,18 +1,18 @@
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import BibDesignPanel from "./BibDesignPanel";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import RecallField from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { type EventFieldName, eventInputConstraints } from "../constraints";
 import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
@@ -46,6 +46,13 @@ import type { EditableEvent } from "../repository";
  * placed and sized like a picture with the rich text's own button (§266), and a second way
  * in — a box the action never even read — was a box that promised what nothing saved. The
  * column stays, and the public page still embeds the links older events carry.
+ *
+ * **Every box refuses first what the server would refuse** (§305; the owner: "nu ar trebui sa
+ * pot crea evenimentul daca am campuri invalide"): `required`, `maxLength`, `type="url"` with
+ * its pattern, `min`/`max` on a number — read off `fields.ts` through `eventInputConstraints`,
+ * never typed here a second time. What the browser cannot know — one field against another,
+ * the declaration an internal event needs — the server refuses, and the refusal comes back
+ * with every box still filled: the fields are `RecallField`s, the ticks `CheckboxField`s.
  *
  * It renders the inputs, not the `<form>`: `<Stack component="form" action={...}>` crashes in
  * MUI 9, so every caller wraps a plain `<form>` around this.
@@ -85,6 +92,20 @@ function timezoneOptions(current: string): readonly string[] {
   const rest = known.filter((zone) => !zone.startsWith("Europe/"));
   const ordered = [DEFAULT_TIMEZONE, ...europe, ...rest];
   return ordered.includes(current) ? ordered : [current, ...ordered];
+}
+
+/**
+ * The box's own constraints, as `TextField` takes them: `required` on the field (MUI marks the
+ * label), the type on the input, and the whole set as HTML attributes on the input itself.
+ * `extra` is what the box adds of its own — an `inputMode`, say.
+ */
+function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
+  const constraints = eventInputConstraints(field);
+  return {
+    required: constraints.required,
+    type: constraints.type,
+    slotProps: { htmlInput: { ...constraints, ...extra } },
+  };
 }
 
 export type DeclarationOption = { id: string; version: number; title: string };
@@ -143,7 +164,7 @@ export default async function EventFieldsForm({
               defaultValue={initialType}
               options={EVENT_TYPES.map((type) => ({ value: type, label: tEvent(`type.${type}`), glyph: `type:${type}` as const }))}
               sx={{ flex: 1 }}
-              required
+              required={eventInputConstraints("type").required}
             />
             <GlyphSelect
               name="event.surface"
@@ -155,20 +176,20 @@ export default async function EventFieldsForm({
               ]}
               sx={{ flex: 1 }}
             />
-            <TextField
+            <RecallField
               select
               name="event.eventStatus"
               label={t("editor.eventStatus")}
               defaultValue={event?.eventStatus ?? "SCHEDULED"}
               sx={{ flex: 1 }}
-              required
+              required={eventInputConstraints("eventStatus").required}
             >
               {EVENT_STATUSES.map((status) => (
                 <MenuItem key={status} value={status}>
                   {EVENT_STATUS_LABEL[status]}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
           </Stack>
 
           {/* What the chosen type means, in one line; the comparison of all seven folded beside
@@ -183,13 +204,13 @@ export default async function EventFieldsForm({
             </Typography>
           </Box>
 
-          <TextField
+          <RecallField
             select
             name="event.timezone"
             label={t("editor.timezone")}
             helperText={t("editor.timezoneHelp")}
             defaultValue={zone}
-            required
+            required={eventInputConstraints("timezone").required}
             slotProps={{ select: { native: true } }}
           >
             {timezoneOptions(zone).map((option) => (
@@ -197,7 +218,7 @@ export default async function EventFieldsForm({
                 {option}
               </option>
             ))}
-          </TextField>
+          </RecallField>
 
           {/* A date and a 24-hour time each, whatever clock the browser speaks (§70). */}
           <WallTimeField
@@ -207,7 +228,7 @@ export default async function EventFieldsForm({
             helperText={t("editor.startsAtHelp", { timezone: zone })}
             value={event?.startsAt ?? null}
             zone={zone}
-            required
+            required={eventInputConstraints("startsAtWallTime").required}
           />
           {/* Only a race has a gun time apart from the meeting time (§71); the field follows the
               type select and is empty — and ignored — for anything else. */}
@@ -219,12 +240,12 @@ export default async function EventFieldsForm({
               helperText={t("editor.raceStartsAtHelp")}
               value={event?.raceStartsAt ?? null}
               zone={zone}
+              required={eventInputConstraints("raceStartsAtWallTime").required}
             />
           </OnlyForType>
           {/* How long, not when it ends: the end is derived (§71). */}
-          <TextField
+          <RecallField
             name="event.durationMinutes"
-            type="number"
             label={t("editor.durationMinutes")}
             helperText={t("editor.durationMinutesHelp")}
             defaultValue={
@@ -233,9 +254,9 @@ export default async function EventFieldsForm({
                 : ""
             }
             // `step` is measured from `min`, so `min: 1, step: 5` made 120 invalid ("the two
-            // nearest valid values are 116 and 121"). Any whole minute is a duration.
-            slotProps={{ htmlInput: { min: 1, max: 7 * 24 * 60, step: 1 } }}
-            inputMode="numeric"
+            // nearest valid values are 116 and 121"). Any whole minute is a duration — the
+            // schema says so, and the box reads it off the schema.
+            {...box("durationMinutes", { inputMode: "numeric" })}
             sx={{ width: 220 }}
           />
 
@@ -249,24 +270,23 @@ export default async function EventFieldsForm({
             second box wrote, `location_address`, stays for the rows that have one and is shown
             where it exists; nothing writes it any more.
           */}
-          <TextField
+          <RecallField
             name="event.locationName"
             label={t("editor.fields.locationName")}
             helperText={t("editor.locationHelp")}
             defaultValue={[event?.locationName, event?.locationAddress].filter(Boolean).join(", ")}
-            required
+            {...box("locationName")}
           />
 
           {/* Where to meet, as one pasted link. Coordinates were asked for here until
               `DECISIONS.md` §61: two decimal numbers to produce a link the organizer could
               paste in one move. */}
-          <TextField
+          <RecallField
             name="event.mapUrl"
-            type="url"
             label={t("editor.mapUrl")}
             helperText={t("editor.mapUrlHelp")}
             defaultValue={event?.mapUrl ?? ""}
-            inputMode="url"
+            {...box("mapUrl", { inputMode: "url" })}
           />
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
@@ -313,27 +333,27 @@ export default async function EventFieldsForm({
       <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
         <EditorPanel title={t("editor.panels.registration")} headingId="panel-registration">
           <Stack spacing={2}>
-            <TextField
+            <RecallField
               select
               name="event.registrationMode"
               label={t("editor.registrationMode")}
               helperText={t("editor.registrationModeHelp")}
               defaultValue={event?.registrationMode ?? "NONE"}
-              required
+              required={eventInputConstraints("registrationMode").required}
             >
               {REGISTRATION_MODES.map((mode) => (
                 <MenuItem key={mode} value={mode}>
                   {REGISTRATION_MODE_LABEL[mode]}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
 
-            <TextField
+            <RecallField
               name="event.capacity"
               label={t("editor.capacity")}
               helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
               defaultValue={event?.capacity ?? ""}
-              inputMode="numeric"
+              {...box("capacity", { inputMode: "numeric" })}
             />
 
             {/*
@@ -375,18 +395,18 @@ export default async function EventFieldsForm({
                 {t("editor.confirmationWindowTitle")}
               </Typography>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
+                <RecallField
                   name="event.confirmationOpensDaysBefore"
                   label={t("editor.confirmationOpensDaysBefore")}
                   defaultValue={event?.confirmationOpensDaysBefore ?? 7}
-                  inputMode="numeric"
+                  {...box("confirmationOpensDaysBefore", { inputMode: "numeric" })}
                   fullWidth
                 />
-                <TextField
+                <RecallField
                   name="event.confirmationDeadlineDaysBefore"
                   label={t("editor.confirmationDeadlineDaysBefore")}
                   defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
-                  inputMode="numeric"
+                  {...box("confirmationDeadlineDaysBefore", { inputMode: "numeric" })}
                   fullWidth
                 />
               </Stack>
@@ -399,14 +419,12 @@ export default async function EventFieldsForm({
                 sheet prints behind them. A club that runs a 5 km from 100 and a 10 km from
                 500 can tell two envelopes apart across a table without reading a name. */}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
+              <RecallField
                 name="event.bibStartNumber"
-                type="number"
                 label={t("editor.bibStartNumber")}
                 helperText={t("editor.bibStartNumberHelp")}
                 defaultValue={event?.bibStartNumber ?? 1}
-                slotProps={{ htmlInput: { min: 1, max: 99_000, step: 1 } }}
-                inputMode="numeric"
+                {...box("bibStartNumber", { inputMode: "numeric" })}
                 sx={{ width: { sm: 220 } }}
               />
               {/*
@@ -418,7 +436,7 @@ export default async function EventFieldsForm({
                 hand, or by a later release) is kept as its own option so the save does not
                 silently change it.
               */}
-              <TextField
+              <RecallField
                 select
                 name="event.bibColour"
                 label={t("editor.bibColour")}
@@ -436,7 +454,7 @@ export default async function EventFieldsForm({
                 {event?.bibColour && !BIB_COLOURS.some((choice) => choice.hex === event.bibColour) && (
                   <option value={event.bibColour}>{event.bibColour}</option>
                 )}
-              </TextField>
+              </RecallField>
             </Stack>
 
             {/* The rest of the bib (§249): what is printed, the number's size, where the name
@@ -456,7 +474,7 @@ export default async function EventFieldsForm({
               out of the CMS entirely: this select can point an event at a version, and nothing
               anywhere in the backoffice can change a word of one.
             */}
-            <TextField
+            <RecallField
               select
               name="event.declarationDocumentId"
               label={t("editor.declarationDocument")}
@@ -473,7 +491,7 @@ export default async function EventFieldsForm({
                   v{document.version} · {document.title}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
 
             {/*
               The start list, off unless somebody deliberately turns it on (BR-REQ-039-01).
@@ -483,32 +501,26 @@ export default async function EventFieldsForm({
               The help text says what turning it on actually publishes, in the words a
               participant would read, because that is the decision being made here.
             */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="event.participantListVisibility"
-                  defaultChecked={event?.participantListVisibility === "NAMES"}
-                />
-              }
-              label={t("editor.participantList")}
-            />
+            <CheckboxField name="event.participantListVisibility" defaultChecked={event?.participantListVisibility === "NAMES"}>
+              {t("editor.participantList")}
+            </CheckboxField>
             <Typography variant="body2" color="text.secondary">
               {t("editor.participantListHelp")}
             </Typography>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
+              <RecallField
                 name="event.externalProvider"
                 label={t("editor.externalProvider")}
                 defaultValue={event?.externalProvider ?? ""}
+                {...box("externalProvider")}
                 sx={{ flex: 1 }}
               />
-              <TextField
+              <RecallField
                 name="event.externalRegistrationUrl"
-                type="url"
                 label={t("editor.externalRegistrationUrl")}
                 defaultValue={event?.externalRegistrationUrl ?? ""}
-                inputMode="url"
+                {...box("externalRegistrationUrl", { inputMode: "url" })}
                 sx={{ flex: 1 }}
               />
             </Stack>
@@ -558,51 +570,48 @@ export default async function EventFieldsForm({
             turns up and where they then run are two different pages on two different services
             more often than they are one (`DECISIONS.md` §49).
           */}
-          <TextField
+          <RecallField
             name="event.routeUrl"
-            type="url"
             label={t("editor.routeUrl")}
             helperText={t("editor.routeUrlHelp")}
             defaultValue={event?.routeUrl ?? ""}
-            inputMode="url"
+            {...box("routeUrl", { inputMode: "url" })}
           />
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <TextField
+            <RecallField
               name="event.distanceMeters"
               label={t("editor.distanceMeters")}
               helperText={t("editor.distanceMetersHelp")}
               defaultValue={event?.distanceMeters ?? ""}
-              inputMode="numeric"
+              {...box("distanceMeters", { inputMode: "numeric" })}
               sx={{ flex: 1 }}
             />
-            <TextField
+            <RecallField
               name="event.elevationGainMeters"
               label={t("editor.elevationGainMeters")}
               defaultValue={event?.elevationGainMeters ?? ""}
-              inputMode="numeric"
+              {...box("elevationGainMeters", { inputMode: "numeric" })}
               sx={{ flex: 1 }}
             />
           </Stack>
 
           {/* The club's Strava group event for this occurrence (criterion 10). */}
-          <TextField
+          <RecallField
             name="event.stravaEventUrl"
-            type="url"
             label={t("editor.stravaEventUrl")}
             helperText={t("editor.stravaEventUrlHelp")}
             defaultValue={event?.stravaEventUrl ?? ""}
-            inputMode="url"
+            {...box("stravaEventUrl", { inputMode: "url" })}
           />
 
           {/* The Facebook event for this occurrence (§144). */}
-          <TextField
+          <RecallField
             name="event.facebookEventUrl"
-            type="url"
             label={t("editor.facebookEventUrl")}
             helperText={t("editor.facebookEventUrlHelp")}
             defaultValue={event?.facebookEventUrl ?? ""}
-            inputMode="url"
+            {...box("facebookEventUrl", { inputMode: "url" })}
           />
 
           {/* The organizations the event is held with (§168): a name and a page each, any
@@ -630,10 +639,9 @@ export default async function EventFieldsForm({
               Only one event may be the site's lead; any number may be special, including one
               date of a series. */}
           <Box>
-            <FormControlLabel
-              control={<Checkbox name="event.featured" defaultChecked={event?.featured ?? false} />}
-              label={t("editor.featured")}
-            />
+            <CheckboxField name="event.featured" defaultChecked={event?.featured ?? false}>
+              {t("editor.featured")}
+            </CheckboxField>
             <Typography variant="body2" color="text.secondary">
               {t("editor.featuredHelp")}
             </Typography>
@@ -643,10 +651,9 @@ export default async function EventFieldsForm({
               organizer looks for "this one is different", and unlike it in the one way that
               matters: any number of events may carry it, including one date of a series. */}
           <Box>
-            <FormControlLabel
-              control={<Checkbox name="event.isSpecial" defaultChecked={event?.isSpecial ?? false} />}
-              label={t("editor.special")}
-            />
+            <CheckboxField name="event.isSpecial" defaultChecked={event?.isSpecial ?? false}>
+              {t("editor.special")}
+            </CheckboxField>
             <Typography variant="body2" color="text.secondary">
               {t("editor.specialHelp")}
             </Typography>

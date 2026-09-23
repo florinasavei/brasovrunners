@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -10,8 +9,12 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { listEventsForAlbumSelect } from "@/modules/content/gallery/repository";
 import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
+import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { createAlbumAction } from "../actions";
 
 type Props = {
@@ -47,18 +50,17 @@ export default async function NewAlbumPage({ params, searchParams }: Props) {
         {t("gallery.createHelp")}
       </Typography>
 
-      {/* Plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. */}
-      <form action={createAlbumAction}>
+      {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
+          refusal comes back with every box still filled (§305). */}
+      <ActionForm action={createAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />
           <AlbumFieldsForm takenOn="" eventId={null} events={events} translations={[]} slugLocked={false} />
           <Box>
-            <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-              {t("gallery.create")}
-            </Button>
+            <SubmitButton label={t("gallery.create")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
           </Box>
         </Stack>
-      </form>
+      </ActionForm>
     </Stack>
   );
 }

@@ -1,9 +1,8 @@
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
@@ -75,19 +74,20 @@ export default async function BibDesignPanel({
         {t(`editor.bibDesign.${field}Help`)}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <FormControlLabel
-          control={
-            <input
-              type="radio"
-              name={`event.bibDesign.${field}`}
-              value=""
-              defaultChecked={design[field] === null}
-              style={{ width: 20, height: 20 }}
-            />
-          }
-          label={t("editor.bibDesign.noPicture")}
-          sx={{ mr: 2 }}
-        />
+        {/* A plain label with children rather than `FormControlLabel`'s element prop: the
+            defect `CheckboxField` documents. The radio comes back as ticked after a refused
+            submit (§305). */}
+        <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
+          <RecallRadio
+            name={`event.bibDesign.${field}`}
+            value=""
+            defaultChecked={design[field] === null}
+            style={{ width: 20, height: 20 }}
+          />
+          <Typography component="span" variant="body2">
+            {t("editor.bibDesign.noPicture")}
+          </Typography>
+        </Box>
         {assets.map((asset) => (
           <Box
             key={asset.id}
@@ -107,8 +107,7 @@ export default async function BibDesignPanel({
             }}
           >
             <Box component="img" src={asset.thumbUrl} alt={asset.originalFilename} width={72} height={72} sx={{ display: "block", width: 72, height: 72, objectFit: "cover", borderRadius: 0.5 }} />
-            <input
-              type="radio"
+            <RecallRadio
               name={`event.bibDesign.${field}`}
               value={asset.webUrl}
               defaultChecked={design[field] === asset.webUrl}
@@ -144,16 +143,14 @@ export default async function BibDesignPanel({
 
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (
-            <FormControlLabel
-              key={field}
-              control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} />}
-              label={t(`editor.bibDesign.${field}`)}
-            />
+            <CheckboxField key={field} name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
+              {t(`editor.bibDesign.${field}`)}
+            </CheckboxField>
           ))}
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          <TextField
+          <RecallField
             select
             name="event.bibDesign.numberScale"
             label={t("editor.bibDesign.numberScale")}
@@ -166,8 +163,8 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.scales.${scale}`)}
               </option>
             ))}
-          </TextField>
-          <TextField
+          </RecallField>
+          <RecallField
             select
             name="event.bibDesign.namePosition"
             label={t("editor.bibDesign.namePosition")}
@@ -180,7 +177,7 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.positions.${position}`)}
               </option>
             ))}
-          </TextField>
+          </RecallField>
         </Stack>
 
         {picker("headerImageSrc")}

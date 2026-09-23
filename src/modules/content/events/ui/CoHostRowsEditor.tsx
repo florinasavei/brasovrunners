@@ -6,11 +6,34 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
+import { useRecall } from "@/shared/forms/recall";
 
 export type CoHostRowValue = { name: string; url: string };
 
 const EMPTY: CoHostRowValue = { name: "", url: "" };
+
+/** The partners as a refused submit posted them, gathered by index from `event.coHosts[i].<box>` (§305). */
+function recalledRows(names: string[], value: (name: string) => string | undefined): CoHostRowValue[] {
+  const rows: CoHostRowValue[] = [];
+  for (const name of names) {
+    const match = /^event\.coHosts\[(\d+)\]\.(name|url)$/.exec(name);
+    if (!match) continue;
+    const index = Number(match[1]);
+    rows[index] = { ...(rows[index] ?? EMPTY), [match[2]]: value(name) ?? "" };
+  }
+  return rows.filter((row) => row !== undefined);
+}
+
+/**
+ * The partners' rows, coming back as they were typed after a refused submit (§305): keyed on
+ * the answer and handed the recalled rows, exactly as `ScheduleRowsEditor` is.
+ */
+export default function CoHostRowsEditor(props: ComponentProps<typeof CoHostRowsEditorIsland>) {
+  const recall = useRecall();
+  const initial = recall.has ? recalledRows(recall.names(), recall.value) : props.initial;
+  return <CoHostRowsEditorIsland key={recall.generation} {...props} initial={initial} />;
+}
 
 /**
  * The organizations the event is held with, in the editor (`DECISIONS.md` §168): a name and a
@@ -23,7 +46,7 @@ const EMPTY: CoHostRowValue = { name: "", url: "" };
  * Rows keep a key of their own across removals, so removing the second partner does not hand
  * the third partner's boxes the second one's values.
  */
-export default function CoHostRowsEditor({
+function CoHostRowsEditorIsland({
   initial,
   labels,
 }: {

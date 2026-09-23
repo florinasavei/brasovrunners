@@ -139,7 +139,11 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
         (/^\d+$/.test(value) && Number(value) >= options.min && Number(value) <= options.max),
       { message: `must be a whole number between ${options.min} and ${options.max}` },
     )
-    .transform((value) => (value === null ? null : Number(value)));
+    .transform((value) => (value === null ? null : Number(value)))
+    // The bounds live in the refine above, where `shared/forms/constraints.ts` cannot read
+    // them; said once more here, on the schema itself, so the box carries `min`, `max` and
+    // `step` and the browser refuses "0 places" before the server does (§305).
+    .meta({ html: { type: "number", min: options.min, max: options.max, step: 1 } });
 
 /** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
 const wholeNumberWithDefault = (fallback: number, options: { min: number; max: number }) =>
@@ -159,6 +163,9 @@ const optionalUuid = z
     { message: "must be an identifier chosen from the list" },
   );
 
+/** What the box for an https link carries, so the browser refuses `http://` and `www.` first (§305). */
+const HTTPS_BOX = { html: { type: "url", pattern: "https://.*" } } as const;
+
 const httpsUrl = (message: string) =>
   z
     .string()
@@ -166,7 +173,8 @@ const httpsUrl = (message: string) =>
     .max(2000)
     .transform((value) => (value === "" ? null : value))
     .nullable()
-    .refine((value) => value === null || /^https:\/\/\S+$/i.test(value), { message });
+    .refine((value) => value === null || /^https:\/\/\S+$/i.test(value), { message })
+    .meta(HTTPS_BOX);
 
 /**
  * An IANA zone name, checked by asking the platform rather than by carrying a list.
@@ -247,7 +255,8 @@ export const eventFieldsSchema = z
       .refine((value) => value === null || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 7 * 24 * 60), {
         message: "a duration is a whole number of minutes, up to a week",
       })
-      .transform((value) => (value === null ? null : Number(value))),
+      .transform((value) => (value === null ? null : Number(value)))
+      .meta({ html: { type: "number", min: 1, max: 7 * 24 * 60, step: 1 } }),
     raceStartsAtWallTime: z.string().trim(),
     /** The programme's rows (§117), at most fifty; absent for a caller from before they existed. */
     scheduleRows: z.array(scheduleRowSchema).max(50).optional().default([]),
@@ -283,7 +292,8 @@ export const eventFieldsSchema = z
       .transform((value) => (value ? value : null))
       .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isStravaLink(value)), {
         message: "a Strava event link must be an https page on strava.com",
-      }),
+      })
+      .meta(HTTPS_BOX),
     // The Facebook event for this occurrence (§144): a Facebook page, or nothing.
     facebookEventUrl: z
       .string()
@@ -293,7 +303,8 @@ export const eventFieldsSchema = z
       .transform((value) => (value ? value : null))
       .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isFacebookLink(value)), {
         message: "a Facebook event link must be an https page on facebook.com",
-      }),
+      })
+      .meta(HTTPS_BOX),
     /**
      * The organizations the event is held with (§168), as the editor posts them: a name and a
      * page per row, in the club's own order. A row left blank in both boxes is the editor's

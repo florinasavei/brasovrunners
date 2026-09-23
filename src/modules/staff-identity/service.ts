@@ -68,7 +68,12 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
 
   const parsed = staffInviteSchema.safeParse(input);
   if (!parsed.success) {
-    throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((i) => i.message).join("; "));
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      parsed.error.issues.map((i) => i.message).join("; "),
+      // The boxes, so the form names them (§305) — the same names the form posts.
+      [...new Set(parsed.error.issues.map((i) => i.path.join(".")).filter((path) => path !== ""))],
+    );
   }
 
   // Checked before inserting so the Administrator gets "this person is already staff" rather

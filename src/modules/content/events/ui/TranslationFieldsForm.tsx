@@ -1,10 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import RecallField from "@/shared/forms/recall";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
+import { type TranslationFieldName, translationInputConstraints } from "../constraints";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import { Link } from "@/i18n/navigation";
@@ -98,7 +99,17 @@ export function blankTranslation(locale: Locale): TranslationDraft {
  * A read-only language renders its reason and no inputs at all, so a save posts nothing for it
  * and the server has nothing to refuse. The rule itself is asserted in the service regardless
  * (BR-REQ-060-01): this is what the organizer sees, not what protects the text.
+ *
+ * Every box carries the constraints its schema rule implies — `required` on the title and the
+ * address, the address's shape as a `pattern`, every `maxLength` — read off `fields.ts` through
+ * `translationInputConstraints` (§305), and comes back filled after a refused submit.
  */
+
+/** The box's own constraints, as `TextField` takes them (see `EventFieldsForm#box`). */
+function box(field: TranslationFieldName) {
+  const constraints = translationInputConstraints(field);
+  return { required: constraints.required, type: constraints.type, slotProps: { htmlInput: constraints } };
+}
 export default async function TranslationFieldsForm({
   translation,
   eventId,
@@ -153,22 +164,22 @@ export default async function TranslationFieldsForm({
           {/* A locked slug is not sent by the disabled field, so it is sent here. */}
           {slugLocked && <input type="hidden" name={name("slug")} value={translation.slug} />}
 
-          <TextField
+          <RecallField
             name={name("title")}
             label={t("editor.fields.title")}
             defaultValue={translation.title}
-            required
+            {...box("title")}
           />
 
           {/* The place's name in this language (migration `0058`): optional, and blank means
               the name typed once in "Când și unde" — the help says so, because two boxes for
               one place need one sentence between them. */}
-          <TextField
+          <RecallField
             name={name("locationName")}
             label={t("editor.locationNameInLanguage")}
             helperText={t("editor.locationNameInLanguageHelp", { panel: t("editor.panels.when") })}
             defaultValue={translation.locationName ?? ""}
-            slotProps={{ htmlInput: { maxLength: 200 } }}
+            {...box("locationName")}
           />
 
           {/* The summary first (§260): it is what a visitor meets — the card, the hero, every
@@ -246,12 +257,12 @@ export default async function TranslationFieldsForm({
           </OnlyForType>
 
           {/* "What to bring": one line on the confirmation and the reminder (§81). */}
-          <TextField
+          <RecallField
             name={name("checklist")}
             label={t("editor.fields.checklist")}
             helperText={t("editor.checklistHelp")}
             defaultValue={translation.checklist ?? ""}
-            slotProps={{ htmlInput: { maxLength: 300 } }}
+            {...box("checklist")}
           />
 
           {/* The page address and what a search engine shows, folded (§170): set once, then
@@ -263,25 +274,29 @@ export default async function TranslationFieldsForm({
               {t("editor.seoSection")}
             </Typography>
             <Stack spacing={2} sx={{ pt: 0.5 }}>
-              <TextField
+              {/* A locked address is disabled and posts nothing (the hidden field above carries
+                  it), so its constraints would only mark a box nobody can type into. */}
+              <RecallField
                 name={name("slug")}
                 label={t("editor.fields.slug")}
                 defaultValue={translation.slug}
                 helperText={slugLocked ? t("editor.slugLocked") : t("editor.slugHelp")}
                 disabled={slugLocked}
-                required={!slugLocked}
+                {...(slugLocked ? {} : box("slug"))}
               />
-              <TextField
+              <RecallField
                 name={name("seoTitle")}
                 label={t("editor.fields.seoTitle")}
                 defaultValue={translation.seoTitle ?? ""}
+                {...box("seoTitle")}
               />
-              <TextField
+              <RecallField
                 name={name("seoDescription")}
                 label={t("editor.fields.seoDescription")}
                 defaultValue={translation.seoDescription ?? ""}
                 multiline
                 minRows={2}
+                {...box("seoDescription")}
               />
             </Stack>
           </Box>

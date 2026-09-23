@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useState } from "react";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { recalledJson, useRecall } from "@/shared/forms/recall";
 import { isRichTextEmpty, readRichText } from "../domain/schema";
 import RichTextEditor from "./RichTextEditor";
 
@@ -15,8 +16,25 @@ import RichTextEditor from "./RichTextEditor";
  * take seconds to become interactive on a phone. The rules are the one most organizers never
  * write, so they sit behind a summary; until it is opened, the stored document is posted as is
  * from a hidden field, so a save that never touched the rules never changes them either.
+ *
+ * After a refused submit the document is the one that was posted (§305) — typed into the
+ * editor, or carried unchanged by the hidden field — keyed on the answer so the fold and the
+ * editor inside it re-mount from it. Tens of kilobytes of text, which is why the values come
+ * back as the action's returned state and not in a cookie.
  */
-export default function LazyRichTextEditor({
+export default function LazyRichTextEditor(props: ComponentProps<typeof RichTextEditor> & { summary: string; emptyHint: string }) {
+  const recall = useRecall();
+  const recalled = recall.value(props.name);
+  return (
+    <LazyRichTextEditorIsland
+      key={recall.generation}
+      {...props}
+      initialBody={recalled === undefined ? props.initialBody : recalledJson(recalled, props.initialBody)}
+    />
+  );
+}
+
+function LazyRichTextEditorIsland({
   summary,
   emptyHint,
   ...editor
@@ -29,6 +47,7 @@ export default function LazyRichTextEditor({
       component="details"
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
       sx={BOXED_DISCLOSURE_SX}
+      data-rich-text-fold={editor.name}
     >
       <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
         {summary}

@@ -64,16 +64,18 @@ function assertTranslationsUsable(translations: readonly LegalDocumentTranslatio
    * without being able to read it. BR-REQ-040-02 forbids falling back to the other language, so
    * the alternative to both is not "one for now" — it is a public page that cannot render.
    */
+  // Each refusal names the box the form posts (`<locale>Title`, `<locale>Body`), so the form can
+  // link to it (§305).
   for (const locale of ["ro", "en"] as const) {
     const translation = translations.find((entry) => entry.locale === locale);
     if (!translation) {
-      throw new DomainError("VALIDATION_ERROR", `the ${locale} version is missing`);
+      throw new DomainError("VALIDATION_ERROR", `the ${locale} version is missing`, [`${locale}Title`, `${locale}Body`]);
     }
     if (translation.title.trim() === "") {
-      throw new DomainError("VALIDATION_ERROR", `the ${locale} title is empty`);
+      throw new DomainError("VALIDATION_ERROR", `the ${locale} title is empty`, [`${locale}Title`]);
     }
     if (isEmptyBody(translation.body)) {
-      throw new DomainError("VALIDATION_ERROR", `the ${locale} text is empty`);
+      throw new DomainError("VALIDATION_ERROR", `the ${locale} text is empty`, [`${locale}Body`]);
     }
   }
 }

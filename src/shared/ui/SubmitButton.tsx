@@ -20,8 +20,18 @@ type Props = {
    * answer a merely-disabled button could never give. See the notes below.
    */
   incompleteHint?: string;
+  /**
+   * The same sentence, naming the first thing missing (`DECISIONS.md` §305; the owner: "in
+   * general formularele trebuie sa fie mai smart"): `{field}` is replaced with the label of the
+   * first control the browser would refuse, read from its own `<label>`. Where a control has
+   * no label to read, `incompleteHint` is what is said. Either alone dims the button.
+   */
+  incompleteHintNamed?: string;
   /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
   slowHint?: string;
+  /** For a form with two submit buttons: the name and value the browser posts for this one. */
+  name?: string;
+  value?: string;
   color?: "primary" | "error" | "warning" | "inherit";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium" | "large";
@@ -98,6 +108,7 @@ export default function SubmitButton({
   label,
   pendingLabel,
   incompleteHint,
+  incompleteHintNamed,
   awaitsBotCheck,
   botCheckHint,
   slowHint,
@@ -107,21 +118,30 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
+  name,
+  value,
 }: Props) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
   const [complete, setComplete] = useState(true);
+  // The label of the first control the browser would refuse, for the named sentence (§305).
+  const [firstMissing, setFirstMissing] = useState<string | null>(null);
+  const watches = Boolean(incompleteHint || incompleteHintNamed);
 
   useEffect(() => {
-    if (!incompleteHint) return;
+    if (!watches) return;
     const form = ref.current?.form;
     if (!form) return;
 
     const measure = () => {
-      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState }>;
-      setComplete(controls.every((control) => !control.validity || control.validity.valid));
+      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState; labels?: NodeListOf<HTMLLabelElement> | null }>;
+      const invalid = controls.find((control) => control.validity && !control.validity.valid);
+      setComplete(invalid === undefined);
+      // MUI marks a required label with " *"; the sentence names the box, not the asterisk.
+      const text = invalid?.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || invalid?.getAttribute("aria-label");
+      setFirstMissing(text || null);
     };
     measure();
     form.addEventListener("input", measure);
@@ -130,7 +150,10 @@ export default function SubmitButton({
       form.removeEventListener("input", measure);
       form.removeEventListener("change", measure);
     };
-  }, [incompleteHint]);
+  }, [watches]);
+
+  const incompleteSentence =
+    incompleteHintNamed && firstMissing ? incompleteHintNamed.replace("{field}", firstMissing) : incompleteHint ?? incompleteHintNamed;
 
   /*
     Cloudflare writes its token into a hidden input inside the widget's own element, so the form
@@ -233,7 +256,7 @@ export default function SubmitButton({
     };
   }, [pending]);
 
-  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
+  const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
 
   return (
     <Box
@@ -247,6 +270,8 @@ export default function SubmitButton({
       <Button
         ref={ref}
         type="submit"
+        name={name}
+        value={value}
         color={color}
         variant={variant}
         size={size}
@@ -296,7 +321,7 @@ export default function SubmitButton({
       </Button>
       {dimmed && (
         <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
-          {waiting && pressedEarly ? (botCheckHint ?? incompleteHint) : incompleteHint}
+          {waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence}
         </Typography>
       )}
       {pending && slow && slowHint && (

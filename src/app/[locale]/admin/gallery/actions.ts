@@ -16,6 +16,7 @@ import {
 import { deleteMediaAsset } from "@/modules/media/references";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
  * The gallery's Server Actions (BR-REQ-054-01): the same shape as the standing pages' — read
@@ -63,7 +64,8 @@ function readFields(form: FormData) {
   };
 }
 
-export async function createAlbumAction(form: FormData): Promise<void> {
+/** A new album. A refusal comes back with every box still filled (`DECISIONS.md` §305). */
+export async function createAlbumAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   let albumId: string;
   try {
@@ -71,16 +73,15 @@ export async function createAlbumAction(form: FormData): Promise<void> {
     const album = await createAlbum(getDb(), { actor, fields: readFields(form) });
     albumId = album.id;
   } catch (error) {
-    backTo(getPathname({ locale, href: "/admin/gallery/new" }), outcomeOf(error));
+    return refused(error, form);
   }
   // Straight to the album, where the photos go in.
   redirect(`${albumPath(locale, albumId)}?saved=created#admin-alert`);
 }
 
-export async function saveAlbumAction(form: FormData): Promise<void> {
+export async function saveAlbumAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const albumId = text(form, "albumId");
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
     await saveAlbum(getDb(), {
@@ -89,11 +90,10 @@ export async function saveAlbumAction(form: FormData): Promise<void> {
       expectedVersion: Number(text(form, "expectedVersion")),
       fields: readFields(form),
     });
-    outcome = { saved: "album" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
-  backTo(albumPath(locale, albumId), outcome);
+  backTo(albumPath(locale, albumId), { saved: "album" });
 }
 
 export async function transitionAlbumAction(form: FormData): Promise<void> {

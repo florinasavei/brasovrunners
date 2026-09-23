@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import { updateContactRecipientsAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
 import type { ContactRecipientsState } from "@/modules/contact/recipients";
 import type { Locale } from "@/i18n/routing";
@@ -70,10 +72,16 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           {t("emails.contacts.readOnly")}
         </Typography>
       ) : (
-      <Box component="form" action={updateContactRecipientsAction} sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1.5 }}>
+      {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§305). */}
+      <ActionForm
+        action={updateContactRecipientsAction}
+        messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}
+        data-testid="contact-recipients-form"
+      >
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
-          <TextField
+          <RecallField
             name="to"
             label={t("emails.contacts.to")}
             defaultValue={formatAddressList(recipients.to)}
@@ -81,7 +89,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             helperText={t("emails.contacts.toHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
-          <TextField
+          <RecallField
             name="cc"
             label={t("emails.contacts.cc")}
             defaultValue={formatAddressList(recipients.cc)}
@@ -89,7 +97,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             helperText={t("emails.contacts.ccHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
-          <TextField
+          <RecallField
             name="bcc"
             label={t("emails.contacts.bcc")}
             defaultValue={formatAddressList(recipients.bcc)}
@@ -101,6 +109,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             <SubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} />
           </Box>
         </Stack>
+      </ActionForm>
       </Box>
       )}
 

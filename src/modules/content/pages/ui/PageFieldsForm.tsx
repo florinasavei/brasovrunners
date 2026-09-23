@@ -1,10 +1,11 @@
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { pageInputConstraints, pageTranslationConstraints } from "../constraints";
 
 export type EditablePageTranslation = {
   locale: string;
@@ -34,6 +35,12 @@ export type EditablePageTranslation = {
  * The format is the one the legal editor already uses and this converts with the same module —
  * a blank line between paragraphs, `## ` for a heading, and it round-trips, so nothing an
  * organizer typed is reshaped behind their back.
+ *
+ * ## After a refused submit
+ *
+ * Every box comes back as typed, the rich text included (§305): the fields are `RecallField`s
+ * and the editor re-mounts from the posted document. Each box carries what `fields.ts`
+ * requires of it, so the browser refuses a missing title or a malformed address first.
  */
 export default async function PageFieldsForm({
   navOrder,
@@ -49,15 +56,21 @@ export default async function PageFieldsForm({
   // The editor is a client island and cannot read the catalogue itself, so its control names are
   // resolved here and passed down (AGENTS.md §9.3: no user-facing string in code).
   const rt = await getTranslations("Admin.richText");
+  const box = (field: Parameters<typeof pageTranslationConstraints>[0]) => {
+    const constraints = pageTranslationConstraints(field);
+    return { required: constraints.required, type: constraints.type, slotProps: { htmlInput: constraints } };
+  };
+  const navOrderConstraints = pageInputConstraints("navOrder");
 
   return (
     <Stack spacing={3}>
-      <TextField
+      <RecallField
         name="navOrder"
         label={t("navOrder")}
         helperText={t("navOrderHelp")}
         defaultValue={String(navOrder)}
-        inputMode="numeric"
+        type={navOrderConstraints.type}
+        slotProps={{ htmlInput: { ...navOrderConstraints, inputMode: "numeric" } }}
         sx={{ maxWidth: 220 }}
       />
 
@@ -71,19 +84,19 @@ export default async function PageFieldsForm({
             label: t(`language.${locale}`),
             content: (
               <Stack spacing={2} sx={{ pt: 2 }}>
-              <TextField
+              <RecallField
                 name={name("title")}
                 label={t("fields.title")}
                 defaultValue={translation?.title ?? ""}
-                required
+                {...box("title")}
               />
-              <TextField
+              <RecallField
                 name={name("slug")}
                 label={t("fields.slug")}
                 helperText={slugLocked ? t("slugLocked") : t("slugHelp")}
                 defaultValue={translation?.slug ?? ""}
-                required
-                slotProps={{ input: { readOnly: slugLocked } }}
+                {...box("slug")}
+                slotProps={{ input: { readOnly: slugLocked }, htmlInput: pageTranslationConstraints("slug") }}
               />
               <RichTextEditor
                 name={name("body")}
@@ -92,17 +105,19 @@ export default async function PageFieldsForm({
                 accessibleSuffix={t(`language.${locale}`)}
                 labels={richTextEditorLabels(rt)}
               />
-              <TextField
+              <RecallField
                 name={name("seoTitle")}
                 label={t("fields.seoTitle")}
                 defaultValue={translation?.seoTitle ?? ""}
+                {...box("seoTitle")}
               />
-              <TextField
+              <RecallField
                 name={name("seoDescription")}
                 label={t("fields.seoDescription")}
                 defaultValue={translation?.seoDescription ?? ""}
                 multiline
                 minRows={2}
+                {...box("seoDescription")}
               />
               </Stack>
             ),
@@ -112,4 +127,3 @@ export default async function PageFieldsForm({
     </Stack>
   );
 }
-

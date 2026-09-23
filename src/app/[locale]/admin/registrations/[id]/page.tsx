@@ -8,6 +8,9 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -98,6 +101,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
+  // The three forms that carry a typed value answer a refusal with the value still in its box (§305).
+  const refusal = await refusalMessages({
+    registeredName: tr("registrations.participantName"),
+    reason: tr("registrations.cancelReason"),
+    confirm: tr("registrations.deleteConfirm"),
+  });
 
   return (
     <Stack spacing={3}>
@@ -373,23 +382,24 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
           {tr("registrations.correctName")}
         </Typography>
-        <form action={correctRegisteredNameAction}>
+        <ActionForm action={correctRegisteredNameAction} messages={refusal} data-testid="correct-name-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="registrationId" value={registration.id} />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-            <TextField
+            <RecallField
               name="registeredName"
               label={tr("registrations.participantName")}
               defaultValue={registration.registeredName}
               size="small"
               required
+              slotProps={{ htmlInput: { maxLength: 200 } }}
               sx={{ flex: 1 }}
             />
             <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
               {tr("registrations.saveName")}
             </Button>
           </Stack>
-        </form>
+        </ActionForm>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {tr("registrations.correctNameHelp")}
         </Typography>
@@ -407,15 +417,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.cancelTitle")}
           </Typography>
-          <form action={cancelRegistrationAction}>
+          <ActionForm action={cancelRegistrationAction} messages={refusal} data-testid="cancel-registration-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-              <TextField
+              <RecallField
                 name="reason"
                 label={tr("registrations.cancelReason")}
                 size="small"
                 required
+                slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ flex: 1 }}
               />
               <ConfirmSubmitButton
@@ -427,7 +438,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 color="error"
               />
             </Stack>
-          </form>
+          </ActionForm>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>
@@ -453,14 +464,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
             </Typography>
-            <form action={deleteRegistrationAction}>
+            {/* A refusal keeps the reason; the "I understand" tick is asked again (§305). */}
+            <ActionForm action={deleteRegistrationAction} messages={refusal} data-testid="erase-registration-form">
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="registrationId" value={registration.id} />
               <Stack spacing={2} sx={{ pb: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>
-                <TextField name="reason" label={tr("registrations.deleteReason")} required />
+                <RecallField name="reason" label={tr("registrations.deleteReason")} required slotProps={{ htmlInput: { maxLength: 500 } }} />
                 <CheckboxField name="confirm" required>
                   {tr("registrations.deleteConfirm")}
                 </CheckboxField>
@@ -470,7 +482,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </Button>
                 </Box>
               </Stack>
-            </form>
+            </ActionForm>
           </Box>
         </Box>
       )}

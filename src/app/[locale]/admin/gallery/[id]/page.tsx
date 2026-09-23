@@ -13,7 +13,11 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findAlbumForEditor, listEventsForAlbumSelect } from "@/modules/content/gallery/repository";
 import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
+import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
 import PhotoUploader from "@/modules/content/gallery/ui/PhotoUploader";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { allowedTransitions, canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL, EDITORIAL_TRANSITION_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -180,7 +184,8 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
       <Divider />
 
       {mayEdit ? (
-        <form action={saveAlbumAction}>
+        // A refusal comes back with every box still filled (§305).
+        <ActionForm action={saveAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="albumId" value={album.id} />
@@ -193,12 +198,10 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               slugLocked={album.publishedAt !== null}
             />
             <Box>
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-                {t("editor.save")}
-              </Button>
+              <SubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
       ) : (
         <Alert severity="info">{t("gallery.readOnly")}</Alert>
       )}

@@ -1,13 +1,15 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { bodyToText } from "../domain/body-text";
 import LegalBodyEditor from "./LegalBodyEditor";
 import TokenLegend from "./TokenLegend";
@@ -31,6 +33,10 @@ export type LegalDocumentFormValues = {
  * field name: `## ` for a heading, a blank line between paragraphs, `[words](url)` for a link.
  * The stored shape, the content hash and the action are untouched, which is what makes the
  * already-approved texts on production safe to open in it.
+ *
+ * A refusal — a language left empty — comes back with both texts still in their boxes and the
+ * summary naming the language (§305). A legal text is tens of kilobytes, so it is the action's
+ * returned state that carries it, never a cookie.
  */
 export default async function LegalDocumentForm({
   action,
@@ -40,7 +46,7 @@ export default async function LegalDocumentForm({
   keyLocked,
   submitLabel,
 }: {
-  action: (form: FormData) => Promise<void>;
+  action: ActionFormAction;
   /** The interface language, so a failed save comes back on the page it left. */
   locale: string;
   /** Present when correcting an existing draft, absent when writing a new version. */
@@ -51,16 +57,24 @@ export default async function LegalDocumentForm({
   submitLabel: string;
 }) {
   const t = await getTranslations("Admin.legal");
+  const tAdmin = await getTranslations("Admin");
+  const messages = await refusalMessages({
+    key: t("document"),
+    roTitle: `RO: ${t("titleField")}`,
+    roBody: `RO: ${t("bodyField")}`,
+    enTitle: `EN: ${t("titleField")}`,
+    enBody: `EN: ${t("bodyField")}`,
+  });
 
   return (
-    <form action={action}>
+    <ActionForm action={action} messages={messages} data-testid="legal-document-form">
       <Stack spacing={3}>
         <input type="hidden" name="uiLocale" value={locale} />
         {versionId && <input type="hidden" name="versionId" value={versionId} />}
 
         <Alert severity="warning">{t("editorWarning")}</Alert>
 
-        <TextField
+        <RecallField
           name="key"
           label={t("document")}
           select
@@ -75,7 +89,7 @@ export default async function LegalDocumentForm({
               {t(`keys.${key}`)}
             </MenuItem>
           ))}
-        </TextField>
+        </RecallField>
         {/* A disabled select posts nothing, and the action still needs to know the key. */}
         {keyLocked && <input type="hidden" name="key" value={values?.key} />}
 
@@ -90,11 +104,12 @@ export default async function LegalDocumentForm({
               {locale.toUpperCase()}
             </Typography>
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
+              <RecallField
                 name={`${locale}Title`}
                 label={t("titleField")}
                 required
                 defaultValue={values?.[locale].title ?? ""}
+                slotProps={{ htmlInput: { maxLength: 300 } }}
               />
               {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
               <LegalBodyEditor
@@ -126,11 +141,9 @@ export default async function LegalDocumentForm({
         ))}
 
         <Box>
-          <Button type="submit" variant="contained">
-            {submitLabel}
-          </Button>
+          <SubmitButton label={submitLabel} pendingLabel={tAdmin("editor.saving")} incompleteHintNamed={tAdmin("forms.incompleteFirst")} size="medium" />
         </Box>
       </Stack>
-    </form>
+    </ActionForm>
   );
 }

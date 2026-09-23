@@ -36,7 +36,7 @@ import {
   type EditorialStatus,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
-import { DomainError } from "@/shared/errors/domain-error";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { hasRichTextContent, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import {
   type EventFieldsInput,
@@ -187,16 +187,17 @@ type ResolvedTimes = {
 function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   const zone = fields.timezone;
 
+  // Every refusal here names its field (§47, §305): the form links the sentence to the box.
   const required = (value: string, name: string): Date => {
     const parsed = fromWallTimeInput(value, zone);
-    if (!parsed) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`);
+    if (!parsed) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [name]);
     return parsed;
   };
 
   const optional = (value: string, name: string): Date | null => {
     const parsed = fromWallTimeInput(value, zone);
     if (value.trim() !== "" && !parsed) {
-      throw new DomainError("VALIDATION_ERROR", `${name}: not a date and time`);
+      throw new DomainError("VALIDATION_ERROR", `${name}: not a date and time`, [name]);
     }
     return parsed;
   };
@@ -223,31 +224,39 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
       const blank = !row.date && !row.time && !row.endTime && !row.ro && !row.en && !row.place;
       if (blank) return null;
       const name = `schedule[${index + 1}]`;
-      if (!row.date || !row.time) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`);
-      const startsAt = required(`${row.date}T${row.time}`, name);
-      const endsAt = row.endTime ? required(`${row.date}T${row.endTime}`, `${name}.end`) : null;
-      if (endsAt && endsAt.getTime() < startsAt.getTime()) {
-        throw new DomainError("VALIDATION_ERROR", `${name}: the end cannot be before the start`);
+      // The field paths name the row as the form posts it, zero-based (`scheduleRows.<i>.<box>`).
+      const box = (which: string) => `scheduleRows.${index}.${which}`;
+      if (!row.date || !row.time) {
+        throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [box(row.date ? "time" : "date")]);
       }
-      if (!row.ro || !row.en) throw new DomainError("VALIDATION_ERROR", `${name}: the label is needed in both languages`);
+      const startsAt = required(`${row.date}T${row.time}`, box("time"));
+      const endsAt = row.endTime ? required(`${row.date}T${row.endTime}`, box("endTime")) : null;
+      if (endsAt && endsAt.getTime() < startsAt.getTime()) {
+        throw new DomainError("VALIDATION_ERROR", `${name}: the end cannot be before the start`, [box("endTime")]);
+      }
+      if (!row.ro || !row.en) {
+        throw new DomainError("VALIDATION_ERROR", `${name}: the label is needed in both languages`, [box(row.ro ? "en" : "ro")]);
+      }
       return { startsAt: startsAt.toISOString(), endsAt: endsAt ? endsAt.toISOString() : null, label: { ro: row.ro, en: row.en }, place: row.place || null };
     })
     .filter((item): item is ScheduleItem => item !== null)
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 
   if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
-    throw new DomainError("VALIDATION_ERROR", "endsAt: the event cannot end before it begins");
+    throw new DomainError("VALIDATION_ERROR", "endsAt: the event cannot end before it begins", ["endsAt"]);
   }
   if (raceStartsAt && raceStartsAt.getTime() < startsAt.getTime()) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "raceStartsAt: the race cannot start before the event begins",
+      ["raceStartsAt"],
     );
   }
   if (raceStartsAt && endsAt && raceStartsAt.getTime() > endsAt.getTime()) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "raceStartsAt: the race cannot start after the event ends",
+      ["raceStartsAt"],
     );
   }
   if (
@@ -258,6 +267,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
     throw new DomainError(
       "VALIDATION_ERROR",
       "registrationClosesAt: registration cannot close before it opens",
+      ["registrationClosesAt"],
     );
   }
 
@@ -273,17 +283,20 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * "approved" lives in another table.
  */
 function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
+  // Every refusal names the boxes it is about (§47, §305), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
       throw new DomainError(
         "VALIDATION_ERROR",
         "capacity and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
+        ["registrationMode", ...(fields.capacity !== null ? ["capacity"] : []), ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : [])],
       );
     }
   } else if (fields.declarationDocumentId === null) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "an event that takes registrations must name the approved declaration a participant signs",
+      ["declarationDocumentId"],
     );
   }
 
@@ -293,6 +306,7 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
     throw new DomainError(
       "VALIDATION_ERROR",
       "a start list can only be published for an event that takes registrations here",
+      ["participantListVisibility"],
     );
   }
 
@@ -301,12 +315,14 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
       throw new DomainError(
         "VALIDATION_ERROR",
         "an externally registered event needs the organizer's registration link",
+        ["externalRegistrationUrl"],
       );
     }
   } else if (fields.externalRegistrationUrl !== null || fields.externalProvider !== null) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "the external provider and link belong to an event registered elsewhere; set the mode to EXTERNAL or clear them",
+      ["registrationMode", ...(fields.externalProvider !== null ? ["externalProvider"] : []), ...(fields.externalRegistrationUrl !== null ? ["externalRegistrationUrl"] : [])],
     );
   }
 }
@@ -404,6 +420,8 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      // The paths, so the form can name the boxes (§47, §305) — names, never values.
+      [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))],
     );
   }
   return parsed.data;
@@ -1177,6 +1195,64 @@ export async function createEvent<T extends Record<string, unknown>>(
     );
 
     return event;
+  });
+}
+
+export type CreateAndPublishResult = {
+  event: EditableEvent;
+  /** Whether the event went live in the same breath. */
+  published: boolean;
+  /** Why it did not, when it did not — the refusal the publication guard gave, or null. */
+  refusal: DomainError | null;
+};
+
+/**
+ * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §305; the
+ * owner: "ar trebui sa pot crea si publica dintr-un foc!").
+ *
+ * A new event is a draft (`createEvent`), and taking it live used to be two more presses in
+ * the editor: DRAFT → IN_REVIEW → PUBLISHED (§201). This walks those same two transitions,
+ * through `transitionEvent`, so every publication guard applies unchanged — the role that may
+ * publish, both languages complete (`REQUIRED_PUBLIC_TRANSLATION_FIELDS`), the meeting point —
+ * and nothing here knows a second way to go live.
+ *
+ * **The draft is never thrown away.** The create and the publication share one transaction,
+ * but the publication runs in a savepoint of its own: when the guard refuses — a summary left
+ * empty, a role below Administrator — the savepoint rolls back, the draft commits, and the
+ * refusal comes back beside it so the editor can say "created, not published, and here is what
+ * is missing" (§170's words). What the organizer typed is in the database, not lost to an
+ * alert. A role that may not publish is answered before either transition is tried, so the
+ * event is a draft and not a submission nobody asked for.
+ */
+export async function createEventAndPublish<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: CreateEventInput & { publish: boolean },
+): Promise<CreateAndPublishResult> {
+  const now = input.now ?? new Date();
+
+  return db.transaction(async (tx) => {
+    const event = await createEvent(tx, { actor: input.actor, fields: input.fields, now });
+    if (!input.publish) return { event, published: false, refusal: null };
+
+    if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+      return {
+        event,
+        published: false,
+        refusal: new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish; the event was created as a draft`),
+      };
+    }
+
+    try {
+      const published = await tx.transaction(async (inner) => {
+        const reviewed = await transitionEvent(inner, { actor: input.actor, eventId: event.id, expectedVersion: event.version, to: "IN_REVIEW", now });
+        return transitionEvent(inner, { actor: input.actor, eventId: event.id, expectedVersion: reviewed.version, to: "PUBLISHED", now });
+      });
+      return { event: published, published: true, refusal: null };
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      // The savepoint rolled the two transitions back; the draft stands.
+      return { event, published: false, refusal: error };
+    }
   });
 }
 

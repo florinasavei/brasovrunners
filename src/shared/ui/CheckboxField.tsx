@@ -3,6 +3,7 @@
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import type { ReactNode } from "react";
+import { useRecall } from "@/shared/forms/recall";
 import { CHECKBOX_TAP_TARGET } from "./tap-target";
 
 /**
@@ -26,6 +27,13 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
  *
  * `label` is `children` for the same reason: it may carry a link, and React handles children
  * robustly where it does not handle an element-valued prop.
+ *
+ * ## After a refused submit
+ *
+ * The box comes back as it was ticked (`DECISIONS.md` §305): when the form it sits in has been
+ * answered with a refusal, the tick is whether this box's value was posted — an unticked box
+ * posts nothing, so "not posted" is "unticked", never the page's default. A disabled box posts
+ * nothing either and keeps the page's word; the caller carries its value in a hidden field.
  */
 export default function CheckboxField({
   name,
@@ -47,15 +55,20 @@ export default function CheckboxField({
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
+  const recall = useRecall();
+  const checked =
+    recall.has && !disabled ? (recall.all(name)?.includes(value ?? "on") ?? false) : defaultChecked;
+
   return (
     <FormControlLabel
       control={
         <Checkbox
+          key={recall.generation}
           id={id}
           name={name}
           value={value}
           required={required}
-          defaultChecked={defaultChecked}
+          defaultChecked={checked}
           disabled={disabled}
           sx={CHECKBOX_TAP_TARGET}
         />

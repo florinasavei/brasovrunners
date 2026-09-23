@@ -1,12 +1,15 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
+import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -180,17 +183,39 @@ export default async function StaffPage({ params, searchParams }: Props) {
         is a form a screen reader cannot find.
       */}
       <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
-        <form action={inviteStaffAction}>
+        {/* A refused address or name comes back in its box, named in the summary (§305); the
+            browser refuses first what the schema would (`staffInviteConstraints`). */}
+        <ActionForm
+          action={inviteStaffAction}
+          messages={await refusalMessages({
+            email: t("staff.email"),
+            displayName: t("staff.name"),
+            role: t("staff.role"),
+            preferredLocale: t("staff.preferredLocale"),
+          })}
+          data-testid="staff-invite-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={2}>
-            <TextField name="email" type="email" label={t("staff.email")} required />
-            <TextField name="displayName" label={t("staff.name")} required />
-            <TextField
+            <RecallField
+              name="email"
+              type="email"
+              label={t("staff.email")}
+              required={staffInviteConstraints("email").required}
+              slotProps={{ htmlInput: staffInviteConstraints("email") }}
+            />
+            <RecallField
+              name="displayName"
+              label={t("staff.name")}
+              required={staffInviteConstraints("displayName").required}
+              slotProps={{ htmlInput: staffInviteConstraints("displayName") }}
+            />
+            <RecallField
               name="role"
               label={t("staff.role")}
               defaultValue="CONTRIBUTOR"
               select
-              required
+              required={staffInviteConstraints("role").required}
               helperText={t("staff.roleHelp")}
             >
               {STAFF_ROLES.map((role) => (
@@ -198,21 +223,24 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   {STAFF_ROLE_LABEL[role]} — {t(`staff.roles.${role}`)}
                 </MenuItem>
               ))}
-            </TextField>
-            <TextField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
+            </RecallField>
+            <RecallField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
               {routing.locales.map((value) => (
                 <MenuItem key={value} value={value}>
                   {value.toUpperCase()}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
             <Box>
-              <Button type="submit" variant="contained">
-                {t("staff.invite")}
-              </Button>
+              <SubmitButton
+                label={t("staff.invite")}
+                pendingLabel={t("staff.inviting")}
+                incompleteHintNamed={t("forms.incompleteFirst")}
+                size="medium"
+              />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           {invitesSend ? t("staff.inviteHelpSends") : t("staff.inviteHelp")}

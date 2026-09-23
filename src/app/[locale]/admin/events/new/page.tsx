@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -13,9 +12,13 @@ import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm, { blankTranslation } from "@/modules/content/events/ui/TranslationFieldsForm";
+import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
+import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
-import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
+import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { createEventAction } from "../../actions";
@@ -48,6 +51,17 @@ export const dynamic = "force-dynamic";
  * început" — whether this is one date or a series is the first thing decided, before the date
  * itself, and it stood at the very bottom. A tick, then the frequency (§170), as on the editor.
  *
+ * **A refusal keeps every box** (§305; the owner: "if I submit an invalid form the entire page
+ * gets cleared"). The form is an `ActionForm`: the action returns what it refused and why, the
+ * summary names each field and links to it, and every box — the settings, both languages with
+ * their rich texts, the repeat rule, the programme's rows — comes back as typed, with
+ * JavaScript or without it. Nothing typed goes into the URL.
+ *
+ * **Create and publish in one press**, for a role that may publish (§305; the owner: "ar
+ * trebui sa pot crea si publica dintr-un foc!"): a second button posts the same form with a
+ * marker, and the action walks the two transitions in the create's own transaction. While a
+ * publication requirement is visibly unmet the button dims and names it.
+ *
  * The type defaults to a group run, as `EventFieldsForm` does, so the programme notes and the
  * registration panel follow the type select from the same starting point on both pages.
  */
@@ -59,12 +73,15 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const staffUser = await requireStaff();
   // The action asserts this again; hiding the form from an Author is the courtesy half.
   if (!canCreateEvent(staffUser.role)) notFound();
+  // Whether the second button is offered at all: the service asks the same question again.
+  const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);
 
   const { error } = await searchParams;
   const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
   // The language endonyms are shared with the public switcher and the editor's tabs.
   const tSite = await getTranslations("Site");
+  const messages = await refusalMessages(await eventFormFieldLabels());
 
   return (
     <Stack spacing={3}>
@@ -79,14 +96,15 @@ export default async function NewEventPage({ params, searchParams }: Props) {
       {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       <Alert severity="info">{t("editor.newHelp")}</Alert>
 
-      <form action={createEventAction}>
+      <ActionForm action={createEventAction} messages={messages} data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
 
         <Stack spacing={3}>
           {/* Recurrence, first (BR-REQ-050-02 criterion 7). The copies are drafts like the
-              event itself; the list publishes them together. A tick first, the frequency after
-              it (§170) — the select's "does not repeat" option existed only because the control
-              was always shown. */}
+              event itself, or live with it when it is created and published at once; the list
+              publishes them together otherwise. A tick first, the frequency after it (§170) —
+              the select's "does not repeat" option existed only because the control was always
+              shown. */}
           <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
             <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -122,11 +140,30 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
           <EventFieldsForm event={null} declarations={declarations} />
 
-          <Box>
-            <SubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} size="medium" />
-          </Box>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+            <SubmitButton
+              label={t("editor.create")}
+              pendingLabel={t("editor.saving")}
+              incompleteHintNamed={t("forms.incompleteFirst")}
+              size="medium"
+            />
+            {mayPublish && (
+              <CreateAndPublishButton
+                label={t("editor.createAndPublish")}
+                pendingLabel={t("editor.publishing")}
+                notReadyHint={t("editor.notReadyToPublish")}
+                locales={routing.locales.map((contentLocale) => ({ locale: contentLocale, name: tSite(`languageName.${contentLocale}`) }))}
+                labels={{
+                  title: t("editor.fields.title"),
+                  slug: t("editor.fields.slug"),
+                  excerpt: t("editor.fields.excerpt"),
+                  locationName: t("editor.fields.locationName"),
+                }}
+              />
+            )}
+          </Stack>
         </Stack>
-      </form>
+      </ActionForm>
     </Stack>
   );
 }
