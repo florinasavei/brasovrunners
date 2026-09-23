@@ -83,6 +83,7 @@ async function loadEvent<T extends Record<string, unknown>>(
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: event.publishedAt,
+    timezone: event.timezone,
   };
 }
 

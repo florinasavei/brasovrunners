@@ -32,9 +32,11 @@ import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationW
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
+import { dayIn } from "./domain/age";
 import {
   declarationSigningSchema,
   isMinorOn,
+  minimumAgeRule,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
 } from "./fields";
@@ -81,7 +83,15 @@ export type EventForRegistration = {
   /** The participation window (§104); absent on a partial row means the thirty-minute hold. */
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
+  /**
+   * The event's own zone (`events.timezone`), for the day the minimum age is counted against
+   * (§NNN). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
+   */
+  timezone?: string;
 };
+
+/** `events.timezone`'s column default: what a partial `EventForRegistration` is read in. */
+const EVENT_TIMEZONE_DEFAULT = "Europe/Bucharest";
 
 /**
  * The event as the allocator must see it once the row is locked: the caller's row, with every
@@ -676,8 +686,20 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * deliberately not consulted here: a TEST row carries a full set of synthetic details and
    * goes through exactly the path a real one does (AGENTS.md §12.6).
    */
-  const schema =
-    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema;
+  /*
+    …and one rule is added here for every caller alike: fourteen on the day of the event (§NNN).
+
+    Here because this is the first line that knows the event, and the one door every
+    registration passes — the public form, a staff entry and the desk's walk-in behind it, a
+    restart of a cancelled row further down, and a TEST row, which must be refused exactly as a
+    real one would (AGENTS.md §12.6). Checked with the rest of the schema rather than after it,
+    so a refusal names every field at once instead of one per round trip, and before anything
+    is written or the throttle is spent: a refused birth date leaves no trace but the refusal.
+  */
+  const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
+  const schema = (
+    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema
+  ).superRefine(minimumAgeRule(eventDay));
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     throw new DomainError(
