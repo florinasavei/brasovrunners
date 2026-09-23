@@ -78,6 +78,8 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§NNN)", ()
     await expect(field("event.locationName")).toHaveValue(secret);
     await page.getByRole("switch", { name: "Locația se anunță mai târziu" }).uncheck();
     await expect(field("event.locationName")).toHaveAttribute("required", "");
+    // The event is live, so the save carries the live-edit acknowledgement, as every such save does.
+    await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("place-announced")).toContainText("Locația e anunțată");
 
