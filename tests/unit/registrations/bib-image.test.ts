@@ -57,7 +57,7 @@ describe("§94 the bib preview", () => {
         footerText: "Cronometraj: StartTime România · Urgențe organizator: 0722 000 000",
       },
     };
-    expect(bibImageFooterLines({ ...long, eventTitle: "x", eventDate: "y", replyTo: "contact@example.test" })).toHaveLength(2);
+    expect(bibImageFooterLines({ ...long, eventTitle: "x", eventDate: "y", replyTo: "contact@example.test" }, false)).toHaveLength(2);
     const drawn = await png(long);
     expect(drawn.byteLength).toBeGreaterThan(1000);
     if (process.env.BIB_IMAGE_SAMPLE_FOOTER) writeFileSync(process.env.BIB_IMAGE_SAMPLE_FOOTER, drawn);

@@ -103,9 +103,14 @@ export const BIB_SHEET_FOOTER = { width: BIB.width - 36, size: 8, lineHeight: 10
 /**
  * The footer lines this sheet prints, decided by `bib-footer.ts` from the club's design. A
  * function of its own so the test can hold it beside the picture's: the two must agree.
+ *
+ * `headerPicture` is whether this sheet really draws the club's picture at the top — not
+ * whether the design names one: a picture the route could not fetch prints the band, with the
+ * title and the date the footer would otherwise repeat.
  */
 export function bibSheetFooterLines(
   input: Pick<BibSheetInput, "design" | "partners" | "replyTo" | "siteUrl" | "eventTitle" | "eventDate">,
+  headerPicture: boolean,
 ): string[] {
   return bibFooterLines(
     bibFooterParts(input.design ?? DEFAULT_BIB_DESIGN, {
@@ -114,6 +119,7 @@ export function bibSheetFooterLines(
       siteUrl: input.siteUrl,
       eventTitle: input.eventTitle,
       eventDate: input.eventDate,
+      headerPicture,
     }),
   );
 }
@@ -127,10 +133,6 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const design = input.design ?? DEFAULT_BIB_DESIGN;
-  // The same on every bib of the sheet, so laid out once (§NNN). A second line takes its height
-  // from the number's area, never from the small print's size.
-  const footerLines = bibSheetFooterLines(input);
-  const footerHeight = FOOTER_HEIGHT + Math.max(0, footerLines.length - 1) * BIB_SHEET_FOOTER.lineHeight;
 
   const doc = new PDFDocument({
     size: "A4",
@@ -165,6 +167,11 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
   /** The strip of sponsors takes this much above the small print, when there is one. */
   const SPONSOR_HEIGHT = sponsorPicture ? 30 : 0;
+  // The same on every bib of the sheet, so laid out once (§NNN), and told which header the sheet
+  // really draws. A second line takes its height from the number's area, never from the small
+  // print's size.
+  const footerLines = bibSheetFooterLines(input, headerPicture !== null);
+  const footerHeight = FOOTER_HEIGHT + Math.max(0, footerLines.length - 1) * BIB_SHEET_FOOTER.lineHeight;
 
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -265,21 +272,25 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       });
     }
 
-    // The small print, as the club composed it (§NNN): one line, or two with the last where the
-    // one line always sat. Each line was measured to fit before it got here, so nothing wraps;
-    // the ellipsis is pdfkit's own safety net, never the rule. Never a telephone number —
-    // `bibFooterParts` says why.
+    /*
+      The small print, as the club composed it (§NNN): one line, or two with the last where the
+      one line always sat. Never a telephone number — `bibFooterParts` says why.
+
+      Each line is centred by hand and handed to pdfkit with **no width**. Given a width, pdfkit
+      wraps whatever `lineBreak` says, and its `ellipsis` does nothing without a `height`; so a
+      line a point wider than its box would drop its last word onto a line of its own, 9 points
+      lower — over the second line, or over the cut edge. Without a width pdfkit cannot wrap at
+      all, and `bibFooterWidth` measured the line no narrower than pdfkit sets it, kerning
+      included, so it fits the 503 points it was laid out for.
+    */
+    doc.font("body").fontSize(BIB_SHEET_FOOTER.size).fillColor(COLOR.inkMuted);
     footerLines.forEach((line, index) => {
-      doc
-        .font("body")
-        .fontSize(BIB_SHEET_FOOTER.size)
-        .fillColor(COLOR.inkMuted)
-        .text(line, left + 18, top + BIB.height - 16 - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight, {
-          width: BIB_SHEET_FOOTER.width,
-          align: "center",
-          lineBreak: false,
-          ellipsis: true,
-        });
+      doc.text(
+        line,
+        left + 18 + (BIB_SHEET_FOOTER.width - doc.widthOfString(line)) / 2,
+        top + BIB.height - 16 - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight,
+        { lineBreak: false },
+      );
     });
 
     // The bib's edge, thin, so the cut is guided on all four sides. Last, over the band, so

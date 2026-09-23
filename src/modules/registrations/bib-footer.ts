@@ -16,16 +16,22 @@ import type { BibDesign } from "./bib-design";
  * `next/og`, and the picture is the club's preview of the paper (§180). A footer that wraps in
  * one and not in the other is a preview of a different bib, so neither renderer wraps anything:
  * both ask `bibFooterLines` which lines to draw and draw exactly those, each on its own line
- * with wrapping off.
+ * with wrapping off — the sheet hands pdfkit no width at all, because pdfkit wraps any text it
+ * is given a width for, whatever `lineBreak` says.
  *
  * What makes that possible is measuring in **ems of the footer's own type** rather than in points
  * or pixels. The sheet's footer is 503.28 points of line set at 8 points — 62.91 ems — and the
- * picture sets its footer at whatever size makes its 840 pixels of line the same 62.91 ems. The
+ * picture sets its footer at whatever size makes its 836 pixels of line the same 62.91 ems. The
  * widths come from the font both renderers embed, `src/theme/pdf/Roboto-Regular.ttf`, read out
- * of it once and kept below as a table; `tests/unit/registrations/bib-footer.test.ts` holds the
- * table to the font glyph by glyph, and holds every line this lays out to pdfkit's own
- * measurement. The sum of advance widths ignores kerning, which only ever tightens Roboto, so a
- * line that fits by the table fits on the paper — measured, not guessed.
+ * of it once and kept below as two tables: each character's advance width, and every pair of
+ * characters the font kerns *apart*. Roboto does both — it sets some 6,250 pairs of these
+ * characters closer than their advances and 627 wider, "rt" by 50/2048 of an em, "’l" by 32,
+ * "FT" by 20 — so a sum of advances alone under-measures a line rich in those, and pdfkit then
+ * finds it a point too wide for its box. The measure adds every widening pair and leaves the
+ * tightening ones out: a line may break a hair earlier than it had to, and is never wider on the
+ * paper than it was measured. `tests/unit/registrations/bib-footer.test.ts` holds both tables to
+ * the font, glyph by glyph and pair by pair, and holds random lines rich in the widening pairs to
+ * pdfkit's own measurement — measured, not guessed.
  *
  * Pure, and importing nothing but a type: the same discipline as `bib-design.ts`.
  */
@@ -57,6 +63,12 @@ export type BibFooterFacts = {
   /** The event's title and date as the header would print them, for a header that does not. */
   eventTitle?: string;
   eventDate?: string;
+  /**
+   * Whether this bib's header really is the club's picture rather than the coloured band — the
+   * renderer's to say, not the stored design's: a sheet whose route could not fetch the picture
+   * prints the band, title and date and all, and its footer must not print them a second time.
+   */
+  headerPicture: boolean;
 };
 
 /**
@@ -73,12 +85,14 @@ export type BibFooterFacts = {
  * text and the club's responsibility, and the designer says so beside the box.
  *
  * *The event in the footer* is not a duplicate by construction: a piece is added only when the
- * header does not show it — the club chose a picture instead of the band (the picture replaces
- * the band's title and date, §249), or switched the title or the date off. With the band showing
- * both, the switch adds nothing.
+ * header does not show it — the header is the club's picture instead of the band (the picture
+ * replaces the band's title and date, §249), or the club switched the title or the date off.
+ * With the band showing both, the switch adds nothing. Which header a bib has is
+ * `facts.headerPicture`, what the renderer is about to draw, rather than whether the design
+ * names a picture: a picture that could not be fetched prints the band.
  */
 export function bibFooterParts(design: BibDesign, facts: BibFooterFacts): string[] {
-  const band = design.headerImageSrc === null;
+  const band = !facts.headerPicture;
   const parts: Array<string | null | undefined> = [];
   if (design.showEventInFooter) {
     if (!(band && design.showEventTitle)) parts.push(facts.eventTitle);
@@ -125,14 +139,22 @@ export function bibFooterText(raw: string): string {
 }
 
 /**
- * How wide a piece of text is in the footer's type, in ems: the sum of Roboto Regular's advance
- * widths. A character outside the table — which the club's own line can never contain, but a
- * partner's name could — counts as a whole em, wider than any glyph in it, so an unknown
- * character can make a line wrap early but never overflow.
+ * How wide a piece of text is in the footer's type, in ems, never less than the renderers set
+ * it: the sum of Roboto Regular's advance widths, plus every pair of neighbours the font kerns
+ * apart. The pairs it kerns together are left out, so the measure errs wide by a hair and never
+ * narrow.
+ *
+ * A character outside the table — which the club's own line can never contain, but a partner's
+ * name could — counts as `UNKNOWN_UNITS`, wider than any glyph the font file has with room for
+ * a kern on either side, so an unknown character can make a line wrap early but never overflow.
  */
 export function bibFooterWidth(text: string): number {
   let units = 0;
-  for (const character of text) units += BIB_FOOTER_ADVANCES.get(character) ?? UNITS_PER_EM;
+  let previous = "";
+  for (const character of text) {
+    units += (BIB_FOOTER_ADVANCES.get(character) ?? UNKNOWN_UNITS) + (BIB_FOOTER_KERNING.get(previous + character) ?? 0);
+    previous = character;
+  }
   return units / UNITS_PER_EM;
 }
 
@@ -217,6 +239,13 @@ function longestPrefix(max: number, ok: (length: number) => boolean): number {
 const UNITS_PER_EM = 2048;
 
 /**
+ * What a character outside the table counts as: 1.125 em. The widest glyph anywhere in the font
+ * file is the rupee sign at 2166, and no pair of its characters is kerned apart by more than 50,
+ * so this covers any glyph pdfkit could draw with the kerns on both its sides.
+ */
+const UNKNOWN_UNITS = 2304;
+
+/**
  * Roboto Regular's advance widths — `src/theme/pdf/Roboto-Regular.ttf`, the file both renderers
  * embed — for the characters a footer is made of: ASCII, Latin-1, Latin Extended-A (every
  * Romanian letter, both the comma and the cedilla forms, and the neighbours' names), and the
@@ -255,5 +284,61 @@ const ROBOTO_REGULAR_ADVANCES: Readonly<Record<number, string>> = {
 export const BIB_FOOTER_ADVANCES: ReadonlyMap<string, number> = new Map(
   Object.entries(ROBOTO_REGULAR_ADVANCES).flatMap(([units, characters]) =>
     Array.from(characters, (character) => [character, Number(units)] as const),
+  ),
+);
+
+/**
+ * Every pair of the table's characters that Roboto Regular sets *wider* than its two advance
+ * widths, in 2048ths of an em: each row is `[units, firsts, seconds]`, meaning every character of
+ * `firsts` followed by every character of `seconds` — the font's own kerning classes, which is
+ * why they read as families of one letter. 627 pairs in all, out of the 113,569 the table's 337
+ * characters make.
+ *
+ * Only the widening pairs are here. The font also kerns some 6,250 pairs *together* (and joins
+ * "fi" and "fl" into ligatures narrower than their letters); leaving those out makes the measure
+ * err wide, which can move a word to the second line a hair early and can never make a line run
+ * past its box. Read out of the font with fontkit by laying out every pair, never typed by hand;
+ * `bib-footer.test.ts` lays out every pair again with pdfkit and checks this against it.
+ */
+const ROBOTO_REGULAR_KERNING: ReadonlyArray<readonly [units: number, firsts: string, seconds: string]> = [
+  [50, "rŕŗř", "t"],
+  [32, "’", "lkh"],
+  [22, "(", "YÝŶŸ"],
+  [20, "(", "V"],
+  [20, "fYÝŶŸV", ")"],
+  [20, "FEÈÉÊËĒĔĖĘĚ", "TŢŤȚ"],
+  [19, "fYÝŶŸV", "}"],
+  [19, "LĹĻĽĿ", "AÀÁÂÃÄÅĀĂĄ"],
+  [18, "IÌÍÎÏĨĪĬĮİHNÑĤŃŅŇM", "AÀÁÂÃÄÅĀĂĄ"],
+  [18, "rŕŗř", "yýÿŷv"],
+  [18, "(", "WŴ"],
+  [18, "f", "]"],
+  [18, "YÝŶŸ", "]YÝŶŸV"],
+  [17, "IÌÍÎÏĨĪĬĮİHNÑĤŃŅŇM", "X"],
+  [17, "rŕŗř", "w"],
+  [17, "YÝŶŸ", "TŢŤȚWŴ"],
+  [17, "V", "]"],
+  [16, "rŕŗřf", "'‘’\"“”"],
+  [16, "TŢŤŦȚ", "TŢŤȚYÝŶŸV"],
+  [15, "rŕŗř", "f"],
+  [15, "yýÿŷv", "'‘’\"“”"],
+  [15, "TŢŤŦȚ", "WŴ"],
+  [15, "P", "yýÿŷv"],
+  [15, "WŴ", ")"],
+  [14, "X", "V"],
+  [14, "P", "t"],
+  [14, "WŴ", "}TŢŤȚ"],
+  [13, "yýÿŷv", "f"],
+  [13, "ZŹŻŽ", "AÀÁÂÃÄÅĀĂĄ"],
+  [13, "YÝŶŸ", "X"],
+  [12, "AÀÁÂÃÄÅĀĂĄ", "zźżž"],
+  [12, "WŴ", "]"],
+  [11, "'‘’\"“”", "w"],
+];
+
+/** The widening pairs, turned round: two characters to the units the font adds between them. */
+export const BIB_FOOTER_KERNING: ReadonlyMap<string, number> = new Map(
+  ROBOTO_REGULAR_KERNING.flatMap(([units, firsts, seconds]) =>
+    Array.from(firsts).flatMap((first) => Array.from(seconds, (second) => [`${first}${second}`, units] as const)),
   ),
 );

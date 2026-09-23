@@ -39,14 +39,18 @@ export const BIB_IMAGE = { width: 900, height: 600 } as const;
 /** The band, and the lockup that sits in it, at this card's scale. */
 const BAND_HEIGHT = 96;
 const LOGO_WIDTH = 204;
+/** The card's edge, the cut guide the sheet strokes round each bib. */
+const CARD_BORDER = 2;
 
 /**
- * The small print's geometry (§NNN): across the card less 30 pixels each side — the sheet's 18
- * points at this scale — at the size that makes that line `BIB_FOOTER_EMS` wide, the sheet's own
- * measure. Not a round number, and deliberately: it is what makes a line that fits on the paper
- * fit here, break in the same place and be cut at the same character.
+ * The small print's geometry (§NNN): across the card inside its border, less 30 pixels each side
+ * — the sheet's 18 points at this scale — at the size that makes that line `BIB_FOOTER_EMS` wide,
+ * the sheet's own measure. Satori sizes boxes border-box, so the footer's line is 900 less both
+ * borders less both paddings: 836. Not a round size, and deliberately: it is what makes a line
+ * that fits on the paper fit here, break in the same place and be cut at the same character.
  */
-export const BIB_IMAGE_FOOTER = { width: BIB_IMAGE.width - 60, size: (BIB_IMAGE.width - 60) / BIB_FOOTER_EMS } as const;
+const FOOTER_LINE = BIB_IMAGE.width - 2 * CARD_BORDER - 60;
+export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FOOTER_EMS } as const;
 
 type BibImageInput = {
   bibNumber: number;
@@ -65,9 +69,12 @@ type BibImageInput = {
 /**
  * The footer lines this picture draws, decided by `bib-footer.ts` from the club's design — the
  * sheet's `bibSheetFooterLines` over the same facts, and the test holds the two side by side.
+ * `headerPicture` is whether this picture really draws the club's picture at the top rather
+ * than the band.
  */
 export function bibImageFooterLines(
   input: Pick<BibImageInput, "design" | "partners" | "replyTo" | "siteUrl" | "eventTitle" | "eventDate">,
+  headerPicture: boolean,
 ): string[] {
   return bibFooterLines(
     bibFooterParts(input.design ?? DEFAULT_BIB_DESIGN, {
@@ -76,6 +83,7 @@ export function bibImageFooterLines(
       siteUrl: input.siteUrl,
       eventTitle: input.eventTitle,
       eventDate: input.eventDate,
+      headerPicture,
     }),
   );
 }
@@ -96,11 +104,12 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const nameSize = input.registeredName.length > 26 ? 30 : 37;
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
-  const footerLines = bibImageFooterLines(input);
   // A picture the club uploaded, made absolute for the renderer (§249); the band when there is
   // none. Satori fetches it itself, from this site's own store — nowhere else is accepted.
   const header = bibPictureUrl(design.headerImageSrc, env.APP_BASE_URL);
   const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
+  // Told which header this picture draws, as the sheet is (§NNN).
+  const footerLines = bibImageFooterLines(input, header !== null);
   /** The name, above the number or below it — and nowhere when the club switched it off. */
   const name = design.showName ? (
     <div
@@ -128,7 +137,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           background: COLOR.surface,
           color: COLOR.ink,
           fontFamily: "Roboto, sans-serif",
-          border: `2px solid ${COLOR.line}`,
+          border: `${CARD_BORDER}px solid ${COLOR.line}`,
         }}
       >
         {/* The club's own header picture across the top (§249), or the coloured band with the

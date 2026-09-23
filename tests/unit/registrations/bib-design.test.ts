@@ -44,7 +44,7 @@ describe("§180 what a bib looks like", () => {
   // Since §NNN the footer is the club's to compose (`bib-footer.test.ts`); the platform's own
   // design still prints exactly this.
   const footer = (partners: readonly string[], replyTo?: string | null) =>
-    bibFooterParts(DEFAULT_BIB_DESIGN, { partners, replyTo }).join(BIB_FOOTER_SEPARATOR);
+    bibFooterParts(DEFAULT_BIB_DESIGN, { partners, replyTo, headerPicture: false }).join(BIB_FOOTER_SEPARATOR);
 
   it("names the partners and then the club's mailbox", () => {
     expect(footer(["Primăria Brașov", "Salvamont"], "contact@example.test")).toBe(
@@ -133,7 +133,7 @@ describe("DECISIONS.md §249 the bib's design", () => {
 
   it("still prints no telephone number in the footer", () => {
     // §180's rule, unchanged by anything above: a bib is worn in public.
-    expect(bibFooterParts(DEFAULT_BIB_DESIGN, { partners: ["Primăria Brașov"], replyTo: "contact@example.test" })).toEqual([
+    expect(bibFooterParts(DEFAULT_BIB_DESIGN, { partners: ["Primăria Brașov"], replyTo: "contact@example.test", headerPicture: false })).toEqual([
       "Primăria Brașov",
       "contact@example.test",
     ]);

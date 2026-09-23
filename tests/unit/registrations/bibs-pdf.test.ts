@@ -1,8 +1,10 @@
 import { writeFileSync } from "node:fs";
+import path from "node:path";
 import { inflateSync } from "node:zlib";
-import { describe, expect, it } from "vitest";
+import PDFDocument from "pdfkit";
+import { describe, expect, it, vi } from "vitest";
 import { BIB_BAND_FALLBACK, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { BIB_SHEET_FOOTER, bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
  * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded,
@@ -129,7 +131,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
         footerText: "Cronometraj: StartTime România · Urgențe organizator: 0722 000 000",
       },
     };
-    expect(bibSheetFooterLines({ ...long, eventTitle: "x", eventDate: "y" })).toHaveLength(2);
+    expect(bibSheetFooterLines({ ...long, eventTitle: "x", eventDate: "y" }, false)).toHaveLength(2);
     const pdf = await sheet(4, "two", long);
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(2);
     // Every switch off: no small print, and still a sheet.
@@ -137,6 +139,44 @@ describe("BR-REQ-038-01 the bib sheet", () => {
     expect(bare.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
     const target = process.env.BIBS_PDF_SAMPLE_FOOTER;
     if (target) writeFileSync(target, pdf);
+  });
+
+  /**
+   * §NNN — pdfkit wraps any text it is given a width for, whatever `lineBreak` says, and its
+   * `ellipsis` does nothing without a `height`. A footer line a point wider than its box used to
+   * drop its last word onto a line of its own, 9 points lower: over the second line, or over the
+   * cut edge. So the sheet centres each line itself and hands pdfkit no width to wrap in.
+   *
+   * The partners are the review's own example: a footer whose first line fitted by the advance
+   * widths and not in pdfkit, because Roboto kerns "rt" apart.
+   */
+  it("draws each footer line centred on the bib and without a width, so pdfkit cannot wrap it", async () => {
+    const input = {
+      partners: ["Expert Port Sportivă Start", "Fort Sport", "Fort Heart Turism Asociația", "Munte", "Port Resort", "Expert Primăria Heart"],
+      replyTo: "contact@example.test",
+    };
+    const lines = bibSheetFooterLines({ ...input, eventTitle: "x", eventDate: "y" }, false);
+    expect(lines).toHaveLength(2);
+
+    const measure = new PDFDocument({ autoFirstPage: false });
+    measure.registerFont("footer", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Regular.ttf"));
+    measure.font("footer").fontSize(BIB_SHEET_FOOTER.size);
+
+    const text = vi.spyOn(PDFDocument.prototype, "text");
+    try {
+      await sheet(1, "one", input);
+      const drawn = text.mock.calls.filter(([string]) => lines.includes(String(string)));
+      expect(drawn.map(([string]) => string)).toEqual(lines);
+      for (const [string, x, , options] of drawn) {
+        expect(options, String(string)).toEqual({ lineBreak: false });
+        const width = measure.widthOfString(String(string));
+        expect(width, String(string)).toBeLessThanOrEqual(BIB_SHEET_FOOTER.width);
+        // Centred on the bib, which is centred on the page.
+        expect(Number(x) + width / 2).toBeCloseTo(595.28 / 2, 6);
+      }
+    } finally {
+      text.mockRestore();
+    }
   });
 
   it("writes a sample to disk for a person to look at, when asked", async () => {
