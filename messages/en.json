@@ -444,6 +444,8 @@
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the race numbers, but nothing here changes a registration: cancelling, erasing, resending an email and the “bib printed” mark are the Administrator’s. On race day you can still confirm on a paper declaration, give a place, set a number and check somebody in — from “Race day”.",
       "columnBib": "Race number (BIB)",
+      "bibColumnHint": "A number with an asterisk (e.g. 2*) is provisional: it can still change until registration closes, then it becomes final, is emailed to the runner and only then printed. A bold number (e.g. 1) is final; the ✓ beside it means it has been printed.",
+      "bibProvisionalShort": "provisional",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
       "bibHeldNow": "Race number: {number} — provisional until registration closes.",

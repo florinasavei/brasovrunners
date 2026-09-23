@@ -95,6 +95,9 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
+/** Present for a screen reader, absent on screen (the usual clip pattern). */
+const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -301,6 +304,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
+      // What "2*", a bold "1" and the tick mean (§NNN; the owner: "not sure what that is!") — a
+      // tap-friendly hint, because the cell's own `title` never shows on a phone.
+      hint: t("registrations.bibColumnHint"),
       sortable: true,
       /*
         Whichever number the runner has (§214). Before the window closes it is the provisional
@@ -328,7 +334,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             }}
           >
             {number.value}
-            {number.settled ? "" : "*"}
+            {number.settled ? null : (
+              <>
+                <span aria-hidden="true">*</span>
+                {/* The asterisk, said in a word to a screen reader, which would otherwise read "star". */}
+                <Box component="span" sx={VISUALLY_HIDDEN}>{` ${t("registrations.bibProvisionalShort")}`}</Box>
+              </>
+            )}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken

@@ -444,6 +444,8 @@
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele de concurs, dar nu poți modifica nimic aici: anulările, ștergerile, retrimiterile de email și marcajul „BID printat” sunt ale Administratorului. La ziua cursei poți confirma pe declarație, da un loc, pune un număr și bifa prezența — de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
+      "bibColumnHint": "Numărul cu steluță (de ex. 2*) e provizoriu: se poate schimba până se închid înscrierile, apoi devine definitiv, i se trimite alergătorului pe email și abia atunci se tipărește. Numărul îngroșat (de ex. 1) e definitiv; bifa ✓ de lângă el înseamnă că e deja tipărit.",
+      "bibProvisionalShort": "provizoriu",
       "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
       "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
