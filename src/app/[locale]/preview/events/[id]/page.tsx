@@ -105,6 +105,7 @@ export default async function PreviewEventPage({ params }: Props) {
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
+    minAge: event.minAge,
     updatedAt: event.updatedAt,
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,

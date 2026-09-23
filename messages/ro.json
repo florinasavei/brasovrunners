@@ -208,6 +208,7 @@
       "fullDescription": "Descrierea completă a evenimentului"
     },
     "route": "Traseu",
+    "age": "Vârstă",
     "openRoute": "Vezi traseul",
     "video": {
       "open": "Vezi filmul evenimentului",
@@ -343,7 +344,7 @@
       "participantName": "Numele participantului",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
-      "birthDateMinimumAge": "Opțional aici. Vârsta minimă este 14 ani împliniți în ziua cursei: o dată care arată mai puțin este refuzată.",
+      "birthDateMinimumAge": "Opțional aici. Dacă o scrii, persoana trebuie să aibă, în ziua cursei, cel puțin vârsta minimă a evenimentului ales (numărul cu „+” de lângă nume); altfel înscrierea este refuzată.",
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
       "listOptIn": "Persoana vrea să apară pe lista publică de participanți",
@@ -576,7 +577,7 @@
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui.",
-      "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are 14 ani împliniți în ziua cursei, iar vârsta minimă de participare este 14 ani. Verifică data cu persoana."
+      "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -800,6 +801,8 @@
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "minAge": "Vârsta minimă (ani)",
+      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea o face un părinte. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -2160,7 +2163,7 @@
       "fieldsIntro": "Verifică aceste câmpuri:",
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "emergencySame": "Persoana de contact trebuie să aibă alt număr decât al tău — pe al tău nu te sună nimeni dacă ți se întâmplă ceva.",
-      "tooYoung": "Vârsta minimă de participare este 14 ani împliniți în ziua cursei.",
+      "tooYoung": "Vârsta minimă de participare la acest eveniment este {age} împliniți în ziua cursei.",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
@@ -2182,8 +2185,13 @@
     "displayName": "Nume afișat public",
     "displayNameHelp": "Implicit, pe lista de participanți și în rezultate apare numele tău complet. Dacă preferi altceva — de exemplu „Ana P.” — scrie-l aici. Dacă nu vrei să apari deloc pe listă, bifează opțiunea de mai jos.",
     "birthDate": "Data nașterii",
-    "birthDateHelp": "Vârsta minimă este 14 ani împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
-    "ageRule": "Participanți de la 14 ani; sub 18 ani, înscrierea o face un părinte.",
+    "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
+    "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
+    "ageRule": {
+      "minimumAndGuardian": "Participanți de la {age}; sub 18 ani, înscrierea o face un părinte.",
+      "minimumOnly": "Participanți de la {age}.",
+      "guardianOnly": "Sub 18 ani, înscrierea o face un părinte."
+    },
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Feminin",

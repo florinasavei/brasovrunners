@@ -17,6 +17,8 @@ import {
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { findEventForRegistrationById } from "@/modules/events/repository";
+import { MIN_PARTICIPANT_AGE, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
@@ -240,17 +242,23 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     /*
       The form comes back as typed, the event still selected (§315).
 
-      Under fourteen on the race day (§321) is the one refusal here about a fact the volunteer
-      typed and can check with the person in front of them, so it keeps its own sentence — the
-      generic "check what you entered" would send them hunting through a form that is correct.
-      The rule's marker is not a box: the summary names the birth date alone, under its label.
+      Under the event's minimum age on the race day (§321) is the one refusal here about a fact
+      the volunteer typed and can check with the person in front of them, so it keeps its own
+      sentence — the generic "check what you entered" would send them hunting through a form that
+      is correct. The sentence names the chosen event's own number (§NNN), read from the event
+      the refusal was about, in the backoffice's language. The rule's marker is not a box: the
+      summary names the birth date alone, under its label.
     */
     const refusal = refused(error, form, {
       fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE),
     });
-    return isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE)
-      ? { ...refusal, error: "UNDER_MINIMUM_AGE" }
-      : refusal;
+    if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
+    const event = await findEventForRegistrationById(getDb(), eventId);
+    return {
+      ...refusal,
+      error: "UNDER_MINIMUM_AGE",
+      errorValues: { age: yearsPhrase(event?.minAge ?? MIN_PARTICIPANT_AGE, locale) },
+    };
   }
 
   // A success goes to where the new row is visible with the status it actually landed in —

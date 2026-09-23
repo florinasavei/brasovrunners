@@ -813,13 +813,16 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
 export async function listEventsAcceptingRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: "ro" | "en",
-): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string }>> {
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number }>> {
   return db
     .select({
       id: events.id,
       title: eventTranslations.title,
       startsAt: events.startsAt,
       timezone: events.timezone,
+      // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
+      // birth date is counted against before pressing (§NNN).
+      minAge: events.minAge,
     })
     .from(events)
     .leftJoin(

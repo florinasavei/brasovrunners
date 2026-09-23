@@ -32,7 +32,7 @@ import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationW
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
-import { dayIn } from "./domain/age";
+import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import {
   declarationSigningSchema,
   isMinorOn,
@@ -88,6 +88,13 @@ export type EventForRegistration = {
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
    */
   timezone?: string;
+  /**
+   * The event's own minimum age (`events.min_age`, §NNN), counted on that day at every door.
+   * The three callers that submit read it off the row and pass it; absent on a partial row
+   * means the column's default, `MIN_PARTICIPANT_AGE` — the same fourteen the column gives an
+   * event nobody set a number on, so a fixture built without it counts what the row holds.
+   */
+  minAge?: number;
 };
 
 /** `events.timezone`'s column default: what a partial `EventForRegistration` is read in. */
@@ -687,7 +694,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * goes through exactly the path a real one does (AGENTS.md §12.6).
    */
   /*
-    …and one rule is added here for every caller alike: fourteen on the day of the event (§321).
+    …and one rule is added here for every caller alike: the event's own minimum age on the day
+    of the event (§321; the number is the event's since §NNN, fourteen unless set otherwise).
 
     Here because this is the first line that knows the event, and the one door every
     registration passes — the public form, a staff entry and the desk's walk-in behind it, a
@@ -699,7 +707,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
   const schema = (
     origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema
-  ).superRefine(minimumAgeRule(eventDay));
+  ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     throw new DomainError(

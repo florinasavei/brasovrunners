@@ -381,6 +381,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
+    // Who may enter, counted on the event's day at every door (§NNN).
+    minAge: fields.minAge,
     registrationOpensAt: times.registrationOpensAt,
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
@@ -820,6 +822,8 @@ const SERIES_COLUMNS = [
   "bibDesign",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",
+  // One race, one age rule: every date of a series takes the same people (§NNN).
+  "minAge",
   "declarationDocumentId",
   "participantListVisibility",
   "externalProvider",
@@ -1420,6 +1424,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     capacity: source.capacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
+    // Who may enter is a property of the race, not of one edition (§NNN): a copy and every date
+    // of a series keep the source's minimum age, like its capacity.
+    minAge: source.minAge,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
     registrationClosesAt: source.registrationClosesAt,

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { isYoutubeLink } from "@/modules/events/domain/video";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
@@ -408,6 +409,13 @@ export const eventFieldsSchema = z
      */
     confirmationOpensDaysBefore: wholeNumberWithDefault(7, { min: 0, max: 60 }),
     confirmationDeadlineDaysBefore: wholeNumberWithDefault(2, { min: 0, max: 60 }),
+    /**
+     * The youngest a participant may be on the day of the event, in years (§NNN, amending §321:
+     * "actually this min age must be set at event level!"). Absent or empty means the club's
+     * fourteen, which is also the column's default; zero means no minimum. The bounds are the
+     * database's CHECK, said again here so the box carries them (§315).
+     */
+    minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: 0, max: 99 }),
     registrationOpensAtWallTime: z.string().trim(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,

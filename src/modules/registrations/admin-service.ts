@@ -185,6 +185,8 @@ async function eventForRegistration<T extends Record<string, unknown>>(
     raceId: event.raceId,
     publishedAt: event.publishedAt,
     timezone: event.timezone,
+    // The event's own minimum age (§NNN): a staff entry and the desk's walk-in meet the same one.
+    minAge: event.minAge,
   };
 }
 
