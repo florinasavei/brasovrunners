@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.60-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.61-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.60-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.61-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12832,3 +12832,42 @@ Baseline `BR-V1.59-2026-09-23`.
 **The underline in the email.** A `__marker__` beside the existing `**marker**` (§189), applied after escaping, so it can only ever wrap text this codebase wrote, as an `<u>` with an inline `text-decoration` because a few clients reset the element; the plain-text part strips it. The already-registered sentence uses it in both languages — "__Ești deja înscris__ la acest eveniment…". The screen after the form stays generic (BR-REQ-031-01 criterion 3, §19.4); only the inbox, which only the address's owner reads, says it, and now says it louder.
 
 Baseline `BR-V1.60-2026-09-23`.
+
+## 310. Decided — contact-form spam that passes every gate is delivered marked, never refused (2026-09-23)
+
+**Context.** The owner, 2026-09-23: „la cel de contact cred ca imi mai trebuie ceva captcha pt ca primesc spam cu SEO stuff". The sample came through the production form from `domains@search-<domain>`: "Feature <domain> in Google's Search Index … searchregister.net".
+
+**Why more captcha changes nothing (checked against the code: it holds).** `submitContactAction` verifies Turnstile first and refuses only `failed`. A plain HTTP script never runs the widget, so it posts an empty `cf-turnstile-response`. `verifyTurnstile("")` answers `unavailable`, and that passes (§216). `submitContactMessage` then runs `looksLikeSpam`, and the script passes that too: it leaves the hidden field empty, and it posts either the `renderedAt` it scraped, more than a second old, or no render time at all, which has not been suspicious since §217. The per-identity throttle (five an hour per canonical address, §149) never engages either, because each spam comes from one address, once. Every gate passes by design. A second challenge would pass the same way: the widget is exactly the thing a script does not run. And turning "no token" into a refusal would repeat Dani's failure from §216: a person with JavaScript off, a content blocker or a bad five seconds at Cloudflare posts the same nothing, and §205 says that person must still reach the club.
+
+**Decision: mark, do not refuse.** A pure classifier, `contact/domain/suspicion.ts`, reads what got through. Two things make a message suspicious:
+
+- *The challenge was on and no token came with the post.* "On" means the club's switch is on and both keys are set (§97, §254). The action reads whether a token was present from the post itself, not from the verdict: `unavailable` covers both "no token" and "a token Cloudflare did not answer for", and only the first is what a script leaves behind. A Cloudflare outage must not mark every message, so a token without an answer is a signal and never a reason. `verifyTurnstile` is unchanged, because the registration form depends on its verdicts.
+- *The sender's domain imitates the club's.* The domain contains the club's name but is neither the club's own domain nor a subdomain of it. The name is the label before the ending of `APP_BASE_URL`'s host, hyphens ignored. The club's own domain is the host's last two labels, the same apex `/admin/tasks` reads, so QA's `qa.` host gives the same answer. `search-club.example`, `club-seo.com`, `clubexample.net` and `club.example.lookalike.net` imitate. `club.example` and `mail.club.example` are the club.
+
+The rule is off, never "everything matches", on `localhost`, an IP address, a single-label host, a provider's shared domain (`vercel.app`) and a label under four characters. A `co.uk`-shaped host therefore turns the rule off rather than matching every "co".
+
+It was first worded as "the *registrable part* contains the name". It tests the whole domain instead, for two reasons. `club.example.lookalike.net` has `lookalike.net` as its registrable part and is the most classic imitation there is. And getting the registrable part right needs a public-suffix list, which a rule meant to stay dumb and explainable refuses to carry.
+
+A suspicious message is **delivered**. Its subject starts with `[posibil spam] `, after QA's `[QA] ` (AGENTS.md §16.4). Its plain-text and HTML bodies end, below the message and the signature and behind a rule, with a short Romanian footer. The footer gives one plain line per reason ("Verificarea anti-bot nu a rulat: formularul a fost trimis fără token — de obicei un program, nu un om." / "Adresa expeditorului imită domeniul clubului: search-club.example.") and a `Semnale:` line. The signals are the seconds from page load to submit, how many links the message holds with their hosts (at most five, each once), the hidden field's state and the challenge's outcome. Links count only when written with `http://`, `https://` or `www.`, because a bare `club.example` in a sentence is prose. The signals are information for the person reading and never on their own a reason.
+
+The sender's answer is the same "sent" whatever the classification. The service returns exactly `{ outcome: "sent" }`, so the action cannot tell a marked message from any other, and a script learns nothing about which signal it tripped (§39, AGENTS.md §19.4). `Reply-To` stays the visitor's, because a real person whose browser never ran the widget looks exactly like this and must still be answerable. A message with neither reason is byte-for-byte what it was, and a test pins the literals. The prefix is stable because the club filters on it (`SETUP.md` §38).
+
+*The honeypot line is not always "gol".* The trap lets through a browser's autofill of the sender's own address (§282). The footer reports what the field actually held rather than assuming it was empty.
+
+*Never an IP, and nothing new kept.* The visitor's IP goes to Cloudflare with the token, as it has since §97, and nowhere else: not into the screening, the message, a row or the log. The log line (`[contact] delivered marked as possible spam: no-token,imitates-club`) names reason kinds only, never an address or a domain, following §216's rule for its own line. Nothing is stored beyond the throttle's hash. The privacy notice needs no change: the footer is derived from what the visitor posted and from the check's verdict.
+
+*Unchanged:* a filled trap or an instant post is still answered "sent" and sent nowhere (BR-REQ-070-04 criterion 4). The mark comes after those gates and cannot turn into a drop.
+
+*Rejected:*
+- Refusing a missing token, or a "harder" challenge mode: it refuses the very people §205 and §216 exist for, and the script runs no widget of any difficulty.
+- A second captcha vendor: same reason.
+- Dropping a message that trips both reasons: a mark costs one filter, while a drop can lose a person. The default is kept and put to the owner.
+- Words or link counts as a reason: an SEO pitch is prose with one link, and so is a runner's question with a Strava link. They are signals.
+- A blocklist of sender domains: it is a list somebody maintains forever, and the imitation rule covers the pattern that actually arrived.
+- A hidden "the widget was drawn" field: a script that scrapes the form posts it back and one that posts a fixed payload does not, so it only weakens detection.
+- An IP-keyed throttle: §19.4 and §39.
+- Telling the sender the message was marked: that is the oracle.
+
+**Consequences.** `modules/contact/domain/suspicion.ts` (new: `contactSuspicion`, `clubIdentity`, `imitatesClub`); `modules/contact/message.ts` (`SUSPICIOUS_SUBJECT_PREFIX`, the footer, an optional `suspicion` argument); `modules/contact/service.ts` (`ContactScreening`, an optional sixth argument that marks nothing when omitted); `app/[locale]/contact/actions.ts` (reads the token's presence and derives the club's host from `APP_BASE_URL`). Tests: unit `contact/suspicion.test.ts` (new), `contact/message.test.ts`; integration `contact/service.test.ts`. No catalogue keys: the club's copy is Romanian in `message.ts`, as it already was. No migration, no dependency. BR-REQ-070-04 criterion 11; `SETUP.md` §38 step 7 (the Gmail filter).
+
+Baseline `BR-V1.61-2026-09-23`.
