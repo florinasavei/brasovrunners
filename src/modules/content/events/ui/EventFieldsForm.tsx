@@ -277,8 +277,12 @@ export default async function EventFieldsForm({
               <Typography variant="body2" color="text.secondary">
                 {t("editor.programmeHelp")}
               </Typography>
+              {/* The rows follow the start date: `WallTimeField` posts `event.startsAt` as
+                  `event.startsAtDate` and `event.startsAtTime`, and the rows island listens to
+                  the date box by that name, the way `OnlyForType` reads the type select. */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
+                startDateName="event.startsAtDate"
                 labels={{
                   date: t("editor.programmeRows.date"),
                   time: t("editor.programmeRows.time"),

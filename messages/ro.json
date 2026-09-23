@@ -611,7 +611,7 @@
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
       "scheduleHelp": "Programul propriu-zis sunt rândurile cu ore de la „{panel}” → „{section}”, comune ambelor limbi. Aici scrii, în această limbă, ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Pe pagina evenimentului apare sub rânduri; emailul de reamintire repetă rândurile și trimite aici.",
       "programmeSection": "Program",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
       "programmeNotesHint": "Ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp — se scrie la „{panel}”, în fiecare limbă, la „{fold}”; apare pe pagină sub aceste rânduri.",
       "programmeRows": {
         "date": "Data",
