@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.65-2026-09-23
+
+- **The signature on the declaration must be the name you registered with** — or, for a minor, the parent's or guardian's name given at registration. The box shows that name in bold, and keeps it in bold when it turns red. The browser refuses a different name before the press, and the server refuses it anyway: nothing is recorded, and the same link still works. Capital letters, extra spaces, missing diacritics, a phone's curly apostrophe or dash and invisible characters are forgiven. A missing or extra letter, a hyphen, or the names in another order are not. Without JavaScript the page explains the refusal once, above the form, and brings back the tick, the document and the typed name. If the registered name is itself wrong, the club corrects it; a parent's name cannot be corrected, so that registration is cancelled and the minor registered again. The name typed to confirm an erasure is compared the same way. `DECISIONS.md` §314.
 ## BR-V1.64-2026-09-23
 
 - **The registrations list says what "2*" means** — a tap-friendly hint on the race-number column: an asterisk is a provisional number, a bold one is final, a tick means printed. **Feature branches create no Vercel deployment** (`vercel.json`): cancelled previews had spent the Hobby plan's hundred a day and blocked the V1.62 release. `DECISIONS.md` §313.

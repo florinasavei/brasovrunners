@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.64-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.65-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.64-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.65-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12968,3 +12968,61 @@ Baseline `BR-V1.63-2026-09-23`.
 `vercel.json` (new, root, read by both projects) sets `git.deploymentEnabled` to `false` for `feat/*`, `fix/*`, `docs/*`, `test/*`, `chore/*`, `batch/*`, `wip/*` and `worktree-*`. Vercel reads it from the commit being deployed, so a branch that carries it already creates nothing, and once it is on `qa` every branch cut from `qa` inherits it. `main` and `qa` deploy exactly as before. Nothing was lost: no preview of a feature branch was ever looked at — both projects cancelled them — and the checks a pull request needs are GitHub's `docs-check` and `e2e`, not Vercel's. A branch named outside those prefixes would still build a preview; the prefixes are the ones this repository has used.
 
 Baseline `BR-V1.64-2026-09-23`.
+
+## 314. Decided — the signature is the registered name, typed exactly (2026-09-23)
+
+**Context.** The owner saw a signature reading "Florin Munca2" under "You registered as Florin Munca — type the same name". He asked: "can I also have this validation here? So I have to type the exact name? and this name should be bolded!" §283 had made the registered name a hint and refused to validate it. Its reason was that comparing strings would mean the platform deciding what a person's name is. This section reverses that half of §283. Its identity-document list and its telephone rules stand.
+
+**Why this is not the platform deciding a name.** The same person gave the name at registration, minutes or days earlier. It is also the name the declaration's own text already prints as the declarant (`{{declarant}}`, §108). A signature that disagrees with the text above it is a declaration that contradicts itself. The only way to type something else is not to be paying attention, and a signature exists to rule that out.
+
+**The rule.** One pure function, `domain/signature-name.ts`, which the browser and the service both import:
+- The expected name is the declarant's: the parent's or guardian's for a minor (§108), the participant's otherwise. It uses the same truthiness as `declarantValues`, so the text and the rule never name two different people.
+- Both names go through `foldName` (`domain/name-fold.ts`), now shared with the erase confirmation (§179) so the two "same name?" rules cannot disagree.
+- Forgiven: case, runs of whitespace, diacritics (`NFD`, so comma-below, cedilla and a bare letter are one letter), the typographic shape of an apostrophe or hyphen, and characters nobody can see. The character classes are written as `\u` escapes, so a reviewer can read them and no editor can strip them.
+- Not forgiven: any letter, digit, hyphen or apostrophe, or the order of the names. "Ana Maria" is not "Ana-Maria", and "Munca Florin" is not "Florin Munca".
+- An empty expected name never matches.
+- What is recorded stays exactly what was typed.
+
+**Where it is enforced.**
+- On the server: `signDeclaration` refuses a mismatch with `VALIDATION_ERROR` on `typedName` before the acceptance is written. The transaction rolls back, the token is not spent, and the same link signs with the right name afterwards.
+- In the browser: the signature box is a small client island, `SignatureField`. It shows the expected name in bold (`t.rich`) and calls `setCustomValidity` through the same function, so the browser itself refuses the press. The red state under the box waits until the box has been left (§198).
+
+**Without JavaScript.**
+- The action redirects to `?invalid=name#declaration-errors`. The URL carries that code and nothing personal (`AGENTS.md` §14.5).
+- The page shows its own focusable summary: the expected name in bold; that nothing was recorded and the link still works; a link into the box; and what to do if the registered name is itself wrong.
+- The tick, the document kind, the series and number, and the typed name come back from a sealed ten-minute cookie on the token's own path. The link's secret is never put in it.
+- The cookie is read, not consumed. A Server Component cannot delete a cookie (the same holds for the registration form's draft, §142), and a successful signature clears it. Anyone who can open that path already holds the link that signs, so a client island whose only job is deleting the cookie would not earn its JavaScript.
+
+**When the registered name is itself wrong.**
+- An adult is told to write to the club, or to reply to the email where a reply reaches somebody. The club's "Corectează numele" fixes the participant's name, and the same link then signs.
+- A parent is not told that, because no staff verb edits `guardian_name` (`AGENTS.md` §15.11). Instead they are told what actually works: cancel from "Înscrierile mele", or ask the club to cancel it, then register the minor again with the right name. The new registration takes a place like any other, or goes on the waiting list if the race has filled by then (BR-REQ-033-04).
+- Letting the club edit a guardian's name would be a new staff verb and needs its own decision.
+
+**Rejected.**
+- Keeping it a hint (§283): the owner saw what a hint allows.
+- A fuzzy match such as edit distance: "Florin Munca2" is one edit away from "Florin Munca", which is exactly the signature this rule exists to refuse.
+- Comparing against the display name: the declaration names the legal name (BR-REQ-031-04 criterion 6).
+
+`AGENTS.md` §10.8 and §15.3 step 3 say the typed name is the declarant's own name as registered (the parent's for a minor).
+
+*The name is compared before anything else moves (found in review).* `signDeclaration` asked "is this the declarant's name?" after the hold expiry and the re-allocation. A lapsed hold that re-allocates to the waiting list returns early, so on that one path a wrong name was never compared, and the early return committed the token spend and the move to the queue. The check now runs as soon as the registration is read and its status allowed, before `expireStaleHolds` and `allocateOrWaitlist`. Neither name changes under the expiry, so nothing is lost by asking first, and a refused name never reaches the allocator. One visible consequence: when the name and the declaration version are both wrong, the name refusal comes first, and the "the text has changed" refusal follows on the next press. Verified by `tests/integration/registrations/signature-name.test.ts` (capacity 1, a lapsed hold with somebody waiting, a wrong name refused with the hold, the queue and the link untouched). The test failed before the move.
+
+*The name is bold wherever it is asked for, and said once.* The owner asked for the name in bold ("this name should be bolded!"), and that applies most in the red state, when somebody is looking for the name to retype. Under the box, the mismatch sentence now carries the name in `<strong>` (`declare.signatureMismatchRich`, `…ForMinorRich`). The browser's bubble gets the same sentence as plain text, because `setCustomValidity` takes a string. After a refusal made by the server, the summary above the form says what went wrong: the title, that nothing was recorded and the link still works, a link to the box, and how a wrong registered name is put right. The mismatch sentence, with the name, stands under the box and nowhere else. Before, both sentences appeared twice, a screen apart, and on a 720-pixel desktop that pushed the button under the sticky footer. When the browser itself refuses the press there is no summary, so the what-to-do sentence still follows the mismatch under the box.
+
+*The fold is wider than the erase confirmation's three things, and the erase confirmation now shares it.* `domain/name-fold.ts` forgives what a keyboard or a phone does and nothing a person decides:
+- case, lower-cased in Romanian first, so a capital whose lower case carries a mark folds too;
+- runs of whitespace, including the non-breaking space a phone inserts;
+- every combining mark (`\p{M}` rather than `\p{Mn}`), so ș and ț with a comma below, with a cedilla, or plain all fold alike;
+- the typographic shape of an apostrophe or a hyphen: an iPhone's smart punctuation turns `'` into `’` by itself, and a correct "O'Brien" must not be refused from a phone;
+- characters nobody can see, such as zero-width spaces, soft hyphens and a BOM.
+
+Letters, digits, hyphens, apostrophes and the order of the names still have to match. "OBrien" is not "O'Brien", "Ana Maria" is not "Ana-Maria", and "Munca Florin" is not "Florin Munca". The typed name that confirms an erasure from the registrations list (§192; `erase-confirmation.ts`, which cited BR-REQ-037-06 and §179 and said "three things are folded away, and nothing else") now folds the same way. That sentence no longer holds, and it is replaced here, because two rules asking "is this the same name?" must never give two answers. The browser's live check imports the same pure function, so the island and the service cannot disagree either.
+
+*The sealed draft is read, not consumed.* This is the §142 limit: a Server Component cannot delete a cookie. The draft lives at most ten minutes, on the token's own path. It is read only for `?invalid=name` and cleared by a successful signature. Whoever can open that path already holds the link that signs.
+
+*What the last review left, knowingly.* Three edges remain, all reachable only with JavaScript off or before the page has hydrated, where the browser's own check does not run:
+- A signature of spaces alone is posted (the `required` attribute only refuses an empty string); the server refuses it, and the page's title then speaks of a name that "does not match" while the box holds the spaces — the refusal is right, the wording approximate.
+- When the signature and another field are both refused at once, the page names only the signature.
+- Each link allows ten requests an hour (§39), and a refused press without JavaScript spends two (the post and the page it returns to); a person who mistypes their name about five times in an hour meets the "link no longer works" page although the refusal told them the link was fine. It recovers by itself within the hour. The throttle is the guard against guessing, and loosening it for this path would weaken it for every path, so it stays; if it ever bites a real runner, the refusal should say "try again in an hour" rather than the throttle being raised.
+
+Baseline `BR-V1.65-2026-09-23`.

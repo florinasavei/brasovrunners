@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.64-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.65-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.64-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.65-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -698,6 +698,7 @@ registration — and it lists registrations and never changes an address.
 
 13. Given addresses under "anunță-ne când cineva confirmă" on `/admin/emails`, when a real registration is confirmed — by signature or at the desk — then one `CLUB_CONFIRMATION_NOTICE` is queued per address (`registration:<id>:club-confirmed:<address>:<time>`), naming the participant, the event and the race number, with no token, no QR and no attachment; none is queued for a test registration or when no address is named. The allowance forecast counts six messages per completed registration because of it (`DECISIONS.md` §245).
 14. Given addresses under „Copie ascunsă la emailurile către participanți” on `/admin/emails`, when a message of a participant type (every type but `DECLARATION_ARCHIVE`, `CLUB_CONFIRMATION_NOTICE`, `STAFF_INVITATION` and `REGISTRATION_OPENED`) is queued for a REAL registration, then the addresses ride in the row's payload as Bcc — minus the participant's own address and anything already there, compared without regard to case — so a list edited afterwards cannot redirect a message already queued, and the sender carries them as envelope recipients that face `EMAIL_ALLOWLIST` on their own outside production; no copy is stamped on a TEST registration's message or on a message with no registration behind it; the allowance forecast on `/admin/emails` and `/admin/tasks` counts one more message per address for each of the five participant messages and says how many of a registration's messages are the copies; the box that sets the list warns that the copy carries the participant's action links and QR (2026-09-22, `DECISIONS.md` §293).
+15. Given a declaration being signed by link, with JavaScript or without, when the typed signature is not the declarant's name, then it is refused. The declarant's name is the registered name, or for a minor the parent or guardian name given at registration (§108). The comparison ignores case, runs of whitespace, diacritics, the typographic shape of an apostrophe or hyphen, and invisible characters; every letter, digit, hyphen and apostrophe and the order of the names must match. The refusal comes before any hold expiry or allocation runs: nothing is recorded, the action link is not spent, and the same link then signs with the right name. What is recorded is what was typed. The box shows the expected name in bold as its hint and again, in bold, in its red state, and the browser refuses the press with the same sentence in plain text. A refusal by the server returns to a focusable summary above the form (`?invalid=name`, with no name in the address). The summary says that nothing was recorded and the link works, links to the box, and says how a wrong registered name is put right: the club corrects an adult's; a minor's registration is cancelled and made again. It does not repeat the mismatch sentence shown under the box. The tick, the document type, the series and number and the signature come back from a sealed ten-minute cookie that never holds the link's secret (2026-09-23, `DECISIONS.md` §314).
 
 **Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `notifications/club-notices.test.ts` (11–13), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`, `notifications/club-notices.test.ts`, `notifications/delivery.test.ts` (12); e2e `registration-form.spec.ts`
 
@@ -971,6 +972,7 @@ registration — and it lists registrations and never changes an address.
 5. Given an erasure, when it completes, then no message is sent to the participant.
 6. Given any role below Administrator, when an erasure is attempted, then it is refused and nothing is removed.
 7. Given an unknown registration, when an erasure is attempted, then it is refused rather than reported as a silent success.
+8. Given an erasure from the registrations list, when the Administrator types the row's name to confirm it, then the typed name is compared with that registration's name using the same fold as the declaration's signature (`domain/name-fold.ts`). Forgiven: case, runs of whitespace (a non-breaking space included), diacritics (any combining mark, with a comma below or a cedilla), the typographic shape of an apostrophe or a hyphen, and invisible characters (zero-width spaces, soft hyphens). Nothing else is forgiven: every letter and digit, every hyphen and apostrophe, and every word, in order. A blank name never matches, and a name that does not match erases nothing (2026-09-23, `DECISIONS.md` §314).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 

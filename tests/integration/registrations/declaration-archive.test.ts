@@ -136,7 +136,7 @@ describe("the club's archive copy (§99)", () => {
     await addTestRegistrations(db, admin, { eventId: event.id, count: 1, now: NOW });
     const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(row.kind).toBe("TEST");
-    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Runner Test")), idDocument: "BV 000000" }, NOW);
+    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, row.registeredName)), idDocument: "BV 000000" }, NOW);
 
     const types = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id))).map((r) => r.messageType);
     expect(types).toContain("REGISTRATION_CONFIRMED");
