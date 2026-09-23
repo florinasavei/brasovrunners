@@ -13,9 +13,15 @@ import { participants } from "./participants";
 import { registrations } from "./registrations";
 
 /**
- * The five purposes from AGENTS.md §12.8. A database enum, so a token issued for a purpose
- * nobody defined cannot exist — BR-REQ-036-02 criterion 2 rejects a token used outside its
- * purpose, and that rule is worth nothing if the purpose column can hold free text.
+ * The five purposes from AGENTS.md §12.8, and a sixth. A database enum, so a token issued for a
+ * purpose nobody defined cannot exist — BR-REQ-036-02 criterion 2 rejects a token used outside
+ * its purpose, and that rule is worth nothing if the purpose column can hold free text.
+ *
+ * `LIST_CONSENT` is the participant's own switch for the public participant list (BR-REQ-039-01;
+ * `DECISIONS.md` §143): "take me off" or "show my name", after registration, from the link in
+ * the confirmation. Its own purpose rather than a second use of `MANAGE_REGISTRATION`, because
+ * spending it must not spend the cancel link in the same email — one active token per
+ * (registration, purpose) is the rule below, and the two links have different lives.
  */
 export const emailActionTokenPurpose = pgEnum("email_action_token_purpose", [
   "VERIFY_REGISTRATION_EMAIL",
@@ -23,6 +29,7 @@ export const emailActionTokenPurpose = pgEnum("email_action_token_purpose", [
   "MANAGE_REGISTRATION",
   "WAITLIST_OFFER",
   "MANAGE_PROFILE",
+  "LIST_CONSENT",
 ]);
 
 export type EmailActionTokenPurpose = (typeof emailActionTokenPurpose.enumValues)[number];
