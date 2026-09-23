@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { foldName } from "@/modules/registrations/domain/name-fold";
-import { expectedSignatureName, signatureNameMatches } from "@/modules/registrations/domain/signature-name";
+import {
+  expectedSignatureName,
+  expectedSignatures,
+  mismatchedSignatures,
+  signatureNameMatches,
+} from "@/modules/registrations/domain/signature-name";
 
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, typed exactly.
@@ -111,5 +116,40 @@ describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
     expect(expectedSignatureName(minor)).toBe("Ion Popescu");
     expect(signatureNameMatches("Ion Popescu", expectedSignatureName(minor))).toBe(true);
     expect(signatureNameMatches("Maria Popescu", expectedSignatureName(minor))).toBe(false);
+  });
+});
+
+/**
+ * §NNN — a minor's declaration is signed by two: the minor, with the name they were registered
+ * under, and the parent or guardian, as the declarant. One pure pair of functions for the page and
+ * the service, so the red boxes and the refusal always name the same ones.
+ */
+describe("§NNN who signs, and which box is wrong", () => {
+  const adult = { registeredName: "Florin Munca", guardianName: null };
+  const minor = { registeredName: "Maria Popescu", guardianName: "Ion Popescu" };
+
+  it("expects one signature from an adult and two for a minor — the child's own and the parent's", () => {
+    expect(expectedSignatures(adult)).toEqual({ typedName: "Florin Munca", minorTypedName: null });
+    expect(expectedSignatures(minor)).toEqual({ typedName: "Ion Popescu", minorTypedName: "Maria Popescu" });
+    // An empty guardian is no guardian: the same truthiness `declarantValues` uses.
+    expect(expectedSignatures({ registeredName: "Ana Pop", guardianName: "" })).toEqual({ typedName: "Ana Pop", minorTypedName: null });
+  });
+
+  it("names every box whose signature is not its name, the minor's first", () => {
+    const expected = expectedSignatures(minor);
+    expect(mismatchedSignatures({ typedName: "ion popescu", minorTypedName: "Maria Popescu" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "Maria Popescu", minorTypedName: "Maria Popescu" }, expected)).toEqual(["typedName"]);
+    expect(mismatchedSignatures({ typedName: "Ion Popescu", minorTypedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName"]);
+    // The two names swapped — the mistake two people at one screen are likeliest to make.
+    expect(mismatchedSignatures({ typedName: "Maria Popescu", minorTypedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName", "typedName"]);
+    // A minor's box that was never filled is a signature missing, not a signature forgiven.
+    expect(mismatchedSignatures({ typedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName"]);
+    expect(mismatchedSignatures({ typedName: "Ion Popescu", minorTypedName: "   " }, expected)).toEqual(["minorTypedName"]);
+  });
+
+  it("never finds an adult's absent second box wrong, whatever was posted in it", () => {
+    const expected = expectedSignatures(adult);
+    expect(mismatchedSignatures({ typedName: "Florin Munca", minorTypedName: "anybody" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "Florin Munca2" }, expected)).toEqual(["typedName"]);
   });
 });

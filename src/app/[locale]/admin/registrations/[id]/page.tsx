@@ -270,6 +270,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
                   {tr("desk.fastTrackHelp")}
+                  {/* A minor's paper is signed by the minor and the parent, and the press attests both (§NNN). */}
+                  {registration.guardianName && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
                 </Typography>
               </Stack>
             </form>
@@ -593,14 +595,38 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {label}: {value}
             </Typography>
           ))}
-        {acceptances.map((acceptance, index) => (
+        {acceptances.map((acceptance, index) => {
+          /*
+            A minor's declaration is signed by two (§NNN): the minor's signature and document, then
+            the parent's — each in the hand, each named. An adult's, and a minor's signed before two
+            signatures were asked, read as they always did.
+          */
+          const twoSigners = Boolean(registration.guardianName) && acceptance.minorTypedName !== null;
+          const hand = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" };
+          return (
           <Typography key={index} variant="body2">
             {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
-            <Box component="span" sx={{ fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" }}>
+            {twoSigners && (
+              <>
+                <Box component="span" sx={hand}>
+                  {acceptance.minorTypedName}
+                </Box>{" "}
+                ({tr("registrations.signedByMinor")}) ·{" "}
+              </>
+            )}
+            <Box component="span" sx={hand}>
               {acceptance.typedName}
             </Box>{" "}
+            {twoSigners && <>({tr("registrations.signedByGuardian")}) </>}
             (v{acceptance.declarationVersion})
-            {acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`}
+            {twoSigners ? (
+              <>
+                {acceptance.minorIdDocument && ` — ${tr("desk.idDocumentMinor")}: ${acceptance.minorIdDocument}`}
+                {acceptance.idDocument && ` — ${tr("desk.idDocumentGuardian")}: ${acceptance.idDocument}`}
+              </>
+            ) : (
+              acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`
+            )}
             {index === 0 && (
               <>
                 {" — "}
@@ -612,7 +638,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>
-        ))}
+          );
+        })}
       </Stack>
 
       {staffTrail.length > 0 && (

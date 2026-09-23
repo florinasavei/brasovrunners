@@ -1,13 +1,22 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
+import { confirmRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { isMinorOn } from "@/modules/registrations/fields";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
-import { declarantValues, findSignedDeclaration, signedDeclarationEntry } from "@/modules/registrations/signed-declaration";
+import {
+  declarantValues,
+  findSignedDeclaration,
+  renderBlankDeclarationPdf,
+  renderSignedDeclarationPdf,
+  signedDeclarationEntry,
+} from "@/modules/registrations/signed-declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -26,7 +35,10 @@ const NOW = new Date("2026-09-04T10:00:00.000Z");
 const LABELS = {
   organization: "Brașov Runners",
   whereupon: "DREPT PENTRU CARE SEMNEZ,",
+  whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
   signature: "Semnătura",
+  minorSignature: "Semnătura minorului",
+  guardianSignature: "Semnătura părintelui sau tutorelui",
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
@@ -37,14 +49,16 @@ const LABELS = {
   attesterRemoved: "un membru al echipei",
 };
 
-async function approve(db: TestDatabase) {
+async function approve(
+  db: TestDatabase,
+  declaration: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
+    { locale: "en", title: "Declaration", body: declarationEn },
+  ],
+) {
   const privacy: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
-  ];
-  const declaration: LegalDocumentTranslationInput[] = [
-    { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
-    { locale: "en", title: "Declaration", body: declarationEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
@@ -123,8 +137,14 @@ describe("a minor registered by a parent (§108)", () => {
     expect(minor.registeredName).toBe("Maria Popescu");
 
     await confirmEmail(db, event, minor.id, NOW);
-    // The parent signs, with their own document.
-    await signDeclaration(db, event, minor.id, { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 654321" }, NOW);
+    // The minor and the parent sign together (§NNN), each with their own name and document.
+    await signDeclaration(
+      db,
+      event,
+      minor.id,
+      { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 654321", minorTypedName: "Maria Popescu", minorIdDocument: "MP 123456" },
+      NOW,
+    );
     const signed = await findSignedDeclaration(db, minor.id);
     expect(signed?.guardianName).toBe("Ion Popescu");
     const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
@@ -133,8 +153,13 @@ describe("a minor registered by a parent (§108)", () => {
     // asserted here — the same function the renderer and the screen both use.
     const merged = mergeLegalBody(entry!.body, entry!.values ?? {});
     const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
-    expect(text).toContain("Subsemnatul/a Ion Popescu (părinte/tutore legal al minorului Maria Popescu), posesor/posesoare al actului de identitate BV 654321");
+    // The platform's text since §NNN: the minor declares with their own document, and the parent
+    // is named with theirs in a sentence of its own.
+    expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al actului de identitate MP 123456");
+    expect(text).toContain("părintele sau tutorele legal: Ion Popescu, posesor/posesoare al actului de identitate BV 654321");
     expect(text).not.toContain("{{");
+    // Both signatures, each with its document, under the one instant.
+    expect(entry!.signature).toMatchObject({ typedName: "Ion Popescu", idDocument: "BV 654321", minor: { typedName: "Maria Popescu", idDocument: "MP 123456" } });
 
     // An adult who typed into the folded field named nobody's guardian: nothing is kept.
     await submitRegistration(db, event, submission({ email: "adult@example.ro", firstName: "Ana", birthDate: "1990-05-17", guardianName: "Cineva" }), NOW);
@@ -142,5 +167,82 @@ describe("a minor registered by a parent (§108)", () => {
     expect(adult?.guardianName).toBeNull();
     expect(declarantValues("Ana Popescu", null, "ro")).toEqual({ declarant: "Ana Popescu", guardian: "—" });
     expect(declarantValues("Maria Popescu", "Ion Popescu", "en").declarant).toBe("Ion Popescu (parent/legal guardian of the minor Maria Popescu)");
+  });
+
+  /**
+   * §NNN — a text the club approved before two signatures were asked names `{{declarant}}` and
+   * `{{idDocument}}` and none of the newer fields. It must read exactly as it did — the parent
+   * declares, with the parent's document — while the minor's own signature and document are
+   * still asked (a minor's declaration is signed by two whatever the text says) and printed in
+   * the signature block beneath it.
+   */
+  it("reads a text approved before two signatures as it did, and still asks the minor for theirs", async () => {
+    const legacy = (text: string): LegalDocumentTranslationInput["body"] => ({ sections: [{ paragraphs: [text] }] });
+    await approve(db, [
+      { locale: "ro", title: "Declarație", body: legacy("Subsemnatul/a {{declarant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar că particip la {{event}}.") },
+      { locale: "en", title: "Declaration", body: legacy("I, {{declarant}}, holder of identity document {{idDocument}}, take part in {{event}}.") },
+    ]);
+    const event = await createEvent(db);
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu" }), NOW);
+    const [minor] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await confirmEmail(db, event, minor.id, NOW);
+
+    // The text names a document, so both are asked: the parent's and the minor's.
+    const read = await signingInput(db, NOW, "Ion Popescu");
+    await expect(signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321", minorTypedName: "Maria Popescu" }, NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["minorIdDocument"],
+    });
+    await signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321", minorTypedName: "Maria Popescu", minorIdDocument: "MP 123456" }, NOW);
+
+    const signed = await findSignedDeclaration(db, minor.id);
+    const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
+    const text = mergeLegalBody(entry!.body, entry!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
+    expect(text).toBe("Subsemnatul/a Ion Popescu (părinte/tutore legal al minorului Maria Popescu), posesor/posesoare al actului de identitate BV 654321, declar că particip la Crosul copiilor.");
+    expect(entry!.signature?.minor).toEqual({ typedName: "Maria Popescu", idDocument: "MP 123456" });
+    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "participant");
+    expect(pdf!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+  });
+
+  /**
+   * §67, §NNN — "Confirmă pe hârtie" for a minor. The paper at the desk carries both signatures,
+   * and what the press records is exactly that: the parent as the declarant and the minor beside
+   * them, the volunteer as the one who saw the paper. Nobody on staff signs; the documents stay on
+   * the paper, as they always did.
+   */
+  it("records both signers when the desk confirms a minor on paper, and the staff member who saw it", async () => {
+    await approve(db);
+    const event = await createEvent(db);
+    const [volunteer] = await db.insert(staffUsers).values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" }).returning();
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu" }), NOW);
+    await submitRegistration(db, event, submission({ email: "adult@example.ro", firstName: "Ana", birthDate: "1990-05-17" }), NOW);
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const minor = rows.find((row) => row.guardianName !== null)!;
+    const adult = rows.find((row) => row.guardianName === null)!;
+
+    expect((await confirmRegistrationByStaff(db, volunteer, minor.id, NOW)).status).toBe("CONFIRMED");
+    expect((await confirmRegistrationByStaff(db, volunteer, adult.id, NOW)).status).toBe("CONFIRMED");
+
+    const acceptances = await db.select().from(declarationAcceptances);
+    expect(acceptances.find((row) => row.registrationId === minor.id)).toMatchObject({
+      method: "PAPER",
+      attestedByStaffUserId: volunteer.id,
+      typedName: "Ion Popescu",
+      minorTypedName: "Maria Popescu",
+      idDocument: null,
+      minorIdDocument: null,
+    });
+    // An adult's paper is unchanged: one signature, the registered name.
+    expect(acceptances.find((row) => row.registrationId === adult.id)).toMatchObject({
+      method: "PAPER",
+      typedName: "Ana Popescu",
+      minorTypedName: null,
+    });
+
+    // The signed PDF of the paper acceptance prints both lines; the blank form for a minor, too.
+    const signed = await findSignedDeclaration(db, minor.id);
+    expect((await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant"))!.signature?.minor).toEqual({ typedName: "Maria Popescu", idDocument: null });
+    const blank = await renderBlankDeclarationPdf(db, event.id, "ro", LABELS, NOW, { forMinor: true });
+    expect(blank!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
   });
 });

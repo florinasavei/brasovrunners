@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  asksForIdDocument,
   BLANK,
+  isMergeField,
   MERGE_FIELDS,
   mergeFieldsIn,
   mergeLegalBody,
@@ -43,10 +45,29 @@ describe("the declaration's merge fields", () => {
     const ro = mergeFieldsIn(declarationRo);
     const en = mergeFieldsIn(declarationEn);
     expect([...ro].sort()).toEqual([...en].sort());
-    // `declarant` (§108) opens the text: the runner, or the parent of a minor with the relation spelled out.
-    for (const field of ["declarant", "idDocument", "event", "eventDate", "eventLocation"]) {
+    /*
+      Since §NNN the platform's text opens with the participant and their own document, and names
+      the parent or guardian with theirs in a sentence of its own — a minor's declaration is signed
+      by both. `{{declarant}}` and `{{idDocument}}` (§108, §95) stay fields every approved text may
+      use; this template no longer needs them.
+    */
+    for (const field of ["participant", "participantIdDocument", "guardian", "guardianIdDocument", "event", "eventDate", "eventLocation"]) {
       expect(ro.has(field as (typeof MERGE_FIELDS)[number]), field).toBe(true);
     }
+    expect(asksForIdDocument(declarationRo)).toBe(true);
+  });
+
+  /** §NNN — each signer's document is a field of its own, and naming any document asks for them. */
+  it("knows the two newer document fields, and asks for documents when a text names any of the three", () => {
+    for (const field of ["idDocument", "participantIdDocument", "guardianIdDocument"]) {
+      expect(isMergeField(field), field).toBe(true);
+      expect(asksForIdDocument({ sections: [{ paragraphs: [`CI {{${field}}}`] }] }), field).toBe(true);
+    }
+    expect(asksForIdDocument({ sections: [{ paragraphs: ["{{participant}} at {{event}}"] }] })).toBe(false);
+    expect(asksForIdDocument("not a body")).toBe(false);
+    // A value fills each; none is a blank, as every other field.
+    expect(mergeText("{{participantIdDocument}} / {{guardianIdDocument}}", { participantIdDocument: "MP 654321", guardianIdDocument: "—" })).toBe("MP 654321 / —");
+    expect(mergeText("{{guardianIdDocument}}", {})).toBe(BLANK);
   });
 
   it("keeps only the club's four facts as placeholders in every template", () => {

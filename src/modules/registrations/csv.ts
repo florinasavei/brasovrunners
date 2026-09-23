@@ -29,6 +29,10 @@ export type RegistrationCsvRow = {
   /** The two halves as registered, for the organiser who hands kits out by identity card (§95). */
   firstName: string;
   lastName: string;
+  /**
+   * The participant's own identity document — the adult's, or since a minor signs too (§NNN) the
+   * minor's — empty once cleared, seven days after the event (§95). `identityDocumentsOf` decides.
+   */
   idDocument: string;
   email: string;
   status: string;
@@ -49,6 +53,8 @@ export type RegistrationCsvRow = {
   instagramHandle: string;
   /** The parent or guardian of a minor (§108), empty for an adult. */
   guardianName: string;
+  /** Their identity document, beside the minor's (§NNN); empty for an adult, and once cleared. */
+  guardianIdDocument: string;
   submittedAt: string;
   confirmedAt: string;
   /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
@@ -73,6 +79,8 @@ const HEADER = [
   "Strava",
   "Instagram",
   "Guardian",
+  // Beside the guardian's name (§NNN): the kit goes to that person (§108), against this document.
+  "Guardian identity document",
   "Submitted",
   "Confirmed",
   // "Race number (BIB)", not "Bib": the club calls it that everywhere else in the backoffice
@@ -104,6 +112,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.stravaUrl,
         row.instagramHandle,
         row.guardianName,
+        row.guardianIdDocument,
         row.submittedAt,
         row.confirmedAt,
         String(raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? ""),

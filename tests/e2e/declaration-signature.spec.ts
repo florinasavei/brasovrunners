@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mintActionLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
+import { latestAcceptance, mintActionLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -168,42 +168,124 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     }
   });
 
-  test("a minor's declaration wants the parent's name, and a wrong parent name is sent to cancel and register again", async ({ page, browser }) => {
+  /**
+   * The minor's and the parent's documents, where the club's text names one (§NNN): each box
+   * exists only on a minor's declaration whose text asks for documents, so a text without them
+   * signs with the two names alone.
+   */
+  async function fillBothDocuments(page: Page) {
+    await page.locator('[name="accepted"]').check();
+    const minorDocument = page.locator('[name="minorIdDocument"]');
+    if (await minorDocument.count()) await minorDocument.fill("MP 654321");
+    const parentDocument = page.locator('[name="idDocument"]');
+    if (await parentDocument.count()) await parentDocument.fill("BV 123456");
+  }
+
+  /**
+   * §NNN — the owner: "I wanna have the ID document of the minor and the parent, and also 2
+   * signatures!" A minor's declaration is signed by both at one press, each with their own name
+   * and document; each box is checked against its own name, and each refused box says its own way
+   * out: the club corrects a minor's registered name, and nobody corrects a parent's, so that one
+   * is "cancel and register again" (§314).
+   */
+  test("a minor's declaration is signed by the minor and the parent, each name checked, each refusal its own", async ({ page, browser }) => {
     const registration = await awaitingDeclaration(page, "minor", { minor: true });
     const parent = registration.guardianName ?? "";
+    const child = registration.registeredName;
 
     const context = await browser.newContext({ javaScriptEnabled: false, baseURL: test.info().project.use.baseURL });
     try {
       const plain = await context.newPage();
       await plain.goto(registration.link);
-      // The parent signs (§108): the hint names the child and wants the parent's name, in bold.
+      // Two boxes, each wanting its own name, in bold: the minor's registered name and the parent's.
+      await expect(plain.locator("#minorTypedName-helper-text strong")).toHaveText(child);
       await expect(plain.locator("#typedName-helper-text strong")).toHaveText(parent);
+      await expect(plain.getByLabel("Semnătura minorului")).toHaveAttribute("name", "minorTypedName");
+      await expect(plain.getByLabel("Semnătura părintelui sau tutorelui")).toHaveAttribute("name", "typedName");
 
-      // The child's own name — the mistake a parent is likeliest to make — is refused.
-      await fillTheRest(plain);
-      await plain.locator('[name="typedName"]').fill(registration.registeredName);
+      // The child's own name in the parent's box — the mistake a parent is likeliest to make — is refused.
+      await fillBothDocuments(plain);
+      await plain.locator('[name="minorTypedName"]').fill(child);
+      await plain.locator('[name="typedName"]').fill(child);
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
-      const summary = plain.locator("#declaration-errors");
-      // The parent's name, in bold, under the box in its red state; the summary does not repeat it.
+      let summary = plain.locator("#declaration-errors");
+      // The parent's name, in bold, under the parent's box in its red state; the summary does not repeat it.
       await expect(plain.locator("#typedName-helper-text strong")).toHaveText(parent);
       await expect(plain.locator("#typedName-helper-text")).toContainText("numele părintelui sau tutorelui dat la înscriere");
+      // The minor's box was right: it is not named, and it is not red.
+      await expect(plain.locator("#minorTypedName-helper-text")).not.toContainText("trebuie să fie exact");
+      await expect(summary.getByRole("link", { name: "Semnătura părintelui sau tutorelui" })).toHaveAttribute("href", "#typedName");
+      await expect(summary.getByRole("link", { name: "Semnătura minorului" })).toHaveCount(0);
       await expect(summary).not.toContainText("Semnătura trebuie să fie exact");
       /*
         §314, found in review: the club can correct a participant's name but not a parent's, so
-        the minor's sentence never promises that. It points at what works — "Înscrierile mele",
+        the parent's sentence never promises that. It points at what works — "Înscrierile mele",
         to cancel and register again.
       */
       await expect(summary).not.toContainText("clubul îl corectează");
       await expect(summary.getByRole("link", { name: "Înscrierile mele" })).toHaveAttribute("href", "/ro/inscrieri/ale-mele");
       expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+      // Everything typed came back: both documents and both signatures.
+      if (await plain.locator('[name="minorIdDocument"]').count()) {
+        await expect(plain.locator('[name="minorIdDocument"]')).toHaveValue("MP 654321");
+        await expect(plain.locator('[name="idDocument"]')).toHaveValue("BV 123456");
+      }
+      await expect(plain.locator('[name="minorTypedName"]')).toHaveValue(child);
 
+      // Now the parent's box right and the minor's wrong: the minor's box is the one named.
       await plain.locator('[name="typedName"]').fill(parent.toLowerCase());
+      await plain.locator('[name="minorTypedName"]').fill(parent);
+      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
+      summary = plain.locator("#declaration-errors");
+      await expect(plain.locator("#minorTypedName-helper-text")).toContainText("Semnătura minorului trebuie să fie exact numele cu care a fost înscris");
+      await expect(plain.locator("#minorTypedName-helper-text strong")).toHaveText(child);
+      await expect(summary.getByRole("link", { name: "Semnătura minorului" })).toHaveAttribute("href", "#minorTypedName");
+      // A minor's registered name is one the club corrects, and the same link then signs.
+      await expect(summary).toContainText("clubul îl corectează");
+      expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+
+      // Both right, as a phone types them: signed, and both recorded, each with its document.
+      await plain.locator('[name="minorTypedName"]').fill(child.toLowerCase());
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
       await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
       expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
+      const acceptance = await latestAcceptance(registration.id);
+      expect(acceptance?.typedName).toBe(parent.toLowerCase());
+      expect(acceptance?.minorTypedName).toBe(child.toLowerCase());
+      if (acceptance?.idDocument !== null) {
+        expect(acceptance?.idDocument).toContain("BV 123456");
+        expect(acceptance?.minorIdDocument).toContain("MP 654321");
+      }
     } finally {
       await context.close();
     }
+  });
+
+  test("with JavaScript, the browser refuses a minor's box that is not the minor's name before the press", async ({ page }) => {
+    const registration = await awaitingDeclaration(page, "minor-js", { minor: true });
+    const parent = registration.guardianName ?? "";
+    await page.goto(registration.link);
+    await hydrated(page);
+
+    await fillBothDocuments(page);
+    const minorSignature = page.locator('[name="minorTypedName"]');
+    await minorSignature.fill(parent);
+    await page.locator('[name="typedName"]').fill(parent);
+    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+
+    // Refused where the press happened: the minor's box, with its own sentence and the child's name in bold.
+    const hint = page.locator("#minorTypedName-helper-text");
+    await expect(hint).toContainText("Semnătura minorului trebuie să fie exact");
+    await expect(hint.locator("strong")).toHaveText(registration.registeredName);
+    expect(await minorSignature.evaluate((input) => (input as HTMLInputElement).validity.customError)).toBe(true);
+    expect(page.url()).not.toMatch(/[?&](done|invalid)=/);
+    expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+
+    await minorSignature.fill(registration.registeredName);
+    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
+    expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
   });
 });

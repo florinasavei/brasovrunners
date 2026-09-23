@@ -5,6 +5,7 @@ import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { buildRegistrationsWorkbook } from "@/modules/registrations/workbook";
 import { listEventsWithRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -111,7 +112,7 @@ export async function GET(request: Request): Promise<Response> {
         registeredName: row.registeredName,
         firstName: row.firstName ?? "",
         lastName: row.lastName ?? "",
-        idDocument: row.idDocument ?? "",
+        idDocument: identityDocumentsOf(row).participant ?? "",
         email: row.participantEmail,
         status: row.status,
         clubName: row.clubName ?? "",
@@ -119,6 +120,7 @@ export async function GET(request: Request): Promise<Response> {
         fitnessDeclaredAt: row.fitnessDeclaredAt,
         stravaUrl: row.stravaUrl ?? "",
         guardianName: row.guardianName ?? "",
+        guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
         instagramHandle: row.instagramHandle ?? "",
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
@@ -146,13 +148,16 @@ export async function GET(request: Request): Promise<Response> {
       registeredName: row.registeredName,
       firstName: row.firstName ?? "",
       lastName: row.lastName ?? "",
-      idDocument: row.idDocument ?? "",
+      // Whose document is whose (§NNN): the participant's own in its column, the parent's beside
+      // the parent's name — never the parent's document under a minor's name, as one column did.
+      idDocument: identityDocumentsOf(row).participant ?? "",
       email: row.participantEmail,
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
       fitnessDeclaredAt: row.fitnessDeclaredAt?.toISOString() ?? null,
       stravaUrl: row.stravaUrl ?? "",
       guardianName: row.guardianName ?? "",
+      guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
       instagramHandle: row.instagramHandle ?? "",
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",

@@ -1107,7 +1107,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   formId: `confirm-${row.id}`,
                   confirm: {
                     title: t("desk.confirmOnPaper"),
-                    body: t("registrations.confirmOnPaperBody"),
+                    // A minor's paper carries two signatures, and the press attests both (§NNN).
+                    body: row.guardianName
+                      ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
+                      : t("registrations.confirmOnPaperBody"),
                     confirmLabel: t("desk.confirmOnPaper"),
                   },
                 });

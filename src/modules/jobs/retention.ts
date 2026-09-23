@@ -171,8 +171,10 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
           .returning({ id: participants.id })
       : [];
 
-  // Seven days after the event: the identity document out of the declaration, the health note
-  // out of the registration. The rows stay; the two fields go.
+  // Seven days after the event: the identity documents out of the declaration, the health note
+  // out of the registration. The rows stay; the fields go. A minor's declaration carries two
+  // documents, the parent's and the child's (§NNN), and both go together — the typed names stay,
+  // as the signatures, for the three years the declaration is kept. Counted per declaration.
   const shortCutoff = daysBefore(now, RETENTION.identityAndHealthDaysAfterEvent);
   const recent = db
     .select({ id: registrations.id })
@@ -181,8 +183,13 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     .where(lt(events.startsAt, shortCutoff));
   const clearedDocuments = await db
     .update(declarationAcceptances)
-    .set({ idDocument: null })
-    .where(and(isNotNull(declarationAcceptances.idDocument), inArray(declarationAcceptances.registrationId, recent)))
+    .set({ idDocument: null, minorIdDocument: null })
+    .where(
+      and(
+        or(isNotNull(declarationAcceptances.idDocument), isNotNull(declarationAcceptances.minorIdDocument)),
+        inArray(declarationAcceptances.registrationId, recent),
+      ),
+    )
     .returning({ id: declarationAcceptances.id });
   const clearedHealth = await db
     .update(registrations)

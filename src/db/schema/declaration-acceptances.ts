@@ -47,7 +47,9 @@ export const declarationAcceptances = pgTable(
     locale: locale("locale").notNull(),
 
     // Explicit checkbox plus typed full name (§10.8) — not a qualified electronic signature.
-    // For `PAPER` it is the registered name, as written on the form staff hold.
+    // The declarant's: the participant's, or the parent's or guardian's for a minor (§108, §314).
+    // For `PAPER` it is the name as written on the form staff hold — the registered name, or for
+    // a minor the guardian's, with the minor's own in `minor_typed_name` (§NNN).
     typedName: text("typed_name").notNull(),
     /**
      * The identity document the declaration names — "posesor al CI seria BV nr. 123456" — as

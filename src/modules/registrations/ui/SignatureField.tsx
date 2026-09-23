@@ -45,9 +45,22 @@ import { signatureNameMatches } from "../domain/signature-name";
  * Strings in, never functions or elements (`AGENTS.md` §14.1): the words are this island's own,
  * through `useTranslations`, so the bold name is in the catalogue (`t.rich`) and not assembled
  * here.
+ *
+ * ## Who signs in this box
+ *
+ * `signer` picks the words (§NNN): `self` for an adult, who signs once; and for a minor's
+ * declaration, which two people sign at one press, `minor` for the child's own box — their
+ * registered name — and `guardian` for the parent's or guardian's, the declarant of §108. Each box
+ * checks its own name with the same pure function, so either can be refused alone, and each has
+ * its own way out when the name it wants is itself wrong: the club corrects a participant's name
+ * (the adult's, the minor's), and no staff verb corrects a guardian's.
  */
+export type Signer = "self" | "minor" | "guardian";
+
 export default function SignatureField({
   id,
+  name,
+  signer,
   expectedName,
   participantName,
   contactHref,
@@ -57,9 +70,12 @@ export default function SignatureField({
   refused,
 }: {
   id: string;
-  /** The declarant's name (`expectedSignatureName`); null when there is none to compare with. */
+  /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§NNN). */
+  name: "typedName" | "minorTypedName";
+  signer: Signer;
+  /** The name this box must hold (`expectedSignatures`); null when there is none to compare with. */
   expectedName: string | null;
-  /** The minor's own name when a parent signs for them (§108); null for an adult. */
+  /** The minor's own name, named in the parent's hint (§108); null in every other box. */
   participantName: string | null;
   /** The club's contact page, for somebody whose registered name is itself wrong. */
   contactHref: string;
@@ -80,16 +96,17 @@ export default function SignatureField({
   const [value, setValue] = useState(defaultValue ?? "");
   const [touched, setTouched] = useState(false);
 
-  const minor = participantName !== null;
   const mismatch =
     expectedName !== null && value.trim() !== "" && !signatureNameMatches(value, expectedName);
   // Plain, for the browser's bubble only: `setCustomValidity` cannot carry markup.
   const mismatchSentence =
     expectedName === null
       ? ""
-      : minor
+      : signer === "guardian"
         ? t("declare.signatureMismatchForMinor", { name: expectedName })
-        : t("declare.signatureMismatch", { name: expectedName });
+        : signer === "minor"
+          ? t("declare.minorSignatureMismatch", { name: expectedName })
+          : t("declare.signatureMismatch", { name: expectedName });
 
   /*
     The refusal the browser enforces, judged on what the box actually holds — read from the DOM
@@ -111,35 +128,47 @@ export default function SignatureField({
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
   const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
   /*
-    What to do when the name the box wants is itself wrong (§314). An adult's registered name is
-    one the club corrects ("Corectează numele") and the same link then signs; a guardian's is not
-    — no staff verb edits it (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and
-    register the minor again with the right name.
+    What to do when the name the box wants is itself wrong (§314). A participant's registered name
+    — an adult's, or a minor's in their own box (§NNN) — is one the club corrects ("Corectează
+    numele") and the same link then signs; a guardian's is not — no staff verb edits it
+    (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and register the
+    minor again with the right name.
   */
-  const wrongNameSentence = minor
-    ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
-    : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
+  const wrongNameSentence =
+    signer === "guardian"
+      ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
+      : signer === "minor"
+        ? t.rich(canReply ? "declare.minorNameWrongReply" : "declare.minorNameWrong", { contact })
+        : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
 
   // The same sentence as the bubble's, with the name in bold, for under the box.
   const mismatchUnderBox =
     expectedName === null
       ? null
-      : minor
+      : signer === "guardian"
         ? t.rich("declare.signatureMismatchForMinorRich", { name: expectedName, strong })
-        : t.rich("declare.signatureMismatchRich", { name: expectedName, strong });
+        : signer === "minor"
+          ? t.rich("declare.minorSignatureMismatchRich", { name: expectedName, strong })
+          : t.rich("declare.signatureMismatchRich", { name: expectedName, strong });
 
   const hint =
     expectedName === null
       ? t("declare.typedNameHelp")
-      : minor
-        ? t.rich("declare.typedNameHelpForMinor", { name: expectedName, participant: participantName, strong })
-        : t.rich("declare.typedNameHelpWithName", { name: expectedName, strong });
+      : signer === "guardian"
+        ? t.rich("declare.typedNameHelpForMinor", { name: expectedName, participant: participantName ?? "", strong })
+        : signer === "minor"
+          ? t.rich("declare.minorTypedNameHelp", { name: expectedName, strong })
+          : t.rich("declare.typedNameHelpWithName", { name: expectedName, strong });
+
+  // Each signer's box says whose signature it is (§NNN); an adult's keeps the words it always had.
+  const label =
+    signer === "guardian" ? t("declare.guardianTypedName") : signer === "minor" ? t("declare.minorTypedName") : t("declare.typedName");
 
   return (
     <TextField
       id={id}
-      name="typedName"
-      label={t("declare.typedName")}
+      name={name}
+      label={label}
       inputRef={inputRef}
       defaultValue={defaultValue ?? ""}
       onChange={(event) => setValue(event.target.value)}
