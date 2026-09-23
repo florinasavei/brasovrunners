@@ -2,6 +2,10 @@ import { createTheme } from "@mui/material/styles";
 import { COLOR, COLOR_DARK, FONT } from "./brand";
 import { KEYFRAMES } from "./motion";
 
+/** Material's filled "Error" glyph (a circle with an exclamation mark), as a mask for invalid fields (§309). */
+const EXCLAMATION_SVG =
+  "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-2h2zm0-4h-2V7h2z%27/%3E%3C/svg%3E";
+
 /**
  * The MUI theme, assembled from the brand tokens.
  *
@@ -74,6 +78,55 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
   */
   breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 2040 } },
   components: {
+    /*
+      An invalid field says so on the field itself (§309; the owner: "I want an exclamation
+      adornment on the invalid fields so it stands out!"). The red helper text under a field
+      is easy to scroll past on a phone; a red mark inside the box is not.
+
+      CSS only, in the theme, so every form on the site gets it — the registration form, the
+      contact form, the declaration, the backoffice — with no component edited and no
+      JavaScript: it shows on a field the server refused (MUI marks it `Mui-error`) and on one
+      the browser refused (`:user-invalid` — only once the person has typed and left it, or
+      pressed send, never on a pristine form), which also gets the red outline MUI keeps for
+      the first case. A masked pseudo-element painted in the error colour, so it follows the
+      dark scheme through the CSS variables; decorative (the helper text and the error summary
+      carry the words, §47), so it is invisible to a screen reader, which is right.
+
+      Not on a select (its arrow lives there), not on a field that already has an end
+      adornment (a unit, a button), and at the top rather than the middle of a multi-line box.
+    */
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: ({ theme }) => {
+          const error = (theme.vars ?? theme).palette.error.main;
+          const invalid = "&.Mui-error, &:has(input:user-invalid), &:has(textarea:user-invalid)";
+          return {
+            "&:has(input:user-invalid) .MuiOutlinedInput-notchedOutline, &:has(textarea:user-invalid) .MuiOutlinedInput-notchedOutline": {
+              borderColor: error,
+            },
+            "&:not(.MuiInputBase-adornedEnd):not(:has(.MuiSelect-select))": {
+              [invalid]: {
+                paddingRight: 36,
+                "&::after": {
+                  content: "\"\"",
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  width: 20,
+                  height: 20,
+                  marginTop: -10,
+                  backgroundColor: error,
+                  mask: `url("${EXCLAMATION_SVG}") center / contain no-repeat`,
+                  WebkitMask: `url("${EXCLAMATION_SVG}") center / contain no-repeat`,
+                  pointerEvents: "none",
+                },
+                "&.MuiInputBase-multiline::after": { top: 16, marginTop: 0 },
+              },
+            },
+          };
+        },
+      },
+    },
     /*
       Cards carry less air (§252; the owner: "there is too much whitespace overall and padding").
 

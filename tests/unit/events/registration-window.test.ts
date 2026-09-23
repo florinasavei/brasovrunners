@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  openRegistrationClosing,
   registrationState,
   type RegistrationWindowInput,
   upcomingRegistrationOpening,
@@ -10,6 +11,7 @@ import {
  * BR-REQ-020-01 criterion 3 — a cancelled or completed event never accepts registration.
  * BR-REQ-030-01 criterion 1 — mode NONE offers no registration action.
  * BR-REQ-011-01 criterion 13 — the opening date, while it is still ahead and only then.
+ * BR-REQ-011-01 criterion 18 — the closing date, while registration is open and only then.
  */
 const START = new Date("2026-10-04T07:00:00Z");
 const PUBLISHED = new Date("2026-09-01T10:00:00Z");
@@ -99,5 +101,39 @@ describe("BR-REQ-020-01 cancelled and completed events", () => {
   ] as const)("reports %s events as closed to registration even mid-window", (eventStatus, state) => {
     // Mid-window on purpose: the status must win over an otherwise open window.
     expect(registrationState(event({ eventStatus }), PUBLISHED)).toBe(state);
+  });
+});
+
+describe("BR-REQ-011-01 criterion 18 — openRegistrationClosing", () => {
+  const closes = new Date("2026-10-01T20:59:00Z");
+  const open = new Date("2026-09-25T12:00:00Z");
+
+  it("returns the stated closing while registration is open, and null from the closing instant on", () => {
+    const e = event({ registrationClosesAt: closes });
+    expect(openRegistrationClosing(e, open)).toEqual(closes);
+    expect(openRegistrationClosing(e, new Date(closes.getTime() - 1000))).toEqual(closes);
+    // The instant registrationState turns CLOSED is the instant the date goes away.
+    expect(registrationState(e, closes)).toBe("CLOSED");
+    expect(openRegistrationClosing(e, closes)).toBeNull();
+  });
+
+  it("falls back to the event's start when no closing is stated — the same default as the state", () => {
+    expect(openRegistrationClosing(event(), open)).toEqual(START);
+    expect(openRegistrationClosing(event(), START)).toBeNull();
+  });
+
+  it("names no date before the window opens — that is the opening's sentence", () => {
+    const opens = new Date("2026-09-20T00:00:00Z");
+    const e = event({ registrationOpensAt: opens, registrationClosesAt: closes });
+    expect(openRegistrationClosing(e, new Date(opens.getTime() - 1000))).toBeNull();
+    expect(upcomingRegistrationOpening(e, new Date(opens.getTime() - 1000))).toEqual(opens);
+    expect(openRegistrationClosing(e, opens)).toEqual(closes);
+  });
+
+  it("names no date for an event with no window of its own, whatever its columns say", () => {
+    expect(openRegistrationClosing(event({ registrationClosesAt: closes, registrationMode: "EXTERNAL" }), open)).toBeNull();
+    expect(openRegistrationClosing(event({ registrationClosesAt: closes, registrationMode: "NONE" }), open)).toBeNull();
+    expect(openRegistrationClosing(event({ registrationClosesAt: closes, eventStatus: "CANCELLED" }), open)).toBeNull();
+    expect(openRegistrationClosing(event({ registrationClosesAt: closes, eventStatus: "COMPLETED" }), open)).toBeNull();
   });
 });

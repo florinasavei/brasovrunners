@@ -29,7 +29,7 @@ waiting on.
 | Service | Plan / SKU | What it holds | Console | State |
 | --- | --- | --- | --- | --- |
 | **Vercel** | Hobby | Account exists. Both applications. One project per environment, function region `fra1` — QA's was `iad1` until read back on 2026-09-16 (`SETUP.md` §26) | vercel.com/dashboard | QA live; production project created 2026-09-16, configured, **never deployed** |
-| **Neon** | Free | PostgreSQL, Frankfurt. Region is fixed at project creation. Free allows 100 projects, so the second one costs nothing (checked 2026-09-16) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
+| **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). Which plan the pages read against is the setting `platform_settings.neonPlan`, set per environment on `/admin/tasks` → Costuri | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
 | **Zitadel** | Free | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | One instance, one project, one application per environment. QA live since 2026-09-04; production application created 2026-09-17. Own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05). Setup, traps and limits: `docs/RUNBOOKS.md` § Staff sign-in |
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
@@ -76,6 +76,19 @@ after comparing the invoices with actual use. Nothing changes automatically: at 
 re-check Free's current compute, storage, branch, restore and production constraints, confirm both
 projects fit, and only then make and document the plan change. Until that explicit decision,
 every operational page and estimate must treat Launch as current.
+
+**Which plan the pages read against is a setting, not a constant.** `platform_settings.neonPlan`
+— `FREE` or `LAUNCH`, with a note and who/when, audited like the Mailgun plan (§100) — is set by
+an Administrator on `/admin/tasks` → Costuri, once per environment, because Neon's API tells the
+application the consumption and never the plan or the invoice. Absent, it reads as **Free**: a
+fresh deployment has no reason to assume money, and the plan with the ceilings is the safe one to
+be wrong about. On Free, `/devs` and the Neon row show the 100 CU-hours and the 0.5 GB as
+ceilings, red past 80%, and "stops until next month"; on Launch they show no ceiling, the hours
+as an **estimated** charge at the rates above, the storage at its GB-month rate, and the billing
+period's end — estimated, because the API gives consumption and Neon's invoice adds the restore
+history and rounds its own way. The December decision is therefore one select on that panel and
+no deployment. Every rate and ceiling lives in `modules/diagnostics/domain/neon-plan.ts` with the
+date it was checked (`NEON_PLANS_CHECKED_ON`), and nowhere else in code.
 
 **This table, the limits below it and the bump order now render on `/admin/tasks`** for an
 Administrator, as **one row per service** rather than three overlapping lists, with the email
@@ -285,8 +298,11 @@ billed: a job monitor every five minutes prevents sleep, 0.25 CU × 24 h = 6 CU-
 180 a month, or **$19.08 per project** at $0.106/CU-hour — QA had spent 74 CU-hours by the 18th
 before the upgrade. So the monitors remain every fifteen minutes in production and hourly in QA,
 the outbox drains itself after the request that filled it (`DECISIONS.md` §68), and `/devs`
-reads the period when `NEON_API_KEY` is set (`SETUP.md` §33). Its current 100-hour denominator,
-80% warning and Free label are stale implementation, explicitly tracked by BR-REQ-090-07.
+reads the period when `NEON_API_KEY` is set (`SETUP.md` §33). What it reads the period *against*
+follows the `neonPlan` setting above: Free's 100-hour denominator and 80% warning when the
+setting says Free, an estimated charge at Launch's rates and no ceiling when it says Launch.
+`/api/health` and the monitors never looked at Neon's hours, so nothing there warns at 80% on
+either plan.
 
 The cold start is also the reason the pool sets no connection timeout: see the next section.
 

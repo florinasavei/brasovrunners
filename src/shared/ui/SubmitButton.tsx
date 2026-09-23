@@ -20,6 +20,8 @@ type Props = {
    * answer a merely-disabled button could never give. See the notes below.
    */
   incompleteHint?: string;
+  /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
+  slowHint?: string;
   color?: "primary" | "error" | "warning" | "inherit";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium" | "large";
@@ -98,6 +100,7 @@ export default function SubmitButton({
   incompleteHint,
   awaitsBotCheck,
   botCheckHint,
+  slowHint,
   color = "primary",
   variant = "contained",
   size = "small",
@@ -179,9 +182,56 @@ export default function SubmitButton({
   */
   const [pressedEarly, setPressedEarly] = useState(false);
   const waiting = Boolean(awaitsBotCheck) && tokenMissing && !pending;
-  // No effect resets `pressedEarly` when the token lands: it is only ever read alongside
-  // `waiting`, which is false from that moment, so a stale `true` says nothing and setting state
-  // from an effect would be a render scheduled for no visible reason.
+
+  /*
+    **A held press is sent, not dropped (§304).**
+
+    §285 swallowed a press made before Cloudflare's token existed and showed a sentence; the
+    sentence went away when the token landed, and that was all — the person had to press again,
+    and nothing told them so. With autofill the whole form is filled in a second and the press
+    comes in the same second, so the swallowed press was the *normal* press. Amalia, from her
+    laptop, 2026-09-23: "nu am eroare … ramane blocat … ca si cum m-am inscris … dar nu apare pe
+    lista" — QA's database has no row and no outbox entry for that minute: the submit never left
+    her browser.
+
+    So the press is kept and replayed: the moment `waiting` turns false — the token arrived, or
+    the valve above opened after eight seconds — the form is submitted with this button as the
+    submitter, exactly as if the finger had landed now. `requestSubmit` runs the browser's own
+    validation first, so an invalid form still gets its bubble rather than a request. Once, and
+    only while nothing is in flight; a page that navigates afterwards resets all of this anyway.
+  */
+  // A ref, not state: "already replayed" is bookkeeping for the effect, never something the
+  // screen shows, and a render for it would be a render for nothing.
+  const replayed = useRef(false);
+  useEffect(() => {
+    if (!pressedEarly || waiting || pending || replayed.current) return;
+    const button = ref.current;
+    const form = button?.form;
+    if (!form) return;
+    replayed.current = true;
+    form.requestSubmit(button);
+  }, [pressedEarly, waiting, pending]);
+
+  /*
+    A submit that takes too long says so (§304). `pending` comes from the form's own status and
+    lasts as long as the request does; a request a proxy has swallowed lasts for ever, and the
+    runner beside the label was the only sign — which reads as "it went through". After
+    SLOW_AFTER_MS a sentence appears under the button; the request itself cannot be cancelled
+    from here, so the sentence asks for patience and forbids the second press, which would only
+    queue a second request behind the first.
+  */
+  const SLOW_AFTER_MS = 15_000;
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    // The reset lives in the cleanup — it runs when `pending` turns false — rather than in the
+    // effect body, where a synchronous setState is a render scheduled from a render.
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [pending]);
 
   const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
 
@@ -235,7 +285,8 @@ export default function SubmitButton({
           if (pending) event.preventDefault();
           if (waiting) {
             // The check is still running: hold this press and say so, rather than spending it on
-            // a refusal the person did nothing to earn.
+            // a refusal the person did nothing to earn. The effect above sends it the moment the
+            // check answers or the valve opens (§304) — the person does not press twice.
             event.preventDefault();
             setPressedEarly(true);
           }
@@ -246,6 +297,11 @@ export default function SubmitButton({
       {dimmed && (
         <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
           {waiting && pressedEarly ? (botCheckHint ?? incompleteHint) : incompleteHint}
+        </Typography>
+      )}
+      {pending && slow && slowHint && (
+        <Typography variant="body2" color="text.secondary" role="status">
+          {slowHint}
         </Typography>
       )}
     </Box>

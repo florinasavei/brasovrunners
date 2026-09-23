@@ -4,7 +4,9 @@ import type { SmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
+import type { TurnstileVerdict } from "@/modules/registrations/turnstile";
 import { DomainError } from "@/shared/errors/domain-error";
+import { contactSuspicion } from "./domain/suspicion";
 import { contactFields, type ContactInput } from "./fields";
 import { type ContactMessageRoute, renderContactMessage } from "./message";
 
@@ -22,12 +24,44 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * Nothing is stored. The message is the email; the platform keeps no copy, which is what the
  * privacy notice promises ("kept in the club's mailbox as ordinary correspondence") — so the
  * throttle's row holds a hash of the identity, not the address, for the day it lives.
+ *
+ * **What the gates let through is still read** (the owner, 2026-09-23: "primesc spam cu SEO
+ * stuff"). A script that posts no token, leaves the trap empty and waits out the timer passes
+ * all three by design, because a person with JavaScript off does exactly the same (§205, §216).
+ * So such a message is not refused and not dropped: it is **delivered, marked** —
+ * "[posibil spam]" in front of the subject and a footer naming why (`domain/suspicion.ts`) — and
+ * the sender is answered "sent" like anybody else, so a script learns nothing about which signal
+ * it tripped (`AGENTS.md` §19.4, §39).
  */
 
 export type ContactDelivery = ContactMessageRoute & { transport: SmtpTransport };
 
+/**
+ * What the action knows about the post that the form's fields do not carry: whether the club's
+ * challenge was on, whether a token came with the post and what Cloudflare said of it, and the
+ * deployment's hostname for the imitation rule. Never the visitor's IP (`AGENTS.md` §19.4):
+ * it goes to Cloudflare with the token and nowhere else.
+ */
+export type ContactScreening = {
+  /** The club's switch is on and both Turnstile keys are set (§97, §254). */
+  botCheckOn: boolean;
+  /** A token came with the post, whatever Cloudflare then said of it. */
+  tokenPresent: boolean;
+  turnstileVerdict: TurnstileVerdict;
+  /** This deployment's hostname, from `APP_BASE_URL`; `null` switches the imitation rule off. */
+  clubHost: string | null;
+};
+
+/** A caller that screened nothing marks nothing: the message is exactly what it always was. */
+const UNSCREENED: ContactScreening = {
+  botCheckOn: false,
+  tokenPresent: false,
+  turnstileVerdict: "not_configured",
+  clubHost: null,
+};
+
 export type ContactOutcome =
-  /** Sent, or captured on a laptop. */
+  /** Sent, or captured on a laptop — marked "[posibil spam]" or not: the answer is the same. */
   | { outcome: "sent" }
   /** A bot's post: answered as sent, sent nowhere. */
   | { outcome: "ignored" }
@@ -59,6 +93,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
   pageUrl: string,
+  screening: ContactScreening = UNSCREENED,
 ): Promise<ContactOutcome> {
   const input = readContactInput(rawInput);
 
@@ -83,12 +118,29 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
   const verdict = await consumeRateLimit(db, "contact-message", key, now);
   if (!verdict.allowed) return { outcome: "limited", retryAfter: verdict.retryAfter };
 
+  // Past every gate; now only read. Nothing below can refuse the message (§205).
+  const suspicion = contactSuspicion({
+    ...screening,
+    elapsedMs: elapsedSince(input.renderedAt, now),
+    senderEmail: input.email,
+    message: input.message,
+    honeypot: input.honeypot,
+  });
+
   const message = renderContactMessage(
     { name: input.name, email: input.email, message: input.message, locale: input.locale, pageUrl },
     { from: delivery.from, to: delivery.to, cc: delivery.cc, bcc: delivery.bcc, appEnv: delivery.appEnv },
+    suspicion,
   );
   const result = await delivery.transport.send(message);
-  if (result.outcome === "sent") return { outcome: "sent" };
+  if (result.outcome === "sent") {
+    // How often the mark fires, for whoever reads the function log — the reasons' names only,
+    // never the address, the domain or anything typed (§216's rule for its own line).
+    if (suspicion.suspicious) {
+      console.info("[contact] delivered marked as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
+    }
+    return { outcome: "sent" };
+  }
 
   // The server's refusal, as a code or a class — never the password or its reply (the adapter
   // reduces it): the one trace an operator has on a wrong-password day (`SETUP.md` §38 step 5).
@@ -97,6 +149,12 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
   console.error("[contact] delivery failed", result.error);
   await refundRateLimit(db, "contact-message", key, now);
   return { outcome: "delivery_failed" };
+}
+
+/** Milliseconds from the page's render to the post, or `null` when the form carried no readable time (§217). */
+function elapsedSince(renderedAt: string | undefined, now: Date): number | null {
+  const at = Date.parse(renderedAt ?? "");
+  return Number.isNaN(at) ? null : now.getTime() - at;
 }
 
 /** The bucket's key: equality is all it needs, so the address itself never sits in the table. */

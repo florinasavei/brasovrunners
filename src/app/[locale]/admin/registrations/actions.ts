@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
+  bulkCancelRegistrationsByStaff,
   cancelRegistrationByStaff,
   checkInByStaff,
   confirmRegistrationByStaff,
@@ -370,27 +371,20 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
 
   let cancelled = 0;
   let failed = 0;
+  let voided: number[] = [];
   try {
     const actor = await requireStaffRole("ADMIN");
-    const db = getDb();
-    const now = new Date();
-
-    for (const registrationId of ids) {
-      try {
-        await cancelRegistrationByStaff(db, actor, registrationId, reason, now);
-        cancelled += 1;
-      } catch (error) {
-        if (!isDomainError(error)) throw error;
-        failed += 1;
-      }
-    }
+    ({ cancelled, failed, voided } = await bulkCancelRegistrationsByStaff(getDb(), actor, ids, reason, new Date()));
   } catch (error) {
     backTo(returnTo, outcomeOf(error));
   }
 
+  // The printed numbers this press just made void (§311), for the banner to name: numbers only,
+  // which is all the page needs to say which bibs come out of the pile.
   const separator = returnTo.includes("?") ? "&" : "?";
+  const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";
   redirect(
-    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}#admin-alert`,
+    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}${voidedQuery}#admin-alert`,
   );
 }
 

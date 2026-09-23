@@ -25,7 +25,7 @@ import {
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -43,7 +43,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { countBibs } from "@/modules/registrations/bibs";
+import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import {
@@ -104,7 +104,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided } = current;
+  // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
+  // and commas only, whatever the address bar says, and a race's worth at most.
+  // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
+  const voidedRaw: string = Array.isArray(voided) ? (voided as string[]).join(",") : (voided ?? "");
+  const voidedNow = voidedRaw.split(",").filter((part) => /^\d{1,5}$/.test(part)).slice(0, 100);
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -141,7 +146,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const eventFilter = defaultEventFilter(eventId, events);
   filters.eventId = eventFilter.eventId;
 
-  const [rows, total, summary, bibs] = await Promise.all([
+  const [rows, total, summary, bibs, voidBibs] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -162,6 +167,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       the club's database bills compute time (§68).
     */
     filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
+    /*
+      The printed bibs that belong to nobody any more (§311) — the numbers themselves, because
+      the panel names each one as a link and there are a handful per race. `countBibs` cannot
+      carry them: its scope is the sheet's, which is confirmed rows only, and that exclusion is
+      the rule this list is the other half of.
+    */
+    filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
   ]);
 
   const t = await getTranslations("Admin");
@@ -215,6 +227,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
+  // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
+  const printedOnPage = printedNumbersACancelWouldVoid(rows);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -383,6 +397,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               cancelled: cancelled ?? "0",
               failed: failed ?? "0",
             })}
+          </Alert>
+        )}
+        {/* The bibs this press has just made void, named where the club is looking (§311). */}
+        {saved === "registrationsCancelled" && voidedNow.length > 0 && (
+          <Alert severity="warning" data-testid="registrations-cancelled-voided" sx={{ mt: 1 }}>
+            {t("registrations.registrationsCancelledPrinted", { numbers: voidedNow.join(", ") })}
           </Alert>
         )}
         {saved === "outboxSent" && (
@@ -557,15 +577,53 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
         Only with an event selected and only when it has numbers: an empty toolbar row would be
         two dead buttons on the screen the club uses most.
+
+        The figures in the aside count **confirmed** registrations only — the sheet's own scope
+        — and the sentence says so, because a cancelled registration keeps its settled number and
+        its printed mark and would otherwise be the silent difference between "5 printed" and
+        the six bibs in the box. Those are the void lines below (§311): one per number, sorted,
+        each a link to the row it belongs to, and the panel stays open while there is one to pull. The panel
+        renders for them even when every confirmed bib is gone, or the line would vanish with the
+        very cancellation that produced it.
       */}
-      {filters.eventId && bibs.total > 0 && (
+      {filters.eventId && (bibs.total > 0 || voidBibs.length > 0) && (
         <Panel
           title={t("panels.bibs")}
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
-          defaultOpen={bibs.unprinted > 0}
+          defaultOpen={bibs.unprinted > 0 || voidBibs.length > 0}
           data-testid="registrations-bibs"
         >
+        {/*
+          One line per bib, and the whole line is the link (§311): the number, whose it was, and
+          what happened to it when — visible, because a `title` never shows on a phone and is not
+          what a screen reader reads as the link's name. The state is said in the message's own
+          language, one key per state, rather than through the backoffice's Romanian enum labels
+          (§35), because here it is a word inside an English sentence.
+        */}
+        {voidBibs.length > 0 && (
+          <Alert severity="warning" data-testid="registrations-void-bibs" sx={{ mb: bibs.total > 0 ? 1.5 : 0 }}>
+            {t("registrations.bibsVoid", { count: voidBibs.length })}
+            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+              {voidBibs.map((bib) => (
+                <Box
+                  component="li"
+                  key={bib.id}
+                  sx={{ fontVariantNumeric: "tabular-nums", "& a": { display: "inline-flex", alignItems: "center", ...TAP_TARGET } }}
+                >
+                  <Link href={{ pathname: "/admin/registrations/[id]", params: { id: bib.id } }}>
+                    {t(bib.status === "CANCELLED" ? "registrations.bibsVoidCancelled" : "registrations.bibsVoidExpired", {
+                      number: bib.bibNumber,
+                      name: bib.registeredName,
+                      date: format.dateTime(bib.voidedAt, { dateStyle: "medium" }),
+                    })}
+                  </Link>
+                </Box>
+              ))}
+            </Box>
+          </Alert>
+        )}
+        {bibs.total > 0 && (
         <Stack
           direction="row"
           spacing={1}
@@ -623,6 +681,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
         </Stack>
+        )}
         </Panel>
       )}
 
@@ -960,6 +1019,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
+                // A printed bib is named before the press (§311): after this the number stays
+                // retired and the paper has to come out of the pile.
+                const printedWarning =
+                  row.bibPrintedAt !== null && row.bibNumber !== null
+                    ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} `
+                    : "";
                 items.push({
                   kind: "submit",
                   icon: "cancel",
@@ -968,7 +1033,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   color: "error",
                   confirm: {
                     title: t("registrations.cancel"),
-                    body: t("registrations.cancelBody"),
+                    body: `${printedWarning}${t("registrations.cancelBody")}`,
                     confirmLabel: t("registrations.cancel"),
                   },
                 });
@@ -1073,6 +1138,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.bulkCancelHelp")}
               </Typography>
+              {/*
+                The printed bibs this form could make void, named before the press (§311) — the
+                single cancel's dialog does it per row, and this is the race-morning path. The ticked
+                set exists only in the browser (plain checkboxes, no client island to count them),
+                so the sentence names the printed numbers among the rows on this page, which is
+                every row the form can reach; the banner afterwards names the ones it did void.
+              */}
+              {printedOnPage.length > 0 && (
+                <Alert severity="warning" data-testid="bulk-cancel-printed">
+                  {t("registrations.bulkCancelPrinted", { numbers: printedOnPage.join(", ") })}
+                </Alert>
+              )}
               <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
               <Box>
                 <SubmitButton

@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -8,6 +9,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import {
@@ -29,6 +31,11 @@ import {
  *       (address vouched for, declaration signed on the paper copy the desk holds)
  *   WAITLISTED → "Give a place" (only into a free one; the allocator refuses otherwise)
  *   CONFIRMED → the number (typed or cleared) and "Check in" / "Undo"
+ *   CANCELLED, EXPIRED → no button at all, and a red line first (§311): the state, the date,
+ *       and — when a bib with this number was printed — that it is in the pile and is not to be
+ *       handed out. The person may well be standing there with the email; the desk is where
+ *       that must not become a surprise. Every role sees it: a state and a number, never an
+ *       address (`AGENTS.md` §15.11).
  *
  * `back` says where the buttons return to — this row inside the desk's search, or the page
  * one scanned code opened — and the hidden fields carry what that page needs to rebuild.
@@ -63,6 +70,17 @@ export default async function DeskRow({
   // morning most of them are provisional, and the desk has to show those or it shows a dash.
   const number = raceNumberOf(row);
 
+  /*
+    A registration that is over (§311). The state machine offers it nothing here — `canConfirm`
+    and the two status checks below already withhold every button — so what this row has to do
+    is say so before anything else on it is read. The date is the row's own pair for the state
+    (`cancelled_at` or `expired_at`); the printed sentence only when a settled number was put on
+    paper, because that is the case where a bib exists that must come out of the pile.
+  */
+  const terminal = isTerminalStatus(row.status);
+  const voidedAt = row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt;
+  const printedVoid = terminal && row.bibPrintedAt !== null && row.bibNumber !== null;
+
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -81,12 +99,29 @@ export default async function DeskRow({
       sx={{
         listStyle: "none",
         border: 1,
-        borderColor: row.checkedInAt ? "success.light" : "divider",
+        borderColor: terminal ? "error.light" : row.checkedInAt ? "success.light" : "divider",
         borderRadius: 1,
         p: 1.5,
         bgcolor: row.checkedInAt ? "success.50" : "background.paper",
       }}
     >
+      {/*
+        First and loudest (§311): before the name, before the number, in the error colour. The
+        volunteer has somebody in front of them holding the confirmation email, and the one
+        thing the screen must not do is look like every other row with a slightly different chip.
+      */}
+      {terminal && (
+        <Alert severity="error" data-testid="desk-void" sx={{ mb: 1.5 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {t(row.status === "CANCELLED" ? "desk.voidCancelled" : "desk.voidExpired", {
+              date: voidedAt ? format.dateTime(voidedAt, { dateStyle: "long" }) : "—",
+            })}
+          </Typography>
+          {printedVoid && (
+            <Typography variant="body2">{t("desk.voidPrinted", { number: row.bibNumber as number })}</Typography>
+          )}
+        </Alert>
+      )}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
@@ -99,11 +134,20 @@ export default async function DeskRow({
               number on a bib, and anything else in that field is something to decode. What
               tells them a number is not settled is the absence of the bib picture below, which
               is only ever drawn for a settled one; the tooltip says it in words.
+
+              Struck through and dimmed on a row that is over (§311): the number is still this
+              person's — it is never reused — and it is not a number to reach for.
             */}
             <Typography
               component="span"
               title={number && !number.settled ? t("desk.bibProvisional") : undefined}
-              sx={{ fontWeight: 700, fontSize: "1.25rem", minWidth: 48, color: number ? "text.primary" : "text.disabled" }}
+              sx={{
+                fontWeight: 700,
+                fontSize: "1.25rem",
+                minWidth: 48,
+                color: number && !terminal ? "text.primary" : "text.disabled",
+                textDecoration: terminal && number ? "line-through" : "none",
+              }}
             >
               {number ? number.value : "—"}
             </Typography>
@@ -116,7 +160,9 @@ export default async function DeskRow({
             )}
             <Chip
               size="small"
-              color={row.status === "CONFIRMED" ? "success" : row.status === "WAITLISTED" ? "default" : "warning"}
+              color={
+                terminal ? "error" : row.status === "CONFIRMED" ? "success" : row.status === "WAITLISTED" ? "default" : "warning"
+              }
               label={REGISTRATION_STATUS_LABEL[row.status]}
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
@@ -157,8 +203,11 @@ export default async function DeskRow({
 
             Loaded only when the fold is opened — `<details>` does not fetch what it does not
             render — which matters on a phone at a start line.
+
+            Not on a row that is over (§311): the picture is for matching a bib to a runner, and
+            this runner gets none. The red line above already names the number to pull.
           */}
-          {number !== null && number.settled && row.kind === "REAL" && (
+          {number !== null && number.settled && row.kind === "REAL" && !terminal && (
             <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
               <Typography component="summary" variant="body2" color="text.secondary">
                 {t("desk.showBib")}
