@@ -35,7 +35,7 @@ import { findLatestPastEvent, listPastEvents, listUpcomingEvents, type PublicEve
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { CARD_DOOR_SX } from "@/modules/events/ui/card-door";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
@@ -485,7 +485,7 @@ async function EventCard({
           button inside a link would be a control inside a control. The arrowed "Vezi detaliile"
           hint it replaces was aria-hidden and inside the link — a decoration, not a door. */}
       <Box sx={{ px: 2, pb: 2 }}>
-        <Button component="a" href={page} variant="outlined" size="small" sx={TAP_TARGET}>
+        <Button component="a" href={page} variant="outlined" size="small" sx={CARD_DOOR_SX}>
           {tEvent("series.fullDescription")}
         </Button>
       </Box>
