@@ -379,7 +379,7 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
     backTo(returnTo, outcomeOf(error));
   }
 
-  // The printed numbers this press just made void (§308), for the banner to name: numbers only,
+  // The printed numbers this press just made void (§311), for the banner to name: numbers only,
   // which is all the page needs to say which bibs come out of the pile.
   const separator = returnTo.includes("?") ? "&" : "?";
   const voidedQuery = voided.length > 0 ? `&voided=${voided.join(",")}` : "";

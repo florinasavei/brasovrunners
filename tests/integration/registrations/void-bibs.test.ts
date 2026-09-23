@@ -28,7 +28,7 @@ import { consumeAndCancelFromMyRegistrations } from "@/modules/registrations/my-
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-038-01 criterion 16, `DECISIONS.md` §308 — a printed bib of a cancelled entry is void.
+ * BR-REQ-038-01 criterion 16, `DECISIONS.md` §311 — a printed bib of a cancelled entry is void.
  *
  * The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
  * printat!". A settled number is never reused (§173), which is right; what it leaves behind is a
@@ -40,7 +40,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * the numbers it voided; a number on a row that is over cannot be cleared or replaced, whoever
  * posts the form (BR-REQ-060-01); and an erased registration's number stays out of every draw.
  */
-describe("§308 the printed bibs of cancelled registrations", () => {
+describe("§311 the printed bibs of cancelled registrations", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -317,7 +317,7 @@ describe("§308 the printed bibs of cancelled registrations", () => {
 
   /**
    * §173 against erasure. Erasing deletes the row, and every draw learns what is taken from the
-   * rows — so, before §308's reader, an erased void 27 was "the lowest free number" again while
+   * rows — so, before §311's reader, an erased void 27 was "the lowest free number" again while
    * its paper was still in the pile. The erasure's own audit row keeps the event, the number and
    * whether it was printed (never who), and every draw reads it back.
    */

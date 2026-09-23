@@ -105,7 +105,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
   });
 
   /**
-   * §308 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
+   * §311 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
    * surprise. The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost
    * deja printat!"
    *

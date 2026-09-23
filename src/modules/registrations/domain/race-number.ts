@@ -31,7 +31,7 @@ export function raceNumberOf(row: {
 }
 
 /**
- * The printed numbers a cancellation among these rows would make void (`DECISIONS.md` §308),
+ * The printed numbers a cancellation among these rows would make void (`DECISIONS.md` §311),
  * lowest first: a settled number, a printed mark, and a status that can still be cancelled.
  *
  * What the registrations list names beside its bulk cancel **before** the press. The ticked set

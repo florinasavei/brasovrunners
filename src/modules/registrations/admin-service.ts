@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull, notInArray, or } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -16,7 +16,7 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { erasedBibNumbers } from "./bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
-import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
+import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
 import {
   findEventForAllocation,
   findRegistrationByEventAndParticipant,
@@ -413,7 +413,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     );
   }
   /*
-    A registration that is over takes no number change at all (§308; BR-REQ-060-01 — the server
+    A registration that is over takes no number change at all (§311; BR-REQ-060-01 — the server
     says it, not the missing field).
 
     Its settled number is retired, not free (§173): clearing it or replacing it would hand 27 back
@@ -430,7 +430,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     );
   }
   /*
-    And a number that is on paper stays on it, whatever the status (§308). The one way to be
+    And a number that is on paper stays on it, whatever the status (§311). The one way to be
     here with a printed mark is a cancelled entry that restarted — it carries its number and its
     mark back into the queue — and moving that number would leave the printed bib pointing at
     nobody, exactly as clearing it on the cancelled row would have.
@@ -454,10 +454,25 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
           number, whichever verb produced it.
         */
         .set({ bibNumber, provisionalBibNumber: null, updatedAt: now })
-        .where(eq(registrations.id, registrationId))
+        /*
+          The two refusals above, again, in the write itself (§311): `current` was read before
+          this transaction, so a registration cancelled or expired — or a number printed — in
+          between would otherwise still have its number moved. No row back means one of them
+          became true, and it is the same refusal.
+        */
+        .where(
+          and(
+            eq(registrations.id, registrationId),
+            notInArray(registrations.status, [...TERMINAL_STATUSES]),
+            or(isNull(registrations.bibPrintedAt), isNull(registrations.bibNumber)),
+          ),
+        )
         .returning();
+      if (!row) {
+        throw new DomainError("VALIDATION_ERROR", "this registration is over or its race number is printed; the number cannot be changed");
+      }
       /*
-        Nor the number of a registration that was erased here (§308). The unique index cannot
+        Nor the number of a registration that was erased here (§311). The unique index cannot
         say it — the row that wore 27 is gone — so the erasure's audit row does, read **after**
         the write, inside it: if the erased row still existed when the UPDATE ran, the index
         refused it; if it was already gone, the audit row was committed before it went, and
@@ -616,7 +631,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   const cancelled = await unregister(db, event, registrationId, "ADMIN", now);
 
   /*
-    A printed bib going void is written into the row's own record (§308; the owner: "trebuie sa
+    A printed bib going void is written into the row's own record (§311; the owner: "trebuie sa
     avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja printat!").
 
     The number stays retired (§173) and the printed mark stays on the row, so `voidBibsFor`
@@ -645,7 +660,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
 /**
  * Cancel several registrations with one reason (§67): the bulk form on the registrations list,
  * which on race morning is the path an Administrator reaches for — and so the one most likely to
- * cancel somebody whose bib is already printed (§308).
+ * cancel somebody whose bib is already printed (§311).
  *
  * Each row goes through `cancelRegistrationByStaff`, once: the same guard, the same allocator,
  * the same audit row carrying the printed number. A row that refuses is counted and the rest
@@ -846,7 +861,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   }
 
   /*
-    The number goes with the row, and this row is where it survives (§308).
+    The number goes with the row, and this row is where it survives (§311).
 
     Every draw learns which numbers are taken from the rows that wear them, so the deleted row
     would take its settled number out of that set — and "the lowest free number" would hand a

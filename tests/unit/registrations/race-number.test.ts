@@ -3,10 +3,10 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { printedNumbersACancelWouldVoid } from "@/modules/registrations/domain/race-number";
 
 /**
- * BR-REQ-038-01 criterion 16, `DECISIONS.md` §308 — what the registrations list names beside its
+ * BR-REQ-038-01 criterion 16, `DECISIONS.md` §311 — what the registrations list names beside its
  * bulk cancel before the press: the printed, settled numbers among the rows the form can cancel.
  */
-describe("§308 the printed numbers a bulk cancel would void", () => {
+describe("§311 the printed numbers a bulk cancel would void", () => {
   const PRINTED = new Date("2026-11-10T09:00:00Z");
   const row = (status: RegistrationStatus, bibNumber: number | null, bibPrintedAt: Date | null = PRINTED) => ({
     status,

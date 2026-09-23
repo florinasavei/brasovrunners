@@ -42,7 +42,7 @@ export const BIB_RANGE = { threeDigits: 999, fourDigits: 9999 } as const;
 const ceilingFor = (start: number) => Math.max(start + BIB_RANGE.fourDigits, BIB_RANGE.fourDigits);
 
 /**
- * The settled numbers of registrations that were **erased** at this event (`DECISIONS.md` §308).
+ * The settled numbers of registrations that were **erased** at this event (`DECISIONS.md` §311).
  *
  * A number is never reissued (§173), and every draw in this file learns which numbers are taken
  * by reading the ones rows wear. Erasing a registration (BR-REQ-037-06) deletes its row, and with
@@ -100,7 +100,7 @@ export async function erasedBibNumbers<T extends Record<string, unknown>>(
  * What does **not** change: a number once given is never taken back or reissued, so a bib
  * printed on Friday is still right on Sunday; a cancelled registration keeps its number, which
  * is how two people avoid both wearing 17; an erased one's stays taken through its audit row
- * (`erasedBibNumbers`, §308), because "lowest free" would otherwise go straight back to it; and
+ * (`erasedBibNumbers`, §311), because "lowest free" would otherwise go straight back to it; and
  * the whole draw happens under the event row's lock, the same serialization point capacity uses
  * (§10.6), so two confirmations cannot reach the same free number.
  *
@@ -133,7 +133,7 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
     if (row.number !== null) taken.add(row.number);
     if (row.provisional !== null) taken.add(row.provisional);
   }
-  // And the numbers erased rows wore (§308), after the rows — `erasedBibNumbers` says why.
+  // And the numbers erased rows wore (§311), after the rows — `erasedBibNumbers` says why.
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
@@ -183,7 +183,7 @@ export async function pickProvisionalBibNumber<T extends Record<string, unknown>
     if (row.final !== null) taken.add(row.final);
     if (row.provisional !== null) taken.add(row.provisional);
   }
-  // An erased row's final number is taken for ever too (§308): a provisional 27 handed out
+  // An erased row's final number is taken for ever too (§311): a provisional 27 handed out
   // after the erasure would be promoted to a final 27 the moment its holder confirmed.
   for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
@@ -322,7 +322,7 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
     .select({ number: registrations.bibNumber })
     .from(registrations)
     .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.bibNumber)));
-  // Erased registrations' numbers too (§308): the recompaction runs from the band's start, so
+  // Erased registrations' numbers too (§311): the recompaction runs from the band's start, so
   // it is the one pass certain to reach an erased 27 if nothing said it was taken.
   const taken = new Set([...worn.map((row) => row.number as number), ...(await erasedBibNumbers(tx, input.eventId))]);
 
@@ -481,7 +481,7 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
     if (row.bibNumber !== null) taken.add(row.bibNumber);
     if (row.provisional !== null) taken.add(row.provisional);
   }
-  // Nor an erased registration's number (§308): offering it would be offering a refusal.
+  // Nor an erased registration's number (§311): offering it would be offering a refusal.
   for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
   // at a race whose numbers start at 500 offers numbers nobody would print.
@@ -565,7 +565,7 @@ export async function countBibs<T extends Record<string, unknown>>(
   return { total: row?.total ?? 0, unprinted: row?.unprinted ?? 0 };
 }
 
-/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §308). */
+/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §311). */
 export type VoidBib = {
   id: string;
   bibNumber: number;
@@ -576,7 +576,7 @@ export type VoidBib = {
 };
 
 /**
- * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §308; the
+ * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §311; the
  * owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
  * printat!").
  *

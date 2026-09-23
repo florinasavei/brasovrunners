@@ -105,9 +105,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   const current = await searchParams;
   const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided } = current;
-  // The printed numbers a bulk cancel just made void (§308), as the action wrote them: digits
+  // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
   // and commas only, whatever the address bar says, and a race's worth at most.
-  const voidedNow = (voided ?? "").split(",").filter((part) => /^\d{1,5}$/.test(part)).slice(0, 100);
+  // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
+  const voidedRaw: string = Array.isArray(voided) ? (voided as string[]).join(",") : (voided ?? "");
+  const voidedNow = voidedRaw.split(",").filter((part) => /^\d{1,5}$/.test(part)).slice(0, 100);
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -166,7 +168,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     */
     filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
     /*
-      The printed bibs that belong to nobody any more (§308) — the numbers themselves, because
+      The printed bibs that belong to nobody any more (§311) — the numbers themselves, because
       the panel names each one as a link and there are a handful per race. `countBibs` cannot
       carry them: its scope is the sheet's, which is confirmed rows only, and that exclusion is
       the rule this list is the other half of.
@@ -225,7 +227,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
-  // What the bulk cancel would void among the rows it is showing (§308); said beside its help.
+  // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
   const printedOnPage = printedNumbersACancelWouldVoid(rows);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
@@ -397,7 +399,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             })}
           </Alert>
         )}
-        {/* The bibs this press has just made void, named where the club is looking (§308). */}
+        {/* The bibs this press has just made void, named where the club is looking (§311). */}
         {saved === "registrationsCancelled" && voidedNow.length > 0 && (
           <Alert severity="warning" data-testid="registrations-cancelled-voided" sx={{ mt: 1 }}>
             {t("registrations.registrationsCancelledPrinted", { numbers: voidedNow.join(", ") })}
@@ -579,7 +581,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         The figures in the aside count **confirmed** registrations only — the sheet's own scope
         — and the sentence says so, because a cancelled registration keeps its settled number and
         its printed mark and would otherwise be the silent difference between "5 printed" and
-        the six bibs in the box. Those are the void lines below (§308): one per number, sorted,
+        the six bibs in the box. Those are the void lines below (§311): one per number, sorted,
         each a link to the row it belongs to, and the panel stays open while there is one to pull. The panel
         renders for them even when every confirmed bib is gone, or the line would vanish with the
         very cancellation that produced it.
@@ -593,7 +595,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           data-testid="registrations-bibs"
         >
         {/*
-          One line per bib, and the whole line is the link (§308): the number, whose it was, and
+          One line per bib, and the whole line is the link (§311): the number, whose it was, and
           what happened to it when — visible, because a `title` never shows on a phone and is not
           what a screen reader reads as the link's name. The state is said in the message's own
           language, one key per state, rather than through the backoffice's Romanian enum labels
@@ -1017,7 +1019,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
-                // A printed bib is named before the press (§308): after this the number stays
+                // A printed bib is named before the press (§311): after this the number stays
                 // retired and the paper has to come out of the pile.
                 const printedWarning =
                   row.bibPrintedAt !== null && row.bibNumber !== null
@@ -1137,7 +1139,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {t("registrations.bulkCancelHelp")}
               </Typography>
               {/*
-                The printed bibs this form could make void, named before the press (§308) — the
+                The printed bibs this form could make void, named before the press (§311) — the
                 single cancel's dialog does it per row, and this is the race-morning path. The ticked
                 set exists only in the browser (plain checkboxes, no client island to count them),
                 so the sentence names the printed numbers among the rows on this page, which is
