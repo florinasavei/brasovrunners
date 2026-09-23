@@ -1,5 +1,5 @@
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter } from "next-intl/server";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
@@ -62,7 +62,8 @@ export async function GET(
   if (Number.isNaN(from) || Number.isNaN(to)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
-  // Two per page unless "one" is asked for; anything else is the default, not an error.
+  // Two A5 bibs per A4 page unless "one" is asked for — each alone in the upper half of its page
+  // (§NNN); anything else is the default, not an error.
   const layout = url.searchParams.get("layout") === "one" ? ("one" as const) : ("two" as const);
   // The only scope besides a range: the bibs nobody has printed yet (§264).
   const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;
@@ -71,7 +72,6 @@ export async function GET(
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
-  const t = await getTranslations({ locale, namespace: "Admin" });
   const format = await getFormatter({ locale });
   const now = new Date();
   const rows = await listBibs(db, id, { from, to, only });
@@ -111,7 +111,6 @@ export async function GET(
     partners: event.coHosts.map((host) => host.name),
     replyTo: env.EMAIL_REPLY_TO,
     siteUrl: env.APP_BASE_URL,
-    pageLabel: (n, total) => t("bibs.page", { n, total }),
     generatedAt: now,
     layout,
     design: event.design,

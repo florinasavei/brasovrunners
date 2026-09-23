@@ -13,20 +13,30 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
+import {
+  BIB_CARD,
+  BIB_FOOTER_LINE,
+  BIB_IMAGE,
+  BIB_IMAGE_SCALE,
+  BIB_LAYOUT,
+  BIB_MARGIN,
+  bibNumberPoints,
+} from "./bib-geometry";
 
 /**
  * One race number as a picture (`DECISIONS.md` §94, §180; the owner: "I should be able to
  * preview and see bibs for each participant — a pretty bib, with our logo, participant name,
  * race").
  *
- * **The same card `bibs-pdf.ts` prints**, and that is the whole point of it: the club looks at
- * this before sending anything to a printer, so a preview that arranged the same facts
- * differently would be a preview of nothing. Both read `bib-design.ts` and `bib-footer.ts` for
- * the decisions that could drift — which colour the band is when the event names none, what
- * the footer says and where it breaks (§317) — and both lay out a coloured band with the white
- * lockup and the race on it, the number under it in the body ink, the registered name beneath,
- * and the small print at the foot. 900×600, near enough the proportion of an A5 bib lying on its
- * side.
+ * **The paper `bibs-pdf.ts` prints, at a screen's size**, and that is the whole point of it: the
+ * club looks at this before sending anything to a printer, so a preview that arranged the same
+ * facts differently would be a preview of nothing. Both read `bib-design.ts` and `bib-footer.ts`
+ * for the decisions that could drift — which colour the band is when the event names none, what
+ * the footer says and where it breaks (§317) — and since the bib became an A5 sheet (§NNN) both
+ * read `bib-geometry.ts` for where everything sits: this picture is 990×700, the A5 paper's own
+ * proportion (√2), and every length in it is the sheet's length in points times
+ * `BIB_IMAGE_SCALE` — the margin, the band, the lockup, the number, the name, the sponsors'
+ * strip, the small print. Nothing here is sized by eye any more.
  *
  * The lockup is `src/theme/pdf/logo-white.png`, white on transparent (the raster
  * `scripts/brand-assets.mjs` writes), because the band is the event's colour and the email's
@@ -34,22 +44,25 @@ import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
  * traced into the function. Drawn through `next/og` like the share cards: flexbox only, the
  * bundled Roboto.
  */
-export const BIB_IMAGE = { width: 900, height: 600 } as const;
 
-/** The band, and the lockup that sits in it, at this card's scale. */
-const BAND_HEIGHT = 96;
-const LOGO_WIDTH = 204;
-/** The card's edge, the cut guide the sheet strokes round each bib. */
-const CARD_BORDER = 2;
+/** Points to this picture's pixels. */
+const px = (points: number) => points * BIB_IMAGE_SCALE;
 
 /**
- * The small print's geometry (§317): across the card inside its border, less 30 pixels each side
- * — the sheet's 18 points at this scale — at the size that makes that line `BIB_FOOTER_EMS` wide,
- * the sheet's own measure. Satori sizes boxes border-box, so the footer's line is 900 less both
- * borders less both paddings: 836. Not a round size, and deliberately: it is what makes a line
- * that fits on the paper fit here, break in the same place and be cut at the same character.
+ * The paper's edge, drawn on the screen only — the printed bib has no frame, its edge is the
+ * paper's (§NNN) — so that a white A5 on a white page still shows where it ends. It sits inside
+ * the margin: Satori sizes boxes border-box, so the padding is the margin less the border, and
+ * everything inside starts exactly where the card starts on the paper.
  */
-const FOOTER_LINE = BIB_IMAGE.width - 2 * CARD_BORDER - 60;
+const PAPER_EDGE = 2;
+
+/**
+ * The small print's geometry (§317): the sheet's 523.28-point line and its 8-point type, both
+ * multiplied by `BIB_IMAGE_SCALE` — 870 pixels of line at 13.3 pixels — which is the same
+ * `BIB_FOOTER_EMS` wide. Not a round size, and deliberately: it is what makes a line that fits on
+ * the paper fit here, break in the same place and be cut at the same character.
+ */
+const FOOTER_LINE = px(BIB_FOOTER_LINE.width);
 export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FOOTER_EMS } as const;
 
 type BibImageInput = {
@@ -96,12 +109,16 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
+/** One line of text that never wraps and is cut with "…" where the sheet's would be. */
+const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
+
 export async function renderBibImage(input: BibImageInput): Promise<ImageResponse> {
   const { width, height } = BIB_IMAGE;
+  const L = BIB_LAYOUT;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const digits = String(input.bibNumber);
-  const numberSize = Math.round((digits.length >= 5 ? 218 : digits.length === 4 ? 273 : 312) * numberScaleFactor(design));
-  const nameSize = input.registeredName.length > 26 ? 30 : 37;
+  // The sheet's size in points, the club's scale included, then to pixels (§249).
+  const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   // A picture the club uploaded, made absolute for the renderer (§249); the band when there is
@@ -110,20 +127,24 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
-  /** The name, above the number or below it — and nowhere when the club switched it off. */
+  const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
+  // The race and its date at the right of the band, in what the lockup leaves — the sheet's width.
+  const headerTextWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset);
+  /**
+   * The name, above the number or below it — and nowhere when the club switched it off — in the
+   * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it.
+   */
   const name = design.showName ? (
     <div
       style={{
         display: "flex",
+        flexShrink: 0,
+        height: px(L.nameBlock),
+        padding: `${px(L.nameTop)}px ${px(L.inset)}px 0 ${px(L.inset)}px`,
         justifyContent: "center",
-        padding: "0 30px",
-        fontSize: nameSize,
-        fontWeight: 700,
-        whiteSpace: "nowrap",
-        overflow: "hidden",
       }}
     >
-      {input.registeredName}
+      <div style={{ ...ONE_LINE, fontSize: px(L.nameSize), fontWeight: 700 }}>{input.registeredName}</div>
     </div>
   ) : null;
   return new ImageResponse(
@@ -137,39 +158,69 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           background: COLOR.surface,
           color: COLOR.ink,
           fontFamily: "Roboto, sans-serif",
-          border: `${CARD_BORDER}px solid ${COLOR.line}`,
+          border: `${PAPER_EDGE}px solid ${COLOR.line}`,
+          padding: px(BIB_MARGIN) - PAPER_EDGE,
         }}
       >
         {/* The club's own header picture across the top (§249), or the coloured band with the
             lockup and the race on it. The picture replaces the band whole: a band *and* a
-            picture is two headers, and the club chose the picture. */}
+            picture is two headers, and the club chose the picture. It covers the strip, centred,
+            exactly as the sheet crops it. */}
         {header ? (
           // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
-          <img src={header} alt="" width={width} height={BAND_HEIGHT} style={{ objectFit: "cover" }} />
+          <img
+            src={header}
+            alt=""
+            width={px(BIB_CARD.width)}
+            height={px(L.bandHeight)}
+            style={{ flexShrink: 0, objectFit: "cover" }}
+          />
         ) : (
           <div
             style={{
               display: "flex",
-              height: BAND_HEIGHT,
+              flexShrink: 0,
+              height: px(L.bandHeight),
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "0 30px",
+              padding: `0 ${px(L.inset)}px`,
               background: band,
             }}
           >
             {design.showLogo ? (
               // eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI
-              <img src={await logo()} alt="" width={LOGO_WIDTH} height={84} style={{ objectFit: "contain" }} />
+              <img
+                src={await logo()}
+                alt=""
+                width={px(L.logoWidth)}
+                height={px(L.logoWidth / L.logoRatio)}
+                style={{ flexShrink: 0, objectFit: "contain" }}
+              />
             ) : (
               <div style={{ display: "flex" }} />
             )}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", color: bandText }}>
-              {design.showEventTitle && <div style={{ display: "flex", fontWeight: 700, fontSize: 20 }}>{input.eventTitle}</div>}
-              {design.showDate && <div style={{ display: "flex", fontSize: 17 }}>{input.eventDate}</div>}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                maxWidth: px(headerTextWidth),
+                color: bandText,
+              }}
+            >
+              {design.showEventTitle && (
+                <div style={{ ...ONE_LINE, maxWidth: px(headerTextWidth), fontWeight: 700, fontSize: px(L.titleSize) }}>
+                  {input.eventTitle}
+                </div>
+              )}
+              {design.showDate && (
+                <div style={{ ...ONE_LINE, maxWidth: px(headerTextWidth), fontSize: px(L.dateSize) }}>{input.eventDate}</div>
+              )}
             </div>
           </div>
         )}
         {design.namePosition === "above" ? name : null}
+        {/* The number, centred on what the card has left, as the sheet centres it. */}
         <div
           style={{
             display: "flex",
@@ -179,7 +230,6 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             fontSize: numberSize,
             fontWeight: 700,
             color: COLOR.ink,
-            letterSpacing: -6,
             lineHeight: 1,
           }}
         >
@@ -187,23 +237,35 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         </div>
         {design.namePosition === "below" ? name : null}
         {/* The sponsors' strip, when the club has one (§249): above the small print, across
-            the card, its own proportion kept. */}
+            the card less its inset, its own proportion kept. */}
         {sponsors ? (
-          // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
-          <img src={sponsors} alt="" width={width - 60} height={64} style={{ margin: "0 30px", objectFit: "contain" }} />
+          <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- Satori fetches it */}
+            <img
+              src={sponsors}
+              alt=""
+              width={px(BIB_CARD.width - 2 * L.inset)}
+              height={px(L.sponsorPicture)}
+              style={{ objectFit: "contain" }}
+            />
+          </div>
         ) : null}
         {/* The small print as the club composed it (§317), in the lines `bib-footer.ts` laid out
             for the sheet too: each its own row with wrapping off, so the picture breaks where
-            the paper breaks. `pre`, because the separator's two spaces are two on the paper and
-            Satori would otherwise collapse them into one. The overflow rule is a safety net,
-            never the rule. */}
+            the paper breaks, the last line as far above the card's foot as the sheet sets it.
+            `pre`, because the separator's two spaces are two on the paper and Satori would
+            otherwise collapse them into one. The overflow rule is a safety net, never the rule. */}
         <div
           style={{
             display: "flex",
+            flexShrink: 0,
             flexDirection: "column",
+            justifyContent: "flex-end",
             alignItems: "center",
-            padding: "14px 30px 16px 30px",
+            height: px(footerHeight),
+            paddingBottom: px(BIB_FOOTER_LINE.lastLineTop - BIB_FOOTER_LINE.lineHeight),
             fontSize: BIB_IMAGE_FOOTER.size,
+            lineHeight: `${px(BIB_FOOTER_LINE.lineHeight)}px`,
             color: COLOR.inkMuted,
           }}
         >
