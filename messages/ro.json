@@ -1143,16 +1143,20 @@
       },
       "neonPlan": {
         "title": "Planul Neon (baza de date)",
-        "intro": "Platforma nu poate citi de la Neon pe ce plan e contul — API-ul dă consumul, nu planul și nu factura — așa că îi spui tu aici. De aici se iau cifrele de pe /devs și rândul Neon de mai jos: pe Free, plafonul de ore și spațiul, cu roșu de la 80%; pe Launch, costul estimat la tarifele planului, fără plafon.",
+        "intro": "Platforma citește planul de la Neon: proiectul spune pe ce plan e contul care îl deține, la fiecare deschidere a paginii. Alegerea de mai jos e rezerva, folosită doar când cheia NEON_API_KEY lipsește sau Neon nu răspunde. De aici se iau cifrele de pe /devs și rândul Neon de mai jos: pe Free, plafonul de ore și spațiul, cu roșu de la 80%; pe Launch, costul estimat la tarifele planului, fără plafon.",
         "inForce": {
-          "free": "Planul setat: Free — {of} ore-CU pe lună pe proiect, incluse; când se termină, baza de date se oprește până luna următoare.",
-          "freeMeasured": "Planul setat: Free — {cu} din {of} ore-CU folosite în perioada aceasta ({percent}%); când se termină, baza de date se oprește până luna următoare.",
-          "launch": "Planul setat: Launch — plătit pe consum, {rate} $/oră-CU, fără plafon și fără oprire. Orele apar când NEON_API_KEY e setat.",
-          "launchMeasured": "Planul setat: Launch — plătit pe consum. Ore de calcul în perioada aceasta: {cu}; cost estimat: {usd} $ ({rate} $/oră-CU)."
+          "free": "Planul: Free — {of} ore-CU pe lună pe proiect, incluse; când se termină, baza de date se oprește până luna următoare.",
+          "freeMeasured": "Planul: Free — {cu} din {of} ore-CU folosite în perioada aceasta ({percent}%); când se termină, baza de date se oprește până luna următoare.",
+          "launch": "Planul: Launch — plătit pe consum, {rate} $/oră-CU, fără plafon și fără oprire. Orele apar când NEON_API_KEY e setat.",
+          "launchMeasured": "Planul: Launch — plătit pe consum. Ore de calcul în perioada aceasta: {cu}; cost estimat: {usd} $ ({rate} $/oră-CU)."
+        },
+        "source": {
+          "neon": "Citit de la Neon acum: contul e pe planul {name}. Nu trebuie ales nimic mai jos.",
+          "setting": "Neon nu a spus planul (cheia NEON_API_KEY lipsește sau Neon nu a răspuns), așa că se folosește planul ales mai jos."
         },
         "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
         "updatedAt": "Setat la {when}. Notă: {note}",
-        "field": "Planul pe care e contul Neon",
+        "field": "Planul de rezervă, când Neon nu răspunde",
         "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate pe {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
         "option": {
           "FREE": "{name} — {cuHours} ore-CU și {storageMb} MB pe lună pe proiect, gratuit; peste, baza de date se oprește",
@@ -2716,6 +2720,10 @@
       "plan": {
         "FREE": "Planul setat: Free.",
         "LAUNCH": "Planul setat: Launch."
+      },
+      "planFromNeon": {
+        "FREE": "Planul: Free, citit de la Neon.",
+        "LAUNCH": "Planul: Launch, citit de la Neon."
       },
       "planLink": "Schimbă planul (Sarcini → Costuri).",
       "planSetBy": "Îl setează Administratorul, pe Sarcini → Costuri.",

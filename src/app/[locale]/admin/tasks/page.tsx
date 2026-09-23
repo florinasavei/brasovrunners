@@ -49,7 +49,7 @@ import {
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
-import { describeNeonBlock } from "@/modules/diagnostics/domain/neon-plan";
+import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
@@ -304,18 +304,19 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   const databaseBytes = await readDatabaseSizeBytes(db);
   const neon = await readNeonConsumption(env);
-  // The plan the club says the Neon account is on (§280's follow-up): Free's ceilings, or
-  // Launch's rates. Set on this panel, read by the row below and by `/devs`.
+  // The Neon plan (§280's follow-up, §NNN): what Neon reports for the account when it answered,
+  // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
+  const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);
   const neonBlock = describeNeonBlock({
-    plan: neonPlan.plan,
+    plan: neonInForce.plan,
     databaseBytes,
     consumption: neon.ok ? neon.consumption : null,
     now,
   });
   const facts = {
     databaseBytes,
-    neonPlan: neonPlan.plan,
+    neonPlan: neonInForce.plan,
     neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
     neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
     emailAllowance: volume.allowance,
@@ -586,7 +587,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           door), so `mayEdit` is true for every reader who gets this far; the prop stays for the
           same reason the Mailgun panel carries it (§291).
         */}
-        <NeonPlanPanel locale={locale} plan={neonPlan} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+        <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
 
         {/*
           The money, and the answer before the table that justifies it: what the club pays today,

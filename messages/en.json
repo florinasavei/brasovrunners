@@ -1143,16 +1143,20 @@
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",
-        "intro": "The platform cannot read from Neon which plan the account is on — the API gives the consumption, not the plan and not the invoice — so you tell it here. The figures on /devs and the Neon row below follow it: on Free, the hours ceiling and the storage, red from 80%; on Launch, the estimated cost at the plan's rates, with no ceiling.",
+        "intro": "The platform reads the plan from Neon: the project names the plan of the account that owns it, every time the page opens. The choice below is the fallback, used only when NEON_API_KEY is missing or Neon does not answer. The figures on /devs and the Neon row below follow it: on Free, the hours ceiling and the storage, red from 80%; on Launch, the estimated cost at the plan's rates, with no ceiling.",
         "inForce": {
-          "free": "Plan set: Free — {of} CU-hours a month per project, included; when they run out the database stops until the next month.",
-          "freeMeasured": "Plan set: Free — {cu} of {of} CU-hours used this period ({percent}%); when they run out the database stops until the next month.",
-          "launch": "Plan set: Launch — paid by usage, ${rate}/CU-hour, no ceiling and no stop. The hours appear once NEON_API_KEY is set.",
-          "launchMeasured": "Plan set: Launch — paid by usage. Compute hours this period: {cu}; estimated cost: ${usd} (${rate}/CU-hour)."
+          "free": "Plan: Free — {of} CU-hours a month per project, included; when they run out, the database stops until next month.",
+          "freeMeasured": "Plan: Free — {cu} of {of} CU-hours used this period ({percent}%); when they run out, the database stops until next month.",
+          "launch": "Plan: Launch — pay as you go, {rate} $/CU-hour, no ceiling and no stop. The hours show once NEON_API_KEY is set.",
+          "launchMeasured": "Plan: Launch — pay as you go. Compute hours this period: {cu}; estimated cost: {usd} $ ({rate} $/CU-hour)."
+        },
+        "source": {
+          "neon": "Read from Neon just now: the account is on the {name} plan. Nothing needs choosing below.",
+          "setting": "Neon did not name the plan (NEON_API_KEY is missing or Neon did not answer), so the plan chosen below is used."
         },
         "estimate": "The figures are estimates from the consumption read from Neon; the invoice is Neon's, with storage and restore history on top.",
         "updatedAt": "Set on {when}. Note: {note}",
-        "field": "The plan the Neon account is on",
+        "field": "Fallback plan, when Neon does not answer",
         "fieldHelp": "Rates and limits from the Neon console and neon.com/pricing, checked on {checkedOn}. The account holds both projects (QA and production); the setting is made on each environment separately.",
         "option": {
           "FREE": "{name} — {cuHours} CU-hours and {storageMb} MB a month per project, free; past that the database stops",
@@ -2716,6 +2720,10 @@
       "plan": {
         "FREE": "Plan set: Free.",
         "LAUNCH": "Plan set: Launch."
+      },
+      "planFromNeon": {
+        "FREE": "Plan: Free, read from Neon.",
+        "LAUNCH": "Plan: Launch, read from Neon."
       },
       "planLink": "Change the plan (Tasks → Costs).",
       "planSetBy": "The Administrator sets it, on Tasks → Costs.",

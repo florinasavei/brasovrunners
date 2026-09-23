@@ -31,16 +31,17 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
 
     // The default: Free, with its ceilings — no key in CI, so the sentence without the hours.
     await expect(panel.getByRole("heading", { name: "Planul Neon (baza de date)" })).toBeVisible();
-    await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul setat: Free/);
-    await expect(main.getByText(/Planul setat: Free/).first()).toBeVisible();
+    await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Free/);
+    // No key in CI, so the setting stands in for Neon's answer, and the panel says so (§NNN).
+    await expect(panel.getByTestId("neon-plan-source")).toContainText("se folosește planul ales mai jos");
 
-    await panel.getByLabel("Planul pe care e contul Neon").selectOption("LAUNCH");
+    await panel.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("LAUNCH");
     await panel.getByLabel("Notă (de ce, până când)").fill("Launch din 22 septembrie; revizuire în decembrie");
     await panel.getByRole("button", { name: "Salvează planul Neon" }).click();
 
     await expect(page).toHaveURL(/panel=costs/);
     await expect(main.getByText("Planul Neon a fost salvat", { exact: false })).toBeVisible();
-    await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul setat: Launch/);
+    await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Launch/);
     await expect(panel.getByText(/Notă: Launch din 22 septembrie/)).toBeVisible();
     // The cost table's row follows: Launch, by usage, no next plan — and the verdict stops saying "free".
     const neonRow = main.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Neon (baza de date)" }) });
@@ -74,10 +75,10 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await adminBlock.getByRole("link", { name: /Schimbă planul/ }).click();
     await expect(page).toHaveURL(/\/admin\/tasks\?panel=costs/);
     const again = page.locator("#main").getByTestId("neon-plan");
-    await again.getByLabel("Planul pe care e contul Neon").selectOption("FREE");
+    await again.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("FREE");
     await again.getByLabel("Notă (de ce, până când)").fill("");
     await again.getByRole("button", { name: "Salvează planul Neon" }).click();
-    await expect(again.getByTestId("neon-plan-in-force")).toContainText(/^Planul setat: Free/);
+    await expect(again.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Free/);
 
     await page.goto("/ro/devs");
     const freeBlock = page.locator("#main").getByTestId("neon-block");
