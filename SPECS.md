@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.62-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.63-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.62-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.63-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -903,6 +903,7 @@ registration — and it lists registrations and never changes an address.
 3. Given any administrative state change, when it completes, then an audit row records actor, action, entity, and time.
 4. Given a cancellation by an administrator, when it commits, then the released place is offered to the front of the waiting list, exactly as a participant's own cancellation is.
 5. Given a registration, when the backoffice shows it — on its own page and as the "Etapă" column of the list — then its journey is derived from the row as six ordered steps (submitted, email confirmed, place reserved, declaration signed, place confirmed, present), with the step the person is at marked current, a waiting-list entry waiting at the reservation step, a signed declaration recognised whether it was signed online or on paper, the race number on the confirmation and on the check-in, a cancelled or expired row keeping the steps it reached and naming how it ended, and a registration restarted on the same row showing only the steps of its current cycle; the list's cell names the last step done, never the one awaited, and reads the acceptance with one probe per row, never a query per row (added 2026-09-19, `DECISIONS.md` §145).
+6. Given a public submission for an event by an address that already holds an active registration for it, when it is accepted, then exactly one `audit_logs` row `registration.resubmitted` is written in the same transaction as the re-send, on that registration, with the participant, no staff actor, and metadata holding only the state found and the message type re-sent (null when nothing was queued); the public answer is identical to a first submission's; the registration's timeline shows each such row as a dated line naming the state and the re-sent message; and the registrations list marks the row "Reînscriere ×N" with the last date, read in one grouped query for the page's rows and counted in no figure the club is given (2026-09-23, `DECISIONS.md` §312).
 
 **Verification:** integration `registrations/staff-crud.test.ts`; unit `registrations/journey.test.ts`; integration `registrations/admin-list.test.ts`
 
@@ -947,6 +948,7 @@ registration — and it lists registrations and never changes an address.
 6. Given an Author or an Editor, when any of this is attempted, then it is refused.
 7. Given any of these changes, when it completes, then an `audit_logs` row records the actor, the action, the entity and the time.
 8. Given the registrations list, when a row renders, then it offers the verbs that apply to its status and the reader role — open, resend, confirm on paper, give a place, check in or undo, cancel — as a menu of the existing actions and never as a free status select, so no transition bypasses the allocator, the signed declaration or the audit row; and given no event in the query, then the list and its export are both filtered to the featured event, with every event one press away (2026-09-20, DECISIONS.md section 178).
+9. Given the registrations list with a name search and no event chosen in the address — no `eventId`, an empty one, or an id no longer listed — when it renders, then it searches every event, says so in one line, and the event select shows its automatic option rather than submitting the featured event's id; given an explicit event id or `all`, then that is honoured as it is; and the export follows the same rule, `all` included, so the file is the set on screen (2026-09-23, `DECISIONS.md` §312).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 
