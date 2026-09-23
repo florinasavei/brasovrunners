@@ -15,6 +15,7 @@ import {
   saveEventAndTranslations,
   SERIES_EDIT_SCOPES,
   type SeriesEditScope,
+  setRepeatPublish,
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
@@ -624,6 +625,26 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     await stopRepeat(getDb(), { actor, eventId });
     outcome = { saved: "repeatStopped" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * The series' automatic publication, on or off (§NNN): whether the dates made from now on go
+ * live as they are made. The button posts which way it switches; the role and the published
+ * source are the service's to assert.
+ */
+export async function setRepeatPublishAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const publish = text(form, "publish") === "on";
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await setRepeatPublish(getDb(), { actor, eventId, publish });
+    outcome = { saved: publish ? "repeatPublishOn" : "repeatPublishOff" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

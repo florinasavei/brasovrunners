@@ -29,6 +29,7 @@ import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
+  canCreateEvent,
   canDeleteEvent,
   canEditEventFields,
   canEditTranslation,
@@ -66,10 +67,12 @@ import {
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
+  setRepeatPublishAction,
   withdrawInterestAction,
   stopRepeatAction,
   transitionEventAction,
 } from "../../actions";
+import { countForm } from "@/i18n/count-form";
 import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
 import { HORIZON_DAYS, readRepeatRule } from "@/modules/events/domain/repeat";
 import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
@@ -138,8 +141,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
+  const tEvent = await getTranslations("Event");
   const format = await getFormatter();
   const now = new Date();
+  // "1 dată", "7 date", "20 de date" (§NNN), for the banners that count a series' dates. The
+  // count arrives in the query string, so anything that is not a number reads as none.
+  const datesWords = (raw: string | undefined) => {
+    const count = Number.isFinite(Number(raw)) ? Number(raw) : 0;
+    return tEvent(`series.count.${countForm(count, locale)}`, { count });
+  };
   // The language endonyms are shared with the public switcher: "Română" is what a Romanian
   // speaker looks for in either interface, and two catalogues of the same two words would drift.
   const tSite = await getTranslations("Site");
@@ -292,12 +302,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "created" && created && !notPublished && (
-          <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
+          <Alert severity="success">{t("editor.createdWithSeries", { dates: datesWords(created) })}</Alert>
         )}
         {/* Created and published in one press (§315), the series with it when there is one. */}
         {saved === "createdPublished" && (
           <Alert severity="success">
-            {created ? t("editor.createdPublishedWithSeries", { created }) : t("editor.createdPublished")}
+            {created ? t("editor.createdPublishedWithSeries", { dates: datesWords(created) }) : t("editor.createdPublished")}
           </Alert>
         )}
         {/* Created, but the second button could not publish: the draft stands, and this says
@@ -310,7 +320,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               : missingDetail
                 ? t("editor.createdNotPublished", { detail: missingDetail })
                 : t("editor.createdNotPublishedOther", { reason: t(`errors.${notPublished}`) })}
-            {created ? ` ${t("editor.createdWithSeries", { created })}` : ""}
+            {created ? ` ${t("editor.createdWithSeries", { dates: datesWords(created) })}` : ""}
           </Alert>
         )}
         {/* "{created} ediții create." read as a job half done — the owner: "nu e clar cand
@@ -321,21 +331,23 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "eventsRepeated" && (
           <Alert severity="success">
             {t("events.eventsRepeated", {
-              created: created ?? "0",
+              dates: datesWords(created),
               until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
             })}
           </Alert>
         )}
         {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
+        {saved === "repeatPublishOn" && <Alert severity="success">{t("editor.repeatPublishStarted")}</Alert>}
+        {saved === "repeatPublishOff" && <Alert severity="success">{t("editor.repeatPublishStopped")}</Alert>}
         {saved === "interestRemoved" && <Alert severity="success">{t("queue.interestRemoved")}</Alert>}
         {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
         {saved === "eventSeries" && (
           <Alert severity="success">
-            {offered ? t("editor.savedSeriesOffered", { applied: applied ?? "0", offered }) : t("editor.savedSeries", { applied: applied ?? "0" })}
+            {offered ? t("editor.savedSeriesOffered", { dates: datesWords(applied), offered }) : t("editor.savedSeries", { dates: datesWords(applied) })}
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -579,6 +591,43 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 })
               : t("editor.repeatRuleForever", { sentence: ruleWords })}
           </Typography>
+          {/*
+            Whether the dates made from now on go live by themselves, and the switch (§NNN). The
+            rule's `publish` was chosen once, with the tick under "Repetă evenimentul", and
+            nothing showed it afterwards: a series started without it made a draft every week,
+            and the list's "Ciornă · 1 date" was all anybody saw of it. The dates that exist keep
+            their state either way; the list's line of drafts says which, and links them.
+            Switching it on asks for a published event, as the first creation did: the copies
+            of an unpublished event stay drafts whatever the rule says (`materializeSeries`).
+          */}
+          {!ruleEnded && (
+            <Box sx={{ mb: 1.5 }} data-testid="repeat-publish">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {repeatRule.publish
+                  ? live
+                    ? t("editor.repeatPublishOn")
+                    : t("editor.repeatPublishWaiting")
+                  : t("editor.repeatPublishOff")}
+              </Typography>
+              {canCreateEvent(staffUser.role) && (repeatRule.publish || live) && (
+                <form action={setRepeatPublishAction}>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <input type="hidden" name="publish" value={repeatRule.publish ? "off" : "on"} />
+                  {repeatRule.publish ? (
+                    <GlyphSubmitButton label={t("editor.repeatPublishTurnOff")} pendingLabel={t("editor.repeatPublishPending")} icon="turnOff" variant="outlined" size="small" />
+                  ) : (
+                    <GlyphSubmitButton label={t("editor.repeatPublishTurnOn")} pendingLabel={t("editor.repeatPublishPending")} icon="turnOn" variant="outlined" size="small" />
+                  )}
+                </form>
+              )}
+              {canCreateEvent(staffUser.role) && !repeatRule.publish && !live && (
+                <Typography variant="body2" color="text.secondary">
+                  {t("editor.repeatPublishNeedsLive")}
+                </Typography>
+              )}
+            </Box>
+          )}
           {maySaveSettings && (
             <form action={stopRepeatAction}>
               <input type="hidden" name="uiLocale" value={locale} />

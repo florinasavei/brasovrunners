@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { countForm } from "@/i18n/count-form";
 import { readRepeatRule, type RepeatRule } from "../domain/repeat";
 import { type EditionDifference, recurrenceOf } from "../domain/series";
 import type { EditionNote } from "./EditionMark";
@@ -55,7 +56,8 @@ export async function recurrenceSentence(
 
   if (recurrence.kind === "dates") {
     return t("series.dates", {
-      count: members.length,
+      // "12 date", "20 de date", "1 dată" (§NNN): the count picks the catalogue's phrasing.
+      dates: t(`series.count.${countForm(members.length, locale)}`, { count: members.length }),
       last: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone }).format(last.startsAt),
     });
   }
