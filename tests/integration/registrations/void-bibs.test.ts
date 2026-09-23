@@ -10,7 +10,7 @@ import { countBibs, listBibs, markBibsPrinted, pickBibNumber, setBibPrinted, voi
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-038-01 criterion 16, `DECISIONS.md` §305 — a printed bib of a cancelled entry is void.
+ * BR-REQ-038-01 criterion 16, `DECISIONS.md` §306 — a printed bib of a cancelled entry is void.
  *
  * The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
  * printat!". A settled number is never reused (§173), which is right; what it leaves behind is a
@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * unprinted count never quietly absorbs one; and a staff cancellation writes the fact into its
  * own audit row so the timeline can say it without a join.
  */
-describe("§305 the printed bibs of cancelled registrations", () => {
+describe("§306 the printed bibs of cancelled registrations", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -190,7 +190,7 @@ describe("§305 the printed bibs of cancelled registrations", () => {
   });
 
   /**
-   * The hole this work found and did not close (§305, still owed): erasing the registration
+   * The hole this work found and did not close (§306, still owed): erasing the registration
    * takes the number with it, and the draw reads live rows only — so an erased void 27 is
    * drawable again while the paper is in the pile. What is protected here is that the fact
    * survives in the erasure's own audit row — the event, the number, that it was printed — so

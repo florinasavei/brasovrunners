@@ -576,7 +576,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   const cancelled = await unregister(db, event, registrationId, "ADMIN", now);
 
   /*
-    A printed bib going void is written into the row's own record (§305; the owner: "trebuie sa
+    A printed bib going void is written into the row's own record (§306; the owner: "trebuie sa
     avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja printat!").
 
     The number stays retired (§173) and the printed mark stays on the row, so `voidBibsFor`
@@ -766,12 +766,12 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   }
 
   /*
-    The number goes with the row, and this row is where it survives (§305).
+    The number goes with the row, and this row is where it survives (§306).
 
     `pickBibNumber` reads the numbers live rows wear, so erasing a registration frees its
     settled number for the next runner — which is right for a number nobody printed and is the
     one way a printed 27 can end up on two chests: the void bib in the pile and a fresh one.
-    Until the draw also reads retired numbers (a decision recorded in §305 as still owed), the
+    Until the draw also reads retired numbers (a decision recorded in §306 as still owed), the
     event, the number and whether it was on paper are written here so the fact outlives the
     deletion, as the deletion itself does. An event id and a number are not who somebody was.
   */

@@ -511,7 +511,7 @@ export async function countBibs<T extends Record<string, unknown>>(
   return { total: row?.total ?? 0, unprinted: row?.unprinted ?? 0 };
 }
 
-/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §305). */
+/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §306). */
 export type VoidBib = {
   id: string;
   bibNumber: number;
@@ -522,7 +522,7 @@ export type VoidBib = {
 };
 
 /**
- * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §305; the
+ * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §306; the
  * owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
  * printat!").
  *
@@ -541,11 +541,14 @@ export type VoidBib = {
  * void again, which is why `EXPIRED` is here although nothing goes from `CONFIRMED` to it
  * directly.
  *
- * The date is the row's own: `cancelled_at` for a cancellation and `expired_at` for a lapse,
- * each written with its status in the one guarded transition (`registrations.ts` says why the two
- * pairs are checked). Pure SQL on `registrations_event_status_idx`, lowest number first — the
- * order somebody pulling bibs out of a numbered pile reads in. A test registration never wears a
- * number and is excluded here as everywhere the club counts (`AGENTS.md` §12.6).
+ * The date is the row's own: `cancelled_at` for a cancellation and `expired_at` for a lapse.
+ * Each is written together with its status and never apart — `CANCELLED` only by
+ * `service.ts#unregister` through the one guarded transition, `EXPIRED` only by the four sweeps
+ * in `repository.ts`, and `registrations.ts` CHECKs each pair together — so the date the status
+ * names is never null here, and nothing falls back to `updated_at`. Pure SQL on
+ * `registrations_event_status_idx`, lowest number first — the order somebody pulling bibs out of
+ * a numbered pile reads in. A test registration never wears a number and is excluded here as
+ * everywhere the club counts (`AGENTS.md` §12.6).
  */
 export async function voidBibsFor<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -559,7 +562,6 @@ export async function voidBibsFor<T extends Record<string, unknown>>(
       status: registrations.status,
       cancelledAt: registrations.cancelledAt,
       expiredAt: registrations.expiredAt,
-      updatedAt: registrations.updatedAt,
     })
     .from(registrations)
     .where(
@@ -578,9 +580,9 @@ export async function voidBibsFor<T extends Record<string, unknown>>(
     bibNumber: row.bibNumber as number,
     registeredName: row.registeredName,
     status: row.status as "CANCELLED" | "EXPIRED",
-    // The pair the status names, then `updated_at` for a row written before the pairs existed —
-    // which the CHECKs make impossible for anything this code has written.
-    voidedAt: (row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt) ?? row.updatedAt,
+    // The pair the status names, and nothing else: non-null by construction (the docblock says
+    // where each is written), so the type states what the row is rather than inventing a fallback.
+    voidedAt: (row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt) as Date,
   }));
 }
 

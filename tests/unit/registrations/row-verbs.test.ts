@@ -135,7 +135,7 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
   });
 
   /**
-   * §305 — the printing mark is a CONFIRMED row's verb. A cancelled registration keeps its
+   * §306 — the printing mark is a CONFIRMED row's verb. A cancelled registration keeps its
    * settled number and its printed mark — that is what makes the bib void and worth listing —
    * but `setBibPrinted` refuses any row the sheet would not print, so offering the mark on it
    * was §289's lesson again: a menu item whose service answers NOT_FOUND.

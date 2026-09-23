@@ -373,12 +373,13 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §305 — a cancelled runner is found by their number, and by nothing else.
+   * §306 — a cancelled runner is found by their number, and by nothing else.
    *
    * A settled number is never reused (§173), so "who is 27" has one answer at the event after
    * 27 cancelled — and a volunteer holding the bib somebody just handed over must get that
    * answer, in red, rather than "nobody matches". By name and in the whole-event list a
-   * cancelled row stays out, as BR-REQ-037-08 criterion 4 says.
+   * cancelled row stays out, as BR-REQ-037-08 criterion 4 says — and by its number it is found,
+   * the one exception the same criterion names.
    */
   it("finds a cancelled runner by their settled number, so the desk can say why nothing is handed out", async () => {
     const event = await createInternalEvent(10);

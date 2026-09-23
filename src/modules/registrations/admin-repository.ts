@@ -448,7 +448,7 @@ export type RegistrationDetail = {
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */
   provisionalBibNumber: number | null;
-  /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§305). */
+  /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§306). */
   bibPrintedAt: Date | null;
   checkinCode: string | null;
   checkedInAt: Date | null;
@@ -554,7 +554,7 @@ export type DeskRegistration = {
   provisionalBibNumber: number | null;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states
-   * (§305). Together they are what the desk says in red about a cancelled or expired runner
+   * (§306). Together they are what the desk says in red about a cancelled or expired runner
    * who turns up anyway: the state, the date, and — when it exists — that a printed bib with
    * this number is in the pile and is not to be handed out. A state and a number, never an
    * address (`AGENTS.md` §15.11).
@@ -618,8 +618,8 @@ export async function findRegistrationByCheckinCode<T extends Record<string, unk
  * The desk's search within one event: a name fragment or a race number. Everything that is
  * not over — a pending registration is shown so it can be confirmed on the spot, which is
  * what "no email arrived" comes down to at a desk — and never a cancelled or expired one,
- * **except by its number** (§305). Capped, because a desk reads a screenful and a race has at
- * most a few hundred entries.
+ * **except by its number**: the one exception BR-REQ-037-08 criterion 4 names (§306). Capped,
+ * because a desk reads a screenful and a race has at most a few hundred entries.
  */
 export async function listDeskRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -632,7 +632,7 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
       Either column: on race morning the desk types the number printed on the sheet, and
       before the settle that number lives in the provisional column (§214).
 
-      Any status, and that is the one place the desk's search reads a cancelled row (§305). A
+      Any status, and that is the one place the desk's search reads a cancelled row (§306). A
       settled number is never reused (§173), so "who is 27" has exactly one answer at this
       event even after 27 cancelled — and a volunteer holding the bib that somebody just handed
       over, typing its number and being told "nobody matches", is the surprise this exists to

@@ -163,7 +163,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     */
     filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
     /*
-      The printed bibs that belong to nobody any more (§305) — the numbers themselves, because
+      The printed bibs that belong to nobody any more (§306) — the numbers themselves, because
       the panel names each one as a link and there are a handful per race. `countBibs` cannot
       carry them: its scope is the sheet's, which is confirmed rows only, and that exclusion is
       the rule this list is the other half of.
@@ -568,7 +568,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         The figures in the aside count **confirmed** registrations only — the sheet's own scope
         — and the sentence says so, because a cancelled registration keeps its settled number and
         its printed mark and would otherwise be the silent difference between "5 printed" and
-        the six bibs in the box. Those are the void line below (§305): each number a link to the
+        the six bibs in the box. Those are the void line below (§306): each number a link to the
         row it belongs to, sorted, and the panel stays open while there is one to pull. The panel
         renders for them even when every confirmed bib is gone, or the line would vanish with the
         very cancellation that produced it.
@@ -998,7 +998,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
-                // A printed bib is named before the press (§305): after this the number stays
+                // A printed bib is named before the press (§306): after this the number stays
                 // retired and the paper has to come out of the pile.
                 const printedWarning =
                   row.bibPrintedAt !== null && row.bibNumber !== null
