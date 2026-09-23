@@ -880,6 +880,10 @@
       "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
       "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
+      "noAccount": "Fără cont de autentificare",
+      "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
+      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
+      "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
     },
     "queue": {
@@ -1101,6 +1105,7 @@
       },
       "state": {
         "blocking": "Blochează",
+        "broken": "Nu funcționează",
         "open": "De făcut",
         "done": "Gata"
       },
@@ -1154,6 +1159,31 @@
             "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
             "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
+          ]
+        },
+        "inviteKey": {
+          "title": "Cheia de invitații (Zitadel)",
+          "todo": "Lipsește cheia (ZITADEL_MANAGEMENT_PAT). Fără ea, „Adaugă” pe Echipa pune persoana pe listă și îi trimite invitația noastră, dar nu îi creează contul de autentificare — iar pagina de autentificare nu are „fă-ți cont”, așa că persoana rămâne blocată. Cheia este tokenul unui service user Zitadel cu rolul Org User Manager, pus pe ambele proiecte Vercel (SETUP.md §37).",
+          "blind": "Cheia este pusă și se autentifică, dar nu poate face nimic: întrebată ce conturi vede, Zitadel nu îi arată nici contul tău — deși ești autentificat cu el chiar acum. Service user-ul nu este „Org User Manager” în organizație. Fiecare „Adaugă” pe Echipa scrie rândul și nu creează niciun cont, iar colegul întâlnește „User not found in the system” la autentificare (DECISIONS.md §288).",
+          "refused": "Cheia este pusă, dar Zitadel refuză căutarea de conturi pe care o face fiecare „Adaugă” — de obicei tokenul a fost revocat sau service user-ul nu este „Org User Manager” în organizație. Răspunsul Zitadel",
+          "unreachable": "Nu am putut verifica cheia: Zitadel nu a răspuns. Nu este neapărat o problemă a cheii — reîncarcă pagina peste câteva minute. Răspunsul",
+          "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
+          "how": [
+            "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „Brașov Runners — invitații”, access token type Bearer. Create.",
+            "Organization → Managers → + New: service account-ul, rolul Org User Manager (poate crea utilizatori și le poate trimite codurile de invitație; nimic altceva). Dialogul se numește „Add an Administrator” și cere service user-ul; dacă cere un Loginname, este „brasovrunners-invites”. Atenție: „Role Assignments” NU este asta — acea pagină dă roluri în interiorul unui proiect și nu are legătură cu gestionarea utilizatorilor; un service account poate sta acolo Activ, arătând configurat, și să nu poată crea pe nimeni (DECISIONS.md §288).",
+            "Pe service account → Personal Access Tokens → New. Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit. Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
+            "Vercel → proiectul de producție → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = tokenul (Production). La fel pe proiectul QA. Redeploy pe ambele.",
+            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni. Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
+          ],
+          "howBroken": [
+            "Consola Zitadel → Organization → Managers → + New: alege service account-ul cheii (SETUP.md §37: „brasovrunners-invites”), rolul Org User Manager — poate crea utilizatori și le poate trimite codurile de invitație, nimic altceva. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este numele service account-ului.",
+            "Nu „Role Assignments”: acea pagină dă roluri în interiorul unui proiect și nu are legătură cu gestionarea utilizatorilor. Un service account poate sta acolo Activ, arătând perfect configurat, și să nu poată crea pe nimeni — exact ce s-a întâmplat pe instanța clubului (DECISIONS.md §288).",
+            "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy (SETUP.md §37, pașii 3–4).",
+            "Verificare: reîncarcă această pagină. Rândul se face verde când cheia găsește contul tău — fără să inviți pe nimeni. Apoi Echipa: fiecare coleg marcat „Fără cont de autentificare” a fost adăugat cât cheia nu putea crea conturi — ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă; de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă."
+          ],
+          "howUnreachable": [
+            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o singură cerere către Zitadel.",
+            "Dacă rămâne așa, deschide consola Zitadel: dacă nu se deschide nici ea, furnizorul are o problemă și nu este nimic de făcut aici; dacă se deschide, verifică pe service account că tokenul există și, pe Vercel, că ZITADEL_MANAGEMENT_PAT și AUTH_ZITADEL_ISSUER sunt setate pe acest proiect (SETUP.md §37)."
           ]
         },
         "mediaStorage": {
@@ -1986,11 +2016,36 @@
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
-    "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "submittedTo": "L-am trimis la adresa:",
-    "submittedDelay": "Poate dura până la 5 minute să ajungă.",
-    "submittedSpam": "Dacă nu îl vezi, verifică și folderul de spam înainte să te înscrii din nou.",
     "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
+    "done": {
+      "heading": "Aproape gata!",
+      "headingNamed": "Aproape gata, {name}!",
+      "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "nextTitle": "Ce urmează",
+      "next": {
+        "open": {
+          "title": "Deschizi emailul și apeși linkul",
+          "body": "Atât. Linkul e valabil {hours} de ore."
+        },
+        "declare": {
+          "title": "Semnezi declarația",
+          "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
+          "bodyLater": "Locul e al tău. Cu {opensDays} zile înainte de start îți cerem confirmarea: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
+        },
+        "confirmed": {
+          "title": "Ești înscris",
+          "body": "Primești confirmarea, cu codul QR și numărul de concurs. Ne vedem la start!"
+        }
+      },
+      "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
+      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {hours} de ore, așa că ai timp.",
+      "backToEvent": "Înapoi la eveniment"
+    },
+    "deliveryNotice": {
+      "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
+      "allowlist": "Acesta este mediul de test: emailurile ajung doar la adresele autorizate de club. Dacă adresa ta nu e printre ele, nu vei primi nimic — și nu e vina ta."
+    },
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
