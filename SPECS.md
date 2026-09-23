@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.56-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.57-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.56-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.57-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1640,18 +1640,19 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 - **Implements:** AGENTS.md §9.2, §16.2
 - **Priority:** SHOULD
 - **Release:** M1 — 2026-09-18, `DECISIONS.md` §68.
-- **Status:** partly stale after the account moved from Free to Launch on 2026-09-22. Criteria
-  3–4 are built; criteria 1–2 require the diagnostics follow-up recorded in `DECISIONS.md` §280.
+- **Status:** built. Criteria 1, 2 and 5 were rewritten on 2026-09-23, when the Neon plan
+  became a setting (`DECISIONS.md` §306, the follow-up §280 recorded); criteria 3–4 are unchanged.
 
 **Acceptance criteria**
 
-1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current billing period, the hours the compute was awake against the hours elapsed, the period's end, and the estimated Launch compute charge at the documented current rate — read from Neon with a five-second timeout, and a sentence rather than an error when Neon does not answer; when the variables are not set, it says how to set them and shows the rest of the page.
-2. Given the Neon row on `/devs` or `/admin/tasks`, when it renders, then it names Launch as the active plan, does not show Free's former 100 CU-hours or 0.5 GB as current ceilings, and distinguishes the estimate from the provider's invoice; storage and retained restore history are named as additional usage-based charges.
+1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current billing period, the hours the compute was awake against the hours elapsed and the period's end — read from Neon with a five-second timeout, a sentence rather than an error when Neon does not answer, and how to set the variables when they are not set — and reads them against the plan the `neonPlan` setting states: on Free against the plan's 100 CU-hours and 0.5 GB, red past 80%, with "stops until next month"; on Launch with no ceiling and nothing red, the hours as an estimated charge at the catalogue's rate (`diagnostics/domain/neon-plan.ts`, dated), the storage at its GB-month rate, the restore rate named, and the word "estimate", because Neon's API gives consumption and not invoices (2026-09-23, `DECISIONS.md` §306).
+2. Given the Neon row on `/admin/tasks` → Costuri and the block on `/devs`, when the setting says Launch, then both name Launch, show neither 100 CU-hours nor 0.5 GB as a ceiling, and the cost row is a usage estimate — this month's pace projected to a full month at the catalogue rate, beside the daily rate it was made from — marked an estimate, with no next plan quoted while Scale's price is not recorded, and the year's total that includes it marked estimated; when the setting says Free, both show exactly the Free block and row, and Launch is the next plan at its per-hour rate. Every rate the pages print comes from the one catalogue through a placeholder; a literal rate in the Neon messages fails the unit test (2026-09-23, `DECISIONS.md` §306).
 3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute may sleep between runs. The cadence limits Launch spend and preserves queue timing; it no longer protects against a 100-CU-hour suspension.
 
 4. Given `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID`, when `/devs` renders, then it shows this month's deployments, today's against Hobby's 100 a day, and the build minutes against Hobby's 6,000 a month, warning at eighty percent of either, summed from Vercel's deployments list across its pages; without them it says how to set them; and it says that bandwidth and invocations are not in Vercel's API and links to the dashboard's Usage page (`DECISIONS.md` §101).
+5. Given `platform_settings.neonPlan`, when it is absent or holds a value this code cannot read, then it reads as FREE; an Administrator (`canManageRegistrations`) sets FREE or LAUNCH with a note on `/admin/tasks` → Costuri, the change is audited as `neon_plan.changed` (from, to, note), any other role is refused on the server, `/devs` links to the panel for a reader who may open it and names who sets it for one who may not, and the setting is read per environment. `/api/health` reads no Neon figure, so no monitor warns at 80% on either plan. (2026-09-23, `DECISIONS.md` §306).
 
-**Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`
+**Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`; unit `diagnostics/neon-plan.test.ts`, `diagnostics/platform-plans.test.ts` (1, 2, 5); integration `diagnostics/neon-plan.test.ts` (5); e2e `neon-plan.spec.ts` (5)
 
 #### BR-REQ-100-01 — AI reviewer permission boundary
 
