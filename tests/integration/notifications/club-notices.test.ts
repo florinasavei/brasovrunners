@@ -207,7 +207,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
    * BR-REQ-033-02 criterion 12's rule for every message a participant receives (2026-09-22):
    * the club's hidden copies ride in the row's payload from the moment the message is queued.
    */
-  describe("the hidden copy of every participant message", () => {
+  describe("BR-REQ-033-02 criterion 12 the hidden copy of every participant message", () => {
     it("rides in the payload of a message queued after the list was set, and not in one queued before", async () => {
       await approve(db);
       const event = await createEvent(db);

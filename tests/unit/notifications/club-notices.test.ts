@@ -110,7 +110,7 @@ describe("DECISIONS.md §244 the club's copies of a signed declaration", () => {
  * The list itself, and the two pure decisions `enqueueEmail` makes with it: which message types
  * carry the copy, and how the copy is merged into a row's payload.
  */
-describe("the club's hidden copy of every participant message", () => {
+describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant message", () => {
   const parse = (value: unknown) => clubNoticesSchema.parse(value);
 
   it("reads a setting stored before the list existed as having none", () => {

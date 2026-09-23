@@ -16,7 +16,7 @@ import {
  * a hidden copy of the participant's messages adds one *per participant message* — the cost that
  * turns a cheap setting into an expensive one, and the reason the panel that sets it says so.
  */
-describe("what one completed registration costs on the allowance", () => {
+describe("BR-REQ-033-02 criterion 13 what one completed registration costs on the allowance", () => {
   it("is six with nothing switched on: five to the runner and one to the club", () => {
     expect(PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION).toBe(5);
     expect(CLUB_MESSAGES_PER_COMPLETED_REGISTRATION).toBe(1);

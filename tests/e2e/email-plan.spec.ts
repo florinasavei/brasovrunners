@@ -67,9 +67,13 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
 
     // And the contact recipients: the list in force, and nothing to change it with — the hidden
     // copies included (2026-09-22): the Organizer reads them, and only the Administrator sets them.
+    // The sentence in force depends on the shared row and on `CONTACT_FORM_TO`: with an address
+    // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
+    // Administrator's test below clears the row — it says nobody receives them, and names no copy.
+    // Whichever state this database is in, the Organizer is shown the sentence.
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
-    await expect(main.getByText(/Copie ascunsă:/)).toBeVisible();
+    await expect(main.getByText(/Copie ascunsă:|Nu le primește nimeni/)).toBeVisible();
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveCount(0);
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveCount(0);
     await expect(main.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)")).toHaveCount(0);
@@ -159,7 +163,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
  * each of the runner's five, so the cost of a registration moves by five and the forecast says
  * which part of it the copies are. Desktop only, for the same one-row reason as the blocks above.
  */
-test.describe("the club's hidden copy of the emails to participants", () => {
+test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails to participants", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
   });
