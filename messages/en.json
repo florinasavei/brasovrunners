@@ -811,6 +811,18 @@
         "sponsorImageSrc": "A sponsors' strip",
         "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
         "noPicture": "No picture",
+        "footer": {
+          "title": "Footer",
+          "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
+          "showEventInFooter": "The event's name and date, when the header does not show them",
+          "showPartners": "The partners",
+          "footerText": "The club's own line",
+          "footerTextPlaceholder": "e.g. Timing: … · Organiser emergencies: 07xx xxx xxx",
+          "footerTextHelp": "It is printed on every number and worn in public — do not write participants' personal data.",
+          "showWebsite": "The club's website",
+          "showEmail": "The club's email address",
+          "notConfigured": "not set on this environment"
+        },
         "previewCaption": "Preview — this is how it prints",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
         "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."

@@ -1,8 +1,8 @@
 import { writeFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { BIB_BAND_FALLBACK } from "@/modules/registrations/bib-design";
-import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { BIB_BAND_FALLBACK, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
  * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded,
@@ -112,6 +112,31 @@ describe("BR-REQ-038-01 the bib sheet", () => {
     // asserted is that the renderer accepted the footer and still produced a page.
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
     expect(pdf.byteLength).toBeGreaterThan(await sheet(1, "one").then((plain) => plain.byteLength - 1));
+  });
+
+  /**
+   * §NNN — the footer the club composed. Two lines take their height from the number's area
+   * rather than shrinking the small print, and the sheet is still two bibs to a page.
+   */
+  it("prints a footer of two lines when the club's composition needs them", async () => {
+    const long = {
+      partners: ["Primăria Municipiului Brașov", "Salvamont Brașov", "Asociația Sportivă Carpați", "Decathlon Brașov", "Clubul Sportiv Olimpia"],
+      replyTo: "contact@example.test",
+      siteUrl: "https://www.example.test",
+      design: {
+        ...DEFAULT_BIB_DESIGN,
+        showWebsite: true,
+        footerText: "Cronometraj: StartTime România · Urgențe organizator: 0722 000 000",
+      },
+    };
+    expect(bibSheetFooterLines({ ...long, eventTitle: "x", eventDate: "y" })).toHaveLength(2);
+    const pdf = await sheet(4, "two", long);
+    expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(2);
+    // Every switch off: no small print, and still a sheet.
+    const bare = await sheet(2, "two", { replyTo: "contact@example.test", design: { ...DEFAULT_BIB_DESIGN, showEmail: false, showPartners: false } });
+    expect(bare.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
+    const target = process.env.BIBS_PDF_SAMPLE_FOOTER;
+    if (target) writeFileSync(target, pdf);
   });
 
   it("writes a sample to disk for a person to look at, when asked", async () => {

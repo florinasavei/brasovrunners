@@ -16,8 +16,12 @@ import {
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
+import { env } from "@/shared/config/env";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import BibDesignPreview from "./BibDesignPreview";
+import BibFooterTextField from "./BibFooterTextField";
 
 /**
  * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
@@ -39,6 +43,13 @@ import BibDesignPreview from "./BibDesignPreview";
  * without this panel — the create form — would otherwise read as "every switch off" and
  * silently redesign a bib. `present=1` is what tells the action that the design was on screen
  * (`app/[locale]/admin/actions.ts`).
+ *
+ * **The footer is a group of its own** ("Subsol", §NNN; the owner: "on the bid I have some
+ * email, I wanna be able to control and toggle that!"): the switches and the club's own line,
+ * laid out in the order they print, each switch naming what it would print on this deployment —
+ * the mailbox, the site's host — so the club is never switching on a word it cannot see. The
+ * line's box is the panel's second island, for its character count; everything else posts
+ * itself, and the preview above follows all of it through the same query-string mirror.
  */
 export default async function BibDesignPanel({
   eventId,
@@ -65,6 +76,41 @@ export default async function BibDesignPanel({
     read "the club's colour" and "no sponsors", which is what such a deployment can honour.
   */
   const assets = isStorageConfigured() ? (await listMediaAssetsForAdmin(getDb(), locale)).slice(0, 60) : [];
+  // What the footer's two switches would print here: this deployment's own values, never a
+  // literal — on QA the host is QA's, and the mailbox may not be set at all (§NNN).
+  const siteHost = bibWebsiteHost(env.APP_BASE_URL);
+  const replyTo = env.EMAIL_REPLY_TO ?? null;
+
+  /*
+    The checkbox's 44 pixels, as a fresh object per box — never the shared constant itself. This
+    is a Server Component handing `<Checkbox>` elements to MUI's `FormControlLabel`, a client
+    component that reads `control.props`. React's payload writes an object met twice once and
+    points at it from then on, and an element whose props point at a row not yet read arrives
+    as a lazy placeholder with no `props` — which `FormControlLabel` dereferences and the editor
+    page fails with "reading 'disabled'". One object per box, and nothing is shared to point at.
+  */
+  const tapTarget = () => ({ ...CHECKBOX_TAP_TARGET });
+
+  /** A footer switch, with what it prints beside its words when there is something to name. */
+  const footerSwitch = (
+    field: "showEventInFooter" | "showPartners" | "showWebsite" | "showEmail",
+    label: string,
+    prints?: string | null,
+  ) => (
+    <FormControlLabel
+      control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} sx={tapTarget()} />}
+      label={
+        <span>
+          {label}
+          {prints !== undefined ? (
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75, overflowWrap: "anywhere" }}>
+              {prints ?? t("editor.bibDesign.footer.notConfigured")}
+            </Typography>
+          ) : null}
+        </span>
+      }
+    />
+  );
 
   const picker = (field: "headerImageSrc" | "sponsorImageSrc") => (
     <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
@@ -146,7 +192,7 @@ export default async function BibDesignPanel({
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (
             <FormControlLabel
               key={field}
-              control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} />}
+              control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} sx={tapTarget()} />}
               label={t(`editor.bibDesign.${field}`)}
             />
           ))}
@@ -185,6 +231,35 @@ export default async function BibDesignPanel({
 
         {picker("headerImageSrc")}
         {picker("sponsorImageSrc")}
+
+        {/* The small print, the club's to compose (§NNN), in the order it prints: the event,
+            the partners, the club's own line, the website, the mailbox. */}
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="bib-design-footer">
+          <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+            {t("editor.bibDesign.footer.title")}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+            {t("editor.bibDesign.footer.intro")}
+          </Typography>
+          <Stack spacing={1}>
+            <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
+              {footerSwitch("showEventInFooter", t("editor.bibDesign.footer.showEventInFooter"))}
+              {footerSwitch("showPartners", t("editor.bibDesign.footer.showPartners"))}
+            </Stack>
+            <BibFooterTextField
+              name="event.bibDesign.footerText"
+              defaultValue={design.footerText}
+              maxLength={BIB_FOOTER_TEXT_MAX}
+              label={t("editor.bibDesign.footer.footerText")}
+              placeholder={t("editor.bibDesign.footer.footerTextPlaceholder")}
+              help={t("editor.bibDesign.footer.footerTextHelp")}
+            />
+            <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
+              {footerSwitch("showWebsite", t("editor.bibDesign.footer.showWebsite"), siteHost)}
+              {footerSwitch("showEmail", t("editor.bibDesign.footer.showEmail"), replyTo)}
+            </Stack>
+          </Stack>
+        </Box>
 
         <Typography variant="caption" color="text.secondary">
           {t("editor.bibDesign.previewNote")}
