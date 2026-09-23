@@ -1,18 +1,23 @@
 import type { Env } from "@/shared/config/env";
+import { NEON_PLANS } from "./domain/neon-plan";
 
 /**
  * The database's consumption this billing period, read from Neon (BR-REQ-090-07).
  *
- * The Free plan gives 100 CU-hours a month per project and *suspends the compute* when they
- * run out — the site is down until the next month. A compute pinged every five minutes never
- * sleeps and spends 180 CU-hours a month, which is how QA had used 74 by the 18th of
- * September 2026. This is the figure to watch, and `/devs` shows it when the two variables
- * are set (SETUP.md §33). Optional: without them the panel says so and nothing else changes.
+ * What the figure means depends on the plan the club states (`domain/neon-plan.ts`): on Free
+ * it is counted against 100 CU-hours a month per project and the compute is *suspended* when
+ * they run out — the site is down until the next month; on Launch the same hours are billed
+ * at the catalogue rate. A compute pinged every five minutes never sleeps and spends 180
+ * CU-hours a month, which is how QA had used 74 by the 18th of September 2026 — a cutoff on
+ * Free and a bill on Launch, which is why the cadence stayed (§280). `/devs` shows the
+ * figure when the two variables are set (SETUP.md §33). Optional: without them the panel says
+ * so and nothing else changes.
  *
  * One request, a short timeout, and a sentence on failure — a diagnostics page that hangs on
  * a third party is worse than one that says "Neon did not answer".
  */
-export const NEON_FREE_CU_HOURS = 100;
+/** Free's monthly compute allowance, from the one catalogue; kept under its old name for the callers that read it. */
+export const NEON_FREE_CU_HOURS = NEON_PLANS.FREE.cuHoursPerMonth as number;
 
 export type NeonConsumption = {
   cuHours: number;

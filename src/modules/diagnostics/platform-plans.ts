@@ -33,7 +33,13 @@
  * this replaced. `nextCost` stays a string, because `$0.106/CU-hour` and `$20/mo per seat` are
  * not quantities to add up, and the moment they became numbers somebody would total them and
  * publish a figure no vendor ever gave.
+ *
+ * The one exception is a plan billed on usage — Neon Launch since 2026-09-22 — where the only
+ * honest number *is* a projection: this month's pace at the vendor's rate, marked as an
+ * estimate everywhere it is printed, and the total that includes it marked the same way.
  */
+
+import { NEON_PLANS, type NeonPlanId, NEON_PLANS_CHECKED_ON, roundUsd } from "./domain/neon-plan";
 
 export type CurrencyCode = "EUR" | "USD";
 
@@ -49,7 +55,13 @@ export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "
 export type AnnualCost =
   | { kind: "free" }
   | { kind: "notTaken" }
-  | { kind: "paid"; amount: number; currency: CurrencyCode; plusVat: boolean };
+  | { kind: "paid"; amount: number; currency: CurrencyCode; plusVat: boolean }
+  /**
+   * Billed on what is used, with no fixed price to quote: the Neon Launch row. The figure is
+   * this month's pace projected to a full month at the vendor's rate, or null when nothing
+   * measures the pace (no API key) — and the page prints the word for that, never a zero.
+   */
+  | { kind: "usage"; currency: CurrencyCode; estimatedPerMonth: number | null };
 
 /**
  * How close this deployment is to the ceiling, right now.
@@ -64,12 +76,14 @@ export type Headroom =
   | { kind: "notMeasured" };
 
 /**
- * Neon Launch, read from neon.com/pricing on 2026-09-18: no monthly fee, $0.106 per CU-hour,
- * $0.35 per GB-month. The owner asked for "a monthly cost", so the row projects this month's
- * pace to a full month at those rates — what the club would pay if it left Free today.
+ * Neon Launch's rates, from the one catalogue (`domain/neon-plan.ts`, checked 2026-09-22): no
+ * monthly fee, $0.106 per CU-hour, $0.35 per GB-month. The owner asked for "a monthly cost",
+ * so the row projects this month's pace to a full month at those rates — what the club pays
+ * on Launch, or would pay if it left Free today. Kept under these names for the callers and
+ * the test that pin them.
  */
-export const NEON_LAUNCH_USD_PER_CU_HOUR = 0.106;
-export const NEON_LAUNCH_USD_PER_GB_MONTH = 0.35;
+export const NEON_LAUNCH_USD_PER_CU_HOUR = NEON_PLANS.LAUNCH.usdPerCuHour;
+export const NEON_LAUNCH_USD_PER_GB_MONTH = NEON_PLANS.LAUNCH.usdPerGbMonth;
 
 export function projectedNeonLaunchUsdPerMonth(
   input: Pick<PlatformFacts, "neonCuHoursThisMonth" | "neonHoursElapsed" | "databaseBytes">,
@@ -78,7 +92,19 @@ export function projectedNeonLaunchUsdPerMonth(
   const monthHours = 30 * 24;
   const cuHoursPerMonth = (input.neonCuHoursThisMonth / input.neonHoursElapsed) * monthHours;
   const gb = typeof input.databaseBytes === "number" ? input.databaseBytes / (1024 * 1024 * 1024) : 0;
-  return Math.round((cuHoursPerMonth * NEON_LAUNCH_USD_PER_CU_HOUR + gb * NEON_LAUNCH_USD_PER_GB_MONTH) * 100) / 100;
+  return roundUsd(cuHoursPerMonth * NEON_LAUNCH_USD_PER_CU_HOUR + gb * NEON_LAUNCH_USD_PER_GB_MONTH);
+}
+
+/**
+ * The last known daily rate: CU-hours a day at this period's pace, or null without a reading.
+ * One decimal, because "1.8 CU-hours a day" is what §280 reasoned from and what the row prints
+ * beside the projection so a reader can check it.
+ */
+export function neonCuHoursPerDay(
+  input: Pick<PlatformFacts, "neonCuHoursThisMonth" | "neonHoursElapsed">,
+): number | null {
+  if (typeof input.neonCuHoursThisMonth !== "number" || !input.neonHoursElapsed || input.neonHoursElapsed <= 0) return null;
+  return Math.round((input.neonCuHoursThisMonth / input.neonHoursElapsed) * 24 * 10) / 10;
 }
 
 /** A temporary bump nobody reverses is the expensive failure, so each row says which it is. */
@@ -108,6 +134,13 @@ export type ServiceRow = {
   nextCost: string | null;
   /** Whether the upgrade above is normally bought for one window and dropped again. */
   bump: BumpKind | null;
+  /**
+   * Which wording the page reads for this row's fixed sentences (what the plan gives, its
+   * ceiling, what crossing it does, the way back down): `services.<id>.<variant>.*` when set,
+   * `services.<id>.*` otherwise. Set only where the plan in force changes what is true — the
+   * Neon row on Launch, whose "first limit" is no longer a limit.
+   */
+  variant?: "launch";
 };
 
 /**
@@ -151,7 +184,13 @@ export type PlatformFacts = {
   messagesPerRegistration: number;
   /** The database's size in bytes, read from Postgres (§88); null when it could not be read. */
   databaseBytes?: number | null;
-  databaseStorageAllowanceBytes?: number;
+  /**
+   * The Neon plan the club says it is on (`diagnostics/neon-plan.ts`); Free when absent, the
+   * same default the setting itself has. On Free the storage is measured against the plan's
+   * half gigabyte and the row is free; on Launch nothing is a ceiling and the row is a usage
+   * estimate at the catalogue's rates.
+   */
+  neonPlan?: NeonPlanId;
   /** This month's compute so far, from Neon (`/devs` reads it with a key); null without one. */
   neonCuHoursThisMonth?: number | null;
   /** How far into the month that figure is, in hours, so it can be projected to a full month. */
@@ -259,40 +298,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       nextCost: "$20/mo per seat",
       bump: "permanent",
     },
-    {
-      id: "neon",
-      planToday: "Free",
-      costToday: { kind: "free" },
-      checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // Storage is measured from Postgres itself since §88 (`pg_database_size` against the
-      // plan's half gigabyte); CU-hours still live in Neon's console (`/devs` reads them with
-      // a key). Unmeasured stays "not measured": a green row here would be a claim.
-      headroom:
-        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
-          ? {
-              kind: "measured",
-              used: Math.round(input.databaseBytes / (1024 * 1024)),
-              of: Math.round(input.databaseStorageAllowanceBytes / (1024 * 1024)),
-              state:
-                input.databaseBytes >= input.databaseStorageAllowanceBytes
-                  ? "reached"
-                  : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
-                    ? "close"
-                    : "ok",
-            }
-          : { kind: "notMeasured" },
-      severity:
-        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
-          ? input.databaseBytes >= input.databaseStorageAllowanceBytes
-            ? "act"
-            : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
-              ? "watch"
-              : "ok"
-          : "unknown",
-      nextPlan: "Launch",
-      nextCost: "$0.106/CU-hour",
-      bump: "temporary",
-    },
+    neonRow(input),
     {
       id: "zitadel",
       planToday: "Free",
@@ -325,26 +331,99 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
 }
 
 /**
+ * The Neon row, which is the one row whose every column follows a setting (`neonPlan`).
+ *
+ * **Free:** the plan is free, storage is measured from Postgres itself since §88
+ * (`pg_database_size` against the plan's half gigabyte) and turns red at eighty percent, the
+ * CU-hours live on `/devs`, and the next step is Launch at its per-hour rate. Unmeasured stays
+ * "not measured": a green row here would be a claim.
+ *
+ * **Launch:** nothing is a ceiling, so nothing is "close" — the row is a usage estimate, this
+ * month's pace projected to a full month at the catalogue's rates, and it reads "ok" when the
+ * pace is measured and "unknown" when no key measures it. No next plan: Scale is for an SLA
+ * the club does not need (§280), and its price is not recorded here, so it is not quoted. The
+ * bump is the way *down* — the December review may return the account to Free, one select on
+ * `/admin/tasks` — which is why the row keeps "temporary" and its wording says so.
+ */
+function neonRow(input: PlatformFacts): ServiceRow {
+  const plan = input.neonPlan ?? "FREE";
+  const entry = NEON_PLANS[plan];
+
+  if (plan === "LAUNCH") {
+    const projected = projectedNeonLaunchUsdPerMonth(input);
+    return {
+      id: "neon",
+      planToday: entry.name,
+      costToday: { kind: "usage", currency: "USD", estimatedPerMonth: projected },
+      checkedOn: NEON_PLANS_CHECKED_ON,
+      headroom: { kind: "derived", reached: false },
+      severity: projected === null ? "unknown" : "ok",
+      nextPlan: null,
+      nextCost: null,
+      bump: "temporary",
+      variant: "launch",
+    };
+  }
+
+  const ceiling = entry.storageBytes;
+  const bytes = typeof input.databaseBytes === "number" ? input.databaseBytes : null;
+  const measured = bytes !== null && ceiling !== null;
+  return {
+    id: "neon",
+    planToday: entry.name,
+    costToday: { kind: "free" },
+    checkedOn: NEON_PLANS_CHECKED_ON,
+    headroom: measured
+      ? {
+          kind: "measured",
+          used: Math.round(bytes / (1024 * 1024)),
+          of: Math.round(ceiling / (1024 * 1024)),
+          state: bytes >= ceiling ? "reached" : bytes >= ceiling * 0.8 ? "close" : "ok",
+        }
+      : { kind: "notMeasured" },
+    severity: measured ? (bytes >= ceiling ? "act" : bytes >= ceiling * 0.8 ? "watch" : "ok") : "unknown",
+    nextPlan: NEON_PLANS.LAUNCH.name,
+    nextCost: `$${NEON_LAUNCH_USD_PER_CU_HOUR}/CU-hour`,
+    bump: "temporary",
+  };
+}
+
+/**
  * What the club pays per year today, per currency.
  *
  * An empty array is the honest answer while nothing has been bought, and the page then says
  * "nothing at all" rather than printing a zero that invites the reader to wonder which currency
  * it is in. Grouped by currency because no exchange rate is applied here; see the header.
+ *
+ * A usage row (Neon Launch) adds twelve of its monthly estimate and marks the total
+ * `estimated`, because a projection is not a price and the sentence has to say so; a usage row
+ * whose pace nothing measures adds nothing and still marks it — the total is then known to be
+ * incomplete, which is more useful than a total that looks whole.
  */
 export function annualCostToday(
   rows: readonly ServiceRow[],
-): { currency: CurrencyCode; amount: number; plusVat: boolean }[] {
-  const totals = new Map<CurrencyCode, { amount: number; plusVat: boolean }>();
+): { currency: CurrencyCode; amount: number; plusVat: boolean; estimated: boolean }[] {
+  const totals = new Map<CurrencyCode, { amount: number; plusVat: boolean; estimated: boolean }>();
 
   for (const row of rows) {
-    if (row.costToday.kind !== "paid") continue;
-    const running = totals.get(row.costToday.currency) ?? { amount: 0, plusVat: false };
-    totals.set(row.costToday.currency, {
-      amount: running.amount + row.costToday.amount,
-      // One VAT-exclusive component makes the whole total VAT-exclusive; saying so is cheaper
-      // than a treasurer discovering it on the invoice.
-      plusVat: running.plusVat || row.costToday.plusVat,
-    });
+    const cost = row.costToday;
+    if (cost.kind !== "paid" && cost.kind !== "usage") continue;
+    const running = totals.get(cost.currency) ?? { amount: 0, plusVat: false, estimated: false };
+    if (cost.kind === "paid") {
+      totals.set(cost.currency, {
+        amount: roundUsd(running.amount + cost.amount),
+        // One VAT-exclusive component makes the whole total VAT-exclusive; saying so is cheaper
+        // than a treasurer discovering it on the invoice.
+        plusVat: running.plusVat || cost.plusVat,
+        estimated: running.estimated,
+      });
+    } else {
+      totals.set(cost.currency, {
+        amount: roundUsd(running.amount + (cost.estimatedPerMonth ?? 0) * 12),
+        plusVat: running.plusVat,
+        estimated: true,
+      });
+    }
   }
 
   return [...totals.entries()].map(([currency, total]) => ({ currency, ...total }));
@@ -362,7 +441,7 @@ export function nextSpend(rows: readonly ServiceRow[]): ServiceRow | null {
   const order: ServiceId[] = ["domain", "mailgun", "vercel"];
   for (const id of order) {
     const row = rows.find((candidate) => candidate.id === id);
-    if (row && row.costToday.kind !== "paid" && row.nextCost) return row;
+    if (row && row.costToday.kind !== "paid" && row.costToday.kind !== "usage" && row.nextCost) return row;
   }
   return null;
 }
@@ -469,15 +548,17 @@ export const OPERATIONAL_LIMITS: readonly OperationalLimit[] = [
 /**
  * Can the club run this for nothing?
  *
- * Three answers rather than two, because "yes" and "no" both mislead here. Nothing is bought
- * yet, the domain is the one line with no free plan under it, and there are named events that
- * end the arrangement.
+ * Four answers rather than two, because "yes" and "no" both mislead here. The domain is the
+ * one line with no free plan under it, there are named events that end the arrangement — and
+ * since 2026-09-22 the database is on a plan the club *chose* to pay for by the hour, which is
+ * neither a limit reached nor a problem: `paysForUsage` says so, and the page reads it calmly.
  */
-export type FreeTierVerdict = "freeExceptDomain" | "freeButAtALimit" | "notFree";
+export type FreeTierVerdict = "freeExceptDomain" | "freeButAtALimit" | "notFree" | "paysForUsage";
 
 export function freeTierVerdict(input: PlatformFacts): FreeTierVerdict {
   // Charging entry is the one that ends it outright rather than pressing on a ceiling: the
   // deployment is then outside Vercel's fair-use terms, not merely close to a cap.
   if (input.hasPaidEvent) return "notFree";
-  return registrationsLeftToday(input) === 0 ? "freeButAtALimit" : "freeExceptDomain";
+  if (registrationsLeftToday(input) === 0) return "freeButAtALimit";
+  return (input.neonPlan ?? "FREE") === "FREE" ? "freeExceptDomain" : "paysForUsage";
 }

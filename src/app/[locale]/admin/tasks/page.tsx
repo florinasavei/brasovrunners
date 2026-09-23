@@ -35,6 +35,8 @@ import {
   annualCostToday,
   freeTierVerdict,
   moneyDecisions,
+  NEON_LAUNCH_USD_PER_CU_HOUR,
+  NEON_LAUNCH_USD_PER_GB_MONTH,
   nextSpend,
   oldestCheckDate,
   platformServices,
@@ -44,9 +46,12 @@ import {
   type ServiceRow,
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
-import { NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
-import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
+import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
+import { describeNeonBlock } from "@/modules/diagnostics/domain/neon-plan";
+import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
+import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -268,6 +273,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   );
 
   const t = await getTranslations("Admin.tasks");
+  // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`, from the Neon and Mailgun plan actions) are
+  // `Admin.errors.*`, shared by every backoffice page — `Admin.tasks.errors` does not exist.
+  const tErrors = await getTranslations("Admin.errors");
   // Over every row, filter or not: what blocks a real registration is not a matter of view.
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
@@ -296,11 +304,20 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   const databaseBytes = await readDatabaseSizeBytes(db);
   const neon = await readNeonConsumption(env);
+  // The plan the club says the Neon account is on (§280's follow-up): Free's ceilings, or
+  // Launch's rates. Set on this panel, read by the row below and by `/devs`.
+  const neonPlan = await readNeonPlan(db);
+  const neonBlock = describeNeonBlock({
+    plan: neonPlan.plan,
+    databaseBytes,
+    consumption: neon.ok ? neon.consumption : null,
+    now,
+  });
   const facts = {
     databaseBytes,
+    neonPlan: neonPlan.plan,
     neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
     neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
-    databaseStorageAllowanceBytes: NEON_FREE_STORAGE_BYTES,
     emailAllowance: volume.allowance,
     // Over the period that binds: today on Free, this month on a paid plan.
     emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
@@ -327,6 +344,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   /** How close this service is to its ceiling, in that service's own words. */
   const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
+  const neonPerDay = neonCuHoursPerDay(facts);
+  // The rates the projection was made at, from the one catalogue, so the sentence quotes what
+  // the arithmetic used — and the catalogue is the only file that knows a price.
+  const neonRates = {
+    rate: neonBlock.rates?.usdPerCuHour ?? NEON_LAUNCH_USD_PER_CU_HOUR,
+    storageRate: neonBlock.rates?.usdPerGbMonth ?? NEON_LAUNCH_USD_PER_GB_MONTH,
+  };
   const howClose = (row: ServiceRow) => {
     if (row.headroom.kind === "measured") {
       const base = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
@@ -338,18 +362,28 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // The monthly figure the owner asked for (§88): this month's pace on the next plan.
       if (row.id === "neon") {
         return neon.ok && neonMonthly !== null
-          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2) })}`
-          : `${base} ${t("services.neon.monthlyUnknown")}`;
+          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2), ...neonRates })}`
+          : `${base} ${t("services.neon.monthlyUnknown", neonRates)}`;
       }
       return base;
     }
     if (row.headroom.kind === "derived") {
       // Mailgun with no ceiling at all (§100): the plan's name is the whole of the answer.
       if (row.id === "mailgun") return t("services.mailgun.closeNone", { plan: volume.planName });
+      // Neon on Launch: no ceiling, so "how close" is "what does this month cost" — the
+      // projection at the current pace and the daily rate it was made from, named an estimate.
+      if (row.id === "neon" && row.variant === "launch") {
+        return neon.ok && neonMonthly !== null && neonPerDay !== null
+          ? t("services.neon.launch.close", { cu: Math.round(neon.consumption.cuHours), perDay: neonPerDay, usd: neonMonthly.toFixed(2), ...neonRates })
+          : t("services.neon.launch.closeUnknown", neonRates);
+      }
       return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);
     }
     return t(`services.${row.id}.closeUnknown`);
   };
+  /** The row's fixed sentences, read under the plan's own wording where the plan changes what is true. */
+  const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack") =>
+    t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
 
   return (
     <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -377,7 +411,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "botCheckOff" && <Alert severity="warning">{t("botCheck.savedOff")}</Alert>}
         {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
-        {typeof query.error === "string" && <Alert severity="error">{t(`errors.${query.error}`)}</Alert>}
+        {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
+        {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
       <Alert severity={blocking > 0 ? "warning" : "success"}>
@@ -545,6 +580,15 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         <Divider />
 
         {/*
+          The one setting on this panel (§280's follow-up): which Neon plan the account is on.
+          Above the figures that follow it, so a plan set wrong shows here before it shows on
+          the invoice. This page is the Administrator's already (`canManageRegistrations` at the
+          door), so `mayEdit` is true for every reader who gets this far; the prop stays for the
+          same reason the Mailgun panel carries it (§291).
+        */}
+        <NeonPlanPanel locale={locale} plan={neonPlan} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+
+        {/*
           The money, and the answer before the table that justifies it: what the club pays today,
           then the next thing to cost anything. Two sentences and two numbers, because the
           complaint this replaced was that a treasurer had to assemble them from four sections.
@@ -554,7 +598,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             {t("costTitle")}
           </Typography>
 
-          <Alert severity={verdict === "freeExceptDomain" ? "success" : "warning"} sx={{ mb: 2 }}>
+          {/* Green while nothing is paid monthly; blue for a plan the club chose to pay by the hour; amber for a limit met. */}
+          <Alert severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" ? "info" : "warning"} sx={{ mb: 2 }}>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
               {paidToday.length === 0
                 ? t("costToday.nothing")
@@ -573,6 +618,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                       )
                       .join(", "),
                   })}
+              {/* A total with a projection in it is not an invoice, and the sentence says so beside the number. */}
+              {paidToday.some((total) => total.estimated) && ` ${t("costToday.estimated")}`}
             </Typography>
             {next && (
               <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -667,15 +714,22 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                         ? t("costToday.free")
                         : row.costToday.kind === "notTaken"
                           ? t("costToday.notTaken")
-                          : row.costToday.plusVat
-                            ? t("costToday.amountPlusVat", {
-                                amount: row.costToday.amount,
-                                currency: row.costToday.currency,
-                              })
-                            : t("costToday.amount", {
-                                amount: row.costToday.amount,
-                                currency: row.costToday.currency,
-                              })}
+                          : row.costToday.kind === "usage"
+                            ? row.costToday.estimatedPerMonth === null
+                              ? t("costToday.usageUnknown")
+                              : t("costToday.usage", {
+                                  amount: row.costToday.estimatedPerMonth.toFixed(2),
+                                  currency: row.costToday.currency,
+                                })
+                            : row.costToday.plusVat
+                              ? t("costToday.amountPlusVat", {
+                                  amount: row.costToday.amount,
+                                  currency: row.costToday.currency,
+                                })
+                              : t("costToday.amount", {
+                                  amount: row.costToday.amount,
+                                  currency: row.costToday.currency,
+                                })}
                     </strong>
                   </Fact>
                   <Fact label={t("field.howClose")}>{howClose(row)}</Fact>
@@ -685,10 +739,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  {t(`services.${row.id}.freeGives`)}
+                  {wording(row, "freeGives")}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  <strong>{t(`services.${row.id}.ceiling`)}</strong> {t(`services.${row.id}.whenCrossed`)}
+                  <strong>{wording(row, "ceiling")}</strong> {wording(row, "whenCrossed")}
                 </Typography>
 
                 {/* The one genuinely good idea in the table this replaced: a temporary upgrade
@@ -703,7 +757,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                       label={t(`bump.${row.bump}`)}
                     />
                     <Typography variant="body2" color="text.secondary">
-                      {t(`services.${row.id}.bumpBack`)}
+                      {wording(row, "bumpBack")}
                     </Typography>
                   </Stack>
                 )}
