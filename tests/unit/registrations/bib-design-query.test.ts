@@ -33,7 +33,7 @@ const EVERYTHING_OFF: BibDesign = {
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
   cutMarks: true,
-  // The footer (§NNN): every switch the other way, and a line with the characters a URL must
+  // The footer (§317): every switch the other way, and a line with the characters a URL must
   // escape — the separator's dot, a colon, an ampersand, a plus, diacritics.
   showEmail: false,
   showPartners: false,
@@ -177,7 +177,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       headerImageSrc: null,
       sponsorImageSrc: OURS,
       cutMarks: true,
-      // The email box was unticked: the footer prints no address (§NNN).
+      // The email box was unticked: the footer prints no address (§317).
       showEmail: false,
       showPartners: true,
       showEventInFooter: false,

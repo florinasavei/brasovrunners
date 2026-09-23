@@ -38,7 +38,7 @@ export type BibDesignFormValues = {
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
   cutMarks: boolean;
-  /** The footer's switches and the club's own line (§NNN; `bib-footer.ts`). */
+  /** The footer's switches and the club's own line (§317; `bib-footer.ts`). */
   showEmail: boolean;
   showPartners: boolean;
   showEventInFooter: boolean;

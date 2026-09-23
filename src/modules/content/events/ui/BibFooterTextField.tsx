@@ -5,7 +5,7 @@ import TextField from "@mui/material/TextField";
 import { useState } from "react";
 
 /**
- * The club's own line in the bib's footer, with a count of what is left (§NNN).
+ * The club's own line in the bib's footer, with a count of what is left (§317).
  *
  * A text box the form posts like any other — `name` is the panel's, the save reads it with the
  * rest of the design — and the one thing a Server Component cannot do for it: say "87/120" as

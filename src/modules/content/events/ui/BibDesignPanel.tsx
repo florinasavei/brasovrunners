@@ -44,7 +44,7 @@ import BibFooterTextField from "./BibFooterTextField";
  * silently redesign a bib. `present=1` is what tells the action that the design was on screen
  * (`app/[locale]/admin/actions.ts`).
  *
- * **The footer is a group of its own** ("Subsol", §NNN; the owner: "on the bid I have some
+ * **The footer is a group of its own** ("Subsol", §317; the owner: "on the bid I have some
  * email, I wanna be able to control and toggle that!"): the switches and the club's own line,
  * laid out in the order they print, each switch naming what it would print on this deployment —
  * the mailbox, the site's host — so the club is never switching on a word it cannot see. The
@@ -77,7 +77,7 @@ export default async function BibDesignPanel({
   */
   const assets = isStorageConfigured() ? (await listMediaAssetsForAdmin(getDb(), locale)).slice(0, 60) : [];
   // What the footer's two switches would print here: this deployment's own values, never a
-  // literal — on QA the host is QA's, and the mailbox may not be set at all (§NNN).
+  // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
   const replyTo = env.EMAIL_REPLY_TO ?? null;
 
@@ -232,7 +232,7 @@ export default async function BibDesignPanel({
         {picker("headerImageSrc")}
         {picker("sponsorImageSrc")}
 
-        {/* The small print, the club's to compose (§NNN), in the order it prints: the event,
+        {/* The small print, the club's to compose (§317), in the order it prints: the event,
             the partners, the club's own line, the website, the mailbox. */}
         <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="bib-design-footer">
           <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>

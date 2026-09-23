@@ -106,7 +106,7 @@ export async function GET(
     eventTitle: event.title,
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
     // The band in the event's own colour, and the facts the foot is composed from — the
-    // partners, the club's mailbox, the site (§180, §NNN) — the same the preview draws from.
+    // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,
     partners: event.coHosts.map((host) => host.name),
     replyTo: env.EMAIL_REPLY_TO,

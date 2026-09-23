@@ -11,7 +11,7 @@ import { bibFooterText } from "./bib-footer";
  * preview of the paper. Anything that is a *decision* rather than a drawing instruction lives
  * here so the two cannot drift: which colour the header band is when the event names none, and
  * what the club chose to print. What the footer says and how it breaks into lines is
- * `bib-footer.ts`, the same kind of decision with a font table of its own (§NNN).
+ * `bib-footer.ts`, the same kind of decision with a font table of its own (§317).
  *
  * Pure, and importing nothing but the palette and the two pure modules beside it
  * (`bib-design-query.ts`, `bib-footer.ts`): no `node:` builtin, no pdfkit, no React. That
@@ -102,7 +102,7 @@ export const bibDesignSchema = z
     /** Corner marks on the sheet, for a club that takes it to a printer. */
     cutMarks: z.boolean().catch(false),
     /*
-      The footer, the club's to compose (§NNN; `bib-footer.ts` lays it out). Every default is
+      The footer, the club's to compose (§317; `bib-footer.ts` lays it out). Every default is
       the footer every bib printed before this — the partners, then the club's mailbox — so a
       design stored before these keys existed prints exactly as it did.
     */
@@ -149,7 +149,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
  * field `catch`es its own default, and an object that is not one at all reads as the platform's
  * whole design.
  *
- * Only the keys this release knows are read (§NNN). The schema is strict because the *form*
+ * Only the keys this release knows are read (§317). The schema is strict because the *form*
  * must not post a setting nobody defined, but a stored design is read, not posted: a key a later
  * release added is ignored here rather than taking every other choice down with it, so rolling
  * back after the club saved a newer design still prints the club's design.

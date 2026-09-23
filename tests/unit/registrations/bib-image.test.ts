@@ -47,7 +47,7 @@ describe("§94 the bib preview", () => {
     expect((await png({ bibNumber: 99_999 })).byteLength).toBeGreaterThan(1000);
   });
 
-  it("draws a footer the club composed, on two lines when it needs them (§NNN)", async () => {
+  it("draws a footer the club composed, on two lines when it needs them (§317)", async () => {
     const long = {
       partners: ["Primăria Municipiului Brașov", "Salvamont Brașov", "Asociația Sportivă Carpați", "Decathlon Brașov", "Clubul Sportiv Olimpia"],
       siteUrl: "https://www.example.test",

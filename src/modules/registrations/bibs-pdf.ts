@@ -21,7 +21,7 @@ import type { BibRow } from "./bibs";
  * when it names none (§173, `bib-design.ts`); the lockup in white at the left of it and the
  * race and its date at the right, both on the band; the number filling everything under it in
  * the body ink; the registered name beneath; and the small print at the foot — the partners
- * (§168) and the mailbox the club answers on unless the club composed it otherwise (§NNN), on one
+ * (§168) and the mailbox the club answers on unless the club composed it otherwise (§317), on one
  * line or two. That is the order the eye reads a bib in at a start line — colour first, which
  * start line; then the number; then, close up, the name.
  *
@@ -51,7 +51,7 @@ export type BibSheetInput = {
   partners?: readonly string[];
   /** `EMAIL_REPLY_TO`, the mailbox every email already says to write to. */
   replyTo?: string | null;
-  /** `APP_BASE_URL`, for the website in the footer when the club asks for it (§NNN). */
+  /** `APP_BASE_URL`, for the website in the footer when the club asks for it (§317). */
   siteUrl?: string | null;
   /** "Page n of N", called per page. */
   pageLabel: (n: number, total: number) => string;
@@ -93,7 +93,7 @@ const FOOTER_HEIGHT = 22;
 const NAME_BLOCK = 44;
 
 /**
- * The small print's geometry (§NNN): 8 points, across the bib less 18 points each side, and a
+ * The small print's geometry (§317): 8 points, across the bib less 18 points each side, and a
  * second line 10 points above the first when the footer needs two. `width / size` is the
  * footer's measure in ems, `BIB_FOOTER_EMS`, which the picture shares — that is how the two
  * renderers break the footer in the same places.
@@ -167,7 +167,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
   /** The strip of sponsors takes this much above the small print, when there is one. */
   const SPONSOR_HEIGHT = sponsorPicture ? 30 : 0;
-  // The same on every bib of the sheet, so laid out once (§NNN), and told which header the sheet
+  // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
   // really draws. A second line takes its height from the number's area, never from the small
   // print's size.
   const footerLines = bibSheetFooterLines(input, headerPicture !== null);
@@ -273,7 +273,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
-      The small print, as the club composed it (§NNN): one line, or two with the last where the
+      The small print, as the club composed it (§317): one line, or two with the last where the
       one line always sat. Never a telephone number — `bibFooterParts` says why.
 
       Each line is centred by hand and handed to pdfkit with **no width**. Given a width, pdfkit

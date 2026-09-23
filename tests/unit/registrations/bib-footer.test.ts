@@ -19,7 +19,7 @@ import { BIB_IMAGE_FOOTER, bibImageFooterLines } from "@/modules/registrations/b
 import { BIB_SHEET_FOOTER, bibSheetFooterLines } from "@/modules/registrations/bibs-pdf";
 
 /**
- * BR-REQ-038-01, `DECISIONS.md` §NNN — the footer is the club's to compose.
+ * BR-REQ-038-01, `DECISIONS.md` §317 — the footer is the club's to compose.
  *
  * Three promises, each of which would fail silently on paper: the platform's own design prints
  * exactly the footer every bib printed before; a footer never overflows the bib or shrinks into
@@ -48,7 +48,7 @@ const LONG_PARTNERS = [
 ];
 const LONG_LINE = "Cronometraj: StartTime România · Urgențe organizator: 0722 000 000 · Traseu marcat cu bandă roșie";
 
-describe("§NNN what the footer says", () => {
+describe("§317 what the footer says", () => {
   it("prints exactly today's footer on the platform's own design", () => {
     // The footer every bib printed before this, character for character, on one line.
     expect(bibFooterLines(bibFooterParts(DEFAULT_BIB_DESIGN, FACTS))).toEqual([
@@ -119,7 +119,7 @@ describe("§NNN what the footer says", () => {
   });
 });
 
-describe("§NNN the club's own line", () => {
+describe("§317 the club's own line", () => {
   it("is one line of plain text, trimmed, at most the limit", () => {
     expect(bibFooterText("  Urgențe:\n0722 000 000\t ")).toBe("Urgențe: 0722 000 000");
     expect(Array.from(bibFooterText("ă".repeat(500)))).toHaveLength(BIB_FOOTER_TEXT_MAX);
@@ -134,7 +134,7 @@ describe("§NNN the club's own line", () => {
   });
 });
 
-describe("§NNN one line or two, measured", () => {
+describe("§317 one line or two, measured", () => {
   const fitsTheTable = (line: string) => bibFooterWidth(line) <= BIB_FOOTER_EMS;
 
   it("keeps a footer that fits on one line", () => {
@@ -218,7 +218,7 @@ describe("§NNN one line or two, measured", () => {
  * The table is the font. If `Roboto-Regular.ttf` is ever replaced, these fail rather than the
  * footer quietly overflowing the paper.
  */
-describe("§NNN the widths are the font's, and the lines fit the paper", () => {
+describe("§317 the widths are the font's, and the lines fit the paper", () => {
   const doc = new PDFDocument({ autoFirstPage: false });
   doc.registerFont("footer", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Regular.ttf"));
   const pdfkitWidth = (text: string, size: number) => doc.font("footer").fontSize(size).widthOfString(text);
@@ -324,7 +324,7 @@ describe("§NNN the widths are the font's, and the lines fit the paper", () => {
   });
 });
 
-describe("§NNN the picture and the paper break the footer in the same places", () => {
+describe("§317 the picture and the paper break the footer in the same places", () => {
   it("measures both footers in the same ems", () => {
     expect(BIB_SHEET_FOOTER.width / BIB_SHEET_FOOTER.size).toBeCloseTo(BIB_FOOTER_EMS, 2);
     expect(BIB_IMAGE_FOOTER.width / BIB_IMAGE_FOOTER.size).toBeCloseTo(BIB_FOOTER_EMS, 6);

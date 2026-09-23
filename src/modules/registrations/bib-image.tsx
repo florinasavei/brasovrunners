@@ -23,7 +23,7 @@ import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
  * this before sending anything to a printer, so a preview that arranged the same facts
  * differently would be a preview of nothing. Both read `bib-design.ts` and `bib-footer.ts` for
  * the decisions that could drift — which colour the band is when the event names none, what
- * the footer says and where it breaks (§NNN) — and both lay out a coloured band with the white
+ * the footer says and where it breaks (§317) — and both lay out a coloured band with the white
  * lockup and the race on it, the number under it in the body ink, the registered name beneath,
  * and the small print at the foot. 900×600, near enough the proportion of an A5 bib lying on its
  * side.
@@ -43,7 +43,7 @@ const LOGO_WIDTH = 204;
 const CARD_BORDER = 2;
 
 /**
- * The small print's geometry (§NNN): across the card inside its border, less 30 pixels each side
+ * The small print's geometry (§317): across the card inside its border, less 30 pixels each side
  * — the sheet's 18 points at this scale — at the size that makes that line `BIB_FOOTER_EMS` wide,
  * the sheet's own measure. Satori sizes boxes border-box, so the footer's line is 900 less both
  * borders less both paddings: 836. Not a round size, and deliberately: it is what makes a line
@@ -60,7 +60,7 @@ type BibImageInput = {
   bandColour?: string | null;
   partners?: readonly string[];
   replyTo?: string | null;
-  /** `APP_BASE_URL`, for the website in the footer when the club asks for it (§NNN). */
+  /** `APP_BASE_URL`, for the website in the footer when the club asks for it (§317). */
   siteUrl?: string | null;
   /** What the club decided this bib shows (§249); absent is the platform's own design. */
   design?: BibDesign;
@@ -108,7 +108,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // none. Satori fetches it itself, from this site's own store — nowhere else is accepted.
   const header = bibPictureUrl(design.headerImageSrc, env.APP_BASE_URL);
   const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
-  // Told which header this picture draws, as the sheet is (§NNN).
+  // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
   /** The name, above the number or below it — and nowhere when the club switched it off. */
   const name = design.showName ? (
@@ -192,7 +192,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
           <img src={sponsors} alt="" width={width - 60} height={64} style={{ margin: "0 30px", objectFit: "contain" }} />
         ) : null}
-        {/* The small print as the club composed it (§NNN), in the lines `bib-footer.ts` laid out
+        {/* The small print as the club composed it (§317), in the lines `bib-footer.ts` laid out
             for the sheet too: each its own row with wrapping off, so the picture breaks where
             the paper breaks. `pre`, because the separator's two spaces are two on the paper and
             Satori would otherwise collapse them into one. The overflow rule is a safety net,

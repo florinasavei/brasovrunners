@@ -70,7 +70,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const format = await getFormatter({ locale });
   const eventDate = format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" });
-  // The same facts the sheet's footer is made of (§180, §NNN), so either picture is a picture of
+  // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of
   // the paper; which of them print is the design's to say.
   const partners = event.coHosts.map((host) => host.name);
 

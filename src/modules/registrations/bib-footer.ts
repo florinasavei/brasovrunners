@@ -2,7 +2,7 @@ import type { BibDesign } from "./bib-design";
 
 /**
  * The small print at the foot of a race number, composed by the club and laid out once for both
- * renderers (§NNN; the owner: "on the bid I have some email, I wanna be able to control and
+ * renderers (§317; the owner: "on the bid I have some email, I wanna be able to control and
  * toggle that! Also to add some more info in the footer").
  *
  * Until now the footer was one fixed sentence — the partners' names, then the mailbox every email

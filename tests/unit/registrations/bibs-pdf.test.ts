@@ -117,7 +117,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   });
 
   /**
-   * §NNN — the footer the club composed. Two lines take their height from the number's area
+   * §317 — the footer the club composed. Two lines take their height from the number's area
    * rather than shrinking the small print, and the sheet is still two bibs to a page.
    */
   it("prints a footer of two lines when the club's composition needs them", async () => {
@@ -142,7 +142,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   });
 
   /**
-   * §NNN — pdfkit wraps any text it is given a width for, whatever `lineBreak` says, and its
+   * §317 — pdfkit wraps any text it is given a width for, whatever `lineBreak` says, and its
    * `ellipsis` does nothing without a `height`. A footer line a point wider than its box used to
    * drop its last word onto a line of its own, 9 points lower: over the second line, or over the
    * cut edge. So the sheet centres each line itself and hands pdfkit no width to wrap in.

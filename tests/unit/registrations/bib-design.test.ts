@@ -41,7 +41,7 @@ describe("§180 what a bib looks like", () => {
     }
   });
 
-  // Since §NNN the footer is the club's to compose (`bib-footer.test.ts`); the platform's own
+  // Since §317 the footer is the club's to compose (`bib-footer.test.ts`); the platform's own
   // design still prints exactly this.
   const footer = (partners: readonly string[], replyTo?: string | null) =>
     bibFooterParts(DEFAULT_BIB_DESIGN, { partners, replyTo, headerPicture: false }).join(BIB_FOOTER_SEPARATOR);
@@ -141,11 +141,11 @@ describe("DECISIONS.md §249 the bib's design", () => {
 });
 
 /**
- * §NNN — the footer's keys joined a column that already holds designs. Every design stored
+ * §317 — the footer's keys joined a column that already holds designs. Every design stored
  * before them must print its footer exactly as it did, and a key written wrong must fall back on
  * its own rather than take the rest of the design with it.
  */
-describe("§NNN the footer's settings, read from whatever is stored", () => {
+describe("§317 the footer's settings, read from whatever is stored", () => {
   const STORED_BEFORE = {
     showName: false,
     showEventTitle: true,

@@ -130,7 +130,7 @@ describe("§249 the bib's design, saved and read back", () => {
   });
 
   /**
-   * §NNN — the footer's switches and the club's own line ride in the same column, saved by the
+   * §317 — the footer's switches and the club's own line ride in the same column, saved by the
    * same form. What only the database can answer: that they survive the save and are what the
    * renderers read, that the line is stored the way it prints, and that a design stored before
    * these keys existed still reads as the footer it always printed.

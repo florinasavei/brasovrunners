@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-038-01, `DECISIONS.md` §301 and §NNN — the bib's footer is the club's to compose, and
+ * BR-REQ-038-01, `DECISIONS.md` §301 and §317 — the bib's footer is the club's to compose, and
  * the preview in the design panel follows every box before anything is saved.
  *
  * Nothing here saves: the panel's preview is a picture whose address carries the unsaved design,
@@ -10,7 +10,7 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
  * club's line arriving in it — and that the route draws it. A read-only spec, so it cannot
  * disturb the featured event the registration specs configure.
  */
-test.describe("§NNN the footer, composed in the designer", () => {
+test.describe("§317 the footer, composed in the designer", () => {
   test("switching the email off redraws the preview without it, and the club's line joins it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin");
