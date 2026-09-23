@@ -65,10 +65,18 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
     await expect(main.getByRole("button", { name: /Salvează/ })).toHaveCount(0);
 
-    // And the contact recipients: the list in force, and nothing to change it with.
+    // And the contact recipients: the list in force, and nothing to change it with — the hidden
+    // copies included (2026-09-22): the Organizer reads them, and only the Administrator sets them.
+    // The sentence in force depends on the shared row and on `CONTACT_FORM_TO`: with an address
+    // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
+    // Administrator's test below clears the row — it says nobody receives them, and names no copy.
+    // Whichever state this database is in, the Organizer is shown the sentence.
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
+    await expect(main.getByText(/Copie ascunsă:|Nu le primește nimeni/)).toBeVisible();
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveCount(0);
+    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveCount(0);
+    await expect(main.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)")).toHaveCount(0);
   });
 
   test("a Redactor reads the figures and neither the queue nor the club's copies", async ({ page }) => {
@@ -105,7 +113,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   });
 
   // Set and cleared again, so the next test on this database starts from the environment's list.
-  test("an Administrator sets who receives the contact messages, with a Cc", async ({ page }) => {
+  test("an Administrator sets who receives the contact messages, with a Cc and a Bcc", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");
     const main = page.locator("#main");
@@ -114,13 +122,17 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
 
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("club@example.com");
     await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("amalia@example.org");
+    // The hidden copy (2026-09-22), with the club's own address typed again: an address in
+    // "Către" is not also Bcc'd, so only the archive mailbox is kept from this box.
+    await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("Club@example.com, arhiva@example.org");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
 
     await expect(main.getByText("Destinatarii formularului de contact au fost salvați.")).toBeVisible();
-    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: amalia@example\.org/)).toBeVisible();
+    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: amalia@example\.org\. Copie ascunsă: arhiva@example\.org/)).toBeVisible();
     // What was saved is what the boxes show on the way back — the whole point of a setting.
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("club@example.com");
     await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
+    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("arhiva@example.org");
 
     // An address that is not one is refused, and nothing of it is kept.
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
@@ -136,7 +148,59 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // half of the sentence, and both are the same answer to "the boxes are empty now".
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("");
     await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("");
+    await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await expect(main.getByText(/Nu le primește nimeni|din variabila CONTACT_FORM_TO/)).toBeVisible();
+    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("");
+  });
+});
+
+/**
+ * BR-REQ-033-02 criterion 12's rule applied to every message a participant receives
+ * (2026-09-22; the owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare"):
+ * the club's hidden copy of the emails to participants is set on the same page, named back in
+ * force above the boxes, and priced in the plan's forecast — one address is one more message on
+ * each of the runner's five, so the cost of a registration moves by five and the forecast says
+ * which part of it the copies are. Desktop only, for the same one-row reason as the blocks above.
+ */
+test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails to participants", () => {
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
+  // Set and cleared again, so the next test on this database starts with no hidden copy.
+  test("an Administrator sets it, the sentence in force names it, and the forecast counts it", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/emails");
+    const main = page.locator("#main");
+    const panel = main.getByTestId("club-notices");
+    const forecast = main.getByTestId("email-forecast");
+    const box = panel.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)");
+
+    // Nothing hidden yet: the forecast prints the plain cost and no second sentence.
+    await expect(forecast).toContainText(/costă circa [0-9]+ mesaje/);
+    await expect(forecast).not.toContainText("copiile ascunse");
+    const before = Number((await forecast.innerText()).match(/costă circa ([0-9]+) mesaje/)?.[1]);
+    expect(before).toBeGreaterThan(0);
+
+    // Only this box is touched; the other lists keep whatever they held, so the row is left as
+    // it was found. The same mailbox twice, in two spellings, is one mailbox.
+    await box.fill("arhiva@example.org, Arhiva@example.org");
+    await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+
+    await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
+    await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
+    await expect(box).toHaveValue("arhiva@example.org");
+    // One address on each of the runner's five messages: the cost moved by five, and the
+    // forecast says so next to the plan's figures, where the club decides what it can afford.
+    await expect(forecast).toContainText(`costă circa ${before + 5} mesaje`);
+    await expect(forecast).toContainText("Din ele, 5 sunt copiile ascunse");
+
+    // And back to none: the sentence in force says so, and the forecast is what it was.
+    await box.fill("");
+    await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(panel.getByText("Copie ascunsă la emailurile către participanți: —.")).toBeVisible();
+    await expect(forecast).toContainText(`costă circa ${before} mesaje`);
+    await expect(forecast).not.toContainText("copiile ascunse");
   });
 });

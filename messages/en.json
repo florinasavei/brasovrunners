@@ -1228,7 +1228,7 @@
             "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To” and, if somebody should get a copy, under “Copy (Cc)” → Save. Changed here at any time, with no redeploy.",
+            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
@@ -1709,7 +1709,8 @@
       },
       "clubNotices": {
         "title": "The club's copies",
-        "intro": "Who at the club receives a copy of a signed declaration, and who is told when somebody confirms their registration. Club addresses, never a participant's.",
+        "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
+        "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
         "source": {
           "setting": "In force: declarations go to {to}; visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
           "environment": "In force: declarations go to {to}, the address in the server's configuration (DECLARATIONS_ARCHIVE_TO), because the box below is empty. Visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
@@ -1725,6 +1726,9 @@
         "bccWarning": "The declaration carries the participant's name and the identity document typed at signing. A hidden copy delivers that personal data to a mailbox nobody on the message can see. Use it only as a decision of the club.",
         "confirmationsTo": "Tell us when somebody confirms",
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
+        "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
+        "participantsBccHelp": "Addresses separated by commas. Each receives, without appearing in the message, a copy of every email sent to a real participant — the address check, the declaration, the confirmation with the QR code, the reminder, a number given by hand. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccWarning": "A hidden copy of these emails also receives the participant's personal links — confirming the address, signing the declaration, “I can't make it any more” — and the QR code for the start. Whoever reads that mailbox can take those steps in their place. A club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
@@ -1785,14 +1789,17 @@
         "saving": "Saving…",
         "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
         "unlimited": "no limit",
-        "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared."
+        "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared.",
+        "forecast": "A registration carried through to confirmation costs about {count} messages; what is left pays for about {left} more registrations.",
+        "forecastUnlimited": "A registration carried through to confirmation costs about {count} messages.",
+        "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant."
       },
       "contacts": {
         "title": "Who receives the contact messages",
-        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another. Saved here, with no redeploy.",
+        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another, “Hidden copy (Bcc)” get a copy without appearing in the message. Saved here, with no redeploy.",
         "source": {
-          "setting": "They currently reach: {to}. Copy: {cc}. Set here, in the app.",
-          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}.",
+          "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
+          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
           "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
         },
         "updatedAt": "Set on {when}.",
@@ -1800,6 +1807,8 @@
         "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
         "cc": "Copy – Cc (addresses separated by commas)",
         "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
+        "bcc": "Hidden copy – Bcc (addresses separated by commas)",
+        "bccHelp": "They get a copy of every message the form sends without appearing in it: neither the visitor nor the people under “To” and “Cc” see them. An address also written under “To” or “Cc” receives one message only. Empty means no hidden copies.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",

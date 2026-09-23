@@ -33,6 +33,11 @@ export type ContactMessageRoute = {
    * colleague sees she was copied and "Reply all" keeps the club together on the thread.
    */
   cc?: readonly string[];
+  /**
+   * The club's hidden copies (2026-09-22): envelope recipients that appear in no header, so
+   * neither the visitor's `Reply-To` thread nor the Cc'd colleagues learn of them.
+   */
+  bcc?: readonly string[];
   /** Which deployment sends it, for the subject's mark. */
   appEnv: AppEnvironment;
 };
@@ -89,6 +94,7 @@ export function renderContactMessage(input: ContactMessageInput, route: ContactM
     // the operator types it — while the setting's addresses met the canonicalizer.
     to: route.to.map(headerSafe),
     ...(route.cc && route.cc.length > 0 ? { cc: route.cc.map(headerSafe) } : {}),
+    ...(route.bcc && route.bcc.length > 0 ? { bcc: route.bcc.map(headerSafe) } : {}),
     replyTo: { name, address: input.email },
     subject: markSubjectForEnvironment(contactSubject(name), route.appEnv),
     text,

@@ -144,7 +144,7 @@ describe("the club's archive copy (§99)", () => {
   });
 
   it("counts one more message per registration on the allowance while the archive is on", () => {
-    expect(messagesPerCompletedRegistration(true)).toBe(MESSAGES_PER_COMPLETED_REGISTRATION + 1);
-    expect(messagesPerCompletedRegistration(false)).toBe(MESSAGES_PER_COMPLETED_REGISTRATION);
+    expect(messagesPerCompletedRegistration({ archiveConfigured: true, participantBccCount: 0 })).toBe(MESSAGES_PER_COMPLETED_REGISTRATION + 1);
+    expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: 0 })).toBe(MESSAGES_PER_COMPLETED_REGISTRATION);
   });
 });
