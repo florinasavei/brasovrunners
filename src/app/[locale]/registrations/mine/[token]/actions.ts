@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { setListConsentFromMyRegistrations } from "@/modules/registrations/list-consent";
 import {
   checkInSelfFromMyRegistrations,
   consumeAndCancelFromMyRegistrations,
@@ -44,6 +45,23 @@ export async function selfCheckInFromMyRegistrationsAction(form: FormData): Prom
     redirect(result.ok ? `${path}?here=${registrationId}` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?hereFailed=${registrationId}`);
+    throw error;
+  }
+}
+
+/** The public list's switch for one registration (BR-REQ-039-01; §143). The link stays valid. */
+export async function setListConsentFromMyRegistrationsAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const registrationId = String(form.get("registrationId") ?? "");
+  const listed = form.get("listed") === "1";
+  const path = pagePath(locale, token);
+
+  try {
+    const result = await setListConsentFromMyRegistrations(getDb(), token, registrationId, listed, new Date());
+    redirect(result.ok ? `${path}?list=${registrationId}` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?listFailed=${registrationId}`);
     throw error;
   }
 }

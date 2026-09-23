@@ -355,6 +355,7 @@
       "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
+      "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
         "registration": {
           "created_by_staff": "Înscriere adăugată de echipă",
@@ -365,7 +366,8 @@
           "confirmed_by_staff": "Confirmat la masă (adresă garantată, declarație pe hârtie)",
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
-          "checkin_undone": "Prezență anulată"
+          "checkin_undone": "Prezență anulată",
+          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
         }
       },
       "locale": {
@@ -2228,6 +2230,21 @@
         "RESIDENCE_PERMIT": "Permis de ședere",
         "OTHER": "Alt act"
       }
+    },
+    "list": {
+      "title": "Lista publică de participanți",
+      "event": "Pentru evenimentul: {event}",
+      "listed": "Numele tău apare pe lista publică de participanți a acestui eveniment.",
+      "notListed": "Numele tău nu apare pe lista publică de participanți a acestui eveniment.",
+      "help": "Lista arată numele (sau numele afișat pe care l-ai ales) și clubul, doar la evenimentele la care clubul publică una. Alegerea e a ta și o poți schimba oricând: de aici, din emailul de confirmare sau din „Înscrierile mele”.",
+      "optOut": "Nu vreau să apar pe lista publică",
+      "optIn": "Vreau să apar pe lista publică",
+      "changed": "Am reținut alegerea ta.",
+      "changedHelp": "Linkul din email s-a folosit. Pagina aceasta are unul nou — dacă te răzgândești, apasă butonul de mai sus.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou sau scrie-ne.",
+      "shortListed": "Apari pe lista publică de participanți.",
+      "shortNotListed": "Nu apari pe lista publică de participanți.",
+      "eventPage": "Pagina evenimentului"
     },
     "mine": {
       "title": "Înscrierile mele",

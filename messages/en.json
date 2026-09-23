@@ -355,6 +355,7 @@
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
+      "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
           "created_by_staff": "Registration entered by staff",
@@ -365,7 +366,8 @@
           "confirmed_by_staff": "Confirmed at the desk (address vouched for, declaration on paper)",
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
-          "checkin_undone": "Check-in undone"
+          "checkin_undone": "Check-in undone",
+          "list_consent_changed": "Public-list choice changed by the participant"
         }
       },
       "locale": {
@@ -2228,6 +2230,21 @@
         "RESIDENCE_PERMIT": "Residence permit",
         "OTHER": "Other document"
       }
+    },
+    "list": {
+      "title": "The public participant list",
+      "event": "For the event: {event}",
+      "listed": "Your name appears on this event's public participant list.",
+      "notListed": "Your name does not appear on this event's public participant list.",
+      "help": "The list shows the name (or the display name you chose) and the club, and only on events where the club publishes one. The choice is yours and you can change it at any time: here, from the confirmation email or from \"My registrations\".",
+      "optOut": "Take me off the public list",
+      "optIn": "Show my name on the public list",
+      "changed": "Your choice has been saved.",
+      "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
+      "failed": "Could not save your choice. Try again or write to us.",
+      "shortListed": "You are on the public participant list.",
+      "shortNotListed": "You are not on the public participant list.",
+      "eventPage": "The event's page"
     },
     "mine": {
       "title": "My registrations",

@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { inReadOnlyTransaction } from "@/db/read-only";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -30,11 +31,18 @@ import { findRegistrationById } from "./repository";
  * cancel button on the same page. The first spends it because §12.8 says an action link is
  * used once, and it can afford to — the page it lands on carries the fresh link.
  *
- * What the write is: `list_opt_out` flipped, `updated_at` bumped, and one audit row saying the
+ * What the write is: `list_opt_out` set, `updated_at` bumped, and one audit row saying the
  * shape of the change — LISTED to NOT_LISTED or back, and through which door — never the name
- * (AGENTS.md §12.12). The published set (`repository.ts#listPublicStartList`) already reads the
- * column, so a name leaves the list the moment the row changes and returns the same way; no
- * second query and no cache stand between the choice and the page (§281).
+ * (AGENTS.md §12.12). The row is the participant's own act, so it has no staff actor; the
+ * backoffice timeline reads a null actor as "the participant". It is written inside the same
+ * transaction as the change, unlike the staff verbs §12.12 describes: nothing here goes
+ * through the allocator or takes the event-row lock, so there is no second write path to keep
+ * out of.
+ *
+ * The published set (`repository.ts#listPublicStartList`) already reads the column, so a name
+ * leaves the list the moment the row changes and returns the same way; no second query and no
+ * cache stand between the choice and the page (§281). §186's "Participant anonim" count picks
+ * the row up on the other side of the same column.
  *
  * "Set", not "flip": the form carries the choice it is making, so a double submission — or a
  * choice made from two tabs — lands on the state the button said, and a second identical
@@ -120,8 +128,10 @@ async function describeListConsent<T extends Record<string, unknown>>(
 
 /**
  * The GET behind the email link (BR-REQ-036-02 criterion 4): throttled per presented token,
- * `LIST_CONSENT` only, and a read — the token context comes out of a read-only transaction, and
- * nothing here touches the registration. A mail scanner opening the link changes nothing.
+ * `LIST_CONSENT` only, and a read. The token context comes out of one READ ONLY transaction
+ * and the page's own two reads out of another (`db/read-only.ts`), so the row this page
+ * describes cannot be written by the request that describes it, whatever a later edit adds.
+ * A mail scanner opening the link changes nothing.
  */
 export async function readListConsent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -132,7 +142,8 @@ export async function readListConsent<T extends Record<string, unknown>>(
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
   const context = await readActionTokenContext(db, { secret, purpose: "LIST_CONSENT", now });
   if (!context.ok) return context;
-  return describeListConsent(db, context.token.registrationId ?? "", locale);
+  const registrationId = context.token.registrationId ?? "";
+  return inReadOnlyTransaction(db, (tx) => describeListConsent(tx, registrationId, locale));
 }
 
 /**
@@ -186,5 +197,30 @@ export async function setListConsentFromManageLink<T extends Record<string, unkn
   if (!context.ok) return context;
 
   const result = await setListConsent(db, context.token.registrationId ?? "", listed, "MANAGE_LINK", now);
+  return { ok: true as const, ...result };
+}
+
+/**
+ * The same choice from "Înscrierile mele" (§77). The `MANAGE_PROFILE` token is read, never
+ * spent, and the registration must be the holder's own — a registration id is not a secret,
+ * and the token is what says who is asking. A stranger's id gets NOT_FOUND, never a hint.
+ */
+export async function setListConsentFromMyRegistrations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  secret: string,
+  registrationId: string,
+  listed: boolean,
+  now: Date,
+): Promise<{ ok: true; listed: boolean; changed: boolean } | TokenRejection> {
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+  const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_PROFILE", now });
+  if (!context.ok) return context;
+
+  const registration = await findRegistrationById(db, registrationId);
+  if (!registration || registration.participantId !== context.token.participantId) {
+    throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
+  }
+
+  const result = await setListConsent(db, registration.id, listed, "MY_REGISTRATIONS", now);
   return { ok: true as const, ...result };
 }
