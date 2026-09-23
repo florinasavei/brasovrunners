@@ -798,7 +798,9 @@
         "sponsorImageSrc": "A sponsors' strip",
         "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
         "noPicture": "No picture",
-        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview and the PDF follow a save."
+        "previewCaption": "Preview — this is how it prints",
+        "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
+        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
