@@ -505,7 +505,7 @@
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
-      "eventsRepeated": "{created} editions created.",
+      "eventsRepeated": "The series is running: {created} dates created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
@@ -721,7 +721,7 @@
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
-      "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
+      "repeatOnCreateHelp": "Optional. Tick it and choose the interval: the dates of the next eight weeks are created with the event, and the platform creates the ones that follow by itself, always eight weeks ahead, until the chosen date or for ever. Each date is its own event with its day's address; they are drafts unless you tick publish.",
       "weekdays": {
         "1": "Mo",
         "2": "Tu",

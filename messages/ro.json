@@ -505,7 +505,7 @@
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
-      "eventsRepeated": "{created} ediții create.",
+      "eventsRepeated": "Seria e pornită: {created} date create acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "bulkSelectAll": "Toate",
       "bulkSelected": "Bifate: {count}",
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
@@ -721,7 +721,7 @@
       "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
       "repeatWeekdaysHelp": "Ziua acestui eveniment este mereu în serie; bifează și celelalte — de exemplu miercuri, pentru o tură de duminică. Se creează doar zilele de după acest eveniment. Nimic bifat: doar ziua evenimentului, la intervalul ales.",
-      "repeatOnCreateHelp": "Opțional. Se creează și edițiile următoare, ca ciorne, cu aceleași detalii și adrese cu data fiecăreia. Le publici pe toate deodată din lista de evenimente, cu „Publică cele bifate”.",
+      "repeatOnCreateHelp": "Opțional. Bifează și alege intervalul: datele din următoarele opt săptămâni se creează odată cu evenimentul, iar platforma le creează singură pe cele care urmează, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit. Fiecare dată e un eveniment al ei, cu adresa zilei; sunt ciorne dacă nu bifezi publicarea.",
       "weekdays": {
         "1": "Lu",
         "2": "Ma",
