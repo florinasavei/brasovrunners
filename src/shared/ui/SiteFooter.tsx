@@ -207,7 +207,13 @@ export default async function SiteFooter() {
 
           On a phone the line has the switch, the summary, three marks and the language in 320
           pixels, and "Confidențialitate" alone is a third of it — so there it says "GDPR", the
-          word Romanian sites use for the same link, and the full label from `sm` up.
+          word Romanian sites use for the same link, and the full label from `sm` up. Nothing
+          that names the notice fits: the fold beside it is 54 pixels at 320 with "GDPR", and
+          "Date personale" is some fifty pixels wider, which would leave the summary nothing.
+
+          The link's name is the notice's own at every width (review finding: a screen reader
+          said "GDPR, link"), and it keeps both visible words inside it, so somebody who says
+          what they see to voice control still hits it (WCAG 2.5.3, label in name).
         */}
         <Box
           sx={{
@@ -226,7 +232,7 @@ export default async function SiteFooter() {
             },
           }}
         >
-          <Link href="/legal/privacy">
+          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")}>
             <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
               {legal("privacyLinkShort")}
             </Box>

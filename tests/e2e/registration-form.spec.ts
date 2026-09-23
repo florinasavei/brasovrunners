@@ -523,6 +523,45 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain(thirteen);
   });
 
+  test("takes the socials out of a minor's form, even with a bad Strava value typed first", async ({ page }) => {
+    /*
+      BR-REQ-031-04 criterion 8 and §NNN: the club keeps no Strava or Instagram of a minor, so the
+      socials go away once the birth date says under eighteen. Hidden alone was not enough (review
+      finding): the Strava box is `type="url"`, and a hidden invalid control stops the browser
+      submitting with nothing on screen to say why. The block is disabled while hidden, so a value
+      typed before the date was neither blocks the form nor reaches the server.
+    */
+    test.skip(test.info().project.name !== "mobile", "the 320px form is the one that matters; one registration per run");
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    // An adult first: the socials are offered, and something that is not a link goes in.
+    await page.getByText("Rețele sociale — opțional").click();
+    const strava = page.locator('[name="stravaUrl"]');
+    await expect(strava).toBeVisible();
+    await strava.fill("not a link");
+    expect(await strava.evaluate((node) => (node as HTMLInputElement).validity.valid)).toBe(false);
+
+    // Then a birth date of somebody sixteen today: a minor, and old enough for the race (§321).
+    const sixteen = new Date();
+    sixteen.setUTCFullYear(sixteen.getUTCFullYear() - 16);
+    await page.locator('[name="birthDate"]').fill(sixteen.toISOString().slice(0, 10));
+    await page.locator('[name="guardianName"]').fill("Ion Popescu");
+
+    // Gone from sight and out of the form: not validated, not posted.
+    await expect(strava).toBeHidden();
+    await expect(page.getByText("Rețele sociale — opțional")).toBeHidden();
+    await expect(strava).toBeDisabled();
+    await expect(page.locator('[name="instagramHandle"]')).toBeDisabled();
+
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+  });
+
   test("does not render a field name it does not recognize", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

@@ -140,9 +140,10 @@ test.describe("the build badge", () => {
     await expect(footer.getByRole("link", { name: /echipă|staff/i })).toHaveCount(0);
     // The two public legal routes are still there — AGENTS.md §9.2 requires them linked from the
     // footer. The privacy notice is on the bar itself since §NNN ("GDPR" on a phone,
-    // "Confidențialitate" from `sm`); the terms are behind the summary, which names them, and a
-    // closed <details> hides its content from the accessibility tree, so open it first.
-    await expect(footer.getByRole("link", { name: /^(GDPR|Confidențialitate)$/ })).toBeVisible();
+    // "Confidențialitate" from `sm`, named for the notice at both); the terms are behind the
+    // summary, which names them, and a closed <details> hides its content from the
+    // accessibility tree, so open it first.
+    await expect(footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true })).toBeVisible();
     await footer.locator("summary").click();
     await expect(footer.getByRole("link", { name: /termeni de concurs/i })).toBeVisible();
   });
@@ -164,7 +165,7 @@ test.describe("the build badge", () => {
     // The badge sits above the footer's own corner: the link must still be clickable, which
     // is the failure a fixed overlay actually causes on a 320px screen. The privacy notice is
     // on the bar since §NNN, so nothing has to be opened to reach it.
-    await page.getByRole("contentinfo").getByRole("link", { name: /^(GDPR|Confidențialitate)$/ }).click();
+    await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
   });
 });

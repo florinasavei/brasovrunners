@@ -9,7 +9,7 @@ import { env } from "@/shared/config/env";
  * (GDPR art. 13; `DECISIONS.md` §NNN).
  *
  * The line is the last thing in each language's half: "Primești acest mesaj de la <club> pentru
- * înscrierea ta. Cum folosim datele tale: <the notice>." — the notice in that half's own
+ * înscrierea ta. Cum folosim datele tale: <the notice>" — the notice in that half's own
  * language, from `APP_BASE_URL`. The club's own mail (the archive copy, the confirmation
  * notice) and the staff invitation are not a participant's message about their data and carry
  * none; the invitation says what the club keeps about its team in its own body instead.
@@ -47,6 +47,8 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§NNN)", 
         for (const half of ["ro", "en"] as const) {
           const url = noticeUrl(half);
           expect(email.text, `text links the ${half} notice`).toContain(url);
+          // Nothing glued to the address in the text part, where a client links whatever touches it.
+          expect(email.text, `no full stop after the ${half} address`).not.toContain(`${url}.`);
           expect(email.html, `html links the ${half} notice`).toContain(`href="${url}"`);
         }
         expect(email.text).toContain("Cum folosim datele tale:");

@@ -86,7 +86,9 @@ export function renderContent(
     content.closing,
     SIGN_OFF[locale],
     ...(content.footer ? ["", content.footer] : []),
-    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}.`] : []),
+    // The address last, with nothing after it: a text client that links it could take a
+    // trailing full stop into the link (review nit). The HTML part keeps the sentence's stop.
+    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}`] : []),
   ];
 
   /**

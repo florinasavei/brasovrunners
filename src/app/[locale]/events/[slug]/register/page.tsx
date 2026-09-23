@@ -872,9 +872,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
                   person can skip without the form being any less complete. Adults only
-                  (§NNN): gone once the birth date says under eighteen, and never stored for a
-                  minor whatever is posted. */}
-              <HiddenForMinor birthDateId={fieldId("birthDate")}>
+                  (§NNN): gone once the birth date says under eighteen — disabled as well as
+                  hidden, so neither box is validated or posted — and never stored for a minor
+                  whatever is posted. A rejection naming either box shows it whatever the date. */}
+              <HiddenForMinor
+                birthDateId={fieldId("birthDate")}
+                forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
+              >
               <Box component="details" sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.socials")}

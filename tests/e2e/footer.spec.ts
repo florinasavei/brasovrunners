@@ -34,8 +34,9 @@ function controls(page: Page) {
     footer,
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă/i }),
-    // On the bar since §NNN: "GDPR" on a phone, "Confidențialitate" from `sm`.
-    privacy: footer.getByRole("link", { name: /^(GDPR|Confidențialitate)$/ }),
+    // On the bar since §NNN: "GDPR" on a phone, "Confidențialitate" from `sm`, and named for
+    // the notice at every width, both visible words inside the name (review finding).
+    privacy: footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language: footer.getByRole("navigation", { name: "Limbă" }),
     badge: page.getByLabel(/versiunea site-ului|website version/i),
@@ -113,7 +114,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
 
     await summary.click();
     // The panel's links, and the privacy notice beside the fold, which wraps under it (§NNN).
-    const panelLinks = footer.getByRole("link", { name: /GDPR|confidențialitate|termeni|înscrierile|scrie-ne/i });
+    const panelLinks = footer.getByRole("link", { name: /confidențialitate|termeni|înscrierile|scrie-ne/i });
     await expect(panelLinks.first()).toBeVisible();
 
     const boxes: Array<[string, Box]> = [];

@@ -139,6 +139,12 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.raceDaySheets;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.length).toBeGreaterThan(0);
+      // The notice's three-year promise covers the club's other mail too (review finding): the
+      // confirmation notices and the club copies each have a search, in both subjects' languages.
+      const steps = item.how.join("\n");
+      for (const subject of ["Declarație semnată", "Signed declaration", "Înscriere confirmată", "Registration confirmed", "Copie club", "Club copy"]) {
+        expect(steps, subject).toContain(subject);
+      }
     }
   });
 

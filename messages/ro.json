@@ -1297,7 +1297,8 @@
             "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:\"Declarație semnată\" older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le."
+            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
+            "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },
         "botCheck": {
@@ -2125,6 +2126,7 @@
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "Confidențialitate",
     "privacyLinkShort": "GDPR",
+    "privacyLinkName": "Nota de confidențialitate (GDPR)",
     "termsLinkLabel": "Termeni de concurs",
     "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",
     "inForce": "Versiunea {version}, în vigoare din {date}"
@@ -2331,8 +2333,8 @@
     "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Tu completezi datele copilului și tu dai, în numele lui, acordurile de mai jos (lista publică, informațiile medicale). Emailul și telefonul pot fi ale tale. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
     "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
-    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, fără seria și numărul actului de identitate, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
-    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, fără seria și numărul actului de identitate, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
     "confidentialNote": "Confidențial. Nu se publică.",
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
@@ -2389,7 +2391,7 @@
       "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
-      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment și nu apar în copia clubului; nu păstrăm o copie a actului.",
+      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân doar primele două și ultimele două caractere); nu păstrăm o copie a actului.",
       "idDocumentPlaceholder": "BV 123456",
       "nextTitle": "Ce urmează",
       "nextConfirmed": [

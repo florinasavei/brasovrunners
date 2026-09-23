@@ -1297,7 +1297,8 @@
             "Delete the CSV and xlsx files downloaded for the event and the all-declarations PDF — from Downloads, from the bin, and from any email or chat you sent them through. If a list must be kept, cut the identity document column first.",
             "On declarations signed on paper, cross out or cover the identity document's series and number. The paper stays three years, then it is destroyed too.",
             "Destroy the emergency sheet and any other list printed for race day (shredder, or torn small).",
-            "In the club's Gmail: declaration copies older than three years are found with subject:\"Declarație semnată\" older_than:3y, and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them."
+            "In the club's Gmail: declaration copies older than three years are found with subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them.",
+            "In the same place, the confirmation notices sent to the club and the club copies of participants' emails, older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — select them all and delete them. The search carries both languages, so it finds the subject in either."
           ]
         },
         "botCheck": {
@@ -2125,6 +2126,7 @@
     "unavailable": "This document has not been published for this environment yet.",
     "privacyLinkLabel": "Privacy",
     "privacyLinkShort": "Privacy",
+    "privacyLinkName": "Privacy notice",
     "termsLinkLabel": "Racing TOS",
     "botCheckNotice": "The “I'm not a robot” check is run by Cloudflare, which sees your IP address and browser details for that purpose only.",
     "inForce": "Version {version}, in force since {date}"
@@ -2331,8 +2333,8 @@
     "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. You fill in the child's details and give the choices below (public list, health information) on their behalf. The email and phone may be yours. For an adult, leave this empty.",
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
-    "privacyBanner": "Nothing you write here appears on the site. The club uses it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, without your identity document's number, goes to the club's archive. We keep the registration for three years after the event.",
-    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth. The club uses your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, without your identity document's number, goes to the club's archive. We keep the registration for three years after the event.",
+    "privacyBanner": "Nothing you write here appears on the site. The club uses it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (only the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
+    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth. The club uses your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (only the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
@@ -2388,7 +2390,7 @@
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
-      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and never appear in the club's copy; we never keep a copy of the document.",
+      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (only the first two and last two characters remain); we never keep a copy of the document.",
       "idDocumentPlaceholder": "BV 123456",
       "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
       "nextTitle": "What happens next",
