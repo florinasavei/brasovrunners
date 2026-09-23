@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.46-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.46-2026-09-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.48-2026-09-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -120,7 +120,7 @@ sections and in `CHANGELOG.md`.
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
   feed of every published event (§107). Race week: countdown, "come to the desk with the QR"
   (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66).
-- The header lockup (§58); the kit-face wordmark on the homepage and nowhere else
+- The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
   dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph.
 

@@ -1754,6 +1754,7 @@
         "confirmationsTo": "Tell us when somebody confirms",
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
         "save": "Save",
+        "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies."
       },
@@ -1808,6 +1809,7 @@
         "customHelp": "Only for “Something else”: type what Mailgun shows under Account → Plan; leave empty what does not exist (both empty means no limit). The other plans take their numbers from the catalogue.",
         "note": "Note (why, until when)",
         "save": "Save the plan",
+        "readOnly": "The plan is the Administrator’s to change. The figures above are current for you too.",
         "saving": "Saving…",
         "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
         "unlimited": "no limit",
@@ -1827,6 +1829,7 @@
         "cc": "Copy – Cc (addresses separated by commas)",
         "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
         "save": "Save the recipients",
+        "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."

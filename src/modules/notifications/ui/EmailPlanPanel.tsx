@@ -15,6 +15,12 @@ type Props = {
   locale: Locale;
   plan: EmailPlanState;
   volume: EmailVolumeToday;
+  /**
+   * Whether the reader may change the plan (§291). The figures are for everyone who may open
+   * the page; the form is the Administrator's, and `updateEmailPlan` refuses anybody else — so
+   * without this the Organizer was shown a "Salvează planul" that could only answer FORBIDDEN.
+   */
+  mayEdit: boolean;
 };
 
 /**
@@ -23,7 +29,7 @@ type Props = {
  * post as ordinary fields, the numbers only mattering for `CUSTOM`. No JavaScript decides
  * anything here; the service validates and the audit row records who said what.
  */
-export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
+export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: Props) {
   const t = await getTranslations("Admin");
   const unlimited = t("emails.plan.unlimited");
   const ceiling = (value: number | null) => (value === null ? unlimited : value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB"));
@@ -59,6 +65,11 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
         </Typography>
       )}
 
+      {!mayEdit ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+          {t("emails.plan.readOnly")}
+        </Typography>
+      ) : (
       <Box component="form" action={updateEmailPlanAction} sx={{ mt: 1.5 }}>
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
@@ -116,6 +127,7 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
           </Box>
         </Stack>
       </Box>
+      )}
     </Panel>
   );
 }
