@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import MuiLink from "@mui/material/Link";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
@@ -30,6 +29,7 @@ import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-id
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import {
@@ -187,9 +187,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <form action={resendRegistrationEmailAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
-            <Button type="submit" variant="outlined" disabled={!canResend}>
+            <GlyphButton icon="resend" type="submit" variant="outlined" disabled={!canResend}>
               {tr("registrations.resend")}
-            </Button>
+            </GlyphButton>
           </form>
         )}
         {/* The reminder by hand (§81): confirmed, and the event still ahead. */}
@@ -198,9 +198,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <input type="hidden" name="messageType" value="EVENT_REMINDER" />
-            <Button type="submit" variant="outlined">
+            <GlyphButton icon="send" type="submit" variant="outlined">
               {tr("registrations.sendReminder")}
-            </Button>
+            </GlyphButton>
           </form>
         )}
       </Stack>
@@ -222,9 +222,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             <form action={confirmRegistrationNowAction}>
               {deskHidden}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
-                <Button type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
+                <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
                   {tr("desk.confirmHere")}
-                </Button>
+                </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
                   {tr("desk.fastTrackHelp")}
                 </Typography>
@@ -234,9 +234,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.status === "WAITLISTED" && (
             <form action={promoteRegistrationAction}>
               {deskHidden}
-              <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
                 {tr("desk.givePlace")}
-              </Button>
+              </GlyphButton>
             </form>
           )}
           {registration.status === "CONFIRMED" && (
@@ -285,9 +285,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                           slotProps={{ htmlInput: { min: 1, max: 99999 } }}
                           sx={{ width: 140 }}
                         />
-                        <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                        <GlyphButton icon="number" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
                           {tr("desk.saveBib")}
-                        </Button>
+                        </GlyphButton>
                       </Stack>
                       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                         {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
@@ -306,28 +306,29 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     there is one renderer, one authorization check and one design, and a
                     volunteer who has to reprint a single number does not download two hundred.
                   */}
-                  <Button
-                    component="a"
+                  <GlyphButton
+                    icon="print"
                     href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
                     variant="outlined"
                     sx={{ minHeight: 44 }}
                   >
                     {tr("registrations.downloadBib")}
-                  </Button>
+                  </GlyphButton>
                 </Stack>
               )}
               <form action={checkInAction}>
                 {deskHidden}
                 <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
-                  <Button
+                  <GlyphButton
+                    icon={registration.checkedInAt ? "undo" : "checkIn"}
                     type="submit"
                     variant={registration.checkedInAt ? "outlined" : "contained"}
                     color={registration.checkedInAt ? "inherit" : "success"}
                     sx={{ minHeight: 44 }}
                   >
                     {registration.checkedInAt ? tr("desk.undoCheckIn") : tr("desk.checkIn")}
-                  </Button>
+                  </GlyphButton>
                   <Typography variant="body2" color="text.secondary">
                     {registration.checkedInAt
                       ? tr("registrations.checkedIn", {
@@ -398,9 +399,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               required
               sx={{ flex: 1 }}
             />
-            <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+            <GlyphButton icon="rename" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
               {tr("registrations.saveName")}
-            </Button>
+            </GlyphButton>
           </Stack>
         </form>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -433,6 +434,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               />
               <ConfirmSubmitButton
                 label={tr("registrations.cancelAction")}
+                icon="cancel"
                 title={tr("confirm.cancelRegistrationTitle")}
                 // The printed bib is named before the press (§311), not discovered in the pile.
                 body={
@@ -483,9 +485,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {tr("registrations.deleteConfirm")}
                 </CheckboxField>
                 <Box>
-                  <Button type="submit" color="error" variant="contained">
+                  <GlyphButton icon="erase" type="submit" color="error" variant="contained">
                     {tr("registrations.deleteAction")}
-                  </Button>
+                  </GlyphButton>
                 </Box>
               </Stack>
             </form>

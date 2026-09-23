@@ -1,5 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import type { JourneyStepKey } from "@/modules/registrations/domain/journey";
+import type { ActionIconName } from "@/shared/ui/action-icons";
 import type { EditorialStatus, StaffRole } from "./roles";
 
 /**
@@ -34,6 +35,18 @@ export const EDITORIAL_TRANSITION_LABEL: Record<EditorialStatus, string> = {
   IN_REVIEW: "Trimite spre verificare",
   PUBLISHED: "Publică",
   ARCHIVED: "Arhivează",
+};
+
+/**
+ * The glyph beside each of those words (§170), by name (`shared/ui/action-icons.ts`) — here,
+ * beside the words, because the event, the album and the standing page all offer the same four
+ * transitions, and until now only the event's wore a glyph (§NNN).
+ */
+export const EDITORIAL_TRANSITION_ICON: Record<EditorialStatus, ActionIconName> = {
+  DRAFT: "draft",
+  IN_REVIEW: "review",
+  PUBLISHED: "publish",
+  ARCHIVED: "archive",
 };
 
 /** The names the club uses (§103): what each role is for, not a rank. */

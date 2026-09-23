@@ -120,7 +120,7 @@ export default async function NeonPlanPanel({ locale, plan, block, mayEdit }: Pr
               {t("tasks.neonPlan.december")}
             </Typography>
             <Box>
-              <SubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} />
+              <SubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} icon="save" />
             </Box>
           </Stack>
         </Box>

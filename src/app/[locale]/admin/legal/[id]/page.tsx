@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -24,6 +23,7 @@ import { approveLegalVersionAction, updateLegalVersionAction } from "../actions"
 import { canManageStaff, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -127,16 +127,16 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
         {document.translations.length > 0 && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, pt: 1 }}>
             {document.translations.map((translation) => (
-              <Button
+              <GlyphButton
                 key={translation.locale}
-                component="a"
+                icon="pdf"
                 href={`/api/admin/legal/${document.id}/pdf?locale=${translation.locale}`}
                 variant="outlined"
                 size="small"
                 sx={{ minHeight: 44 }}
               >
                 {t("legal.downloadPdf", { locale: translation.locale.toUpperCase() })}
-              </Button>
+              </GlyphButton>
             ))}
           </Stack>
         )}
@@ -188,9 +188,9 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
                   {t("legal.approveConfirm")}
                 </CheckboxField>
                 <Box>
-                  <Button type="submit" color="warning" variant="contained">
+                  <GlyphButton icon="approve" type="submit" color="warning" variant="contained">
                     {t("legal.approveAction")}
-                  </Button>
+                  </GlyphButton>
                 </Box>
               </Stack>
             </form>
@@ -213,7 +213,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
           <Alert severity="info">{t("legal.readOnlyNotice")}</Alert>
           {mayWrite && (
             <Box>
-              <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} variant="contained">
+              <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} icon="add" variant="contained">
                 {t("legal.nextVersion")}
               </ButtonLink>
             </Box>

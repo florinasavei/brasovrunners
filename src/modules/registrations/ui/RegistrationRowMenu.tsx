@@ -1,13 +1,6 @@
 "use client";
 
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
-import UndoIcon from "@mui/icons-material/Undo";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import Divider from "@mui/material/Divider";
@@ -21,6 +14,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
+import { ACTION_ICONS, type ActionIconName } from "@/shared/ui/action-icons";
 
 /**
  * A registration's verbs behind "⋮" (`DECISIONS.md` §178).
@@ -39,28 +33,13 @@ import { useState } from "react";
  * `requestSubmit()` on the one that was chosen. Nothing about authorization lives here; what
  * lives here is which form to post and whether to ask first.
  */
-export type RegistrationMenuIcon =
-  | "open"
-  | "resend"
-  | "confirm"
-  | "place"
-  | "checkIn"
-  | "undo"
-  | "cancel"
-  | "erase";
-
-const ICONS: Record<RegistrationMenuIcon, typeof MoreVertIcon> = {
-  open: VisibilityIcon,
-  resend: PersonAddAlt1Icon,
-  confirm: CheckCircleIcon,
-  place: HowToRegIcon,
-  checkIn: HowToRegIcon,
-  undo: UndoIcon,
-  cancel: RemoveCircleIcon,
-  // Not the same glyph as cancel, and deliberately so: a menu where "anulează" and "șterge" wear
-  // the same icon in the same colour is a menu somebody picks the wrong line out of.
-  erase: DeleteForeverIcon,
-};
+/*
+  The glyphs are the one registry's (§NNN): the desk's "Dă-i un loc" and this menu's wear the
+  same seat, the bib's printed mark the same double tick as the batch button on the bibs panel.
+  Cancel and erase stay different shapes there, and deliberately so: a menu where "anulează" and
+  "șterge" wear the same icon in the same colour is a menu somebody picks the wrong line out of.
+*/
+export type RegistrationMenuIcon = ActionIconName;
 
 /**
  * Drawn above the item, with a gap, to break the run of verbs (§180).
@@ -120,7 +99,7 @@ export default function RegistrationRowMenu({
           already, which is exactly what is wanted.
         */}
         {items.flatMap((item) => {
-          const Icon = ICONS[item.icon];
+          const Icon = ACTION_ICONS[item.icon];
           const tint = item.color === "error" ? { color: "error.main" } : undefined;
           const rule = item.separated ? <Divider key={`${item.label}-rule`} sx={{ my: 0.5 }} /> : null;
 

@@ -7,6 +7,10 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+
+// A client island already, so it makes the element itself; the glyph is the registry's (§NNN).
+const UploadGlyph = ACTION_ICONS.upload;
 
 /**
  * Photos in, from a phone, without the phone's file sizes.
@@ -81,7 +85,7 @@ export default function PhotoUploader({
           if (event.target.files && event.target.files.length > 0) void upload(event.target.files);
         }}
       />
-      <Button component="label" htmlFor="photo-upload" variant="contained" disabled={busy} sx={{ minHeight: 44 }}>
+      <Button component="label" htmlFor="photo-upload" variant="contained" disabled={busy} startIcon={<UploadGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
         {labels.choose}
       </Button>
       {progress && (

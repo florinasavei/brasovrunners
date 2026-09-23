@@ -1,16 +1,6 @@
 "use client";
 
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import EditIcon from "@mui/icons-material/Edit";
-import MailIcon from "@mui/icons-material/Mail";
-import PersonOffIcon from "@mui/icons-material/PersonOff";
-import PublicIcon from "@mui/icons-material/Public";
-import PublicOffIcon from "@mui/icons-material/PublicOff";
-import StarIcon from "@mui/icons-material/Star";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -23,32 +13,14 @@ import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
+import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
-/** The glyph before a verb (the owner: "these should also have icons"), by name — the menu is a client island and makes the element. */
-export type RowMenuIcon =
-  | "preview"
-  | "registrations"
-  | "duplicate"
-  | "delete"
-  | "edit"
-  | "publish"
-  | "unpublish"
-  | "cover"
-  | "invite"
-  | "revoke";
-
-const ICONS: Record<RowMenuIcon, typeof MoreVertIcon> = {
-  preview: VisibilityIcon,
-  registrations: HowToRegIcon,
-  duplicate: ContentCopyIcon,
-  delete: DeleteIcon,
-  edit: EditIcon,
-  publish: PublicIcon,
-  unpublish: PublicOffIcon,
-  cover: StarIcon,
-  invite: MailIcon,
-  revoke: PersonOffIcon,
-};
+/**
+ * The glyph before a verb (the owner: "these should also have icons"), by name — the menu is a
+ * client island and makes the element. The names are the one registry's (§NNN), so a verb in
+ * this menu wears the glyph the same verb wears on a button anywhere else.
+ */
+export type RowMenuIcon = ActionIconName;
 
 export type RowMenuItem =
   /**
@@ -97,7 +69,7 @@ export default function RowMenu({
   const [pending, setPending] = useState<Extract<RowMenuItem, { kind: "submit" }> | null>(null);
   const glyph = (name: RowMenuIcon | undefined) => {
     if (!name) return null;
-    const Icon = ICONS[name];
+    const Icon = ACTION_ICONS[name];
     return (
       <ListItemIcon sx={{ color: "inherit", minWidth: 32 }}>
         <Icon fontSize="small" />

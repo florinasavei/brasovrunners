@@ -1,6 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -175,9 +175,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             </Box>
 
             <Box>
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="addPerson" type="submit" variant="contained" sx={{ minHeight: 44 }}>
                 {t("registrations.create")}
-              </Button>
+              </GlyphButton>
             </Box>
           </Stack>
         </form>

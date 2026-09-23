@@ -124,7 +124,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
             (§207, §208). The action refuses either way — this keeps the button off a screen
             where pressing it could only fail. */}
         {canEditTexts(actor.role) && (
-        <ButtonLink href="/admin/pages/new" variant="contained" sx={{ minHeight: 44 }}>
+        <ButtonLink href="/admin/pages/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
           {t("pages.create")}
         </ButtonLink>
         )}

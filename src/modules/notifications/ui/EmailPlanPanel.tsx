@@ -147,7 +147,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
           </Typography>
           <TextField name="note" label={t("emails.plan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
           <Box>
-            <SubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} />
+            <SubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} icon="save" />
           </Box>
         </Stack>
       </Box>

@@ -66,6 +66,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit 
               label={t("outbox.sendNow")}
               pendingLabel={t("outbox.sending")}
               ariaLabel={t("outbox.sendNowLong")}
+              icon="send"
               variant="contained"
             />
           </Box>

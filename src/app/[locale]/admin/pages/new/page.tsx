@@ -1,6 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -47,9 +47,9 @@ export default async function NewPagePage({ params, searchParams }: Props) {
           <input type="hidden" name="uiLocale" value={locale} />
           <PageFieldsForm navOrder={0} translations={[]} slugLocked={false} />
           <Box>
-            <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
+            <GlyphButton icon="add" type="submit" variant="contained" sx={{ minHeight: 44 }}>
               {t("pages.create")}
-            </Button>
+            </GlyphButton>
           </Box>
         </Stack>
       </form>

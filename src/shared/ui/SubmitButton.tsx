@@ -5,14 +5,27 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
+
+/**
+ * The glyph's size in CSS pixels, per button size: what MUI's own start-icon slot gives an icon
+ * (18 / 20 / 22), so the running figure that replaces the verb's glyph while the request is in
+ * flight is exactly as big as the glyph it replaced and the label does not move.
+ */
+const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;
 
 type Props = {
   label: string;
   /** What the button says while the server is working. It is the whole reason this exists. */
   pendingLabel: string;
+  /**
+   * The verb's glyph before the label, by name (`action-icons.ts`, §NNN). While the request is
+   * in flight it gives way to the running figure, which is the one thing the button already did.
+   */
+  icon?: ActionIconName;
   /**
    * When given, the button watches its form and, while any required field is still empty or
    * invalid, dims itself and shows this sentence beneath. It stays pressable: a press then runs
@@ -97,6 +110,7 @@ type Props = {
 export default function SubmitButton({
   label,
   pendingLabel,
+  icon,
   incompleteHint,
   awaitsBotCheck,
   botCheckHint,
@@ -234,6 +248,7 @@ export default function SubmitButton({
   }, [pending]);
 
   const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
+  const Glyph = icon ? ACTION_ICONS[icon] : null;
 
   return (
     <Box
@@ -278,7 +293,15 @@ export default function SubmitButton({
         // name of its own: the label beside it has already changed to `pendingLabel` and
         // `aria-busy` is set, so the figure is the third way of saying it rather than the
         // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
-        startIcon={pending ? <RunnerLoader size={18} color="inherit" /> : undefined}
+        // At rest the verb's own glyph, if it has one (§NNN) — on the public send buttons that
+        // is the same runner, standing, so a press is the figure setting off.
+        startIcon={
+          pending ? (
+            <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
+          ) : Glyph ? (
+            <Glyph fontSize="small" />
+          ) : undefined
+        }
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.

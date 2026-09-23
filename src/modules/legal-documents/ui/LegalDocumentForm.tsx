@@ -1,12 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { bodyToText } from "../domain/body-text";
 import LegalBodyEditor from "./LegalBodyEditor";
@@ -126,9 +126,9 @@ export default async function LegalDocumentForm({
         ))}
 
         <Box>
-          <Button type="submit" variant="contained">
+          <GlyphButton icon="save" type="submit" variant="contained">
             {submitLabel}
-          </Button>
+          </GlyphButton>
         </Box>
       </Stack>
     </form>

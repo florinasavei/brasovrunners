@@ -13,9 +13,10 @@ import ButtonLink from "@/shared/ui/ButtonLink";
  *
  * A Server Component with no pathname lookup: `AdminTabs` is a client island because a layout
  * cannot know which page it wraps, but there are exactly two pages here and each one knows
- * which it is, so it says so. No icons — an icon element passed from a Server Component to a
- * client one is the defect `shared/ui/action-icons.ts` documents, and a two-word label needs
- * no glyph.
+ * which it is, so it says so. Each wears its glyph by name (§NNN, amending §183's "no icons",
+ * which was written when the only way to give one was the element-valued prop
+ * `shared/ui/action-icons.ts` forbids): the albums the Galerie tab's own picture, the bucket's
+ * pictures a single image.
  */
 export default async function GallerySubNav({ active }: { active: "albums" | "pictures" }) {
   const t = await getTranslations("Admin");
@@ -24,6 +25,7 @@ export default async function GallerySubNav({ active }: { active: "albums" | "pi
     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
       <ButtonLink
         href="/admin/gallery"
+        icon="album"
         variant={active === "albums" ? "contained" : "outlined"}
         size="small"
         sx={{ minHeight: 44 }}
@@ -32,6 +34,7 @@ export default async function GallerySubNav({ active }: { active: "albums" | "pi
       </ButtonLink>
       <ButtonLink
         href="/admin/gallery/pictures"
+        icon="picture"
         variant={active === "pictures" ? "contained" : "outlined"}
         size="small"
         sx={{ minHeight: 44 }}

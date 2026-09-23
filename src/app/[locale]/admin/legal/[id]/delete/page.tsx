@@ -1,6 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -197,9 +197,9 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
               />
               <Box>
-                <Button type="submit" color="error" variant="contained" sx={{ minHeight: 44 }}>
+                <GlyphButton icon="erase" type="submit" color="error" variant="contained" sx={{ minHeight: 44 }}>
                   {t("legal.erase.action")}
-                </Button>
+                </GlyphButton>
               </Box>
             </Stack>
           </Box>

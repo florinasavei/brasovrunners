@@ -98,7 +98,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
-            <SubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} />
+            <SubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} icon="save" />
           </Box>
         </Stack>
       </Box>

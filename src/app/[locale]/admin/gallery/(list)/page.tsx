@@ -92,7 +92,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("gallery.title")}
         </Typography>
-        <ButtonLink href="/admin/gallery/new" variant="contained" sx={{ minHeight: 44 }}>
+        <ButtonLink href="/admin/gallery/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
           {t("gallery.create")}
         </ButtonLink>
       </Stack>

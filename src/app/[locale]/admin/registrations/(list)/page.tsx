@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
@@ -40,6 +39,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import Panel from "@/shared/ui/Panel";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -488,19 +488,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <SubmitButton
                   label={t("registrations.eraseAction")}
                   pendingLabel={t("registrations.erasePending")}
+                  icon="erase"
                   color="error"
                   variant="contained"
                 />
                 {/* A link, not a button: leaving the panel is a navigation, and it must work
                     for the same reader the panel itself was built for. */}
-                <Button
-                  component="a"
+                <GlyphButton
+                  icon="dismiss"
                   href={buildListHref(basePath, listParams, { erase: undefined, page: current.page })}
                   variant="text"
                   sx={TAP_TARGET}
                 >
                   {t("confirm.cancel")}
-                </Button>
+                </GlyphButton>
               </Stack>
             </Stack>
           </Box>
@@ -526,15 +527,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           {/* BR-REQ-037-05: somebody asked at a run, and the club types it in for them. */}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="addPerson"
             href={`${getPathname({ locale, href: "/admin/registrations/new" })}${eventId ? `?eventId=${eventId}` : ""}`}
             variant="contained"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.new")}
-          </Button>
+          </GlyphButton>
           {/*
             The export takes the filters and not the page: a spreadsheet of whichever 25 rows
             happened to be on screen would be a quietly wrong file (§15.10). Set the event
@@ -544,24 +545,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             wide enough to read, dates that sort as dates. The comma-separated file stays for
             whoever is feeding it to something else.
           */}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="spreadsheet"
             href={`/api/admin/registrations/export?format=xlsx${listQueryString ? `&${listQueryString}` : ""}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.exportExcel")}
-          </Button>
-          <Button
-            component="a"
+          </GlyphButton>
+          <GlyphButton
+            icon="download"
             href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
             variant="text"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.export")}
-          </Button>
+          </GlyphButton>
         </Stack>
       </Stack>
 
@@ -623,6 +624,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           </Alert>
         )}
+        {/*
+          Each of the four wears its verb (§NNN; the owner: "I also need more icons, including on
+          the Printing BID stuff"): the printer on the batch that goes to it, the PDF on the whole
+          sheet, the double tick on "they are printed" and the struck-through tick on taking that
+          back — the same two glyphs the row's "⋮" uses for one bib.
+        */}
         {bibs.total > 0 && (
         <Stack
           direction="row"
@@ -630,25 +637,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
         >
           {bibs.unprinted > 0 && (
-            <Button
-              component="a"
+            <GlyphButton
+              icon="print"
               href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}&only=unprinted`}
               variant="contained"
               size="small"
               sx={TAP_TARGET}
             >
               {t("registrations.bibsDownloadUnprinted", { count: bibs.unprinted })}
-            </Button>
+            </GlyphButton>
           )}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="pdf"
             href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.bibsDownloadAll", { count: bibs.total })}
-          </Button>
+          </GlyphButton>
           {/* The downloads above are reads and belong to the Organizer too (§289); saying a
               sheet came out of the printer is a write, so it stays the Administrator's. */}
           {mayManage && bibs.unprinted > 0 && (
@@ -660,6 +667,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <SubmitButton
                 label={t("registrations.bibsMarkPrinted", { count: bibs.unprinted })}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                icon="markPrinted"
                 variant="text"
                 compact
               />
@@ -674,6 +682,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <SubmitButton
                 label={t("registrations.bibsMarkAllUnprinted")}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                icon="markUnprinted"
                 variant="text"
                 color="inherit"
                 compact
@@ -781,6 +790,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("outbox.sendNow")}
               pendingLabel={t("outbox.sending")}
               ariaLabel={t("outbox.sendNowLong")}
+              icon="send"
               variant="contained"
             />
           </Box>
@@ -868,13 +878,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ))}
           </TextField>
           <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
-            <Button type="submit" variant="contained" sx={TAP_TARGET}>
+            <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
               {t("registrations.filter")}
-            </Button>
+            </GlyphButton>
             {hasFilters && (
-              <Button component="a" href={basePath} variant="text" sx={TAP_TARGET}>
+              <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
                 {t("list.clear")}
-              </Button>
+              </GlyphButton>
             )}
           </Stack>
         </Stack>
@@ -944,6 +954,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
+                  icon="resend"
                   variant="outlined"
                   // One per row, in a narrow column: the 44-pixel floor and a wrapping label
                   // together made every row seventy pixels tall in a list whose whole purpose
@@ -975,7 +986,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               const items: RegistrationMenuItem[] = [
                 {
                   kind: "link",
-                  icon: "open",
+                  icon: "preview",
                   label: t("registrations.openRow"),
                   href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
                 },
@@ -1005,7 +1016,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("markBibPrinted")) {
                 items.push({
                   kind: "submit",
-                  icon: "confirm",
+                  icon: "markPrinted",
                   label: t("registrations.bibMarkPrinted"),
                   formId: `bib-printed-${row.id}`,
                 });
@@ -1013,7 +1024,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("unmarkBibPrinted")) {
                 items.push({
                   kind: "submit",
-                  icon: "undo",
+                  icon: "markUnprinted",
                   label: t("registrations.bibMarkUnprinted"),
                   formId: `bib-printed-${row.id}`,
                 });
@@ -1155,6 +1166,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <SubmitButton
                   label={t("registrations.bulkCancelAction")}
                   pendingLabel={t("registrations.bulkCancelPending")}
+                  icon="cancel"
                   color="warning"
                   variant="contained"
                 />
@@ -1190,6 +1202,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   <ConfirmSubmitButton
                     formAction={bulkDeleteRegistrationsAction}
                     label={t("registrations.bulkEraseAction")}
+                    icon="erase"
                     title={t("confirm.bulkEraseTitle")}
                     body={t("confirm.bulkEraseBody")}
                     confirmLabel={t("registrations.bulkEraseAction")}

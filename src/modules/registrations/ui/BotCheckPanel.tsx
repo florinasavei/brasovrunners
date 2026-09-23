@@ -75,6 +75,7 @@ export default async function BotCheckPanel({
           <SubmitButton
             label={t(state.honeypot ? "botCheck.honeypot.turnOff" : "botCheck.honeypot.turnOn")}
             pendingLabel={t("botCheck.saving")}
+            icon={state.honeypot ? "turnOff" : "turnOn"}
             color={state.honeypot ? "warning" : "primary"}
             variant={state.honeypot ? "outlined" : "contained"}
           />
@@ -90,6 +91,7 @@ export default async function BotCheckPanel({
             <SubmitButton
               label={t(state.enabled ? "botCheck.turnOff" : "botCheck.turnOn")}
               pendingLabel={t("botCheck.saving")}
+              icon={state.enabled ? "turnOff" : "turnOn"}
               color={state.enabled ? "warning" : "primary"}
               variant={state.enabled ? "outlined" : "contained"}
             />

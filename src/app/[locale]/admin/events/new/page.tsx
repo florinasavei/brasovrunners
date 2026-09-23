@@ -123,7 +123,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           <EventFieldsForm event={null} declarations={declarations} />
 
           <Box>
-            <SubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} size="medium" />
+            <SubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
           </Box>
         </Stack>
       </form>

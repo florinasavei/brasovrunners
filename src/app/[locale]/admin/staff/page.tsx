@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -19,6 +18,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import RowMenu from "@/shared/ui/RowMenu";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
@@ -207,9 +207,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
               ))}
             </TextField>
             <Box>
-              <Button type="submit" variant="contained">
+              <GlyphButton icon="addPerson" type="submit" variant="contained">
                 {t("staff.invite")}
-              </Button>
+              </GlyphButton>
             </Box>
           </Stack>
         </form>
@@ -300,6 +300,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   <SubmitButton
                     label={t("staff.changeRole")}
                     pendingLabel={t("staff.changeRolePending")}
+                    icon="role"
                     variant="outlined"
                   />
                 </Stack>

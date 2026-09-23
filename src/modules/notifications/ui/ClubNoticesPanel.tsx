@@ -138,7 +138,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
-            <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} />
+            <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} icon="save" />
           </Box>
         </Stack>
       </Box>

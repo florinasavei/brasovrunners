@@ -305,7 +305,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
                 <Box>
-                  <SubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} variant="contained" size="medium" />
+                  <SubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
             </form>
@@ -338,7 +338,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
       {mayCreate && (
         <Box>
-          <ButtonLink href="/admin/legal/new" variant="contained" sx={{ minHeight: 44 }}>
+          <ButtonLink href="/admin/legal/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
           </ButtonLink>
           {/* The platform's own texts, complete but for the club's four facts (§95). */}
@@ -447,6 +447,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       */}
                       <ConfirmSubmitButton
                         label={t("legal.withdraw")}
+                        icon="unpublish"
                         title={t("legal.withdrawTitle")}
                         body={t("legal.withdrawBody")}
                         confirmLabel={t("legal.withdraw")}
@@ -478,6 +479,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 <input type="hidden" name="versionId" value={version.id} />
                 <ConfirmSubmitButton
                   label={t("legal.delete")}
+                  icon="delete"
                   title={t("legal.deleteTitle")}
                   body={t("legal.deleteBody")}
                   confirmLabel={t("legal.delete")}

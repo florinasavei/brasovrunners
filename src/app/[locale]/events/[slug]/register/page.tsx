@@ -4,7 +4,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -47,6 +46,7 @@ import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
@@ -447,9 +447,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               it — one refusal in the server log and no second request at all.
             */}
             {tooFast && (
-              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, mb: 2 }}>
+              <GlyphButton icon="runner" type="submit" variant="contained" sx={{ ...TAP_TARGET, mb: 2 }}>
                 {t("errors.tooFastResend")}
-              </Button>
+              </GlyphButton>
             )}
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
@@ -1021,6 +1021,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
+                // The club's runner (§NNN; the owner: "butoanele de trimitere înscriere și contact
+                // trebuie să aibă și iconița cu un alergător") — standing at rest, running while
+                // the form is in flight. Decoration: the label is the button's name.
+                icon="runner"
                 incompleteHint={t("incompleteHint")}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the
