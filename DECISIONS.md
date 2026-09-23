@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.57-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.58-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.57-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.58-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12796,3 +12796,17 @@ Baseline `BR-V1.56-2026-09-23`.
 Baseline `BR-V1.56-2026-09-23`.
 
 Baseline `BR-V1.57-2026-09-23`.
+
+## 307. Changed — QA sends through the club's domain with its own key, and its notice says the mail is real (2026-09-23)
+
+**Context.** §163 let a QA deployment address anyone through the allowlist's star, and QA's notice (the one §37's two waiting testers produced) kept saying "only the addresses the club authorized receive mail", because QA still sent through Mailgun's US sandbox, which delivers to five confirmed recipients and nobody else. Amalia's second registration on 2026-09-23 made the owner say it outright: "we need to drop that allowlist, and both us and the user needs to know he is trying to re-register". The application's allowlist was already the star; the gate that remained was the provider's.
+
+**Decision.** QA sends through the club's verified domain, `mail.<club domain>` in Mailgun's EU region, with **its own sending key** (`brasovrunners-qa`), not production's: a key revoked on one environment must not stop the other. The key lives on the QA Vercel project as `MAILGUN_API_KEY` and in the owner's `.env.local` as `MAILGUN_API_KEY_QA`, never in the repository. `EMAIL_DELIVERY_MODE` stays `allowlist` and the list keeps its star (§163): `live` outside production is still refused at startup, and every QA subject still carries `[QA] ` (`QA_SUBJECT_PREFIX`).
+
+**The notice follows the list.** `emailDeliveryNotice` now reads `EMAIL_ALLOWLIST` as well as the mode. With the star it returns `deliveryNotice.everyone` — "emailurile pleacă de aici cu adevărat, marcate „[QA]” în subiect — dar înscrierea de aici nu este una reală și nu îți ține un loc la cursă" — because telling a tester they will receive nothing while the message is already in their inbox is §37's failure in reverse. A list of named addresses keeps `deliveryNotice.allowlist`, which is still exactly true for it. Capture and live are unchanged.
+
+**What it costs, and what it does not cover.** QA and production now share one sending domain, so they share its plan's daily allowance (the Free plan's hundred a day, §100): a QA rehearsal that sends thirty messages leaves seventy for real runners that day. The domain's webhooks point at production, so a bounce of a QA message is recorded on production's outbox, not QA's; a rehearsal that needs to see a bounce on QA does not get one. Neither is worth a second domain while the club is on Free; both are named here so nobody is surprised.
+
+**Reverses nothing.** §37 (sandbox first, before the domain existed) described the order of work and is complete; §163's star is unchanged.
+
+Baseline `BR-V1.58-2026-09-23`.
