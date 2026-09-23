@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
@@ -41,14 +40,19 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import Panel from "@/shared/ui/Panel";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { NeverKeptField } from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import {
-  cancelRegistrationAction,
+  cancelRegistrationFromRowAction,
   checkInAction,
   confirmRegistrationNowAction,
   eraseRegistrationFromListAction,
@@ -513,7 +517,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1, color: "error.main" }}>
             {t("registrations.eraseTitle", { name: eraseTarget.registeredName })}
           </Typography>
-          <Box component="form" action={eraseRegistrationFromListAction}>
+          {/* A refusal — the name mistyped — keeps the panel open with the reason still in its
+              box; the typed name is asked again, because it is the guard (§180, §315). */}
+          <ActionForm
+            action={eraseRegistrationFromListAction}
+            messages={await refusalMessages(
+              { reason: t("registrations.deleteReason"), confirmName: t("registrations.eraseTypeName") },
+              { confirmation: true },
+            )}
+            data-testid="erase-from-list-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={eraseTarget.id} />
             {/* Only the query, never a path: `actions.ts` rebuilds the path from `getPathname`,
@@ -523,14 +536,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.deleteHelp")}
               </Typography>
-              <TextField
+              <RecallField
                 name="reason"
                 label={t("registrations.deleteReason")}
                 required
                 size="small"
+                slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ maxWidth: 480 }}
               />
-              <TextField
+              {/* Never a `RecallField`: the typed name is not kept. `NeverKeptField` still
+                  carries the id the summary's "check this field" link points at (§47). */}
+              <NeverKeptField
                 name="confirmName"
                 label={t("registrations.eraseTypeName")}
                 helperText={t("registrations.eraseTypeNameHelp", { name: eraseTarget.registeredName })}
@@ -540,25 +556,27 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 sx={{ maxWidth: 480 }}
               />
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("registrations.eraseAction")}
                   pendingLabel={t("registrations.erasePending")}
+                  icon="erase"
+                  incompleteHintNamed={t("forms.incompleteFirst")}
                   color="error"
                   variant="contained"
                 />
                 {/* A link, not a button: leaving the panel is a navigation, and it must work
                     for the same reader the panel itself was built for. */}
-                <Button
-                  component="a"
+                <GlyphButton
+                  icon="dismiss"
                   href={buildListHref(basePath, listParams, { erase: undefined, page: current.page })}
                   variant="text"
                   sx={TAP_TARGET}
                 >
                   {t("confirm.cancel")}
-                </Button>
+                </GlyphButton>
               </Stack>
             </Stack>
-          </Box>
+          </ActionForm>
         </Box>
       )}
 
@@ -581,15 +599,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           {/* BR-REQ-037-05: somebody asked at a run, and the club types it in for them. */}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="addPerson"
             href={`${getPathname({ locale, href: "/admin/registrations/new" })}${eventId ? `?eventId=${eventId}` : ""}`}
             variant="contained"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.new")}
-          </Button>
+          </GlyphButton>
           {/*
             The export takes the filters and not the page: a spreadsheet of whichever 25 rows
             happened to be on screen would be a quietly wrong file (§15.10). Set the event
@@ -599,24 +617,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             wide enough to read, dates that sort as dates. The comma-separated file stays for
             whoever is feeding it to something else.
           */}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="spreadsheet"
             href={`/api/admin/registrations/export?format=xlsx${exportQueryString ? `&${exportQueryString}` : ""}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.exportExcel")}
-          </Button>
-          <Button
-            component="a"
+          </GlyphButton>
+          <GlyphButton
+            icon="download"
             href={`/api/admin/registrations/export${exportQueryString ? `?${exportQueryString}` : ""}`}
             variant="text"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.export")}
-          </Button>
+          </GlyphButton>
         </Stack>
       </Stack>
 
@@ -678,6 +696,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           </Alert>
         )}
+        {/*
+          Each of the four wears its verb (§318; the owner: "I also need more icons, including on
+          the Printing BID stuff"): the printer on the batch that goes to it, the PDF on the whole
+          sheet, the double tick on "they are printed" and the struck-through tick on taking that
+          back — the same two glyphs the row's "⋮" uses for one bib.
+        */}
         {bibs.total > 0 && (
         <Stack
           direction="row"
@@ -685,25 +709,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
         >
           {bibs.unprinted > 0 && (
-            <Button
-              component="a"
+            <GlyphButton
+              icon="print"
               href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}&only=unprinted`}
               variant="contained"
               size="small"
               sx={TAP_TARGET}
             >
               {t("registrations.bibsDownloadUnprinted", { count: bibs.unprinted })}
-            </Button>
+            </GlyphButton>
           )}
-          <Button
-            component="a"
+          <GlyphButton
+            icon="pdf"
             href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
           >
             {t("registrations.bibsDownloadAll", { count: bibs.total })}
-          </Button>
+          </GlyphButton>
           {/* The downloads above are reads and belong to the Organizer too (§289); saying a
               sheet came out of the printer is a write, so it stays the Administrator's. */}
           {mayManage && bibs.unprinted > 0 && (
@@ -712,9 +736,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="only" value="unprinted" />
               <input type="hidden" name="listQuery" value={listQueryString} />
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("registrations.bibsMarkPrinted", { count: bibs.unprinted })}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                icon="markPrinted"
                 variant="text"
                 compact
               />
@@ -726,9 +751,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="printed" value="0" />
               <input type="hidden" name="listQuery" value={listQueryString} />
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("registrations.bibsMarkAllUnprinted")}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                icon="markUnprinted"
                 variant="text"
                 color="inherit"
                 compact
@@ -832,10 +858,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Box component="form" action={sendOutboxNowAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="listQuery" value={listQueryString} />
-            <SubmitButton
+            <GlyphSubmitButton
               label={t("outbox.sendNow")}
               pendingLabel={t("outbox.sending")}
               ariaLabel={t("outbox.sendNowLong")}
+              icon="send"
               variant="contained"
             />
           </Box>
@@ -939,13 +966,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ))}
           </TextField>
           <Stack direction="row" spacing={1} sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
-            <Button type="submit" variant="contained" sx={TAP_TARGET}>
+            <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
               {t("registrations.filter")}
-            </Button>
+            </GlyphButton>
             {hasFilters && (
-              <Button component="a" href={basePath} variant="text" sx={TAP_TARGET}>
+              <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
                 {t("list.clear")}
-              </Button>
+              </GlyphButton>
             )}
           </Stack>
         </Stack>
@@ -1019,6 +1046,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Box component="form" action={resendRegistrationEmailAction}>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                {/*
+                  No glyph here, unlike the registration's own full-size "Retrimite" (§318): on
+                  a desktop the envelope made this button 24 pixels wider (84 → 108) and the
+                  actions column with it (244 → 268), in a table already wider than a 1280-pixel
+                  screen. The column was narrowed so eighty rows stay scannable, and a picture
+                  of a verb the label already says is not worth undoing that.
+                */}
                 <SubmitButton
                   label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
@@ -1054,7 +1088,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               const items: RegistrationMenuItem[] = [
                 {
                   kind: "link",
-                  icon: "open",
+                  icon: "preview",
                   label: t("registrations.openRow"),
                   href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
                 },
@@ -1084,7 +1118,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("markBibPrinted")) {
                 items.push({
                   kind: "submit",
-                  icon: "confirm",
+                  icon: "markPrinted",
                   label: t("registrations.bibMarkPrinted"),
                   formId: `bib-printed-${row.id}`,
                 });
@@ -1092,7 +1126,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               if (verbs.includes("unmarkBibPrinted")) {
                 items.push({
                   kind: "submit",
-                  icon: "undo",
+                  icon: "markUnprinted",
                   label: t("registrations.bibMarkUnprinted"),
                   formId: `bib-printed-${row.id}`,
                 });
@@ -1153,7 +1187,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     </Box>
                   )}
                   {verbs.includes("cancel") && (
-                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationAction} sx={{ display: "none" }}>
+                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationFromRowAction} sx={{ display: "none" }}>
                       {hidden}
                     </Box>
                   )}
@@ -1208,6 +1242,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Typography component="summary" variant="body2">
             {t("registrations.bulkCancelTitle")}
           </Typography>
+          {/* A plain form, not an `ActionForm` (§315): its selection is the table's ticks, which a
+              returned refusal could not refill — `bulkDeleteRegistrationsAction` says why. */}
           <Box component="form" id={BULK_FORM} action={bulkCancelRegistrationsAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             {/* Only the query, never a path: `actions.ts` rebuilds the path itself so this
@@ -1231,9 +1267,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               )}
               <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
               <Box>
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("registrations.bulkCancelAction")}
                   pendingLabel={t("registrations.bulkCancelPending")}
+                  icon="cancel"
                   color="warning"
                   variant="contained"
                 />
@@ -1269,6 +1306,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   <ConfirmSubmitButton
                     formAction={bulkDeleteRegistrationsAction}
                     label={t("registrations.bulkEraseAction")}
+                    icon="erase"
                     title={t("confirm.bulkEraseTitle")}
                     body={t("confirm.bulkEraseBody")}
                     confirmLabel={t("registrations.bulkEraseAction")}

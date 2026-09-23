@@ -1,14 +1,13 @@
 import Box from "@mui/material/Box";
 import { specialCard } from "@/theme/surfaces";
 import Card from "@mui/material/Card";
-import Button from "@mui/material/Button";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
-import { CARD_DOOR_SX } from "./card-door";
+import CardDoor from "./CardDoor";
 import type { Locale } from "@/i18n/routing";
 import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { riseIn } from "@/theme/motion";
@@ -119,9 +118,7 @@ export default async function SeriesCard({
             button — no client island, 44px — to the next date's page, which is where the full
             description, the rules and the programme live. */}
         <Box sx={{ mt: 1.5 }}>
-          <Button component="a" href={pageOf(next.slug)} variant="outlined" size="small" sx={CARD_DOOR_SX}>
-            {t("series.fullDescription")}
-          </Button>
+          <CardDoor href={pageOf(next.slug)} label={t("series.fullDescription")} />
         </Box>
       </CardContent>
     </Card>

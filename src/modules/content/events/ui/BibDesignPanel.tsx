@@ -1,9 +1,8 @@
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
@@ -16,8 +15,11 @@ import {
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
+import { env } from "@/shared/config/env";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import BibDesignPreview from "./BibDesignPreview";
+import BibFooterTextField from "./BibFooterTextField";
 
 /**
  * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
@@ -39,6 +41,13 @@ import BibDesignPreview from "./BibDesignPreview";
  * without this panel — the create form — would otherwise read as "every switch off" and
  * silently redesign a bib. `present=1` is what tells the action that the design was on screen
  * (`app/[locale]/admin/actions.ts`).
+ *
+ * **The footer is a group of its own** ("Subsol", §317; the owner: "on the bid I have some
+ * email, I wanna be able to control and toggle that!"): the switches and the club's own line,
+ * laid out in the order they print, each switch naming what it would print on this deployment —
+ * the mailbox, the site's host — so the club is never switching on a word it cannot see. The
+ * line's box is the panel's second island, for its character count; everything else posts
+ * itself, and the preview above follows all of it through the same query-string mirror.
  */
 export default async function BibDesignPanel({
   eventId,
@@ -65,6 +74,30 @@ export default async function BibDesignPanel({
     read "the club's colour" and "no sponsors", which is what such a deployment can honour.
   */
   const assets = isStorageConfigured() ? (await listMediaAssetsForAdmin(getDb(), locale)).slice(0, 60) : [];
+  // What the footer's two switches would print here: this deployment's own values, never a
+  // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
+  const siteHost = bibWebsiteHost(env.APP_BASE_URL);
+  const replyTo = env.EMAIL_REPLY_TO ?? null;
+
+  /** A footer switch, with what it prints beside its words when there is something to name. */
+  const footerSwitch = (
+    field: "showEventInFooter" | "showPartners" | "showWebsite" | "showEmail",
+    label: string,
+    prints?: string | null,
+  ) => (
+    // A `CheckboxField` like every other tick of the design (§315): it comes back as it was after a
+    // refused save, and its label travels as children, never as an element prop (the defect it documents).
+    <CheckboxField name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
+        <span>
+          {label}
+          {prints !== undefined ? (
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75, overflowWrap: "anywhere" }}>
+              {prints ?? t("editor.bibDesign.footer.notConfigured")}
+            </Typography>
+          ) : null}
+        </span>
+    </CheckboxField>
+  );
 
   const picker = (field: "headerImageSrc" | "sponsorImageSrc") => (
     <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
@@ -75,19 +108,20 @@ export default async function BibDesignPanel({
         {t(`editor.bibDesign.${field}Help`)}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <FormControlLabel
-          control={
-            <input
-              type="radio"
-              name={`event.bibDesign.${field}`}
-              value=""
-              defaultChecked={design[field] === null}
-              style={{ width: 20, height: 20 }}
-            />
-          }
-          label={t("editor.bibDesign.noPicture")}
-          sx={{ mr: 2 }}
-        />
+        {/* A plain label with children rather than `FormControlLabel`'s element prop: the
+            defect `CheckboxField` documents. The radio comes back as ticked after a refused
+            submit (§315). */}
+        <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
+          <RecallRadio
+            name={`event.bibDesign.${field}`}
+            value=""
+            defaultChecked={design[field] === null}
+            style={{ width: 20, height: 20 }}
+          />
+          <Typography component="span" variant="body2">
+            {t("editor.bibDesign.noPicture")}
+          </Typography>
+        </Box>
         {assets.map((asset) => (
           <Box
             key={asset.id}
@@ -107,8 +141,7 @@ export default async function BibDesignPanel({
             }}
           >
             <Box component="img" src={asset.thumbUrl} alt={asset.originalFilename} width={72} height={72} sx={{ display: "block", width: 72, height: 72, objectFit: "cover", borderRadius: 0.5 }} />
-            <input
-              type="radio"
+            <RecallRadio
               name={`event.bibDesign.${field}`}
               value={asset.webUrl}
               defaultChecked={design[field] === asset.webUrl}
@@ -144,16 +177,14 @@ export default async function BibDesignPanel({
 
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (
-            <FormControlLabel
-              key={field}
-              control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} />}
-              label={t(`editor.bibDesign.${field}`)}
-            />
+            <CheckboxField key={field} name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
+              {t(`editor.bibDesign.${field}`)}
+            </CheckboxField>
           ))}
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          <TextField
+          <RecallField
             select
             name="event.bibDesign.numberScale"
             label={t("editor.bibDesign.numberScale")}
@@ -166,8 +197,8 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.scales.${scale}`)}
               </option>
             ))}
-          </TextField>
-          <TextField
+          </RecallField>
+          <RecallField
             select
             name="event.bibDesign.namePosition"
             label={t("editor.bibDesign.namePosition")}
@@ -180,11 +211,40 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.positions.${position}`)}
               </option>
             ))}
-          </TextField>
+          </RecallField>
         </Stack>
 
         {picker("headerImageSrc")}
         {picker("sponsorImageSrc")}
+
+        {/* The small print, the club's to compose (§317), in the order it prints: the event,
+            the partners, the club's own line, the website, the mailbox. */}
+        <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }} data-testid="bib-design-footer">
+          <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+            {t("editor.bibDesign.footer.title")}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+            {t("editor.bibDesign.footer.intro")}
+          </Typography>
+          <Stack spacing={1}>
+            <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
+              {footerSwitch("showEventInFooter", t("editor.bibDesign.footer.showEventInFooter"))}
+              {footerSwitch("showPartners", t("editor.bibDesign.footer.showPartners"))}
+            </Stack>
+            <BibFooterTextField
+              name="event.bibDesign.footerText"
+              defaultValue={design.footerText}
+              maxLength={BIB_FOOTER_TEXT_MAX}
+              label={t("editor.bibDesign.footer.footerText")}
+              placeholder={t("editor.bibDesign.footer.footerTextPlaceholder")}
+              help={t("editor.bibDesign.footer.footerTextHelp")}
+            />
+            <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
+              {footerSwitch("showWebsite", t("editor.bibDesign.footer.showWebsite"), siteHost)}
+              {footerSwitch("showEmail", t("editor.bibDesign.footer.showEmail"), replyTo)}
+            </Stack>
+          </Stack>
+        </Box>
 
         <Typography variant="caption" color="text.secondary">
           {t("editor.bibDesign.previewNote")}

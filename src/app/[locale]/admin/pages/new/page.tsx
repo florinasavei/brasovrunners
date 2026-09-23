@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -8,8 +7,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
+import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { createPageAction } from "../actions";
 
 type Props = {
@@ -41,18 +44,23 @@ export default async function NewPagePage({ params, searchParams }: Props) {
         {t("pages.create")}
       </Typography>
 
-      {/* Plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. */}
-      <form action={createPageAction}>
+      {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
+          refusal comes back with every box still filled (§315). */}
+      <ActionForm action={createPageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />
           <PageFieldsForm navOrder={0} translations={[]} slugLocked={false} />
           <Box>
-            <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-              {t("pages.create")}
-            </Button>
+            <GlyphSubmitButton
+              label={t("pages.create")}
+              pendingLabel={t("editor.saving")}
+              icon="add"
+              incompleteHintNamed={t("forms.incompleteFirst")}
+              size="medium"
+            />
           </Box>
         </Stack>
-      </form>
+      </ActionForm>
     </Stack>
   );
 }

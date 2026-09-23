@@ -182,6 +182,17 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
   }
 }
 
+/** The code and the boxes a refusal names, as the erase form's summary shows them (§315). */
+async function refusalOf(operation: Promise<unknown>): Promise<string> {
+  try {
+    await operation;
+    return "no error";
+  } catch (error) {
+    if (isDomainError(error)) return `${error.code} ${error.fields.join(",")}`;
+    throw error;
+  }
+}
+
 const rowsFor = (eventId: string) =>
   db.select().from(registrations).where(eq(registrations.eventId, eventId));
 
@@ -240,9 +251,10 @@ describe("BR-REQ-037-06 an Administrator erases an event and everyone registered
 
     // Near misses, not nonsense: the whole point of the field is that half-remembering the
     // title is not enough. Case and whitespace are part of "exact"; the id is not a title.
+    // Each refusal names the box it is about, so the summary links to the title (§315).
     for (const typed of ["crosul de toamnă", "Crosul de toamna", "Crosul", "", event.id]) {
       expect(
-        await codeOf(
+        await refusalOf(
           hardDeleteEvent(db, {
             actor: admin,
             eventId: event.id,
@@ -252,7 +264,7 @@ describe("BR-REQ-037-06 an Administrator erases an event and everyone registered
           }),
         ),
         `typed "${typed}"`,
-      ).toBe("VALIDATION_ERROR");
+      ).toBe("VALIDATION_ERROR typedTitle");
     }
 
     expect(await db.select().from(events).where(eq(events.id, event.id))).toHaveLength(1);
@@ -269,11 +281,11 @@ describe("BR-REQ-037-06 an Administrator erases an event and everyone registered
 
     for (const reason of ["", "   ", "x"]) {
       expect(
-        await codeOf(
+        await refusalOf(
           hardDeleteEvent(db, { actor: admin, eventId: event.id, typedTitle: TITLE_RO, reason, now: NOW }),
         ),
         `reason "${reason}"`,
-      ).toBe("VALIDATION_ERROR");
+      ).toBe("VALIDATION_ERROR reason");
     }
 
     expect(await db.select().from(events).where(eq(events.id, event.id))).toHaveLength(1);

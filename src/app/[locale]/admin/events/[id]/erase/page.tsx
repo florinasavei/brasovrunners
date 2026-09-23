@@ -1,8 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -13,7 +11,7 @@ import { routing } from "@/i18n/routing";
 import { readEventErasurePlan } from "@/modules/content/events/repository";
 import { canHardDeleteEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { hardDeleteEventAction } from "../../../actions";
+import EraseEventForm from "./form";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -124,34 +122,10 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
       {/*
         No dialog, no checkbox: the confirmation *is* the typed title, and it is checked on the
         server. A tick the server does not read would be decoration (BR-REQ-060-01), and a
-        dialog would put the numbers above out of sight at the moment of deciding.
+        dialog would put the numbers above out of sight at the moment of deciding. A refusal
+        keeps the reason and asks for the title again (§315).
       */}
-      <Box component="form" action={hardDeleteEventAction}>
-        <input type="hidden" name="uiLocale" value={locale} />
-        <input type="hidden" name="eventId" value={plan.eventId} />
-        <Stack spacing={2}>
-          <TextField
-            name="typedTitle"
-            label={t("erase.typeTitleLabel")}
-            helperText={t("erase.typeTitleHelp", { title: expected })}
-            required
-            autoComplete="off"
-            slotProps={{ htmlInput: { maxLength: 300 } }}
-          />
-          <TextField
-            name="reason"
-            label={t("erase.reasonLabel")}
-            helperText={t("erase.reasonHelp")}
-            required
-            slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
-          />
-          <Box>
-            <Button type="submit" color="error" variant="contained" sx={{ minHeight: 44 }}>
-              {t("erase.action")}
-            </Button>
-          </Box>
-        </Stack>
-      </Box>
+      <EraseEventForm locale={locale} eventId={plan.eventId} expected={expected} />
     </Stack>
   );
 }

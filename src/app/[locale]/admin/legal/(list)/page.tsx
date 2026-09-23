@@ -9,12 +9,9 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import {
-  findCurrentApprovedDocument,
-  findCurrentApprovedVersionId,
-} from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { env } from "@/shared/config/env";
 import { approvePlatformTemplatesAction } from "../actions";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -23,13 +20,19 @@ import {
   type LegalDocumentVersionRow,
   listVersionsForBackoffice,
 } from "@/modules/legal-documents/repository";
-import { isReliedOn } from "@/modules/legal-documents/service";
+import {
+  type DeletionFacts,
+  deletionObstacle,
+  type InForceWindow,
+  isReliedOn,
+} from "@/modules/legal-documents/domain/deletability";
+import { readDeletionFacts } from "@/modules/legal-documents/service";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
 
@@ -74,11 +77,14 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * pressed: withdrawal as a button, deletion as a link to a screen that spells out the
  * consequence and asks for a typed phrase. The reversible one is the larger target on purpose.
  *
- * Where neither is possible the row says why, derived from the same facts the service checks and
- * in the same order — the three counts, then "in force right now" — and it says it about both
- * verbs at once, because the condition is the same condition. A missing button explains nothing;
- * a count is a reason an organizer accepts. The server refuses regardless (BR-REQ-060-01) — this
- * only changes what the screen is able to explain before anything is pressed.
+ * Where neither is possible the row says why, from the service's own verdict (`deletionObstacle`)
+ * — the three counts, then "in force right now" — and it says it about both verbs at once,
+ * because the condition is the same condition. Where only deletion is refused — a terms version
+ * somebody registered or signed a declaration under while it was in force (§316) — the withdraw
+ * button stays and the link gives way to the reason, with the count and the dates. A missing button
+ * explains nothing; a count is a reason an organizer accepts. The server refuses regardless
+ * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
+ * pressed.
  *
  * Withdrawn rows are folded away by default and revealed with `?withdrawn=1`, because the
  * point of withdrawing is to get them out of the way, and the point of not deleting them is
@@ -137,19 +143,35 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     )
   ).filter((key): key is "PRIVACY_NOTICE" | "TERMS" | "EVENT_DECLARATION" => key !== null);
   /*
-    Which three rows the site is serving right now — the one reason a withdrawal is refused that
-    no count on the row can show. A privacy notice with zero signatures is not unused; it is the
-    notice of a quiet week, and withdrawing it would close registration (BR-REQ-053-01).
+    What the service would answer about each row, asked of the service before anything is drawn
+    (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
+    asks before it destroys anything. The row's link, its sentence and its "Folosit" cell all read
+    from this, so the list cannot offer a press the server will refuse.
+
+    It used to carry its own copy — the three counts, then "in force right now" — and the copy
+    was one rule short: a terms version that had been in force read "Nefolosit încă" with a
+    "Șterge definitiv" link, and the page behind the link refused. The owner, the third time:
+    "Still can't delete these docs...".
+
+    It includes which rows the site is serving right now — the one reason a withdrawal is refused
+    that no count on the row can show. A privacy notice with zero signatures is not unused; it is
+    the notice of a quiet week, and withdrawing it would close registration (BR-REQ-053-01).
+
+    Every row in one call, so the in-force question is asked once per document rather than once
+    per row; the only per-row cost is the count for each terms version that was ever in force.
   */
-  const inForceIds = new Set(
-    (
-      await Promise.all(
-        (["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) =>
-          findCurrentApprovedVersionId(getDb(), key, now),
-        ),
-      )
-    ).filter((id): id is string => id !== undefined),
+  const allFacts = await readDeletionFacts(getDb(), versions, versions, now);
+  const factsById = new Map<string, DeletionFacts>(
+    versions.map((version, index) => [version.id, allFacts[index]]),
   );
+  const factsOf = (version: LegalDocumentVersionRow): DeletionFacts => {
+    const facts = factsById.get(version.id);
+    if (!facts) throw new Error(`no deletion facts were read for version ${version.id}`);
+    return facts;
+  };
+  // "4–20 sept. 2026": the stretch a terms version was the text in force.
+  const span = (window: InForceWindow) =>
+    format.dateTimeRange(window.from, window.until ?? now, { dateStyle: "medium" });
   const missingFacts = (
     [
       ["CLUB_LEGAL_NAME", facts.legalName],
@@ -225,6 +247,18 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       key: "usage",
       label: t("legal.usage"),
       render: (version) => {
+        /*
+          A terms version is used by whoever submitted a registration, or signed a
+          declaration, while it was in force, and that is the figure it gets. "Nefolosit
+          încă" was never true of one: the three counts are vacuous for this key, because a
+          registration records no terms version (§203).
+        */
+        const terms = factsOf(version).terms;
+        if (terms) {
+          return terms.window.until
+            ? t("legal.termsRegistrations", { count: terms.registrations })
+            : t("legal.termsRegistrationsSoFar", { count: terms.registrations });
+        }
         const reliance = relianceOf(version);
         return isReliedOn({
           acceptances: reliance.signatures,
@@ -305,7 +339,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
                 <Box>
-                  <SubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} variant="contained" size="medium" />
+                  <GlyphSubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
             </form>
@@ -338,9 +372,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
       {mayCreate && (
         <Box>
-          <ButtonLink href="/admin/legal/new" variant="contained" sx={{ minHeight: 44 }}>
+          <GlyphButtonLink href="/admin/legal/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
-          </ButtonLink>
+          </GlyphButtonLink>
           {/* The platform's own texts, complete but for the club's four facts (§95). */}
           <Typography variant="body2" sx={{ mt: 1.5 }}>
             {t("legal.templatesIntro")}{" "}
@@ -387,6 +421,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               events: reliance.events,
               privacyAcknowledgements: reliance.acknowledgements,
             });
+            // The service's verdict on deleting this row, and the first reason if it is no.
+            const obstacle = deletionObstacle(factsOf(version));
 
             const reason = (message: string) => (
               <Typography
@@ -403,12 +439,15 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               not the text the site is serving, can be withdrawn: out of every list and every
               resolution, still on the record, still holding its number.
 
-              The three conditions are asked in the service's own order, so the sentence the row
-              gives and the refusal the server would give name the same obstacle.
+              The obstacle is the service's own (`deletionObstacle`), so the sentence the row
+              gives and the refusal the server would give name the same thing. The first two
+              stop both verbs, because withdrawal asks the same question (`dependantObstacle`).
             */
             if (version.isApproved) {
-              if (relied) return reason(t("legal.removeBlockedReferenced", reliance));
-              if (inForceIds.has(version.id)) return reason(t("legal.removeBlockedCurrent"));
+              if (obstacle?.kind === "referenced") {
+                return reason(t("legal.removeBlockedReferenced", reliance));
+              }
+              if (obstacle?.kind === "inForce") return reason(t("legal.removeBlockedCurrent"));
 
               /*
                 Deletable, so the row says both verbs and what each one costs (§151).
@@ -422,6 +461,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 A withdrawn version has no withdraw button left, only the date it went and the
                 delete link: it is the row the owner asked about, already out of circulation and
                 still in the way.
+
+                A terms version somebody registered or signed under keeps its withdraw button
+                and loses the link: withdrawal keeps the words, so it is still open to it, and
+                deletion would destroy text somebody may have accepted — the row says that, with
+                the count and the dates, instead of a link to a page that would refuse (§316).
               */
               return (
                 <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
@@ -433,8 +477,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                     )
                   ) : !mayDestroy ? (
                     // Withdrawing is the Superadministrator's, like deleting beside it (§222): the
-                    // service asserts it, so a reader is shown the state and not a button.
-                    reason(t("legal.deleteMeans", { version: version.version }))
+                    // service asserts it, so a reader is shown no button — and the sentence
+                    // below already says what deleting would mean, once.
+                    null
                   ) : (
                     <Box component="form" action={withdrawLegalVersionAction}>
                       <input type="hidden" name="uiLocale" value={locale} />
@@ -447,6 +492,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       */}
                       <ConfirmSubmitButton
                         label={t("legal.withdraw")}
+                        icon="unpublish"
                         title={t("legal.withdrawTitle")}
                         body={t("legal.withdrawBody")}
                         confirmLabel={t("legal.withdraw")}
@@ -455,14 +501,28 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       />
                     </Box>
                   )}
-                  {mayDestroy && (
-                    <Link
-                      href={{ pathname: "/admin/legal/[id]/delete", params: { id: version.id } }}
-                    >
-                      {t("legal.deletePermanently")}
-                    </Link>
+                  {obstacle?.kind === "termsAccepted" ? (
+                    reason(
+                      t("legal.deleteBlockedTermsAccepted", {
+                        count: obstacle.registrations,
+                        window: span(obstacle.window),
+                      }),
+                    )
+                  ) : (
+                    <>
+                      {mayDestroy && (
+                        <Link
+                          href={{
+                            pathname: "/admin/legal/[id]/delete",
+                            params: { id: version.id },
+                          }}
+                        >
+                          {t("legal.deletePermanently")}
+                        </Link>
+                      )}
+                      {reason(t("legal.deleteMeans", { version: version.version }))}
+                    </>
                   )}
-                  {reason(t("legal.deleteMeans", { version: version.version }))}
                 </Stack>
               );
             }
@@ -478,6 +538,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 <input type="hidden" name="versionId" value={version.id} />
                 <ConfirmSubmitButton
                   label={t("legal.delete")}
+                  icon="delete"
                   title={t("legal.deleteTitle")}
                   body={t("legal.deleteBody")}
                   confirmLabel={t("legal.delete")}

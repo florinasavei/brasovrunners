@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -38,6 +38,19 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 let volunteer: StaffUser;
 let admin: StaffUser;
+
+/*
+  The staff form's action, for the one thing only the action decides: what the refusal says.
+  Getters, resolved when the action calls them (`signature-name.test.ts` does the same): the
+  database under test, and the Voluntar at the desk as the signed-in staff member.
+*/
+vi.mock("@/db/client", () => ({ getDb: () => db }));
+vi.mock("@/modules/staff-identity/session", () => ({
+  requireStaff: async () => volunteer,
+  requireStaffRole: async () => admin,
+}));
+
+const { createRegistrationAction } = await import("@/app/[locale]/admin/registrations/actions");
 
 beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
@@ -240,6 +253,49 @@ describe("§NNN a staff entry and the desk's walk-in", () => {
     expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, undefined), NOW))).toBeNull();
     const [row] = await db.select().from(registrations);
     expect(row.birthDate).toBeNull();
+  });
+
+  it("comes back to the staff form with the rule's own sentence, the birth date named, and every box kept", async () => {
+    /*
+      The form keeps what was typed (§315) through `refused`, which carries the service's code
+      and field names as they are — so without the action's own mapping the volunteer would read
+      the generic VALIDATION_ERROR, and the summary would list the rule's marker as if it were a
+      box, under its raw name. The sentence is `Admin.errors.UNDER_MINIMUM_AGE`; the marker is
+      not a box, so it is not a link.
+    */
+    const event = await createRace();
+    const form = new FormData();
+    for (const [name, value] of Object.entries({
+      uiLocale: "ro",
+      back: "desk",
+      eventId: event.id,
+      firstName: "Andrei",
+      lastName: "Ionescu",
+      birthDate: FOURTEEN_THE_DAY_AFTER,
+      city: "Brașov",
+      email: "andrei@example.ro",
+      participantLocale: "ro",
+      relayedByParticipantRequest: "on",
+    })) {
+      form.set(name, value);
+    }
+
+    const outcome = await createRegistrationAction(null, form);
+
+    expect(outcome?.error).toBe("UNDER_MINIMUM_AGE");
+    expect(outcome?.fields).toContain("birthDate");
+    expect(outcome?.fields).not.toContain(UNDER_MINIMUM_AGE);
+    // `guardianName` is named as well today — §108's rule, and a box the staff form does not
+    // have (see "does not refuse fourteen" above); `toContain`, so the follow-up that settles
+    // it does not have to rewrite this.
+    expect(outcome?.values).toMatchObject({
+      eventId: [event.id],
+      firstName: ["Andrei"],
+      birthDate: [FOURTEEN_THE_DAY_AFTER],
+      city: ["Brașov"],
+      email: ["andrei@example.ro"],
+    });
+    expect(await db.select().from(registrations)).toHaveLength(0);
   });
 });
 

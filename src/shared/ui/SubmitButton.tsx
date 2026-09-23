@@ -1,18 +1,48 @@
 "use client";
 
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { type ComponentType, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
 
-type Props = {
+/**
+ * The glyph's size in CSS pixels, per button size: what MUI's own start-icon slot gives an icon
+ * (18 / 20 / 22), so the running figure that replaces the verb's glyph while the request is in
+ * flight is exactly as big as the glyph it replaced and the label does not move.
+ */
+const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;
+
+export type SubmitButtonProps = {
   label: string;
   /** What the button says while the server is working. It is the whole reason this exists. */
   pendingLabel: string;
+  /**
+   * The public send buttons — the registration and the contact form: the club's runner before
+   * the label, standing at rest, the figure `RunnerLoader` animates while the same button is
+   * pending (§318; the owner: "butoanele de trimitere înscriere și contact trebuie să aibă și
+   * iconița cu un alergător").
+   *
+   * A flag and not a name, because this button is on the public pages and the verbs' registry
+   * (`action-icons.ts`) is the backoffice's: a lookup by a runtime key cannot be tree-shaken, so
+   * importing it here would put every backoffice glyph on the register page, the contact page
+   * and the event page. `DirectionsRunIcon` is the one glyph this file imports, and
+   * `RunnerLoader` already carries it.
+   */
+  runner?: boolean;
+  /**
+   * A glyph already resolved on the client, for `GlyphSubmitButton` — the backoffice's wrapper,
+   * which looks a verb's name up in the registry and hands the component here. A Server
+   * Component cannot pass this (a function does not cross the boundary); it passes the name to
+   * `GlyphSubmitButton` instead. While the request is in flight the glyph gives way to the
+   * running figure, which is the one thing this button already did.
+   */
+  glyph?: ComponentType<SvgIconProps>;
   /**
    * When given, the button watches its form and, while any required field is still empty or
    * invalid, dims itself and shows this sentence beneath. It stays pressable: a press then runs
@@ -20,6 +50,13 @@ type Props = {
    * answer a merely-disabled button could never give. See the notes below.
    */
   incompleteHint?: string;
+  /**
+   * The same sentence, naming the first thing missing (`DECISIONS.md` §315; the owner: "in
+   * general formularele trebuie sa fie mai smart"): `{field}` is replaced with the label of the
+   * first control the browser would refuse, read from its own `<label>`. Where a control has
+   * no label to read, `incompleteHint` is what is said. Either alone dims the button.
+   */
+  incompleteHintNamed?: string;
   /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
   slowHint?: string;
   color?: "primary" | "error" | "warning" | "inherit";
@@ -97,7 +134,10 @@ type Props = {
 export default function SubmitButton({
   label,
   pendingLabel,
+  runner,
+  glyph,
   incompleteHint,
+  incompleteHintNamed,
   awaitsBotCheck,
   botCheckHint,
   slowHint,
@@ -107,21 +147,38 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
-}: Props) {
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
   const [complete, setComplete] = useState(true);
+  // The label of the first control the browser would refuse, for the named sentence (§315).
+  const [firstMissing, setFirstMissing] = useState<string | null>(null);
+  const watches = Boolean(incompleteHint || incompleteHintNamed);
 
   useEffect(() => {
-    if (!incompleteHint) return;
+    if (!watches) return;
     const form = ref.current?.form;
     if (!form) return;
 
     const measure = () => {
-      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState }>;
-      setComplete(controls.every((control) => !control.validity || control.validity.valid));
+      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState; labels?: NodeListOf<HTMLLabelElement> | null }>;
+      const invalid = controls.find((control) => control.validity && !control.validity.valid);
+      setComplete(invalid === undefined);
+      // A tick's label is a sentence, not the name of a box — "Fill in first: I understand that…"
+      // reads badly — so a tick is named only where the button has no sentence of its own for it
+      // (the live-edit acknowledgement's `incompleteHint`).
+      const tick = invalid instanceof HTMLInputElement && invalid.type === "checkbox";
+      if (tick && incompleteHint) {
+        setFirstMissing(null);
+        return;
+      }
+      // MUI marks a required label with " *"; the sentence names the box, not the asterisk. A box
+      // inside a language tab says which language, or "Titlu" would not say which of two titles.
+      const text = invalid?.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || invalid?.getAttribute("aria-label");
+      const language = invalid?.closest("[data-language]")?.getAttribute("data-language");
+      setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
     form.addEventListener("input", measure);
@@ -130,7 +187,12 @@ export default function SubmitButton({
       form.removeEventListener("input", measure);
       form.removeEventListener("change", measure);
     };
-  }, [incompleteHint]);
+  }, [watches, incompleteHint]);
+
+  // The named sentence when there is a box to name; the button's own sentence otherwise; and
+  // never the named one with its `{field}` unfilled.
+  const incompleteSentence =
+    incompleteHintNamed && firstMissing ? incompleteHintNamed.replace("{field}", firstMissing) : incompleteHint;
 
   /*
     Cloudflare writes its token into a hidden input inside the widget's own element, so the form
@@ -233,7 +295,11 @@ export default function SubmitButton({
     };
   }, [pending]);
 
-  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
+  const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
+  const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence;
+  // One id per button: a page with two forms has two buttons that may both be waiting (§315).
+  const hintId = useId();
+  const Glyph = glyph ?? (runner ? DirectionsRunIcon : null);
 
   return (
     <Box
@@ -259,7 +325,7 @@ export default function SubmitButton({
         // on press, is the explanation.
         aria-disabled={pending}
         aria-busy={pending}
-        aria-describedby={dimmed ? "submit-incomplete" : undefined}
+        aria-describedby={dimmed && hint ? hintId : undefined}
         sx={{
           ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
           ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
@@ -278,7 +344,15 @@ export default function SubmitButton({
         // name of its own: the label beside it has already changed to `pendingLabel` and
         // `aria-busy` is set, so the figure is the third way of saying it rather than the
         // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
-        startIcon={pending ? <RunnerLoader size={18} color="inherit" /> : undefined}
+        // At rest the verb's own glyph, if it has one (§318) — on the public send buttons that
+        // is the same runner, standing, so a press is the figure setting off.
+        startIcon={
+          pending ? (
+            <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
+          ) : Glyph ? (
+            <Glyph fontSize="small" />
+          ) : undefined
+        }
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.
@@ -294,9 +368,9 @@ export default function SubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
-      {dimmed && (
-        <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
-          {waiting && pressedEarly ? (botCheckHint ?? incompleteHint) : incompleteHint}
+      {dimmed && hint && (
+        <Typography id={hintId} variant="body2" color="text.secondary" role="status">
+          {hint}
         </Typography>
       )}
       {pending && slow && slowHint && (
