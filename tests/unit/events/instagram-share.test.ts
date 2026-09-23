@@ -11,8 +11,7 @@ import {
 
 /**
  * BR-REQ-052-02 criterion 8 — the Instagram button shares the picture where the phone can take
- * one, and downloads it everywhere else (`DECISIONS.md` §90, §140, and the 2026-09-23 section
- * on the share buttons; the owner: "it needs to be an actual share, not just create a picture").
+ * one, and downloads it everywhere else (`DECISIONS.md` §90, §140 and §299; the owner: "it needs to be an actual share, not just create a picture").
  *
  * The decisions are pure functions so they can be held here without a device: what counts as
  * a browser that can share a file, what the sheet is handed, and which refusal becomes a

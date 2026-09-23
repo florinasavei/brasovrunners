@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 /**
  * BR-REQ-052-02 criterion 8 — what the event page's share buttons actually send
- * (`DECISIONS.md` §90, §140 and the 2026-09-23 section on the share buttons;
+ * (`DECISIONS.md` §90, §140 and §299;
  * `events/ui/ShareLinks.tsx`, `events/share-links.ts`).
  *
  * The end-to-end server runs with `APP_BASE_URL` set to its own address, so the absolute URL

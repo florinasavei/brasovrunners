@@ -1,8 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
- * The footer's one line (BR-REQ-041-01 criteria 1, 6 and 11; `DECISIONS.md` §115, §262 and the
- * 2026-09-23 section on the footer that wraps; `shared/ui/SiteFooter.tsx`).
+ * The footer's one line (BR-REQ-041-01 criteria 1, 6 and 11; `DECISIONS.md` §115, §262  and §299; `shared/ui/SiteFooter.tsx`).
  *
  * Three reports on one day said the same thing: the social marks sat on the summary's last word
  * and on the build badge between 600 and 750 pixels (the owner's screenshot), and on an iPhone

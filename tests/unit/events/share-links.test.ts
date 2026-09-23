@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { absoluteUrl, eventPageUrl, facebookShareUrl, whatsappShareUrl } from "@/modules/events/share-links";
 
 /**
- * BR-REQ-052-02 criterion 8 — what the share buttons send (`DECISIONS.md` §90, §140, and the
- * 2026-09-23 section on the share buttons).
+ * BR-REQ-052-02 criterion 8 — what the share buttons send (`DECISIONS.md` §90, §140,  and §299).
  *
  * A Facebook share opened a "Create post" whose card was the bare domain — no title, no
  * picture — which is what Facebook draws when the address it is handed is not the page that
