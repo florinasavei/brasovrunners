@@ -174,7 +174,8 @@ export const FONT = {
   body: "var(--font-roboto)",
   /**
    * Facón, the face the club's kit is printed in. Loaded by the locale layout from
-   * `src/theme/fonts/`, and used in exactly one place: the homepage wordmark.
+   * `src/theme/fonts/`, and used in exactly one component: `shared/ui/Wordmark`, which heads
+   * the listing, the calendar and the contact page (2026-09-22) and nothing else.
    *
    * It is confined to that one string for a hard reason, not a stylistic one. The font
    * contains 129 characters and NONE of them are Romanian — not ș or ț in either encoding,
@@ -191,7 +192,8 @@ export const FONT = {
 } as const;
 
 /**
- * The wordmark, as a logotype rather than as the club's name. On the homepage, in the kit face.
+ * The wordmark, as a logotype rather than as the club's name. At the head of the listing, the
+ * calendar and the contact page, in the kit face (`shared/ui/Wordmark`).
  *
  * Deliberately unaccented and deliberately not from the message catalogues. It matches the
  * kit, which is printed BRASOV RUNNERS, and it is the same in both locales because a logotype
@@ -303,8 +305,9 @@ export const PAGE_WIDTH = "xl" as const;
 export const PROSE_MEASURE = "60rem";
 
 /**
- * The homepage wordmark's size. A display face, but a signature rather than a banner — 4rem
- * was "way too big" (the owner, 2026-09-17), 2.5rem still a bit; it caps at 2rem. Measured: the face renders
+ * The wordmark's size (`shared/ui/Wordmark`: the listing, the calendar and the contact page). A
+ * display face, but a signature rather than a banner — 4rem was "way too big" (the owner,
+ * 2026-09-17), 2.5rem still a bit; it caps at 2rem. Measured: the face renders
  * about 10.5× its font size wide, so the 1.25rem floor (210px) fits well inside the 288px a 320px
  * viewport leaves inside the gutters (BR-REQ-041-01 criterion 1).
  */

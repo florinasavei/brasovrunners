@@ -14,6 +14,8 @@ type Props = {
   locale: Locale;
   queue: OutboxQueue;
   volume: EmailVolumeToday;
+  /** "Trimite acum" is the Administrator's (§80); the queue itself is read by whoever may read the registrations (§291). */
+  mayEdit: boolean;
 };
 
 /**
@@ -29,7 +31,7 @@ type Props = {
  * message do not fit a table at 320 pixels, and a table that scrolls sideways is worse than a
  * paragraph (the same reasoning §196 applied to the one place a table is unavoidable).
  */
-export default async function OutboxQueuePanel({ locale, queue, volume }: Props) {
+export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit }: Props) {
   const t = await getTranslations("Admin");
   const when = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "short",
@@ -53,8 +55,11 @@ export default async function OutboxQueuePanel({ locale, queue, volume }: Props)
           {t("emails.queue.count", { count: queue.total })}
         </Typography>
         {/* The same rule the list's button follows (§80): offered only when there is something
-            to send and room to send it, because a disabled button cannot say why. */}
-        {queue.total > 0 && (volume.remaining === null || volume.remaining > 0) ? (
+            to send and room to send it, because a disabled button cannot say why. And only to
+            the role that may press it (§291): for the Organizer the count above is the whole
+            answer, and the else-branch's "allowance spent" would be an answer to a question they
+            were never offered. */}
+        {!mayEdit ? null : queue.total > 0 && (volume.remaining === null || volume.remaining > 0) ? (
           <Box component="form" action={sendOutboxNowFromEmailsAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <SubmitButton

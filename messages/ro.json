@@ -1724,6 +1724,7 @@
         "confirmationsTo": "Anunță-ne când cineva confirmă",
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
         "save": "Salvează",
+        "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
         "saved": "Am salvat cine primește copiile clubului."
       },
@@ -1778,6 +1779,7 @@
         "customHelp": "Doar pentru „Altceva”: scrie ce arată Mailgun în Account → Plan; lasă gol ce nu există (amândouă goale înseamnă fără limită). La celelalte planuri numerele vin din catalog.",
         "note": "Notă (de ce, până când)",
         "save": "Salvează planul",
+        "readOnly": "Planul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
         "saving": "Se salvează…",
         "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
         "unlimited": "fără limită",
@@ -1797,6 +1799,7 @@
         "cc": "Copie – Cc (adrese despărțite prin virgulă)",
         "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
         "save": "Salvează destinatarii",
+        "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
         "saved": "Destinatarii formularului de contact au fost salvați.",
         "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."

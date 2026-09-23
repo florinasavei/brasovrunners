@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.46-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.46-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12447,3 +12447,37 @@ is still a `terms_version` on the registration — a migration and a change to w
 records — which is not this fix.
 
 Baseline `BR-V1.46-2026-09-22`.
+
+## 291. Decided — the emails page reads for the Organizer and writes for the Administrator (2026-09-22)
+
+**Context.** Two messages from the owner, minutes apart, on the same screen. First: "organizatorul ar trebui sa vada (readonly) chiar si pagina de status unde vede cate mailuri s-au trimis si asa mai departe". Then, with a screenshot of `/admin/emails` as an Organizer showing **Salvează planul** and **Salvează destinatarii** in full colour: "Dar organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
+
+**What was there.** The page is open to every role that may read the club's content (§253), and it drew every form for every reader. Each form's service refused anybody below Administrator — `updateEmailPlan`, `updateContactRecipients`, `updateClubNotices`, the outbox's "send now" — so nothing was exposed, and the e2e even asserted the shape: a Moderator presses Save and *is refused by a sentence*. That assertion was the defect written down as a feature. It is the same shape as §289's sibling and §290, for the third time in one evening: a screen offering a verb the server will refuse, and the reader learning the rule from the refusal.
+
+The queue and the club's copies were the other half of the wrong answer. Both name people — a recipient's address, the addresses a signed declaration goes to — so both were read only for `canManageRegistrations`, which meant the Organizer who since §289 reads every registration could not read the queue of messages *to* those registrations, nor see whether Ana's confirmation was stuck. That is the status page the owner meant.
+
+**Decision.** *Two gates on one page.* Reading follows `canReadRegistrations` (§289): the plan's figures for everyone who may open the page, the outbox queue and the club's copies for whoever may read the registrations — the Organizer included, the Redactor and Tehnic excluded, exactly as the list itself. Writing follows `canManageRegistrations`: the plan's form, "Trimite acum", the club's copies and the contact recipients are the Administrator's, and each panel takes `mayEdit` so that a role that may not press is not shown the button — it is shown one sentence saying whose the setting is and that the figures above are current for them too.
+
+*The e2e turns around.* "A Moderator does not get the page's form to act on" asserted a press and a refusal; it now asserts that the Organizer sees the figures, the queue and the copies with no form, and a new case asserts the Redactor sees the figures and neither the queue nor the copies. The test that pinned the wrong behaviour is the test most worth rewriting.
+
+**What was rejected.** *Leaving the forms and relying on the server.* Correct, and what BR-REQ-060-01 requires — but a rule the reader meets only as an error is a rule they cannot plan around, and the owner's screenshot is what that looks like. *Opening the plan's form to the Organizer.* The plan decides what the club pays and what "send now" may spend; it stays with the role that answers for the money.
+
+Baseline `BR-V1.47-2026-09-22`.
+
+## 292. Decided — the kit-face wordmark heads the calendar and the contact page too (2026-09-22)
+
+**Context.** The owner, looking at the listing with `BRASOV RUNNERS` in the kit face above it: "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea de calendar".
+
+**What `BR-V1.32` decided, and why it is being changed.** The wordmark had a day of arrangements in the header — beside the lockup, at mark height, side by side — and each was wrong for a reason `SiteHeader.tsx` still records: the name twice on one row in two typefaces, one of them baked into an image, unalignable. The answer was to take it out of the header altogether and give it the room a display face wants, above the listing, **on the homepage and nowhere else** — `CLAUDE.md` carried that sentence, `shared/ui/Wordmark` and `theme/brand.ts` repeated it. "Nowhere else" was a guard against the header, not a judgement about other pages; it stood because nobody had asked for another page.
+
+The calendar and the contact page are the club's own pages in the same sense the listing is — what the club does and how to reach it — and the owner wants the club's signature on them. An event page or a legal text is the event's or the text's, not the club's, and keeps the heading it has.
+
+**Decision.** *Three pages, as a page heading.* `shared/ui/Wordmark` heads the listing, the calendar and the contact page — the same component, the same 2rem cap ("way too big" at 4rem, 2026-09-17), the same Server Component, so the two new pages pay no client island and no second request for Facón, which the locale layout already loads for every page. It is a paragraph that is an image to assistive technology named from the catalogue ("Brașov Runners", spelled properly), never an `<h1>`, so each page keeps exactly one heading of the first level: "Calendar", "Scrie-ne".
+
+*Never back into the header.* §58's lockup stays alone on the row; that is the half of `BR-V1.32` that was a judgement, and it stands.
+
+*A fourth page is a decision, not a copy-paste.* `tests/unit/theme/wordmark.test.ts` pins the three files that render `<Wordmark />`, that each puts it before its one `<h1>`, and that the component stays a Server Component — source-level, like `events/card-excerpt.test.ts`, because the rule is about which files carry one line.
+
+**What was rejected.** *Putting it in the layout for every public page.* An event page's heading is the event's title and a legal text's is the text's; the club's signature above "Termeni și condiții" would read as a letterhead, and the owner named two pages, not the site.
+
+Baseline `BR-V1.48-2026-09-22`.
