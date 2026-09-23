@@ -15,8 +15,9 @@ import {
  * no terms version and the three dependant counts are vacuous for that key. The owner met that as
  * a list offering "Șterge definitiv" beside "Nefolosit încă" and a page refusing it, three times
  * ("Still can't delete these docs..."). The evidence was there all along: a terms version is
- * accepted at the instant a registration is submitted while it is the text in force. So the rule
- * is now a window — when was it in force — and a count of submissions inside it.
+ * accepted at the instant a registration is submitted, or its declaration signed, while it is the
+ * text in force. So the rule is now a window — when was it in force — and a count of the
+ * registrations that did either inside it.
  *
  * These pin the window, and the order in which the reasons are given.
  */
@@ -165,15 +166,15 @@ describe("§NNN the reasons a version may not be deleted, in the order they are 
     expect(deletionObstacle(unused)).toBeNull();
   });
 
-  it("a terms version nobody submitted a registration under may go", () => {
+  it("a terms version nobody registered or signed under may go", () => {
     // The owner's two rows. §203 refused them for having been in force at all.
-    expect(deletionObstacle({ ...unused, terms: { window, submissions: 0 } })).toBeNull();
+    expect(deletionObstacle({ ...unused, terms: { window, registrations: 0 } })).toBeNull();
   });
 
-  it("a terms version with a submission in its window is refused, with the count and the window", () => {
-    expect(deletionObstacle({ ...unused, terms: { window, submissions: 3 } })).toEqual({
+  it("a terms version with a registration in its window is refused, with the count and the window", () => {
+    expect(deletionObstacle({ ...unused, terms: { window, registrations: 3 } })).toEqual({
       kind: "termsAccepted",
-      submissions: 3,
+      registrations: 3,
       window,
     });
   });
@@ -190,21 +191,21 @@ describe("§NNN the reasons a version may not be deleted, in the order they are 
         ...unused,
         privacyAcknowledgementCount: 4,
         inForce: true,
-        terms: { window, submissions: 1 },
+        terms: { window, registrations: 1 },
       }),
     ).toEqual({ kind: "referenced", signatures: 0, events: 0, acknowledgements: 4 });
 
     // In force is told before the window: withdrawing is the step that actually moves, and a
     // version in force cannot even be withdrawn until its successor is approved.
     expect(
-      deletionObstacle({ ...unused, inForce: true, terms: { window: { ...window, until: null }, submissions: 7 } }),
+      deletionObstacle({ ...unused, inForce: true, terms: { window: { ...window, until: null }, registrations: 7 } }),
     ).toEqual({ kind: "inForce" });
   });
 
   it("withdrawal's question ignores the terms window, which is deletion's alone", () => {
     // Withdrawal keeps the words, so a blind count loses nothing there; only deletion destroys
     // them (§203). A terms version somebody accepted can still be withdrawn.
-    expect(dependantObstacle({ ...unused, terms: { window, submissions: 5 } } as DeletionFacts)).toBeNull();
+    expect(dependantObstacle({ ...unused, terms: { window, registrations: 5 } } as DeletionFacts)).toBeNull();
     expect(dependantObstacle({ ...unused, eventCount: 1 })).toEqual({
       kind: "referenced",
       signatures: 0,

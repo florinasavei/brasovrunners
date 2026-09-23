@@ -24,7 +24,7 @@ import {
   type TermsReliance,
 } from "./domain/deletability";
 import {
-  countRegistrationsSubmittedWithin,
+  countRegistrationsAgreeingWithin,
   findCurrentApprovedDocument,
   findCurrentApprovedVersionId,
   findVersionWithTranslations,
@@ -157,43 +157,50 @@ function refusalFor(obstacle: DeletionObstacle): DomainError {
     case "termsAccepted":
       return new DomainError(
         "CONFLICT",
-        `${obstacle.submissions} registration(s) were submitted while this terms version was in force (${obstacle.window.from.toISOString()} – ${obstacle.window.until?.toISOString() ?? "now"}); a registration records no terms version, so any of them may have accepted it`,
+        `${obstacle.registrations} registration(s) were submitted, or had their declaration signed, while this terms version was in force (${obstacle.window.from.toISOString()} – ${obstacle.window.until?.toISOString() ?? "now"}); neither records a terms version, so any of them may have accepted it`,
         ["termsAccepted"],
       );
   }
 }
 
 /**
- * Everything the deletion rule reads about one version, for `deletionObstacle` (§290, §NNN).
+ * Everything the deletion rule reads about each of `rows`, for `deletionObstacle` (§290, §NNN) —
+ * one `DeletionFacts` per row, in the order given.
  *
  * Exported because three callers must get the same answer — the service before it destroys, the
  * delete screen before it offers the form, the list before it offers the link — and the one that
  * did not ask is how the owner came to press "Șterge definitiv" three times on a version the
  * service would always refuse. `versions` is every row of `listVersionsForBackoffice`, which each
- * caller has already read; a terms version's window is computed from its siblings.
+ * caller has already read; a terms version's window is computed from its siblings. `rows` is the
+ * ones to judge: the service and the delete screen pass the one they are about, the list passes
+ * all of them.
  *
- * Reads only. Two queries at most: the version in force for the key, and — for a terms version
- * that was ever in force — the registrations submitted inside its window.
+ * **Plural so the list costs what it should.** Reads only: one in-force lookup per *key* among
+ * `rows` — three at most, however many versions there are — and one count per terms version that
+ * was ever in force. Asked a row at a time, the list made an in-force lookup for every privacy
+ * notice and declaration it drew, the same three answers over and over.
  */
 export async function readDeletionFacts<T extends Record<string, unknown>>(
   db: Database<T>,
-  row: LegalDocumentVersionRow,
+  rows: readonly LegalDocumentVersionRow[],
   versions: readonly LegalDocumentVersionRow[],
   now: Date,
-): Promise<DeletionFacts> {
-  const [inForceId, terms] = await Promise.all([
-    findCurrentApprovedVersionId(db, row.key, now),
-    termsRelianceOf(db, row, versions, now),
+): Promise<DeletionFacts[]> {
+  const keys = [...new Set(rows.map((row) => row.key))];
+  const [inForceIds, terms] = await Promise.all([
+    Promise.all(keys.map((key) => findCurrentApprovedVersionId(db, key, now))),
+    Promise.all(rows.map((row) => termsRelianceOf(db, row, versions, now))),
   ]);
+  const inForce = new Set(inForceIds.filter((id): id is string => id !== undefined));
 
-  return {
+  return rows.map((row, index) => ({
     isApproved: row.isApproved,
     acceptanceCount: row.acceptanceCount,
     eventCount: row.eventCount,
     privacyAcknowledgementCount: row.privacyAcknowledgementCount,
-    inForce: inForceId === row.id,
-    terms,
-  };
+    inForce: inForce.has(row.id),
+    terms: terms[index],
+  }));
 }
 
 async function termsRelianceOf<T extends Record<string, unknown>>(
@@ -205,7 +212,7 @@ async function termsRelianceOf<T extends Record<string, unknown>>(
   if (row.key !== "TERMS") return null;
   const window = inForceWindow(row, versions, now);
   if (!window) return null;
-  return { window, submissions: await countRegistrationsSubmittedWithin(db, window) };
+  return { window, registrations: await countRegistrationsAgreeingWithin(db, window) };
 }
 
 /**
@@ -632,8 +639,9 @@ export type DeleteApprovedVersionInput = {
  * is refused too, and told which verb applies: `deleteDraftVersion` needs no confirmation and
  * retires no number, and quietly doing one verb's work under the other's name is how a draft
  * would start costing a version number. And a terms version is refused while any registration
- * was submitted during its time in force (§NNN), because a registration records no terms version
- * and the submission's instant is the only evidence of which text it accepted.
+ * was submitted, or had its declaration signed, during its time in force (§NNN), because neither
+ * records a terms version and those two instants are the only evidence of which text was agreed
+ * to.
  *
  * **In production as well.** §30 keeps *test registrations* out of production because a
  * synthetic row corrupts the club's real counts; nothing follows from it about the club tidying
@@ -736,8 +744,8 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
  * The question is `deletionObstacle`, the pure rule the delete screen and the list ask too, fed
  * by `readDeletionFacts`: a draft first, so aiming this at a draft is answered by naming the verb
  * that applies; then the question shared with withdrawal (`dependantObstacle`), so the two verbs
- * can never disagree about what "unused" means; then, for TERMS, whether anybody submitted a
- * registration while the version was in force.
+ * can never disagree about what "unused" means; then, for TERMS, whether any registration was
+ * submitted, or had its declaration signed, while the version was in force.
  *
  * A withdrawn version passes the shared part: it has no dependants by construction — withdrawal
  * refused it otherwise — and it is by definition not in force. That is the natural second step,
@@ -748,9 +756,9 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
  * destroys the words, and after it the audit row's hash is the only evidence of what the club
  * published — so for the one key whose counts are vacuous it needs the window to be empty.
  *
- * Inside the transaction the window is in the past, so no new submission can land in it; a
- * restart can only stretch a registration *across* it, which is counted (see
- * `countRegistrationsSubmittedWithin`), so the second asking can only be stricter than the first.
+ * Inside the transaction the window is in the past, so no new submission or signature can land
+ * in it; a restart can only stretch a registration *across* it, which is counted (see
+ * `countRegistrationsAgreeingWithin`), so the second asking can only be stricter than the first.
  */
 async function assertDeletable<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -761,7 +769,8 @@ async function assertDeletable<T extends Record<string, unknown>>(
   const row = versions.find((candidate) => candidate.id === versionId);
   if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
 
-  const obstacle = deletionObstacle(await readDeletionFacts(db, row, versions, now));
+  const [facts] = await readDeletionFacts(db, [row], versions, now);
+  const obstacle = deletionObstacle(facts);
   if (obstacle) throw refusalFor(obstacle);
 
   return row;

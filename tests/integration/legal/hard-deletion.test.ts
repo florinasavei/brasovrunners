@@ -459,14 +459,16 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   });
 
   /*
-    §NNN — a terms version is deletable when nobody submitted a registration while it was in force.
+    §NNN — a terms version is deletable when nobody submitted a registration, or signed a
+    declaration, while it was in force.
 
     §203 found the three dependant counts vacuous for TERMS — a registration records
     `privacy_notice_version`, `results_consent_version` and `health_consent_version`, never a terms
     version — and refused every terms version that had ever been in force. The owner met that
     three times on two versions nobody had registered under ("Still can't delete these docs...").
-    The evidence was there: the terms are accepted at the instant the form is submitted, so a
-    version with no submission inside its window was accepted by nobody.
+    The evidence was there: the terms are accepted at the instant the form is submitted, and again
+    when the declaration ("sunt de acord cu termenii...") is signed, so a version with neither
+    inside its window was accepted by nobody.
 
     The history below is the owner's, compressed: version 1 in force from the 4th, version 2 from
     the 6th at ten, the deletion attempted on the 7th while version 2 is in force.
@@ -510,23 +512,50 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
         defaultName: "Ana",
       })
       .returning();
-    await db.insert(registrations).values({
-      eventId: event.id,
-      participantId: participant.id,
-      status: "CONFIRMED",
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        eventId: event.id,
+        participantId: participant.id,
+        status: "CONFIRMED",
+        locale: "ro",
+        registeredName: "Ana",
+        displayName: "Ana",
+        kind: input.kind ?? "REAL",
+        source: input.source ?? "PUBLIC",
+        // A notice number no version here carries, unless a case asks for one: the acknowledgement
+        // count stays at zero, and for the terms only the window can refuse.
+        privacyNoticeVersion: input.privacyNoticeVersion ?? 99,
+        privacyAcknowledgedAt: input.acknowledgedAt ?? input.createdAt,
+        resultsNameConsent: false,
+        resultsConsentVersion: input.privacyNoticeVersion ?? 99,
+        submittedAt: input.createdAt,
+        createdAt: input.createdAt,
+      })
+      .returning({ id: registrations.id });
+    return registration.id;
+  }
+
+  /**
+   * The registration's declaration, signed at `acceptedAt` — "Sunt de acord cu termenii,
+   * condițiile și regulamentul evenimentului", the second instant the terms are agreed to.
+   */
+  async function declarationSigned(registrationId: string, acceptedAt: Date) {
+    const declaration = await createDraftVersion(
+      db,
+      superadmin,
+      { key: "EVENT_DECLARATION", translations: translations("d1") },
+      BEFORE_V1,
+    );
+    await approveVersion(db, superadmin, declaration, BEFORE_V1);
+    await db.insert(declarationAcceptances).values({
+      registrationId,
+      legalDocumentId: declaration,
+      declarationVersion: 1,
+      contentSha256: "a".repeat(64),
       locale: "ro",
-      registeredName: "Ana",
-      displayName: "Ana",
-      kind: input.kind ?? "REAL",
-      source: input.source ?? "PUBLIC",
-      // A notice number no version here carries, unless a case asks for one: the acknowledgement
-      // count stays at zero, and for the terms only the window can refuse.
-      privacyNoticeVersion: input.privacyNoticeVersion ?? 99,
-      privacyAcknowledgedAt: input.acknowledgedAt ?? input.createdAt,
-      resultsNameConsent: false,
-      resultsConsentVersion: input.privacyNoticeVersion ?? 99,
-      submittedAt: input.createdAt,
-      createdAt: input.createdAt,
+      typedName: "Ana",
+      acceptedAt,
     });
   }
 
@@ -534,7 +563,9 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     isDomainError(error) &&
     error.code === "CONFLICT" &&
     error.fields.includes("termsAccepted") &&
-    error.message.startsWith(`${count} registration(s) were submitted while this terms version was in force`) &&
+    error.message.startsWith(
+      `${count} registration(s) were submitted, or had their declaration signed, while this terms version was in force`,
+    ) &&
     error.message.includes(TERMS_V1_AT.toISOString()) &&
     error.message.includes(TERMS_V2_AT.toISOString());
 
@@ -580,6 +611,40 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     await registrationSubmitted({ createdAt: BEFORE_V1, acknowledgedAt: UNDER_V2 });
 
     await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+  });
+
+  it("refuses one under which a declaration was signed, though the form was submitted before it", async () => {
+    /*
+      Registered on the 3rd, before any terms were in force; the declaration — "sunt de acord cu
+      termenii, condițiile și regulamentul evenimentului" — signed on the 5th, under version 1.
+      That is the usual shape since the participation window (§104): the declaration is asked
+      days after the form. Whoever signed on the 5th agreed to "the terms" as they then stood.
+    */
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: BEFORE_V1 });
+    await declarationSigned(registration, IN_V1_WINDOW);
+    await withdrawApprovedVersion(db, superadmin, first, LATER);
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+    expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(1);
+    expect(await db.select().from(legalDocumentNumbering)).toHaveLength(0);
+  });
+
+  it("counts a registration once when both its form and its declaration fall in the window", async () => {
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: IN_V1_WINDOW });
+    await declarationSigned(registration, IN_V1_WINDOW);
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+  });
+
+  it("deletes one whose only signature fell under a later version", async () => {
+    // Registered before version 1, signed under version 2: neither instant is version 1's.
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: BEFORE_V1 });
+    await declarationSigned(registration, UNDER_V2);
+
+    await expect(erase(first, "TERMS 1")).resolves.toEqual({ key: "TERMS", version: 1 });
   });
 
   it("counts a test registration and a staff-entered one too", async () => {
@@ -638,9 +703,10 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     §290 and §NNN — one rule, every caller.
 
     The list offered "Șterge definitiv" on rows the service refused, because it carried its own
-    copy of the obstacles. It now renders `deletionObstacle(await readDeletionFacts(...))`, the
-    same two calls `assertDeletable` makes; this asserts that what those two say is what the
-    service then does, row by row, across both keys and every kind of obstacle.
+    copy of the obstacles. It now renders `deletionObstacle` over `readDeletionFacts`, the same two
+    calls `assertDeletable` makes; this asserts that what those two say is what the service then
+    does, row by row, across both keys and every kind of obstacle. The list asks for every row in
+    one call and the service for its one row, so the two askings are compared as well.
   */
   it("gives the list the service's own verdict: a row offers deletion exactly when deletion succeeds", async () => {
     const NOON = new Date("2026-09-06T12:00:00.000Z");
@@ -663,9 +729,13 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     for (const id of [first, second, third, ...notices]) {
       // Read fresh each time, as the list does when it renders after the previous deletion.
       const versions = await listVersionsForBackoffice(db);
-      const row = versions.find((candidate) => candidate.id === id);
+      const index = versions.findIndex((candidate) => candidate.id === id);
+      const row = versions[index];
       if (!row) throw new Error("the version under test is missing");
-      const obstacle = deletionObstacle(await readDeletionFacts(db, row, versions, LATER));
+      const [facts] = await readDeletionFacts(db, [row], versions, LATER);
+      // The list's asking — every row at once — says the same about this one.
+      expect((await readDeletionFacts(db, versions, versions, LATER))[index]).toEqual(facts);
+      const obstacle = deletionObstacle(facts);
       verdicts[`${row.key} ${row.version}`] = obstacle?.kind ?? null;
 
       const outcome = await erase(id, confirmationPhrase(row.key, row.version)).then(

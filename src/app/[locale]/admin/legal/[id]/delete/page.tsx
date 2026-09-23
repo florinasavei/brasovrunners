@@ -86,7 +86,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
     offered the delete link: the owner pressed it three times. A copy is a thing that drifts; there
     is no copy here any more.
   */
-  const facts = await readDeletionFacts(db, version, versions, now);
+  const [facts] = await readDeletionFacts(db, [version], versions, now);
   const obstacle = deletionObstacle(facts);
   // "4–20 sept. 2026": the stretch the version was the text in force, up to now if it still is.
   const span = (window: InForceWindow) =>
@@ -110,7 +110,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
         // What stands on it, then what can still be done — which, for a version already
         // withdrawn, is nothing more, and the sentence says so rather than offering it again.
         return `${t("legal.erase.blockedTermsAccepted", {
-          count: obstacle.submissions,
+          count: obstacle.registrations,
           window: span(obstacle.window),
         })} ${version.withdrawnAt ? t("legal.erase.termsAlreadyWithdrawn") : t("legal.erase.termsWithdrawInstead")}`;
     }
@@ -119,8 +119,9 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   /*
     Why it may go, in the terms that apply to this key. The three counts say nothing about a terms
     version, so "no signature, no event, no registration" would be a vacuous reassurance there;
-    what is true is when it was in force and that nobody submitted a registration in that time —
-    or that it never took effect at all.
+    what is true is when it was in force and that nobody submitted a registration or signed a
+    declaration in that time — or that it was never the text in force at all, which says no more
+    than it knows: superseded before its date and withdrawn before it are both that.
   */
   const whyItMayGo = facts.terms
     ? t("legal.erase.termsNobodyAccepted", { window: span(facts.terms.window) })

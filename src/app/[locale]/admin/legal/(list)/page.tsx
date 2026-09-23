@@ -80,8 +80,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * Where neither is possible the row says why, from the service's own verdict (`deletionObstacle`)
  * — the three counts, then "in force right now" — and it says it about both verbs at once,
  * because the condition is the same condition. Where only deletion is refused — a terms version
- * somebody submitted a registration under while it was in force (§NNN) — the withdraw button
- * stays and the link gives way to the reason, with the count and the dates. A missing button
+ * somebody registered or signed a declaration under while it was in force (§NNN) — the withdraw
+ * button stays and the link gives way to the reason, with the count and the dates. A missing button
  * explains nothing; a count is a reason an organizer accepts. The server refuses regardless
  * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
  * pressed.
@@ -156,14 +156,13 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     It includes which rows the site is serving right now — the one reason a withdrawal is refused
     that no count on the row can show. A privacy notice with zero signatures is not unused; it is
     the notice of a quiet week, and withdrawing it would close registration (BR-REQ-053-01).
+
+    Every row in one call, so the in-force question is asked once per document rather than once
+    per row; the only per-row cost is the count for each terms version that was ever in force.
   */
+  const allFacts = await readDeletionFacts(getDb(), versions, versions, now);
   const factsById = new Map<string, DeletionFacts>(
-    await Promise.all(
-      versions.map(
-        async (version) =>
-          [version.id, await readDeletionFacts(getDb(), version, versions, now)] as const,
-      ),
-    ),
+    versions.map((version, index) => [version.id, allFacts[index]]),
   );
   const factsOf = (version: LegalDocumentVersionRow): DeletionFacts => {
     const facts = factsById.get(version.id);
@@ -249,15 +248,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       label: t("legal.usage"),
       render: (version) => {
         /*
-          A terms version is used by whoever submitted a registration while it was in force, and
-          that is the figure it gets. "Nefolosit încă" was never true of one: the three counts are
-          vacuous for this key, because a registration records no terms version (§203).
+          A terms version is used by whoever submitted a registration, or signed a
+          declaration, while it was in force, and that is the figure it gets. "Nefolosit
+          încă" was never true of one: the three counts are vacuous for this key, because a
+          registration records no terms version (§203).
         */
         const terms = factsOf(version).terms;
         if (terms) {
           return terms.window.until
-            ? t("legal.termsSubmissions", { count: terms.submissions })
-            : t("legal.termsSubmissionsSoFar", { count: terms.submissions });
+            ? t("legal.termsRegistrations", { count: terms.registrations })
+            : t("legal.termsRegistrationsSoFar", { count: terms.registrations });
         }
         const reliance = relianceOf(version);
         return isReliedOn({
@@ -462,7 +462,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 delete link: it is the row the owner asked about, already out of circulation and
                 still in the way.
 
-                A terms version somebody submitted a registration under keeps its withdraw button
+                A terms version somebody registered or signed under keeps its withdraw button
                 and loses the link: withdrawal keeps the words, so it is still open to it, and
                 deletion would destroy text somebody may have accepted — the row says that, with
                 the count and the dates, instead of a link to a page that would refuse (§NNN).
@@ -503,7 +503,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                   {obstacle?.kind === "termsAccepted" ? (
                     reason(
                       t("legal.deleteBlockedTermsAccepted", {
-                        count: obstacle.submissions,
+                        count: obstacle.registrations,
                         window: span(obstacle.window),
                       }),
                     )

@@ -113,10 +113,12 @@ export function inForceWindow(
 }
 
 /**
- * What a terms version's window shows: how many registrations were submitted while it was the
- * text in force. Null for the other two keys, and for a terms version that was never in force.
+ * What a terms version's window shows: how many registrations agreed to "the terms" while it was
+ * the text in force — submitted the form, or signed the declaration, inside the window
+ * (`countRegistrationsAgreeingWithin`). Null for the other two keys, and for a terms version that
+ * was never in force.
  */
-export type TermsReliance = { window: InForceWindow; submissions: number };
+export type TermsReliance = { window: InForceWindow; registrations: number };
 
 /** Everything the deletion rule reads about one version, gathered by `readDeletionFacts`. */
 export type DeletionFacts = {
@@ -136,7 +138,7 @@ export type DependantObstacle =
 export type DeletionObstacle =
   | { kind: "draft" }
   | DependantObstacle
-  | { kind: "termsAccepted"; submissions: number; window: InForceWindow };
+  | { kind: "termsAccepted"; registrations: number; window: InForceWindow };
 
 /**
  * Something stands on these words, or the site is serving them (`DECISIONS.md` §46, §53, §151).
@@ -179,11 +181,12 @@ export function dependantObstacle(
  *    the text in force — before anything narrower, because withdrawing is the step that moves.
  * 3. **A terms version somebody accepted.** A registration records `privacy_notice_version` and
  *    never a terms version, so the three counts are vacuous for this key. What *can* be shown is
- *    when it was accepted: a terms version is accepted at the instant the form is submitted while
- *    it is the text in force. So the question is whether any registration was submitted inside its
- *    window (`TermsReliance`). None, and nobody ever ticked "I accept" under those words — it may
- *    go like any other unused version. One, and deletion would destroy text somebody may have
- *    accepted, leaving only a hash.
+ *    when it was accepted: the terms are agreed to at the instant the form is submitted, and again
+ *    when the declaration — "sunt de acord cu termenii, condițiile și regulamentul evenimentului"
+ *    — is signed, and whatever was in force at that instant is what was agreed to. So the question
+ *    is whether any registration did either inside its window (`TermsReliance`). None, and nobody
+ *    ever agreed to anything under those words — it may go like any other unused version. One,
+ *    and deletion would destroy text somebody may have accepted, leaving only a hash.
  *
  * §203 refused every terms version that had *ever* been in force, because it had no evidence at
  * all; this replaces that refusal with the evidence, without a migration.
@@ -194,10 +197,10 @@ export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null 
   const dependant = dependantObstacle(facts);
   if (dependant) return dependant;
 
-  if (facts.terms && facts.terms.submissions > 0) {
+  if (facts.terms && facts.terms.registrations > 0) {
     return {
       kind: "termsAccepted",
-      submissions: facts.terms.submissions,
+      registrations: facts.terms.registrations,
       window: facts.terms.window,
     };
   }

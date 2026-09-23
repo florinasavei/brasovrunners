@@ -563,7 +563,7 @@
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
-      "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations from the time it was in force, and a registration does not record which version of the terms it accepted. You can withdraw it instead — it stays on the record and is offered to nobody."
+      "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody."
     },
     "editor": {
       "eventSection": "Event details",
@@ -989,8 +989,8 @@
       "legalDraftSaved": "The draft was saved.",
       "legalVersionApproved": "The version is approved and now public.",
       "referencedFull": "{signatures} signatures · {events} events · {acknowledgements} registrations",
-      "termsSubmissions": "Registrations while it was in force: {count}",
-      "termsSubmissionsSoFar": "Registrations since it took effect: {count}",
+      "termsRegistrations": "Registrations while it was in force: {count}",
+      "termsRegistrationsSoFar": "Registrations since it took effect: {count}",
       "tableCaption": "Legal document versions, with their state and what depends on each",
       "delete": "Delete the draft",
       "deletePending": "Deleting…",
@@ -998,7 +998,7 @@
       "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
       "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
       "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
-      "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted while it was in force, {window} ({count}), and a registration does not record which version of the terms it accepted.",
+      "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted or declarations signed while it was in force, {window} ({count}), and neither records which version of the terms was accepted.",
       "legalVersionDeleted": "The draft has been deleted.",
       "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
       "platformApproved": "Done: {count} texts approved, with the club's facts. Registrations are open; the declaration is chosen on each event, under Registration (if not already).",
@@ -1058,8 +1058,8 @@
         "numberRetired": "Version number {version} stays retired for good. The next version of this document takes the next number, never {version} again, so a number people already ticked at registration can never end up on different words.",
         "auditOnly": "One trace is left: an audit line with the document, the number, the date it took effect, who approved it, the SHA-256 of each language's text and the reason you type. The text itself is kept nowhere.",
         "nothingDepends": "It can be deleted because nothing depends on it: no signature, no event, no registration — and it is not the text in force right now.",
-        "termsNobodyAccepted": "It can be deleted because nobody accepted it: it was in force {window} and no registration was submitted in that time — and it is no longer the text in force.",
-        "termsNeverInForce": "It can be deleted because nobody accepted it: it was never the text in force — it was superseded before it took effect.",
+        "termsNobodyAccepted": "It can be deleted because nobody accepted it: it was in force {window}, and in that time no registration was submitted and no declaration was signed — and it is no longer the text in force.",
+        "termsNeverInForce": "It can be deleted because nobody accepted it: it was never the text in force.",
         "alreadyWithdrawn": "You already withdrew this version, on {date}. Deleting is the second and final step: now it leaves the record as well.",
         "notWithdrawn": "This version has not been withdrawn. If you only want it to stop being offered anywhere, withdraw it from the list instead: it stays on the record, with its text and its number. Deleting cannot be undone.",
         "phraseLabel": "Confirmation",
@@ -1070,7 +1070,7 @@
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
         "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
         "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
-        "blockedTermsAccepted": "Cannot be deleted: registrations were submitted while this version of the terms was in force, {window} ({count}). Any of them may have accepted it, and a registration does not record which version of the terms it was — so nobody can be shown not to have relied on it, and deletion destroys the words themselves.",
+        "blockedTermsAccepted": "Cannot be deleted: while this version of the terms was in force, {window}, registrations were submitted or declarations signed ({count}). Any of them may have accepted it — the declaration says “I agree with the event's terms, conditions and rules” — and neither records which version of the terms it was, so nobody can be shown not to have relied on it, and deletion destroys the words themselves.",
         "termsWithdrawInstead": "Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody.",
         "termsAlreadyWithdrawn": "You have already withdrawn it, so it is offered to nobody; it stays on the record, with its number, for whoever accepted it."
       },
