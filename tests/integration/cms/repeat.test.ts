@@ -58,6 +58,10 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
         declarationDocumentId: null,
         editorialStatus: options.published ? "PUBLISHED" : "DRAFT",
         publishedAt: options.published ? new Date("2026-09-01T00:00:00Z") : null,
+        // A recurring Strava club event and a Facebook event with several dates: one address
+        // each for every occurrence, which is why a series inherits them (§297).
+        stravaEventUrl: "https://www.strava.com/clubs/1147727/group_events/3393210254679131656",
+        facebookEventUrl: "https://www.facebook.com/events/885822964531556",
       })
       .returning();
     await db.insert(eventTranslations).values([
@@ -100,6 +104,17 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(third.participantListVisibility).toBe("HIDDEN");
     expect(third.repeatOf).toBe(source.id);
     expect(third.repeatRule).toBeNull();
+    /*
+      The series inherits the source's Strava and Facebook event links (§297; the owner: "if I
+      put the root links … strava and facebook should be smart enough to inherit this"). Both
+      platforms give a recurring event one address for all its dates, so the address on the
+      source IS the address of every occurrence — where §71 had assumed each occurrence has its
+      own page. A duplicate (next year's edition) still gets neither: that is a new event page.
+    */
+    expect(third.stravaEventUrl).toBe("https://www.strava.com/clubs/1147727/group_events/3393210254679131656");
+    expect(third.facebookEventUrl).toBe("https://www.facebook.com/events/885822964531556");
+    // And never the film: last year's would be wrong on this year's date.
+    expect(third.videoUrl).toBeNull();
     // The source carries the rule.
     expect((await db.select().from(events).where(eq(events.id, source.id)))[0].repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: false });
   });
