@@ -882,7 +882,8 @@
           "none": "No email went out: the place, the date and time and the programme did not change, and the note for the participants was empty.",
           "cancelled": "The event is cancelled. “Event cancelled” emails queued: {queued}.",
           "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked."
-        }
+        },
+        "countTest": "Test registrations, which get the email too and are counted nowhere: {test}."
       }
     },
     "preview": {

@@ -207,6 +207,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           plan: noticeVolume.planName,
           remaining: String(noticeVolume.remaining),
         });
+  // Test rows get the email too (§12.6) and are said apart, so "0 participants, 3 messages" reads right.
+  const noticeTestNote = noticeRecipients.test > 0 ? ` ${t("editor.notice.countTest", { test: String(noticeRecipients.test) })}` : "";
 
   /**
    * Why Delete is, or is not, offered (§170; the owner: "aparent nu pot șterge evenimente").
@@ -489,7 +491,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       notifyHelp:
                         noticeRecipients.real + noticeRecipients.test === 0
                           ? t("editor.notice.countNone")
-                          : `${t("editor.notice.count", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${inSeries ? ` ${t("editor.notice.countSeries")}` : ""}`,
+                          : `${t("editor.notice.count", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${noticeTestNote}${inSeries ? ` ${t("editor.notice.countSeries")}` : ""}`,
                       note: t("editor.notice.note"),
                       noteHelp: t("editor.notice.noteHelp", { max: String(EVENT_NOTICE_TEXT_MAX) }),
                       cancelTitle: t("editor.notice.cancelTitle"),
@@ -500,7 +502,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       cancelNotifyHelp:
                         noticeRecipients.real + noticeRecipients.test === 0
                           ? t("editor.notice.cancelCountNone")
-                          : t("editor.notice.cancelCount", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance }),
+                          : `${t("editor.notice.cancelCount", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${noticeTestNote}`,
                     }}
                   />
                 </Box>
