@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.61-2026-09-23
+
+- **Spam through the contact form now arrives marked instead of looking like a real message.** A message that gets past every check but looks automated — sent with no anti-bot token while the check is on, or from an address whose domain imitates the club's — still reaches the club's mailbox, with „[posibil spam]" at the front of the subject and a short note under the message saying why, how fast it was sent and which links it holds. The sender sees „Mesajul a plecat" either way and „Reply" still answers them, because a real person whose browser never ran the check looks exactly the same. A Gmail filter on the mark files these away (SETUP.md §38). Ordinary messages are unchanged, to the byte. `DECISIONS.md` §310.
 ## BR-V1.60-2026-09-23
 
 - **An invalid field wears an exclamation mark inside the box** — on every form, CSS only: a field the server refused, or one the browser refused once touched or on send (which now also turns its outline red). **"Ești deja înscris" is underlined** in the message re-sent to somebody who fills in the form again. `DECISIONS.md` §309.

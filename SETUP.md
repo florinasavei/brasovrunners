@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.60-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.61-2026-09-23 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.60-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.61-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1304,6 +1304,20 @@ club names — which is why a colleague's Yahoo can be on the list.
    "Nu am putut trimite. Scrie-ne direct la …" on the page and `smtp EAUTH` in the function
    log — never the password. Those failed tries are not counted against the sender: once
    the password is right, the same address sends at once.
+7. **Optional, in the club's Gmail: file the messages the site marks as possible spam.** A
+   message the form lets through but that looks automated still arrives, so that a real person is
+   never lost. That covers a post with no anti-bot token while the check is on, and a sender whose
+   domain imitates the club's (`search-<domain>`, `<name>-seo.com`). The subject starts with
+   `[posibil spam] ` (`[QA] [posibil spam] …` on QA) and a note under the message says why. To file
+   them away: open the club's Gmail → the search box → **Show search options** → in **Has the
+   words** type `subject:"[posibil spam]"` (Gmail ignores the brackets and matches the phrase, so
+   the QA mark is caught too) → **Create filter** → tick **Skip the Inbox (Archive it)** and
+   **Apply the label** → **New label** `Posibil spam` → **Create filter**. Do not tick **Delete
+   it**. Look at the label once a week: somebody whose browser never ran the check lands there too,
+   and "Reply" still answers them. The mark is fixed text (`SUSPICIOUS_SUBJECT_PREFIX` in
+   `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
+   Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
+   §310)
 
 To take the form away, clear the recipients on `/admin/emails` and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
