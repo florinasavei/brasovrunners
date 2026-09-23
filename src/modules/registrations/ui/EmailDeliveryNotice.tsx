@@ -5,8 +5,8 @@ import { env } from "@/shared/config/env";
 
 /**
  * The one sentence a tester needs before filling in a form on QA or on a laptop: that the
- * email this environment promises is not coming, or is coming only to the addresses the club
- * authorized. Rendered on the registration form and on the "check your email" screen, and on
+ * email this environment promises is not coming, is coming only to the addresses the club
+ * authorized, or is coming for real — tagged [QA] — for a registration that is not (§307). Rendered on the registration form and on the "check your email" screen, and on
  * production — `EMAIL_DELIVERY_MODE=live` — not at all (`delivery-notice.ts`).
  *
  * A Server Component with no state: the mode is fixed for the life of the process, and the

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { emailDeliveryNotice } from "@/modules/notifications/delivery-notice";
-import { EMAIL_DELIVERY_MODES } from "@/shared/config/env-enums";
+import { EMAIL_DELIVERY_MODES, type EmailDeliveryMode } from "@/shared/config/env-enums";
 
 /**
  * `AGENTS.md` §16.4 — the delivery modes, told to the person about to wait for an email. Two
@@ -19,23 +19,36 @@ import { EMAIL_DELIVERY_MODES } from "@/shared/config/env-enums";
  * renders `t(key)` with a variable, which the static i18n check cannot see.
  */
 describe("AGENTS.md §16.4 the email delivery notice", () => {
+  const listed = ["tester@example.org"];
+
   it("says nothing on production, where the mode is live", () => {
-    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "live" })).toBeNull();
+    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "live", EMAIL_ALLOWLIST: [] })).toBeNull();
   });
 
   it("names the capture mode a laptop and the test run are in", () => {
-    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "capture" })).toBe("deliveryNotice.capture");
+    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "capture", EMAIL_ALLOWLIST: [] })).toBe("deliveryNotice.capture");
   });
 
-  it("names the allowlist mode QA is in", () => {
-    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "allowlist" })).toBe("deliveryNotice.allowlist");
+  it("names an allowlist of addresses: only those receive mail", () => {
+    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: listed })).toBe("deliveryNotice.allowlist");
+  });
+
+  // §307: QA sends through the club's domain with the star of §163, so the mail is real — the
+  // old "you will receive nothing" would have told a tester to stop waiting for a message that
+  // was already in their inbox.
+  it("says the mail is real, the registration is not, when the allowlist carries the star", () => {
+    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: ["*"] })).toBe("deliveryNotice.everyone");
+    expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: [...listed, "*"] })).toBe("deliveryNotice.everyone");
   });
 
   it("returns a key that resolves in both catalogues for every mode that is not live", () => {
     const registration = (messages: unknown) =>
       (messages as { Registration: { deliveryNotice: Record<string, string> } }).Registration.deliveryNotice;
-    for (const mode of EMAIL_DELIVERY_MODES) {
-      const key = emailDeliveryNotice({ EMAIL_DELIVERY_MODE: mode });
+    const cases: { mode: EmailDeliveryMode; list: string[] }[] = EMAIL_DELIVERY_MODES.flatMap((mode): { mode: EmailDeliveryMode; list: string[] }[] =>
+      mode === "allowlist" ? [{ mode, list: listed }, { mode, list: ["*"] }] : [{ mode, list: [] }],
+    );
+    for (const { mode, list } of cases) {
+      const key = emailDeliveryNotice({ EMAIL_DELIVERY_MODE: mode, EMAIL_ALLOWLIST: list });
       if (mode === "live") {
         expect(key).toBeNull();
         continue;
