@@ -6,13 +6,14 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
@@ -34,6 +35,7 @@ import { findLatestPastEvent, listPastEvents, listUpcomingEvents, type PublicEve
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
@@ -437,13 +439,17 @@ async function EventCard({
   now: Date;
 }) {
   const tEvent = await getTranslations("Event");
+  const locale = (await getLocale()) as Locale;
+  const page = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } });
   return (
     <Card
       component="li"
       variant="outlined"
-      /* An event the club marked special wears it on the whole card (§272), not only as a chip. */
-      sx={{ ...liftOnHover, ...riseIn(index), ...(event.isSpecial ? specialCard : {}) }}
+      /* An event the club marked special wears it on the whole card (§272), not only as a chip.
+         A flex column so the button under the link sits at the foot of every card in a row (§275). */
+      sx={{ ...liftOnHover, ...riseIn(index), ...(event.isSpecial ? specialCard : {}), display: "flex", flexDirection: "column" }}
     >
+      <Box sx={{ flexGrow: 1 }}>
       <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
         <CardContent>
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
@@ -469,18 +475,20 @@ async function EventCard({
 
           {/* No links inside: the card is the link. */}
           <EventFacts event={event} now={now} variant="compact" links={false} />
-
-          {/*
-            The card has always been one big link (`CardLink`), and nothing said so. Text plus
-            an arrow rather than a second button: the whole card is already the tap target
-            (BR-REQ-041-01 criterion 6), and a real button inside a link would be a control
-            inside a control.
-          */}
-          <Typography aria-hidden="true" variant="body2" sx={{ mt: 2, color: "primary.main", fontWeight: 500 }}>
-            {tEvent("seeDetails")} →
-          </Typography>
         </CardContent>
       </CardLink>
+      </Box>
+
+      {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
+          pentru 'descrierea completa a evenimentului'") — the same button the series card wears,
+          so the two kinds of card read alike. It stands *outside* the whole-card link: a real
+          button inside a link would be a control inside a control. The arrowed "Vezi detaliile"
+          hint it replaces was aria-hidden and inside the link — a decoration, not a door. */}
+      <Box sx={{ px: 2, pb: 2 }}>
+        <Button component="a" href={page} variant="outlined" size="small" sx={TAP_TARGET}>
+          {tEvent("series.fullDescription")}
+        </Button>
+      </Box>
     </Card>
   );
 }

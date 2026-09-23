@@ -189,7 +189,6 @@
       "FREE": "Gratuit",
       "PAID": "Cu taxă"
     },
-    "seeDetails": "Vezi detaliile",
     "series": {
       "weekly": "În fiecare {days}",
       "fortnightly": "O dată la două săptămâni, {days}",
@@ -204,7 +203,8 @@
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
       "nextLabel": "Următoarea",
-      "allDatesCount": "Următoarele date ({count})"
+      "allDatesCount": "Următoarele date ({count})",
+      "fullDescription": "Descrierea completă a evenimentului"
     },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
@@ -495,6 +495,8 @@
       "registrationModeTitle": "Modul de înscriere, din setările evenimentului",
       "columnDate": "Data",
       "seriesDates": "Datele acestei serii",
+      "seriesRenewsUntil": "Se reînnoiește automat: platforma creează datele mereu {weeks} săptămâni înainte, până pe {until}.",
+      "seriesRenewsForever": "Se reînnoiește automat: platforma creează datele mereu {weeks} săptămâni înainte, la nesfârșit.",
       "seriesEdit": "Editează următoarea dată",
       "seriesDeleteNote": "O serie se șterge din bara de deasupra listei: bifeaz-o, apoi „Șterge cele bifate”.",
       "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",

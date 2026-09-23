@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.56-2026-09-23
+
+- **Two lists say what they mean.** Every card on the events listing now ends with a button, „Descrierea completă a evenimentului", to the event's page — the title was the only link, and a title does not say a page exists behind it. And on the backoffice list, a repeating event says under its cadence that it renews itself — „platforma creează datele mereu 8 săptămâni înainte, la nesfârșit" or „până pe …" — because the date span beside it was only the eight weeks made so far and read like an end. §305.
 ## BR-V1.55-2026-09-23
 
 - **Fixed: pressing „Trimite înscrierea" a second too early lost the press.** While the anti-bot check was still answering, the button held your press and said so — and then did nothing when the check finished; you had to press again, and nothing told you. With autofill that was the normal case, and it looked like a registration that went through. The held press is now sent by itself the moment the check answers (or after eight seconds if it never does), the sentence says so, and a submit that takes longer than fifteen seconds tells you to wait rather than press again. §304.
