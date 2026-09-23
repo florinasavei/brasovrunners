@@ -65,7 +65,7 @@ async function createEvent(db: TestDatabase): Promise<EventForRegistration> {
 const submission = (overrides: Record<string, unknown>) => ({
   firstName: "Maria",
   lastName: "Popescu",
-  // Fifteen on the race day: a minor, and over the minimum age of fourteen (§NNN).
+  // Fifteen on the race day: a minor, and over the minimum age of fourteen (§321).
   birthDate: "2011-03-02",
   sex: "FEMALE",
   nationality: "RO",

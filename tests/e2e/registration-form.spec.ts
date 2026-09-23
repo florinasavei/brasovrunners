@@ -467,7 +467,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
   test("refuses somebody under fourteen on the race day, in the picker and on the server", async ({ page }) => {
     /*
-      §NNN — "Min age must be 14". The picker's `max` is the latest birth date that is still
+      §321 — "Min age must be 14". The picker's `max` is the latest birth date that is still
       fourteen on this race's day, computed on the server from the arithmetic it refuses with, so
       the browser refuses a thirteen-year-old first. Without that — JavaScript off, an old
       browser, a bot — the server refuses, the summary names the birth date with the rule in a

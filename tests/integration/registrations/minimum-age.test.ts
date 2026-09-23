@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — a participant is at least fourteen on the day of the event.
+ * §321 — a participant is at least fourteen on the day of the event.
  *
  * The owner, 2026-09-23: "Min age must be 14". Every door a registration can come through is
  * tried here — the public form, a staff entry and the desk's walk-in, a TEST row, a restart of a
@@ -147,7 +147,7 @@ async function nothingWritten() {
   expect(await db.select().from(rateLimitBuckets)).toHaveLength(0);
 }
 
-describe("§NNN the public form", () => {
+describe("§321 the public form", () => {
   it("refuses somebody who is thirteen on the race day, names the birth date, and writes nothing", async () => {
     const event = await createRace();
     const refused = await refusal(submitRegistration(db, event, submission(), NOW));
@@ -197,7 +197,7 @@ describe("§NNN the public form", () => {
   });
 });
 
-describe("§NNN a TEST registration is refused exactly like a real one (AGENTS.md §12.6)", () => {
+describe("§321 a TEST registration is refused exactly like a real one (AGENTS.md §12.6)", () => {
   it("refuses a thirteen-year-old TEST row and writes nothing", async () => {
     const event = await createRace();
     const refused = await refusal(submitRegistration(db, event, submission(), NOW, "TEST"));
@@ -206,7 +206,7 @@ describe("§NNN a TEST registration is refused exactly like a real one (AGENTS.m
   });
 });
 
-describe("§NNN a staff entry and the desk's walk-in", () => {
+describe("§321 a staff entry and the desk's walk-in", () => {
   const staffEntry = (event: EventForRegistration, birthDate: string | undefined, fastTrack = false) => ({
     eventId: event.id,
     firstName: "Andrei",
@@ -299,7 +299,7 @@ describe("§NNN a staff entry and the desk's walk-in", () => {
   });
 });
 
-describe("§NNN a restart of a cancelled registration", () => {
+describe("§321 a restart of a cancelled registration", () => {
   it("is refused under fourteen, and the cancelled row keeps what it had", async () => {
     const event = await createRace();
     await submitRegistration(db, event, submission({ birthDate: "1990-05-17", guardianName: undefined }), NOW);

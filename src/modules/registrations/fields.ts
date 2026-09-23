@@ -222,7 +222,7 @@ const guardianRule = (
 };
 
 /**
- * The marker a refusal for age carries beside `birthDate` (§NNN), in the shape of §231's
+ * The marker a refusal for age carries beside `birthDate` (§321), in the shape of §231's
  * `emergencySame`: the field name is what lets the error summary link to the box, and this is
  * what lets the page say *which* rule refused it — "complete this field correctly" about a real
  * birth date would be untrue. Not a field, so `parseInvalidFields` drops it from the summary.
@@ -230,7 +230,7 @@ const guardianRule = (
 export const UNDER_MINIMUM_AGE = "tooYoung";
 
 /**
- * Fourteen on the day of the event (§NNN, `MIN_PARTICIPANT_AGE`).
+ * Fourteen on the day of the event (§321, `MIN_PARTICIPANT_AGE`).
  *
  * A factory, because the rule needs the one thing this schema does not have: the event. The
  * service knows it (`submitRegistration`) and adds this to whichever schema the caller gets, so

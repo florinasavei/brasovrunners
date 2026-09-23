@@ -240,7 +240,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     /*
       The form comes back as typed, the event still selected (§315).
 
-      Under fourteen on the race day (§NNN) is the one refusal here about a fact the volunteer
+      Under fourteen on the race day (§321) is the one refusal here about a fact the volunteer
       typed and can check with the person in front of them, so it keeps its own sentence — the
       generic "check what you entered" would send them hunting through a form that is correct.
       The rule's marker is not a box: the summary names the birth date alone, under its label.

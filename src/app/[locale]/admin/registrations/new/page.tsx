@@ -136,7 +136,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             a registration recorded with gaps beats one refused for them.
           */}
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
-          {/* Optional here too, and when it is given the server counts it (§NNN): under fourteen on
+          {/* Optional here too, and when it is given the server counts it (§321): under fourteen on
               the race day is refused, so the field says so before the volunteer presses. */}
           <RecallField
             name="birthDate"

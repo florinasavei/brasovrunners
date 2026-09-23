@@ -16,14 +16,14 @@ import {
 } from "@/modules/registrations/fields";
 
 /**
- * §NNN — a participant is at least fourteen on the day of the event, by calendar years, the
+ * §321 — a participant is at least fourteen on the day of the event, by calendar years, the
  * arithmetic `isMinorOn` has always used; the day is the race's own, in the race's own zone.
  *
  * The integration suite (`registrations/minimum-age.test.ts`) proves every door refuses; this
  * proves the counting those refusals rest on, at the edges where counting goes wrong: the
  * birthday itself, the day after it, 29 February, and midnight in a zone that is not UTC.
  */
-describe("§NNN the minimum age is counted by the calendar, on the race day", () => {
+describe("§321 the minimum age is counted by the calendar, on the race day", () => {
   it("is fourteen", () => {
     expect(MIN_PARTICIPANT_AGE).toBe(14);
   });
@@ -79,7 +79,7 @@ describe("§NNN the minimum age is counted by the calendar, on the race day", ()
   });
 });
 
-describe("§NNN the rule on the schema, for whichever caller adds it", () => {
+describe("§321 the rule on the schema, for whichever caller adds it", () => {
   const complete = {
     firstName: "Maria",
     lastName: "Popescu",
@@ -135,7 +135,7 @@ describe("§NNN the rule on the schema, for whichever caller adds it", () => {
   });
 });
 
-describe("§NNN the catalogues say the same number as the constant", () => {
+describe("§321 the catalogues say the same number as the constant", () => {
   /*
     The number is written in words in the catalogues, because Romanian changes at twenty
     ("14 ani", "20 de ani") and an interpolated {age} would read wrongly the day somebody raised

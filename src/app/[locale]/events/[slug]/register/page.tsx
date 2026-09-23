@@ -186,14 +186,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const emergencySame = (fields ?? "").split(",").includes("emergencySame");
   /**
-   * Under fourteen on the day of the race (§NNN). The same kind of marker as the one above: the
+   * Under fourteen on the day of the race (§321). The same kind of marker as the one above: the
    * summary links the birth date, and this says which rule refused it — "complete this field
    * correctly" about somebody's real birth date would be untrue.
    */
   const tooYoung = (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
 
   /*
-    BR-REQ-031-04 criterion 4 and the minimum age (§NNN), expressed where the browser can enforce
+    BR-REQ-031-04 criterion 4 and the minimum age (§321), expressed where the browser can enforce
     them too. The upper bound is the latest birth date that is still fourteen on the race's own
     day in the race's own zone — computed here, for this event, from the arithmetic the server
     refuses with — so the picker never offers a date the submission would be turned back for.
@@ -285,7 +285,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           </LegalLink>
         </Box>
         {/* Who may enter, among the facts of what is being signed up for and before the first
-            field (§NNN): the minimum age, and who fills the form in for a minor (§108). A line,
+            field (§321): the minimum age, and who fills the form in for a minor (§108). A line,
             not a banner — it is a condition of the race like its date, not a warning. Gone once
             the form has been sent: by then it has been answered. */}
         {!submitted && (
@@ -417,7 +417,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {rejected.map((name) => (
                       <li key={name}>
                         <MuiLink href={`#${fieldId(name)}`}>{t(`fieldNames.${name}`)}</MuiLink>
-                        {/* The rule, where the browser lands (§NNN): a birth date refused for age
+                        {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
                         {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung")}</>}
                       </li>
@@ -549,7 +549,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate", t("birthDateHelp"))}
-                /* The minimum age and the categories, in the help (§NNN); a refusal for age says
+                /* The minimum age and the categories, in the help (§321); a refusal for age says
                    the rule again rather than "complete this field correctly". */
                 helperText={
                   invalid.has("birthDate")

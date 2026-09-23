@@ -9,11 +9,11 @@
  *
  * Two thresholds live here and they are counted against different days, on purpose:
  * - **eighteen, on the day of submission** (`isMinorOn`, §108) — whether a parent registers;
- * - **fourteen, on the day of the event** (`MIN_PARTICIPANT_AGE`, §NNN) — whether anybody can.
+ * - **fourteen, on the day of the event** (`MIN_PARTICIPANT_AGE`, §321) — whether anybody can.
  */
 
 /**
- * The youngest a participant may be **on the day of the event**, in whole years (§NNN; the
+ * The youngest a participant may be **on the day of the event**, in whole years (§321; the
  * owner, 2026-09-23: "Min age must be 14").
  *
  * The day of the event and not the day of submission because that is when the person runs, and
@@ -79,7 +79,7 @@ export function ageOn(birthDate: string, day: string): number | null {
 }
 
 /**
- * The latest birth date that is still `years` old on `day` — the date input's `max` (§NNN), so
+ * The latest birth date that is still `years` old on `day` — the date input's `max` (§321), so
  * the picker cannot offer a date the server would refuse.
  *
  * `day` minus `years` calendar years, except on 29 February, where the year `years` earlier may

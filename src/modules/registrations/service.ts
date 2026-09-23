@@ -85,7 +85,7 @@ export type EventForRegistration = {
   confirmationDeadlineDaysBefore?: number | null;
   /**
    * The event's own zone (`events.timezone`), for the day the minimum age is counted against
-   * (§NNN). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
+   * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
    */
   timezone?: string;
 };
@@ -687,7 +687,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * goes through exactly the path a real one does (AGENTS.md §12.6).
    */
   /*
-    …and one rule is added here for every caller alike: fourteen on the day of the event (§NNN).
+    …and one rule is added here for every caller alike: fourteen on the day of the event (§321).
 
     Here because this is the first line that knows the event, and the one door every
     registration passes — the public form, a staff entry and the desk's walk-in behind it, a
