@@ -1446,7 +1446,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   }
 
   if ((input.rule.weekdays ?? []).some((day) => !WEEKDAYS.includes(day))) {
-    throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
+    throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)", ["weekday"]);
   }
   // The event's own day is always in the series (§128): a Sunday run with "Wednesday" ticked
   // runs on Sundays and Wednesdays — the source is the first date, not a one-off before them.
@@ -1460,10 +1460,10 @@ export async function repeatEvent<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
   const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish });
-  if (!rule.success) throw new DomainError("VALIDATION_ERROR", "until: a date, or nothing for a series without an end");
+  if (!rule.success) throw new DomainError("VALIDATION_ERROR", "until: a date, or nothing for a series without an end", ["until"]);
   const end = untilEnd(rule.data, source.timezone);
   if (end && end.getTime() <= source.startsAt.getTime()) {
-    throw new DomainError("VALIDATION_ERROR", "until: the end must be after this event");
+    throw new DomainError("VALIDATION_ERROR", "until: the end must be after this event", ["until"]);
   }
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));

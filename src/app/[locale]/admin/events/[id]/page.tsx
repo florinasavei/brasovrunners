@@ -131,7 +131,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam } = await searchParams;
+  // Why "create and publish" stopped at the draft (§306): a domain code, matched against the
+  // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
+  const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -600,7 +603,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         </Box>
       ) : (
       <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
-        <form action={repeatEventAction}>
+        {/* A refused rule — an end before the event — comes back as it was chosen (§306). */}
+        <ActionForm
+          action={repeatEventAction}
+          messages={await refusalMessages({
+            repeatOn: t("editor.repeatOn"),
+            cadence: t("editor.repeatCadence"),
+            until: t("editor.repeatUntil"),
+            weekday: t("editor.repeatWeekdays"),
+          })}
+          scope="repeat"
+          data-testid="repeat-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
           {/* The tick first, the frequency after it (§170; the owner: "repetă evenimentul
@@ -633,7 +647,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               />
             </Box>
           </RepeatToggle>
-        </form>
+        </ActionForm>
       </EditorPanel>
       )}
       </Stack>

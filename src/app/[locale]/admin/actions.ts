@@ -589,7 +589,12 @@ function weekdaysFrom(form: FormData): Weekday[] {
     .filter((value): value is Weekday => (WEEKDAYS as readonly number[]).includes(value));
 }
 
-export async function repeatEventAction(form: FormData): Promise<void> {
+/**
+ * A standing series from an existing event (§122), from the editor's repeat panel. A refusal — an
+ * end before the event, say — comes back as the form's state with the tick, the cadence, the end
+ * and the weekdays as they were chosen (§306); a series made lands on the editor as before.
+ */
+export async function repeatEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -599,11 +604,11 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     // The tick is the answer to "does this repeat" (§170). The button that posts this form is
     // hidden until it is ticked, and this is the same rule asserted where it decides.
     if (form.get("repeatOn") !== "on") {
-      throw new DomainError("VALIDATION_ERROR", "tick 'repeat this event' before creating a series");
+      throw new DomainError("VALIDATION_ERROR", "tick 'repeat this event' before creating a series", ["repeatOn"]);
     }
     const cadence = text(form, "cadence");
     if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
-      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
+      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences", ["cadence"]);
     }
     const result = await repeatEvent(getDb(), {
       actor,
@@ -612,7 +617,7 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   // Back to the source: it now says how it repeats, and the list has the dates.
