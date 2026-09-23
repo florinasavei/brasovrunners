@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.65-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.65-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.66-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -13026,3 +13026,182 @@ Letters, digits, hyphens, apostrophes and the order of the names still have to m
 - Each link allows ten requests an hour (§39), and a refused press without JavaScript spends two (the post and the page it returns to); a person who mistypes their name about five times in an hour meets the "link no longer works" page although the refusal told them the link was fine. It recovers by itself within the hour. The throttle is the guard against guessing, and loosening it for this path would weaken it for every path, so it stays; if it ever bites a real runner, the refusal should say "try again in an hour" rather than the throttle being raised.
 
 Baseline `BR-V1.65-2026-09-23`.
+
+## 315. Decided — a refused backoffice form keeps what was typed, the browser refuses first, and an event is created and published in one press (2026-09-23)
+
+**Context.** The owner: "if I submit an invalid form (eg: event creation) the entire page gets cleared", then "nu ar trebui sa pot crea evenimentul daca am campuri invalide!" and "ar trebui sa pot crea si publica dintr-un foc!". Every backoffice action answered a refusal with a redirect (`?error=CODE#admin-alert`). The redirected GET rendered the page from the database, or from nothing on a create, so every box came back empty. The public form's answer, a sealed cookie (§142, §286), holds about 4 KB. An event's rich texts run to tens of kilobytes.
+
+**Decision: a refusal is the form's returned state, not a redirect.**
+- `ActionForm` (`shared/forms/ActionForm.tsx`) wraps the page's own Server Components in one client island that uses `useActionState`. The action returns `refused(error, form)`: the code, the names of the boxes it is about (never values), and every posted string.
+- Each box reads its value back (`RecallField`, `CheckboxField`, `RecallRadio`). The islands with state of their own re-mount from the recalled values, keyed on the answer: the programme rows, the partners, the repeat tick, the rich-text editors, the MUI selects.
+- The summary is §47's: focusable, first in the form, each named box a link to its `#field-<scope>-<name>` id.
+- It works with JavaScript off, puts nothing in the URL or a cookie, and has no size limit. A success redirects exactly where it always did.
+- Service paths are mapped to posted names in one place (`content/events/form-names.ts`). The one save prefixes a language's refusal with `translations.<locale>.`.
+
+**What is never refilled.** `NEVER_KEPT` covers a typed confirmation (the event erase's title, the legal version's phrase §151, the registration's name §180, the batch count §287, the "I understand" tick) and `password`. File inputs are never kept. Those boxes are `NeverKeptField`: they carry the summary's id and the error mark, with the page's instruction kept beside "check this field", and come back empty. The summary says "What you typed is still in the boxes, except the confirmation, which is asked again."
+
+**The version guard survives a refusal without JavaScript.** A refused POST renders the page from the database while the boxes are recalled. A re-read hidden version would pair the old edits with the colleague's new version, and the second press would overwrite that colleague without a CONFLICT. The event row, each translation, a page and an album now post their version through `RecallHidden`, the version the refused press carried. The CONFLICT sentence asks to copy what is needed and reload, which fetches both the boxes and the version fresh.
+
+**The browser refuses first.** HTML constraints (`required`, lengths, `pattern`, `type="url"`/`email`/`number`, `min`/`max`/`step`) are read off the Zod schemas (`shared/forms/constraints.ts`), never kept as a second list. A rich text posts through a hidden field that constraint validation ignores. It gets a `ValidityProxy` the browser can point at, and that a button can make required for one press. `SubmitButton` names the first box still missing.
+
+**Create and publish in one press.** "Creează și publică" posts the create form with a marker. `createEventAndPublish` walks DRAFT → IN_REVIEW → PUBLISHED through `transitionEvent`, so every publication guard applies unchanged, inside a savepoint. When the guard refuses, the draft commits and the editor says what it still needs (§170's words). A series made with it follows the event's publication.
+
+**With JavaScript off,** a fold holding a kept form (`RecallDetails`) opens itself after a refusal. Otherwise the kept boxes would come back hidden. A page with several kept forms gives each a scope (the event editor's save, repeat rule, thank-you, "Anunță-mă", test rows; the registration page's rename, cancel, erase, race number; `/admin/emails`' plan, notices, contacts and each copy editor), so no two boxes or summaries share an id.
+
+**Forms deliberately left on the redirect, by name:**
+- **The bulk cancel and bulk erase on the registrations list** (`bulkCancelRegistrationsAction`, `bulkDeleteRegistrationsAction`). What they refuse is the selection: nothing ticked, or a count that does not match the ticks. The selection is the table's checkboxes, joined to the form by their `form` attribute and outside anything a returned state can refill. React resets every control of a form when its action completes, so keeping the reason would untick the rows it was about. A per-row refusal inside the batch is a `failed=N` count, not a refusal of the form.
+- **The list's row-menu cancel** (`cancelRegistrationFromRowAction`): no box.
+- **Every form with nothing typed in it:**
+  - publication transitions for events, pages and albums;
+  - duplicate, delete, stop repeat, assign numbers, remove test rows;
+  - set cover, delete photo or picture, move page;
+  - approve, withdraw and delete a legal version, and approve the platform templates;
+  - check in, confirm now, give a place, resend, the printed mark, mark the bibs printed, send now (list and emails);
+  - resend invitation, password link, access on/off;
+  - the bot-check switches;
+  - the per-row role select (a choice, not typing).
+- **Public forms** (registration, contact, the "Anunță-mă" box) keep the sealed cookie of §142/§286.
+
+**The series is part of the create's transaction (the second review of §315).** The create form's repeat rule used to be checked only for its cadence before anything was written. The rest of it — the weekdays, the end's format, and an end on or before the event's start — is `repeatEvent`'s to judge, and `repeatEvent` ran after `createEventAndPublish` had committed. So an end before the start left a new event behind (published, if the second button was pressed). The action, already holding its id, redirected to that event's editor with `?error`, and the repeat settings the organizer had chosen were gone. That is the very complaint §315 answers. Now `createEventAndPublish` takes the rule (`repeat`, without `publish`: the series goes live exactly when its source did, §122) and calls `repeatEvent` inside its own transaction, after the publication's savepoint. A refusal rolls back the create and the publication with it. Its fields come back prefixed with `repeat.` by `namedUnder`, the helper that already prefixed a language's refusal with `translations.<locale>.`, and `form-names.ts` maps them to the boxes the create form posts: `repeat.until`, and a bare `weekday` for the tick boxes. So the action has one answer to any refusal, `refused(error, form)`, because nothing was written. `repeatEvent` remains the only judge of a rule; no second validator exists to drift from it. A refused publication still keeps the draft, since it has its own savepoint, and the series is then made as drafts, as before.
+
+**A trimmed field's pattern leaves room for spaces.** `htmlConstraints` used to copy a schema's `regex` check into the `pattern` attribute unchanged. But a schema that trims first (`slug: z.string().trim()…regex(SLUG)`, and the album's date) accepts "my-race " as "my-race", while the browser refused it. Zod 4 stores `.trim()` as an `overwrite` check that holds only its function — the same shape as `.toLowerCase()` — so the reader tries the function on " x ". A trim chained before the regex widens the pattern to `\s*(?:…)\s*`; JavaScript's `trim` strips exactly what `\s` matches. The order of the chain matters because Zod runs checks in that order: a trim placed after the regex does not help the regex, so it does not widen the pattern either.
+
+Baseline `BR-V1.66-2026-09-23`.
+
+## 316. Decided — a terms version nobody agreed to can be deleted: its window in force, and the forms submitted and declarations signed inside it (2026-09-23)
+
+**Status:** Decided and built. `domain/deletability.ts` (`inForceWindow`, `deletionObstacle`), `service.ts` (`readDeletionFacts`, `assertDeletable`), `repository.ts` (`countRegistrationsAgreeingWithin`), `/admin/legal` and `/admin/legal/[id]/delete`. Reverses the part of §203 that refused every terms version that had ever been in force. No migration.
+
+**What the owner met.** "Still can't delete these docs...": the third time. `/admin/legal` showed Termeni de concurs v1 and v2, both withdrawn. Each read "Nefolosit încă" next to a "Șterge definitiv" link, and the page behind the link refused. §203 refused any terms version that had been in force, because a registration records `privacy_notice_version` but never a terms version, so the three dependant counts say nothing for that key. The list carried its own copy of the obstacles, and that copy was one rule short: the drift §290 had already found once on the delete page.
+
+**The evidence was there without a new column.** Agreeing to the terms leaves an instant behind, and whatever was in force at that instant is what was agreed to. There are two such instants:
+- **The form, submitted.** `created_at`/`submitted_at` for the first submission, and `privacy_acknowledged_at`, which every re-submission rewrites. A row whose earliest and latest submissions *straddle* the window counts, because a restart in between would have been overwritten.
+- **The declaration, signed.** Its text says "Sunt de acord cu termenii, condițiile și regulamentul evenimentului". Each signing is a `declaration_acceptances` row with its own `accepted_at`, usually days after the form (§104), and paper signatures recorded at the desk count the same way. Whether that sentence means the platform's terms or only the event's rules is not something the code can settle, so it is read the wide way: counting it can only refuse a version, never pass one somebody signed under.
+
+A registration counts once if either instant falls inside the version's window. Every kind (TEST included) and every source counts. An erased registration is gone with its acceptance (§44) and is not counted.
+
+**The window.** It uses `findCurrentApprovedVersionId`'s rule, asked of the past. A version is in force from its `effective_at` until it is withdrawn, or until a higher approved version takes effect. This is computed as a sweep over the higher versions, so a successor that was itself withdrawn gives the time back. Only the part that has already happened counts. A version approved ahead of its date and superseded before that date was never in force, and may go. A deleted higher version can no longer shorten a window; that errs towards refusing.
+
+**The order of reasons, unchanged at the front.** A draft is named first. Then comes the question shared with withdrawal (`dependantObstacle`): a signature, an event, a registration that recorded the number, or the text in force. Then, for TERMS only, a non-empty window refuses. Withdrawal does not ask the terms question, because it keeps the words.
+
+**One rule, three callers.** `deletionObstacle` (pure) and `readDeletionFacts` (the reads) are what `assertDeletable`, the delete page and the list all ask. The list therefore shows the link only where the service would delete; elsewhere the row gives the reason, with the count and the dates. A terms version's "Folosit" cell shows that count instead of "Nefolosit încă". `readDeletionFacts` takes the rows to judge: the service and the delete page pass one, the list passes all. It asks which version is in force once per key and counts once per terms version that was ever in force, so the list makes at most 3 + T queries rather than one lookup per row. The terms refusal names itself in `fields` (`termsAccepted`), so the action says what happened rather than "somebody else saved meanwhile".
+
+Untouched: the typed confirmation, the reason, the audit row with the hash written first, the retired number, and the Superadministrator gate.
+
+Baseline `BR-V1.66-2026-09-23`.
+
+## 317. Decided — the small print on a bib is the club's to compose, laid out once for the paper and the preview (2026-09-23)
+
+**Context.** The owner, looking at a bib preview: "on the bid I have some email, I wanna be able to control and toggle that! Also to add some more info in the footer". Until now the footer was one fixed sentence: the partners' names, then the mailbox every email says to reply to (§168, §180).
+
+**The rule.** The footer is part of the club's bib design (§249), per event, in the same JSON column. No migration was needed. It has five pieces, printed in this order:
+1. The event's title and date. Off by default. Only the parts the header does not already show are printed: the header is the club's picture instead of the band, or the club switched the title or the date off.
+2. The partners. On by default.
+3. One line of the club's own.
+4. The website. Off by default. It is the bare host of `APP_BASE_URL`, never a hostname literal (`AGENTS.md` §8).
+5. The mailbox. On by default.
+
+The defaults print exactly the footer every bib printed before, character for character. A design stored before these keys existed reads the same way.
+
+The club's line is plain text on one line:
+- normalised to composed characters;
+- whitespace collapsed;
+- anything the bib's font cannot draw left out (an emoji would be a box on paper and a fetch in the preview);
+- at most 120 characters.
+Neither renderer ever reads it as HTML or as a template. **No participant data can reach the footer.** The function has no parameter for it, and above all no telephone number (`AGENTS.md` §19.2): the designer says beside the box that the line is the club's text and the club's responsibility.
+
+**One layout, drawn twice.** The picture is the club's preview of the paper (§180). A footer that wrapped in one renderer and not in the other would be a preview of a different bib. So `bib-footer.ts` decides the lines, and both renderers draw exactly those lines, each on its own line, with wrapping off:
+- one line when the footer fits;
+- otherwise whole pieces moved to a second line;
+- otherwise the second line cut with "…".
+There is never a third line, and the type is never shrunk.
+
+Everything is measured in ems of the footer's own type:
+- The sheet's line is 503.28 pt at 8 pt, which is 62.91 ems.
+- The picture's line is 836 px: 900, less the card's 2-px border on each side (Satori sizes boxes border-box), less 30 px of padding on each side. The picture sets its type at whatever size makes 836 px equal the same 62.91 ems.
+
+The widths come from `src/theme/pdf/Roboto-Regular.ttf`, which both renderers embed, kept as two tables read out of the font:
+- each character's advance width;
+- every pair of characters the font kerns *apart*: 627 of them, for example "rt" +50/2048 em, "’l" +32, "FT" +20.
+The measure adds the widening pairs and leaves out the roughly 6,250 pairs the font kerns together, so it can be slightly too wide but never too narrow. A character outside the table counts as 1.125 em. That is wider than the font's widest glyph (the rupee sign, 2166/2048) with room for a kern on each side.
+
+The sheet centres each line itself and gives pdfkit **no width**. Given a width, pdfkit wraps whatever `lineBreak` says, and its `ellipsis` does nothing without a `height`.
+
+`readBibDesign` now reads only the keys it knows. A design saved by a later release therefore still reads as the club's design after a rollback, rather than falling back to the platform's.
+
+**Rolling back past this release.** The previous release's strict `readBibDesign` treats a design that carries the new footer keys as invalid. Once a club saves a footer, rolling back to before this release shows the platform's default bib design — header picture, number size and every other choice — until the rollback is undone. The old editor would also show those defaults and save them on its next save. The release notes say so.
+
+*The measure counts kerning, and pdfkit cannot wrap (found in review).* The first version summed advance widths only, assuming Roboto's kerning only ever tightens. It does not. Over 3,000 random footers made of realistic partner words, 27 of 4,263 lines were up to 1.1 pt wider in pdfkit than their 503.28-pt box. pdfkit then moved the last word to a line of its own, 9.375 pt lower: over the second line, or over the bib's cut edge. The preview showed none of this.
+
+The fix has two halves:
+- The sheet draws without a width, so it cannot wrap.
+- The measure includes the widening pairs, so the line fits anyway.
+
+`bib-footer.test.ts` now checks:
+- the kerning table against pdfkit for all 113,569 pairs;
+- the unknown-character weight against every character from U+0020 to U+FFFF;
+- random footers rich in the widening pairs and the fi/fl ligatures against pdfkit's own measurement.
+A spy test shows the sheet draws each footer line centred with no width.
+
+*The header the footer compares with is the one actually drawn (found in review).* When the route cannot fetch the club's header picture, the sheet prints the band, with its title and date. The footer used to decide from the stored picture address, so it printed the title and date a second time. Each renderer now tells the footer which header it draws.
+
+**Rejected.**
+- A safety margin off the line instead of the kerning table. A line built from "rt" pairs can exceed any small margin, and a large margin wastes the line on every footer.
+- Letting pdfkit wrap and cut. It wraps, and it does not cut.
+- Shrinking the type to fit. Small print shrunk until it fits is small print nobody reads.
+
+Baseline `BR-V1.66-2026-09-23`.
+
+## 318. Decided — every backoffice verb wears one glyph from one registry, and the send buttons wear the club's runner (2026-09-23)
+
+**Context.** The owner, 2026-09-23: "I also need more icons, including on the Printing BID stuff", and from the same morning's queue: "butoanele de trimitere înscriere și contact trebuie să aibă și iconița cu un alergător". §170 had given the publication row and the bulk bar their glyphs through `shared/ui/action-icons.ts`, by name, because these buttons render from Server Components and an icon element passed as a prop across the server/client boundary is the defect `CheckboxField` and `GlyphChip` document. Everything else was words only, and the two row menus each kept their own table of glyphs, so one verb could wear two different pictures on the same screen. The registration menu, for instance, gave "give a place" and "check in" the same glyph.
+
+**Decision.** *One registry, by name, for every verb.* `ActionIconName` grows from 7 names to 51, one file per glyph from `@mui/icons-material` and never the barrel (§90). `RowMenu` and `RegistrationRowMenu` read it instead of their own tables. A navigation button wears its tab's glyph (`AdminTabs`): the desk is the trophy, the registrations list the person with the tick. The four editorial transitions keep their glyphs beside their words, `EDITORIAL_TRANSITION_ICON` in `staff-labels.ts`, so the event, the album and the standing page show the same four.
+
+*`GlyphButton` replaces `SubmitIconButton`.* It is an MUI Button that wears a glyph by name. With an `href` it renders a plain `<a>` (the `/api/…` downloads); without one it is a `<button>`, usually a submit inside the form the Server Component rendered. No state and no handler, so it works with JavaScript off exactly like the button it replaced. `SubmitButton` and `ButtonLink` take the same `icon` name. While the request is in flight, `SubmitButton` shows the running figure in the glyph's place, sized to the glyph it replaces (18/20/22 px), so the label does not move. The §304 replay and slow sentence are untouched.
+
+*The bibs (§264).*
+- The batch that goes to the printer now wears the printer: only the unprinted, a single reprint, one per page, the blank paper declaration.
+- A whole sheet to keep wears the PDF.
+- "Printed" is the double tick and taking it back the tick struck through, on the list's panel and in the row's "⋮" alike.
+- The event editor's "Vezi numerele" was a lone text link and is now a text button with the picture it leads to.
+
+*Removing keeps two shapes.* Deleting is the bin. Erasing — "Șterge definitiv", on four screens and in two menus — is the bin with the cross, including the events list's hard-delete link, which had worn the plain bin. Cancelling a registration keeps the row and wears a different shape again.
+
+*The public send buttons wear the club's runner.* "Trimite înscrierea", its "send again" after a refusal, and the contact form's "Trimite" carry `DirectionsRun` at the start of the label. It is the figure `RunnerLoader` animates (§166): standing at rest, running while the same button is pending, still under `prefers-reduced-motion`.
+
+*Decoration only.* `SvgIcon` renders `aria-hidden` unless given a title, so no accessible name changed, and every button a spec finds by name is found the same way.
+
+*Amends §183.* The gallery's two sub-navigation buttons now carry glyphs. The "no icons" there was written when the only way to add one was the element-valued prop.
+
+**Refused.**
+- *An `icon` element prop on the shared buttons*: it is the hydration defect this registry exists to avoid.
+- *A second registry per module*: that is how the row menus drifted.
+- *Icons on dialog actions, editor popovers and links inside sentences*: a dialog's question already names the verb, and a link in a sentence is not a button.
+
+**Test.** `tests/unit/shared/action-icons.test.ts` checks that:
+- every name used in `src/` resolves, and every registry name is used;
+- the registry imports each glyph file once and never the barrel;
+- a label wears one glyph wherever it is written;
+- the verbs that are one verb under several words (erase, cancel, save, send, mark printed, print, PDF, add a person, the runner) share one glyph;
+- the shared buttons make the element on the client, from the name.
+
+**The icon list is the backoffice's alone (the review of §318, 2026-09-23).** The first version let `ButtonLink` and `SubmitButton` take an icon by name, so both imported `action-icons.ts`. A lookup by a runtime key cannot be tree-shaken, so every page that rendered either one shipped all fifty-one icon modules (about 32 KB raw, 4.6 KB gzipped), whether a button showed an icon or not. That meant the landing listing's featured event, every event page's registration button, the not-found page, and the register, contact and interest forms. The register page's "send again" did the same through `GlyphButton`. That breaks the owner's standing rule that the header and the landing page are what every visitor pays for.
+
+The lookup now lives in three backoffice-only client components: `GlyphButton`, `GlyphButtonLink` (a locale-aware link with an icon) and `GlyphSubmitButton` (which looks up the name and hands `SubmitButton` the component). `ButtonLink` takes no icon again. `SubmitButton` takes a `runner` flag for the public send buttons and imports `DirectionsRunIcon` directly. `RunnerLoader` already carried that icon, so the send buttons cost nothing new, and `runner` left the list. The registration's "send again" is now a `SubmitButton` with the flag too.
+
+`tests/unit/shared/action-icons.test.ts` follows imports back from the list and fails if any route outside `/admin` and `/devs` reaches it. On the production build, no public route's client chunks carry a backoffice-only icon: 49 public routes checked by name and path data, while all 28 backoffice routes carry them.
+
+**One name, one icon.** Checking in and the registrations list both used the person with the tick. The list, meaning its navigation button and the "Înscrieri" tab, now uses `ListAlt`, and the test refuses two names on one icon. Sending an email again is one action: the registration's "Retrimite", the staff "Retrimite invitația" and the password reset all use `resend`. The `invite` name (a plain envelope) is gone.
+
+**The per-row resend in the registrations list has no icon.** Measured on the production build: the icon made the compact button 24 px wider, and the actions column with it (244 to 268 px), on a desktop, in a table already wider than a 1280-px screen. At 320 px the phone layout absorbed it. The column was narrowed so eighty rows stay scannable, so the compact button stays text only. The registration's own full-size "Retrimite" keeps the icon.
+
+Baseline `BR-V1.66-2026-09-23`.
+
+## 319. Changed — the listing card's "Descrierea completă" is a link with a glyph, not a button (2026-09-23)
+
+**Context.** §305 gave every listing card a button to the event's page, §308 made it quieter (sentence case, a smaller type), and the owner came back a third time the same evening: "butoanele de 'descrierea completa a evenimentului' sunt încă prea mari și nu au iconițe!" The outlined MUI button was still a bordered 44-pixel box. However small its type, a border and a box read as the card's main control, and on a listing of two or three cards the eye went to the buttons before the titles.
+
+**Decision.** `CardDoor` (`events/ui/CardDoor.tsx`), a Server Component shared by the series card and the single-date card, renders the "read more" glyph (`ReadMore`, one file from `@mui/icons-material`) and the words as a plain link: sentence case, a small bold type in the primary colour, no border, an underline on hover and a visible focus ring. It keeps the 44-pixel tap height BR-REQ-041-01 criterion 6 asks of anything a thumb must hit, as an invisible box around the text rather than a drawn one — what shrinks is what the eye sees, not what the finger gets. The accessible name is unchanged (the glyph is `aria-hidden`), so the e2e that finds the link by name and checks its height still holds. The glyph is rendered in the Server Component itself and never passed as a prop to a client one, which is the hydration defect `shared/ui/action-icons.ts` documents. `card-door.ts`, the button's `sx`, is gone.
+
+Baseline `BR-V1.66-2026-09-23`.
