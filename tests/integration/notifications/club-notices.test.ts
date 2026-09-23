@@ -181,7 +181,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
     const [admin] = await db.select().from(staffUsers);
     await addTestRegistrations(db, admin, { eventId: event.id, count: 1, now: NOW });
     const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
-    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Runner Test")), idDocument: "BV 000000" }, NOW);
+    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, row.registeredName)), idDocument: "BV 000000" }, NOW);
 
     const types = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id))).map((r) => r.messageType);
     expect(types).toContain("REGISTRATION_CONFIRMED");
@@ -256,7 +256,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
       const [admin] = await db.select().from(staffUsers);
       await addTestRegistrations(db, admin, { eventId: event.id, count: 1, now: NOW });
       const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
-      await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Runner Test")), idDocument: "BV 000000" }, NOW);
+      await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, row.registeredName)), idDocument: "BV 000000" }, NOW);
 
       const rows = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id));
       expect(rows.map((r) => r.messageType)).toContain("REGISTRATION_CONFIRMED");

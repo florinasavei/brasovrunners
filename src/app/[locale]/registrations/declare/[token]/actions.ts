@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
+import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -34,8 +36,30 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     );
 
     if (!result.ok) redirect(`${path}?invalid=1`);
+    // Signed: a draft kept by an earlier refused press has nothing left to fill in.
+    await clearFormDraft(path);
     redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}`);
   } catch (error) {
+    /*
+      The signature is not the declarant's name (§NNN) — its own refusal, never the generic one.
+
+      `?invalid=1` renders "we could not record the signature … your link is fine", written for
+      an unticked box; a name refused under it would leave somebody guessing what was wrong. The
+      code goes in the URL and nothing else (§14.5: neither the name expected nor the one typed),
+      and the page says which name, next to the box, from the registration it already reads.
+      Nothing was recorded and the token was not spent: the throw rolled the transaction back.
+
+      What was typed comes back, sealed, for ten minutes (`form-draft.ts`): the tick, the kind of
+      document, its series and number, and the signature itself, so the one thing left to do is
+      correct the name. The series and number ride along deliberately — keeping them sealed for
+      minutes on the person's own browser is a smaller exposure than the declaration keeps them
+      for (seven days after the event, §95), and making somebody retype a document number to
+      recover from a refusal about their name is friction charged to the wrong field (§286).
+    */
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes("typedName")) {
+      await stashDraftValues(declarationDraftOf(form), path);
+      redirect(`${path}?invalid=name#${DECLARATION_ERROR_SUMMARY_ID}`);
+    }
     // The checkbox is HTML-required, so this is only a client that bypassed it — treated the
     // same as an invalid token rather than as a server error, since nothing was consumed (the
     // whole transaction, including the token spend, rolled back with the validation failure).
@@ -47,6 +71,20 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     }
     throw error;
   }
+}
+
+/**
+ * What a refused signature brings back to the form (§NNN): these four fields and nothing else.
+ * Not `draftValuesOf(form)` — that keeps every posted string, and this form posts the action
+ * link's secret, the one value that must never be copied anywhere, sealed or not.
+ */
+function declarationDraftOf(form: FormData): Record<string, string> {
+  const draft: Record<string, string> = {};
+  for (const name of ["accepted", "idDocumentType", "idDocument", "typedName"]) {
+    const value = form.get(name);
+    if (typeof value === "string" && value !== "") draft[name] = value;
+  }
+  return draft;
 }
 
 /** The chosen kind and the typed series, as the one string the declaration carries (§283). */

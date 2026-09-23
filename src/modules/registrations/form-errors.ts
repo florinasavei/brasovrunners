@@ -67,3 +67,9 @@ export function parseInvalidFields(value: string | undefined): RegistrationFormF
  * functions.
  */
 export const ERROR_SUMMARY_ID = "registration-errors";
+
+/**
+ * The same, for the declaration: where a refused signature is sent back to (§NNN), shared by
+ * `signDeclarationAction` and the page that renders the target, for the same reason as above.
+ */
+export const DECLARATION_ERROR_SUMMARY_ID = "declaration-errors";

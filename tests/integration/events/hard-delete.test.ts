@@ -190,7 +190,7 @@ describe("BR-REQ-037-06 an Administrator erases an event and everyone registered
     const event = await seedEvent(10);
     const one = await registerPublicly(event, "one@example.ro");
     await registerPublicly(event, "two@example.ro");
-    await signDeclaration(db, event, one.id, await signingInput(db, NOW, "Runner"), NOW);
+    await signDeclaration(db, event, one.id, await signingInput(db, NOW, one.registeredName), NOW);
 
     expect(
       await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, one.id)),
@@ -430,7 +430,7 @@ describe("BR-REQ-037-06 the screen says what would be destroyed before anything 
   it("counts the registrations, the confirmed ones, and the real people among them", async () => {
     const event = await seedEvent(10);
     const confirmed = await registerPublicly(event, "real@example.ro");
-    await signDeclaration(db, event, confirmed.id, await signingInput(db, NOW, "Runner"), NOW);
+    await signDeclaration(db, event, confirmed.id, await signingInput(db, NOW, confirmed.registeredName), NOW);
     await addTestRegistrations(db, admin, { eventId: event.id, count: 2, locale: "ro", now: NOW });
 
     const plan = await readEventErasurePlan(db, event.id);

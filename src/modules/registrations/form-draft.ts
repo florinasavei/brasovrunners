@@ -88,7 +88,16 @@ export function openFormDraft(sealed: string, secret = deploymentSecret()): Form
 
 /** Keep the typed values for the page the action sends the browser back to. */
 export async function stashFormDraft(form: FormData, path: string): Promise<void> {
-  const sealed = sealFormDraft(draftValuesOf(form));
+  await stashDraftValues(draftValuesOf(form), path);
+}
+
+/**
+ * Keep exactly these values, sealed the same way, for a form whose fields are not all worth
+ * keeping — the declaration (§NNN) carries its action link's secret in a hidden field, and a
+ * secret is never copied anywhere it does not have to be, sealed or not.
+ */
+export async function stashDraftValues(values: FormDraft, path: string): Promise<void> {
+  const sealed = sealFormDraft(values);
   const jar = await cookies();
   if (!sealed) {
     jar.delete(COOKIE);

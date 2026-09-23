@@ -171,7 +171,7 @@ describe("the club's declaration (§95)", () => {
     await approve(db, PLAIN_DECLARATION);
     const event = await createEvent(db);
     const pending = await pendingRegistration(event);
-    const confirmed = await signDeclaration(db, event, pending.id, await signingInput(db, NOW), NOW);
+    const confirmed = await signDeclaration(db, event, pending.id, await signingInput(db, NOW, pending.registeredName), NOW);
     expect(confirmed.status).toBe("CONFIRMED");
     expect((await db.select().from(declarationAcceptances))[0].idDocument).toBeNull();
 

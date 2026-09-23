@@ -29,6 +29,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
+import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import {
   declarationSigningSchema,
@@ -1060,6 +1061,9 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      // The field names, never the values (§14.5): a blank signature is answered on the page as
+      // the signature it is, not as a broken link (§NNN).
+      [...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "")).filter(Boolean))],
     );
   }
 
@@ -1123,6 +1127,21 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
     if (asksForIdDocument && !parsed.data.idDocument) {
       throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
+    }
+
+    /**
+     * The signature is the declarant's name (§NNN, reversing that half of §283): the name given
+     * at registration, or the parent's for a minor (§108) — the name the text above it already
+     * prints as the one who declares. Asserted here, where the acceptance is written, and not only
+     * in the browser that refuses it first: a form with JavaScript off, or a second caller, meets
+     * the same rule. A refusal is a throw, so the whole transaction rolls back with it — the token
+     * spend included — and the same link signs with the right name a moment later.
+     *
+     * What is recorded stays what was typed, casing and diacritics and all: the rule decides
+     * whether the signature is accepted, never what it says.
+     */
+    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(current))) {
+      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
     }
 
     await repo.insertDeclarationAcceptance(tx, {
