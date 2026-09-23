@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -24,6 +25,8 @@ type Props = {
    * without this the Organizer was shown a "Salvează planul" that could only answer FORBIDDEN.
    */
   mayEdit: boolean;
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§NNN). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -32,7 +35,7 @@ type Props = {
  * post as ordinary fields, the numbers only mattering for `CUSTOM`. No JavaScript decides
  * anything here; the service validates and the audit row records who said what.
  */
-export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: Props) {
+export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const unlimited = t("emails.plan.unlimited");
   const ceiling = (value: number | null) => (value === null ? unlimited : value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB"));
@@ -49,8 +52,27 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
     messagesPerRegistration: volume.messagesPerRegistration,
   });
 
+  /*
+    A fold since §NNN (the owner, 2026-09-23: "the first card should also be an accordion"),
+    closed, with the plan and the day's figure in the summary — which is what anybody opening
+    this page on race morning wants to read, and is readable without opening anything. It opens
+    by itself after its own save, and when the allowance is spent: that is the one state here
+    that asks for something to be done (a plan changed, or a wait until tomorrow).
+  */
   return (
-    <Panel title={t("emails.plan.title")} intro={t("emails.plan.intro")}>
+    <Panel
+      title={t("emails.plan.title")}
+      intro={t("emails.plan.intro")}
+      aside={t(`emails.plan.aside.${volume.period}`, {
+        plan: volume.planName,
+        sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+        allowance: ceiling(volume.allowance),
+      })}
+      collapsible
+      openWhen={{ ...openWhen, attention: volume.remaining === 0 }}
+      id="email-plan"
+      data-testid="email-plan"
+    >
 
       {/* The counts first: a plan set wrong shows here before it shows on race day. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }}>

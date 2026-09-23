@@ -670,7 +670,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           title={t("panels.bibs")}
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
-          defaultOpen={bibs.unprinted > 0 || voidBibs.length > 0}
+          // Open while a bib waits for the printer or a printed one waits to be pulled (§311),
+          // and after a batch was marked — the undo is in here (§NNN).
+          openWhen={{
+            attention: bibs.unprinted > 0 || voidBibs.length > 0,
+            saved: saved === "bibsPrinted" || saved === "bibsUnprinted",
+          }}
+          id="registrations-bibs"
           data-testid="registrations-bibs"
         >
         {/*
@@ -837,7 +843,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         title={t("panels.outbox")}
         aside={t("outbox.waitingShort", { count: volume.waitingMessages })}
         collapsible
-        defaultOpen={volume.waitingMessages > 0}
+        openWhen={{ attention: volume.waitingMessages > 0, saved: saved === "outboxSent" }}
+        id="registrations-outbox"
         data-testid="outbox-panel"
       >
       <Stack
@@ -889,6 +896,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         title={t("panels.filters")}
         aside={hasFilters ? t("registrations.filtersInUse") : undefined}
         collapsible
+        // Open while the list is narrowed, so nobody loses a filter behind a fold (§269); closed
+        // otherwise (§NNN) — the list is what the screen is for.
+        openWhen={{ inUse: hasFilters }}
+        id="registrations-filters"
         data-testid="registrations-filters"
       >
       <Box component="form" method="get" action={basePath}>

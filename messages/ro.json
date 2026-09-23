@@ -1791,6 +1791,8 @@
       "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri.",
       "link": "Vezi emailurile pe care le primesc participanții →",
       "subject": "Subiect",
+      "aside": "{count} mesaje · {language}",
+      "langLabel": "Limba în care vezi și scrii mesajele:",
       "lang": {
         "ro": "Română",
         "en": "English"
@@ -1835,8 +1837,29 @@
         "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token."
       },
+      "whenShort": {
+        "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
+        "COMPLETE_DECLARATION": "după confirmarea adresei, când e loc",
+        "WAITLIST_JOINED": "după confirmarea adresei, când nu mai e loc",
+        "WAITLIST_SPOT_OFFER": "când se eliberează un loc",
+        "REGISTRATION_CONFIRMED": "după semnarea declarației",
+        "REGISTRATION_CANCELLED": "la retragere sau anulare",
+        "WAITLIST_OFFER_EXPIRED": "când trec cele 24 de ore ale ofertei",
+        "REGISTRATION_MANAGE_LINK": "la cerere, „Retrimite linkul”",
+        "PROFILE_MANAGE_LINK": "la cerere, toate înscrierile",
+        "REGISTRATION_STATE_NOTICE": "retrimis de un organizator",
+        "EVENT_REMINDER": "cu două zile înainte de start",
+        "EVENT_THANKS": "manual, după eveniment",
+        "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
+        "DECLARATION_ARCHIVE": "odată cu declarația semnată, către arhivă",
+        "BIB_ASSIGNED": "când un organizator dă numărul de mână",
+        "STAFF_INVITATION": "când e adăugat un coleg",
+        "REGISTRATION_OPENED": "când se deschid înscrierile",
+        "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club"
+      },
       "clubNotices": {
         "title": "Copiile clubului",
+        "aside": "Adrese care primesc copii: {count}",
         "intro": "Cine primește, la club, copia unei declarații semnate, cine află când cineva își confirmă înscrierea și cine primește o copie ascunsă a emailurilor către participanți. Adrese ale clubului, nu ale participanților.",
         "participantsInForce": "Copie ascunsă la emailurile către participanți: {bcc}.",
         "source": {
@@ -1894,6 +1917,11 @@
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",
         "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe /admin/tasks, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
+        "aside": {
+          "day": "Planul {plan} · {sent} din {allowance} azi",
+          "month": "Planul {plan} · {sent} din {allowance} luna aceasta",
+          "none": "Planul {plan} · fără limită"
+        },
         "status": {
           "day": "Planul {plan}: {sent} din {allowance} mesaje trimise azi, mai rămân {remaining}; în coadă: {waiting}.",
           "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
@@ -1924,6 +1952,8 @@
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
+        "aside": "Acum ajung la: {to}",
+        "asideNobody": "nimeni",
         "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul, „Copie ascunsă (Bcc)” primesc o copie fără să apară în mesaj. Se salvează aici, fără redeploy.",
         "source": {
           "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
