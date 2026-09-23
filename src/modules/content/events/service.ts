@@ -1171,9 +1171,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     }
     /*
       This save announced the place (§NNN): the switch was on and is off now, so the place is on
-      every public surface from this commit. Nobody is written to about it — the platform has no
-      message for "the place changed", and one sent on a save would reach every entrant for a
-      typo fixed the minute after — so the editor's banner says so instead.
+      every public surface from this commit. Nobody is written to about it: a message sent as a
+      side effect of a save would reach every entrant for a typo fixed the minute after, so telling
+      the participants is the organizer's own, separate act, and the editor's banner says so.
     */
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
     return { appliedTo, offered, placeAnnounced };

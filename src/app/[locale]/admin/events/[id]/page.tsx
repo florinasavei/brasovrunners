@@ -338,10 +338,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
-        {/* The save that announced the place (§NNN): public from now on, and nobody was told.
-            The platform has no message to the people already registered, so the sentence says
-            what reaches them anyway — the reminder before the event carries the place. Only
-            while the event is live: a draft's place is announced to nobody. */}
+        {/* The save that announced the place (§NNN): public from now on, and nobody was told —
+            a save writes to no participant, so the sentence says what reaches them anyway: the
+            reminder before the event carries the place. The live wording only while the event
+            is live: a draft's place is announced to nobody. */}
         {announced === "1" && (saved === "event" || saved === "eventSeries") && (
           <Alert severity="info" data-testid="place-announced">
             {live ? t("editor.placeAnnouncedLive") : t("editor.placeAnnouncedDraft")}

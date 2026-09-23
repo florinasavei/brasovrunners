@@ -101,7 +101,12 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
       createElement(
         RecallProvider,
         { value: { values, fields: [], generation: values ? 1 : 0, fieldError: "Verifică acest câmp." } } as unknown as ComponentProps<typeof RecallProvider>,
-        createElement(PlaceToBeAnnounced, { defaultChecked, labels, locationName: { defaultValue: typed, box } }, createElement("input", { name: "event.mapUrl" })),
+        createElement(
+          PlaceToBeAnnounced,
+          // The map link's box arrives as `children`, the third argument, as the form passes it.
+          { defaultChecked, labels, locationName: { defaultValue: typed, box } } as ComponentProps<typeof PlaceToBeAnnounced>,
+          createElement("input", { name: "event.mapUrl" }),
+        ),
       ),
     );
   /** The meeting point's `<input>`, as the browser receives it. */
