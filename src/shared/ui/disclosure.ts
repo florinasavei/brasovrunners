@@ -31,3 +31,58 @@ export const DISCLOSURE_SUMMARY_SX = {
 
 /** The same, addressed from the `<details>`: spread into a `Box component="details"`'s `sx`. */
 export const DISCLOSURE_SX = { "& > summary": DISCLOSURE_SUMMARY_SX } as const;
+
+/**
+ * The backoffice fold, as a box (`DECISIONS.md` §269 and its follow-up; the owner, looking at
+ * the bib-design panel and the event editor: "toate aceste acordeoane din zona de backoffice
+ * trebuie sa fie mai 'boxed'").
+ *
+ * The same summary as above — marker, pointer, underline, 44 pixels — drawn as the header row
+ * of a bordered box: a hairline in `divider`, the corner radius every other box in the
+ * backoffice has, the surface colour behind the body, and a wash of `action.hover` behind the
+ * summary so it reads as a bar and not as a line of text with a triangle in front of it. Open,
+ * the box stays: the summary keeps its wash, squares its bottom corners and gets a rule under
+ * it, and the body is padded so text never touches the border. Theme tokens throughout, so the
+ * dark scheme follows without a second rule (`AGENTS.md` §3.2: no colour outside `brand.ts`).
+ *
+ * **The box pads; the summary un-pads itself.** The fold's children are whatever the screen
+ * puts there — a form, an ordered list, a `Stack` — so the horizontal padding is on the
+ * `<details>` and the summary reaches the border with a negative margin of the same size. A
+ * padding rule on `> :not(summary)` would have beaten every `pl` an ordered list sets, and a
+ * wrapper element would have had to be added at twenty call sites. The vertical padding under
+ * the body is on `[open]` only, so a closed fold is exactly its summary.
+ *
+ * Public pages keep `DISCLOSURE_SX`: a fold on the registration form or in the footer is a
+ * line in a column of prose, and a box there would be a card in the middle of a sentence.
+ *
+ * A fold that is deliberately a different colour — the erase panel's red, the batch cancel's
+ * amber — spreads this and overrides `borderColor`, so it keeps the shape and the row and says
+ * only what is different about it.
+ */
+export const BOXED_DISCLOSURE_SX = {
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 1,
+  px: 2,
+  bgcolor: "background.paper",
+  "& > summary": {
+    ...DISCLOSURE_SUMMARY_SX,
+    mx: -2,
+    px: 2,
+    // The marker inside the summary's own box, so it sits in the padding and not outside the
+    // border the negative margin just reached. It is what the HTML rendering section says a
+    // summary's marker is anyway (`disclosure-closed inside`); written out so the reset cannot
+    // take it back.
+    listStylePosition: "inside",
+    bgcolor: "action.hover",
+    borderRadius: "inherit",
+  },
+  "&[open] > summary": {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottom: 1,
+    borderColor: "divider",
+    mb: 1.5,
+  },
+  "&[open]": { pb: 1.5 },
+} as const;

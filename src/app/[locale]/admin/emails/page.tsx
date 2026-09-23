@@ -29,6 +29,7 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string }> };
 
@@ -191,17 +192,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         // The platform's own text for this message, as the editor's starting point.
         const shipped = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
         return (
-          <Box
-            key={messageType}
-            component="details"
-            sx={{
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-              px: 2,
-              "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" },
-            }}
-          >
+          <Box key={messageType} component="details" sx={BOXED_DISCLOSURE_SX}>
             <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
               {t(`emails.types.${messageType}`)}
               <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>

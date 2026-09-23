@@ -9,7 +9,7 @@ import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import { Link } from "@/i18n/navigation";
 import { EVENT_TYPES, type EventType, hasProgramme } from "@/modules/events/domain/event-type";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import type { EditableTranslation } from "../repository";
 import OnlyForType from "./OnlyForType";
 
@@ -183,11 +183,11 @@ export default async function TranslationFieldsForm({
           {/* The page address and what a search engine shows, folded (§170): set once, then
               never looked at again. A published slug is locked anyway (§11.5), and the hidden
               input above is what carries it. */}
-          <Box component="details" sx={DISCLOSURE_SX}>
+          <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <Typography component="summary" variant="body2">
               {t("editor.seoSection")}
             </Typography>
-            <Stack spacing={2} sx={{ pt: 1, pb: 1 }}>
+            <Stack spacing={2} sx={{ pt: 0.5 }}>
               <TextField
                 name={name("slug")}
                 label={t("editor.fields.slug")}

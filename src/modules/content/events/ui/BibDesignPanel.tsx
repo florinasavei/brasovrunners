@@ -15,7 +15,7 @@ import {
   type BibDesign,
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
-import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 /**
  * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
@@ -103,14 +103,14 @@ export default async function BibDesignPanel({ design = DEFAULT_BIB_DESIGN }: {
   );
 
   return (
-    <Box component="details" sx={{ ...DISCLOSURE_SX, mt: 1 }} data-testid="bib-design">
-      <Typography component="summary" variant="body2" sx={{ ...DISCLOSURE_SUMMARY_SX, fontWeight: 600 }}>
+    <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }} data-testid="bib-design">
+      <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
         {t("editor.bibDesign.title")}
       </Typography>
       {/* What tells the action that this panel was on the form; see the note above. */}
       <input type="hidden" name="event.bibDesign.present" value="1" />
 
-      <Stack spacing={1.5} sx={{ mt: 1 }}>
+      <Stack spacing={1.5}>
         <Typography variant="caption" color="text.secondary">
           {t("editor.bibDesign.intro")}
         </Typography>
