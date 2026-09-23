@@ -273,6 +273,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   );
 
   const t = await getTranslations("Admin.tasks");
+  // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`, from the Neon and Mailgun plan actions) are
+  // `Admin.errors.*`, shared by every backoffice page — `Admin.tasks.errors` does not exist.
+  const tErrors = await getTranslations("Admin.errors");
   // Over every row, filter or not: what blocks a real registration is not a matter of view.
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
@@ -409,7 +412,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
-        {typeof query.error === "string" && <Alert severity="error">{t(`errors.${query.error}`)}</Alert>}
+        {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
       <Alert severity={blocking > 0 ? "warning" : "success"}>
