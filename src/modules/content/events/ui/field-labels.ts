@@ -63,6 +63,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.schedule[].ro": `${t("editor.programmeSection")}: ${t("editor.programmeRows.ro")}`,
     "event.schedule[].en": `${t("editor.programmeSection")}: ${t("editor.programmeRows.en")}`,
     "event.schedule[].place": `${t("editor.programmeSection")}: ${t("editor.programmeRows.place")}`,
+    // Beside the save button (§NNN): what changed, and why the event is cancelled.
+    "notice.note": t("editor.notice.note"),
+    "cancel.reason": t("editor.notice.cancelReason"),
     "repeat.cadence": t("editor.repeatCadence"),
     "repeat.until": t("editor.repeatUntil"),
     weekday: t("editor.repeatWeekdays"),

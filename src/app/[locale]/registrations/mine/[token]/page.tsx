@@ -126,6 +126,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   color={item.status === "CONFIRMED" ? "success" : item.status === "WAITLISTED" ? "default" : "warning"}
                   label={t(`mine.status.${item.status}`)}
                 />
+                {/* The race will not run (§NNN); the registration's own state stays beside it. */}
+                {item.eventCancelled && <Chip size="small" color="error" label={t("mine.eventCancelledChip")} />}
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {format.dateTime(item.eventStartsAt, {
@@ -134,8 +136,14 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   timeStyle: "short", hourCycle: "h23",
                 })}
               </Typography>
+              {item.eventCancelled && (
+                <Alert severity="info" sx={{ mb: 1.5 }}>
+                  {t("mine.eventCancelled")}
+                </Alert>
+              )}
 
-              {item.status === "CONFIRMED" && item.checkinCode && (
+              {/* No desk code or QR for a race that will not run: the desk is closed (§NNN). */}
+              {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" }, mb: 1.5 }}>
                   <Box
                     component="img"

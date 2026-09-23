@@ -46,6 +46,13 @@ export const emailMessageType = pgEnum("email_message_type", [
   // "Somebody has confirmed" to the club's own mailboxes (§245): who, for which event, and
   // their number. No token and no link a participant could act on — the club signs in.
   "CLUB_CONFIRMATION_NOTICE",
+  // "Detalii actualizate" (§NNN): the organizer ticked "Anunță participanții" on a save that
+  // moved the place, the start or the programme, or wrote a note. One per active registration,
+  // in its own language; the changed facts are read at send time. No token.
+  "EVENT_UPDATE_NOTICE",
+  // "{event} a fost anulat" (§NNN): the event was cancelled in the editor, with the reason the
+  // organizer typed. One per active registration; the registration itself is left as it was.
+  "EVENT_CANCELLED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

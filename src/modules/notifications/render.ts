@@ -6,6 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
+import { readEventChanges, readEventNoticeText } from "@/modules/events/domain/event-changes";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
 import { toCalendarEvent } from "@/modules/events/calendar";
@@ -158,8 +159,32 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
-  // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words.
-  if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+  /*
+    "Detalii actualizate" (§NNN): which facts the save changed, from the payload; the facts
+    themselves are the ones above, read now. Nothing the event held before the save is in the
+    row, so nothing it held before can reach the runner — a place corrected twice before this
+    batch runs is sent once, as it now stands.
+  */
+  const updateChanges = row.messageType === "EVENT_UPDATE_NOTICE" ? readEventChanges((row.payloadJson as { changes?: unknown } | null)?.changes) : [];
+  if (row.messageType === "EVENT_UPDATE_NOTICE") {
+    data.updateChanges = updateChanges;
+    const note = readEventNoticeText((row.payloadJson as { note?: unknown } | null)?.note);
+    if (note) data.organizerNote = note;
+    if (updateChanges.includes("time") && eventDetails?.raceStartsAt) {
+      data.eventRaceStartsAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+        timeStyle: "short",
+        timeZone: eventDetails.timezone,
+      }).format(eventDetails.raceStartsAt);
+    }
+  }
+  // "{event} a fost anulat" (§NNN): the reason the organizer typed, and nothing to act on.
+  if (row.messageType === "EVENT_CANCELLED") {
+    const reason = readEventNoticeText((row.payloadJson as { reason?: unknown } | null)?.reason);
+    if (reason) data.cancellationReason = reason;
+  }
+  // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
+  // and in the update notice when the programme is what changed (§NNN).
+  if ((row.messageType === "EVENT_REMINDER" || updateChanges.includes("programme")) && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);
     if (items.length > 0) {
       const other = locale === "ro" ? "en" : "ro";
@@ -195,6 +220,9 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
     payloadActionUrl = data.signInUrl;
   }
+  // The update's one button is the event's own page (§NNN): public, no token — and, like every
+  // action, absent from a club copy.
+  if (row.messageType === "EVENT_UPDATE_NOTICE" && data.eventUrl) payloadActionUrl = data.eventUrl;
   // "Registration is open" (§146): no participant, no token; the action is the ordinary
   // registration page, which asks everything itself.
   if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {

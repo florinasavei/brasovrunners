@@ -6,7 +6,9 @@ import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
   horizonEnd,
   occurrencesBetween,
@@ -712,6 +714,219 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   return updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
 }
 
+// --- Telling the participants (§NNN) --------------------------------------------------------
+
+/** "Anunță participanții despre schimbare", as the editor's save posts it: the box, and the optional note. */
+export type EventNoticeRequest = { notify: boolean; note?: string | null };
+
+/** Why the event is being cancelled, and whether its participants are told (the box starts ticked). */
+export type EventCancellationRequest = { reason: string; notify: boolean };
+
+/**
+ * What the save told the participants, for the banner that follows it. Absent when the save was
+ * asked for nothing: the box unticked, and the event not cancelled by it.
+ *
+ * - `update` — "details updated" queued for this many real registrations (test ones are told but
+ *   never counted, `AGENTS.md` §12.6), across every date the save reached.
+ * - `nothingToTell` — the box was ticked, but nothing a runner plans by changed and no note was
+ *   written, so nothing was sent; the banner says so rather than letting the tick look ignored.
+ * - `cancelled` — the save cancelled the event (or dates of its series); `queued` messages when
+ *   the organizer left "tell them" ticked, none when they did not.
+ * - `cancelledNobodyToTell` — the save cancelled an event that takes no registrations here (a
+ *   group run, or the organizer's own page), so the editor drew no "tell them" box and nobody was
+ *   written to. Said apart so the banner does not blame a box that was never on the page.
+ */
+export type EventNoticeOutcome =
+  | { kind: "update"; queued: number; changes: EventChangeKind[] }
+  | { kind: "nothingToTell" }
+  | { kind: "cancelled"; queued: number; notified: boolean }
+  | { kind: "cancelledNobodyToTell" };
+
+type NoticeRequest = {
+  notify: boolean;
+  note: string | null;
+  cancellation: { reason: string; notify: boolean } | null;
+};
+
+/**
+ * The notice and the cancellation, checked before any row is locked (§NNN).
+ *
+ * **Cancelling asks why.** A save that moves the event to `CANCELLED` must carry a reason: it
+ * goes to the participants when they are told, and into the audit trail whether or not they are
+ * — the owner reads "who cancelled the race, and why" there months later. Refused with the box
+ * named, so the form comes back with everything else still typed (§315).
+ *
+ * **Only whoever may save the event row may tell its participants** (BR-REQ-060-01): the same
+ * gate as the settings (`canEditEventFields`). A Redactor, who writes the words and not the
+ * facts, sees no box; one who posts it anyway is refused here, whatever the page drew.
+ */
+function readNoticeRequest(
+  actor: Actor,
+  current: EditableEvent,
+  nextStatus: EditableEvent["eventStatus"] | undefined,
+  notice: EventNoticeRequest | undefined,
+  cancellation: EventCancellationRequest | undefined,
+): NoticeRequest {
+  const cancelling = nextStatus === "CANCELLED" && current.eventStatus !== "CANCELLED";
+  const notify = notice?.notify === true;
+  if ((cancelling || notify) && !canEditEventFields(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not tell an event's participants about it`);
+  }
+
+  let note: string | null = null;
+  if (notify && notice?.note) {
+    const parsed = eventNoticeTextSchema.safeParse(notice.note);
+    if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "notice.note: at most 500 characters", ["notice.note"]);
+    note = parsed.data === "" ? null : parsed.data;
+  }
+
+  let cancelled: NoticeRequest["cancellation"] = null;
+  if (cancelling) {
+    const parsed = eventNoticeTextSchema.safeParse(cancellation?.reason ?? "");
+    if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "cancel.reason: at most 500 characters", ["cancel.reason"]);
+    if (parsed.data === "") {
+      throw new DomainError("VALIDATION_ERROR", "cancel.reason: say why the event is cancelled", ["cancel.reason"]);
+    }
+    cancelled = { reason: parsed.data, notify: cancellation?.notify === true };
+  }
+  return { notify, note, cancellation: cancelled };
+}
+
+/** One date of the save, as it was and as it was written. */
+type SavedDate = {
+  before: EditableEvent;
+  after: EditableEvent;
+  translationsBefore: readonly EditableTranslation[];
+  translationsAfter: readonly EditableTranslation[];
+};
+
+/**
+ * Tell one date's participants what the save did to it, inside the save's transaction (§NNN).
+ *
+ * A date the save cancelled gets `EVENT_CANCELLED` — when the organizer left the box ticked —
+ * and an audit row naming who and why either way. A date that is still on and whose place, start
+ * or programme moved, or that is on again, gets `EVENT_UPDATE_NOTICE` when the box was ticked;
+ * with nothing of that kind changed it still goes when the organizer wrote a note, because a
+ * note is a thing they chose to say. A date that is cancelled or over is not told about an edit:
+ * it is not happening.
+ *
+ * Registrations are not touched. A cancelled event's registrations keep their status as the
+ * record of who had entered; nothing is cancelled on the runner's behalf, and a reinstated event
+ * finds its queue where it left it.
+ *
+ * `alreadyStarted` is a date of the series other than the one being edited that had begun before
+ * the save (`announceSave`): nobody is written to about it, but a cancellation of it is still
+ * recorded — who, why, marked as told to nobody — because the audit trail is one row per date
+ * the save cancelled, whatever the date.
+ */
+async function announceSavedDate<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  input: SavedDate & { actor: Actor; request: NoticeRequest; saveKey: string; alreadyStarted: boolean; now: Date },
+): Promise<EventNoticeOutcome | null> {
+  const { before, after, request, actor, now } = input;
+
+  if (before.eventStatus !== "CANCELLED" && after.eventStatus === "CANCELLED") {
+    if (!request.cancellation) return null;
+    const tell = request.cancellation.notify && !input.alreadyStarted;
+    const queued = tell
+      ? await queueEventCancelledNotices(tx, { eventId: after.id, saveKey: input.saveKey, reason: request.cancellation.reason, actorStaffUserId: actor.id, now })
+      : 0;
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.cancelled",
+      entityType: "event",
+      entityId: after.id,
+      // Who, why, and whether the participants were told — the count, never who they are (§12.12).
+      metadata: {
+        reason: request.cancellation.reason,
+        notified: tell,
+        recipients: queued,
+        version: after.version,
+        ...(input.alreadyStarted ? { alreadyStarted: true } : {}),
+      },
+      now,
+    });
+    /*
+      An event that takes no registrations here had no "tell them" box on the page (the editor
+      draws it for `INTERNAL` only), so "not told because the box was unticked" would name a box
+      nobody saw. Judged on the mode the page was drawn from, and only when nothing was queued:
+      a row left from an earlier mode that was written to is reported as told.
+    */
+    if (before.registrationMode !== "INTERNAL" && queued === 0) return { kind: "cancelledNobodyToTell" };
+    return { kind: "cancelled", queued, notified: tell };
+  }
+
+  if (!request.notify || after.eventStatus !== "SCHEDULED" || input.alreadyStarted) return null;
+  const languages = (rows: readonly EditableTranslation[]) => rows.map((row) => ({ locale: row.locale, locationName: row.locationName }));
+  const changes = eventChangesToAnnounce(before, after, languages(input.translationsBefore), languages(input.translationsAfter));
+  if (changes.length === 0 && !request.note) return { kind: "nothingToTell" };
+
+  const queued = await queueEventUpdateNotices(tx, {
+    eventId: after.id,
+    saveKey: input.saveKey,
+    changes,
+    note: request.note,
+    actorStaffUserId: actor.id,
+    now,
+  });
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.update_notice_sent",
+    entityType: "event",
+    entityId: after.id,
+    metadata: { changes, note: request.note, recipients: queued, version: after.version },
+    now,
+  });
+  return { kind: "update", queued, changes };
+}
+
+/**
+ * Every date's answer as the one the banner gives: a cancellation first (one with a box before
+ * one without), then messages sent, then "nothing to tell".
+ */
+function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[]): EventNoticeOutcome | undefined {
+  const cancelled = outcomes.filter((outcome): outcome is Extract<EventNoticeOutcome, { kind: "cancelled" }> => outcome?.kind === "cancelled");
+  if (cancelled.length > 0) {
+    return { kind: "cancelled", queued: cancelled.reduce((sum, outcome) => sum + outcome.queued, 0), notified: cancelled.some((outcome) => outcome.notified) };
+  }
+  if (outcomes.some((outcome) => outcome?.kind === "cancelledNobodyToTell")) return { kind: "cancelledNobodyToTell" };
+  const updates = outcomes.filter((outcome): outcome is Extract<EventNoticeOutcome, { kind: "update" }> => outcome?.kind === "update");
+  if (updates.length > 0) {
+    return {
+      kind: "update",
+      queued: updates.reduce((sum, outcome) => sum + outcome.queued, 0),
+      changes: [...new Set(updates.flatMap((outcome) => outcome.changes))],
+    };
+  }
+  return outcomes.some((outcome) => outcome?.kind === "nothingToTell") ? { kind: "nothingToTell" } : undefined;
+}
+
+/**
+ * Tell every date the save reached (§NNN): this one, then each date of the series it carried
+ * the change to — each date's own registrants once, about their own date. The save is named by
+ * the event that was saved and the version it now has, so a retried press queues nothing twice.
+ *
+ * Another date of the series that has already begun is not told anything: "every date" reaches
+ * last month's too (§130), and a runner who ran it is owed no "details updated" and no "it is
+ * cancelled" about a morning that is over. Its cancellation is still audited, and it is left out
+ * of the banner's count, which is of messages. The date being edited is always told when asked —
+ * the organizer is looking at it, and a race called off at the start line is still news.
+ */
+async function announceSave<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  input: { actor: Actor; request: NoticeRequest; saved: EditableEvent; dates: readonly SavedDate[]; now: Date },
+): Promise<EventNoticeOutcome | undefined> {
+  if (!input.request.notify && !input.request.cancellation) return undefined;
+  const saveKey = `${input.saved.id}:v${input.saved.version}`;
+  const outcomes: (EventNoticeOutcome | null)[] = [];
+  for (const [index, date] of input.dates.entries()) {
+    const alreadyStarted = index > 0 && date.before.startsAt.getTime() <= input.now.getTime();
+    const outcome = await announceSavedDate(tx, { ...date, actor: input.actor, request: input.request, saveKey, alreadyStarted, now: input.now });
+    if (!alreadyStarted) outcomes.push(outcome);
+  }
+  return combineNoticeOutcomes(outcomes);
+}
+
 // --- The event row --------------------------------------------------------------------------
 
 export type SaveEventFieldsInput = {
@@ -719,6 +934,10 @@ export type SaveEventFieldsInput = {
   eventId: string;
   expectedVersion: number;
   fields: unknown;
+  /** Tell the participants what changed (§NNN); absent or unticked sends nothing. */
+  notice?: EventNoticeRequest;
+  /** Required when the save moves the event to CANCELLED (§NNN). */
+  cancellation?: EventCancellationRequest;
   now?: Date;
 };
 
@@ -747,6 +966,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   assertCoherentRegistrationBlock(fields);
   const times = resolveTimes(fields);
+  // The same rule as the editor's save (§NNN): a cancellation says why, and tells whom it was asked to.
+  const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
 
   /**
    * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -768,13 +989,25 @@ export async function saveEventFields<T extends Record<string, unknown>>(
 
     if (fields.featured) await clearFeaturedExcept(tx, input.eventId, now);
 
-    return updateEventWithVersionGuard(
+    const saved = await updateEventWithVersionGuard(
       tx,
       input.eventId,
       input.expectedVersion,
       { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
       now,
     );
+    if (request.notify || request.cancellation) {
+      // This save writes no language, so the place's names in each are the same on both sides.
+      const translations = await listTranslationsForEvent(tx, input.eventId);
+      await announceSave(tx, {
+        actor: input.actor,
+        request,
+        saved,
+        dates: [{ before: current, after: saved, translationsBefore: translations, translationsAfter: translations }],
+        now,
+      });
+    }
+    return saved;
   });
 }
 
@@ -796,6 +1029,10 @@ export type SaveEventAndTranslationsInput = {
   acknowledgeLiveEdit?: boolean;
   /** Which dates of the series this save reaches (§130); "this" — the default — is the one event. */
   scope?: SeriesEditScope;
+  /** "Anunță participanții despre schimbare" (§NNN); absent or unticked sends nothing, as before. */
+  notice?: EventNoticeRequest;
+  /** Required when the save moves the event to CANCELLED (§NNN): the reason, and whether to tell. */
+  cancellation?: EventCancellationRequest;
   now?: Date;
 };
 
@@ -897,12 +1134,15 @@ async function applyToSeries<T extends Record<string, unknown>>(
     after: EditableEvent;
     translationsBefore: readonly EditableTranslation[];
     translationsAfter: readonly EditableTranslation[];
+    /** Hand back each touched date as it was and as it was written, for its participants' notice (§NNN). */
+    collect?: boolean;
     now: Date;
   },
-): Promise<{ applied: number; offered: number }> {
+): Promise<{ applied: number; offered: number; dates: SavedDate[] }> {
   const { before, after, now } = input;
+  const dates: SavedDate[] = [];
   const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
-  if (!sourceId) return { applied: 0, offered: 0 };
+  if (!sourceId) return { applied: 0, offered: 0, dates };
   if (!canEditEventFields(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a series`);
   }
@@ -933,14 +1173,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
     return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
   });
   if (Object.keys(rowChanges).length === 0 && timeChanges.length === 0 && !scheduleChanged && translationChanges.length === 0) {
-    return { applied: 0, offered: 0 };
+    return { applied: 0, offered: 0, dates };
   }
 
   // The series is the source and every date made from it; "following" is by the day this
   // date had before the save, so moving it does not change which dates follow; ticked dates
   // are those and no other, whatever else the list carried.
   const chosen = typeof input.scope === "object" ? input.scope.ids.filter((id) => id !== before.id) : null;
-  if (chosen && chosen.length === 0) return { applied: 0, offered: 0 };
+  if (chosen && chosen.length === 0) return { applied: 0, offered: 0, dates };
   const members = await tx
     .select()
     .from(events)
@@ -979,6 +1219,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
+    // Read before anything is written to this date, only when a notice needs to compare (§NNN).
+    const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
     if (Object.keys(changes).length > 0) {
       await tx
@@ -1012,9 +1254,22 @@ async function applyToSeries<T extends Record<string, unknown>>(
         touched = true;
       }
     }
-    if (touched) applied += 1;
+    if (touched) {
+      applied += 1;
+      if (input.collect) {
+        const [written] = await tx.select().from(events).where(eq(events.id, member.id)).limit(1);
+        if (written) {
+          dates.push({
+            before: member,
+            after: written,
+            translationsBefore: memberTranslationsBefore,
+            translationsAfter: await listTranslationsForEvent(tx, member.id),
+          });
+        }
+      }
+    }
   }
-  return { applied, offered };
+  return { applied, offered, dates };
 }
 
 /**
@@ -1079,7 +1334,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(tx: Transa
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean }> {
+): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean; notice?: EventNoticeOutcome }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -1098,6 +1353,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     assertCoherentRegistrationBlock(parsedEventFields);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
+  // The notice and the cancellation's reason, refused here like any other box (§NNN, §315).
+  const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
 
   return db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
@@ -1159,7 +1416,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // The other dates of the series, when asked (§130) — after this one, so what travels is
     // exactly what was written, and inside the transaction, so a refused date undoes it all.
     const scope = input.scope ?? "this";
+    const announcing = request.notify || request.cancellation !== null;
     let appliedTo = 0;
+    const otherDates: SavedDate[] = [];
     if (scope !== "this") {
       const series = await applyToSeries(tx, {
         actor: input.actor,
@@ -1168,10 +1427,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         after: savedEvent,
         translationsBefore: existingTranslations,
         translationsAfter: savedTranslations,
+        collect: announcing,
         now,
       });
       appliedTo = series.applied;
       offered += series.offered;
+      otherDates.push(...series.dates);
     }
     /*
       This save announced the place (§NNN): the switch was on and is off now, so the place is on
@@ -1180,7 +1441,30 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       the participants is the organizer's own, separate act, and the editor's banner says so.
     */
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
-    return { appliedTo, offered, placeAnnounced };
+
+    /*
+      Telling the participants (§NNN), last, when every date is written and nothing is left to
+      refuse: a refused save queues nothing, because the messages are rows in this transaction.
+      This date's languages as they now stand are the ones written above, and the rest as loaded.
+    */
+    const notice = announcing
+      ? await announceSave(tx, {
+          actor: input.actor,
+          request,
+          saved: savedEvent,
+          dates: [
+            {
+              before: current,
+              after: savedEvent,
+              translationsBefore: existingTranslations,
+              translationsAfter: existingTranslations.map((row) => savedTranslations.find((saved) => saved.id === row.id) ?? row),
+            },
+            ...otherDates,
+          ],
+          now,
+        })
+      : undefined;
+    return notice ? { appliedTo, offered, placeAnnounced, notice } : { appliedTo, offered, placeAnnounced };
   });
 }
 

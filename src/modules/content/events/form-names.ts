@@ -32,6 +32,8 @@ export function eventFormFieldName(path: string): string {
   if (summary) return `${summary[1]}.excerptBody`;
   if (path === "repeat.weekday") return "weekday";
   if (path.startsWith("translations.") || path.startsWith("repeat.")) return path;
+  // The notice to the participants and the cancellation's reason (§NNN) post under their own names.
+  if (path.startsWith("notice.") || path.startsWith("cancel.")) return path;
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;
   if (path === "scheduleRows") return "event.schedule[0].date";

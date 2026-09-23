@@ -13,7 +13,11 @@ import { fillAvailableSpots } from "./service";
 
 /**
  * Registration maintenance (AGENTS.md §16.2): expire stale holds, close the waiting list for
- * events that have started, and offer released or newly free places to whoever is next.
+ * events that have started, and offer released or newly free places to whoever is next — on
+ * scheduled events only. A cancelled event is skipped like a completed one (§NNN): nothing
+ * about its queue must still run, and every automatic message below asks for `SCHEDULED` too.
+ * What still runs for everybody is event-blind: the 48-hour lapse of unconfirmed addresses,
+ * the retention sweep, the picture sweep and the series horizon.
  *
  * A delivery and liveness mechanism, never a correctness one — §10.6 and §16.2 are both
  * explicit that capacity and queue correctness come from every read and every
@@ -64,6 +68,14 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
       await db.transaction(async (tx) => {
         const event = await repo.lockEventForCapacity(tx, eventId);
         if (!event) return;
+        /*
+          A cancelled event is left as it was cancelled (§NNN), and a completed one as it
+          finished (§82): no hold expired, no offer made, no number settled — and so no
+          `BIB_ASSIGNED` to a runner whose race will not run. The scan selects scheduled events
+          only; this is the same rule under the lock, for a cancellation saved between the scan
+          and this line.
+        */
+        if (event.eventStatus !== "SCHEDULED") return;
 
         if (event.startsAt <= now) {
           await repo.closeWaitlistForStartedEvent(tx, eventId, now);

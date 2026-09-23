@@ -18,6 +18,7 @@ import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel"
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { copyFor } from "@/modules/notifications/domain/email-copy";
+import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import { readEmailCopy } from "@/modules/notifications/email-copy";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readOutboxQueue } from "@/modules/notifications/queue";
@@ -32,6 +33,9 @@ import { env } from "@/shared/config/env";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string }> };
+
+/** Nothing queues these any more (§NNN, `domain/never-queued.ts`): listed last, and said so. */
+const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
 
 /**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
@@ -126,10 +130,25 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     inviterName: "Florin",
     staffEmail: "ana.popescu@example.org",
     signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
+    // "Detalii actualizate" and "Eveniment anulat" (§NNN): a new place and start, the
+    // organizer's note, and a reason — read only by those two messages' templates.
+    updateChanges: ["place", "time"],
+    organizerNote: tRo ? "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta." : "We meet at the Livada Poștei entrance, by the map board.",
+    cancellationReason: tRo ? "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur." : "An orange weather warning for Tâmpa: the route is not safe.",
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 
-  const types = emailMessageType.enumValues as readonly EmailMessageType[];
+  /*
+    Every type, as it would go out — and the three that nothing queues any more said to be so and
+    listed last, rather than left looking like mail somebody receives (§NNN; the owner: "I want to
+    know exactly when and if participants get email alerts"). They stay in the catalogue because
+    the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
+    renders through them.
+  */
+  const types = [
+    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !NEVER_QUEUED.has(type)),
+    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
+  ];
 
   return (
     <Stack spacing={3}>
@@ -198,6 +217,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           <Box key={messageType} component="details" sx={BOXED_DISCLOSURE_SX}>
             <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
               {t(`emails.types.${messageType}`)}
+              {NEVER_QUEUED.has(messageType) && (
+                <Typography component="span" variant="body2" color="warning.main" sx={{ ml: 1, fontWeight: 600 }}>
+                  {t("emails.neverSent")}
+                </Typography>
+              )}
               <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
                 {t("emails.subject")}: {content.subject}
               </Typography>

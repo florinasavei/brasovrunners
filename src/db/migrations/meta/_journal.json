@@ -449,6 +449,13 @@
       "when": 1790198571074,
       "tag": "0063_list_opt_out_default",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790199636663,
+      "tag": "0064_event_notices",
+      "breakpoints": true
     }
   ]
 }

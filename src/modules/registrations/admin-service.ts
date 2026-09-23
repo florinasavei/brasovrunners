@@ -128,6 +128,17 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
       `nothing to resend for a registration in status ${registration.status}`,
     );
   }
+  /*
+    A cancelled event's links lead nowhere (§NNN): the declaration refuses, the offer refuses,
+    the confirmation's QR opens a desk that is closed. Its participants were told in a message
+    of its own, so the one thing still worth sending is where their registration stands.
+  */
+  if (messageType !== "REGISTRATION_STATE_NOTICE") {
+    const event = await findEventForAllocation(db, registration.eventId);
+    if (event?.eventStatus === "CANCELLED") {
+      throw new DomainError("VALIDATION_ERROR", "the event is cancelled; its participants were told, and there is nothing to resend");
+    }
+  }
 
   const [participant] = await db
     .select({ deliveryEmail: participants.deliveryEmail })
@@ -519,8 +530,10 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     now,
   });
   // The runner is told (§105): a number given or changed by hand after the confirmation went
-  // out would otherwise live only on the desk's screen. A cleared number is not news.
-  if (bibNumber !== null && updated.status === "CONFIRMED") {
+  // out would otherwise live only on the desk's screen. A cleared number is not news, and
+  // neither is a number at a race that will not run (§NNN): it is written, and nobody is mailed.
+  const event = bibNumber !== null && updated.status === "CONFIRMED" ? await findEventForAllocation(db, updated.eventId) : undefined;
+  if (bibNumber !== null && updated.status === "CONFIRMED" && event?.eventStatus !== "CANCELLED") {
     await db.transaction(async (tx) => {
       await enqueueEmail(tx, {
         participantId: updated.participantId,

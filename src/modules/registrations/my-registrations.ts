@@ -78,8 +78,13 @@ export type MyRegistration = {
   bibNumber: number | null;
   /** The number held before the settle (§214); what the runner is shown until then. */
   provisionalBibNumber: number | null;
-  /** "I am here" is offered from the day before the start, confirmed registrations only. */
+  /** "I am here" is offered from the day before the start, confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
+  /**
+   * The event was cancelled (§NNN). The registration keeps its own status — it is the record of
+   * who had entered — and the page says, beside it, that the race will not run.
+   */
+  eventCancelled: boolean;
   /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
   listed: boolean;
   /**
@@ -106,6 +111,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventSlug: eventTranslations.slug,
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
+      eventStatus: events.eventStatus,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
@@ -129,11 +135,13 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     )
     .orderBy(asc(events.startsAt), asc(registrations.id));
 
-  return rows.map(({ listOptOut, ...row }) => ({
+  return rows.map(({ listOptOut, eventStatus, ...row }) => ({
     ...row,
     listed: !listOptOut,
+    eventCancelled: eventStatus === "CANCELLED",
     selfCheckinOpen:
       row.status === "CONFIRMED" &&
+      eventStatus !== "CANCELLED" &&
       now.getTime() >= row.eventStartsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000,
   }));
 }

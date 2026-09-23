@@ -2,6 +2,7 @@ import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter"
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
 import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
@@ -297,6 +298,8 @@ export type TemplateData = {
   eventStartsAtFormatted?: string;
   /** The same instant in the other language's words, for the bilingual message's second half (§96). */
   eventStartsAtFormattedOther?: string;
+  /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§NNN). */
+  eventRaceStartsAtFormatted?: string;
   currentStatus?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
@@ -360,7 +363,32 @@ export type TemplateData = {
   inviterName?: string;
   staffEmail?: string;
   signInUrl?: string;
+  /**
+   * "Detalii actualizate" (§NNN): which facts the save changed — the place, the start, the
+   * programme, the event on again. The values are the event's as it stands at send time, in the
+   * fields above; this says which of them to name as new.
+   */
+  updateChanges?: readonly EventChangeKind[];
+  /** The organizer's own words on that message, plain text, at most 500 characters. */
+  organizerNote?: string;
+  /** Why the event was cancelled, as the organizer typed it (§NNN). */
+  cancellationReason?: string;
 };
+
+/**
+ * The organizer's own words — the note on an update, the reason for a cancellation — as a block
+ * of its own (§NNN): a bold label, then the text escaped, its line breaks kept, and **no**
+ * emphasis markers read inside it. The platform's sentences may carry `**` and `__` (§189,
+ * §309); a note typed in the backoffice is not the platform's sentence, and a stray pair of
+ * asterisks in it must print as asterisks.
+ */
+function organizerTextPart(label: string, text: string): EmailBodyPart {
+  const lines = text.split("\n");
+  return {
+    html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5"><strong>${escapeHtml(label)}</strong><br>${lines.map(escapeHtml).join("<br>")}</p>`,
+    text: [label, ...lines],
+  };
+}
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
 function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
@@ -605,6 +633,36 @@ const T = {
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} are starea: ${d.currentStatus ?? "necunoscută"}.`,
       ],
     },
+    eventUpdateNotice: {
+      subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Organizatorii au actualizat detaliile pentru ${d.eventTitle ?? "evenimentul"} la care ești înscris.`,
+        "Înscrierea ta rămâne așa cum era și nu trebuie să faci nimic. Pagina evenimentului are mereu detaliile la zi.",
+      ],
+      action: "Vezi pagina evenimentului",
+    },
+    eventCancelled: {
+      subject: (d: TemplateData) => `Evenimentul „${d.eventTitle ?? "Brașov Runners"}” a fost anulat`,
+      body: (d: TemplateData) => [
+        `Ne pare rău: evenimentul „${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
+        "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
+        `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
+      ],
+    },
+    /** What the update and the cancellation add around the club's words (§NNN): the facts named as new, the labels of the organizer's text. */
+    noticeWords: {
+      place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
+      time: (d: TemplateData) =>
+        d.eventStartsAtFormatted
+          ? `Data și ora sunt acum: ${d.eventStartsAtFormatted}${d.eventRaceStartsAtFormatted ? `; startul cursei la ${d.eventRaceStartsAtFormatted}` : ""}.`
+          : "Data sau ora s-au schimbat — le găsești pe pagina evenimentului.",
+      programme: (d: TemplateData) =>
+        d.eventProgramme?.length ? `Programul actualizat: ${d.eventProgramme.join("; ")}.` : "Programul s-a schimbat — îl găsești pe pagina evenimentului.",
+      reinstated: () => "Evenimentul nu mai este anulat: are loc.",
+      noteLabel: "Mesajul organizatorilor:",
+      reasonLabel: "Motivul:",
+    },
     closing: "Alergare plăcută,",
     /**
      * In front of a message re-sent because the form was filled in again (§235, §286).
@@ -827,6 +885,35 @@ const T = {
         `Your registration for ${d.eventTitle ?? "the event"} currently has this status: ${d.currentStatus ?? "unknown"}.`,
       ],
     },
+    eventUpdateNotice: {
+      subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `The organizers have updated the details of ${d.eventTitle ?? "the event"}, which you are registered for.`,
+        "Your registration stays as it was and there is nothing you need to do. The event's page always has the latest details.",
+      ],
+      action: "See the event's page",
+    },
+    eventCancelled: {
+      subject: (d: TemplateData) => `“${d.eventTitle ?? "Brașov Runners"}” has been cancelled`,
+      body: (d: TemplateData) => [
+        `We are sorry: “${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+        "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
+        `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
+      ],
+    },
+    noticeWords: {
+      place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
+      time: (d: TemplateData) =>
+        d.eventStartsAtFormatted
+          ? `The date and time are now: ${d.eventStartsAtFormatted}${d.eventRaceStartsAtFormatted ? `; the race starts at ${d.eventRaceStartsAtFormatted}` : ""}.`
+          : "The date or the time has changed — it is on the event's page.",
+      programme: (d: TemplateData) =>
+        d.eventProgramme?.length ? `The updated programme: ${d.eventProgramme.join("; ")}.` : "The programme has changed — it is on the event's page.",
+      reinstated: () => "The event is no longer cancelled: it is going ahead.",
+      noteLabel: "A message from the organizers:",
+      reasonLabel: "The reason:",
+    },
     closing: "Happy running,",
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
     alreadyRegistered: (bib?: number | null) =>
@@ -865,7 +952,32 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
+  EVENT_UPDATE_NOTICE: "eventUpdateNotice",
+  EVENT_CANCELLED: "eventCancelled",
 };
+
+/**
+ * The sentences the update and the cancellation add after the body (§NNN) — machinery, like the
+ * provisional-number line (§237), so a club that rewrote the message's words (§247) still sends
+ * the new place and the reason: they are statements about the event, not about how the club
+ * likes to write. One line per kind the save changed, in the order a runner reads a morning — on
+ * again, where, when, the programme — then the organizer's note, or the reason.
+ */
+function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: TemplateData): (string | EmailBodyPart)[] {
+  const words = T[locale].noticeWords;
+  if (messageType === "EVENT_CANCELLED") {
+    return data.cancellationReason ? [organizerTextPart(words.reasonLabel, data.cancellationReason)] : [];
+  }
+  if (messageType !== "EVENT_UPDATE_NOTICE") return [];
+  const changes = new Set(data.updateChanges ?? []);
+  return [
+    ...(changes.has("reinstated") ? [words.reinstated()] : []),
+    ...(changes.has("place") ? [words.place(data)] : []),
+    ...(changes.has("time") ? [words.time(data)] : []),
+    ...(changes.has("programme") ? [words.programme(data)] : []),
+    ...(data.organizerNote ? [organizerTextPart(words.noteLabel, data.organizerNote)] : []),
+  ];
+}
 
 /**
  * Every message type's content, for one locale, given the data the renderer looked up.
@@ -972,6 +1084,8 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.map(fill)
           : entry.body(data)),
+      // What changed and the organizer's own words, after the body and whoever wrote it (§NNN).
+      ...noticeParts(messageType, locale, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
