@@ -459,7 +459,7 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
   it("removes the row, its declaration acceptance, and its queued email", async () => {
     const event = await createInternalEvent(10);
     const registration = await registerPublicly(event, "erase@example.ro");
-    await signDeclaration(db, event, registration.id, await signingInput(db, NOW, "Runner"), NOW);
+    await signDeclaration(db, event, registration.id, await signingInput(db, NOW, registration.registeredName), NOW);
 
     const [acceptanceBefore] = await db
       .select()

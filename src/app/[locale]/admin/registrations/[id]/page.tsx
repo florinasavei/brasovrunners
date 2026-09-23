@@ -11,6 +11,8 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { emailMessageType } from "@/db/schema/email-outbox";
+import { registrationStatus } from "@/db/schema/registrations";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
@@ -81,12 +83,39 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const { resent, saved, error } = await searchParams;
   const tr = await getTranslations("Admin");
   const format = await getFormatter();
+  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+
+  /*
+    The form filled again with the same address (§312), out of the trail and into the timeline,
+    oldest first like the lines around them. They are what the person did, not what the team
+    did, so they leave "Ce a făcut echipa" to the team. Each says the state it found — "still
+    waiting for the email link" is usually the whole answer to "she says she registered" — and
+    what went out, in the words `/admin/emails` uses for that message.
+  */
+  const resubmissions = auditTrail
+    .filter((entry) => entry.action === "registration.resubmitted")
+    .reverse()
+    .map((entry) => {
+      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown };
+      const status = registrationStatus.enumValues.find((value) => value === metadata.status);
+      const resent = emailMessageType.enumValues.find((value) => value === metadata.resent);
+      const values = {
+        date: dt(entry.createdAt) ?? "",
+        state: status ? REGISTRATION_STATUS_LABEL[status] : "—",
+      };
+      return {
+        text: resent
+          ? tr("registrations.resubmittedSent", { ...values, message: tr(`emails.types.${resent}`) })
+          : tr("registrations.resubmittedNothing", values),
+        actorName: entry.actorName,
+      };
+    });
+  const staffTrail = auditTrail.filter((entry) => entry.action !== "registration.resubmitted");
 
   const canResend = deriveAllowedResendMessageType(registration.status) !== null;
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
-  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
   /*
     A settled number that is on paper (§264), and the same number on a registration that is over
     (§311): the first is what the cancel confirmation warns about before the press, the second is
@@ -499,8 +528,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem" }}>
           {tr("registrations.timeline")}
         </Typography>
+        <Typography variant="body2">
+          {tr("registrations.submitted")}: {dt(registration.submittedAt)}
+        </Typography>
+        {/* Each time the form came back with the same address, right under the first (§312). */}
+        {resubmissions.map((line, index) => (
+          <Typography key={`resubmitted-${index}`} variant="body2" data-testid="timeline-resubmitted">
+            {line.text}
+            {line.actorName ? ` · ${line.actorName}` : ""}
+          </Typography>
+        ))}
         {[
-          [tr("registrations.submitted"), dt(registration.submittedAt)],
           [
             tr("registrations.emailConfirmed"),
             registration.emailConfirmedAt
@@ -554,12 +592,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         ))}
       </Stack>
 
-      {auditTrail.length > 0 && (
+      {staffTrail.length > 0 && (
         <Stack spacing={1}>
           <Typography variant="h3" sx={{ fontSize: "1rem" }}>
             {tr("registrations.auditTrail")}
           </Typography>
-          {auditTrail.map((entry, index) => (
+          {staffTrail.map((entry, index) => (
             <Typography key={index} variant="body2">
               {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`)} ·{" "}
               {entry.actorName ??

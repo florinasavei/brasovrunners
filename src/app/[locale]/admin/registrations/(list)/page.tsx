@@ -17,6 +17,7 @@ import {
   summariseRegistrationsForAdmin,
   listEventsWithRegistrations,
   listRegistrationsForAdmin,
+  listResubmissionMarks,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
@@ -54,7 +55,7 @@ import {
   promoteRegistrationAction,
   setBibPrintedAction,
 } from "../actions";
-import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 
@@ -95,6 +96,9 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
+/** Present for a screen reader, absent on screen (the usual clip pattern). */
+const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -138,13 +142,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     The events come first now, because the default filter is derived from them (§178): with no
     eventId in the query the list is about the club's featured event, which is the one anybody
     opening this page is asking about. "Toate evenimentele" stays one press away as `all`.
+
+    Unless a name was typed and no event chosen (§312): then every event, because somebody
+    searching for a person must not be told "nobody" by a filter they never set.
   */
   const [volume, events] = await Promise.all([
     readEmailVolumeToday(db, new Date()),
     listEventsWithRegistrations(db),
   ]);
-  const eventFilter = defaultEventFilter(eventId, events);
+  const eventFilter = defaultEventFilter(eventId, events, q);
   filters.eventId = eventFilter.eventId;
+  const featuredEvent = events.find((event) => event.featured) ?? null;
 
   const [rows, total, summary, bibs, voidBibs] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
@@ -176,8 +184,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
   ]);
 
-  const t = await getTranslations("Admin");
-  const format = await getFormatter();
+  /*
+    Who filled the form again, for the rows on this page only (§312): one grouped read of the
+    audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
+    twenty-five. Beside the translations, which it does not depend on.
+  */
+  const [resubmissions, t, format] = await Promise.all([
+    listResubmissionMarks(db, rows.map((row) => row.id)),
+    getTranslations("Admin"),
+    getFormatter(),
+  ]);
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -193,6 +209,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
+  /*
+    The export's query names the scope the screen resolved, never the automatic one (§312,
+    §15.10): the file is the set that was on screen when the button was pressed, even if the
+    club features another event before the link is followed. The route runs the same
+    `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
+  */
+  const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
   const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
 
   /*
@@ -272,6 +295,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("registrations.notOnPublicList")}
             />
           )}
+          {/* The form filled again with the same address (§312): how often and when last, in the
+              chip's own words, because a `title` never shows on a phone. The sentence with the
+              full date is the hover text; the registration's timeline has each one. Shown to
+              whoever reads the list, the Organizer too (§289) — it changes nothing. */}
+          {(() => {
+            const mark = resubmissions.get(row.id);
+            if (!mark) return null;
+            return (
+              <Chip
+                size="small"
+                variant="outlined"
+                data-testid="resubmitted-chip"
+                label={t("registrations.resubmittedChip", {
+                  count: mark.count,
+                  date: format.dateTime(mark.lastAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+                })}
+                title={t("registrations.resubmittedHint", {
+                  count: mark.count,
+                  date: format.dateTime(mark.lastAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+                })}
+              />
+            );
+          })()}
         </Stack>
       ),
     },
@@ -301,6 +347,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
+      // What "2*", a bold "1" and the tick mean (§313; the owner: "not sure what that is!") — a
+      // tap-friendly hint, because the cell's own `title` never shows on a phone.
+      hint: t("registrations.bibColumnHint"),
       sortable: true,
       /*
         Whichever number the runner has (§214). Before the window closes it is the provisional
@@ -328,7 +377,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             }}
           >
             {number.value}
-            {number.settled ? "" : "*"}
+            {number.settled ? null : (
+              <>
+                <span aria-hidden="true">*</span>
+                {/* The asterisk, said in a word to a screen reader, which would otherwise read "star". */}
+                <Box component="span" sx={VISUALLY_HIDDEN}>{` ${t("registrations.bibProvisionalShort")}`}</Box>
+              </>
+            )}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken
@@ -547,7 +602,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           */}
           <GlyphButton
             icon="spreadsheet"
-            href={`/api/admin/registrations/export?format=xlsx${listQueryString ? `&${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?format=xlsx${exportQueryString ? `&${exportQueryString}` : ""}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
@@ -556,7 +611,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </GlyphButton>
           <GlyphButton
             icon="download"
-            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export${exportQueryString ? `?${exportQueryString}` : ""}`}
             variant="text"
             size="small"
             sx={TAP_TARGET}
@@ -828,13 +883,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             defaultValue={q ?? ""}
             sx={{ minWidth: 260, flexGrow: 1 }}
           />
+          {/*
+            "Let the page decide" is an option of its own (§312), the empty value, and it is what
+            the select shows and submits until somebody picks an event. Before, the select
+            submitted the featured event's id on every press of "Filtrează", so the default
+            became a choice nobody had made — and a name search stayed inside it. Its words say
+            what it means *on this render*: the featured event, or every event while a name is
+            being searched. `displayEmpty` so the empty value shows its words rather than a blank.
+          */}
           <TextField
             select
             name="eventId"
             label={t("nav.events")}
             defaultValue={eventFilter.selected}
+            slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
             sx={{ minWidth: 220 }}
           >
+            {featuredEvent && (
+              <MenuItem value={AUTOMATIC}>
+                {eventFilter.searchesEverywhere
+                  ? t("registrations.filterAutoSearch")
+                  : t("registrations.filterAutoFeatured", { event: featuredEvent.title ?? featuredEvent.id })}
+              </MenuItem>
+            )}
             <MenuItem value={ALL_EVENTS}>{t("registrations.filterAll")}</MenuItem>
             {events.map((event) => (
               <MenuItem key={event.id} value={event.id}>
@@ -890,6 +961,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Stack>
       </Box>
       </Panel>
+
+      {/* The scope a name search widened to, said where the results start (§312): one line, so
+          the filter that used to be silent is never silent the other way either. */}
+      {eventFilter.searchesEverywhere && (
+        <Alert severity="info" data-testid="registrations-search-everywhere">
+          {t("registrations.searchEverywhere")}
+        </Alert>
+      )}
 
       <AdminTable
         caption={t("registrations.tableCaption")}
