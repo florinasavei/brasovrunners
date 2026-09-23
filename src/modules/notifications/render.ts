@@ -17,6 +17,7 @@ import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
+import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { readEmailCopyForSending } from "./email-copy";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -75,12 +76,28 @@ const DEFAULT_TOKEN_HOURS = 14 * 24;
 export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now) => {
   const locale = row.locale as Locale;
 
-  const [participant] = row.participantId
-    ? await db.select().from(participants).where(eq(participants.id, row.participantId)).limit(1)
-    : [];
+  /*
+    The club's copy of a participant's message (§NNN; `enqueueClubCopies` in `outbox.ts`).
+
+    The same words the participant read, for a club mailbox — and nothing the participant alone
+    may hold: no token is minted, so there is no action button, no manage link, no "take me off
+    the list" link and no PDF-by-link; no check-in code or QR, which is what the desk hands a
+    race number against; and no attachment, neither the signed declaration nor the calendar
+    file. The subject and the first line say it is the club's copy and that the personal links
+    were taken out. Its row carries no `participantId`, which on its own already keeps the token
+    branches below shut; the flag closes them again explicitly, so a hand-made row that named a
+    participant would still mint nothing.
+  */
+  const clubCopy = isClubCopy(row.payloadJson);
 
   const [registration] = row.registrationId
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
+    : [];
+
+  // A club copy's greeting still names the runner, read through the registration it is about.
+  const participantId = row.participantId ?? (clubCopy ? registration?.participantId : undefined);
+  const [participant] = participantId
+    ? await db.select().from(participants).where(eq(participants.id, participantId)).limit(1)
     : [];
 
   // The event comes from the registration — or, for the one message about an event and
@@ -121,6 +138,8 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
+  // The subject's "[Copie club]" and the line that says the personal links were taken out.
+  if (clubCopy) data.clubCopy = true;
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
   // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
@@ -188,13 +207,17 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED") &&
     registration?.status === "CONFIRMED"
   ) {
-    let code = registration.checkinCode;
-    if (!code) {
-      code = newCheckinCode();
-      await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registration.id));
+    // The desk hands the number against this code; a club mailbox has no use for it (§245's
+    // reasoning for the club's own notice, and §NNN's for the club copy).
+    if (!clubCopy) {
+      let code = registration.checkinCode;
+      if (!code) {
+        code = newCheckinCode();
+        await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registration.id));
+      }
+      data.checkinCode = code;
+      data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
     }
-    data.checkinCode = code;
-    data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
     /*
       The number the runner has, settled or not (§237; the owner: "peste tot trebuie să
       apară BID-ul!!").
@@ -215,8 +238,10 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
 
-  let actionUrl: string | undefined = payloadActionUrl;
-  if (purpose && row.participantId) {
+  // A club copy has no action button at all — not even the thank-you's public link — so there is
+  // one rule to check rather than a list of which actions are safe to copy (§NNN).
+  let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
+  if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
     // Borrow the registration's own deadline so the token dies when the place does — but only
@@ -265,7 +290,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     what the table enforces. The lifetime is the same fortnight the manage link gets; after it,
     "Înscrierile mele" and the manage page carry the same button under their own links.
   */
-  if (row.messageType === "REGISTRATION_CONFIRMED" && row.participantId && registration) {
+  if (row.messageType === "REGISTRATION_CONFIRMED" && row.participantId && registration && !clubCopy) {
     const issued = await issueActionToken(db, {
       participantId: row.participantId,
       registrationId: registration.id,
@@ -295,8 +320,11 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
    *
    * A published event only: an `.ics` for a draft would leak an unpublished page's details into
    * somebody's calendar. When there is no published row the message simply goes without it.
+   *
+   * Never on a club copy (§NNN), which attaches nothing: the rule is "no attachment", not a list.
    */
   if (
+    !clubCopy &&
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
     eventDetails?.slug
   ) {
@@ -314,13 +342,23 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
   }
 
+  /*
+    Which copy of the PDF, if any (§NNN): the whole document on the participant's own messages;
+    on the club's archive copy (§99, §244) the identity document masked, because that copy leaves
+    the platform for mailboxes nobody sweeps after seven days as the database is swept (§95) —
+    the whole document stays in the event's bundle in the backoffice for those seven days. A
+    club copy of a participant's message attaches nothing, and says when it was signed anyway.
+  */
+  const pdfAudience = declarationPdfAudience(row.messageType, clubCopy);
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
     registration
   ) {
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
-      const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now);
+      const pdf = pdfAudience
+        ? await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now, pdfAudience)
+        : undefined;
       // Beside the calendar file, never instead of it: the confirmation carries both (§174).
       if (pdf) attachments = [...(attachments ?? []), { filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }];
       data.signedAtFormatted = new Intl.DateTimeFormat(signed.locale === "ro" ? "ro-RO" : "en-GB", {
@@ -338,8 +376,14 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     declaration was signed, and a list edited since must not silently redirect a copy that was
     already queued. Addresses only — `AGENTS.md` §14.5 keeps bodies and tokens out of the row,
     and an address is neither.
+
+    Only the club's own messages carry copies on their envelope (§NNN). A participant's message
+    never does — including a row queued before §NNN with the old participant Bcc in its payload,
+    which now goes to the participant alone rather than handing that mailbox the runner's live
+    links — and a club copy goes to the one address its row is for.
   */
-  const payload = (row.payloadJson ?? {}) as { cc?: unknown; bcc?: unknown };
+  const envelopeCopies = !clubCopy && !isParticipantMessage(row.messageType);
+  const payload = (envelopeCopies ? (row.payloadJson ?? {}) : {}) as { cc?: unknown; bcc?: unknown };
   const addresses = (value: unknown): string[] =>
     Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "") : [];
 
@@ -350,7 +394,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     messageType: row.messageType,
     data,
     actionUrl,
-    attachments,
+    attachments: clubCopy ? undefined : attachments,
     // The club's own words, when it has written any (§247). Memoized for half a minute, so a
     // batch of twenty reads the setting once rather than twenty times.
     overrides: await readEmailCopyForSending(db, now),

@@ -62,6 +62,28 @@ export type DeclarationPdfInput = {
   };
 };
 
+/** What stands in for the hidden characters of an identity document (§NNN). */
+export const ID_DOCUMENT_MASK = "••••";
+
+/**
+ * An identity document as the club's copies print it (§NNN): "BV 123456" becomes "BV ••••56".
+ *
+ * The first two and the last two characters that are not spaces, with the mask between — enough
+ * for somebody at the club to tell which runner's paper it is and to match it against the card
+ * shown at the desk, not enough to be the number. Counted without spaces because people type
+ * "BV 123456", "BV123456" and "CI seria BV nr. 123456" for the same card.
+ *
+ * Shown only while at least as many characters stay hidden as are shown: under eight, the four
+ * characters kept would be most of the document (the form allows four to thirty, `ID_DOCUMENT`),
+ * so the whole value becomes the mask. Pure, so it is tested on its own and the PDF only draws
+ * what it returns.
+ */
+export function maskIdDocument(value: string): string {
+  const characters = [...value.replace(/\s+/g, "")];
+  if (characters.length < 8) return ID_DOCUMENT_MASK;
+  return `${characters.slice(0, 2).join("")} ${ID_DOCUMENT_MASK}${characters.slice(-2).join("")}`;
+}
+
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
 /** Opened once per document (`doc.openImage`): pdfkit embeds a Buffer again on every `image()` call, and two hundred copies of the lockup are the difference between two megabytes and ten. */
 let LOGO: Buffer;

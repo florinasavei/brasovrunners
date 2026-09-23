@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -204,19 +204,25 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
   });
 
   /**
-   * BR-REQ-033-02 criterion 12's rule for every message a participant receives (2026-09-22):
-   * the club's hidden copies ride in the row's payload from the moment the message is queued.
+   * BR-REQ-033-02 criterion 14's rule for every message a participant receives (2026-09-22), as
+   * §NNN changed it: the club's copies are rows of their own, queued with the participant's
+   * message, and never a Bcc on the participant's envelope. `club-copy.test.ts` renders them.
    */
-  describe("BR-REQ-033-02 criterion 12 the hidden copy of every participant message", () => {
-    it("rides in the payload of a message queued after the list was set, and not in one queued before", async () => {
+  describe("BR-REQ-033-02 criterion 14 the club's copy of every participant message", () => {
+    const own = (type: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "REGISTRATION_CONFIRMED") =>
+      db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, type), isNotNull(emailOutbox.participantId)));
+    const copies = (type: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "REGISTRATION_CONFIRMED") =>
+      db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, type), isNull(emailOutbox.participantId)));
+
+    it("is queued beside a message queued after the list was set, and not beside one queued before", async () => {
       await approve(db);
       const event = await createEvent(db);
 
-      // Queued before the club named anybody: the verification carries no copy, and never will —
+      // Queued before the club named anybody: the verification has no copy, and never will —
       // a list edited afterwards cannot redirect a message already queued.
       await submitRegistration(db, event, submission, NOW);
       const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
-      const [verification] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"));
+      const [verification] = await own("VERIFY_REGISTRATION_EMAIL");
       expect(verification.payloadJson).not.toHaveProperty("bcc");
 
       await setNotices(db, {
@@ -225,27 +231,36 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
         participants: { bcc: [HIDDEN, PRESIDENT] },
       });
 
-      // Queued after: the declaration request and the confirmation both carry the list.
+      // Queued after: the declaration request and the confirmation each get one copy per address.
       await confirmEmail(db, event, row.id, NOW);
       await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Ana Popescu")), idDocument: "BV 123456" }, NOW);
 
-      const [request] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "COMPLETE_DECLARATION"));
-      expect(request.payloadJson).toMatchObject({ bcc: [HIDDEN, PRESIDENT] });
-      const [confirmed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "REGISTRATION_CONFIRMED"));
-      expect(confirmed.payloadJson).toMatchObject({ bcc: [HIDDEN, PRESIDENT] });
-      // Still to the participant, still their message: the copies are envelope recipients on the
-      // rendered message, and the address it is *for* is unchanged.
+      for (const type of ["COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED"] as const) {
+        const [message] = await own(type);
+        // The participant's own row carries no club address at all.
+        expect(message.payloadJson, type).not.toHaveProperty("bcc");
+        expect((await copies(type)).map((copy) => copy.recipientEmail).sort(), type).toEqual([HIDDEN, PRESIDENT].sort());
+      }
+      const [confirmed] = await own("REGISTRATION_CONFIRMED");
       const message = await renderOutboxMessage({ ...confirmed, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
       expect(message.to).toBe(submission.email);
-      expect(message.bcc).toEqual([HIDDEN, PRESIDENT]);
+      expect(message.bcc).toBeUndefined();
       expect(message.cc).toBeUndefined();
 
-      // The row queued before the list still renders without a copy.
-      const early = await renderOutboxMessage({ ...verification, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
-      expect(early.bcc).toBeUndefined();
+      // The copy goes to its club address alone, and says what it is.
+      const [copy] = (await copies("REGISTRATION_CONFIRMED")).filter((row) => row.recipientEmail === HIDDEN);
+      const rendered = await renderOutboxMessage({ ...copy, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+      expect(rendered.to).toBe(HIDDEN);
+      expect(rendered.bcc).toBeUndefined();
+      expect(rendered.subject.startsWith("[Copie club] Înscrierea este confirmată")).toBe(true);
+      expect(rendered.html).not.toMatch(/\/inregistrari\/gestionare\//);
+      expect(rendered.attachments ?? []).toHaveLength(0);
+
+      // Nothing was queued beside the verification after the fact.
+      expect(await copies("VERIFY_REGISTRATION_EMAIL")).toHaveLength(0);
     });
 
-    it("carries none on a test registration's messages (§12.6)", async () => {
+    it("is never queued for a test registration's messages (§12.6)", async () => {
       await approve(db);
       await setNotices(db, {
         declarations: { to: "", cc: [], bcc: [] },
@@ -260,7 +275,11 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
 
       const rows = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id));
       expect(rows.map((r) => r.messageType)).toContain("REGISTRATION_CONFIRMED");
-      for (const queued of rows) expect(queued.payloadJson, queued.messageType).not.toHaveProperty("bcc");
+      for (const queued of rows) {
+        expect(queued.payloadJson, queued.messageType).not.toHaveProperty("bcc");
+        expect(queued.payloadJson, queued.messageType).not.toHaveProperty("clubCopy");
+        expect(queued.recipientEmail, queued.messageType).not.toBe(HIDDEN);
+      }
     });
 
     it("leaves the club's own notices alone: a copy of a copy would spend the allowance twice", async () => {
@@ -273,13 +292,14 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
       const event = await createEvent(db);
       await signed(db, event);
 
-      const [archive] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "DECLARATION_ARCHIVE"));
-      expect(archive.payloadJson).toEqual({ cc: [], bcc: [] });
-      const [notice] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "CLUB_CONFIRMATION_NOTICE"));
-      expect(notice.payloadJson).toEqual({});
-      // While the participant's own confirmation does carry the copy.
-      const [confirmed] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "REGISTRATION_CONFIRMED"));
-      expect(confirmed.payloadJson).toMatchObject({ bcc: [HIDDEN] });
+      const archives = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "DECLARATION_ARCHIVE"));
+      expect(archives).toHaveLength(1);
+      expect(archives[0].payloadJson).toEqual({ cc: [], bcc: [] });
+      const notices = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "CLUB_CONFIRMATION_NOTICE"));
+      expect(notices).toHaveLength(1);
+      expect(notices[0].payloadJson).toEqual({});
+      // While the participant's own confirmation is copied — as a message of its own.
+      expect((await copies("REGISTRATION_CONFIRMED")).map((copy) => copy.recipientEmail)).toEqual([HIDDEN]);
     });
 
     it("reads a setting saved before the list existed as having none", async () => {

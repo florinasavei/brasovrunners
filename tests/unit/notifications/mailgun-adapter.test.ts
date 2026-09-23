@@ -69,6 +69,34 @@ describe("BR-REQ-080-01 what the adapter sends", () => {
     expect(form.get("o:tag")).toBe("locale:ro");
   });
 
+  /**
+   * §NNN: no open or click tracking, on every message. Click tracking would rewrite each link —
+   * a participant's single-use action link included — through Mailgun's redirect host; open
+   * tracking is a pixel reporting when somebody read their mail. Per-message options override the
+   * domain's setting (Mailgun's API reference), so these three are what makes it hold.
+   */
+  it("pins open and click tracking off on every message, whatever it carries", async () => {
+    respondWith(200, JSON.stringify({ id: "<1@x>" }));
+    const messages: OutgoingEmail[] = [
+      MESSAGE,
+      { ...MESSAGE, cc: ["club@example.test"], bcc: ["arhiva@example.test"] },
+      { ...MESSAGE, attachments: [{ filename: "d.pdf", contentType: "application/pdf", data: Buffer.from("%PDF-1.7") }] },
+    ];
+    for (const message of messages) await adapter().send(message);
+
+    expect(calls).toHaveLength(messages.length);
+    for (const call of calls) {
+      const form = call.init.body as FormData;
+      expect(form.get("o:tracking")).toBe("no");
+      expect(form.get("o:tracking-clicks")).toBe("no");
+      expect(form.get("o:tracking-opens")).toBe("no");
+      // Set once each, so no later value can win.
+      expect(form.getAll("o:tracking")).toHaveLength(1);
+      expect(form.getAll("o:tracking-clicks")).toHaveLength(1);
+      expect(form.getAll("o:tracking-opens")).toHaveLength(1);
+    }
+  });
+
   it("omits Reply-To when the club has named no mailbox", async () => {
     respondWith(200, JSON.stringify({ id: "<1@x>" }));
 
