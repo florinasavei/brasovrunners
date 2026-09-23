@@ -118,6 +118,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
     eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
     manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
+    // The public list's switch on the confirmation (§143): the sample runner is on the list.
+    listConsentUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-list`,
+    listed: true,
     // The staff invitation (§141): a made-up colleague, added by a made-up administrator.
     staffRole: "Organizator",
     inviterName: "Florin",

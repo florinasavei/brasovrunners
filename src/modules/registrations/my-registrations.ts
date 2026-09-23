@@ -78,6 +78,8 @@ export type MyRegistration = {
   provisionalBibNumber: number | null;
   /** "I am here" is offered from the day before the start, confirmed registrations only. */
   selfCheckinOpen: boolean;
+  /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
+  listed: boolean;
 };
 
 /** Every active registration of one participant, soonest event first, with the event as the page names it. */
@@ -100,6 +102,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
       provisionalBibNumber: registrations.provisionalBibNumber,
+      listOptOut: registrations.listOptOut,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
@@ -115,8 +118,9 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     )
     .orderBy(asc(events.startsAt), asc(registrations.id));
 
-  return rows.map((row) => ({
+  return rows.map(({ listOptOut, ...row }) => ({
     ...row,
+    listed: !listOptOut,
     selfCheckinOpen:
       row.status === "CONFIRMED" &&
       now.getTime() >= row.eventStartsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000,
