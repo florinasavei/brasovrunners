@@ -25,7 +25,8 @@ const EVENT_FORM = read("src/modules/content/events/ui/EventFieldsForm.tsx");
 const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFieldsForm.tsx");
 
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
-const NOT_A_BOX = new Set(["featured", "isSpecial", "participantListVisibility", "bibDesign", "scheduleRows", "coHosts", "locationAddress"]);
+// `links` is an island of rows (§NNN) whose boxes read their constraints off `eventLinkRowSchema`.
+const NOT_A_BOX = new Set(["featured", "isSpecial", "participantListVisibility", "bibDesign", "scheduleRows", "coHosts", "links", "locationAddress"]);
 
 describe("the event form's constraints are the schema's (§315)", () => {
   it("renders `required` on every box whose schema refuses an empty box", () => {

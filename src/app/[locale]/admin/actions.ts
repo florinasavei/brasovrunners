@@ -159,6 +159,19 @@ function eventFieldsFrom(form: FormData) {
     coHosts[index] = { ...(coHosts[index] ?? {}), [match[2]]: entry };
   }
 
+  /**
+   * The links (§NNN), posted as `event.links[i].<box>` by `LinkRowsEditor` — gathered by index
+   * like the two lists above, blanks included; `fields.ts` drops the spare line and refuses a
+   * row whose address is not https, naming the row by this same index.
+   */
+  const links: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^event\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    links[index] = { ...(links[index] ?? {}), [match[2]]: entry };
+  }
+
   return {
     type: value("type"),
     // Optional, like difficulty below: "" from the unselected dropdown means "none".
@@ -173,6 +186,9 @@ function eventFieldsFrom(form: FormData) {
     stravaEventUrl: value("stravaEventUrl"),
     facebookEventUrl: value("facebookEventUrl"),
     coHosts: coHosts.filter((row) => row !== undefined),
+    // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
+    // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
+    links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.

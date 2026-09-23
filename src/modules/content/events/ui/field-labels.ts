@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
 
 /**
  * The label of every box on the event form, by the `name` it posts — for the refusal summary
@@ -65,6 +66,27 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "repeat.until": t("editor.repeatUntil"),
     weekday: t("editor.repeatWeekdays"),
   };
+
+  /*
+    The links (§NNN), named **by row** and by what is wrong with them — "Linkul 2: adresa trebuie
+    să înceapă cu https://" — because a link row is refused for one reason a person can cause
+    (the address), and "Linkuri: Adresa" in a list of eight would not say which of the rows to
+    look at. `ActionForm` reads the exact name first, so the indexed entries win; the unindexed
+    ones are the fallback for a name past the ceiling. A label or a kind can only be wrong from a
+    form somebody tampered with — the boxes carry `maxLength` and the select posts the set.
+  */
+  labels["event.links"] = t("editor.linkRows.tooMany", { max: MAX_EVENT_LINKS });
+  labels["event.links[].url"] = `${t("editor.linksSection")}: ${t("editor.linkRows.url")}`;
+  labels["event.links[].kind"] = `${t("editor.linksSection")}: ${t("editor.linkRows.kind")}`;
+  labels["event.links[].labelRo"] = `${t("editor.linksSection")}: ${t("editor.linkRows.labelRo")}`;
+  labels["event.links[].labelEn"] = `${t("editor.linksSection")}: ${t("editor.linkRows.labelEn")}`;
+  for (let index = 0; index < MAX_EVENT_LINKS; index += 1) {
+    const n = index + 1;
+    labels[`event.links[${index}].url`] = t("editor.linkRows.urlError", { n });
+    labels[`event.links[${index}].kind`] = t("editor.linkRows.kindError", { n });
+    labels[`event.links[${index}].labelRo`] = t("editor.linkRows.labelRoError", { n, max: MAX_EVENT_LINK_LABEL });
+    labels[`event.links[${index}].labelEn`] = t("editor.linkRows.labelEnError", { n, max: MAX_EVENT_LINK_LABEL });
+  }
 
   // Every language's boxes, named with the language first, as the publication alert does.
   const perLanguage: Record<string, string> = {

@@ -114,6 +114,17 @@
     },
     "rules": "Regulamentul evenimentului",
     "schedule": "Programul evenimentului",
+    "links": {
+      "heading": "Linkuri și fișiere",
+      "kinds": {
+        "GPX": "Traseul (GPX)",
+        "MAP": "Harta traseului",
+        "DOCUMENT": "Document",
+        "PHOTOS": "Album foto",
+        "RESULTS": "Rezultate",
+        "OTHER": "Link"
+      }
+    },
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
@@ -767,6 +778,24 @@
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul"
+      },
+      "linksSection": "Linkuri și fișiere",
+      "linksHelp": "Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul foto, rezultatele — un link către locul unde e fișierul: Google Drive, Dropbox, OneDrive, Strava, Garmin. Partajează fișierul cu „Oricine are linkul”, altfel alergătorii dau de o cerere de acces. Eticheta e opțională în fiecare limbă: fără ea, pagina arată tipul („Traseul (GPX)”) în limba cititorului, iar sub etichetă apare site-ul pe care se deschide linkul. Linkurile se copiază pe toate datele unei serii, ca traseul.",
+      "linkRows": {
+        "kind": "Tip",
+        "url": "Adresa (https://…)",
+        "labelRo": "Eticheta în română (opțional)",
+        "labelEn": "Eticheta în engleză (opțional)",
+        "add": "Adaugă un link",
+        "remove": "Șterge linkul",
+        "moveUp": "Mută mai sus linkul",
+        "moveDown": "Mută mai jos linkul",
+        "row": "Linkul",
+        "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
+        "kindError": "Linkul {n}: alege tipul din listă",
+        "labelRoError": "Linkul {n}: eticheta în română are cel mult {max} de caractere",
+        "labelEnError": "Linkul {n}: eticheta în engleză are cel mult {max} de caractere",
+        "tooMany": "Linkuri și fișiere: cel mult {max} pe un eveniment"
       },
       "coHostHelp": "Opțional. Organizațiile alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — una pe rând, cu pagina lor dacă au una. Apar ca „Împreună cu A, B și C” pe pagină și pe card, și sunt trecute ca organizatori după club pentru Google. Partenerii se copiază pe toate datele unei serii.",
       "stravaEventUrl": "Link către evenimentul Strava",

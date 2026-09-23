@@ -6,6 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
+import { readEventLinks } from "@/modules/events/domain/links";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
 import { toCalendarEvent } from "@/modules/events/calendar";
@@ -153,6 +154,10 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
+  // "Linkuri și fișiere" (§NNN): one line pointing at `#links`, only when the page has one — the
+  // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the
+  // email names where they are, never a raw Drive link in a message that is forwarded.
+  if (data.eventUrl && eventDetails && readEventLinks(eventDetails.links).length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words.
   if (row.messageType === "EVENT_REMINDER" && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);

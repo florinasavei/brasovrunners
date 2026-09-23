@@ -14,7 +14,9 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
 import type { PublicEvent } from "@/modules/events/repository";
+import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventLinks from "@/modules/events/ui/EventLinks";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -128,6 +130,7 @@ export default async function PreviewEventPage({ params }: Props) {
     coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,
+    links: event.links,
     isSpecial: event.isSpecial,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
@@ -165,6 +168,14 @@ export default async function PreviewEventPage({ params }: Props) {
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
+
+      {/* The links (§NNN), before the programme as on the public page, in the public words. */}
+      <EventLinks
+        links={preview.links}
+        locale={locale}
+        heading={tEvent("links.heading")}
+        kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+      />
 
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />
       {!isRichTextEmpty(readRichText(preview.rulesJson)) && (

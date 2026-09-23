@@ -9,14 +9,17 @@ import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { textFieldConstraints } from "@/shared/forms/constraints";
+import { EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS, readEventLinks } from "@/modules/events/domain/links";
+import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { type EventFieldName, eventInputConstraints } from "../constraints";
+import { eventLinkRowSchema } from "../fields";
 import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
+import LinkRowsEditor from "./LinkRowsEditor";
 import OnlyForType from "./OnlyForType";
 import ScheduleRowsEditor from "./ScheduleRowsEditor";
 import TypeNote from "./TypeNote";
@@ -134,6 +137,14 @@ export default async function EventFieldsForm({
   const coHostRows = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null }).map((host) => ({
     name: host.name,
     url: host.url ?? "",
+  }));
+
+  /** The links as boxes (§NNN), read through the one function that decides what a stored row means. */
+  const linkRows = readEventLinks(event?.links ?? null).map((link) => ({
+    kind: link.kind,
+    url: link.url,
+    labelRo: link.labelRo ?? "",
+    labelEn: link.labelEn ?? "",
   }));
 
   /** One sentence per type, for the note under the select (§170). */
@@ -585,6 +596,37 @@ export default async function EventFieldsForm({
               defaultValue={event?.elevationGainMeters ?? ""}
               {...box("elevationGainMeters", { inputMode: "numeric" })}
               sx={{ flex: 1 }}
+            />
+          </Stack>
+
+          {/* "Linkuri și fișiere" (§NNN), beside the route because that is what most of them
+              are — the GPX on Google Drive, the map on a platform — and then the rest: a PDF,
+              the album, the results. Links, never an upload (`AGENTS.md` §17). */}
+          <Stack spacing={1}>
+            <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
+              {t("editor.linksSection")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("editor.linksHelp", { max: MAX_EVENT_LINKS })}
+            </Typography>
+            <LinkRowsEditor
+              initial={linkRows}
+              kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+              constraints={{
+                url: htmlConstraints(eventLinkRowSchema.shape.url),
+                label: htmlConstraints(eventLinkRowSchema.shape.labelRo),
+              }}
+              labels={{
+                kind: t("editor.linkRows.kind"),
+                url: t("editor.linkRows.url"),
+                labelRo: t("editor.linkRows.labelRo"),
+                labelEn: t("editor.linkRows.labelEn"),
+                add: t("editor.linkRows.add"),
+                remove: t("editor.linkRows.remove"),
+                moveUp: t("editor.linkRows.moveUp"),
+                moveDown: t("editor.linkRows.moveDown"),
+                row: t("editor.linkRows.row"),
+              }}
             />
           </Stack>
 
