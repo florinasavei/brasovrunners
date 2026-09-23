@@ -169,7 +169,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * BR-REQ-033-02 criterion 11 as amended by §NNN: the copy that leaves for a club mailbox prints
+   * BR-REQ-033-02 criterion 11 as amended by §320: the copy that leaves for a club mailbox prints
    * the identity document masked — in the text's blank and on the signature line alike — while
    * the name, the event and the signature are the participant's copy's.
    */

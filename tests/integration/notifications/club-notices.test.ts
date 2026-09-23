@@ -205,7 +205,7 @@ describe("the club's copies and the notice that somebody confirmed (§244, §245
 
   /**
    * BR-REQ-033-02 criterion 14's rule for every message a participant receives (2026-09-22), as
-   * §NNN changed it: the club's copies are rows of their own, queued with the participant's
+   * §320 changed it: the club's copies are rows of their own, queued with the participant's
    * message, and never a Bcc on the participant's envelope. `club-copy.test.ts` renders them.
    */
   describe("BR-REQ-033-02 criterion 14 the club's copy of every participant message", () => {

@@ -12,7 +12,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
 /**
- * Who a rendering of a signed declaration is for (§NNN).
+ * Who a rendering of a signed declaration is for (§320).
  *
  * - `participant` — the whole document, the identity document as it was typed: the runner's own
  *   copy (their link, their emails) and the backoffice's operational copies, which live inside
@@ -182,7 +182,7 @@ function signedEntry(
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
   const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
-  // Masked once, here, so the text's blank and the signature line cannot disagree (§NNN).
+  // Masked once, here, so the text's blank and the signature line cannot disagree (§320).
   const idDocument = audience === "club" && signed.idDocument !== null ? maskIdDocument(signed.idDocument) : signed.idDocument;
   return {
     title: signed.title,
@@ -228,7 +228,7 @@ export async function renderSignedDeclarationPdf<T extends Record<string, unknow
 /**
  * Every signed declaration of an event in one PDF, oldest first — what the club archives.
  *
- * Whole, identity documents included (§NNN): it is downloaded by signed-in staff from the
+ * Whole, identity documents included (§320): it is downloaded by signed-in staff from the
  * backoffice, and it is operational for exactly as long as the database keeps the identity
  * document — seven days after the event (§95) — after which the same bundle prints without it.
  */

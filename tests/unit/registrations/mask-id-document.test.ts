@@ -3,7 +3,7 @@ import { ID_DOCUMENT } from "@/modules/registrations/fields";
 import { ID_DOCUMENT_MASK, maskIdDocument } from "@/modules/registrations/declaration-pdf";
 
 /**
- * BR-REQ-033-02 criterion 11 as amended by §NNN — the identity document in every copy of a signed
+ * BR-REQ-033-02 criterion 11 as amended by §320 — the identity document in every copy of a signed
  * declaration that leaves the platform for a club mailbox.
  *
  * The PDF draws whatever `maskIdDocument` returns, and pdfkit writes an embedded font's text as
@@ -11,7 +11,7 @@ import { ID_DOCUMENT_MASK, maskIdDocument } from "@/modules/registrations/declar
  * function is what is asserted, here on its own and, in the integration suite, on the entry the
  * renderer hands the PDF for the archive copy.
  */
-describe("BR-REQ-033-02 criterion 11 the identity document masked in the club's copy (§NNN)", () => {
+describe("BR-REQ-033-02 criterion 11 the identity document masked in the club's copy (§320)", () => {
   it("keeps the first two and the last two characters of a Romanian identity card, and hides the number", () => {
     expect(maskIdDocument("BV 123456")).toBe("BV ••••56");
     expect(maskIdDocument("BV123456")).toBe("BV ••••56");

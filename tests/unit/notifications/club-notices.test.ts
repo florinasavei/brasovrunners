@@ -148,12 +148,12 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
 });
 
 /**
- * BR-REQ-033-02 criterion 14 as amended by §NNN: the club's copy is a message of its own, one per
+ * BR-REQ-033-02 criterion 14 as amended by §320: the club's copy is a message of its own, one per
  * address, and never the participant's envelope. These are the pure halves of `enqueueClubCopies`
  * and of the renderer's attachment rule; `tests/integration/notifications/club-copy.test.ts`
  * renders every participant type through them.
  */
-describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and attachments (§NNN)", () => {
+describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and attachments (§320)", () => {
   it("sends one copy per club address, never to the participant, one spelling each", () => {
     expect(clubCopyRecipients("ana@example.ro", [])).toEqual([]);
     expect(clubCopyRecipients("ana@example.ro", ["arhiva@example.ro", "presedinte@example.ro"])).toEqual([

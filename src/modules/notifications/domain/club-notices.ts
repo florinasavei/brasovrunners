@@ -17,7 +17,7 @@ import { z } from "zod";
  * - **participants** — the club's copy of every message a *real* participant receives
  *   (2026-09-22; the owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare").
  *   One list, still labelled "Bcc" on the screen because the participant never sees it. Since
- *   §NNN it is **not** a Bcc on the participant's envelope: each address gets a separate outbox
+ *   §320 it is **not** a Bcc on the participant's envelope: each address gets a separate outbox
  *   row — the *club copy* — queued beside the participant's own in the same transaction
  *   (`enqueueEmail`), so a list edited tomorrow changes tomorrow's copies and not the ones
  *   already queued (§244's rule). A club copy is rendered with no token minted, no action link,
@@ -35,7 +35,7 @@ import { z } from "zod";
  * personal data to a mailbox that nobody on the message can see, which is exactly the property
  * that makes it useful for an archive and exactly the property that makes it a way to leak
  * quietly. The platform allows it and says so on the screen that sets it; the club decides.
- * Since §NNN the club's copy of the declaration carries the identity document masked
+ * Since §320 the club's copy of the declaration carries the identity document masked
  * (`maskIdDocument`), so what a hidden copy hands on is the name, the event and the signature.
  *
  * Pure: no database, no environment. The environment's old single address is still read as a
@@ -177,14 +177,14 @@ export function confirmationNoticeRecipients(setting: ClubNotices | null): reado
   return setting?.confirmations.to ?? [];
 }
 
-/** Who receives a club copy of every message to a real participant (§NNN). No environment fallback either. */
+/** Who receives a club copy of every message to a real participant (§320). No environment fallback either. */
 export function participantMessageBcc(setting: ClubNotices | null): readonly string[] {
   return setting?.participants.bcc ?? [];
 }
 
 /**
  * The messages a participant receives, from §16.3's list — the ones the club gets a copy of
- * (§NNN). Spelled out as the exclusions rather than the inclusions, so a message type added
+ * (§320). Spelled out as the exclusions rather than the inclusions, so a message type added
  * tomorrow *for a participant* is copied without anybody remembering this set, and one added
  * for the club or the staff has to be named here to stay out:
  *
@@ -207,7 +207,7 @@ export function isParticipantMessage(messageType: EmailMessageType): boolean {
 }
 
 /**
- * Who receives a club copy of one participant message (§NNN): the club's list, minus the
+ * Who receives a club copy of one participant message (§320): the club's list, minus the
  * participant's own address, one spelling each, compared without regard to case (§74's rule, as
  * everywhere in this file). A participant whose address is also on the club's list gets their
  * own message, never also the stripped copy of it.
@@ -246,7 +246,7 @@ export function clubCopyPayload(payload: Record<string, unknown>): Record<string
 }
 
 /**
- * Which signed-declaration PDF a message carries, if any (§95, §99, §NNN).
+ * Which signed-declaration PDF a message carries, if any (§95, §99, §320).
  *
  * - `participant` — the whole document, identity document included: the runner's own copy, on
  *   the confirmation and on the declaration's own message.

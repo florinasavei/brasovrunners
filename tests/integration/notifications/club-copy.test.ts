@@ -20,7 +20,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-02 criteria 11 and 14 as amended by §NNN, and BR-REQ-036-02 — no club-bound message
+ * BR-REQ-033-02 criteria 11 and 14 as amended by §320, and BR-REQ-036-02 — no club-bound message
  * carries anything only the participant may hold.
  *
  * The GDPR audit of 2026-09-23 found the participant-Bcc list (§293) receiving the participant's
@@ -133,7 +133,7 @@ const claimed = (row: OutboxRow): OutboxRow => ({ ...row, status: "PROCESSING", 
 /** What a PDF was drawn from, as one string: the text's fill-ins and the signature line. */
 const drawnFrom = (input: unknown) => JSON.stringify((input as DeclarationPdfInput).entries.map((entry) => ({ values: entry.values, signature: entry.signature })));
 
-describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a link, an attachment or the identity document (§NNN)", () => {
+describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a link, an attachment or the identity document (§320)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -355,7 +355,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
   });
 
   /**
-   * A row queued before §NNN deployed carries the old participant Bcc in its payload. Rendered
+   * A row queued before §320 deployed carries the old participant Bcc in its payload. Rendered
    * after, it goes to the participant alone: the club loses one copy of an in-flight message
    * rather than a club mailbox receiving that runner's live links.
    */

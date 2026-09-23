@@ -194,7 +194,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       form.set("html", message.html);
       /*
         No open or click tracking, on every message, whatever the domain's own setting says
-        (§NNN). Click tracking rewrites every link through Mailgun's redirect host — the
+        (§320). Click tracking rewrites every link through Mailgun's redirect host — the
         single-use action links included, so a participant's token would pass through a third
         party's log — and open tracking is a pixel that reports when and where somebody read
         their mail, where the privacy notice says "fără … urmărire". The per-message options win over

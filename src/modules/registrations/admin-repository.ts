@@ -188,7 +188,7 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
   LIMIT 1
 )`.mapWith(declarationAcceptances.acceptedAt);
 
-// A club copy (§NNN) that bounced is a club mailbox's problem, not the participant's address:
+// A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
 // it never marks the registration as unreachable.
 const emailRejectedReason = sql<string | null>`(
   SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
@@ -762,7 +762,7 @@ export type OutboxHistoryRow = {
   messageType: string;
   status: string;
   isManualResend: boolean;
-  /** The club's copy of the participant's message (§NNN), labelled so it does not read as a second send to them. */
+  /** The club's copy of the participant's message (§320), labelled so it does not read as a second send to them. */
   clubCopy: boolean;
   createdAt: Date;
   sentAt: Date | null;

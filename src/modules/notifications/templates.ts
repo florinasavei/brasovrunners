@@ -256,7 +256,7 @@ export function renderBilingual(
 export type TemplateData = {
   participantName: string;
   /**
-   * This is the club's copy of a participant's message (§NNN): "[Copie club]" in front of the
+   * This is the club's copy of a participant's message (§320): "[Copie club]" in front of the
    * subject, one line at the top saying the personal links were taken out, no action button, and
    * none of the links or codes only the participant may hold — whatever else the data carries.
    */
@@ -511,7 +511,7 @@ const T = {
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
         `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, la ${d.signedAtFormatted}` : ""}.`,
-        // The PDF attached masks the identity document (§NNN); the sentence says where the whole one is, and until when.
+        // The PDF attached masks the identity document (§320); the sentence says where the whole one is, and until when.
         "Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Se păstrează trei ani după eveniment, ca în nota de confidențialitate; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la șapte zile după eveniment.",
       ],
     },
@@ -595,7 +595,7 @@ const T = {
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
     footer: "Răspunde la acest email pentru întrebări.",
-    /** The club's copy of a participant's message (§NNN): in front of the subject, and the first line. */
+    /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
       subject: "[Copie club] ",
       note: "Copie pentru club a mesajului trimis participantului. Legăturile personale, codul QR și atașamentele au fost scoase.",
@@ -846,14 +846,15 @@ export function buildTemplateContent(
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
   /*
-    The club's copy (§NNN) is the participant's message minus what only the participant may hold.
+    The club's copy (§320) is the participant's message minus what only the participant may hold.
     The renderer already mints no token and sets none of these for one; they are dropped here as
     well, so the template cannot print a manage link, a list switch, the PDF-by-link, the desk
     code or its QR into a club mailbox whatever it is handed — and the action button goes too.
   */
   const clubCopy = data.clubCopy === true;
   if (clubCopy) {
-    data = { ...data, manageUrl: undefined, listConsentUrl: undefined, declarationPdfUrl: undefined, checkinCode: undefined, checkinQrUrl: undefined };
+    // `thanksUrl` too: it is the thank-you's action, so its "the link below" sentence goes with the button (review nit).
+    data = { ...data, manageUrl: undefined, listConsentUrl: undefined, declarationPdfUrl: undefined, checkinCode: undefined, checkinQrUrl: undefined, thanksUrl: undefined };
     actionUrl = undefined;
   }
   // TypeScript can't see that every key but "hi"/"closing" shares this shape; the
@@ -914,7 +915,7 @@ export function buildTemplateContent(
       the only person entitled to the answer.
     */
     paragraphs: [
-      // What this is, before anything else is read (§NNN).
+      // What this is, before anything else is read (§320).
       ...(clubCopy ? [copy.clubCopy.note] : []),
       // The number when the message carries one: a settled number, or the provisional one the
       // desk gave, whichever this registration actually has (§286).

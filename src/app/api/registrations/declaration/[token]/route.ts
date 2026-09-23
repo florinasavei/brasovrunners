@@ -21,7 +21,7 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
   if (!registration || !signed) return new Response(null, { status: 404 });
 
   const now = new Date();
-  // The runner's own copy: whole (§NNN).
+  // The runner's own copy: whole (§320).
   const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, await declarationWords(signed.locale, now), now, "participant");
   if (!pdf) return new Response(null, { status: 404 });
   return pdfResponse(pdf, "declaratie-semnata.pdf");

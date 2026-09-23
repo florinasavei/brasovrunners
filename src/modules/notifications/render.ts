@@ -77,7 +77,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const locale = row.locale as Locale;
 
   /*
-    The club's copy of a participant's message (§NNN; `enqueueClubCopies` in `outbox.ts`).
+    The club's copy of a participant's message (§320; `enqueueClubCopies` in `outbox.ts`).
 
     The same words the participant read, for a club mailbox — and nothing the participant alone
     may hold: no token is minted, so there is no action button, no manage link, no "take me off
@@ -208,7 +208,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     registration?.status === "CONFIRMED"
   ) {
     // The desk hands the number against this code; a club mailbox has no use for it (§245's
-    // reasoning for the club's own notice, and §NNN's for the club copy).
+    // reasoning for the club's own notice, and §320's for the club copy).
     if (!clubCopy) {
       let code = registration.checkinCode;
       if (!code) {
@@ -239,7 +239,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
 
   // A club copy has no action button at all — not even the thank-you's public link — so there is
-  // one rule to check rather than a list of which actions are safe to copy (§NNN).
+  // one rule to check rather than a list of which actions are safe to copy (§320).
   let actionUrl: string | undefined = clubCopy ? undefined : payloadActionUrl;
   if (purpose && row.participantId && !clubCopy) {
     const route = ROUTE_BY_PURPOSE[purpose];
@@ -321,7 +321,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
    * A published event only: an `.ics` for a draft would leak an unpublished page's details into
    * somebody's calendar. When there is no published row the message simply goes without it.
    *
-   * Never on a club copy (§NNN), which attaches nothing: the rule is "no attachment", not a list.
+   * Never on a club copy (§320), which attaches nothing: the rule is "no attachment", not a list.
    */
   if (
     !clubCopy &&
@@ -343,7 +343,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
 
   /*
-    Which copy of the PDF, if any (§NNN): the whole document on the participant's own messages;
+    Which copy of the PDF, if any (§320): the whole document on the participant's own messages;
     on the club's archive copy (§99, §244) the identity document masked, because that copy leaves
     the platform for mailboxes nobody sweeps after seven days as the database is swept (§95) —
     the whole document stays in the event's bundle in the backoffice for those seven days. A
@@ -377,8 +377,8 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     already queued. Addresses only — `AGENTS.md` §14.5 keeps bodies and tokens out of the row,
     and an address is neither.
 
-    Only the club's own messages carry copies on their envelope (§NNN). A participant's message
-    never does — including a row queued before §NNN with the old participant Bcc in its payload,
+    Only the club's own messages carry copies on their envelope (§320). A participant's message
+    never does — including a row queued before §320 with the old participant Bcc in its payload,
     which now goes to the participant alone rather than handing that mailbox the runner's live
     links — and a club copy goes to the one address its row is for.
   */

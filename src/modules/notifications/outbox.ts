@@ -122,7 +122,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       messageType: params.messageType,
       locale: params.locale,
       recipientEmail: params.recipientEmail,
-      // The participant's own message, exactly as asked for: no club address rides on it (§NNN).
+      // The participant's own message, exactly as asked for: no club address rides on it (§320).
       payloadJson: params.payload,
       idempotencyKey: params.idempotencyKey,
       requestedByStaffUserId: params.requestedByStaffUserId ?? null,
@@ -146,7 +146,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
 
 /**
  * The club's copy of a participant's message (2026-09-22; the owner: "să putem seta și unde mai
- * merg în BCC mailurile de înregistrare"), queued here and nowhere else — and, since §NNN, as
+ * merg în BCC mailurile de înregistrare"), queued here and nowhere else — and, since §320, as
  * rows of its own rather than as a Bcc on the participant's envelope.
  *
  * *Why not the Bcc any more.* A Bcc receives the message byte for byte, and the participant's

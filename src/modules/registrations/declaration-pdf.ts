@@ -62,11 +62,11 @@ export type DeclarationPdfInput = {
   };
 };
 
-/** What stands in for the hidden characters of an identity document (§NNN). */
+/** What stands in for the hidden characters of an identity document (§320). */
 export const ID_DOCUMENT_MASK = "••••";
 
 /**
- * An identity document as the club's copies print it (§NNN): "BV 123456" becomes "BV ••••56".
+ * An identity document as the club's copies print it (§320): "BV 123456" becomes "BV ••••56".
  *
  * The first two and the last two characters that are not spaces, with the mask between — enough
  * for somebody at the club to tell which runner's paper it is and to match it against the card

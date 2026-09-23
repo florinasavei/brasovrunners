@@ -4,7 +4,7 @@ import { isParticipantMessage } from "@/modules/notifications/domain/club-notice
 import { buildOutgoingEmail, buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * BR-REQ-033-02 criterion 14 as amended by §NNN — the template's half of the club copy.
+ * BR-REQ-033-02 criterion 14 as amended by §320 — the template's half of the club copy.
  *
  * The renderer mints no token for a club copy, so in production the data below never carries a
  * personal link for one. The template drops them again regardless, and this is where that is
@@ -35,7 +35,7 @@ const WITH_PERSONAL_LINKS: TemplateData = {
 
 const PARTICIPANT_TYPES = (emailMessageType.enumValues as EmailMessageType[]).filter(isParticipantMessage);
 
-describe("BR-REQ-033-02 criterion 14 the club copy prints nothing only the participant may hold (§NNN)", () => {
+describe("BR-REQ-033-02 criterion 14 the club copy prints nothing only the participant may hold (§320)", () => {
   it("covers at least the messages a runner meets on the way to the start", () => {
     for (const type of ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "DECLARATION_SIGNED"]) {
       expect(PARTICIPANT_TYPES).toContain(type);

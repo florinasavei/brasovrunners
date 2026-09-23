@@ -70,7 +70,7 @@ describe("BR-REQ-080-01 what the adapter sends", () => {
   });
 
   /**
-   * §NNN: no open or click tracking, on every message. Click tracking would rewrite each link —
+   * §320: no open or click tracking, on every message. Click tracking would rewrite each link —
    * a participant's single-use action link included — through Mailgun's redirect host; open
    * tracking is a pixel reporting when somebody read their mail. Per-message options override the
    * domain's setting (Mailgun's API reference), so these three are what makes it hold.
