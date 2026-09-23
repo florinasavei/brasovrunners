@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import {
   countTasks,
   filterTasks,
@@ -26,6 +28,7 @@ const LAUNCHED: OwnerTaskInputs = {
   appEnv: "production",
   staleJobNames: [],
   staffCount: 3,
+  inviteKey: { kind: "ok" },
   publishedEventCount: 4,
   roDomainBound: true,
   storageConfigured: true,
@@ -125,6 +128,7 @@ describe("owner tasks", () => {
       "approveLegalText",
       "liveEmail",
       "inviteStaff",
+      "inviteKey",
       "publishEvents",
       "mediaStorage",
       "botCheck",
@@ -135,21 +139,92 @@ describe("owner tasks", () => {
     ]);
   });
 
-  it("orders blocking first, then open, then done", () => {
+  it("orders blocking first, then broken, then open, then done", () => {
     const sorted = sortTasks(
       ownerTasks({
         ...LAUNCHED,
         legalTextIsSample: true,
         roDomainBound: false,
+        inviteKey: { kind: "blind" },
       }),
     );
     expect(sorted.map((task) => task.state)).toEqual(
       [...sorted.map((task) => task.state)].sort((a, b) => {
-        const rank = { blocking: 0, open: 1, done: 2 } as const;
+        const rank = { blocking: 0, broken: 1, open: 2, done: 3 } as const;
         return rank[a] - rank[b];
       }),
     );
     expect(sorted[0].state).toBe("blocking");
+    const states = sorted.map((task) => task.state);
+    expect(states.indexOf("broken")).toBeGreaterThan(states.lastIndexOf("blocking"));
+    expect(states.indexOf("open")).toBeGreaterThan(states.lastIndexOf("broken"));
+  });
+});
+
+/**
+ * The invitation key, tested rather than merely present (`DECISIONS.md` §288). For two days the
+ * key was set on both projects, authenticated on every call and could create nobody; the board
+ * asked "is it set" and said done. The row now carries the answer to "does it work", and the
+ * fourth state exists so that "set and not working" is red without claiming to block anybody.
+ */
+describe("the invitation key row (§288)", () => {
+  const keyRow = (inviteKey: OwnerTaskInputs["inviteKey"]) =>
+    ownerTasks({ ...LAUNCHED, inviteKey }).find((task) => task.id === "inviteKey");
+
+  it("is done only when a real search found the reader, and open with the procedure without a key", () => {
+    expect(keyRow({ kind: "ok" })).toMatchObject({ state: "done", owner: "club", kind: "account" });
+    expect(keyRow({ kind: "ok" })?.text).toBeUndefined();
+    const missing = keyRow({ kind: "unconfigured" });
+    expect(missing?.state).toBe("open");
+    // The default sentence and the default steps: `todo`, and the whole of SETUP.md §37.
+    expect(missing?.text).toBeUndefined();
+    expect(missing?.steps).toBeUndefined();
+  });
+
+  it("is broken — red, with the one step that was missed — when the key authenticates and cannot see accounts", () => {
+    // The club's own instance for two days: set, authenticating, and shown nobody.
+    const blind = keyRow({ kind: "blind" });
+    expect(blind).toMatchObject({ state: "broken", text: "blind", steps: "howBroken" });
+    expect(blind?.detail).toBeUndefined();
+    const refused = keyRow({ kind: "refused", reason: "403 membership not found (AUTHZ-cdgFk)" });
+    expect(refused).toMatchObject({
+      state: "broken",
+      text: "refused",
+      steps: "howBroken",
+      detail: "403 membership not found (AUTHZ-cdgFk)",
+    });
+  });
+
+  it("gives no verdict on a provider that did not answer, and never blocks a registration", () => {
+    const silent = keyRow({ kind: "unreachable", reason: "TimeoutError: The operation was aborted due to timeout" });
+    expect(silent).toMatchObject({ state: "open", text: "unreachable", steps: "howUnreachable" });
+    expect(silent?.detail).toContain("TimeoutError");
+    // Whatever the key does, it stops no registration: the line above the list stays true.
+    for (const kind of ["blind", "refused", "unreachable", "unconfigured"] as const) {
+      expect(ownerTasks({ ...LAUNCHED, inviteKey: { kind } }).some((task) => task.state === "blocking")).toBe(false);
+    }
+  });
+
+  it("has no row at all where the development switcher is the provider", () => {
+    expect(keyRow({ kind: "inapplicable" })).toBeUndefined();
+  });
+
+  it("points only at sentences and steps both catalogues carry", () => {
+    // The page builds these keys from the row (`items.<id>.<text>`, `items.<id>.<steps>`), so
+    // the static catalogue scan cannot see them; a missing one renders the key to the club.
+    const items = (messages: typeof ro) => messages.Admin.tasks.items.inviteKey;
+    for (const catalogue of [ro, en]) {
+      const row = items(catalogue);
+      for (const kind of ["blind", "refused", "unreachable"] as const) {
+        expect(keyRow({ kind, reason: "x" })?.text).toBe(kind);
+        expect(typeof row[kind]).toBe("string");
+      }
+      expect(Array.isArray(row.howBroken)).toBe(true);
+      expect(Array.isArray(row.howUnreachable)).toBe(true);
+      expect(row.howBroken.length).toBeGreaterThan(0);
+      expect(row.howUnreachable.length).toBeGreaterThan(0);
+      expect(typeof catalogue.Admin.tasks.state.broken).toBe("string");
+    }
   });
 });
 

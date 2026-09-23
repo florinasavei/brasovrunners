@@ -27,6 +27,7 @@ import {
   TASK_OWNERS,
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
+import { checkInviteKey } from "@/modules/diagnostics/invite-key";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { readBotCheck } from "@/modules/registrations/bot-check";
 import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
@@ -88,6 +89,8 @@ type TaskPanel = (typeof TASK_PANELS)[number];
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
 const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
   blocking: "error",
+  // Set up and not working (§288): red like blocking, because it needs a hand today.
+  broken: "error",
   open: "warning",
   done: "success",
 };
@@ -193,6 +196,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
   const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
+  /**
+   * Whether the invitation key can create an account, asked of Zitadel with a real search
+   * (§288) — the reader is signed in through it, so a key that cannot find them is a key that
+   * cannot see accounts. Bounded inside; a provider that hangs answers `unreachable`.
+   */
+  const inviteKey = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
 
   /**
    * Is this deployment on the club's own domain, or still on somebody else's hostname?
@@ -241,6 +250,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       appEnv: env.APP_ENV,
       staleJobNames,
       staffCount,
+      inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
@@ -497,8 +507,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
               <Typography variant="h2" sx={{ fontSize: "1rem", mb: 0.5 }}>
                 {t(`items.${task.id}.title`)}
               </Typography>
+              {/* The row's own sentence for its state when `todo`/`done` cannot say it — a key
+                  that is set and does not work is neither (§288). */}
               <Typography variant="body2" color="text.secondary">
-                {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`, howValues)}
+                {t(`items.${task.id}.${task.text ?? (task.state === "done" ? "done" : "todo")}`, howValues)}
                 {task.detail && ` — ${task.detail}`}
               </Typography>
               {/*
@@ -514,7 +526,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                     {t("howTitle")}
                   </Box>
                   <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>
-                    {(t.raw(`items.${task.id}.how`) as string[]).map((step, index) => (
+                    {(t.raw(`items.${task.id}.${task.steps ?? "how"}`) as string[]).map((step, index) => (
                       <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
                         {fill(step)}
                       </Typography>
