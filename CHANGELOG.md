@@ -11,6 +11,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 ## BR-V1.59-2026-09-23
 
 - **The listing card says until when registration is open.** "Înscrieri deschise până pe 14 nov., 23:59" replaces "Înscrierile sunt deschise" while the window is open — the stated closing, or the event's start when none is stated — read through the same rule that closes registration, so the card's date is the moment the button goes away. `DECISIONS.md` §308.
+- **The listing card's "Descrierea completă" button is quieter** — sentence case, a smaller type, the same 44-pixel tap height. `DECISIONS.md` §308.
 ## BR-V1.58-2026-09-23
 
 - **QA sends real mail through the club's domain, and says so.** QA's Mailgun settings moved from the US sandbox (five confirmed recipients) to `mail.<club domain>` with QA's own sending key; the notice on QA's registration form and "check your email" screen now says the mail is real, tagged `[QA]`, and the registration is not, whenever the allowlist carries the star. QA and production share the domain's daily allowance and its webhooks. `DECISIONS.md` §307.

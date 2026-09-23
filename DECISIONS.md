@@ -12819,4 +12819,6 @@ Baseline `BR-V1.58-2026-09-23`.
 
 **Where it is not, on purpose.** The event page and the listing's featured hero render the full facts, where the registration button and its free places stand for the state; the owner asked for the card. Adding the same line there is one call to the same helper if wanted.
 
+**The same card, one more change.** The owner, the same afternoon: "'Full description' buttons should be smaller and not in caps." §305's button now reads in sentence case, in a smaller type with tight padding (`CARD_DOOR_SX`, `events/ui/card-door.ts`, shared by the series card and the single-date card so the two stay alike). It keeps the 44-pixel height BR-REQ-041-01 criterion 6 asks of every control a thumb must hit: what shrinks is what the eye sees, not what the finger gets.
+
 Baseline `BR-V1.59-2026-09-23`.
