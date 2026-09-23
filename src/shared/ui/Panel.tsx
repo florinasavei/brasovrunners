@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
+import { BOXED_DISCLOSURE_SX } from "./disclosure";
 
 type Props = {
   /** The heading, and — when the panel folds — the words that open it. */
@@ -42,8 +42,10 @@ type Props = {
  * **A Server Component over `<details>`, never client state.** The same reasoning `SubNav`
  * records: the backoffice works with JavaScript off, and a panel whose open state lived in
  * React would be a panel that does not open before hydration — on the very screens a volunteer
- * opens on a phone at the desk. `DISCLOSURE_SUMMARY_SX` is what makes the summary read as a
- * control (§164), and it carries the 44-pixel target with it.
+ * opens on a phone at the desk. `BOXED_DISCLOSURE_SX` is what draws the box and makes the
+ * summary read as a control — a bar with a wash behind it (§164, and the owner's "mai
+ * boxed") — and it carries the 44-pixel target with it. The same object every other fold in
+ * the backoffice spreads, so they all change together.
  *
  * **The summary is never `display: flex`.** Chrome and Safari drop the disclosure marker when
  * it is, which is exactly how a fold becomes grey text; the title and the aside are inline
@@ -59,14 +61,19 @@ export default function Panel({
   "data-testid": testId,
   children,
 }: Props) {
-  const frame = {
-    border: 1,
-    borderColor: "divider",
-    borderRadius: 1,
-    px: 2,
-    py: collapsible ? 0.5 : 2,
-    scrollMarginTop: 16,
-  } as const;
+  // The open section and the fold are the same box — the fold's border, radius, surface and
+  // padding come from the shared object, so a screen of both reads as one system.
+  const frame = collapsible
+    ? ({ ...BOXED_DISCLOSURE_SX, scrollMarginTop: 16 } as const)
+    : ({
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+        px: 2,
+        py: 2,
+        bgcolor: "background.paper",
+        scrollMarginTop: 16,
+      } as const);
 
   const heading = (
     <>
@@ -105,10 +112,11 @@ export default function Panel({
         role at all. The section then exists for a pointer and disappears from the heading list
         a screen reader navigates by — the e2e suite caught it as "no heading with that name".
         A block heading inside the summary keeps both: the disclosure's own behaviour and the
-        landmark. The `sx` stays on the summary, because that is what must not be `display:
-        flex` (Chrome and Safari drop the marker when it is).
+        landmark. The summary's own look — the wash, the padding, the 44 pixels — is addressed
+        from the `<details>` by `BOXED_DISCLOSURE_SX`, and it is never `display: flex` (Chrome
+        and Safari drop the marker when it is).
       */}
-      <Box component="summary" sx={DISCLOSURE_SUMMARY_SX}>
+      <Box component="summary">
         <Typography component="h2" variant="h2" sx={{ fontSize: "1.1rem", display: "inline" }}>
           {heading}
         </Typography>
@@ -118,7 +126,7 @@ export default function Panel({
           {intro}
         </Typography>
       )}
-      <Box sx={{ pb: 1.5 }}>{children}</Box>
+      <Box>{children}</Box>
     </Box>
   );
 }

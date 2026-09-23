@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localizedSchedule, programmeLines, readScheduleItems, shiftScheduleItems } from "@/modules/events/domain/schedule";
+import { localizedSchedule, programmeLines, readScheduleItems, shiftProgrammeDates, shiftScheduleItems } from "@/modules/events/domain/schedule";
 
 /** BR-REQ-020-01 criterion 11 (`DECISIONS.md` §117) — the programme as data. */
 const ZONE = "Europe/Bucharest";
@@ -41,5 +41,64 @@ describe("the programme's rows", () => {
     ]);
     expect(programmeLines(rows.slice(1), ZONE, "ro")).toEqual(["09:30 — Briefing", "10:00 — Start"]);
     expect(programmeLines([], ZONE, "ro")).toEqual([]);
+  });
+});
+
+/**
+ * BR-REQ-050-02 criterion 13 (`DECISIONS.md` §117) — the editor's rows follow the event's date:
+ * the pure function behind the island, on the form's `YYYY-MM-DD` boxes.
+ */
+describe("the programme's rows follow the event's date", () => {
+  const box = (date: string, label = "x") => ({ date, time: "09:30", endTime: "", ro: label, en: label, place: "" });
+
+  it("moves every dated row by the same number of days, and touches nothing else on the row", () => {
+    const rows = [box("2026-11-21", "Briefing"), box("2026-11-21", "Start")];
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-11-28")).toEqual([
+      { date: "2026-11-28", time: "09:30", endTime: "", ro: "Briefing", en: "Briefing", place: "" },
+      { date: "2026-11-28", time: "09:30", endTime: "", ro: "Start", en: "Start", place: "" },
+    ]);
+  });
+
+  it("keeps a two-day programme two days: the day before the start stays the day before", () => {
+    const rows = [box("2026-11-20", "Kit pickup"), box("2026-11-21", "Start"), box("2026-11-22", "Awards")];
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-11-14").map((row) => row.date)).toEqual(["2026-11-13", "2026-11-14", "2026-11-15"]);
+  });
+
+  it("leaves a row with no date alone, and a row whose box is not a date", () => {
+    const rows = [box(""), box("2026-11-21"), box("2026-02-30"), box("tomorrow")];
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-11-22").map((row) => row.date)).toEqual(["", "2026-11-22", "2026-02-30", "tomorrow"]);
+  });
+
+  it("crosses a month, a year and a leap day by the calendar", () => {
+    expect(shiftProgrammeDates([box("2026-10-31")], "2026-10-31", "2026-11-01")[0].date).toBe("2026-11-01");
+    expect(shiftProgrammeDates([box("2026-12-31"), box("2027-01-01")], "2026-12-31", "2027-01-01").map((row) => row.date)).toEqual(["2027-01-01", "2027-01-02"]);
+    expect(shiftProgrammeDates([box("2026-02-28")], "2026-02-28", "2028-02-28")[0].date).toBe("2028-02-28");
+    expect(shiftProgrammeDates([box("2028-02-28")], "2028-02-27", "2028-02-28")[0].date).toBe("2028-02-29");
+    // Across the clock change, a calendar day is a calendar day: no hour is lost or gained.
+    expect(shiftProgrammeDates([box("2026-10-24")], "2026-10-24", "2026-10-26")[0].date).toBe("2026-10-26");
+  });
+
+  it("moves nothing for a delta of zero, and nothing when either anchor is not a date", () => {
+    const rows = [box("2026-11-21"), box("")];
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-11-21")).toEqual(rows);
+    expect(shiftProgrammeDates(rows, "", "2026-11-28")).toEqual(rows);
+    expect(shiftProgrammeDates(rows, "2026-11-21", "")).toEqual(rows);
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-13-01")).toEqual(rows);
+  });
+
+  it("reads a year as typed, so a chain of moves through a half-typed year ends where the last one says", () => {
+    // A date box reads "0002-11-21" while "2027" is being typed over "2026"; the moves telescope.
+    let rows = [box("2026-11-21"), box("2026-11-22")];
+    let from = "2026-11-21";
+    for (const to of ["0002-11-21", "0020-11-21", "0202-11-21", "2027-11-21"]) {
+      rows = shiftProgrammeDates(rows, from, to);
+      from = to;
+    }
+    expect(rows.map((row) => row.date)).toEqual(["2027-11-21", "2027-11-22"]);
+  });
+
+  it("never reads the clock: the same input gives the same answer", () => {
+    const rows = [box("2026-11-21")];
+    expect(shiftProgrammeDates(rows, "2026-11-21", "2026-12-05")).toEqual(shiftProgrammeDates(rows, "2026-11-21", "2026-12-05"));
   });
 });

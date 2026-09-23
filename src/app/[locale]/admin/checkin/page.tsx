@@ -24,6 +24,7 @@ import DeskRow from "@/modules/registrations/ui/DeskRow";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -95,20 +96,11 @@ export default async function DeskPage({ params, searchParams }: Props) {
       </Box>
 
       {/* The whole process, on the page, folded: what happens before, at the table, and after. */}
-      <Box
-        component="details"
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 1,
-          px: 2,
-          "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" },
-        }}
-      >
+      <Box component="details" sx={BOXED_DISCLOSURE_SX}>
         <Typography component="summary" variant="subtitle2">
           {t("desk.howTitle")}
         </Typography>
-        <Box component="ol" sx={{ m: 0, mb: 1.5, pl: 2.5, "& li": { mb: 0.75 } }}>
+        <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
           {(t.raw("desk.how") as string[]).map((step, index) => (
             <Typography component="li" variant="body2" key={index}>
               {step}
