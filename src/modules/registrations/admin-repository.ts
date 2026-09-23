@@ -632,15 +632,24 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
       Either column: on race morning the desk types the number printed on the sheet, and
       before the settle that number lives in the provisional column (§214).
 
-      Any status, and that is the one place the desk's search reads a cancelled row (§306). A
-      settled number is never reused (§173), so "who is 27" has exactly one answer at this
-      event even after 27 cancelled — and a volunteer holding the bib that somebody just handed
-      over, typing its number and being told "nobody matches", is the surprise this exists to
-      prevent. The row they get says, in red, why nothing is to be handed out. A cancelled
-      provisional number was released with the place and finds nothing, which is right: it is
-      printed nowhere and may already be somebody else's.
+      A **settled** number in any status, and that is the one place the desk's search reads a
+      cancelled or expired row (§306, the exception BR-REQ-037-08 criterion 4 names). A settled
+      number is never reused (§173), so "who is 27" has exactly one answer at this event even
+      after 27 cancelled — and a volunteer holding the bib that somebody just handed over,
+      typing its number and being told "nobody matches", is the surprise this exists to
+      prevent. The row they get says, in red, why nothing is to be handed out.
+
+      A provisional number only on a live row. It is printed nowhere and may already be
+      somebody else's once the place is gone, so a row that is over never answers to it — and
+      that is said here rather than left to the transitions, because one of them does not clear
+      the column: the lapsed-declaration sweep (`repository.ts`, `DECLARATION_HOLD_LAPSED`)
+      leaves it set, and `coalesce` over any status would have found that row by a number it
+      never wore on paper.
     */
-    conditions.push(sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) = ${Number(q)}`);
+    const number = Number(q);
+    conditions.push(
+      sql`(${registrations.bibNumber} = ${number} OR (${registrations.bibNumber} IS NULL AND ${registrations.provisionalBibNumber} = ${number} AND ${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')))`,
+    );
   } else {
     conditions.push(sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`);
     if (q !== "") {

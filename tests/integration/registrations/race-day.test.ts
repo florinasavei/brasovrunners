@@ -401,6 +401,29 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
+   * §306 — the exception BR-REQ-037-08 criterion 4 names is a **settled** number. A provisional
+   * one is printed nowhere, so a row that is over never answers to it — including the lapsed
+   * declaration hold, whose sweep leaves the provisional column set.
+   */
+  it("does not find a lapsed row by the provisional number it kept, and still finds a live one by it", async () => {
+    const event = await createInternalEvent(10);
+    const bob = await enter(event, "bob@example.org", { fastTrack: true });
+    const held = bob.registration.provisionalBibNumber;
+    expect(held).toBe(1);
+    const byHeld = () => listDeskRegistrations(db, { eventId: event.id, query: String(held), locale: "ro" });
+    expect((await byHeld()).map((row) => row.id)).toEqual([bob.registration.id]);
+
+    // What the DECLARATION_HOLD_LAPSED sweep writes: the status and its pair, nothing else.
+    await db
+      .update(registrations)
+      .set({ status: "EXPIRED", expiredAt: NOW, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: NOW })
+      .where(eq(registrations.id, bob.registration.id));
+    expect((await findRegistrationById(db, bob.registration.id))?.provisionalBibNumber).toBe(1);
+
+    expect(await byHeld()).toEqual([]);
+  });
+
+  /**
    * §173 — numbers run in order from the event's own start, and a confirmed runner's number is
    * settled. §94's random draw is gone: sequential is how every race does it, it is a list a
    * volunteer can check off, and the band a number falls in says which start line it belongs on.
