@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.59-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.60-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.59-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.60-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12822,3 +12822,13 @@ Baseline `BR-V1.58-2026-09-23`.
 **The same card, one more change.** The owner, the same afternoon: "'Full description' buttons should be smaller and not in caps." §305's button now reads in sentence case, in a smaller type with tight padding (`CARD_DOOR_SX`, `events/ui/card-door.ts`, shared by the series card and the single-date card so the two stay alike). It keeps the 44-pixel height BR-REQ-041-01 criterion 6 asks of every control a thumb must hit: what shrinks is what the eye sees, not what the finger gets.
 
 Baseline `BR-V1.59-2026-09-23`.
+
+## 309. Changed — an invalid field wears an exclamation mark, and "Ești deja înscris" is underlined in the re-sent message (2026-09-23)
+
+**Context.** Two requests from the owner on the same afternoon, both about the one thing a reader must not miss. Of the forms: "I want an exclamation adornment on the invalid fields so it stands out!" — the red helper text under a field (§47) is easy to scroll past on a phone, and a field the browser refused before the press showed only the browser's own bubble, which disappears. Of the message re-sent to somebody who filled in the form a second time (§235), with it open in front of him: "in this email this needs to be underlined!" — pointing at "You are already registered", the sentence that person is hunting for.
+
+**The mark on an invalid field.** One rule in the theme's `MuiOutlinedInput` override, so every form on the site gets it — the registration form, the contact form, the declaration, every backoffice form, and whatever the forms work of the same week adds — with no component edited and no JavaScript. It shows on a field the server refused (MUI's `Mui-error`, set from the refusal's field list) and on one the browser refused (`:user-invalid`, which matches only once the person has typed and left the field or pressed send — never on a pristine form); the second case also gets the red outline MUI keeps for the first, so the two refusals look alike. The mark is Material's filled "error" glyph as a CSS mask on a pseudo-element painted `var(--mui-palette-error-main)`, so it follows the colour scheme (§93) and adds no request. It is decorative on purpose: the words stay in the helper text and the error summary (§47), which a screen reader reads; the glyph adds nothing to say. Not on a select, whose arrow lives there; not on a field that already carries an end adornment; top-aligned in a multi-line box. Checked on the contact form in a real browser: a malformed address typed and left, and a press with the name and message empty, mark all three.
+
+**The underline in the email.** A `__marker__` beside the existing `**marker**` (§189), applied after escaping, so it can only ever wrap text this codebase wrote, as an `<u>` with an inline `text-decoration` because a few clients reset the element; the plain-text part strips it. The already-registered sentence uses it in both languages — "__Ești deja înscris__ la acest eveniment…". The screen after the form stays generic (BR-REQ-031-01 criterion 3, §19.4); only the inbox, which only the address's owner reads, says it, and now says it louder.
+
+Baseline `BR-V1.60-2026-09-23`.

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.60-2026-09-23
+
+- **An invalid field wears an exclamation mark inside the box** — on every form, CSS only: a field the server refused, or one the browser refused once touched or on send (which now also turns its outline red). **"Ești deja înscris" is underlined** in the message re-sent to somebody who fills in the form again. `DECISIONS.md` §309.
 ## BR-V1.59-2026-09-23
 
 - **The listing card says until when registration is open.** "Înscrieri deschise până pe 14 nov., 23:59" replaces "Înscrierile sunt deschise" while the window is open — the stated closing, or the event's start when none is stated — read through the same rule that closes registration, so the card's date is the moment the button goes away. `DECISIONS.md` §308.

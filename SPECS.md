@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.59-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.60-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.59-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.60-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -176,6 +176,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 14. Given a public page whose content costs a query, when a loading shape stands in for a region, then it is never larger than the smallest shape that region can take — the month grid is drawn with exactly the number of week rows the month on view spans, and a region that may be absent reserves no box — so the swap only ever grows the page and never collapses it; and given a control that navigates to such a page without its own route-level loading state, when it is pressed, then the control itself says the press landed, in place and without moving, for as long as the navigation is pending (2026-09-20, `DECISIONS.md` §167).
 
 15. Given the facts block on an event's own page, when it renders, then each row's pieces are a list, one line under another with a bullet that is hidden from a screen reader, rather than one line separated by middle dots — a row with a single piece being just that fact; the labels stay a `<dt>`, the values a `<dd>`, the words unchanged, and a link among the pieces keeps its 44 pixels. The hero and the listing cards keep the one-line form (2026-09-20, `DECISIONS.md` §168). The list's `role="list"` and each item's `role="listitem"` are stated as well as meant, because WebKit drops the implicit roles from a list with no marker of its own; and the one time of an event that is not a race is named on its bullet ("începe la 09:00") rather than standing there as a bare number, while the one-line form keeps it unnamed after the date (2026-09-20, `DECISIONS.md` §169).
+16. Given a text field on any form, when the server refused it or the browser refused it after it was touched or on a send press, then the box carries a red exclamation mark inside it, at the end (at the top of a multi-line box), and the browser-refused case also has the red outline; a pristine field, a select and a field with its own end adornment carry none; the mark is decorative and the words stay in the helper text and the error summary (2026-09-23, `DECISIONS.md` §309).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -401,6 +402,7 @@ coffee is run on nothing.
 4. Given `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` both set, when the public form renders, then it carries the Cloudflare Turnstile widget, and a submission whose token Cloudflare does not confirm — or that carries none, or when Cloudflare cannot be reached — is refused with a field error the person can act on; with either key unset nothing is shown or checked, and the honeypot and the timing check stand either way; the staff form never shows it (2026-09-18, `DECISIONS.md` §97).
 
 5. Given the registration form, when it renders, then under its title it states the event's date and time in the event's zone and its meeting point, and offers as links, each a 44 px target: the event's page, its rules when the organizer wrote any, the terms and the privacy notice — so what is being signed up for and under which terms is on the form itself (`DECISIONS.md` §102).
+6. Given a registration submitted again for the same event by the same address, when the re-sent message renders, then its opening sentence says the person is already registered, with that phrase underlined in the HTML part and plain in the text part, while the screen after the form stays the same for everybody (criterion 3) (2026-09-23, `DECISIONS.md` §309).
 
 **Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
