@@ -42,9 +42,9 @@ export async function selfCheckInFromMyRegistrationsAction(form: FormData): Prom
 
   try {
     const result = await checkInSelfFromMyRegistrations(getDb(), token, registrationId, locale, new Date());
-    redirect(result.ok ? `${path}?here=${registrationId}` : `${path}?invalid=1`);
+    redirect(result.ok ? `${path}?here=${encodeURIComponent(registrationId)}` : `${path}?invalid=1`);
   } catch (error) {
-    if (isDomainError(error)) redirect(`${path}?hereFailed=${registrationId}`);
+    if (isDomainError(error)) redirect(`${path}?hereFailed=${encodeURIComponent(registrationId)}`);
     throw error;
   }
 }
@@ -59,9 +59,9 @@ export async function setListConsentFromMyRegistrationsAction(form: FormData): P
 
   try {
     const result = await setListConsentFromMyRegistrations(getDb(), token, registrationId, listed, new Date());
-    redirect(result.ok ? `${path}?list=${registrationId}` : `${path}?invalid=1`);
+    redirect(result.ok ? `${path}?list=${encodeURIComponent(registrationId)}` : `${path}?invalid=1`);
   } catch (error) {
-    if (isDomainError(error)) redirect(`${path}?listFailed=${registrationId}`);
+    if (isDomainError(error)) redirect(`${path}?listFailed=${encodeURIComponent(registrationId)}`);
     throw error;
   }
 }

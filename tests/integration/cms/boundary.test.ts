@@ -217,6 +217,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/preview/events/[id]",
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",
+      // The public list's own switch (BR-REQ-039-01, §143): written here by hand like the rest.
+      "/registrations/list/[token]",
       "/registrations/manage/[token]",
       "/registrations/mine",
       "/registrations/mine/[token]",
