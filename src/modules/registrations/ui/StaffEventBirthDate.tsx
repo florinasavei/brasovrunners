@@ -4,9 +4,10 @@ import MenuItem from "@mui/material/MenuItem";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
+import GuardianForMinor from "./GuardianForMinor";
 
 /**
- * The staff form's event and birth date, which have to know about each other (§324).
+ * The staff form's event, birth date and parent, which have to know about each other (§324).
  *
  * The public form's date box stops at the latest birth date that is still fourteen on the
  * race's own day (§321), computed on the server for the one event the page is about. The staff
@@ -18,28 +19,50 @@ import { latestBirthDateFor, MIN_PARTICIPANT_AGE } from "../domain/age";
  * well, as on the public form. The server still decides; this only stops the picker offering a
  * date it would turn back.
  *
- * Two pieces sharing one choice rather than one component, because the two fields are not next
- * to each other on the form: the names come between them. Plain data crosses the boundary —
- * ids, labels, days — and the elements are made here (`AGENTS.md` §14.1).
+ * Pieces sharing one choice rather than one component, because the fields are not next to each
+ * other on the form: the names come between the event and the date. Plain data crosses the
+ * boundary — ids, labels, days — and the elements are made here (`AGENTS.md` §14.1).
  */
-type Choice = { selected: string | undefined; choose: (eventId: string) => void; eventDays: Record<string, string> };
+type Choice = {
+  selected: string | undefined;
+  choose: (eventId: string) => void;
+  /** Each event's calendar day in its own zone, by id. */
+  eventDays: Readonly<Record<string, string>>;
+  /** Today and a hundred and twenty years ago, from the server, so both renders agree. */
+  today: string;
+  earliest: string;
+};
 
-const ChoiceContext = createContext<Choice>({ selected: undefined, choose: () => {}, eventDays: {} });
+const ChoiceContext = createContext<Choice>({
+  selected: undefined,
+  choose: () => {},
+  eventDays: {},
+  today: "9999-12-31",
+  earliest: "0001-01-01",
+});
 
 export function StaffEventScope({
   eventDays,
   initialEventId,
+  today,
+  earliest,
   children,
 }: {
-  /** Each event's calendar day in its own zone, by id. */
-  eventDays: Record<string, string>;
+  eventDays: Readonly<Record<string, string>>;
   initialEventId: string;
+  today: string;
+  earliest: string;
   children: ReactNode;
 }) {
   const [changed, setChanged] = useState<string | undefined>(undefined);
+  // After a refusal the select comes back holding what was posted (§315), and so does this.
   const recalled = useRecall().value("eventId");
-  const selected = changed ?? (typeof recalled === "string" && recalled !== "" ? recalled : initialEventId);
-  return <ChoiceContext.Provider value={{ selected, choose: setChanged, eventDays }}>{children}</ChoiceContext.Provider>;
+  const selected = changed ?? (recalled ? recalled : initialEventId);
+  return (
+    <ChoiceContext.Provider value={{ selected, choose: setChanged, eventDays, today, earliest }}>
+      {children}
+    </ChoiceContext.Provider>
+  );
 }
 
 export function StaffEventSelect({
@@ -71,9 +94,8 @@ export function StaffEventSelect({
 }
 
 export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
-  const { selected, eventDays } = useContext(ChoiceContext);
+  const { selected, eventDays, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;
-  const today = new Date().toISOString().slice(0, 10);
   const youngest = day ? latestBirthDateFor(MIN_PARTICIPANT_AGE, day) : today;
   const max = youngest < today ? youngest : today;
   return (
@@ -82,7 +104,27 @@ export function StaffBirthDateField({ label, helperText }: { label: string; help
       type="date"
       label={label}
       helperText={helperText}
-      slotProps={{ inputLabel: { shrink: true }, htmlInput: { max } }}
+      slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: earliest, max } }}
     />
+  );
+}
+
+/**
+ * The parent or guardian's box (§108), shown when the birth date says under eighteen today — the
+ * public form's own island and rule (`GuardianForMinor`, §188) — so a fourteen-to-seventeen-year-old
+ * can be entered at the desk with a birth date rather than refused over a box that was not there.
+ *
+ * Two things the public form does not need. Its date box is found by the id the kept form gives
+ * it (`useRecall().idOf`), and the block is re-mounted with every refusal, because the kept
+ * form re-mounts its boxes then (§315) and a subscription to the old input would read nothing.
+ * And a refusal that named the parent's box opens it whatever the date now says, so the summary
+ * never links to something hidden.
+ */
+export function StaffGuardian({ children }: { children: ReactNode }) {
+  const recall = useRecall();
+  return (
+    <GuardianForMinor key={recall.generation} birthDateId={recall.idOf("birthDate")} forceOpen={recall.named("guardianName")}>
+      {children}
+    </GuardianForMinor>
   );
 }

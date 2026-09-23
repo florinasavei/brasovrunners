@@ -214,6 +214,12 @@ export type CreateRegistrationByStaffInput = {
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     clubName?: string;
+    /**
+     * A minor's parent or guardian (§108): required by the staff schema when a birth date is
+     * given and says under eighteen, as on the public form, so the desk can enter a fourteen-to-
+     * seventeen-year-old with the date (§324). Kept only for a minor.
+     */
+    guardianName?: string;
     /** BR-REQ-031-06. What the person told the organizer; a claim like every other one. */
     clubMemberDeclared?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";

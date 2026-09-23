@@ -207,11 +207,11 @@ describe("§321 a TEST registration is refused exactly like a real one (AGENTS.m
 });
 
 describe("§321 a staff entry and the desk's walk-in", () => {
-  const staffEntry = (event: EventForRegistration, birthDate: string | undefined, fastTrack = false) => ({
+  const staffEntry = (event: EventForRegistration, birthDate: string | undefined, fastTrack = false, guardianName?: string) => ({
     eventId: event.id,
     firstName: "Andrei",
     lastName: "Ionescu",
-    details: birthDate ? { birthDate } : {},
+    details: birthDate ? { birthDate, guardianName } : {},
     email: `andrei-${birthDate ?? "none"}-${fastTrack}@example.ro`,
     locale: "ro" as const,
     listOptOut: true,
@@ -232,20 +232,57 @@ describe("§321 a staff entry and the desk's walk-in", () => {
     expect(await db.select().from(registrations)).toHaveLength(0);
   });
 
-  it("does not refuse fourteen on the race day for age", async () => {
+  it("does not refuse fourteen on the race day for age, and takes the minor with a parent named", async () => {
     const event = await createRace();
     /*
-      Not accepted outright, and not because of this rule: the staff schema carries the guardian
-      rule of §108 too, and the staff form has no field for the parent's name — so any minor
-      entered *with* a birth date is refused for `guardianName`, as it was before this change.
-      That is reported to the owner rather than changed here. What this proves is that the age
-      rule itself lets the fourteenth birthday through, and an adult's entry goes all the way.
+      The staff schema carries the guardian rule of §108 as the public one does, and since §324
+      the staff form asks for the parent once the birth date says under eighteen. Without the
+      name the refusal is about `guardianName` and never about age; with it the fourteen-year-old
+      is entered at the desk, the parent on the row. An adult's entry goes all the way too.
     */
     const refused = await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true), NOW));
     expect(refused?.fields ?? []).not.toContain(UNDER_MINIMUM_AGE);
-    expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, "1990-05-17", true), NOW))).toBeNull();
+    expect(refused?.fields).toContain("guardianName");
+    expect(
+      await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, FOURTEEN_ON_RACE_DAY, true, "Maria Ionescu"), NOW)),
+    ).toBeNull();
+    const [minor] = await db.select().from(registrations).where(eq(registrations.birthDate, FOURTEEN_ON_RACE_DAY));
+    expect(minor.guardianName).toBe("Maria Ionescu");
+
+    expect(await refusal(createRegistrationByStaff(db, volunteer, staffEntry(event, "1990-05-17", true, "Nobody"), NOW))).toBeNull();
+    const [adult] = await db.select().from(registrations).where(eq(registrations.birthDate, "1990-05-17"));
+    // An adult's stray parent names nobody (§108).
+    expect(adult.guardianName).toBeNull();
+  });
+
+  it("carries the parent's box from the staff form to the row (§324)", async () => {
+    const event = await createRace();
+    const form = new FormData();
+    for (const [name, value] of Object.entries({
+      uiLocale: "ro",
+      back: "desk",
+      eventId: event.id,
+      firstName: "Andrei",
+      lastName: "Ionescu",
+      birthDate: FOURTEEN_ON_RACE_DAY,
+      guardianName: "Maria Ionescu",
+      email: "andrei-parent@example.ro",
+      participantLocale: "ro",
+      relayedByParticipantRequest: "on",
+    })) {
+      form.set(name, value);
+    }
+
+    // A success answers with a redirect, which Next.js throws; a refusal would return instead.
+    const outcome = await createRegistrationAction(null, form).catch((error: unknown) => {
+      if (String((error as { digest?: unknown } | null)?.digest ?? "").startsWith("NEXT_REDIRECT")) return null;
+      throw error;
+    });
+
+    expect(outcome).toBeNull();
     const [row] = await db.select().from(registrations);
-    expect(row.birthDate).toBe("1990-05-17");
+    expect(row.birthDate).toBe(FOURTEEN_ON_RACE_DAY);
+    expect(row.guardianName).toBe("Maria Ionescu");
   });
 
   it("accepts an entry that gives no birth date: nothing to count, and BR-REQ-031-04 criterion 5 stands", async () => {
@@ -285,9 +322,8 @@ describe("§321 a staff entry and the desk's walk-in", () => {
     expect(outcome?.error).toBe("UNDER_MINIMUM_AGE");
     expect(outcome?.fields).toContain("birthDate");
     expect(outcome?.fields).not.toContain(UNDER_MINIMUM_AGE);
-    // `guardianName` is named as well today — §108's rule, and a box the staff form does not
-    // have (see "does not refuse fourteen" above); `toContain`, so the follow-up that settles
-    // it does not have to rewrite this.
+    // `guardianName` is named as well — §108's rule, and since §324 a box the staff form shows
+    // once the birth date says under eighteen; hence `toContain` above.
     expect(outcome?.values).toMatchObject({
       eventId: [event.id],
       firstName: ["Andrei"],

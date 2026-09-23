@@ -43,6 +43,19 @@ function controls(page: Page) {
   };
 }
 
+/**
+ * The page scrolled to its end, where the sticky bar rests in its own place (§324).
+ *
+ * Since the page reserves room above the sticky footer for whatever the browser scrolls into view
+ * (`scroll-padding-bottom`, theme.ts), a trial click on a control *in* the bar scrolls the page
+ * to its end — the only place a sticky bar can move out of that room — and on a phone the build
+ * badge is under the bar there, so the bar rises by the badge's height. Measured from the end,
+ * every box is taken with the bar where it stays, and no click moves it.
+ */
+async function restAtTheEnd(page: Page) {
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+}
+
 function expectDisjoint(boxes: Array<[string, Box]>, width: number) {
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
@@ -61,6 +74,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       const { footer, summary, toggle, privacy, marks, language, badge } = controls(page);
       const count = await marks.count();
       test.skip(count === 0, "no social address is configured for this server");
+      await restAtTheEnd(page);
 
       const boxes: Array<[string, Box]> = [
         ["the summary", await boxOf(summary, "the summary")],
@@ -124,6 +138,8 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
     // The panel's links, and the privacy notice beside the fold, which wraps under it (§323).
     const panelLinks = footer.getByRole("link", { name: /confidențialitate|termeni|înscrierile|scrie-ne/i });
     await expect(panelLinks.first()).toBeVisible();
+    // Open, the bar is taller: measured at the page's new end, where no trial click moves it.
+    await restAtTheEnd(page);
 
     const boxes: Array<[string, Box]> = [];
     for (let i = 0; i < (await panelLinks.count()); i++) boxes.push([`panel link ${i}`, await boxOf(panelLinks.nth(i), `panel link ${i}`)]);

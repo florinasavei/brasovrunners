@@ -389,7 +389,8 @@
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
           "resubmitted": "S-a înscris din nou cu aceeași adresă",
           "health_viewed": "Urgențele și nota medicală deschise",
-          "consent_withdrawn": "Consimțământ retras"
+          "consent_withdrawn": "Consimțământ retras",
+          "declaration_downloaded": "Declarația semnată descărcată (PDF)"
         }
       },
       "locale": {

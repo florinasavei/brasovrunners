@@ -217,6 +217,9 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           emergencyContactName: optional(form, "emergencyContactName"),
           emergencyContactPhone: optional(form, "emergencyContactPhone"),
           clubName: optional(form, "clubName"),
+          // A minor's parent (§108), asked by the form once the birth date says under eighteen
+          // (§324); the schema requires it then, and ignores it for an adult.
+          guardianName: optional(form, "guardianName"),
           clubMemberDeclared: form.get("clubMemberDeclared") === "on",
           tshirtSize: optional(form, "tshirtSize") as
             | "NONE"

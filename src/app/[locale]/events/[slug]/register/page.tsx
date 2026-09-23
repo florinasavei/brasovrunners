@@ -24,6 +24,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
+import { phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
@@ -212,6 +213,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
+  // The phone prefixes' order, sorted here and only drawn in the browser (§324): the two
+  // runtimes' ICU data name countries differently, and a second sort there broke hydration.
+  const phoneOrder = phoneCountryOrder(locale);
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -479,9 +483,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               rather than a glyph by name: the verbs' registry is the backoffice's and must not
               reach a public page. The row is a flex container so the button keeps its own width.
             */}
+            {/*
+              And the same hold for Cloudflare's token (§285, §304; §324): this press sends the
+              same form, and the widget below has been redrawn for the new render, so a press
+              before it answers would buy the refusal it is meant to get past. Held, then sent
+              when the token lands — never dropped.
+            */}
             {tooFast && (
               <Box sx={{ display: "flex", mb: 2 }}>
-                <SubmitButton label={t("errors.tooFastResend")} pendingLabel={t("submitting")} runner size="medium" />
+                <SubmitButton
+                  label={t("errors.tooFastResend")}
+                  pendingLabel={t("submitting")}
+                  runner
+                  awaitsBotCheck={Boolean(siteKey)}
+                  botCheckHint={t("botCheckWait")}
+                  slowHint={t("submitSlow")}
+                  size="medium"
+                />
               </Box>
             )}
             <Stack spacing={2}>
@@ -661,7 +679,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 id={fieldId("phone")}
                 label={t("phone")}
                 countryLabel={t("phoneCountry")}
-                locale={locale}
+                countryOrder={phoneOrder}
                 required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
@@ -692,7 +710,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
                   countryLabel={t("phoneCountry")}
-                  locale={locale}
+                  countryOrder={phoneOrder}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused

@@ -389,7 +389,8 @@
           "list_consent_changed": "Public-list choice changed by the participant",
           "resubmitted": "Registered again with the same address",
           "health_viewed": "Emergency details and health note opened",
-          "consent_withdrawn": "Consent withdrawn"
+          "consent_withdrawn": "Consent withdrawn",
+          "declaration_downloaded": "Signed declaration downloaded (PDF)"
         }
       },
       "locale": {
