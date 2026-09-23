@@ -47,6 +47,8 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
 }
 
 const URL = "https://example.test/ro/evenimente/tura-pe-tampa";
+/** The listing — the club's front page, which the organization block names as its `url` (§NNN). */
+const LISTING = "https://example.test/ro/evenimente";
 
 function parsed(data: Record<string, unknown>) {
   return JSON.parse(JSON.stringify(data));
@@ -121,7 +123,13 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
   it("references the club @id as organizer", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer["@id"]).toBe(clubId());
-    expect(block.organizer["@id"]).toBe(parsed(sportsOrganizationJsonLd("Brașov Runners"))["@id"]);
+    expect(block.organizer["@id"]).toBe(parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING))["@id"]);
+  });
+
+  it("names the listing as the club's url, never the bare base that redirects (§NNN)", () => {
+    const block = parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING));
+    expect(block.url).toBe(LISTING);
+    expect(block.url).not.toBe(clubId().replace(/\/#organization$/, ""));
   });
 
   it("includes a postal address on the location", () => {
@@ -160,7 +168,7 @@ describe("BR-REQ-052-02 criterion 6 no participant data", () => {
   it("contains no participant, email, registration or declaration field", () => {
     const serialised = JSON.stringify([
       sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"),
-      sportsOrganizationJsonLd("Brașov Runners"),
+      sportsOrganizationJsonLd("Brașov Runners", LISTING),
     ]).toLowerCase();
 
     for (const forbidden of ["participant", "@example.", "registration", "declaration", "attendee"]) {

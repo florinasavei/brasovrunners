@@ -130,6 +130,22 @@ export async function findPageForEditor<T extends Record<string, unknown>>(db: D
 }
 
 /**
+ * Every locale one published page lives in, with that locale's own slug — its `hreflang`
+ * alternates (§NNN), the pages' twin of `findPublishedTranslations` for events. A page that is
+ * not published yields nothing, so no draft is ever advertised.
+ */
+export async function findPublishedPageTranslations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  pageId: string,
+): Promise<Array<{ locale: Locale; slug: string }>> {
+  return db
+    .select({ locale: pageTranslations.locale, slug: pageTranslations.slug })
+    .from(pageTranslations)
+    .innerJoin(pages, eq(pages.id, pageTranslations.pageId))
+    .where(and(eq(pageTranslations.pageId, pageId), eq(pages.editorialStatus, "PUBLISHED")));
+}
+
+/**
  * The same page's address in the other language (BR-REQ-040-01 criterion 5).
  *
  * Published only: switching language must not reveal a draft, and a page whose other locale is

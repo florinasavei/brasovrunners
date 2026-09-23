@@ -2112,7 +2112,9 @@
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "GDPR",
-    "termsLinkLabel": "Termeni de concurs"
+    "termsLinkLabel": "Termeni de concurs",
+    "termsTitle": "Termeni și condiții",
+    "privacyTitle": "Notă de confidențialitate"
   },
   "Registration": {
     "title": "Înscriere: {event}",

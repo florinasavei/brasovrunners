@@ -2112,7 +2112,9 @@
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
     "privacyLinkLabel": "GDPR",
-    "termsLinkLabel": "Racing TOS"
+    "termsLinkLabel": "Racing TOS",
+    "termsTitle": "Terms and conditions",
+    "privacyTitle": "Privacy notice"
   },
   "Registration": {
     "title": "Register: {event}",
