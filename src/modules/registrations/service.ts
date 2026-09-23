@@ -1088,6 +1088,28 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
     }
 
+    /**
+     * The signature is the declarant's name (§NNN, reversing that half of §283): the name given
+     * at registration, or the parent's for a minor (§108) — the name the text above it already
+     * prints as the one who declares. Asserted here, in the transaction that writes the
+     * acceptance, and not only in the browser that refuses it first: a form with JavaScript off,
+     * or a second caller, meets the same rule. A refusal is a throw, so the whole transaction
+     * rolls back with it — the token spend included — and the same link signs with the right
+     * name a moment later.
+     *
+     * Before the hold expiry and the re-allocation below, not after them (found in review): a
+     * lapsed hold that re-allocates to the waiting list returns early, so a check placed later
+     * never ran on that path, and the early return committed the token spend with a name nobody
+     * had compared. Neither name changes under the expiry, so nothing is lost by asking first,
+     * and a refused name never reaches the allocator.
+     *
+     * What is recorded stays what was typed, casing and diacritics and all: the rule decides
+     * whether the signature is accepted, never what it says.
+     */
+    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(before))) {
+      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
+    }
+
     // Re-verify the hold is still live at the moment of signing — never trusting that it was
     // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`). A hold
     // past its deadline is still live while nobody waits for the place (§160): the signature
@@ -1127,21 +1149,6 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
     if (asksForIdDocument && !parsed.data.idDocument) {
       throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
-    }
-
-    /**
-     * The signature is the declarant's name (§NNN, reversing that half of §283): the name given
-     * at registration, or the parent's for a minor (§108) — the name the text above it already
-     * prints as the one who declares. Asserted here, where the acceptance is written, and not only
-     * in the browser that refuses it first: a form with JavaScript off, or a second caller, meets
-     * the same rule. A refusal is a throw, so the whole transaction rolls back with it — the token
-     * spend included — and the same link signs with the right name a moment later.
-     *
-     * What is recorded stays what was typed, casing and diacritics and all: the rule decides
-     * whether the signature is accepted, never what it says.
-     */
-    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(current))) {
-      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
     }
 
     await repo.insertDeclarationAcceptance(tx, {

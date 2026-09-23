@@ -44,10 +44,10 @@ async function approve() {
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
-async function createEvent(): Promise<EventForRegistration> {
+async function createEvent(capacity = 10): Promise<EventForRegistration> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity: 10, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul aniversar", slug: "crosul-aniversar" },
@@ -176,6 +176,40 @@ describe("BR-REQ-033-02 §NNN a signature that is not the declarant's name", () 
     expect(signed.ok).toBe(true);
     const [acceptance] = await db.select().from(declarationAcceptances);
     expect(acceptance.typedName).toBe("ION POPESCU");
+  });
+
+  /*
+    Found in review: the name used to be checked after the hold expiry and the re-allocation, and
+    a lapsed hold that re-allocates to the waiting list returns early — so a wrong name there was
+    never checked, and the early return committed the token spend and the move to the queue. The
+    check now comes before either: a refused name never reaches the allocator.
+  */
+  it("refuses a wrong name on a lapsed hold before the allocator runs, and the link still works", async () => {
+    await approve();
+    const event = await createEvent(1);
+    const { row, secret } = await awaitingDeclaration(event);
+
+    // The one place is held; the next person, a minute later, waits for it.
+    await submitRegistration(db, event, submission({ firstName: "Ana", lastName: "Pop", email: "ana@example.ro" }), NOW);
+    const [waiting] = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter((r) => r.id !== row.id);
+    expect((await confirmEmail(db, event, waiting.id, new Date(NOW.getTime() + 60_000))).status).toBe("WAITLISTED");
+
+    // Past the thirty minutes, with somebody waiting: the hold is one the signing would release.
+    const lapsed = new Date(NOW.getTime() + 31 * 60_000);
+    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Florin Munca2"), lapsed))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["typedName"],
+    });
+    // Nothing moved: the hold not released, the queue untouched, the link unspent.
+    expect(await state(row.id)).toEqual({ status: "PENDING_DECLARATION", acceptances: 0, spent: 0, live: 1 });
+    const [stillWaiting] = await db.select().from(registrations).where(eq(registrations.id, waiting.id));
+    expect(stillWaiting.status).toBe("WAITLISTED");
+
+    // The same link with the right name reaches the allocator, which does what it always did
+    // with a hold that lapsed while somebody waited: the place is offered on, this one queues.
+    const signed = await consumeAndSignDeclaration(secret, await signing("Florin Munca"), lapsed);
+    expect(signed.ok).toBe(true);
+    expect(await state(row.id)).toEqual({ status: "WAITLISTED", acceptances: 0, spent: 1, live: 0 });
   });
 
   it("forgives the diacritics a phone keyboard leaves out", async () => {

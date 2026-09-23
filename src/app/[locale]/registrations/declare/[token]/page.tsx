@@ -209,7 +209,6 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const draft = nameRefused ? await readFormDraft() : null;
   const draftDocumentType = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
-  const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
   const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
 
@@ -279,21 +278,18 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             The signature was refused on the server (§NNN) — reached with JavaScript off, or past
             the browser's own check. Where the redirect lands (`#declaration-errors`), right above
             the form rather than above a page of legal text, focusable and announced like the
-            registration form's summary (§47): what was wrong, which name is wanted, that nothing
-            was recorded and the link still works, a link that puts focus in the box, and what to
-            do when the registered name is itself the mistake.
+            registration form's summary (§47): what was wrong, that nothing was recorded and the
+            link still works, a link that puts focus in the box, and what to do when the
+            registered name is itself the mistake.
+
+            Which name is wanted is said once, under the box, in bold (`SignatureField`) — where
+            the eye goes to retype it, and where it stays while the box is still wrong. Said here
+            as well it was the same sentence twice, a screen apart (found in review).
           */}
           {nameRefused && (
             <Alert severity="error" id={DECLARATION_ERROR_SUMMARY_ID} role="alert" tabIndex={-1} sx={{ mb: 3 }}>
               <AlertTitle>{t("declare.nameRefusedTitle")}</AlertTitle>
-              {expectedName !== null && (
-                <Box>
-                  {signsForMinor
-                    ? t.rich("declare.signatureMismatchForMinorRich", { name: expectedName, strong })
-                    : t.rich("declare.signatureMismatchRich", { name: expectedName, strong })}
-                </Box>
-              )}
-              <Box sx={{ mt: 0.5 }}>{t("declare.nameRefusedNothingRecorded")}</Box>
+              <Box>{t("declare.nameRefusedNothingRecorded")}</Box>
               <Box sx={{ mt: 0.5 }}>
                 <MuiLink href={`#${SIGNATURE_FIELD_ID}`}>{t("declare.typedName")}</MuiLink>
               </Box>

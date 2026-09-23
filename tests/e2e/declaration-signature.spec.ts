@@ -100,6 +100,10 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       not go anywhere, and nothing was recorded.
     */
     await expect(hint).toContainText("Semnătura trebuie să fie exact numele cu care te-ai înscris");
+    // Red, and the name still in bold: the moment somebody looks for it is the moment it matters.
+    await expect(hint.locator("strong")).toHaveText(registration.registeredName);
+    // No summary above the form on this path, so what to do about a wrong registered name is here.
+    await expect(hint).toContainText("Dacă numele de la înscriere este greșit");
     expect(await signature.evaluate((input) => (input as HTMLInputElement).validity.customError)).toBe(true);
     expect(await signature.evaluate((input) => (input as HTMLInputElement).validationMessage)).toContain(registration.registeredName);
     expect(page.url()).not.toMatch(/[?&](done|invalid)=/);
@@ -124,13 +128,23 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       await plain.locator('[name="typedName"]').fill("Munca Florin");
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
 
-      // Its own refusal — never "the link is no longer valid" — with the name it wants, in bold.
+      // Its own refusal — never "the link is no longer valid" — and what to do about it.
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
       const summary = plain.locator("#declaration-errors");
       await expect(summary).toBeVisible();
-      await expect(summary.locator("strong")).toHaveText(registration.registeredName);
       await expect(summary).toContainText("linkul tău este în regulă");
+      await expect(summary).toContainText("Dacă numele de la înscriere este greșit");
       await expect(summary.getByRole("link", { name: "Scrie numele complet ca semnătură" })).toHaveAttribute("href", "#typedName");
+      /*
+        The name it wants is said once, under the box, in bold, in the red state — and neither
+        sentence twice: the summary does not repeat the mismatch, the box does not repeat what to
+        do about a wrong registered name (§NNN, found in review).
+      */
+      const underBox = plain.locator("#typedName-helper-text");
+      await expect(underBox).toContainText("Semnătura trebuie să fie exact numele cu care te-ai înscris");
+      await expect(underBox.locator("strong")).toHaveText(registration.registeredName);
+      await expect(underBox).not.toContainText("Dacă numele de la înscriere este greșit");
+      await expect(summary).not.toContainText("Semnătura trebuie să fie exact");
       // Nothing about the person in the address: the code, and only the code.
       expect(plain.url()).not.toContain("Munca");
       expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
@@ -141,7 +155,6 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
         await expect(plain.locator('[name="idDocument"]')).toHaveValue("BV 123456");
       }
       await expect(plain.locator('[name="typedName"]')).toHaveValue("Munca Florin");
-      await expect(plain.locator("#typedName-helper-text")).toContainText(registration.registeredName);
 
       await plain.locator('[name="typedName"]').fill(registration.registeredName.toLowerCase());
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
@@ -169,7 +182,10 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
       const summary = plain.locator("#declaration-errors");
-      await expect(summary.locator("strong")).toHaveText(parent);
+      // The parent's name, in bold, under the box in its red state; the summary does not repeat it.
+      await expect(plain.locator("#typedName-helper-text strong")).toHaveText(parent);
+      await expect(plain.locator("#typedName-helper-text")).toContainText("numele părintelui sau tutorelui dat la înscriere");
+      await expect(summary).not.toContainText("Semnătura trebuie să fie exact");
       /*
         §NNN, found in review: the club can correct a participant's name but not a parent's, so
         the minor's sentence never promises that. It points at what works — "Înscrierile mele",
@@ -180,15 +196,7 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
       expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
 
       await plain.locator('[name="typedName"]').fill(parent.toLowerCase());
-      /*
-        The parent's refusal is long enough, said twice, to push the button under the sticky
-        footer bar on a 720px desktop. Playwright's "scroll if needed" counts a button under that
-        bar as already in view and retries against the footer until the test times out, so it is
-        brought to the middle first, where a person scrolling would have it.
-      */
-      const sign = plain.getByRole("button", { name: "Semnează și confirmă" });
-      await sign.evaluate((button) => button.scrollIntoView({ block: "center" }));
-      await sign.click();
+      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
       await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
       expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
     } finally {

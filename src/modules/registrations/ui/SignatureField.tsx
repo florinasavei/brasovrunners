@@ -28,6 +28,14 @@ import { signatureNameMatches } from "../domain/signature-name";
  * §198 set for every live check on these forms. A refusal the server already made is shown at
  * once, until the name is corrected.
  *
+ * What the red state says under the box is the mismatch sentence with the name **in bold** — the
+ * moment somebody is looking for the name to type is exactly when it must stand out (the owner:
+ * "this name should be bolded!"). The bubble gets the same sentence plain, because
+ * `setCustomValidity` takes a string and the browser draws it. After a refusal the browser made
+ * (or a blur), the what-to-do sentence for a registered name that is itself wrong follows it; after
+ * one the server made it does not, because the page's summary above the form already carries it,
+ * and saying it twice only pushed the button further down.
+ *
  * ## Uncontrolled, like every island on these forms (§211)
  *
  * The DOM owns the value — `defaultValue`, never `value` — and state only watches it, so a person
@@ -75,6 +83,7 @@ export default function SignatureField({
   const minor = participantName !== null;
   const mismatch =
     expectedName !== null && value.trim() !== "" && !signatureNameMatches(value, expectedName);
+  // Plain, for the browser's bubble only: `setCustomValidity` cannot carry markup.
   const mismatchSentence =
     expectedName === null
       ? ""
@@ -111,6 +120,14 @@ export default function SignatureField({
     ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
     : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
 
+  // The same sentence as the bubble's, with the name in bold, for under the box.
+  const mismatchUnderBox =
+    expectedName === null
+      ? null
+      : minor
+        ? t.rich("declare.signatureMismatchForMinorRich", { name: expectedName, strong })
+        : t.rich("declare.signatureMismatchRich", { name: expectedName, strong });
+
   const hint =
     expectedName === null
       ? t("declare.typedNameHelp")
@@ -134,7 +151,8 @@ export default function SignatureField({
       helperText={
         showError ? (
           <>
-            {mismatchSentence} {wrongNameSentence}
+            {mismatchUnderBox}
+            {!refused && <> {wrongNameSentence}</>}
           </>
         ) : (
           hint
