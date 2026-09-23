@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.49-2026-09-22
+
+- **A hidden copy (Bcc) of the contact form’s messages and of every participant email.** Both are set on `/admin/emails` by the Administrator and read by whoever reads the page: stamped in the outbox row at enqueue time so a later edit cannot redirect a queued message, never on a test registration's message, counted in the allowance forecast (five more per registration per address), with a warning above the box that the copy carries the participant's own links and QR. §293.
 ## BR-V1.48-2026-09-22
 
 - **The `BRASOV RUNNERS` wordmark now heads the calendar and the contact page**, as it heads the listing — the same kit face, the same size, a Server Component, no extra download. The header is unchanged. `BR-V1.32` said "the homepage and nowhere else"; that sentence guarded the header, and the calendar and the contact page are the club's own pages in the same sense the listing is. A test pins the three so a fourth is a decision rather than a habit. §292.

@@ -28,45 +28,68 @@ describe("BR-REQ-070-04 the contact form's recipients", () => {
     expect(contactRecipientsSchema.safeParse({ to: [], cc: [] }).success).toBe(true);
     expect(contactRecipientsSchema.safeParse({ to: ["nope"], cc: [] }).success).toBe(false);
     expect(contactRecipientsSchema.safeParse({ to: ["club@example.com"], cc: ["amalia at example.org"] }).success).toBe(false);
+    // The hidden copies (2026-09-22) are validated like the other two, and refused whole.
+    expect(contactRecipientsSchema.safeParse({ to: [], cc: [], bcc: ["x@example.com"] }).success).toBe(true);
+    expect(contactRecipientsSchema.safeParse({ to: ["club@example.com"], cc: [], bcc: ["x at example.com"] }).success).toBe(false);
     // Nothing else may ride along in a settings row.
-    expect(contactRecipientsSchema.safeParse({ to: [], cc: [], bcc: ["x@example.com"] }).success).toBe(false);
+    expect(contactRecipientsSchema.safeParse({ to: [], cc: [], bcc: [], replyTo: ["x@example.com"] }).success).toBe(false);
+  });
+
+  it("reads a row stored before the hidden copies existed as having none", () => {
+    // `platform_settings.contactRecipients` rows written under §164 carry `to` and `cc` only;
+    // there is no migration for a JSON setting, so the schema is what makes them still read.
+    expect(contactRecipientsSchema.parse({ to: ["club@example.com"], cc: ["amalia@example.org"] })).toEqual({
+      to: ["club@example.com"],
+      cc: ["amalia@example.org"],
+      bcc: [],
+    });
   });
 
   it("prefers the club's own list, falls back to the environment, and answers nobody with nobody", () => {
     const environment = ["deployed@example.com"];
 
-    expect(resolveContactRecipients({ to: ["club@example.com"], cc: ["amalia@example.org"] }, environment)).toEqual({
+    expect(resolveContactRecipients({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] }, environment)).toEqual({
       to: ["club@example.com"],
       cc: ["amalia@example.org"],
+      bcc: ["arhiva@example.org"],
       source: "setting",
     });
 
-    // The copy list is the app's whichever half answered for the "to" list: a colleague's
+    // The copy lists are the app's whichever half answered for the "to" list: a colleague's
     // copy must not wait on the club moving the main list into the app.
-    expect(resolveContactRecipients({ to: [], cc: ["amalia@example.org"] }, environment)).toEqual({
+    expect(resolveContactRecipients({ to: [], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] }, environment)).toEqual({
       to: environment,
       cc: ["amalia@example.org"],
+      bcc: ["arhiva@example.org"],
       source: "environment",
     });
 
-    expect(resolveContactRecipients(null, environment)).toEqual({ to: environment, cc: [], source: "environment" });
-    expect(resolveContactRecipients({ to: [], cc: [] }, [])).toEqual({ to: [], cc: [], source: "none" });
-    expect(resolveContactRecipients(null, [])).toEqual({ to: [], cc: [], source: "none" });
+    expect(resolveContactRecipients(null, environment)).toEqual({ to: environment, cc: [], bcc: [], source: "environment" });
+    expect(resolveContactRecipients({ to: [], cc: [], bcc: [] }, [])).toEqual({ to: [], cc: [], bcc: [], source: "none" });
+    expect(resolveContactRecipients(null, [])).toEqual({ to: [], cc: [], bcc: [], source: "none" });
   });
 
   it("writes the same mailbox once, however many boxes it was typed into", () => {
-    // Nodemailer builds the envelope from both lists, so a repeat is a second RCPT TO and a
-    // name in two headers. The first spelling is the one kept (§164).
+    // Nodemailer builds the envelope from every list, so a repeat is a second RCPT TO and a
+    // name in two headers. The first spelling is the one kept (§164); "to" beats "cc" beats
+    // "bcc", so an address that is a recipient is never also a hidden copy.
     const parsed = contactRecipientsSchema.parse({
       to: ["club@example.com", "Club@Example.com"],
       cc: ["CLUB@example.com", "amalia@example.org", "amalia@example.org"],
+      bcc: ["AMALIA@example.org", "club@EXAMPLE.com", "arhiva@example.org", "Arhiva@example.org"],
     });
-    expect(parsed).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"] });
+    expect(parsed).toEqual({ to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] });
 
     // And against the environment's list too, for a deployment that has not moved it yet.
-    expect(resolveContactRecipients({ to: [], cc: ["Deployed@example.com", "amalia@example.org"] }, ["deployed@example.com"])).toEqual({
+    expect(
+      resolveContactRecipients(
+        { to: [], cc: ["Deployed@example.com", "amalia@example.org"], bcc: ["deployed@EXAMPLE.com", "arhiva@example.org"] },
+        ["deployed@example.com"],
+      ),
+    ).toEqual({
       to: ["deployed@example.com"],
       cc: ["amalia@example.org"],
+      bcc: ["arhiva@example.org"],
       source: "environment",
     });
   });

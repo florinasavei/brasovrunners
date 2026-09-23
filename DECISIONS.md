@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.49-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.49-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12481,3 +12481,23 @@ The calendar and the contact page are the club's own pages in the same sense the
 **What was rejected.** *Putting it in the layout for every public page.* An event page's heading is the event's title and a legal text's is the text's; the club's signature above "Termeni și condiții" would read as a letterhead, and the owner named two pages, not the site.
 
 Baseline `BR-V1.48-2026-09-22`.
+
+## 293. Added — a hidden copy (Bcc) of the contact form's messages and of every participant email (2026-09-22)
+
+**Ask.** The owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare" — the club wants a mailbox that silently receives what the contact form sends and every email a participant receives, without redeploying and without the addresses showing on the message.
+
+**Decision.** Two Bcc lists on `/admin/emails`, both settings in `platform_settings`, both read by whoever may read the page and written only through the service that asserts `canManageRegistrations` — the gate §164 and §244 already use — with an audit row naming who changed what from what.
+
+1. **The contact form** gains "Copie ascunsă – Bcc" beside "Către" and "Copie – Cc" (`contactRecipients.bcc`; a row stored before the box existed reads as none). The SMTP sender hands the list to Nodemailer as `bcc`, so the addresses are envelope recipients and appear in no header — neither the visitor's Reply-To thread nor the Cc'd colleagues learn of them. An address typed in two boxes is sent to once, compared without regard to case. The sentence in force above the boxes names the Bcc; `/admin/tasks`'s contact step names the third box.
+
+2. **The club's copies** gain "Copie ascunsă la emailurile către participanți" (`clubNotices.participants.bcc`). Every message a `REAL` registration's participant receives carries the list in its outbox payload from the moment it is queued — stamped in `enqueueEmail` (`clubCopiesFor`) and nowhere else, so a message type added tomorrow for a participant is copied without anybody remembering, and a list edited afterwards cannot redirect a message already queued (§244's rule). The render step already reads `payload.bcc`, the Mailgun adapter already puts it on the envelope, and outside production each address already faces the allowlist on its own. The participant is never Bcc'd on their own message. A `TEST` registration's message carries none, nor does a message with no registration behind it (§12.6); the club's own archive copy and confirmation notice, the staff invitation and the "registration is open" notice are named out (`isParticipantMessage`).
+
+**What it costs.** A copy is a message: every Bcc address is one more message against the Mailgun allowance for each of the runner's five messages. `messagesPerCompletedRegistration` takes the archive flag and the Bcc count, `volume.ts` computes it once, and `/admin/emails` says what a registration costs and how many of those messages are the hidden copies, as `/admin/tasks` does; `docs/PLATFORM.md` states the rule beside the six-per-registration floor.
+
+**The warning.** The declaration's Bcc box already warns (§244) that a hidden copy hands the participant's name and identity document to a mailbox nobody on the message sees. The participants' box warns in the same place and shape, because its copy is the stronger: those emails carry the participant's own action links and, on the confirmation, the QR for the start, so whoever reads the Bcc mailbox can take those steps in the participant's place (§12.8). The platform allows it, as §244 allows the other; the person switching it on reads those words while they do.
+
+**Why not per-caller, why not a cached read.** Stamping at the twenty `enqueueEmail` call sites was rejected for the reason above. Reading the setting once per batch in `event-mail.ts` was considered in review and left: two primary-key reads per row, the second only when a list is set, on a scheduler job at launch volumes — a pre-read parameter would give every batch caller a second way to be right.
+
+**Tests.** Unit: `notifications/volume.test.ts`, `notifications/club-notices.test.ts`, `contact/recipients.test.ts`, `contact/message.test.ts`. Integration: `notifications/club-notices.test.ts` (queued after the list is set carries it, queued before does not, a TEST registration never), `contact/recipients.test.ts`, `contact/service.test.ts`. E2e (`email-plan.spec.ts`, desktop only, one shared row): the Administrator sets and clears both boxes and watches the forecast move by five per address; the Organizer reads the sentence in force — whichever state the shared row is in — and is offered no form.
+
+Baseline `BR-V1.49-2026-09-22`.
