@@ -89,7 +89,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
   /*
     A settled number that is on paper (§264), and the same number on a registration that is over
-    (§306): the first is what the cancel confirmation warns about before the press, the second is
+    (§308): the first is what the cancel confirmation warns about before the press, the second is
     a bib in the club's pile that belongs to nobody — said as a chip beside the state, and on the
     timeline's own line, both from the row and without a join.
   */
@@ -127,7 +127,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.registeredName}
         </Typography>
         <Chip size="small" label={REGISTRATION_STATUS_LABEL[registration.status]} />
-        {/* A printed bib nobody may wear (§306): the number stays retired, the paper comes out of the pile. */}
+        {/* A printed bib nobody may wear (§308): the number stays retired, the paper comes out of the pile. */}
         {voidBib !== null && (
           <Chip size="small" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: voidBib })} data-testid="void-bib" />
         )}
@@ -434,7 +434,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               <ConfirmSubmitButton
                 label={tr("registrations.cancelAction")}
                 title={tr("confirm.cancelRegistrationTitle")}
-                // The printed bib is named before the press (§306), not discovered in the pile.
+                // The printed bib is named before the press (§308), not discovered in the pile.
                 body={
                   printedBib !== null
                     ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
@@ -509,7 +509,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
           [tr("registrations.holdExpires"), dt(registration.holdExpiresAt)],
           [tr("registrations.confirmed"), dt(registration.confirmedAt)],
-          // "cancelled; bib 27 was printed" on the line itself (§306), whoever cancelled — the
+          // "cancelled; bib 27 was printed" on the line itself (§308), whoever cancelled — the
           // participant's link and the job write no audit row, so the row is the record.
           [
             tr("registrations.cancelled"),

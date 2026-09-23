@@ -31,7 +31,7 @@ import {
  *       (address vouched for, declaration signed on the paper copy the desk holds)
  *   WAITLISTED → "Give a place" (only into a free one; the allocator refuses otherwise)
  *   CONFIRMED → the number (typed or cleared) and "Check in" / "Undo"
- *   CANCELLED, EXPIRED → no button at all, and a red line first (§306): the state, the date,
+ *   CANCELLED, EXPIRED → no button at all, and a red line first (§308): the state, the date,
  *       and — when a bib with this number was printed — that it is in the pile and is not to be
  *       handed out. The person may well be standing there with the email; the desk is where
  *       that must not become a surprise. Every role sees it: a state and a number, never an
@@ -71,7 +71,7 @@ export default async function DeskRow({
   const number = raceNumberOf(row);
 
   /*
-    A registration that is over (§306). The state machine offers it nothing here — `canConfirm`
+    A registration that is over (§308). The state machine offers it nothing here — `canConfirm`
     and the two status checks below already withhold every button — so what this row has to do
     is say so before anything else on it is read. The date is the row's own pair for the state
     (`cancelled_at` or `expired_at`); the printed sentence only when a settled number was put on
@@ -106,7 +106,7 @@ export default async function DeskRow({
       }}
     >
       {/*
-        First and loudest (§306): before the name, before the number, in the error colour. The
+        First and loudest (§308): before the name, before the number, in the error colour. The
         volunteer has somebody in front of them holding the confirmation email, and the one
         thing the screen must not do is look like every other row with a slightly different chip.
       */}
@@ -135,7 +135,7 @@ export default async function DeskRow({
               tells them a number is not settled is the absence of the bib picture below, which
               is only ever drawn for a settled one; the tooltip says it in words.
 
-              Struck through and dimmed on a row that is over (§306): the number is still this
+              Struck through and dimmed on a row that is over (§308): the number is still this
               person's — it is never reused — and it is not a number to reach for.
             */}
             <Typography
@@ -204,7 +204,7 @@ export default async function DeskRow({
             Loaded only when the fold is opened — `<details>` does not fetch what it does not
             render — which matters on a phone at a start line.
 
-            Not on a row that is over (§306): the picture is for matching a bib to a runner, and
+            Not on a row that is over (§308): the picture is for matching a bib to a runner, and
             this runner gets none. The red line above already names the number to pull.
           */}
           {number !== null && number.settled && row.kind === "REAL" && !terminal && (

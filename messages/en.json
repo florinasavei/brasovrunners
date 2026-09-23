@@ -368,6 +368,8 @@
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
           "checkin_undone": "Check-in undone",
+          "bibs_printed": "Bib marked as printed",
+          "bibs_unprinted": "Bib marked as not printed",
           "list_consent_changed": "Public-list choice changed by the participant"
         }
       },
@@ -401,7 +403,9 @@
       "bulkCancelHelp": "Each ticked registration is cancelled separately, with the same reason, and each place goes to the first person on the waiting list. Permanent erasure is never done in bulk.",
       "bulkCancelAction": "Cancel the ticked ones",
       "bulkCancelPending": "Cancelling…",
+      "bulkCancelPrinted": "Numbers already printed on this page: {numbers}. If you tick them, after cancelling they stay retired — never given to anybody else — and must be pulled out of the pile.",
       "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
+      "registrationsCancelledPrinted": "Printed numbers retired just now: {numbers}. Pull them out of the pile — they go to nobody else.",
       "searchHelp": "Search by name, with or without Romanian diacritics.",
       "resendShort": "Resend",
       "resendQr": "Resend QR",
@@ -450,7 +454,8 @@
       "bibMarkUnprinted": "The bib is not printed",
       "bibsPrintedCount": "Bibs: {printed} of {total} printed — confirmed registrations only",
       "bibsVoid": "Printed numbers belonging to cancelled or expired registrations — pull them out of the pile ({count}):",
-      "bibsVoidLink": "Number {number}: {name}, {status} on {date}",
+      "bibsVoidCancelled": "Number {number}: {name}, registration cancelled on {date}",
+      "bibsVoidExpired": "Number {number}: {name}, registration expired on {date}",
       "bibVoid": "Bib {number} printed — pull it from the pile",
       "bibsDownloadUnprinted": "Download the unprinted bibs ({count})",
       "bibsDownloadAll": "Download every bib ({count})",

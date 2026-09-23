@@ -105,7 +105,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
   });
 
   /**
-   * §306 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
+   * §308 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
    * surprise. The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost
    * deja printat!"
    *
@@ -164,10 +164,18 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.getByRole("menuitem", { name: "Marchează BID-ul ca printat" }).click();
     await page.waitForURL(/saved=bibsPrinted/);
 
+    // The bulk cancel names the printed number among the rows it shows, before any press. (The
+    // mark returns to the registration's own page, so back to the list for it.)
+    await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
+    await hydrated(page);
+    await page.locator("summary", { hasText: "Anulează înscrierile bifate" }).click();
+    await expect(page.locator("#main").getByTestId("bulk-cancel-printed")).toContainText(`deja tipărite: ${bib}.`);
+
     // Cancel, and be told about the paper before the press.
     await page.goto(detailUrl);
     await hydrated(page);
-    await page.locator('[name="reason"]').fill("nu mai vine");
+    // The cancel's reason; the erase panel has a `reason` of its own, folded away.
+    await page.getByRole("textbox", { name: "Motivul" }).fill("nu mai vine");
     await page.getByRole("button", { name: "Anulează înscrierea" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText(`Numărul ${bib} e deja tipărit`);
@@ -192,11 +200,19 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toHaveCount(1);
     await expect(page.getByTestId("desk-void")).toContainText("Înscriere anulată pe");
 
-    // The list's bibs panel names the number as a link to the row.
+    // The list's bibs panel names the number, whose it was and what happened, as one visible
+    // link to the row — readable on a phone, not hidden in a tooltip.
     await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
-    const voidLine = page.getByTestId("registrations-void-bibs");
+    const voidLine = page.locator("#main").getByTestId("registrations-void-bibs");
     await expect(voidLine).toContainText("de scos din teanc");
-    await voidLine.getByRole("link", { name: bib, exact: true }).click();
+    await voidLine.getByRole("link", { name: `Numărul ${bib}: ${name}, înscriere anulată pe` }).click();
     await expect(page).toHaveURL(detailUrl.replace(/\?.*$/, ""));
+
+    // The banner a bulk cancel returns to names the printed numbers it voided, as the action
+    // writes them into the address — and only numbers, whatever else the address carries.
+    await page.goto(`/ro/admin/registrations?eventId=${eventId}&saved=registrationsCancelled&cancelled=1&failed=0&voided=${bib},x`);
+    await expect(page.locator("#main").getByTestId("registrations-cancelled-voided")).toHaveText(
+      `Numere deja tipărite, retrase acum: ${bib}. Scoate-le din teanc — nu se dau altcuiva.`,
+    );
   });
 });

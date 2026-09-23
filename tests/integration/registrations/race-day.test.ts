@@ -373,7 +373,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §306 — a cancelled runner is found by their number, and by nothing else.
+   * §308 — a cancelled runner is found by their number, and by nothing else.
    *
    * A settled number is never reused (§173), so "who is 27" has one answer at the event after
    * 27 cancelled — and a volunteer holding the bib somebody just handed over must get that
@@ -401,7 +401,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §306 — the exception BR-REQ-037-08 criterion 4 names is a **settled** number. A provisional
+   * §308 — the exception BR-REQ-037-08 criterion 4 names is a **settled** number. A provisional
    * one is printed nowhere, so a row that is over never answers to it — including the lapsed
    * declaration hold, whose sweep leaves the provisional column set.
    */

@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -41,6 +42,49 @@ export const BIB_RANGE = { threeDigits: 999, fourDigits: 9999 } as const;
 const ceilingFor = (start: number) => Math.max(start + BIB_RANGE.fourDigits, BIB_RANGE.fourDigits);
 
 /**
+ * The settled numbers of registrations that were **erased** at this event (`DECISIONS.md` §308).
+ *
+ * A number is never reissued (§173), and every draw in this file learns which numbers are taken
+ * by reading the ones rows wear. Erasing a registration (BR-REQ-037-06) deletes its row, and with
+ * it the only place its number was written — so an erased 27 was the lowest free number again,
+ * and the next confirmation drew it while the bib printed for the erased entry was still in the
+ * club's pile and the email saying "27" was still in somebody's inbox.
+ *
+ * The number survives in the erasure's own audit row: `admin-service.ts#eraseRegistration`
+ * writes the event, the number and whether it was printed — never who — into a table that is
+ * insert-only and outlives the deletion by design. This reads it back, and every draw adds it to
+ * what is taken. Every erased settled number, printed or not: the runner was emailed it either
+ * way, which is the same reason a cancelled number stays taken whether or not it reached a
+ * printer. No migration: the fact already had a home that no deletion reaches.
+ *
+ * **Read after the rows, never before**, by every caller. The erasure commits its audit row
+ * before the transaction that deletes the row begins, so a reader whose snapshot no longer sees
+ * the row necessarily sees the audit row; the other order leaves a window in which the number is
+ * in neither place. No index serves this and none is needed at a club's scale: the filter on
+ * `action` discards nearly every row of a table that holds the staff's own presses. The number is
+ * retired for as long as its audit row is kept (three years, `jobs/retention.ts`), which is far
+ * longer than any event's draws last after an erasure made before it.
+ */
+export async function erasedBibNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number[]> {
+  const rows = await db
+    .select({ number: sql<number>`(${auditLogs.metadataJson} ->> 'bibNumber')::integer`.mapWith(Number) })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.action, "registration.deleted_by_staff"),
+        sql`${auditLogs.metadataJson} ->> 'eventId' = ${eventId}`,
+        // Digits only before the cast: this sits on every allocation's path, and a row that was
+        // somehow written otherwise must be skipped, never turn every registration into an error.
+        sql`${auditLogs.metadataJson} ->> 'bibNumber' ~ '^[0-9]{1,5}$'`,
+      ),
+    );
+  return rows.map((row) => row.number);
+}
+
+/**
  * The next free number at this event, counting up from the event's own start (§173, reversing
  * §94).
  *
@@ -55,9 +99,10 @@ const ceilingFor = (start: number) => Math.max(start + BIB_RANGE.fourDigits, BIB
  *
  * What does **not** change: a number once given is never taken back or reissued, so a bib
  * printed on Friday is still right on Sunday; a cancelled registration keeps its number, which
- * is how two people avoid both wearing 17; and the whole draw happens under the event row's
- * lock, the same serialization point capacity uses (§10.6), so two confirmations cannot reach
- * the same free number.
+ * is how two people avoid both wearing 17; an erased one's stays taken through its audit row
+ * (`erasedBibNumbers`, §308), because "lowest free" would otherwise go straight back to it; and
+ * the whole draw happens under the event row's lock, the same serialization point capacity uses
+ * (§10.6), so two confirmations cannot reach the same free number.
  *
  * A gap is left where a number was released or typed by hand out of order, and the next
  * registration fills it — "the lowest free number at or above the start" rather than "the last
@@ -88,6 +133,8 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
     if (row.number !== null) taken.add(row.number);
     if (row.provisional !== null) taken.add(row.provisional);
   }
+  // And the numbers erased rows wore (§308), after the rows — `erasedBibNumbers` says why.
+  for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
   // The caller inside a transaction that already holds the event row usually passes the start;
   // read it when it did not, so nothing has to remember to.
@@ -136,6 +183,9 @@ export async function pickProvisionalBibNumber<T extends Record<string, unknown>
     if (row.final !== null) taken.add(row.final);
     if (row.provisional !== null) taken.add(row.provisional);
   }
+  // An erased row's final number is taken for ever too (§308): a provisional 27 handed out
+  // after the erasure would be promoted to a final 27 the moment its holder confirmed.
+  for (const number of await erasedBibNumbers(tx, eventId)) taken.add(number);
 
   const start =
     startNumber ??
@@ -272,7 +322,9 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
     .select({ number: registrations.bibNumber })
     .from(registrations)
     .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.bibNumber)));
-  const taken = new Set(worn.map((row) => row.number as number));
+  // Erased registrations' numbers too (§308): the recompaction runs from the band's start, so
+  // it is the one pass certain to reach an erased 27 if nothing said it was taken.
+  const taken = new Set([...worn.map((row) => row.number as number), ...(await erasedBibNumbers(tx, input.eventId))]);
 
   const settled: SettledBib[] = [];
   let candidate = input.bibStartNumber;
@@ -429,6 +481,8 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
     if (row.bibNumber !== null) taken.add(row.bibNumber);
     if (row.provisional !== null) taken.add(row.provisional);
   }
+  // Nor an erased registration's number (§308): offering it would be offering a refusal.
+  for (const number of await erasedBibNumbers(db, eventId)) taken.add(number);
   // From the event's own band unless the caller asked from somewhere (§173): suggesting 1, 2, 3
   // at a race whose numbers start at 500 offers numbers nobody would print.
   const start =
@@ -511,7 +565,7 @@ export async function countBibs<T extends Record<string, unknown>>(
   return { total: row?.total ?? 0, unprinted: row?.unprinted ?? 0 };
 }
 
-/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §306). */
+/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §308). */
 export type VoidBib = {
   id: string;
   bibNumber: number;
@@ -522,7 +576,7 @@ export type VoidBib = {
 };
 
 /**
- * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §306; the
+ * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §308; the
  * owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
  * printat!").
  *

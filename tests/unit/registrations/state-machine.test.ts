@@ -44,7 +44,7 @@ describe("registration state machine", () => {
   });
 
   /**
-   * §306 — the terminal states are exactly the complement of the active ones, so a status added
+   * §308 — the terminal states are exactly the complement of the active ones, so a status added
    * later cannot fall between "holds or wants a place" and "is over": a void bib is one on a
    * terminal row, and a row that is neither would be a bib nobody lists.
    */

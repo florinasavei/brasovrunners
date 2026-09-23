@@ -99,7 +99,7 @@ export function rowVerbsFor(
     printed, and only for whoever may manage registrations: the sheet is a read that the
     Organizer has too (§289), and this is the club's record of having put it on paper.
 
-    And only while CONFIRMED (§306). A cancelled registration keeps its settled number and its
+    And only while CONFIRMED (§308). A cancelled registration keeps its settled number and its
     printed mark — that is what makes the bib *void* and worth listing — but `setBibPrinted`
     refuses any row the sheet would not print, so offering the mark here was §289's lesson over
     again: a menu item whose service answers NOT_FOUND. The void mark is read, on the list's

@@ -368,6 +368,8 @@
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
           "checkin_undone": "Prezență anulată",
+          "bibs_printed": "BID marcat ca printat",
+          "bibs_unprinted": "BID marcat ca neprintat",
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
         }
       },
@@ -401,7 +403,9 @@
       "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup.",
       "bulkCancelAction": "Anulează cele bifate",
       "bulkCancelPending": "Se anulează…",
+      "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
+      "registrationsCancelledPrinted": "Numere deja tipărite, retrase acum: {numbers}. Scoate-le din teanc — nu se dau altcuiva.",
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR",
@@ -450,7 +454,8 @@
       "bibMarkUnprinted": "BID-ul nu e printat",
       "bibsPrintedCount": "BID-uri: {printed} din {total} printate — doar înscrierile confirmate",
       "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
-      "bibsVoidLink": "Numărul {number}: {name}, {status} pe {date}",
+      "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată pe {date}",
+      "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată pe {date}",
       "bibVoid": "BID {number} tipărit — de retras",
       "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
       "bibsDownloadAll": "Descarcă toate BID-urile ({count})",

@@ -14,8 +14,9 @@ import { findParticipantByCanonicalEmail } from "@/modules/participants/reposito
 import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
+import { erasedBibNumbers } from "./bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
-import { canTransition, isActiveStatus } from "./domain/state-machine";
+import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import {
   findEventForAllocation,
   findRegistrationByEventAndParticipant,
@@ -411,23 +412,62 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
       "this registration is confirmed and already has a race number; it cannot be changed",
     );
   }
+  /*
+    A registration that is over takes no number change at all (§308; BR-REQ-060-01 — the server
+    says it, not the missing field).
+
+    Its settled number is retired, not free (§173): clearing it or replacing it would hand 27 back
+    to the draw while the bib printed for it is still in the pile, and the desk verb that reaches
+    here is every staff role's. The desk and the registration's page draw no number field on such
+    a row, and that is the interface agreeing with this line rather than standing in for it. A
+    terminal row with no number is refused too: a number given to nobody is a number retired for
+    nothing.
+  */
+  if (isTerminalStatus(current.status)) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this registration is ${current.status.toLowerCase()}; its race number is retired and cannot be changed`,
+    );
+  }
+  /*
+    And a number that is on paper stays on it, whatever the status (§308). The one way to be
+    here with a printed mark is a cancelled entry that restarted — it carries its number and its
+    mark back into the queue — and moving that number would leave the printed bib pointing at
+    nobody, exactly as clearing it on the cancelled row would have.
+  */
+  if (current.bibNumber !== null && current.bibPrintedAt !== null) {
+    throw new DomainError("VALIDATION_ERROR", "this race number is already printed; it cannot be changed");
+  }
 
   let updated: Registration;
   try {
-    [updated] = await db
-      .update(registrations)
-      /*
-        Setting a number by hand **settles** it, so the provisional one goes with it (§230).
+    updated = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(registrations)
+        /*
+          Setting a number by hand **settles** it, so the provisional one goes with it (§230).
 
-        §220 already says the recompaction closes around a number given by hand; it only skips
-        rows that have a final number, so a row left holding both columns would keep a
-        provisional number reserved to somebody who no longer needs it — a hole in the
-        sequence, which is the exact failure §220 fixed in the bulk sweeps. One runner, one
-        number, whichever verb produced it.
+          §220 already says the recompaction closes around a number given by hand; it only skips
+          rows that have a final number, so a row left holding both columns would keep a
+          provisional number reserved to somebody who no longer needs it — a hole in the
+          sequence, which is the exact failure §220 fixed in the bulk sweeps. One runner, one
+          number, whichever verb produced it.
+        */
+        .set({ bibNumber, provisionalBibNumber: null, updatedAt: now })
+        .where(eq(registrations.id, registrationId))
+        .returning();
+      /*
+        Nor the number of a registration that was erased here (§308). The unique index cannot
+        say it — the row that wore 27 is gone — so the erasure's audit row does, read **after**
+        the write, inside it: if the erased row still existed when the UPDATE ran, the index
+        refused it; if it was already gone, the audit row was committed before it went, and
+        this read sees it and rolls the write back.
       */
-      .set({ bibNumber, provisionalBibNumber: null, updatedAt: now })
-      .where(eq(registrations.id, registrationId))
-      .returning();
+      if (bibNumber !== null && (await erasedBibNumbers(tx, current.eventId)).includes(bibNumber)) {
+        throw new DomainError("CONFLICT", `number ${bibNumber} was worn by an erased registration at this event and stays retired`);
+      }
+      return row;
+    });
   } catch (error) {
     const message = error instanceof Error ? `${error.message} ${String((error as { cause?: unknown }).cause ?? "")}` : "";
     if (/registrations_event_bib_number_unique/.test(message)) {
@@ -576,7 +616,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   const cancelled = await unregister(db, event, registrationId, "ADMIN", now);
 
   /*
-    A printed bib going void is written into the row's own record (§306; the owner: "trebuie sa
+    A printed bib going void is written into the row's own record (§308; the owner: "trebuie sa
     avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja printat!").
 
     The number stays retired (§173) and the printed mark stays on the row, so `voidBibsFor`
@@ -600,6 +640,46 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   });
 
   return cancelled;
+}
+
+/**
+ * Cancel several registrations with one reason (§67): the bulk form on the registrations list,
+ * which on race morning is the path an Administrator reaches for — and so the one most likely to
+ * cancel somebody whose bib is already printed (§308).
+ *
+ * Each row goes through `cancelRegistrationByStaff`, once: the same guard, the same allocator,
+ * the same audit row carrying the printed number. A row that refuses is counted and the rest
+ * continue, as the bulk erase does: a batch that stops at the first surprise leaves the club not
+ * knowing what happened.
+ *
+ * What it adds is the answer the saved banner needs — **which printed numbers this press has just
+ * made void**, lowest first, read from each cancelled row itself (a cancellation keeps the number
+ * and the mark, §173) — so the banner names the bibs to pull out of the pile instead of leaving
+ * the club to notice them on the bibs panel afterwards.
+ */
+export async function bulkCancelRegistrationsByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationIds: readonly string[],
+  reason: string,
+  now: Date,
+): Promise<{ cancelled: number; failed: number; voided: number[] }> {
+  assertAdministrator(actor);
+
+  let cancelled = 0;
+  let failed = 0;
+  const voided: number[] = [];
+  for (const registrationId of registrationIds) {
+    try {
+      const row = await cancelRegistrationByStaff(db, actor, registrationId, reason, now);
+      cancelled += 1;
+      if (row.bibNumber !== null && row.bibPrintedAt !== null) voided.push(row.bibNumber);
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      failed += 1;
+    }
+  }
+  return { cancelled, failed, voided: voided.sort((a, b) => a - b) };
 }
 
 /**
@@ -766,14 +846,16 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   }
 
   /*
-    The number goes with the row, and this row is where it survives (§306).
+    The number goes with the row, and this row is where it survives (§308).
 
-    `pickBibNumber` reads the numbers live rows wear, so erasing a registration frees its
-    settled number for the next runner — which is right for a number nobody printed and is the
-    one way a printed 27 can end up on two chests: the void bib in the pile and a fresh one.
-    Until the draw also reads retired numbers (a decision recorded in §306 as still owed), the
-    event, the number and whether it was on paper are written here so the fact outlives the
-    deletion, as the deletion itself does. An event id and a number are not who somebody was.
+    Every draw learns which numbers are taken from the rows that wear them, so the deleted row
+    would take its settled number out of that set — and "the lowest free number" would hand a
+    printed 27 to the next runner while the void bib was still in the pile. The event, the number
+    and whether it was on paper are written here instead, and `bibs.ts#erasedBibNumbers` reads
+    them back into every draw, the hand-typed number and the free-number hints. Written **before**
+    the delete, and committed before it when `db` is the pool: that order is what lets a draw
+    that no longer sees the row be certain to see this. An event id and a number are not who
+    somebody was.
   */
   const worn =
     current.bibNumber !== null
