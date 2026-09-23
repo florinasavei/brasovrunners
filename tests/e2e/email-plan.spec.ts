@@ -150,3 +150,53 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("");
   });
 });
+
+/**
+ * BR-REQ-033-02 criterion 12's rule applied to every message a participant receives
+ * (2026-09-22; the owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare"):
+ * the club's hidden copy of the emails to participants is set on the same page, named back in
+ * force above the boxes, and priced in the plan's forecast — one address is one more message on
+ * each of the runner's five, so the cost of a registration moves by five and the forecast says
+ * which part of it the copies are. Desktop only, for the same one-row reason as the blocks above.
+ */
+test.describe("the club's hidden copy of the emails to participants", () => {
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
+  // Set and cleared again, so the next test on this database starts with no hidden copy.
+  test("an Administrator sets it, the sentence in force names it, and the forecast counts it", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/emails");
+    const main = page.locator("#main");
+    const panel = main.getByTestId("club-notices");
+    const forecast = main.getByTestId("email-forecast");
+    const box = panel.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)");
+
+    // Nothing hidden yet: the forecast prints the plain cost and no second sentence.
+    await expect(forecast).toContainText(/costă circa [0-9]+ mesaje/);
+    await expect(forecast).not.toContainText("copiile ascunse");
+    const before = Number((await forecast.innerText()).match(/costă circa ([0-9]+) mesaje/)?.[1]);
+    expect(before).toBeGreaterThan(0);
+
+    // Only this box is touched; the other lists keep whatever they held, so the row is left as
+    // it was found. The same mailbox twice, in two spellings, is one mailbox.
+    await box.fill("arhiva@example.org, Arhiva@example.org");
+    await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+
+    await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
+    await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
+    await expect(box).toHaveValue("arhiva@example.org");
+    // One address on each of the runner's five messages: the cost moved by five, and the
+    // forecast says so next to the plan's figures, where the club decides what it can afford.
+    await expect(forecast).toContainText(`costă circa ${before + 5} mesaje`);
+    await expect(forecast).toContainText("Din ele, 5 sunt copiile ascunse");
+
+    // And back to none: the sentence in force says so, and the forecast is what it was.
+    await box.fill("");
+    await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(panel.getByText("Copie ascunsă la emailurile către participanți: —.")).toBeVisible();
+    await expect(forecast).toContainText(`costă circa ${before} mesaje`);
+    await expect(forecast).not.toContainText("copiile ascunse");
+  });
+});

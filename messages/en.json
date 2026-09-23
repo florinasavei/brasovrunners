@@ -1226,7 +1226,7 @@
             "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To” and, if somebody should get a copy, under “Copy (Cc)” → Save. Changed here at any time, with no redeploy.",
+            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
@@ -1789,7 +1789,7 @@
         "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared.",
         "forecast": "A registration carried through to confirmation costs about {count} messages; what is left pays for about {left} more registrations.",
         "forecastUnlimited": "A registration carried through to confirmation costs about {count} messages.",
-        "forecastBcc": "Of those, {extra} are the hidden copies ({bcc} addresses on every email to a participant), set under “The club's copies”."
+        "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant."
       },
       "contacts": {
         "title": "Who receives the contact messages",

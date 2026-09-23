@@ -1226,7 +1226,7 @@
             "Tot în Security → App passwords → creează una cu numele „Brașov Runners site” → copiază cele 16 caractere (se arată o singură dată).",
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei o copie pentru cineva, la „Copie (Cc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
+            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         }
@@ -1789,7 +1789,7 @@
         "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
         "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
-        "forecastBcc": "Din ele, {extra} sunt copiile ascunse ({bcc} adrese la fiecare email către participant), setate la „Copiile clubului”."
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
