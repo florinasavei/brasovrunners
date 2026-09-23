@@ -21,14 +21,16 @@ import OnlyForType from "./OnlyForType";
  * `admin/actions.ts#translationFieldsFrom` reads exactly these names back.
  *
  * Only what genuinely differs between the two languages is here: the title, the page address,
- * the two descriptions, the rules, the programme, the checklist and the two search-engine
- * fields. The meeting point, the street address, the difficulty and the cost are one value for
- * the whole event and live in the settings panels (`DECISIONS.md` §36) — they were the same
- * answer typed twice, not a translation.
+ * the two descriptions, the rules, the notes under the programme, the checklist and the two
+ * search-engine fields. The meeting point, the street address, the difficulty and the cost are
+ * one value for the whole event and live in the settings panels (`DECISIONS.md` §36) — they
+ * were the same answer typed twice, not a translation — and so are the programme's timed rows
+ * (§117): the time and the place are one fact, only the label is a translation, so the row
+ * carries both and lives in "Când și unde".
  *
  * **The order is the order somebody writes in** (§260): the title, then the summary that the
- * card and the shares carry, then the full description, then the rules and the programme, then
- * what to bring. Every long text is a fold, and the address and the two search-engine fields
+ * card and the shares carry, then the full description, then the rules and the notes under the
+ * programme, then what to bring. Every long text is a fold, and the address and the two search-engine fields
  * are folded away at the bottom because they are set once and never looked at again.
  *
  * §170 put the description first — "it is what the writer came here to write" — and moved the
@@ -143,22 +145,28 @@ export default async function TranslationFieldsForm({
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
             {t("editor.rulesHelp")}
           </Typography>
-          {/* The programme (§96): kit pickup, briefing, start, cut-offs — folded like the rules.
-              Not on a group run (§111): it follows the type select in the settings panels, and
-              the service stores no programme for one whatever this posts. */}
+          {/* The notes under the programme (§96, §117): the programme itself is the timed rows
+              in "Când și unde" — one list for both languages, one calendar entry each, repeated
+              in the reminder — and this is the free text `EventProgramme` renders beneath them
+              for what does not fit a row. The two carried the same word in two panels far apart
+              and the owner read them as a duplicate ("programul evenimentului e duplicat!"), so
+              the fold says "notes" and the hint says where the rows are. Folded like the rules;
+              the column stays `schedule_json`. Not on a group run (§111): it follows the type
+              select in the settings panels, and the service stores no programme for one
+              whatever this posts. */}
           <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={eventType}>
             <Stack spacing={2}>
               <LazyRichTextEditor
                 name={name("schedule")}
-                label={t("editor.fields.schedule")}
-                summary={t("editor.fields.schedule")}
-                emptyHint={t("editor.rulesEmpty")}
+                label={t("editor.fields.scheduleNotes")}
+                summary={t("editor.fields.scheduleNotes")}
+                emptyHint={t("editor.bodyEmpty")}
                 initialBody={translation.scheduleJson}
                 accessibleSuffix={translation.locale.toUpperCase()}
                 labels={richTextEditorLabels(rt)}
               />
               <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-                {t("editor.scheduleHelp")}
+                {t("editor.scheduleHelp", { panel: t("editor.panels.when"), section: t("editor.programmeSection") })}
               </Typography>
             </Stack>
           </OnlyForType>

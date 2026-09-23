@@ -267,7 +267,8 @@ export default async function EventFieldsForm({
           />
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
-              block. */}
+              block. The caption under the rows names the notes fold in the language panels, so
+              the two are read as one programme and its notes, not two programmes. */}
           <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={initialType}>
             <Stack spacing={1}>
               <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
@@ -290,6 +291,9 @@ export default async function EventFieldsForm({
                   empty: t("editor.programmeRows.empty"),
                 }}
               />
+              <Typography variant="caption" color="text.secondary">
+                {t("editor.programmeNotesHint", { panel: t("editor.contentSection"), fold: t("editor.fields.scheduleNotes") })}
+              </Typography>
             </Stack>
           </OnlyForType>
         </Stack>
