@@ -78,3 +78,17 @@ export function upcomingRegistrationOpening(event: RegistrationWindowInput, now:
   if (registrationState(event, now) !== "NOT_YET_OPEN") return null;
   return event.registrationOpensAt ?? event.publishedAt;
 }
+
+/**
+ * Until when an open registration stays open (`DECISIONS.md` §308): the instant
+ * `registrationState` turns `CLOSED` — the stated closing, or the event's start when none is
+ * stated (BR-REQ-011-01 criterion 3) — while the state is `OPEN`, and null otherwise. The
+ * listing card says it ("Înscrieri deschise până pe 14 nov., 23:59"); the owner: "I also need
+ * to show when registrations are closing on the event card". Read through the same expression
+ * `registrationState` uses, so the date on the card and the moment the button goes away can
+ * never disagree.
+ */
+export function openRegistrationClosing(event: RegistrationWindowInput, now: Date): Date | null {
+  if (registrationState(event, now) !== "OPEN") return null;
+  return event.registrationClosesAt ?? event.startsAt;
+}

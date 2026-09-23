@@ -18,6 +18,7 @@ import {
   summariseRegistrationsForAdmin,
   listEventsWithRegistrations,
   listRegistrationsForAdmin,
+  listResubmissionMarks,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
@@ -25,7 +26,7 @@ import {
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
+import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -43,7 +44,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { countBibs } from "@/modules/registrations/bibs";
+import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import {
@@ -54,7 +55,7 @@ import {
   promoteRegistrationAction,
   setBibPrintedAction,
 } from "../actions";
-import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 
@@ -95,6 +96,9 @@ function isRegistrationStatus(value: string | undefined): value is RegistrationS
  * cancelling several at once is the bulk form below the table, and everything about one person —
  * rename, cancel, erase — is on their own page, which is where §15.11's four verbs live in full.
  */
+/** Present for a screen reader, absent on screen (the usual clip pattern). */
+const VISUALLY_HIDDEN = { position: "absolute", width: 1, height: 1, p: 0, m: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
+
 export default async function AdminRegistrationsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -104,7 +108,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided } = current;
+  // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
+  // and commas only, whatever the address bar says, and a race's worth at most.
+  // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
+  const voidedRaw: string = Array.isArray(voided) ? (voided as string[]).join(",") : (voided ?? "");
+  const voidedNow = voidedRaw.split(",").filter((part) => /^\d{1,5}$/.test(part)).slice(0, 100);
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -133,15 +142,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     The events come first now, because the default filter is derived from them (§178): with no
     eventId in the query the list is about the club's featured event, which is the one anybody
     opening this page is asking about. "Toate evenimentele" stays one press away as `all`.
+
+    Unless a name was typed and no event chosen (§312): then every event, because somebody
+    searching for a person must not be told "nobody" by a filter they never set.
   */
   const [volume, events] = await Promise.all([
     readEmailVolumeToday(db, new Date()),
     listEventsWithRegistrations(db),
   ]);
-  const eventFilter = defaultEventFilter(eventId, events);
+  const eventFilter = defaultEventFilter(eventId, events, q);
   filters.eventId = eventFilter.eventId;
+  const featuredEvent = events.find((event) => event.featured) ?? null;
 
-  const [rows, total, summary, bibs] = await Promise.all([
+  const [rows, total, summary, bibs, voidBibs] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -162,10 +175,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       the club's database bills compute time (§68).
     */
     filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
+    /*
+      The printed bibs that belong to nobody any more (§311) — the numbers themselves, because
+      the panel names each one as a link and there are a handful per race. `countBibs` cannot
+      carry them: its scope is the sheet's, which is confirmed rows only, and that exclusion is
+      the rule this list is the other half of.
+    */
+    filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
   ]);
 
-  const t = await getTranslations("Admin");
-  const format = await getFormatter();
+  /*
+    Who filled the form again, for the rows on this page only (§312): one grouped read of the
+    audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
+    twenty-five. Beside the translations, which it does not depend on.
+  */
+  const [resubmissions, t, format] = await Promise.all([
+    listResubmissionMarks(db, rows.map((row) => row.id)),
+    getTranslations("Admin"),
+    getFormatter(),
+  ]);
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -181,6 +209,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
+  /*
+    The export's query names the scope the screen resolved, never the automatic one (§312,
+    §15.10): the file is the set that was on screen when the button was pressed, even if the
+    club features another event before the link is followed. The route runs the same
+    `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
+  */
+  const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
   const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
 
   /*
@@ -215,6 +250,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
+  // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
+  const printedOnPage = printedNumbersACancelWouldVoid(rows);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -258,6 +295,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("registrations.notOnPublicList")}
             />
           )}
+          {/* The form filled again with the same address (§312): how often and when last, in the
+              chip's own words, because a `title` never shows on a phone. The sentence with the
+              full date is the hover text; the registration's timeline has each one. Shown to
+              whoever reads the list, the Organizer too (§289) — it changes nothing. */}
+          {(() => {
+            const mark = resubmissions.get(row.id);
+            if (!mark) return null;
+            return (
+              <Chip
+                size="small"
+                variant="outlined"
+                data-testid="resubmitted-chip"
+                label={t("registrations.resubmittedChip", {
+                  count: mark.count,
+                  date: format.dateTime(mark.lastAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+                })}
+                title={t("registrations.resubmittedHint", {
+                  count: mark.count,
+                  date: format.dateTime(mark.lastAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+                })}
+              />
+            );
+          })()}
         </Stack>
       ),
     },
@@ -287,6 +347,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
+      // What "2*", a bold "1" and the tick mean (§313; the owner: "not sure what that is!") — a
+      // tap-friendly hint, because the cell's own `title` never shows on a phone.
+      hint: t("registrations.bibColumnHint"),
       sortable: true,
       /*
         Whichever number the runner has (§214). Before the window closes it is the provisional
@@ -314,7 +377,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             }}
           >
             {number.value}
-            {number.settled ? "" : "*"}
+            {number.settled ? null : (
+              <>
+                <span aria-hidden="true">*</span>
+                {/* The asterisk, said in a word to a screen reader, which would otherwise read "star". */}
+                <Box component="span" sx={VISUALLY_HIDDEN}>{` ${t("registrations.bibProvisionalShort")}`}</Box>
+              </>
+            )}
             {/*
               Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
               reason the editor's toolbar has words on it: the printer emoji renders as a broken
@@ -383,6 +452,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               cancelled: cancelled ?? "0",
               failed: failed ?? "0",
             })}
+          </Alert>
+        )}
+        {/* The bibs this press has just made void, named where the club is looking (§311). */}
+        {saved === "registrationsCancelled" && voidedNow.length > 0 && (
+          <Alert severity="warning" data-testid="registrations-cancelled-voided" sx={{ mt: 1 }}>
+            {t("registrations.registrationsCancelledPrinted", { numbers: voidedNow.join(", ") })}
           </Alert>
         )}
         {saved === "outboxSent" && (
@@ -526,7 +601,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           */}
           <Button
             component="a"
-            href={`/api/admin/registrations/export?format=xlsx${listQueryString ? `&${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?format=xlsx${exportQueryString ? `&${exportQueryString}` : ""}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
@@ -535,7 +610,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Button>
           <Button
             component="a"
-            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export${exportQueryString ? `?${exportQueryString}` : ""}`}
             variant="text"
             size="small"
             sx={TAP_TARGET}
@@ -557,15 +632,53 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
         Only with an event selected and only when it has numbers: an empty toolbar row would be
         two dead buttons on the screen the club uses most.
+
+        The figures in the aside count **confirmed** registrations only — the sheet's own scope
+        — and the sentence says so, because a cancelled registration keeps its settled number and
+        its printed mark and would otherwise be the silent difference between "5 printed" and
+        the six bibs in the box. Those are the void lines below (§311): one per number, sorted,
+        each a link to the row it belongs to, and the panel stays open while there is one to pull. The panel
+        renders for them even when every confirmed bib is gone, or the line would vanish with the
+        very cancellation that produced it.
       */}
-      {filters.eventId && bibs.total > 0 && (
+      {filters.eventId && (bibs.total > 0 || voidBibs.length > 0) && (
         <Panel
           title={t("panels.bibs")}
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
-          defaultOpen={bibs.unprinted > 0}
+          defaultOpen={bibs.unprinted > 0 || voidBibs.length > 0}
           data-testid="registrations-bibs"
         >
+        {/*
+          One line per bib, and the whole line is the link (§311): the number, whose it was, and
+          what happened to it when — visible, because a `title` never shows on a phone and is not
+          what a screen reader reads as the link's name. The state is said in the message's own
+          language, one key per state, rather than through the backoffice's Romanian enum labels
+          (§35), because here it is a word inside an English sentence.
+        */}
+        {voidBibs.length > 0 && (
+          <Alert severity="warning" data-testid="registrations-void-bibs" sx={{ mb: bibs.total > 0 ? 1.5 : 0 }}>
+            {t("registrations.bibsVoid", { count: voidBibs.length })}
+            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+              {voidBibs.map((bib) => (
+                <Box
+                  component="li"
+                  key={bib.id}
+                  sx={{ fontVariantNumeric: "tabular-nums", "& a": { display: "inline-flex", alignItems: "center", ...TAP_TARGET } }}
+                >
+                  <Link href={{ pathname: "/admin/registrations/[id]", params: { id: bib.id } }}>
+                    {t(bib.status === "CANCELLED" ? "registrations.bibsVoidCancelled" : "registrations.bibsVoidExpired", {
+                      number: bib.bibNumber,
+                      name: bib.registeredName,
+                      date: format.dateTime(bib.voidedAt, { dateStyle: "medium" }),
+                    })}
+                  </Link>
+                </Box>
+              ))}
+            </Box>
+          </Alert>
+        )}
+        {bibs.total > 0 && (
         <Stack
           direction="row"
           spacing={1}
@@ -623,6 +736,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
         </Stack>
+        )}
         </Panel>
       )}
 
@@ -759,13 +873,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             defaultValue={q ?? ""}
             sx={{ minWidth: 260, flexGrow: 1 }}
           />
+          {/*
+            "Let the page decide" is an option of its own (§312), the empty value, and it is what
+            the select shows and submits until somebody picks an event. Before, the select
+            submitted the featured event's id on every press of "Filtrează", so the default
+            became a choice nobody had made — and a name search stayed inside it. Its words say
+            what it means *on this render*: the featured event, or every event while a name is
+            being searched. `displayEmpty` so the empty value shows its words rather than a blank.
+          */}
           <TextField
             select
             name="eventId"
             label={t("nav.events")}
             defaultValue={eventFilter.selected}
+            slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
             sx={{ minWidth: 220 }}
           >
+            {featuredEvent && (
+              <MenuItem value={AUTOMATIC}>
+                {eventFilter.searchesEverywhere
+                  ? t("registrations.filterAutoSearch")
+                  : t("registrations.filterAutoFeatured", { event: featuredEvent.title ?? featuredEvent.id })}
+              </MenuItem>
+            )}
             <MenuItem value={ALL_EVENTS}>{t("registrations.filterAll")}</MenuItem>
             {events.map((event) => (
               <MenuItem key={event.id} value={event.id}>
@@ -821,6 +951,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Stack>
       </Box>
       </Panel>
+
+      {/* The scope a name search widened to, said where the results start (§312): one line, so
+          the filter that used to be silent is never silent the other way either. */}
+      {eventFilter.searchesEverywhere && (
+        <Alert severity="info" data-testid="registrations-search-everywhere">
+          {t("registrations.searchEverywhere")}
+        </Alert>
+      )}
 
       <AdminTable
         caption={t("registrations.tableCaption")}
@@ -960,6 +1098,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
+                // A printed bib is named before the press (§311): after this the number stays
+                // retired and the paper has to come out of the pile.
+                const printedWarning =
+                  row.bibPrintedAt !== null && row.bibNumber !== null
+                    ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} `
+                    : "";
                 items.push({
                   kind: "submit",
                   icon: "cancel",
@@ -968,7 +1112,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   color: "error",
                   confirm: {
                     title: t("registrations.cancel"),
-                    body: t("registrations.cancelBody"),
+                    body: `${printedWarning}${t("registrations.cancelBody")}`,
                     confirmLabel: t("registrations.cancel"),
                   },
                 });
@@ -1073,6 +1217,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.bulkCancelHelp")}
               </Typography>
+              {/*
+                The printed bibs this form could make void, named before the press (§311) — the
+                single cancel's dialog does it per row, and this is the race-morning path. The ticked
+                set exists only in the browser (plain checkboxes, no client island to count them),
+                so the sentence names the printed numbers among the rows on this page, which is
+                every row the form can reach; the banner afterwards names the ones it did void.
+              */}
+              {printedOnPage.length > 0 && (
+                <Alert severity="warning" data-testid="bulk-cancel-printed">
+                  {t("registrations.bulkCancelPrinted", { numbers: printedOnPage.join(", ") })}
+                </Alert>
+              )}
               <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
               <Box>
                 <SubmitButton

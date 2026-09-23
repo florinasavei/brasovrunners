@@ -11,7 +11,7 @@ import { Fragment, type ReactNode } from "react";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { readCoHosts } from "../domain/co-hosts";
 import { distanceInKm, isStravaLink, takesRegistrations } from "../domain/event-type";
-import { registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
+import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 
@@ -223,12 +223,16 @@ export default async function EventFacts({
     // Two plain lines on a card: no labels, the state of registration as the last piece —
     // and, while the window is ahead, the date it opens rather than "not yet" (§146) — read
     // through the one helper the feed reads it through, never a formula of this file's own.
+    // And while it is open, until when (§308) — the same helper family, so the card's date is
+    // the instant the button goes away.
     const opensAt = upcomingRegistrationOpening(event, now);
-    const registrationPiece =
-      opensAt
-        ? t("cta.opensOnShort", {
-            date: format.dateTime(opensAt, { timeZone: event.timezone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
-          })
+    const closesAt = openRegistrationClosing(event, now);
+    const shortDate = (date: Date) =>
+      format.dateTime(date, { timeZone: event.timezone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    const registrationPiece = opensAt
+      ? t("cta.opensOnShort", { date: shortDate(opensAt) })
+      : closesAt
+        ? t("cta.openUntilShort", { date: shortDate(closesAt) })
         : t(`registrationState.${state}`);
     const second = [
       ...where,

@@ -1,3 +1,6 @@
+import type { RegistrationStatus } from "@/db/schema/registrations";
+import { canTransition } from "./state-machine";
+
 /**
  * Which number a runner actually has, and whether it can still move (`DECISIONS.md` §214).
  *
@@ -25,4 +28,22 @@ export function raceNumberOf(row: {
   if (row.bibNumber !== null) return { value: row.bibNumber, settled: true };
   if (row.provisionalBibNumber !== null) return { value: row.provisionalBibNumber, settled: false };
   return null;
+}
+
+/**
+ * The printed numbers a cancellation among these rows would make void (`DECISIONS.md` §311),
+ * lowest first: a settled number, a printed mark, and a status that can still be cancelled.
+ *
+ * What the registrations list names beside its bulk cancel **before** the press. The ticked set
+ * lives only in the browser — the checkboxes are plain inputs of a server-rendered form, and no
+ * client island is spent on counting them — so the sentence is about the rows the form is showing,
+ * which is every row it could cancel; the saved banner afterwards names the ones it actually did.
+ */
+export function printedNumbersACancelWouldVoid(
+  rows: readonly { status: RegistrationStatus; bibNumber: number | null; bibPrintedAt: Date | null }[],
+): number[] {
+  return rows
+    .filter((row) => row.bibNumber !== null && row.bibPrintedAt !== null && canTransition(row.status, "CANCELLED"))
+    .map((row) => row.bibNumber as number)
+    .sort((a, b) => a - b);
 }

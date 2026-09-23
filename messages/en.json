@@ -166,6 +166,7 @@
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
+      "openUntilShort": "Registration open until {date}",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -368,7 +369,10 @@
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
           "checkin_undone": "Check-in undone",
-          "list_consent_changed": "Public-list choice changed by the participant"
+          "bibs_printed": "Bib marked as printed",
+          "bibs_unprinted": "Bib marked as not printed",
+          "list_consent_changed": "Public-list choice changed by the participant",
+          "resubmitted": "Registered again with the same address"
         }
       },
       "locale": {
@@ -401,8 +405,17 @@
       "bulkCancelHelp": "Each ticked registration is cancelled separately, with the same reason, and each place goes to the first person on the waiting list. Permanent erasure is never done in bulk.",
       "bulkCancelAction": "Cancel the ticked ones",
       "bulkCancelPending": "Cancelling…",
+      "bulkCancelPrinted": "Numbers already printed on this page: {numbers}. If you tick them, after cancelling they stay retired — never given to anybody else — and must be pulled out of the pile.",
       "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
-      "searchHelp": "Search by name, with or without Romanian diacritics.",
+      "registrationsCancelledPrinted": "Printed numbers retired just now: {numbers}. Pull them out of the pile — they go to nobody else.",
+      "searchHelp": "Search by name, with or without Romanian diacritics — across every event unless you choose one.",
+      "searchEverywhere": "Searching every event — choose one to narrow it down.",
+      "filterAutoFeatured": "The featured event: {event}",
+      "filterAutoSearch": "Every event, for the name search",
+      "resubmittedChip": "Registered again ×{count} · {date}",
+      "resubmittedHint": "The form was sent again with the same address ({count}), last on {date}. Each one is on the registration's timeline.",
+      "resubmittedSent": "Registered again with the same address: {date} ({state}) — we re-sent “{message}”",
+      "resubmittedNothing": "Registered again with the same address: {date} ({state}) — there was nothing to re-send",
       "resendShort": "Resend",
       "resendQr": "Resend QR",
       "sendReminder": "Send the reminder",
@@ -439,6 +452,8 @@
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the race numbers, but nothing here changes a registration: cancelling, erasing, resending an email and the “bib printed” mark are the Administrator’s. On race day you can still confirm on a paper declaration, give a place, set a number and check somebody in — from “Race day”.",
       "columnBib": "Race number (BIB)",
+      "bibColumnHint": "A number with an asterisk (e.g. 2*) is provisional: it can still change until registration closes, then it becomes final, is emailed to the runner and only then printed. A bold number (e.g. 1) is final; the ✓ beside it means it has been printed.",
+      "bibProvisionalShort": "provisional",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
       "bibHeldNow": "Race number: {number} — provisional until registration closes.",
@@ -448,7 +463,11 @@
       "bibPrintedOn": "Bib printed on {date}",
       "bibMarkPrinted": "Mark the bib as printed",
       "bibMarkUnprinted": "The bib is not printed",
-      "bibsPrintedCount": "Bibs: {printed} of {total} printed",
+      "bibsPrintedCount": "Bibs: {printed} of {total} printed — confirmed registrations only",
+      "bibsVoid": "Printed numbers belonging to cancelled or expired registrations — pull them out of the pile ({count}):",
+      "bibsVoidCancelled": "Number {number}: {name}, registration cancelled on {date}",
+      "bibsVoidExpired": "Number {number}: {name}, registration expired on {date}",
+      "bibVoid": "Bib {number} printed — pull it from the pile",
       "bibsDownloadUnprinted": "Download the unprinted bibs ({count})",
       "bibsDownloadAll": "Download every bib ({count})",
       "bibsMarkPrinted": "Mark these {count} as printed",
@@ -535,6 +554,7 @@
       "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
       "cancelRegistrationTitle": "Cancel this registration?",
       "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled.",
+      "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
       "repeatTitle": "Create the editions?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
@@ -1679,7 +1699,8 @@
         "No email arrived, or they cannot find the QR: search by name. If it says “pending”, give them the paper declaration to sign, press “Confirm here”, then “Here”.",
         "Never registered at all: “Add somebody” — name and email; the “is at the desk” tick is already set. They sign the paper declaration, then “Here”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
-        "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”."
+        "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
+        "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in. If it says the number was printed, pull that bib out of the pile — numbers are never reused."
       ],
       "noEvents": "No event with local registration in this period.",
       "event": "Event",
@@ -1729,7 +1750,10 @@
       "guardian": "Minor — parent/guardian: {name}",
       "confirmOnPaper": "Confirm on paper",
       "showBib": "Show the race number (BID)",
-      "bibAlt": "Race number (BID) {number}"
+      "bibAlt": "Race number (BID) {number}",
+      "voidCancelled": "Registration cancelled on {date}",
+      "voidExpired": "Registration expired on {date}",
+      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused."
     },
     "emails": {
       "title": "The emails participants receive",
@@ -1971,6 +1995,7 @@
           "who": "Role: Administrator or Superadministrator.",
           "steps": [
             "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
+            "A name search with no event chosen looks in every event. “Registered again ×2” on a row means the person sent the form twice more with the same address; the registration's timeline says when, what state it was in and which email we re-sent. They learn from that email that they were already registered — the form's screen says nothing, so that nobody can use it to find out who is registered.",
             "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
             "“Staff” (Superadministrator): add people by email and role. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row.",
             "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
@@ -2088,7 +2113,8 @@
     },
     "deliveryNotice": {
       "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
-      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault."
+      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault.",
+      "everyone": "This is the test site: emails really are sent from here, marked “[QA]” in the subject — but a registration made here is not a real one and holds no place in the race."
     },
     "errors": {
       "title": "The registration could not be submitted",

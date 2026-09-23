@@ -8,6 +8,28 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.64-2026-09-23
+
+- **The registrations list says what "2*" means** — a tap-friendly hint on the race-number column: an asterisk is a provisional number, a bold one is final, a tick means printed. **Feature branches create no Vercel deployment** (`vercel.json`): cancelled previews had spent the Hobby plan's hundred a day and blocked the V1.62 release. `DECISIONS.md` §313.
+## BR-V1.63-2026-09-23
+
+- **The club sees a second registration attempt, and a name search looks in every event.** Filling the form again with the same address now leaves a dated line on the registration's timeline ("S-a înscris din nou cu aceeași adresă … — i-am retrimis …", with the state it found) and a "Reînscriere ×N" chip on the list, for the Administrator and the Organizer; the visitor's screen is unchanged. Searching the list by name without choosing an event searches every event and says so in one line, the export follows the screen, and exporting "Toate evenimentele" now works. `DECISIONS.md` §312.
+## BR-V1.62-2026-09-23
+
+- **A printed bib of a cancelled registration is void, and the club can see which.** The registrations list's bibs panel names every printed number whose registration was cancelled or expired, one line each ("Numărul 27: Ana Pop, înscriere anulată pe 12 oct. 2026", the whole line a link to the row), and says its "printed / total" figures count confirmed registrations only. The desk answers a cancelled or expired runner, scanned or typed by number, with a red box first ("Înscriere anulată pe 12 octombrie", "Numărul 27 a fost tipărit — nu se dă. Numerele nu se refolosesc.") and no button. The registration's page wears a red "BID 27 tipărit — de retras" chip and says it on the timeline. Cancelling warns before the press: the single cancel names the printed number, and the bulk cancel names the printed numbers on the page and, afterwards, the ones it just retired. The audit row records the number. The sheet never reprints a void number, in a batch or a range. Nobody can clear or change the number of a registration that is over, or a number already printed. An erased registration's number stays out of every draw, the free-number hints and the typed number. All of it is tested. `DECISIONS.md` §311.
+## BR-V1.61-2026-09-23
+
+- **Spam through the contact form now arrives marked instead of looking like a real message.** A message that gets past every check but looks automated — sent with no anti-bot token while the check is on, or from an address whose domain imitates the club's — still reaches the club's mailbox, with „[posibil spam]" at the front of the subject and a short note under the message saying why, how fast it was sent and which links it holds. The sender sees „Mesajul a plecat" either way and „Reply" still answers them, because a real person whose browser never ran the check looks exactly the same. A Gmail filter on the mark files these away (SETUP.md §38). Ordinary messages are unchanged, to the byte. `DECISIONS.md` §310.
+## BR-V1.60-2026-09-23
+
+- **An invalid field wears an exclamation mark inside the box** — on every form, CSS only: a field the server refused, or one the browser refused once touched or on send (which now also turns its outline red). **"Ești deja înscris" is underlined** in the message re-sent to somebody who fills in the form again. `DECISIONS.md` §309.
+## BR-V1.59-2026-09-23
+
+- **The listing card says until when registration is open.** "Înscrieri deschise până pe 14 nov., 23:59" replaces "Înscrierile sunt deschise" while the window is open — the stated closing, or the event's start when none is stated — read through the same rule that closes registration, so the card's date is the moment the button goes away. `DECISIONS.md` §308.
+- **The listing card's "Descrierea completă" button is quieter** — sentence case, a smaller type, the same 44-pixel tap height. `DECISIONS.md` §308.
+## BR-V1.58-2026-09-23
+
+- **QA sends real mail through the club's domain, and says so.** QA's Mailgun settings moved from the US sandbox (five confirmed recipients) to `mail.<club domain>` with QA's own sending key; the notice on QA's registration form and "check your email" screen now says the mail is real, tagged `[QA]`, and the registration is not, whenever the allowlist carries the star. QA and production share the domain's daily allowance and its webhooks. `DECISIONS.md` §307.
 ## BR-V1.57-2026-09-23
 
 - **The Neon plan is a setting, and `/devs` and the cost table read the database's month against it.** An Administrator states Free or Launch on `/admin/tasks` → Costuri (audited, one row per environment, Free when unset); on Launch the pages show no 100-CU-hour denominator, no 512 MB ceiling and no red — the hours as an estimated charge at $0.106/CU-hour, the storage at $0.35/GB-month, the period's end and the awake hours — and the Neon cost row becomes a usage estimate at this month's pace beside its daily rate, marked an estimate rather than an invoice; on Free everything reads exactly as before. Every rate lives in one dated catalogue, and `/devs` links to the panel for whoever may open it. The December review is now one select, not a deployment. §306.

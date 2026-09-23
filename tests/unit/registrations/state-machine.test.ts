@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { RegistrationStatus } from "@/db/schema/registrations";
-import { allowedFromStatuses, canTransition, isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import {
+  ACTIVE_STATUSES,
+  allowedFromStatuses,
+  canTransition,
+  isActiveStatus,
+  isTerminalStatus,
+  TERMINAL_STATUSES,
+} from "@/modules/registrations/domain/state-machine";
 
 /** AGENTS.md §10.5 — the registration state machine. */
 describe("registration state machine", () => {
@@ -33,6 +40,24 @@ describe("registration state machine", () => {
     ];
     for (const [from, to] of expected) {
       expect(canTransition(from, to), `${from} -> ${to}`).toBe(true);
+    }
+  });
+
+  /**
+   * §311 — the terminal states are exactly the complement of the active ones, so a status added
+   * later cannot fall between "holds or wants a place" and "is over": a void bib is one on a
+   * terminal row, and a row that is neither would be a bib nobody lists.
+   */
+  it("splits every status into active or terminal, with nothing in between", () => {
+    for (const status of ALL) {
+      expect(isActiveStatus(status) !== isTerminalStatus(status), status).toBe(true);
+    }
+    expect([...ACTIVE_STATUSES, ...TERMINAL_STATUSES].sort()).toEqual([...ALL].sort());
+    // And nothing leaves a terminal state except a restart, which never reaches CONFIRMED.
+    for (const from of TERMINAL_STATUSES) {
+      for (const to of ALL) {
+        if (canTransition(from, to)) expect(isActiveStatus(to) && to !== "CONFIRMED", `${from} -> ${to}`).toBe(true);
+      }
     }
   });
 

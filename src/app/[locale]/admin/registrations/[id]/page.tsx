@@ -12,6 +12,8 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { emailMessageType } from "@/db/schema/email-outbox";
+import { registrationStatus } from "@/db/schema/registrations";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
@@ -24,7 +26,7 @@ import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
-import { canTransition } from "@/modules/registrations/domain/state-machine";
+import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -81,12 +83,48 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const { resent, saved, error } = await searchParams;
   const tr = await getTranslations("Admin");
   const format = await getFormatter();
+  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+
+  /*
+    The form filled again with the same address (§312), out of the trail and into the timeline,
+    oldest first like the lines around them. They are what the person did, not what the team
+    did, so they leave "Ce a făcut echipa" to the team. Each says the state it found — "still
+    waiting for the email link" is usually the whole answer to "she says she registered" — and
+    what went out, in the words `/admin/emails` uses for that message.
+  */
+  const resubmissions = auditTrail
+    .filter((entry) => entry.action === "registration.resubmitted")
+    .reverse()
+    .map((entry) => {
+      const metadata = entry.metadataJson as { status?: unknown; resent?: unknown };
+      const status = registrationStatus.enumValues.find((value) => value === metadata.status);
+      const resent = emailMessageType.enumValues.find((value) => value === metadata.resent);
+      const values = {
+        date: dt(entry.createdAt) ?? "",
+        state: status ? REGISTRATION_STATUS_LABEL[status] : "—",
+      };
+      return {
+        text: resent
+          ? tr("registrations.resubmittedSent", { ...values, message: tr(`emails.types.${resent}`) })
+          : tr("registrations.resubmittedNothing", values),
+        actorName: entry.actorName,
+      };
+    });
+  const staffTrail = auditTrail.filter((entry) => entry.action !== "registration.resubmitted");
 
   const canResend = deriveAllowedResendMessageType(registration.status) !== null;
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
-  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+  /*
+    A settled number that is on paper (§264), and the same number on a registration that is over
+    (§311): the first is what the cancel confirmation warns about before the press, the second is
+    a bib in the club's pile that belongs to nobody — said as a chip beside the state, and on the
+    timeline's own line, both from the row and without a join.
+  */
+  const printedBib = registration.bibPrintedAt !== null && registration.bibNumber !== null ? registration.bibNumber : null;
+  const voidBib = printedBib !== null && isTerminalStatus(registration.status) ? printedBib : null;
+  const voidSuffix = voidBib !== null ? ` · ${tr("registrations.bibVoid", { number: voidBib })}` : "";
   // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.
   const canConfirmNow =
     registration.status === "PENDING_EMAIL_CONFIRMATION" ||
@@ -118,6 +156,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.registeredName}
         </Typography>
         <Chip size="small" label={REGISTRATION_STATUS_LABEL[registration.status]} />
+        {/* A printed bib nobody may wear (§311): the number stays retired, the paper comes out of the pile. */}
+        {voidBib !== null && (
+          <Chip size="small" color="error" variant="outlined" label={tr("registrations.bibVoid", { number: voidBib })} data-testid="void-bib" />
+        )}
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
@@ -421,7 +463,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               <ConfirmSubmitButton
                 label={tr("registrations.cancelAction")}
                 title={tr("confirm.cancelRegistrationTitle")}
-                body={tr("confirm.cancelRegistrationBody")}
+                // The printed bib is named before the press (§311), not discovered in the pile.
+                body={
+                  printedBib !== null
+                    ? `${tr("confirm.cancelRegistrationPrintedBody", { number: printedBib })} ${tr("confirm.cancelRegistrationBody")}`
+                    : tr("confirm.cancelRegistrationBody")
+                }
                 confirmLabel={tr("registrations.cancelAction")}
                 cancelLabel={tr("confirm.cancel")}
                 color="error"
@@ -479,8 +526,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem" }}>
           {tr("registrations.timeline")}
         </Typography>
+        <Typography variant="body2">
+          {tr("registrations.submitted")}: {dt(registration.submittedAt)}
+        </Typography>
+        {/* Each time the form came back with the same address, right under the first (§312). */}
+        {resubmissions.map((line, index) => (
+          <Typography key={`resubmitted-${index}`} variant="body2" data-testid="timeline-resubmitted">
+            {line.text}
+            {line.actorName ? ` · ${line.actorName}` : ""}
+          </Typography>
+        ))}
         {[
-          [tr("registrations.submitted"), dt(registration.submittedAt)],
           [
             tr("registrations.emailConfirmed"),
             registration.emailConfirmedAt
@@ -491,8 +547,20 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
           [tr("registrations.holdExpires"), dt(registration.holdExpiresAt)],
           [tr("registrations.confirmed"), dt(registration.confirmedAt)],
-          [tr("registrations.cancelled"), registration.cancelledAt ? `${dt(registration.cancelledAt)} (${registration.cancellationSource})` : null],
-          [tr("registrations.expired"), registration.expiredAt ? `${dt(registration.expiredAt)} (${registration.expiryReason})` : null],
+          // "cancelled; bib 27 was printed" on the line itself (§311), whoever cancelled — the
+          // participant's link and the job write no audit row, so the row is the record.
+          [
+            tr("registrations.cancelled"),
+            registration.cancelledAt
+              ? `${dt(registration.cancelledAt)} (${registration.cancellationSource})${registration.status === "CANCELLED" ? voidSuffix : ""}`
+              : null,
+          ],
+          [
+            tr("registrations.expired"),
+            registration.expiredAt
+              ? `${dt(registration.expiredAt)} (${registration.expiryReason})${registration.status === "EXPIRED" ? voidSuffix : ""}`
+              : null,
+          ],
         ]
           .filter(([, value]) => value !== null)
           .map(([label, value]) => (
@@ -522,12 +590,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         ))}
       </Stack>
 
-      {auditTrail.length > 0 && (
+      {staffTrail.length > 0 && (
         <Stack spacing={1}>
           <Typography variant="h3" sx={{ fontSize: "1rem" }}>
             {tr("registrations.auditTrail")}
           </Typography>
-          {auditTrail.map((entry, index) => (
+          {staffTrail.map((entry, index) => (
             <Typography key={index} variant="body2">
               {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`)} ·{" "}
               {entry.actorName ??

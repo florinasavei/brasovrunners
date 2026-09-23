@@ -166,6 +166,7 @@
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
+      "openUntilShort": "Înscrieri deschise până pe {date}",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
@@ -368,7 +369,10 @@
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
           "checkin_undone": "Prezență anulată",
-          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
+          "bibs_printed": "BID marcat ca printat",
+          "bibs_unprinted": "BID marcat ca neprintat",
+          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
+          "resubmitted": "S-a înscris din nou cu aceeași adresă"
         }
       },
       "locale": {
@@ -401,8 +405,17 @@
       "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup.",
       "bulkCancelAction": "Anulează cele bifate",
       "bulkCancelPending": "Se anulează…",
+      "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
-      "searchHelp": "Caută după nume, cu sau fără diacritice.",
+      "registrationsCancelledPrinted": "Numere deja tipărite, retrase acum: {numbers}. Scoate-le din teanc — nu se dau altcuiva.",
+      "searchHelp": "Caută după nume, cu sau fără diacritice — în toate evenimentele, dacă nu alegi unul.",
+      "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
+      "filterAutoFeatured": "Evenimentul principal: {event}",
+      "filterAutoSearch": "Toate evenimentele, pentru căutarea după nume",
+      "resubmittedChip": "Reînscriere ×{count} · {date}",
+      "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată pe {date}. Fiecare trimitere este în cronologia înscrierii.",
+      "resubmittedSent": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”",
+      "resubmittedNothing": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — nu era nimic de retrimis",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
@@ -439,6 +452,8 @@
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele de concurs, dar nu poți modifica nimic aici: anulările, ștergerile, retrimiterile de email și marcajul „BID printat” sunt ale Administratorului. La ziua cursei poți confirma pe declarație, da un loc, pune un număr și bifa prezența — de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
+      "bibColumnHint": "Numărul cu steluță (de ex. 2*) e provizoriu: se poate schimba până se închid înscrierile, apoi devine definitiv, i se trimite alergătorului pe email și abia atunci se tipărește. Numărul îngroșat (de ex. 1) e definitiv; bifa ✓ de lângă el înseamnă că e deja tipărit.",
+      "bibProvisionalShort": "provizoriu",
       "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
       "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
@@ -448,7 +463,11 @@
       "bibPrintedOn": "BID printat pe {date}",
       "bibMarkPrinted": "Marchează BID-ul ca printat",
       "bibMarkUnprinted": "BID-ul nu e printat",
-      "bibsPrintedCount": "BID-uri: {printed} din {total} printate",
+      "bibsPrintedCount": "BID-uri: {printed} din {total} printate — doar înscrierile confirmate",
+      "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
+      "bibsVoidCancelled": "Numărul {number}: {name}, înscriere anulată pe {date}",
+      "bibsVoidExpired": "Numărul {number}: {name}, înscriere expirată pe {date}",
+      "bibVoid": "BID {number} tipărit — de retras",
       "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
       "bibsDownloadAll": "Descarcă toate BID-urile ({count})",
       "bibsMarkPrinted": "Marchează cele {count} ca printate",
@@ -535,6 +554,7 @@
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
       "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
+      "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
@@ -1679,7 +1699,8 @@
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă apare „în așteptare”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă aici”, apoi „Prezent”.",
         "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email, bifa „este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
-        "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”."
+        "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
+        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
       ],
       "noEvents": "Niciun eveniment cu înscriere locală în perioada asta.",
       "event": "Eveniment",
@@ -1729,7 +1750,10 @@
       "guardian": "Minor — părinte/tutore: {name}",
       "confirmOnPaper": "Confirmă pe hârtie",
       "showBib": "Vezi numărul de concurs (BID)",
-      "bibAlt": "Numărul de concurs (BID) {number}"
+      "bibAlt": "Numărul de concurs (BID) {number}",
+      "voidCancelled": "Înscriere anulată pe {date}",
+      "voidExpired": "Înscriere expirată pe {date}",
+      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc."
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -1971,6 +1995,7 @@
           "who": "Rol: Administrator sau Superadministrator.",
           "steps": [
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
+            "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
@@ -2088,7 +2113,8 @@
     },
     "deliveryNotice": {
       "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
-      "allowlist": "Acesta este mediul de test: emailurile ajung doar la adresele autorizate de club. Dacă adresa ta nu e printre ele, nu vei primi nimic — și nu e vina ta."
+      "allowlist": "Acesta este mediul de test: emailurile ajung doar la adresele autorizate de club. Dacă adresa ta nu e printre ele, nu vei primi nimic — și nu e vina ta.",
+      "everyone": "Acesta este site-ul de test: emailurile pleacă de aici cu adevărat, marcate „[QA]” în subiect — dar înscrierea de aici nu este una reală și nu îți ține un loc la cursă."
     },
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",

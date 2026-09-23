@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.57-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.64-2026-09-23 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.57-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.64-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1164,9 +1164,11 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    Failure" is ignored by the route.
 6. **Rehearse on QA first** — production refuses every registration until the club's legal
    texts are approved (§30), so a registration there cannot be walked yet. On the QA Vercel
-   project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (step 4),
-   `MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3`, keep `EMAIL_DELIVERY_MODE=allowlist`
-   and `EMAIL_ALLOWLIST=<your address>`, redeploy, register on QA with a dotted spelling of your
+   project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (QA's **own** sending key,
+   `brasovrunners-qa` — created like step 4's, so revoking one never stops the other; the owner
+   keeps it in `.env.local` as `MAILGUN_API_KEY_QA`), `MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3`,
+   keep `EMAIL_DELIVERY_MODE=allowlist` with `EMAIL_ALLOWLIST=*` (`DECISIONS.md` §163, §307 — every
+   subject carries `[QA]`), redeploy, register on QA with a dotted spelling of your
    Gmail (`DECISIONS.md` §74 — each spelling is a new participant, all land in one inbox): the
    verification, the declaration link and the confirmation with its QR arrive from
    `noreply@mail.<club domain>`. `/devs` on QA shows the email check "limited (allowlist)" and
@@ -1187,8 +1189,10 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    against the free plan's hundred — and "Trimite acum" (`DECISIONS.md` §80). A spent
    allowance defers the rest to the reset, never drops it (`DECISIONS.md` §40).
 
-Sandbox afterwards: leave it; QA can keep the club domain in allowlist mode (step 6), which
-frees it from the sandbox's five-recipient limit.
+Sandbox afterwards: unused since 2026-09-23 — QA sends through the club domain with its own key
+(step 6, `DECISIONS.md` §307). Two consequences to remember: QA and production share the domain's
+daily allowance (a rehearsal's messages count against the same hundred a day), and the domain's
+webhooks point at production, so a QA bounce is recorded on production's outbox, not QA's.
 
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)
 
@@ -1300,6 +1304,20 @@ club names — which is why a colleague's Yahoo can be on the list.
    "Nu am putut trimite. Scrie-ne direct la …" on the page and `smtp EAUTH` in the function
    log — never the password. Those failed tries are not counted against the sender: once
    the password is right, the same address sends at once.
+7. **Optional, in the club's Gmail: file the messages the site marks as possible spam.** A
+   message the form lets through but that looks automated still arrives, so that a real person is
+   never lost. That covers a post with no anti-bot token while the check is on, and a sender whose
+   domain imitates the club's (`search-<domain>`, `<name>-seo.com`). The subject starts with
+   `[posibil spam] ` (`[QA] [posibil spam] …` on QA) and a note under the message says why. To file
+   them away: open the club's Gmail → the search box → **Show search options** → in **Has the
+   words** type `subject:"[posibil spam]"` (Gmail ignores the brackets and matches the phrase, so
+   the QA mark is caught too) → **Create filter** → tick **Skip the Inbox (Archive it)** and
+   **Apply the label** → **New label** `Posibil spam` → **Create filter**. Do not tick **Delete
+   it**. Look at the label once a week: somebody whose browser never ran the check lands there too,
+   and "Reply" still answers them. The mark is fixed text (`SUSPICIOUS_SUBJECT_PREFIX` in
+   `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
+   Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
+   §310)
 
 To take the form away, clear the recipients on `/admin/emails` and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes

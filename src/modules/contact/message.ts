@@ -1,5 +1,6 @@
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
 import type { SmtpAddress, SmtpMessage } from "@/infrastructure/email/smtp-adapter";
+import type { ContactSignals, ContactSuspicion, SuspicionReason } from "./domain/suspicion";
 
 /**
  * The message the club receives when somebody writes through the form (`DECISIONS.md` §149).
@@ -61,7 +62,78 @@ export function contactSubject(name: string): string {
   return `Mesaj de pe site: ${headerSafe(name)}`;
 }
 
-export function renderContactMessage(input: ContactMessageInput, route: ContactMessageRoute): SmtpMessage {
+/**
+ * The mark on a message the gates let through that still looks like a program's
+ * (`domain/suspicion.ts`; the owner, 2026-09-23, of SEO spam through the form). Stable, because
+ * the club filters on it — a Gmail filter on `subject:"[posibil spam]"` (`SETUP.md` §38) — so a
+ * change to these characters is a change to every club mailbox's filter.
+ */
+export const SUSPICIOUS_SUBJECT_PREFIX = "[posibil spam] ";
+
+/** One line per reason, in Romanian whatever the form's language: the club is the reader (this module's first note). */
+function reasonLine(reason: SuspicionReason): string {
+  switch (reason.kind) {
+    case "no-token":
+      return "Verificarea anti-bot nu a rulat: formularul a fost trimis fără token — de obicei un program, nu un om.";
+    case "token-rejected":
+      return "Cloudflare a respins verificarea anti-bot a acestui formular.";
+    case "imitates-club":
+      return `Adresa expeditorului imită domeniul clubului: ${reason.senderDomain}.`;
+  }
+}
+
+/** Under two minutes in seconds, under two hours in minutes, beyond that in hours. */
+function elapsedText(seconds: number | null): string {
+  if (seconds === null) return "fără ora deschiderii paginii";
+  const span = seconds < 120 ? `${seconds} s` : seconds < 7_200 ? `${Math.round(seconds / 60)} min` : `${Math.round(seconds / 3_600)} h`;
+  return `trimis la ${span} după deschiderea paginii`;
+}
+
+function linksText(signals: ContactSignals): string {
+  if (signals.linkCount === 0) return "niciun link";
+  const more = signals.linkHostCount > signals.linkHosts.length ? ", …" : "";
+  return `${signals.linkCount === 1 ? "1 link" : `${signals.linkCount} linkuri`}: ${signals.linkHosts.join(", ")}${more}`;
+}
+
+const HONEYPOT_TEXT: Record<ContactSignals["honeypot"], string> = {
+  empty: "câmpul ascuns gol",
+  "sender-address": "câmpul ascuns completat de browser cu adresa expeditorului",
+  filled: "câmpul ascuns completat",
+};
+
+const BOT_CHECK_TEXT: Record<ContactSignals["botCheck"], string> = {
+  off: "verificarea anti-bot oprită",
+  passed: "verificarea anti-bot trecută",
+  "no-token": "verificarea anti-bot fără token",
+  "no-answer": "Cloudflare nu a răspuns la verificare",
+  rejected: "verificarea anti-bot respinsă",
+};
+
+/**
+ * The footer of a marked message: why, in one plain line a reason, and what else was measured,
+ * so the person reading can overrule the mark — a real question from somebody whose browser
+ * never ran the widget looks exactly like this, and "Reply" still answers them.
+ */
+function suspicionFooter(suspicion: ContactSuspicion): { heading: string; reasons: string[]; signals: string } {
+  const { signals } = suspicion;
+  return {
+    heading: "Posibil spam — livrat oricum, ca să nu pierdem un om:",
+    reasons: suspicion.reasons.map(reasonLine),
+    signals: `Semnale: ${[elapsedText(signals.elapsedSeconds), linksText(signals), HONEYPOT_TEXT[signals.honeypot], BOT_CHECK_TEXT[signals.botCheck]].join(" · ")}`,
+  };
+}
+
+/**
+ * The message itself. `suspicion` is what the gates could not decide (`domain/suspicion.ts`):
+ * a suspicious one gets the subject's prefix and a footer below everything else; any other —
+ * no suspicion given, or one that found nothing — is byte-for-byte the message as it has always
+ * been, which `tests/unit/contact/message.test.ts` pins.
+ */
+export function renderContactMessage(
+  input: ContactMessageInput,
+  route: ContactMessageRoute,
+  suspicion?: ContactSuspicion,
+): SmtpMessage {
   const name = headerSafe(input.name);
   const text = [
     `Nume: ${name}`,
@@ -87,6 +159,23 @@ export function renderContactMessage(input: ContactMessageInput, route: ContactM
     `<p><em>— Trimis prin formularul de contact al site-ului. Răspunde direct acestui e-mail ca să-i scrii.</em></p>`,
   ].join("");
 
+  const marked = suspicion?.suspicious ? suspicionFooter(suspicion) : null;
+  // Below the message and the signature, behind a rule, so the visitor's words read first and
+  // the platform's verdict is plainly not theirs.
+  const markedText = marked
+    ? [text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n")
+    : text;
+  const markedHtml = marked
+    ? [
+        html,
+        "<hr>",
+        `<p><strong>${escapeHtml(marked.heading)}</strong></p>`,
+        `<ul>${marked.reasons.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`,
+        `<p><small>${escapeHtml(marked.signals)}</small></p>`,
+      ].join("")
+    : html;
+  const subject = marked ? `${SUSPICIOUS_SUBJECT_PREFIX}${contactSubject(name)}` : contactSubject(name);
+
   return {
     from: route.from,
     // Each address on one line, whatever a setting or a variable once held: a header may not
@@ -95,9 +184,13 @@ export function renderContactMessage(input: ContactMessageInput, route: ContactM
     to: route.to.map(headerSafe),
     ...(route.cc && route.cc.length > 0 ? { cc: route.cc.map(headerSafe) } : {}),
     ...(route.bcc && route.bcc.length > 0 ? { bcc: route.bcc.map(headerSafe) } : {}),
+    // The sender's, marked or not: a real person whose browser never ran the widget is answered
+    // with "Reply" like anybody else.
     replyTo: { name, address: input.email },
-    subject: markSubjectForEnvironment(contactSubject(name), route.appEnv),
-    text,
-    html,
+    // On QA the environment's mark comes first — "[QA] [posibil spam] …" — and a filter on the
+    // phrase matches either way.
+    subject: markSubjectForEnvironment(subject, route.appEnv),
+    text: markedText,
+    html: markedHtml,
   };
 }

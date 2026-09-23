@@ -1,4 +1,5 @@
-import { and, asc, count, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -390,6 +391,48 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   return summary;
 }
 
+/** How many times the form was filled again for one registration, and when last (§312). */
+export type ResubmissionMark = { count: number; lastAt: Date };
+
+/**
+ * The "Reînscriere ×2" chip for the rows on one page of the list (§312), in **one grouped
+ * query** over the audit trail — never a query per row, and never a column on every row of the
+ * export, which has no use for it.
+ *
+ * Keyed on the row ids the page already fetched, so it reads exactly the rows on screen and
+ * rides the `(entity_type, entity_id, created_at)` index the registration's own timeline uses.
+ * A `TEST` row is marked like any other (§12.6 forbids a difference in behaviour, and a marker
+ * is not a count); nothing here feeds the summary strip, which counts people, not attempts.
+ */
+export async function listResubmissionMarks<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, ResubmissionMark>> {
+  const marks = new Map<string, ResubmissionMark>();
+  if (registrationIds.length === 0) return marks;
+
+  const rows = await db
+    .select({
+      registrationId: auditLogs.entityId,
+      total: count(),
+      lastAt: max(auditLogs.createdAt),
+    })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.entityType, "registration"),
+        eq(auditLogs.action, "registration.resubmitted"),
+        inArray(auditLogs.entityId, [...registrationIds]),
+      ),
+    )
+    .groupBy(auditLogs.entityId);
+
+  for (const row of rows) {
+    if (row.registrationId && row.lastAt) marks.set(row.registrationId, { count: row.total, lastAt: row.lastAt });
+  }
+  return marks;
+}
+
 /**
  * How many rows match, which is not the same question as which rows to show.
  *
@@ -448,6 +491,8 @@ export type RegistrationDetail = {
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */
   provisionalBibNumber: number | null;
+  /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§311). */
+  bibPrintedAt: Date | null;
   checkinCode: string | null;
   checkedInAt: Date | null;
   /** Null when the participant checked themselves in, or the staff row is gone. */
@@ -479,6 +524,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .select({
       bibNumber: registrations.bibNumber,
       provisionalBibNumber: registrations.provisionalBibNumber,
+      bibPrintedAt: registrations.bibPrintedAt,
       checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
       checkedInAt: registrations.checkedInAt,
@@ -549,6 +595,16 @@ export type DeskRegistration = {
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */
   provisionalBibNumber: number | null;
+  /**
+   * Whether the settled number is on paper (§264), and when the row left the live states
+   * (§311). Together they are what the desk says in red about a cancelled or expired runner
+   * who turns up anyway: the state, the date, and — when it exists — that a printed bib with
+   * this number is in the pile and is not to be handed out. A state and a number, never an
+   * address (`AGENTS.md` §15.11).
+   */
+  bibPrintedAt: Date | null;
+  cancelledAt: Date | null;
+  expiredAt: Date | null;
   /** Null until confirmed. */
   checkinCode: string | null;
   checkedInAt: Date | null;
@@ -569,6 +625,9 @@ const DESK_COLUMNS = {
   eventStartsAt: events.startsAt,
   bibNumber: registrations.bibNumber,
   provisionalBibNumber: registrations.provisionalBibNumber,
+  bibPrintedAt: registrations.bibPrintedAt,
+  cancelledAt: registrations.cancelledAt,
+  expiredAt: registrations.expiredAt,
   checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
   checkedInAt: registrations.checkedInAt,
@@ -601,27 +660,47 @@ export async function findRegistrationByCheckinCode<T extends Record<string, unk
 /**
  * The desk's search within one event: a name fragment or a race number. Everything that is
  * not over — a pending registration is shown so it can be confirmed on the spot, which is
- * what "no email arrived" comes down to at a desk — and never a cancelled or expired one.
- * Capped, because a desk reads a screenful and a race has at most a few hundred entries.
+ * what "no email arrived" comes down to at a desk — and never a cancelled or expired one,
+ * **except by its number**: the one exception BR-REQ-037-08 criterion 4 names (§311). Capped,
+ * because a desk reads a screenful and a race has at most a few hundred entries.
  */
 export async function listDeskRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { eventId: string; query: string; locale: Locale },
 ): Promise<DeskRegistration[]> {
   const q = input.query.trim();
-  const conditions: SQL[] = [
-    eq(registrations.eventId, input.eventId),
-    sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`,
-  ];
+  const conditions: SQL[] = [eq(registrations.eventId, input.eventId)];
   if (/^\d{1,5}$/.test(q)) {
-    // Either column: on race morning the desk types the number printed on the sheet, and
-    // before the settle that number lives in the provisional column (§214).
-    conditions.push(sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) = ${Number(q)}`);
-  } else if (q !== "") {
-    // The same diacritics-blind contains-match as the list: the desk types what it hears.
+    /*
+      Either column: on race morning the desk types the number printed on the sheet, and
+      before the settle that number lives in the provisional column (§214).
+
+      A **settled** number in any status, and that is the one place the desk's search reads a
+      cancelled or expired row (§311, the exception BR-REQ-037-08 criterion 4 names). A settled
+      number is never reused (§173), so "who is 27" has exactly one answer at this event even
+      after 27 cancelled — and a volunteer holding the bib that somebody just handed over,
+      typing its number and being told "nobody matches", is the surprise this exists to
+      prevent. The row they get says, in red, why nothing is to be handed out.
+
+      A provisional number only on a live row. It is printed nowhere and may already be
+      somebody else's once the place is gone, so a row that is over never answers to it — and
+      that is said here rather than left to the transitions, because one of them does not clear
+      the column: the lapsed-declaration sweep (`repository.ts`, `DECLARATION_HOLD_LAPSED`)
+      leaves it set, and `coalesce` over any status would have found that row by a number it
+      never wore on paper.
+    */
+    const number = Number(q);
     conditions.push(
-      sql`${foldedName(registrations.registeredName)} LIKE ${`%${escapeLike(foldTerm(q))}%`} ESCAPE '\\'`,
+      sql`(${registrations.bibNumber} = ${number} OR (${registrations.bibNumber} IS NULL AND ${registrations.provisionalBibNumber} = ${number} AND ${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')))`,
     );
+  } else {
+    conditions.push(sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`);
+    if (q !== "") {
+      // The same diacritics-blind contains-match as the list: the desk types what it hears.
+      conditions.push(
+        sql`${foldedName(registrations.registeredName)} LIKE ${`%${escapeLike(foldTerm(q))}%`} ESCAPE '\\'`,
+      );
+    }
   }
   return deskQuery(db, input.locale)
     .where(and(...conditions))

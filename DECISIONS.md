@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.57-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.64-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.57-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.64-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12796,3 +12796,175 @@ Baseline `BR-V1.56-2026-09-23`.
 Baseline `BR-V1.56-2026-09-23`.
 
 Baseline `BR-V1.57-2026-09-23`.
+
+## 307. Changed — QA sends through the club's domain with its own key, and its notice says the mail is real (2026-09-23)
+
+**Context.** §163 let a QA deployment address anyone through the allowlist's star, and QA's notice (the one §37's two waiting testers produced) kept saying "only the addresses the club authorized receive mail", because QA still sent through Mailgun's US sandbox, which delivers to five confirmed recipients and nobody else. Amalia's second registration on 2026-09-23 made the owner say it outright: "we need to drop that allowlist, and both us and the user needs to know he is trying to re-register". The application's allowlist was already the star; the gate that remained was the provider's.
+
+**Decision.** QA sends through the club's verified domain, `mail.<club domain>` in Mailgun's EU region, with **its own sending key** (`brasovrunners-qa`), not production's: a key revoked on one environment must not stop the other. The key lives on the QA Vercel project as `MAILGUN_API_KEY` and in the owner's `.env.local` as `MAILGUN_API_KEY_QA`, never in the repository. `EMAIL_DELIVERY_MODE` stays `allowlist` and the list keeps its star (§163): `live` outside production is still refused at startup, and every QA subject still carries `[QA] ` (`QA_SUBJECT_PREFIX`).
+
+**The notice follows the list.** `emailDeliveryNotice` now reads `EMAIL_ALLOWLIST` as well as the mode. With the star it returns `deliveryNotice.everyone` — "emailurile pleacă de aici cu adevărat, marcate „[QA]” în subiect — dar înscrierea de aici nu este una reală și nu îți ține un loc la cursă" — because telling a tester they will receive nothing while the message is already in their inbox is §37's failure in reverse. A list of named addresses keeps `deliveryNotice.allowlist`, which is still exactly true for it. Capture and live are unchanged.
+
+**What it costs, and what it does not cover.** QA and production now share one sending domain, so they share its plan's daily allowance (the Free plan's hundred a day, §100): a QA rehearsal that sends thirty messages leaves seventy for real runners that day. The domain's webhooks point at production, so a bounce of a QA message is recorded on production's outbox, not QA's; a rehearsal that needs to see a bounce on QA does not get one. Neither is worth a second domain while the club is on Free; both are named here so nobody is surprised.
+
+**Reverses nothing.** §37 (sandbox first, before the domain existed) described the order of work and is complete; §163's star is unchanged.
+
+Baseline `BR-V1.58-2026-09-23`.
+
+## 308. Changed — the listing card says until when registration is open (2026-09-23)
+
+**Context.** The owner, on 2026-09-23: "I also need to show when registrations are closing on the event card." While a window was ahead, the card already said when it opens (§146, "Înscrierile se deschid pe 1 oct., 09:00"); once it opened, the card said only "Înscrierile sunt deschise" — true, and no help to somebody deciding whether to register tonight or at the weekend. The date the button disappears was on no public surface at all.
+
+**Decision.** While registration is open, the card's last piece reads "Înscrieri deschise până pe 14 nov., 23:59" / "Registration open until 14 Nov, 23:59", in the event's time zone, in the same short form as the opening's sentence. The date is **the instant `registrationState` turns `CLOSED`** — the stated `registration_closes_at`, or the event's start when none is stated (BR-REQ-011-01 criterion 3) — read through one pure helper, `openRegistrationClosing`, beside `upcomingRegistrationOpening`, using the same expression the state uses. So the card's date and the moment the button goes away cannot disagree, and a test pins that at the boundary. Before the window opens the card keeps the opening's sentence (one date at a time); an external, absent, cancelled or completed registration names no closing, whatever its columns hold. A series card reads it for its next date.
+
+**Where it is not, on purpose.** The event page and the listing's featured hero render the full facts, where the registration button and its free places stand for the state; the owner asked for the card. Adding the same line there is one call to the same helper if wanted.
+
+**The same card, one more change.** The owner, the same afternoon: "'Full description' buttons should be smaller and not in caps." §305's button now reads in sentence case, in a smaller type with tight padding (`CARD_DOOR_SX`, `events/ui/card-door.ts`, shared by the series card and the single-date card so the two stay alike). It keeps the 44-pixel height BR-REQ-041-01 criterion 6 asks of every control a thumb must hit: what shrinks is what the eye sees, not what the finger gets.
+
+Baseline `BR-V1.59-2026-09-23`.
+
+## 309. Changed — an invalid field wears an exclamation mark, and "Ești deja înscris" is underlined in the re-sent message (2026-09-23)
+
+**Context.** Two requests from the owner on the same afternoon, both about the one thing a reader must not miss. Of the forms: "I want an exclamation adornment on the invalid fields so it stands out!" — the red helper text under a field (§47) is easy to scroll past on a phone, and a field the browser refused before the press showed only the browser's own bubble, which disappears. Of the message re-sent to somebody who filled in the form a second time (§235), with it open in front of him: "in this email this needs to be underlined!" — pointing at "You are already registered", the sentence that person is hunting for.
+
+**The mark on an invalid field.** One rule in the theme's `MuiOutlinedInput` override, so every form on the site gets it — the registration form, the contact form, the declaration, every backoffice form, and whatever the forms work of the same week adds — with no component edited and no JavaScript. It shows on a field the server refused (MUI's `Mui-error`, set from the refusal's field list) and on one the browser refused (`:user-invalid`, which matches only once the person has typed and left the field or pressed send — never on a pristine form); the second case also gets the red outline MUI keeps for the first, so the two refusals look alike. The mark is Material's filled "error" glyph as a CSS mask on a pseudo-element painted `var(--mui-palette-error-main)`, so it follows the colour scheme (§93) and adds no request. It is decorative on purpose: the words stay in the helper text and the error summary (§47), which a screen reader reads; the glyph adds nothing to say. Not on a select, whose arrow lives there; not on a field that already carries an end adornment; top-aligned in a multi-line box. Checked on the contact form in a real browser: a malformed address typed and left, and a press with the name and message empty, mark all three.
+
+**The underline in the email.** A `__marker__` beside the existing `**marker**` (§189), applied after escaping, so it can only ever wrap text this codebase wrote, as an `<u>` with an inline `text-decoration` because a few clients reset the element; the plain-text part strips it. The already-registered sentence uses it in both languages — "__Ești deja înscris__ la acest eveniment…". The screen after the form stays generic (BR-REQ-031-01 criterion 3, §19.4); only the inbox, which only the address's owner reads, says it, and now says it louder.
+
+Baseline `BR-V1.60-2026-09-23`.
+
+## 310. Decided — contact-form spam that passes every gate is delivered marked, never refused (2026-09-23)
+
+**Context.** The owner, 2026-09-23: „la cel de contact cred ca imi mai trebuie ceva captcha pt ca primesc spam cu SEO stuff". The sample came through the production form from `domains@search-<domain>`: "Feature <domain> in Google's Search Index … searchregister.net".
+
+**Why more captcha changes nothing (checked against the code: it holds).** `submitContactAction` verifies Turnstile first and refuses only `failed`. A plain HTTP script never runs the widget, so it posts an empty `cf-turnstile-response`. `verifyTurnstile("")` answers `unavailable`, and that passes (§216). `submitContactMessage` then runs `looksLikeSpam`, and the script passes that too: it leaves the hidden field empty, and it posts either the `renderedAt` it scraped, more than a second old, or no render time at all, which has not been suspicious since §217. The per-identity throttle (five an hour per canonical address, §149) never engages either, because each spam comes from one address, once. Every gate passes by design. A second challenge would pass the same way: the widget is exactly the thing a script does not run. And turning "no token" into a refusal would repeat Dani's failure from §216: a person with JavaScript off, a content blocker or a bad five seconds at Cloudflare posts the same nothing, and §205 says that person must still reach the club.
+
+**Decision: mark, do not refuse.** A pure classifier, `contact/domain/suspicion.ts`, reads what got through. Two things make a message suspicious:
+
+- *The challenge was on and no token came with the post.* "On" means the club's switch is on and both keys are set (§97, §254). The action reads whether a token was present from the post itself, not from the verdict: `unavailable` covers both "no token" and "a token Cloudflare did not answer for", and only the first is what a script leaves behind. A Cloudflare outage must not mark every message, so a token without an answer is a signal and never a reason. `verifyTurnstile` is unchanged, because the registration form depends on its verdicts.
+- *The sender's domain imitates the club's.* The domain contains the club's name but is neither the club's own domain nor a subdomain of it. The name is the label before the ending of `APP_BASE_URL`'s host, hyphens ignored. The club's own domain is the host's last two labels, the same apex `/admin/tasks` reads, so QA's `qa.` host gives the same answer. `search-club.example`, `club-seo.com`, `clubexample.net` and `club.example.lookalike.net` imitate. `club.example` and `mail.club.example` are the club.
+
+The rule is off, never "everything matches", on `localhost`, an IP address, a single-label host, a provider's shared domain (`vercel.app`) and a label under four characters. A `co.uk`-shaped host therefore turns the rule off rather than matching every "co".
+
+It was first worded as "the *registrable part* contains the name". It tests the whole domain instead, for two reasons. `club.example.lookalike.net` has `lookalike.net` as its registrable part and is the most classic imitation there is. And getting the registrable part right needs a public-suffix list, which a rule meant to stay dumb and explainable refuses to carry.
+
+A suspicious message is **delivered**. Its subject starts with `[posibil spam] `, after QA's `[QA] ` (AGENTS.md §16.4). Its plain-text and HTML bodies end, below the message and the signature and behind a rule, with a short Romanian footer. The footer gives one plain line per reason ("Verificarea anti-bot nu a rulat: formularul a fost trimis fără token — de obicei un program, nu un om." / "Adresa expeditorului imită domeniul clubului: search-club.example.") and a `Semnale:` line. The signals are the seconds from page load to submit, how many links the message holds with their hosts (at most five, each once), the hidden field's state and the challenge's outcome. Links count only when written with `http://`, `https://` or `www.`, because a bare `club.example` in a sentence is prose. The signals are information for the person reading and never on their own a reason.
+
+The sender's answer is the same "sent" whatever the classification. The service returns exactly `{ outcome: "sent" }`, so the action cannot tell a marked message from any other, and a script learns nothing about which signal it tripped (§39, AGENTS.md §19.4). `Reply-To` stays the visitor's, because a real person whose browser never ran the widget looks exactly like this and must still be answerable. A message with neither reason is byte-for-byte what it was, and a test pins the literals. The prefix is stable because the club filters on it (`SETUP.md` §38).
+
+*The honeypot line is not always "gol".* The trap lets through a browser's autofill of the sender's own address (§282). The footer reports what the field actually held rather than assuming it was empty.
+
+*Never an IP, and nothing new kept.* The visitor's IP goes to Cloudflare with the token, as it has since §97, and nowhere else: not into the screening, the message, a row or the log. The log line (`[contact] delivered marked as possible spam: no-token,imitates-club`) names reason kinds only, never an address or a domain, following §216's rule for its own line. Nothing is stored beyond the throttle's hash. The privacy notice needs no change: the footer is derived from what the visitor posted and from the check's verdict.
+
+*Unchanged:* a filled trap or an instant post is still answered "sent" and sent nowhere (BR-REQ-070-04 criterion 4). The mark comes after those gates and cannot turn into a drop.
+
+*Rejected:*
+- Refusing a missing token, or a "harder" challenge mode: it refuses the very people §205 and §216 exist for, and the script runs no widget of any difficulty.
+- A second captcha vendor: same reason.
+- Dropping a message that trips both reasons: a mark costs one filter, while a drop can lose a person. The default is kept and put to the owner.
+- Words or link counts as a reason: an SEO pitch is prose with one link, and so is a runner's question with a Strava link. They are signals.
+- A blocklist of sender domains: it is a list somebody maintains forever, and the imitation rule covers the pattern that actually arrived.
+- A hidden "the widget was drawn" field: a script that scrapes the form posts it back and one that posts a fixed payload does not, so it only weakens detection.
+- An IP-keyed throttle: §19.4 and §39.
+- Telling the sender the message was marked: that is the oracle.
+
+**Consequences.** `modules/contact/domain/suspicion.ts` (new: `contactSuspicion`, `clubIdentity`, `imitatesClub`); `modules/contact/message.ts` (`SUSPICIOUS_SUBJECT_PREFIX`, the footer, an optional `suspicion` argument); `modules/contact/service.ts` (`ContactScreening`, an optional sixth argument that marks nothing when omitted); `app/[locale]/contact/actions.ts` (reads the token's presence and derives the club's host from `APP_BASE_URL`). Tests: unit `contact/suspicion.test.ts` (new), `contact/message.test.ts`; integration `contact/service.test.ts`. No catalogue keys: the club's copy is Romanian in `message.ts`, as it already was. No migration, no dependency. BR-REQ-070-04 criterion 11; `SETUP.md` §38 step 7 (the Gmail filter).
+
+Baseline `BR-V1.61-2026-09-23`.
+
+## 311. Decided — a printed bib of a cancelled or expired registration is void, and the club is shown which (2026-09-23)
+
+**Context.** The owner, 2026-09-23: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja printat!" A settled race number is never reused and never renumbered (§173). That is right, but a registration cancelled after its bib was printed leaves three problems: a piece of paper with a valid-looking number in the club's pile, a person who may still turn up holding the confirmation email, and no screen that says so.
+
+**Decision — one reader.** `bibs.ts#voidBibsFor(eventId)` returns every real registration of the event that has a settled number, a printed mark (`bib_printed_at`) and a terminal status. For each it gives the number, the registered name, the state, and the date the state names: `cancelled_at` or `expired_at`. It is plain SQL, ordered lowest number first, because that is how somebody pulls bibs out of a numbered pile.
+
+*Terminal* means `CANCELLED` or `EXPIRED`, now named `TERMINAL_STATUSES` in the state machine. A test asserts they are exactly the complement of `ACTIVE_STATUSES`, so a status added later cannot fall between the two. The test is terminal rather than "not confirmed" for a reason: a cancelled entry that restarts keeps its number and its printed mark, and while it is pending again the bib becomes right again the moment they sign. Once they lapse, the bib is void again.
+
+The date is never null, and nothing falls back to `updated_at`. `CANCELLED` is written only by `unregister`, in the one guarded transition, together with `cancelled_at`. `EXPIRED` is written only by the four sweeps, together with `expired_at`. The schema CHECKs require each date to be set together with the field it is paired with.
+
+A test registration never carries a number and is excluded here, as it is everywhere the club counts (`AGENTS.md` §12.6).
+
+**Where it shows:**
+
+- **The registrations list's bibs panel.** A warning line reads "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc (N):" followed by each number as a link to its row, sorted. The "printed / total" figure now says it counts confirmed registrations only, which it always did. The panel stays open while there is a void bib, even when no confirmed bib is left, or the line would disappear with the very cancellation that produced it.
+- **The desk.** A cancelled or expired row that is scanned or typed says so first, in red and before the name: "Înscriere anulată/expirată pe {date}". When a bib was printed it adds "Numărul 27 a fost tipărit — nu se dă. Numerele nu se refolosesc." The row shows no action button, a struck-through number and no bib picture. Every staff role sees it; it is a state and a number, never an address (`AGENTS.md` §15.11). The desk's how-to gained one step about this.
+- **The desk's number search** is the one place the search reads a row that is over. A **settled** number finds its row in any state: "who is 27" has exactly one answer at an event, and a volunteer holding a returned bib must not be told "nobody matches". A **provisional** number finds live rows only. It is printed nowhere and may already belong to somebody else once the place is gone. The lapsed-declaration sweep leaves `provisional_bib_number` set, so a search over every state would have found that row by a number it never had on paper. A name search and the whole-event list still show only live rows. BR-REQ-037-08 criterion 4 is amended to say this.
+- **The registration's own page.** A red chip "BID 27 tipărit — de retras" sits beside the state. The same words appear on the timeline's cancelled or expired line. The cancel dialog, on the page and in the list's ⋮ menu, names the printed number before the button is pressed.
+- **The sheet** already printed only confirmed registrations, for a batch and for a range (`bibScopeWhere`). A test now pins it: asking for 1–50 around a cancelled, printed 27 returns 49 bibs.
+- **The printing mark** is offered only on a confirmed row. `setBibPrinted` refuses anything else, so offering it elsewhere would repeat §289's mistake: a menu item whose service answers NOT_FOUND.
+
+**The record.** A staff cancellation writes `bibNumber` and `bibPrinted: true` into its own audit row. An erasure writes the event, the number and whether it was printed into its row. Neither ever writes the name; the row id already reaches it, and an erased row must not keep it (`AGENTS.md` §12.12).
+
+The participant's own cancel link and the maintenance job (expiry) write no audit row. The audit log records staff actions, and neither of these is one. They do not need a row: both leave `status`, the date the status names, `bib_number` and `bib_printed_at` on the registration, which is exactly what `voidBibsFor` and the page read. The registration row is the record, and the timeline says "cancelled; bib 27 was printed" from it without a join, whoever cancelled.
+
+**Left open, deliberately.** Erasing a registration deletes the row, and the number draw (`pickBibNumber`) reads only numbers on rows that still exist. So an erased void 27 can be drawn again while the paper is still in the pile: the one way a printed number can end up on two runners. The erasure's audit row keeps the fact, and a test names the gap instead of closing it. Closing it means the draw also reading retired numbers, and that is a separate decision.
+
+Also noted and not changed here: the lapsed-declaration sweep, unlike the other three sweeps and the cancel transition, does not clear `provisional_bib_number`. The number stays reserved on the expired row. The desk search now guards against it, but the sweep itself is unchanged.
+
+No migration. Both languages use the same keys.
+
+**The bulk cancel says it too (second review).** The single cancel's dialog already named a printed number before the press, but the bulk form did not, and it is the path an Administrator uses on race morning. Next to its help, it now names the printed, settled numbers among the rows on the page that a cancel can reach (`printedNumbersACancelWouldVoid`). This is the page, not the ticked set, and on purpose: the checkboxes are plain inputs of a server-rendered form, and counting them in the browser would spend a client island on a sentence. The press itself goes through `bulkCancelRegistrationsByStaff`, which cancels row by row through `cancelRegistrationByStaff` and reports which printed numbers it has just made void. The saved banner names those numbers ("Numere deja tipărite, retrase acum: 12, 27. Scoate-le din teanc"), so the bibs to pull are named where the club is looking. They are not left to be noticed on the bibs panel later.
+
+**A number on a registration that is over does not move.** `setBibNumberByStaff` used to refuse a change only on a confirmed row. A POST straight to the desk action, which every staff role may call, could clear or replace a cancelled runner's settled 27. That freed 27 for the draw while the void bib was still in the pile. Since the desk hides the field on such a row, only the server could stop it (BR-REQ-060-01). The service now refuses any change on a `CANCELLED` or `EXPIRED` row: clearing, replacing, or giving a number to a row that has none, because a number given to nobody is retired for nothing. It also refuses any change to a printed number, whatever the status. The only way to reach that case is a cancelled entry that restarted and carried its printed mark back into the queue. No other code overwrites an existing number: the settle, the batch and confirmation only fill a null.
+
+**An erased registration's number stays out of every draw.** The draw is "the lowest free number at or above the start", not "the highest plus one". It learns what is taken from the rows that wear numbers, so erasing a row (BR-REQ-037-06) made its number the lowest free one again. A printed 27 would have gone to the next runner while its paper was still in the pile, against §173. The number already survived in the erasure's audit row: the event, the number and whether it was printed, never who. `erasedBibNumbers` reads it back. The final draw, the provisional draw (a provisional 27 would be promoted on confirmation), the settle (which recompacts from the band's start), the free-number hints and the hand-typed number all treat it as taken. Every erased settled number is retired, printed or not, because the runner was emailed it either way; a cancelled number stays taken for the same reason. There is no race. Every reader reads the rows first and the audit row second. The erasure commits its audit row before its delete begins, so a reader that no longer sees the row is sure to see the audit row. The hand-typed number is checked inside its own transaction after the UPDATE and rolled back. There is no migration and no index: the table is the staff's own presses, and the filter on `action` discards nearly all of it. A number stays retired as long as its audit row is kept (three years), which is longer than any event's draws last after an erasure. The erased number no longer appears on the bibs panel's void list, because its row and name are gone. It is out of the draw, but the list does not tell anyone to pull its paper.
+
+**What the void list shows.** It shows one line per bib, and the whole line is the link: "Numărul 27: Ana Pop, înscriere anulată pe 12 oct. 2026". The name and the state are visible and are the link's accessible name, not a `title` that a phone never shows. The state is a word inside the sentence in the message's own language, one key per state, because the backoffice's Romanian enum labels (§35) would put a Romanian word in an English sentence.
+
+**From this release on, not before.** `erasedBibNumbers` reads the event and the number from the erasure's audit row, and only erasures written by this release record them: an older `registration.deleted_by_staff` row carries neither, and the number it erased was never stored anywhere, so it cannot be backfilled. A number erased on production before this ships can still be drawn again; the club should check the bib pile against the list once after the release if anything was erased before it. **The write re-checks the refusals.** `setBibNumberByStaff` reads the registration before its transaction; the UPDATE carries the two refusals — not `CANCELLED`/`EXPIRED`, not a printed number — in its own `WHERE`, and no row back is the same refusal, so a cancellation in between cannot slip a number change through.
+
+Baseline `BR-V1.62-2026-09-23`.
+
+## 312. Decided — a second submission is marked for the club, and a name search looks in every event (2026-09-23)
+
+**Context.** Amalia, an organizer testing on QA, registered with her browser's autofill twice. The owner: "both us and the user needs to know he is trying to re-register". The participant already learns it: the re-sent message opens with "Ești deja înscris", underlined (§235, §309). The club did not. A second submission changed no row and left no trace a staff member could see, so "she says she registered but I cannot find anything" had no answer on any screen. And the staff member who searched for her by name found nothing, for a second reason: the list opens on the featured event (§178), and a name typed into the search stayed inside that filter, which nobody had chosen and the screen did not name.
+
+(The first half of the owner's sentence — dropping QA's recipient allowlist — is the mail setting of §307, not this.)
+
+**Decision.**
+
+*Every second submission leaves one audit row.* `registration.resubmitted`, on the registration it found, with the participant's id, no staff actor, and metadata `{ status, resent }`: the state it found and the message type re-sent, or null. `submitRegistration` writes it inside the transaction that queues the re-send, so the record and the message cannot disagree. It is written for every active state, whether or not anything went out. `resent` is taken from what the outbox actually queued: the same idempotency key twice in one millisecond queues nothing, and the row says null rather than naming a message that does not exist.
+
+*Only staff read it.* The screen after the form is word for word the same for a new address and a registered one — the oracle rule (`AGENTS.md` §19.4, BR-REQ-031-01 criterion 3) is the reason this is an audit row and not a flag the confirmation page could consult. It is read behind `canReadRegistrations`: the Administrator and, since §289, the Organizer, who changes nothing by seeing it.
+
+*Nothing personal.* The participant is the row's own column; the metadata names a state and a message type (§12.12). A different spelling of the name typed the second time is recorded nowhere, and the registration keeps the name it has.
+
+*No new throttle.* The per-identity bucket in front of the form (§19.4, five an hour) already bounds how often one address reaches the branch, so the trail grows no faster than the inbox it mirrors.
+
+*The registration's page reads the rows as timeline lines*, under "Trimisă", oldest first: "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”", or "— nu era nimic de retrimis", with the message named in `/admin/emails`'s own words. The found state is the useful half — "Așteaptă confirmarea emailului" is usually the whole answer to "she says she registered". They leave "Ce a făcut echipa", which is for what the team did.
+
+*The list marks the row* "Reînscriere ×N · {date}", with the date visible because a `title` never shows on a phone, read in one grouped query over the page's row ids (`listResubmissionMarks`) on the index the timeline already uses — never a query per row, never a column on the export. A `TEST` row is marked like any other; no count the club is given includes attempts, because the summary counts people (§12.6).
+
+*A name search with no event chosen looks in every event*, and says so in one line: "Caut în toate evenimentele — alege unul ca să restrângi". An explicit event id, or `all`, is honoured as it is. The rule is `defaultEventFilter`, still pure, now taking the search, and still shared by the page and the export (§15.10).
+
+*"Chosen" means in the address, and the select had to stop choosing for people.* The filter form's select always submitted the featured event's id, so the first press of "Filtrează" turned the default into an explicit choice — the search could never have widened — and the sort and page links did the same. The select now carries the automatic answer as an option of its own, the empty value, dropped from every link and labelled for what it means on that render: "Evenimentul principal: {event}", or "Toate evenimentele, pentru căutarea după nume".
+
+*The export names the scope the screen resolved*, and the route runs the same rule over what it receives. Found on the way: `eventId=all` reached the query as an event id, compared a uuid column with "all" and failed, so the export of "Toate evenimentele" had never worked since §178. A file about every event is no longer named after its first row's event.
+
+**Rejected.**
+
+*A sentence on the public screen.* That is the oracle: "this address is registered", said to anybody who types it (§19.4, §235).
+
+*A flag or a counter column on `registrations`.* A migration for a fact the audit trail already has a table, an index and a reader for, and a column every join and the export would carry.
+
+*Keeping the featured filter under a search and adding a hint.* A hint under a wrong answer is still a wrong answer; somebody typing a name is looking for a person, not browsing a race.
+
+*A throttle on the audit row itself.* The form's own bucket is the right bound, and a second one would make the trail disagree with the inbox.
+
+**Consequences.** `AuditAction` gains `registration.resubmitted`, the second action with no staff actor after `list_consent_changed`. No migration: the action is text. BR-REQ-037-03 and BR-REQ-037-05 gain a criterion each. The Administrator's guide says both in one paragraph.
+
+Tests: `tests/integration/registrations/resubmission-marker.test.ts` (12), `tests/unit/registrations/default-event-filter.test.ts` (11), e2e `registration-autofill.spec.ts` (the second submission end to end on both viewports: the identical screen, the list searched across events, the chip, the export, the timeline line).
+
+Baseline `BR-V1.63-2026-09-23`.
+
+## 313. Changed — the list says what "2*" means, and feature branches create no Vercel deployment (2026-09-23)
+
+**Context.** Two small things from the same afternoon. The owner, of the registrations list: "I still have that bids with the asterisk... not sure what that is!" And the release of BR-V1.62 (#130), merged at 16:12, did not reach production: Vercel answered "Deployment rate limited — retry in 24 hours".
+
+**The asterisk.** `2*` is a provisional race number (§214): the runner holds it while registration is open, it can still change, and it is settled, emailed and printed only when registration closes; a bold number is settled, and the tick beside it means printed (§264). All of that was said only in the cell's `title`, which a phone never shows, although the column's own comment already claimed it was "explained by the column's own hint" — the hint had never been written. The race-number column now carries it, through the table's tap-friendly ⓘ (`Hint`, §189): the asterisk, the bold number and the tick, in one sentence each. The asterisk itself is `aria-hidden` and followed by a visually hidden "provizoriu", so a screen reader says the word instead of "star".
+
+**The deployments.** Vercel's Hobby plan allows a hundred deployments in twenty-four hours for the account. On 2026-09-23 there were 103, and 81 of them had been **cancelled**: every push to a feature branch created a preview on both projects, and the Ignored Build Step of each project cancelled it — but a cancelled build still counts, so fourteen pull requests in a day spent the allowance on builds nobody saw and the production release was refused. Vercel does not retry a refused push; the release was deployed by hand through the API once the window reopened (a deployment of `main` at the release's commit, the same build a push would have made).
+
+`vercel.json` (new, root, read by both projects) sets `git.deploymentEnabled` to `false` for `feat/*`, `fix/*`, `docs/*`, `test/*`, `chore/*`, `batch/*`, `wip/*` and `worktree-*`. Vercel reads it from the commit being deployed, so a branch that carries it already creates nothing, and once it is on `qa` every branch cut from `qa` inherits it. `main` and `qa` deploy exactly as before. Nothing was lost: no preview of a feature branch was ever looked at — both projects cancelled them — and the checks a pull request needs are GitHub's `docs-check` and `e2e`, not Vercel's. A branch named outside those prefixes would still build a preview; the prefixes are the ones this repository has used.
+
+Baseline `BR-V1.64-2026-09-23`.
