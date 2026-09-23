@@ -19,15 +19,18 @@ export const THEN_PUBLISH = "publish";
  *
  * Two families pass through as they are, because the form already posts them under those
  * names: a language's boxes (`translations.<locale>.<field>` — the save prefixes the language
- * onto a translation's own paths, `service.ts#namedForLocale`) and the create form's repeat
- * rule (`repeat.cadence`, which the action names itself). The one exception inside a language is
- * the plain summary: the schema's `excerpt` is derived from the rich one the editor posts as
- * `excerptBody`, so a refusal of either points at that box. A path nobody recognises is prefixed
+ * onto a translation's own paths, `service.ts#namedUnder`) and the create form's repeat rule
+ * (`repeat.cadence`, which the action names itself, and `repeat.until`, which
+ * `createEventAndPublish` prefixes onto `repeatEvent`'s own `until`). Two exceptions: the plain
+ * summary — the schema's `excerpt` is derived from the rich one the editor posts as
+ * `excerptBody`, so a refusal of either points at that box — and the weekday ticks, which
+ * `RepeatFields` posts as a bare `weekday` on both forms. A path nobody recognises is prefixed
  * like any event column; the summary then shows it by name rather than not at all.
  */
 export function eventFormFieldName(path: string): string {
   const summary = /^(translations\.\w+)\.excerpt$/.exec(path);
   if (summary) return `${summary[1]}.excerptBody`;
+  if (path === "repeat.weekday") return "weekday";
   if (path.startsWith("translations.") || path.startsWith("repeat.")) return path;
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;

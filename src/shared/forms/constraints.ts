@@ -17,7 +17,7 @@ import { z } from "zod";
  *   - `minLength` / `maxLength`: a string's `min` and `max` checks. A minimum of one is
  *     `required` and is not repeated.
  *   - `pattern`: a string's `regex` check, with the anchors stripped — an HTML pattern is
- *     anchored by the browser.
+ *     anchored by the browser — and spaces allowed at either end when a `trim` runs before it.
  *   - `type`: `email` and `url` string formats; `number` for a number schema.
  *   - `min` / `max` / `step`: a number's bounds and integer check.
  *   - `html` metadata (`schema.meta({ html: { ... } })`): merged last, so a schema whose rule is
@@ -57,15 +57,39 @@ function defOf(schema: unknown): Def | null {
   return zod?.def ?? null;
 }
 
-/** `^…$` off, because the browser anchors an HTML pattern itself. */
-function htmlPattern(regex: RegExp): string {
-  return regex.source.replace(/^\^/, "").replace(/\$$/, "");
+/**
+ * `^…$` off, because the browser anchors an HTML pattern itself — and room for spaces at either
+ * end when the schema trims before it tests. `slug: z.string().trim()….regex(SLUG)` takes
+ * "my-race " as "my-race"; a pattern copied as it is would have the browser refuse what the
+ * server accepts. JavaScript's `trim` strips exactly what `\s` matches.
+ */
+function htmlPattern(regex: RegExp, trimmed: boolean): string {
+  const source = regex.source.replace(/^\^/, "").replace(/\$$/, "");
+  return trimmed ? `\\s*(?:${source})\\s*` : source;
+}
+
+/**
+ * Whether an `overwrite` check is `.trim()`. Zod keeps only the function, the same shape as
+ * `.toLowerCase()`, so it is asked what it does to a padded letter: a trim returns the letter.
+ */
+function isTrim(check: Record<string, unknown>): boolean {
+  if (typeof check.tx !== "function") return false;
+  try {
+    return (check.tx as (value: string) => unknown)(" x ") === "x";
+  } catch {
+    return false;
+  }
 }
 
 function readChecks(def: Def, into: HtmlConstraints): void {
+  // Checks run in the order they were chained, so a trim widens only the patterns after it.
+  let trimmed = false;
   for (const check of def.checks ?? []) {
     const c = check._zod.def;
     switch (c.check) {
+      case "overwrite":
+        if (isTrim(c)) trimmed = true;
+        break;
       case "min_length":
         if (typeof c.minimum === "number" && c.minimum > 1) into.minLength = c.minimum;
         break;
@@ -73,7 +97,7 @@ function readChecks(def: Def, into: HtmlConstraints): void {
         if (typeof c.maximum === "number") into.maxLength = c.maximum;
         break;
       case "string_format":
-        if (c.format === "regex" && c.pattern instanceof RegExp) into.pattern = htmlPattern(c.pattern);
+        if (c.format === "regex" && c.pattern instanceof RegExp) into.pattern = htmlPattern(c.pattern, trimmed);
         if (c.format === "email") into.type = "email";
         if (c.format === "url") into.type = "url";
         break;

@@ -83,6 +83,13 @@ describe("the event form's constraints are the schema's (§315)", () => {
     const compiled = new RegExp(`^(?:${slug.pattern})$`, "v");
     expect(compiled.test("alergare-de-duminica")).toBe(true);
     expect(compiled.test("Alergare de duminică")).toBe(false);
+    // The schema trims before it tests, so the server takes a pasted "my-race " as "my-race";
+    // the browser must not refuse what the server accepts. A space inside is still refused.
+    for (const padded of ["my-race ", " my-race", "\tmy-race\n"]) {
+      expect(compiled.test(padded), JSON.stringify(padded)).toBe(true);
+      expect(translationFieldsSchema.shape.slug.safeParse(padded).success, JSON.stringify(padded)).toBe(true);
+    }
+    expect(compiled.test("my race")).toBe(false);
     expect(eventInputConstraints("locationName")).toMatchObject({ required: true, maxLength: 200 });
   });
 
@@ -103,7 +110,8 @@ describe("the other backoffice forms read their schemas the same way", () => {
   });
 
   it("the album: the date required in its shape, the title and address required", () => {
-    expect(albumInputConstraints("takenOn")).toMatchObject({ required: true, pattern: "\\d{4}-\\d{2}-\\d{2}" });
+    // Trimmed before it is tested, so the pattern leaves room for spaces at either end.
+    expect(albumInputConstraints("takenOn")).toMatchObject({ required: true, pattern: "\\s*(?:\\d{4}-\\d{2}-\\d{2})\\s*" });
     expect(albumTranslationConstraints("title")).toMatchObject({ required: true, maxLength: 200 });
     expect(albumTranslationConstraints("description")).toEqual({ maxLength: 1000 });
   });
@@ -134,6 +142,14 @@ describe("htmlConstraints, the reader itself", () => {
   it("reads a minimum length above one, and never repeats `required` as a minimum of one", () => {
     expect(htmlConstraints(z.string().min(3).max(500))).toEqual({ required: true, minLength: 3, maxLength: 500 });
     expect(htmlConstraints(z.string().min(1))).toEqual({ required: true });
+  });
+
+  it("widens a pattern for surrounding spaces only when a trim runs before it", () => {
+    // Zod runs checks in the order they were chained: a trim after the regex does not help it,
+    // and a lower-casing is an overwrite too but is not a trim.
+    expect(htmlConstraints(z.string().trim().regex(/^[a-z]+$/)).pattern).toBe("\\s*(?:[a-z]+)\\s*");
+    expect(htmlConstraints(z.string().regex(/^[a-z]+$/).trim()).pattern).toBe("[a-z]+");
+    expect(htmlConstraints(z.string().toLowerCase().regex(/^[a-z]+$/)).pattern).toBe("[a-z]+");
   });
 
   it("reads through a pipe into a bounded number", () => {

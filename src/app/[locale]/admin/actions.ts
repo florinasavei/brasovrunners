@@ -497,27 +497,28 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
  * the event is in the URL. A create that went through opens the new event's page, as it
  * always did — with the banner saying whether it was also published, and if not, why not
  * (`createEventAndPublish` commits the draft and hands back the guard's refusal).
+ *
+ * The series is made inside the create's transaction, so a refused rule — an end on or before
+ * the event's start — writes nothing and comes back like any other refusal, the repeat
+ * settings included, rather than leaving an event behind and a redirect to it.
  */
 export async function createEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
-  let createdId: string | undefined;
-  let published = false;
-  let notPublished: string | undefined;
-  let repeated = 0;
-  let outcome: { error?: string; saved?: string; created?: string } | undefined;
+  let outcome: { saved: string; created?: string; notPublished?: string };
+  let createdId: string;
   try {
     const actor = await requireStaff();
 
     // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
-    // event page offers, made right away. The tick decides whether this event repeats at all
-    // (§170); the cadence only says how. Without it the recurrence fields are hidden, and a
-    // hidden field's value means nothing. Checked before anything is written, so a bad
-    // cadence refuses the whole form with the boxes still filled rather than after a create.
+    // event page offers, made with the event. The tick decides whether this event repeats at
+    // all (§170); the cadence only says how. Without it the recurrence fields are hidden, and a
+    // hidden field's value means nothing. The rest of the rule is `repeatEvent`'s to judge.
     const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
     if (cadence && cadence !== "NONE" && !REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
       throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences", ["repeat.cadence"]);
     }
+    const repeats = cadence !== "" && cadence !== "NONE";
 
     // The create form renders the editor's own language panels, so each language is read
     // with the save's reader — the rich summary, the description, the folds — and not a
@@ -533,37 +534,25 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
       },
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
+      repeat: repeats
+        ? { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null }
+        : null,
     });
     createdId = result.event.id;
-    published = result.published;
-    notPublished = result.refusal?.code;
-
-    // The series, as drafts — or live, when the source has just gone live: the rule's own
-    // `publish` flag is what §122 already does for a published source, and nothing here
-    // knows a second way.
-    if (cadence && cadence !== "NONE") {
-      const series = await repeatEvent(getDb(), {
-        actor,
-        eventId: result.event.id,
-        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: published },
-      });
-      repeated = series.created;
-    }
+    outcome = {
+      saved: result.published ? "createdPublished" : "created",
+      created: result.repeated > 0 ? String(result.repeated) : undefined,
+      // Why the second button did not publish: the code, never a word of what was typed. The
+      // editor names what is missing in its own alert (§170).
+      notPublished: result.refusal?.code,
+    };
   } catch (error) {
-    // Nothing written yet: the form comes back with everything typed. A create that succeeded
-    // but whose series did not opens the event, with the series' own error, as before.
-    if (!createdId) return refused(error, form, { fieldNames: eventFormFieldNames });
-    outcome = outcomeOf(error);
+    // Nothing was written — the create, the publication and the series are one transaction —
+    // so the form comes back with everything typed.
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
-  if (outcome) backTo(editorPath(locale, createdId as string), outcome);
-  backTo(editorPath(locale, createdId as string), {
-    saved: published ? "createdPublished" : "created",
-    created: repeated > 0 ? String(repeated) : undefined,
-    // Why the second button did not publish: the code, never a word of what was typed. The
-    // editor names what is missing in its own alert (§170).
-    notPublished,
-  });
+  backTo(editorPath(locale, createdId), outcome);
 }
 
 export async function duplicateEventAction(form: FormData): Promise<void> {

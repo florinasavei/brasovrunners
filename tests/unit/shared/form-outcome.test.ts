@@ -116,6 +116,8 @@ describe("the event form's names", () => {
     // became `event.repeat.cadence`, a link to nothing shown under its raw name.
     expect(eventFormFieldName("repeat.cadence")).toBe("repeat.cadence");
     expect(eventFormFieldName("repeat.until")).toBe("repeat.until");
+    // `repeatEvent`'s weekday refusal, prefixed by the create: the ticks post a bare `weekday`.
+    expect(eventFormFieldName("repeat.weekday")).toBe("weekday");
     // The schema's `excerpt` is derived from `excerptBody`, the box the editor actually posts.
     expect(eventFormFieldName("translations.en.excerpt")).toBe("translations.en.excerptBody");
     expect(eventFormFieldName("translations.en.excerptBody")).toBe("translations.en.excerptBody");

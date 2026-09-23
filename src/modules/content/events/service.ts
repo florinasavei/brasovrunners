@@ -428,19 +428,21 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
 }
 
 /**
- * A language's refusal, naming its boxes the way the one-save editor posts them (§315).
+ * A part's refusal, naming its boxes the way the one form that carries it posts them (§315).
  *
  * `translationFieldsSchema` speaks for one language, so its paths are bare (`title`); the editor
  * carries both languages in one form, as `translations.<locale>.title`. Without the language the
  * summary could not say which tab to open, and `form-names.ts` would read a bare `title` as an
- * event column. Only the field names change — the code and the message are the refusal's own.
+ * event column. The same for the repeat rule on the create form: `repeatEvent` names `until`, and
+ * the form posts `repeat.until`. Only the field names change — the code and the message are the
+ * refusal's own.
  */
-async function namedForLocale<R>(locale: string, save: () => Promise<R>): Promise<R> {
+async function namedUnder<R>(prefix: string, save: () => Promise<R>): Promise<R> {
   try {
     return await save();
   } catch (error) {
     if (isDomainError(error) && error.fields.length > 0) {
-      throw new DomainError(error.code, error.message, error.fields.map((field) => `translations.${locale}.${field}`));
+      throw new DomainError(error.code, error.message, error.fields.map((field) => `${prefix}.${field}`));
     }
     throw error;
   }
@@ -1120,7 +1122,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
 
       savedTranslations.push(
-        await namedForLocale(existing.locale, () =>
+        await namedUnder(`translations.${existing.locale}`, () =>
           applyTranslationSave(tx, {
             actor: input.actor,
             event: current,
@@ -1225,7 +1227,15 @@ export type CreateAndPublishResult = {
   published: boolean;
   /** Why it did not, when it did not — the refusal the publication guard gave, or null. */
   refusal: DomainError | null;
+  /** How many dates of the series were made with it; 0 when it does not repeat. */
+  repeated: number;
 };
+
+/**
+ * The repeat rule the create form asks for (§64, §170). No `publish` of its own: the series goes
+ * live exactly when its source does (§122), which is only known once the publication has run.
+ */
+export type NewEventRepeatRule = Omit<RepeatEventInput["rule"], "publish">;
 
 /**
  * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §315; the
@@ -1244,37 +1254,64 @@ export type CreateAndPublishResult = {
  * is missing" (§170's words). What the organizer typed is in the database, not lost to an
  * alert. A role that may not publish is answered before either transition is tried, so the
  * event is a draft and not a submission nobody asked for.
+ *
+ * **The series is made in the same transaction, and a refused rule refuses the whole create.**
+ * `repeatEvent` is the only judge of a rule — the weekdays, an end on or before the event's
+ * start, the date format — and it can only judge the end once the start exists. It used to run
+ * after this function had committed, so an end before the start left an event behind, the
+ * action had nothing left to return but a redirect, and the repeat settings the organizer had
+ * chosen were gone (the review of §315). Here, a refusal rolls back the create and the
+ * publication with it, and comes back naming `repeat.until` or `repeat.weekday` — the boxes the
+ * create form posts — so the action returns the form with every box as it was typed.
  */
 export async function createEventAndPublish<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: CreateEventInput & { publish: boolean },
+  input: CreateEventInput & { publish: boolean; repeat?: NewEventRepeatRule | null },
 ): Promise<CreateAndPublishResult> {
   const now = input.now ?? new Date();
 
   return db.transaction(async (tx) => {
-    const event = await createEvent(tx, { actor: input.actor, fields: input.fields, now });
-    if (!input.publish) return { event, published: false, refusal: null };
+    const created = await createEvent(tx, { actor: input.actor, fields: input.fields, now });
+    const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
+    if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
-    if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
-      return {
-        event,
-        published: false,
-        refusal: new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish; the event was created as a draft`),
-      };
-    }
-
-    try {
-      const published = await tx.transaction(async (inner) => {
-        const reviewed = await transitionEvent(inner, { actor: input.actor, eventId: event.id, expectedVersion: event.version, to: "IN_REVIEW", now });
-        return transitionEvent(inner, { actor: input.actor, eventId: event.id, expectedVersion: reviewed.version, to: "PUBLISHED", now });
-      });
-      return { event: published, published: true, refusal: null };
-    } catch (error) {
-      if (!isDomainError(error)) throw error;
-      // The savepoint rolled the two transitions back; the draft stands.
-      return { event, published: false, refusal: error };
-    }
+    // The series, as drafts — or live, when the source has just gone live: the rule's own
+    // `publish` flag is what §122 already does for a published source.
+    const rule = { ...input.repeat, publish: published };
+    const series = await namedUnder("repeat", () => repeatEvent(tx, { actor: input.actor, eventId: event.id, rule, now }));
+    return { event, published, refusal, repeated: series.created };
   });
+}
+
+/** The publication half of `createEventAndPublish`: its own savepoint, so a refusal keeps the draft. */
+async function publishNewEvent<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  actor: Actor,
+  event: EditableEvent,
+  publish: boolean,
+  now: Date,
+): Promise<Omit<CreateAndPublishResult, "repeated">> {
+  if (!publish) return { event, published: false, refusal: null };
+
+  if (!canTransition(actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+    return {
+      event,
+      published: false,
+      refusal: new DomainError("FORBIDDEN", `role ${actor.role} may not publish; the event was created as a draft`),
+    };
+  }
+
+  try {
+    const published = await tx.transaction(async (inner) => {
+      const reviewed = await transitionEvent(inner, { actor, eventId: event.id, expectedVersion: event.version, to: "IN_REVIEW", now });
+      return transitionEvent(inner, { actor, eventId: event.id, expectedVersion: reviewed.version, to: "PUBLISHED", now });
+    });
+    return { event: published, published: true, refusal: null };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    // The savepoint rolled the two transitions back; the draft stands.
+    return { event, published: false, refusal: error };
+  }
 }
 
 export type DuplicateEventInput = {

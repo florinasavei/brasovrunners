@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
-import { events } from "@/db/schema/events";
+import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { listTranslationsForEvent } from "@/modules/content/events/repository";
-import { createEvent, createEventAndPublish, repeatEvent, transitionEvent } from "@/modules/content/events/service";
+import { createEvent, createEventAndPublish, transitionEvent } from "@/modules/content/events/service";
+import type { Weekday } from "@/modules/events/domain/repeat";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -167,33 +168,87 @@ describe("BR-REQ-050-02 create and publish in one press (§315)", () => {
   });
 
   it("publishes the series with its source through the rule's own flag (§122)", async () => {
-    const result = await createEventAndPublish(db, { actor: admin, fields: COMPLETE, publish: true, now: NOW });
-    // What `createEventAction` does next: the rule asks to publish exactly when the source did.
-    const series = await repeatEvent(db, {
+    const result = await createEventAndPublish(db, {
       actor: admin,
-      eventId: result.event.id,
-      rule: { cadence: "WEEKLY", weekdays: [], until: null, publish: result.published },
+      fields: COMPLETE,
+      publish: true,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null },
       now: NOW,
     });
 
-    expect(series).toMatchObject({ published: true });
-    expect(series.created).toBeGreaterThan(0);
+    expect(result).toMatchObject({ published: true, refusal: null });
+    expect(result.repeated).toBeGreaterThan(0);
     const copies = await db.select().from(events).where(eq(events.repeatOf, result.event.id));
+    expect(copies).toHaveLength(result.repeated);
     expect(copies.every((copy) => copy.editorialStatus === "PUBLISHED")).toBe(true);
+    // The rule the create form chose is on the source, with the publication it followed.
+    expect((await rowOf(result.event.id)).repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: true });
   });
 
   it("keeps the series in draft when its source could not be published", async () => {
-    const result = await createEventAndPublish(db, { actor: admin, fields: ENGLISH_SUMMARY_MISSING, publish: true, now: NOW });
-    const series = await repeatEvent(db, {
+    const result = await createEventAndPublish(db, {
       actor: admin,
-      eventId: result.event.id,
-      rule: { cadence: "WEEKLY", weekdays: [], until: null, publish: result.published },
+      fields: ENGLISH_SUMMARY_MISSING,
+      publish: true,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null },
       now: NOW,
     });
 
-    expect(series.published).toBe(false);
+    expect(result.published).toBe(false);
     const copies = await db.select().from(events).where(eq(events.repeatOf, result.event.id));
     expect(copies.length).toBeGreaterThan(0);
+    expect(copies).toHaveLength(result.repeated);
     expect(copies.every((copy) => copy.editorialStatus === "DRAFT")).toBe(true);
+  });
+
+  /*
+    The review of §315: the series used to be made after the create had committed, so a rule
+    `repeatEvent` refused — an end before the start — left the event behind, and the action could
+    only redirect to it, losing the repeat settings. One transaction now: the refusal names the
+    box the create form posts, and nothing at all is written, the publication included.
+  */
+  it.each([
+    ["an end the day before the start", "2026-10-10"],
+    ["an end that is not a date", "11/10/2026"],
+  ])("refuses %s, naming repeat.until, and writes nothing", async (_case, until) => {
+    const refusal = await createEventAndPublish(db, {
+      actor: admin,
+      fields: COMPLETE,
+      publish: true,
+      repeat: { cadence: "FORTNIGHTLY", weekdays: [3], until },
+      now: NOW,
+    }).catch((error: unknown) => error);
+
+    expect(isDomainError(refusal) && [refusal.code, refusal.fields]).toEqual(["VALIDATION_ERROR", ["repeat.until"]]);
+    expect(await db.select().from(events)).toHaveLength(0);
+    expect(await db.select().from(eventTranslations)).toHaveLength(0);
+  });
+
+  it("refuses a weekday outside Monday to Sunday, naming repeat.weekday, and writes nothing", async () => {
+    const refusal = await createEventAndPublish(db, {
+      actor: admin,
+      fields: COMPLETE,
+      publish: false,
+      repeat: { cadence: "WEEKLY", weekdays: [9 as Weekday], until: null },
+      now: NOW,
+    }).catch((error: unknown) => error);
+
+    expect(isDomainError(refusal) && [refusal.code, refusal.fields]).toEqual(["VALIDATION_ERROR", ["repeat.weekday"]]);
+    expect(await db.select().from(events)).toHaveLength(0);
+  });
+
+  it("takes an end on the event's own day: the series is that one date", async () => {
+    // The end is the last day a date may fall on, in the event's zone; the start's own day is
+    // after the start by the rest of that day, so it is not refused — and nothing follows it.
+    const result = await createEventAndPublish(db, {
+      actor: admin,
+      fields: COMPLETE,
+      publish: false,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: "2026-10-11" },
+      now: NOW,
+    });
+
+    expect(result.repeated).toBe(0);
+    expect((await rowOf(result.event.id)).repeatRule).toMatchObject({ until: "2026-10-11" });
   });
 });

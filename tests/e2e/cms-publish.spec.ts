@@ -260,6 +260,68 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 
+  /*
+    §315, the review: a series whose end falls before the event is a rule only the server can
+    judge — the browser does not know the start when it reads the end — and it used to be judged
+    after the event was written, so the press opened a new event and the repeat settings were
+    gone. The create, the publication and the series are one transaction now: nothing is written,
+    and the form comes back whole.
+  */
+  test("a series that ends before the event is refused with the title, the summary and the repeat rule kept", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `serie-refuzata-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const wednesday = page.locator('[name="weekday"][value="3"]');
+
+    await field("event.startsAtDate").fill("2027-05-04");
+    await field("event.startsAtTime").fill("09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    const romanian = page.locator("#locale-panel-ro");
+    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
+    await page.keyboard.type("O serie care se termină înainte să înceapă.");
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`Refused series ${suffix}`);
+    await field("translations.en.slug").fill(`refused-series-${suffix}`);
+
+    await field("repeat.on").check();
+    await field("repeat.cadence").selectOption("FORTNIGHTLY");
+    await field("repeat.until").fill("2027-05-01");
+    await wednesday.check();
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+
+    // The server's refusal names the end and links to it; the press opened nothing.
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Până la (opțional)" })).toHaveAttribute("href", "#field-repeat.until");
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+
+    // Every box as it was typed: the words, the rich summary, and the whole repeat rule.
+    await expect(field("translations.ro.title")).toHaveValue(`Serie refuzată ${suffix}`);
+    await expect(field("translations.ro.slug")).toHaveValue(slug);
+    await expect(field("translations.ro.excerptBody")).toHaveValue(/O serie care se termină înainte să înceapă\./);
+    await expect(field("translations.en.title")).toHaveValue(`Refused series ${suffix}`);
+    await expect(field("event.startsAtDate")).toHaveValue("2027-05-04");
+    await expect(field("repeat.on")).toBeChecked();
+    await expect(field("repeat.cadence")).toHaveValue("FORTNIGHTLY");
+    await expect(field("repeat.until")).toHaveValue("2027-05-01");
+    await expect(wednesday).toBeChecked();
+
+    // Nothing was written: the same addresses are free for the create that goes through. (Without
+    // the series, so each run leaves one draft and not a fortnightly row of them.)
+    await field("repeat.on").uncheck();
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=created/);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+  });
+
   // §315. The owner: "ar trebui sa pot crea si publica dintr-un foc!"
   test("creates and publishes in one press, both languages live at once", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
