@@ -56,7 +56,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await main.getByRole("button", { name: "Creează edițiile" }).click();
     const dialog = page.getByRole("dialog", { name: "Creezi edițiile?" });
     await dialog.getByRole("button", { name: "Creează edițiile" }).click();
-    await expect(page.locator("#admin-alert")).toContainText("8 ediții create", { timeout: 15_000 });
+    await expect(page.locator("#admin-alert")).toContainText("8 date create acum", { timeout: 15_000 });
     await hydrated(page);
 
     // The header (§131, §134): which date this is, every date as a chip — this one current,
