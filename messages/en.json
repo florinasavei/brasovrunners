@@ -189,7 +189,6 @@
       "FREE": "Free",
       "PAID": "Paid"
     },
-    "seeDetails": "See details",
     "series": {
       "weekly": "Every {days}",
       "fortnightly": "Every other {days}",

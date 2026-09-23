@@ -16,15 +16,17 @@ test.describe("§305 the listing card's door to the page", () => {
     // (§166), and a count taken the instant the page loads is a count of nothing — which is how
     // this spec failed on CI's desktop run and passed on its mobile run.
     await expect(first).toBeVisible();
-    // The seed publishes at least one series; every card gets the button.
+    // The seed publishes events; every card — series or single date — gets the button.
     expect(await buttons.count()).toBeGreaterThan(0);
     const box = await first.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(await first.getAttribute("href")).toMatch(/^\/ro\/evenimente\/[^/]+$/);
 
-    // And it is the same door the title opens: the card's heading link and the button agree.
+    // And it is the same door the card already opens: a series card links its title, a
+    // single-date card is one whole link (CardLink) — either way the card's first link and the
+    // button agree. CI's seed has no multi-date series, so there the cards are all single-date.
     const card = first.locator("xpath=ancestor::li[1]");
-    const titleHref = await card.getByRole("heading", { level: 2 }).getByRole("link").getAttribute("href");
-    expect(await first.getAttribute("href")).toBe(titleHref);
+    const cardHref = await card.getByRole("link").first().getAttribute("href");
+    expect(await first.getAttribute("href")).toBe(cardHref);
   });
 });
