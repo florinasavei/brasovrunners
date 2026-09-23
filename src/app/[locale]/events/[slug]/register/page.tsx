@@ -25,10 +25,12 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
-import { readFormDraft, readSubmittedAddress } from "@/modules/registrations/form-draft";
+import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
+import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
+import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
@@ -141,8 +143,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (state !== "OPEN") notFound();
 
   const { submitted, error, fields, retry } = await searchParams;
-  // Only meaningful on the screen that follows a successful submit (§224).
-  const submittedTo = submitted ? await readSubmittedAddress() : null;
+  // Only meaningful on the screen that follows a successful submit (§224): the inbox to open
+  // and the first name to greet, from the form just posted, never from the registrations table.
+  const submittedFacts = submitted ? await readSubmittedFacts() : null;
 
   /**
    * Which boxes to mark, when the server rejected the form.
@@ -269,6 +272,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         </Box>
       </Box>
 
+      {/*
+        Where the email is *not* going, said before anything promises one: on QA only the
+        club's authorized addresses receive mail, on a laptop nothing is sent at all, and two
+        testers stood on the screen below waiting for a message that was never coming. Nothing
+        on production, where the mode is `live` (`delivery-notice.ts`). Above the journey strip
+        so it is the first thing read on the form and on the check-your-email screen alike.
+      */}
+      <EmailDeliveryNotice />
+
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
       <RegistrationJourney current={submitted ? "confirm" : "details"} />
@@ -282,99 +294,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       )}
 
       {submitted ? (
-        <Stack spacing={2}>
-          {/*
-            "Check your email", and then — in the same panel, in the same weight — how long it
-            may take. The owner asked for the second sentence to be highlighted here rather than
-            left where it was, three lines down in the stepper's prose: this screen is where
-            somebody stands with their inbox open, and a person who does not know a wait is
-            normal fills the form again within thirty seconds (§199 is the reason that is not
-            free, and §205 is what it costs the club when they give up instead).
-
-            One caveat worth knowing rather than guessing at: the outbox drains after the
-            request that queued it, so the usual delay is seconds. Five minutes is the honest
-            outer bound for the common path; a message that misses its drain waits for the
-            pinger, which by day is a quarter of an hour (§68).
-          */}
-          <Alert severity="success">
-            <AlertTitle>{t("submitted")}</AlertTitle>
-            {/*
-              The address it went to (§224). The one fact this screen was missing: "check your
-              email" is useless to somebody who typed `@gmail.con`, and QA's outbox holds three
-              bounced messages to exactly that. Reading their own address back is what catches
-              it, in the second before they walk away.
-            */}
-            {submittedTo && (
-              <Typography variant="body2" sx={{ mb: 0.5 }}>
-                {t("submittedTo")}{" "}
-                <Box component="strong" sx={{ wordBreak: "break-all" }}>
-                  {submittedTo}
-                </Box>
-              </Typography>
-            )}
-            {/* The wait, in bold, because not knowing it is normal is what makes somebody
-                fill the form in again thirty seconds later (§224). */}
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              {t("submittedDelay")}
-            </Typography>
-            <Typography variant="body2">{t("submittedSpam")}</Typography>
-            {/*
-              And the sentence that stops this screen lying (§229).
-
-              Amalia, testing: "te poți înscrie cu fix același mail de 2 ori, primești și QR și
-              tot". No second registration was ever created — the database refuses one — but
-              re-submitting an address that is already confirmed re-sends the confirmation, QR
-              and all (§199), while this screen said "check your email to confirm your
-              registration". Two emails with a QR and a screen asserting a new registration is
-              indistinguishable from having registered twice.
-
-              It cannot be fixed by saying "you are already registered" here: that would answer
-              a question about somebody else's address to anybody who types it, which is the
-              oracle `AGENTS.md` §19.4 forbids. So the sentence is made **true for everybody**
-              instead — it reads the same whether or not the address was registered, and the
-              person who owns the inbox is the only one who learns which case they are in.
-            */}
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {t("submittedAlready")}
-            </Typography>
-          </Alert>
-          {/*
-            The one thing a person needs when the message does not arrive, offered at the
-            moment they would first notice — carrying the event so the resend knows which
-            registration is meant without asking a second question.
-          */}
-          <Typography variant="body2" color="text.secondary">
-            {t("resend.prompt")}{" "}
-            <Link href={{ pathname: "/registrations/resend", query: { event: slug } }}>
-              {t("resend.linkLabel")}
-            </Link>
-          </Typography>
-          {/*
-            The second way out, and it exists because the first one can fail (§205).
-
-            The owner, after two people in one evening got no message: "trebuie să lăsăm oamenii
-            să se înscrie cu orice preț!!! Asta e scopul principal al site-ului. Dacă nu primesc
-            mail trebuie să le apară opțiunea de retrimite sau să ne dea mail prin formularul de
-            contact."
-
-            He is right about the order of importance. A resend helps when a message was lost in
-            transit, and does nothing when the address itself cannot be reached — a spam filter
-            that swallows every one, a provider refusing the sending domain, a typo in the
-            address they cannot now correct. In all of those the person is stuck on this screen
-            with no way to tell anybody, and the club never learns they tried.
-
-            So: a link to the contact form, carrying the event, which reaches a human. It is
-            deliberately second and quieter than the resend — most people need the resend — and
-            it is deliberately present, because "the message never arrives" is not a rare case on
-            a club's first season with a new sending domain.
-          */}
-          <Typography variant="body2" color="text.secondary">
-            {t("resend.stillNothing")}{" "}
-            <Link href={{ pathname: "/contact", query: { about: slug } }}>
-              {t("resend.contactLinkLabel")}
-            </Link>
-          </Typography>
-        </Stack>
+        /*
+          "Aproape gata, Ana!" — the screen after the form, in `CheckYourEmail.tsx`. It carries
+          every fact the receipt it replaced had: the address (§224), the wait in bold and once
+          (§224), the spam folder, the sentence that keeps it true for somebody already
+          registered (§229), the resend and the contact form (§205) — and adds the first name,
+          the event and its date, what happens next in three steps, and the way back.
+          The owner: it "should be more fun". It reads the same for a first and a repeat
+          registration: nothing on it is read from the registrations table (§19.4).
+        */
+        <CheckYourEmail
+          eventTitle={event.title}
+          whenLabel={whenLabel}
+          eventHref={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}
+          slug={slug}
+          facts={submittedFacts}
+          window={stepsWindow}
+        />
       ) : (
         <>
           {/*

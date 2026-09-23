@@ -126,8 +126,26 @@ export async function readFormDraft(): Promise<FormDraft | null> {
  */
 const SUBMITTED_COOKIE = "br_submitted_to";
 
-export async function stashSubmittedAddress(email: string, path: string): Promise<void> {
-  const sealed = sealFormDraft({ email });
+/**
+ * The two facts that screen greets somebody with: the inbox to open, and — since the owner
+ * asked for the screen to be "more fun" — their first name, so it can say "Aproape gata, Ana!"
+ * rather than read like a receipt. The name is the first word of what they typed in the
+ * first-name box (`firstNameOf`), sealed with the address, and forgotten with it.
+ */
+export type SubmittedFacts = Readonly<{ email: string | null; firstName: string | null }>;
+
+/**
+ * The one word a greeting uses: the first token of the first-name box, or null when there is
+ * none to use. "Ana Maria" greets Ana; a box of spaces greets nobody by name and the screen
+ * falls back to the plain heading rather than "Aproape gata, !".
+ */
+export function firstNameOf(typedFirstName: string | null | undefined): string | null {
+  const first = (typedFirstName ?? "").trim().split(/\s+/)[0] ?? "";
+  return first === "" ? null : first;
+}
+
+export async function stashSubmittedFacts(facts: { email: string; firstName: string }, path: string): Promise<void> {
+  const sealed = sealFormDraft({ email: facts.email, firstName: firstNameOf(facts.firstName) ?? "" });
   if (!sealed) return;
   const jar = await cookies();
   jar.set(SUBMITTED_COOKIE, sealed, {
@@ -139,11 +157,13 @@ export async function stashSubmittedAddress(email: string, path: string): Promis
   });
 }
 
-/** The address the confirmation screen names, or null when the cookie has gone. */
-export async function readSubmittedAddress(): Promise<string | null> {
+/** The address and first name the confirmation screen uses, or null when the cookie has gone. */
+export async function readSubmittedFacts(): Promise<SubmittedFacts | null> {
   const sealed = (await cookies()).get(SUBMITTED_COOKIE)?.value;
   if (!sealed) return null;
   const opened = openFormDraft(sealed);
-  const email = opened?.email;
-  return typeof email === "string" && email !== "" ? email : null;
+  if (!opened) return null;
+  const email = typeof opened.email === "string" && opened.email !== "" ? opened.email : null;
+  const firstName = firstNameOf(opened.firstName);
+  return { email, firstName };
 }
