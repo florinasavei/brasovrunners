@@ -8,7 +8,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { CARD_DOOR_SX } from "./card-door";
 import type { Locale } from "@/i18n/routing";
 import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { riseIn } from "@/theme/motion";
@@ -119,7 +119,7 @@ export default async function SeriesCard({
             button — no client island, 44px — to the next date's page, which is where the full
             description, the rules and the programme live. */}
         <Box sx={{ mt: 1.5 }}>
-          <Button component="a" href={pageOf(next.slug)} variant="outlined" size="small" sx={TAP_TARGET}>
+          <Button component="a" href={pageOf(next.slug)} variant="outlined" size="small" sx={CARD_DOOR_SX}>
             {t("series.fullDescription")}
           </Button>
         </Box>
