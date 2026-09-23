@@ -1,11 +1,12 @@
 "use client";
 
+import Box, { type BoxProps } from "@mui/material/Box";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 import { createContext, type InputHTMLAttributes, type ReactNode, useContext } from "react";
 import { fieldId } from "./outcome";
 
 /**
- * What a refused submit typed, handed back to every box (`DECISIONS.md` §306).
+ * What a refused submit typed, handed back to every box (`DECISIONS.md` §315).
  *
  * `ActionForm` provides it from the outcome the Server Action returned; a field asks for its own
  * name and puts the value back as its `defaultValue`. Islands that hold state of their own — a
@@ -91,6 +92,75 @@ export default function RecallField({ name, ...props }: TextFieldProps & { name:
       error={props.error || named}
       helperText={named && recall.fieldError ? recall.fieldError : props.helperText}
     />
+  );
+}
+
+/**
+ * The box for a value that is meant to be typed again (`NEVER_KEPT`): an erase's typed title,
+ * a legal version's phrase, a registration's name (§180, §151, §315).
+ *
+ * `RecallField`'s twin with the one difference that matters: it **never reads its value back**.
+ * It still carries the id the refusal summary links to, and still marks itself when the refusal
+ * named it — a plain `TextField` got an id MUI made up, so "the typed title does not match" linked
+ * nowhere (§47). The page's own help stays under the box beside "check this field", because
+ * that help is what says *what* to type (the title, the phrase, the name), and a box emptied on
+ * purpose with its instructions replaced would be a guard nobody can pass.
+ *
+ * Keyed on the generation, so the box is empty after every refusal whatever it held before the
+ * press — with JavaScript on as with it off.
+ */
+export function NeverKeptField({ name, ...props }: Omit<TextFieldProps, "defaultValue" | "value"> & { name: string }) {
+  const recall = useRecall();
+  const named = recall.named(name);
+  return (
+    <TextField
+      key={recall.generation}
+      id={props.id ?? recall.idOf(name)}
+      name={name}
+      {...props}
+      error={props.error || named}
+      helperText={
+        named && recall.fieldError ? (
+          <>
+            {recall.fieldError} {props.helperText}
+          </>
+        ) : (
+          props.helperText
+        )
+      }
+    />
+  );
+}
+
+/**
+ * A hidden field whose value is what the refused submit posted, when it posted one.
+ *
+ * For the version guard (§36): the save carries the version its boxes were rendered from. With
+ * JavaScript off, a refused POST re-renders the page from the database while every box is
+ * recalled from the press — so a plain hidden input would now hold the colleague's newer version
+ * under the edits made against the older one, and the next press would overwrite that colleague
+ * without a CONFLICT. The recalled version keeps the boxes and their version together; a reload
+ * (which the CONFLICT sentence asks for) is what fetches both fresh.
+ */
+export function RecallHidden({ name, value }: { name: string; value: string | number }) {
+  const recall = useRecall();
+  return <input type="hidden" name={name} value={recall.value(name) ?? String(value)} />;
+}
+
+/**
+ * A fold inside a kept form that opens itself after a refusal.
+ *
+ * With JavaScript off a refused POST renders the page afresh, and a `<details>` arrives closed:
+ * the kept boxes inside it — a registration's erase reason, a hand-set race number — would be
+ * back but out of sight, under a summary line that says nothing happened. Keyed on the answer,
+ * so every refusal opens it again, even after it was closed by hand.
+ */
+export function RecallDetails({ children, sx }: { children: ReactNode; sx?: BoxProps["sx"] }) {
+  const recall = useRecall();
+  return (
+    <Box component="details" key={recall.generation} open={recall.has || undefined} sx={sx}>
+      {children}
+    </Box>
   );
 }
 

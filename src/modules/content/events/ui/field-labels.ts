@@ -3,7 +3,7 @@ import { routing } from "@/i18n/routing";
 
 /**
  * The label of every box on the event form, by the `name` it posts — for the refusal summary
- * that links a named field to its box (§47, `DECISIONS.md` §306), so an organizer reads
+ * that links a named field to its box (§47, `DECISIONS.md` §315), so an organizer reads
  * "Română: Titlu" and never `translations.ro.title`, the same lookup the editor's "not ready
  * to publish" alert makes (§170).
  *

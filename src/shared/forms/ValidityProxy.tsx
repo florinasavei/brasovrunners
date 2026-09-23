@@ -4,7 +4,7 @@
 export const VALIDITY_PROXY_ATTRIBUTE = "data-validity-proxy";
 
 /**
- * A box the browser can point at, for a value that lives in a hidden field (`DECISIONS.md` §306).
+ * A box the browser can point at, for a value that lives in a hidden field (`DECISIONS.md` §315).
  *
  * A rich text posts its document through `<input type="hidden">`, and a hidden input is barred
  * from constraint validation: `required` on it is ignored, and even a custom validity could not

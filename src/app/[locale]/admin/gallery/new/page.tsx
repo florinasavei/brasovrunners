@@ -51,7 +51,7 @@ export default async function NewAlbumPage({ params, searchParams }: Props) {
       </Typography>
 
       {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
-          refusal comes back with every box still filled (§306). */}
+          refusal comes back with every box still filled (§315). */}
       <ActionForm action={createAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />

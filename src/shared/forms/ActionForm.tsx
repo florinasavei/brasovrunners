@@ -33,7 +33,7 @@ export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Pr
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 
 /**
- * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §306).
+ * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §315).
  *
  * The one client island a form needs for this, and it holds one thing: the outcome the Server
  * Action returned. `useActionState` is what makes it work with JavaScript off — on a plain POST

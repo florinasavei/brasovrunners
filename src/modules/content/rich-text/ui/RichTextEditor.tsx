@@ -1634,7 +1634,7 @@ function Control({
 }
 
 /**
- * After a refused submit the body comes back as it was typed (`DECISIONS.md` §306): the
+ * After a refused submit the body comes back as it was typed (`DECISIONS.md` §315): the
  * recalled JSON is the document, keyed on the answer so Tiptap re-mounts from it rather than
  * keep what it held before the press. With nothing recalled this is the island as it was.
  */

@@ -51,13 +51,13 @@ export const dynamic = "force-dynamic";
  * început" — whether this is one date or a series is the first thing decided, before the date
  * itself, and it stood at the very bottom. A tick, then the frequency (§170), as on the editor.
  *
- * **A refusal keeps every box** (§306; the owner: "if I submit an invalid form the entire page
+ * **A refusal keeps every box** (§315; the owner: "if I submit an invalid form the entire page
  * gets cleared"). The form is an `ActionForm`: the action returns what it refused and why, the
  * summary names each field and links to it, and every box — the settings, both languages with
  * their rich texts, the repeat rule, the programme's rows — comes back as typed, with
  * JavaScript or without it. Nothing typed goes into the URL.
  *
- * **Create and publish in one press**, for a role that may publish (§306; the owner: "ar
+ * **Create and publish in one press**, for a role that may publish (§315; the owner: "ar
  * trebui sa pot crea si publica dintr-un foc!"): a second button posts the same form with a
  * marker, and the action walks the two transitions in the create's own transaction. While a
  * publication requirement is visibly unmet the button dims and names it.

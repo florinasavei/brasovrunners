@@ -39,7 +39,7 @@ export type EditablePageTranslation = {
  *
  * ## After a refused submit
  *
- * Every box comes back as typed, the rich text included (§306): the fields are `RecallField`s
+ * Every box comes back as typed, the rich text included (§315): the fields are `RecallField`s
  * and the editor re-mounts from the posted document. Each box carries what `fields.ts`
  * requires of it, so the browser refuses a missing title or a malformed address first.
  */

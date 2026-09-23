@@ -1,7 +1,7 @@
 import { type DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §306).
+ * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §315).
  *
  * The owner: "if I submit an invalid form (eg: event creation) the entire page gets cleared".
  * Every backoffice action used to answer a refusal with a redirect — `?error=CODE#admin-alert`

@@ -2054,6 +2054,7 @@
       "fieldError": "Verifică acest câmp.",
       "kept": "Ce ai scris a rămas în câmpuri; corectează și trimite din nou.",
       "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
+      "keptExceptConfirmation": "Ce ai scris a rămas în câmpuri, în afară de confirmare, care se cere din nou.",
       "incompleteFirst": "Completează mai întâi: {field}"
     }
   },

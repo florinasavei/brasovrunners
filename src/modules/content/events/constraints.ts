@@ -3,14 +3,14 @@ import { eventFieldsSchema, translationFieldsSchema } from "./fields";
 
 /**
  * The HTML constraints of every box on the event form, read off `fields.ts` (`DECISIONS.md`
- * §306): one place per module, so the browser's rule and the server's rule are the same rule.
+ * §315): one place per module, so the browser's rule and the server's rule are the same rule.
  *
  * `EventFieldsForm` spreads `eventInputConstraints("capacity")` into the box's `htmlInput`;
  * `TranslationFieldsForm` does the same with `translationInputConstraints("title")`. A field
  * that is not a box — a checkbox, a rich text, the wall-clock pair — never asks, and a caller
  * that wants `required` alone (the two boxes of a `WallTimeField`) reads it off the result.
  *
- * `tests/unit/content/form-constraints.test.ts` walks both schemas and asserts every field the
+ * `tests/unit/shared/form-constraints.test.ts` walks both schemas and asserts every field the
  * schema requires renders `required`, every https rule renders `type="url"`, every bounded
  * number renders `min` and `max`.
  */

@@ -24,7 +24,7 @@ import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
  * says whether the event repeats at all, and these fields are not shown until it is ticked.
  * The enum value stays in the domain for the rows that carry it.
  *
- * After a refused submit every one of them comes back as it was chosen (`DECISIONS.md` §306): the
+ * After a refused submit every one of them comes back as it was chosen (`DECISIONS.md` §315): the
  * cadence and the end are `RecallField`s, the weekday ticks `CheckboxField`s, which read the
  * form's returned state wherever the form is an `ActionForm`.
  */

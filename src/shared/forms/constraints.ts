@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §306).
+ * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §315).
  *
  * The owner: "nu ar trebui sa pot crea evenimentul daca am campuri invalide!" A rule the server
  * refuses is a rule the browser can refuse first — `required`, `maxLength`, `pattern`,

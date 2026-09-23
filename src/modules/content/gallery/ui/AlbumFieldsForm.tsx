@@ -21,7 +21,7 @@ export type EditableAlbumTranslation = {
  * exactly the same names (`actions.ts#readFields`).
  *
  * Every box carries what `fields.ts` requires of it and comes back filled after a refused
- * submit (§306).
+ * submit (§315).
  */
 export default async function AlbumFieldsForm({
   takenOn,

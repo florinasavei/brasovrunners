@@ -9,7 +9,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02, BR-REQ-051-01 — create and publish in one press (`DECISIONS.md` §306).
+ * BR-REQ-050-02, BR-REQ-051-01 — create and publish in one press (`DECISIONS.md` §315).
  *
  * The owner: "ar trebui sa pot crea si publica dintr-un foc!" A new event was a draft that needed
  * two more presses in the editor, DRAFT → IN_REVIEW → PUBLISHED (§201). The one press walks those
@@ -60,7 +60,7 @@ const ENGLISH_SUMMARY_MISSING = {
   translations: { ...COMPLETE.translations, en: { ...COMPLETE.translations.en, excerpt: "" } },
 };
 
-describe("BR-REQ-050-02 create and publish in one press (§306)", () => {
+describe("BR-REQ-050-02 create and publish in one press (§315)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

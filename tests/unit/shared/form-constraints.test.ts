@@ -11,7 +11,7 @@ import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
 import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 
 /**
- * The browser refuses first what the server would refuse (`DECISIONS.md` §306; the owner: "nu ar
+ * The browser refuses first what the server would refuse (`DECISIONS.md` §315; the owner: "nu ar
  * trebui sa pot crea evenimentul daca am campuri invalide!").
  *
  * The HTML constraints are read off the Zod schemas the services validate with, never typed a
@@ -27,7 +27,7 @@ const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFieldsFo
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
 const NOT_A_BOX = new Set(["featured", "isSpecial", "participantListVisibility", "bibDesign", "scheduleRows", "coHosts", "locationAddress"]);
 
-describe("the event form's constraints are the schema's (§306)", () => {
+describe("the event form's constraints are the schema's (§315)", () => {
   it("renders `required` on every box whose schema refuses an empty box", () => {
     const required = Object.keys(eventFieldsSchema.shape).filter(
       (field) => !NOT_A_BOX.has(field) && eventInputConstraints(field as keyof typeof eventFieldsSchema.shape).required,

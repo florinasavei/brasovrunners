@@ -21,7 +21,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  *
  * The two post as `<name>Date` and `<name>Time`; `admin/actions.ts` joins them into the
  * `<name>WallTime` string the service has always read, so nothing below the form changed.
- * Both come back filled after a refused submit (§306), like every other box on the form.
+ * Both come back filled after a refused submit (§315), like every other box on the form.
  */
 export default function WallTimeField({
   name,

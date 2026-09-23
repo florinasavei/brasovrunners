@@ -187,7 +187,7 @@ type ResolvedTimes = {
 function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   const zone = fields.timezone;
 
-  // Every refusal here names its field (§47, §306): the form links the sentence to the box.
+  // Every refusal here names its field (§47, §315): the form links the sentence to the box.
   const required = (value: string, name: string): Date => {
     const parsed = fromWallTimeInput(value, zone);
     if (!parsed) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [name]);
@@ -283,7 +283,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * "approved" lives in another table.
  */
 function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
-  // Every refusal names the boxes it is about (§47, §306), so the form can link to them.
+  // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
       throw new DomainError(
@@ -420,11 +420,30 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
-      // The paths, so the form can name the boxes (§47, §306) — names, never values.
+      // The paths, so the form can name the boxes (§47, §315) — names, never values.
       [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))],
     );
   }
   return parsed.data;
+}
+
+/**
+ * A language's refusal, naming its boxes the way the one-save editor posts them (§315).
+ *
+ * `translationFieldsSchema` speaks for one language, so its paths are bare (`title`); the editor
+ * carries both languages in one form, as `translations.<locale>.title`. Without the language the
+ * summary could not say which tab to open, and `form-names.ts` would read a bare `title` as an
+ * event column. Only the field names change — the code and the message are the refusal's own.
+ */
+async function namedForLocale<R>(locale: string, save: () => Promise<R>): Promise<R> {
+  try {
+    return await save();
+  } catch (error) {
+    if (isDomainError(error) && error.fields.length > 0) {
+      throw new DomainError(error.code, error.message, error.fields.map((field) => `translations.${locale}.${field}`));
+    }
+    throw error;
+  }
 }
 
 // --- Translations ---------------------------------------------------------------------------
@@ -1101,16 +1120,18 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
 
       savedTranslations.push(
-        await applyTranslationSave(tx, {
-          actor: input.actor,
-          event: current,
-          current: existing,
-          expectedVersion: submitted.expectedVersion,
-          fields: submitted.fields,
-          acknowledgeLiveEdit: input.acknowledgeLiveEdit,
-          eventType: parsedEventFields?.type ?? current.type,
-          now,
-        }),
+        await namedForLocale(existing.locale, () =>
+          applyTranslationSave(tx, {
+            actor: input.actor,
+            event: current,
+            current: existing,
+            expectedVersion: submitted.expectedVersion,
+            fields: submitted.fields,
+            acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+            eventType: parsedEventFields?.type ?? current.type,
+            now,
+          }),
+        ),
       );
     }
 
@@ -1207,7 +1228,7 @@ export type CreateAndPublishResult = {
 };
 
 /**
- * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §306; the
+ * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §315; the
  * owner: "ar trebui sa pot crea si publica dintr-un foc!").
  *
  * A new event is a draft (`createEvent`), and taking it live used to be two more presses in
@@ -1739,7 +1760,9 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
   const reason = input.reason.trim();
   if (reason.length < 3) {
-    throw new DomainError("VALIDATION_ERROR", "an erasure needs a reason; it is the only thing that survives it");
+    // Named, so the erase form's summary points at the box that was wrong (§315) — the form
+    // posts these two names, and nothing else here is typed.
+    throw new DomainError("VALIDATION_ERROR", "an erasure needs a reason; it is the only thing that survives it", ["reason"]);
   }
 
   /**
@@ -1751,7 +1774,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
    */
   const accepted = plan.titles.length > 0 ? plan.titles.map((entry) => entry.title) : [plan.eventId];
   if (!accepted.some((title) => title.trim() === input.typedTitle.trim())) {
-    throw new DomainError("VALIDATION_ERROR", "the typed title does not match this event's title");
+    throw new DomainError("VALIDATION_ERROR", "the typed title does not match this event's title", ["typedTitle"]);
   }
 
   const now = input.now ?? new Date();

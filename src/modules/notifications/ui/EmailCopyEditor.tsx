@@ -55,7 +55,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
       sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }}
       data-testid={`email-copy-${messageType}`}
     >
-    {/* A refused wording — a placeholder misspelt — comes back as typed (§306). */}
+    {/* A refused wording — a placeholder misspelt — comes back as typed (§315). */}
     <ActionForm
       action={updateEmailCopyAction}
       messages={await refusalMessages({ subject: t("emails.copy.subject"), body: t("emails.copy.paragraphs") })}

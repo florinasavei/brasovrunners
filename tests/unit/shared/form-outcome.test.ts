@@ -6,7 +6,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { fieldId, keptValuesOf, NEVER_KEPT, refused } from "@/shared/forms/outcome";
 
 /**
- * A refused backoffice submit keeps what was typed (`DECISIONS.md` §306; the owner: "if I submit
+ * A refused backoffice submit keeps what was typed (`DECISIONS.md` §315; the owner: "if I submit
  * an invalid form (eg: event creation) the entire page gets cleared").
  *
  * The action returns the refusal as `useActionState`'s state instead of redirecting, and the
@@ -109,6 +109,17 @@ describe("the event form's names", () => {
     expect(eventFormFieldName("raceStartsAt")).toBe("event.raceStartsAtDate");
     expect(eventFormFieldName("scheduleRows.2.time")).toBe("event.schedule[2].time");
     expect(eventFormFieldName("coHosts.0.url")).toBe("event.coHosts[0].url");
+  });
+
+  it("passes the create form's repeat rule through, and points the plain summary at the rich box", () => {
+    // The action's own cadence refusal names `repeat.cadence`; prefixed as an event column it
+    // became `event.repeat.cadence`, a link to nothing shown under its raw name.
+    expect(eventFormFieldName("repeat.cadence")).toBe("repeat.cadence");
+    expect(eventFormFieldName("repeat.until")).toBe("repeat.until");
+    // The schema's `excerpt` is derived from `excerptBody`, the box the editor actually posts.
+    expect(eventFormFieldName("translations.en.excerpt")).toBe("translations.en.excerptBody");
+    expect(eventFormFieldName("translations.en.excerptBody")).toBe("translations.en.excerptBody");
+    expect(eventFormFieldName("translations.ro.body")).toBe("translations.ro.body");
   });
 
   it("keeps the second button's marker in a plain module, not beside the button", () => {

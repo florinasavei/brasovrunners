@@ -263,7 +263,7 @@ function LegalBodyEditorIsland({
       <input type="hidden" name={name} value={text} readOnly />
       {/* A legal text is never saved empty (`service.ts#assertTranslationsUsable`), so the browser
           refuses an empty one first, with its bubble at this box — a hidden field cannot carry
-          the constraint (§306). */}
+          the constraint (§315). */}
       <ValidityProxy name={name} label={accessibleName} required={text.trim() === ""} />
     </Box>
   );
@@ -299,7 +299,7 @@ function Control({
 }
 
 /**
- * After a refused submit the text comes back as it was typed (`DECISIONS.md` §306): the
+ * After a refused submit the text comes back as it was typed (`DECISIONS.md` §315): the
  * recalled text is the starting point, keyed on the answer so the island re-mounts from it.
  * A legal body runs to tens of kilobytes, which is why this is the action's returned state
  * and not a cookie.

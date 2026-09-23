@@ -1,11 +1,10 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
-import RecallField from "@/shared/forms/recall";
+import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -180,18 +179,22 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
             A tick the server does not read would be decoration (BR-REQ-060-01), and the phrase
             carries the version number because every version of this document has the same title.
 
-            A refusal keeps the reason and asks for the phrase again (§306): the phrase is the
-            guard, and a plain `TextField` here is what says so — it is never recalled.
+            A refusal keeps the reason and asks for the phrase again (§315): the phrase is the
+            guard, and a `NeverKeptField` here is what says so — it is never recalled, and it
+            still carries the id the summary's link points at.
           */}
           <ActionForm
             action={deleteApprovedLegalVersionAction}
-            messages={await refusalMessages({ typedConfirmation: t("legal.erase.phraseLabel"), reason: t("legal.erase.reasonLabel") })}
+            messages={await refusalMessages(
+              { typedConfirmation: t("legal.erase.phraseLabel"), reason: t("legal.erase.reasonLabel") },
+              { confirmation: true },
+            )}
             data-testid="legal-erase-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="versionId" value={version.id} />
             <Stack spacing={2}>
-              <TextField
+              <NeverKeptField
                 name="typedConfirmation"
                 label={t("legal.erase.phraseLabel")}
                 helperText={t("legal.erase.phraseHelp", { phrase })}

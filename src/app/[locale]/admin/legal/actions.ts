@@ -66,7 +66,7 @@ function outcomeOf(error: unknown): { error: string } {
 
 /**
  * A new version, as a draft. A refusal — a language left empty — comes back with both texts
- * still in their boxes (`DECISIONS.md` §306): a legal text runs to tens of kilobytes, which is
+ * still in their boxes (`DECISIONS.md` §315): a legal text runs to tens of kilobytes, which is
  * why it is the action's returned state and never a cookie.
  */
 export async function createLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -203,7 +203,7 @@ export async function withdrawLegalVersionAction(form: FormData): Promise<void> 
  *
  * The reason itself never goes into the query string, even on a refusal: it is a free line of
  * somebody's prose, and a query string is the server log, the browser history and the referrer.
- * Since §306 a refusal is the form's returned state rather than a redirect, so the reason comes
+ * Since §315 a refusal is the form's returned state rather than a redirect, so the reason comes
  * back in its box without ever leaving the POST; the typed phrase never comes back — it is the
  * guard, and it is meant to be typed again (`NEVER_KEPT`).
  */

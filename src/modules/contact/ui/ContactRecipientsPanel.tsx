@@ -73,10 +73,12 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§306). */}
+      {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§315). */}
       <ActionForm
         action={updateContactRecipientsAction}
         messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}
+        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        scope="contacts"
         data-testid="contact-recipients-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />

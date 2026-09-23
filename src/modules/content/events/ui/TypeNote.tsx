@@ -17,7 +17,7 @@ import { useRecall } from "@/shared/forms/recall";
  * The same subscription as `OnlyForType`, and for the same reason: MUI's Select keeps its value
  * on a hidden input and fires no native change event, so the honest subscription is a mutation
  * observer on that input's `value` attribute — renewed after a refused submit re-mounts the
- * select with the type that was posted (§306).
+ * select with the type that was posted (§315).
  */
 export default function TypeNote({
   selectName,

@@ -21,7 +21,7 @@ type Props = {
    */
   incompleteHint?: string;
   /**
-   * The same sentence, naming the first thing missing (`DECISIONS.md` §306; the owner: "in
+   * The same sentence, naming the first thing missing (`DECISIONS.md` §315; the owner: "in
    * general formularele trebuie sa fie mai smart"): `{field}` is replaced with the label of the
    * first control the browser would refuse, read from its own `<label>`. Where a control has
    * no label to read, `incompleteHint` is what is said. Either alone dims the button.
@@ -121,7 +121,7 @@ export default function SubmitButton({
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
   const [complete, setComplete] = useState(true);
-  // The label of the first control the browser would refuse, for the named sentence (§306).
+  // The label of the first control the browser would refuse, for the named sentence (§315).
   const [firstMissing, setFirstMissing] = useState<string | null>(null);
   const watches = Boolean(incompleteHint || incompleteHintNamed);
 
@@ -265,7 +265,7 @@ export default function SubmitButton({
 
   const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
   const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence;
-  // One id per button: a page with two forms has two buttons that may both be waiting (§306).
+  // One id per button: a page with two forms has two buttons that may both be waiting (§315).
   const hintId = useId();
 
   return (

@@ -79,7 +79,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused list comes back as typed (§306). */}
+      {/* A refused list comes back as typed (§315). */}
       <ActionForm
         action={updateClubNoticesAction}
         messages={await refusalMessages({
@@ -89,6 +89,8 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           confirmationsTo: t("emails.clubNotices.confirmationsTo"),
           participantsBcc: t("emails.clubNotices.participantsBcc"),
         })}
+        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        scope="notices"
         data-testid="club-notices-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />

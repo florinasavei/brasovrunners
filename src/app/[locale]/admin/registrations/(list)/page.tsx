@@ -47,7 +47,7 @@ import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import ActionForm from "@/shared/forms/ActionForm";
-import RecallField from "@/shared/forms/recall";
+import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import {
   cancelRegistrationFromRowAction,
@@ -462,10 +462,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.eraseTitle", { name: eraseTarget.registeredName })}
           </Typography>
           {/* A refusal — the name mistyped — keeps the panel open with the reason still in its
-              box; the typed name is asked again, because it is the guard (§180, §306). */}
+              box; the typed name is asked again, because it is the guard (§180, §315). */}
           <ActionForm
             action={eraseRegistrationFromListAction}
-            messages={await refusalMessages({ reason: t("registrations.deleteReason"), confirmName: t("registrations.eraseTypeName") })}
+            messages={await refusalMessages(
+              { reason: t("registrations.deleteReason"), confirmName: t("registrations.eraseTypeName") },
+              { confirmation: true },
+            )}
             data-testid="erase-from-list-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
@@ -485,8 +488,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ maxWidth: 480 }}
               />
-              {/* A plain `TextField`, never a `RecallField`: the typed name is not kept. */}
-              <TextField
+              {/* Never a `RecallField`: the typed name is not kept. `NeverKeptField` still
+                  carries the id the summary's "check this field" link points at (§47). */}
+              <NeverKeptField
                 name="confirmName"
                 label={t("registrations.eraseTypeName")}
                 helperText={t("registrations.eraseTypeNameHelp", { name: eraseTarget.registeredName })}
@@ -1141,6 +1145,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Typography component="summary" variant="body2">
             {t("registrations.bulkCancelTitle")}
           </Typography>
+          {/* A plain form, not an `ActionForm` (§315): its selection is the table's ticks, which a
+              returned refusal could not refill — `bulkDeleteRegistrationsAction` says why. */}
           <Box component="form" id={BULK_FORM} action={bulkCancelRegistrationsAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             {/* Only the query, never a path: `actions.ts` rebuilds the path itself so this

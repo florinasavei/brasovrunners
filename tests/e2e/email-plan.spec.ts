@@ -135,7 +135,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("arhiva@example.org");
 
     // An address that is not one is refused and nothing of it is saved — but what was typed stays
-    // in its box to be corrected, and the refusal is said inside the form it is about (§306).
+    // in its box to be corrected, and the refusal is said inside the form it is about (§315).
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await expect(main.getByTestId("contact-recipients-form").getByTestId("form-refusal")).toBeVisible();

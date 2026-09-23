@@ -27,7 +27,7 @@ import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
-import { areTestRegistrationsAvailable } from "@/modules/registrations/test-registrations";
+import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
   canDeleteEvent,
@@ -46,6 +46,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
 import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitIconButton from "@/shared/ui/SubmitIconButton";
 import type { ActionIconName } from "@/shared/ui/action-icons";
@@ -132,7 +133,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   const staffUser = await requireStaff();
   const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam } = await searchParams;
-  // Why "create and publish" stopped at the draft (§306): a domain code, matched against the
+  // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
   const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
 
@@ -262,7 +263,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   /**
    * What "not ready to publish" names, in the words on the screen (§170) — read once, because
    * the same sentence is the publication panel's alert and, after "create and publish" was
-   * refused, the banner that says what the draft still needs (§306).
+   * refused, the banner that says what the draft still needs (§315).
    */
   const missingDetail = [
     ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
@@ -305,7 +306,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "created" && created && !notPublished && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
         )}
-        {/* Created and published in one press (§306), the series with it when there is one. */}
+        {/* Created and published in one press (§315), the series with it when there is one. */}
         {saved === "createdPublished" && (
           <Alert severity="success">
             {created ? t("editor.createdPublishedWithSeries", { created }) : t("editor.createdPublished")}
@@ -370,7 +371,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }}
       >
       <Box sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
-      {/* Settings and content: one form, one save — and a refusal that keeps every box (§306). */}
+      {/* Settings and content: one form, one save — and a refusal that keeps every box (§315). */}
       <ActionForm action={saveEventAndTranslationsAction} messages={refusal} data-testid="event-save-form">
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={event.id} />
@@ -379,9 +380,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           event row at all: an Author sees no settings panel, so this field is absent and the
           service writes no event row rather than assuming a version it was never given.
         */}
-        {maySaveSettings && (
-          <input type="hidden" name="event.expectedVersion" value={event.version} />
-        )}
+        {/* Recalled after a refusal, never re-read (§315): with JavaScript off a refused POST
+            renders this page from the database, and the boxes' edits must travel with the
+            version they were made against — or a CONFLICT would pass on the second press. */}
+        {maySaveSettings && <RecallHidden name="event.expectedVersion" value={event.version} />}
 
         <Stack spacing={3}>
           {/* The words first (§170): this is what somebody opened the editor to write. */}
@@ -608,7 +610,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         </Box>
       ) : (
       <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
-        {/* A refused rule — an end before the event — comes back as it was chosen (§306). */}
+        {/* A refused rule — an end before the event — comes back as it was chosen (§315). */}
         <ActionForm
           action={repeatEventAction}
           messages={await refusalMessages({
@@ -803,14 +805,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short", hourCycle: "h23" }) })}
               </Typography>
             ) : (
-              <form action={sendEventThanksAction}>
+              // A refused link comes back in its box (§315).
+              <ActionForm
+                action={sendEventThanksAction}
+                messages={await refusalMessages({ url: t("thanks.url") })}
+                scope="thanks"
+                data-testid="thanks-form"
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
                   <Typography variant="body2" color="text.secondary">
                     {t("thanks.help")}
                   </Typography>
-                  <TextField
+                  <RecallField
                     name="url"
                     type="url"
                     label={t("thanks.url")}
@@ -829,7 +837,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     />
                   </Box>
                 </Stack>
-              </form>
+              </ActionForm>
             )}
           </Box>
         )}
@@ -853,16 +861,22 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {t("queue.interestHelp")}
               </Typography>
-              <form action={withdrawInterestAction}>
+              {/* An address the service refuses comes back in its box (§315). */}
+              <ActionForm
+                action={withdrawInterestAction}
+                messages={await refusalMessages({ email: t("queue.interestEmail") })}
+                scope="interest"
+                data-testid="interest-withdraw-form"
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
-                  <TextField name="email" type="email" label={t("queue.interestEmail")} required size="small" sx={{ minWidth: 260 }} />
+                  <RecallField name="email" type="email" label={t("queue.interestEmail")} required size="small" sx={{ minWidth: 260 }} />
                   <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                     {t("queue.interestRemove")}
                   </Button>
                 </Stack>
-              </form>
+              </ActionForm>
             </Box>
           )}
         </Box>
@@ -879,23 +893,31 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-            <form action={addTestRegistrationsAction}>
+            {/* The service's bounds as the browser's, and a refused count back in its box (§315). */}
+            <ActionForm
+              action={addTestRegistrationsAction}
+              messages={await refusalMessages({ count: t("testRegistrations.count") })}
+              scope="test"
+              data-testid="test-registrations-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={event.id} />
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <TextField
+                <RecallField
                   name="count"
                   label={t("testRegistrations.count")}
                   defaultValue="3"
-                  inputMode="numeric"
+                  type="number"
+                  required
                   size="small"
+                  slotProps={{ htmlInput: { min: 1, max: MAX_TEST_REGISTRATIONS_PER_BATCH, step: 1, inputMode: "numeric" } }}
                   sx={{ width: 120 }}
                 />
                 <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                   {t("testRegistrations.add")}
                 </Button>
               </Stack>
-            </form>
+            </ActionForm>
 
             <form action={removeTestRegistrationsAction}>
               <input type="hidden" name="uiLocale" value={locale} />

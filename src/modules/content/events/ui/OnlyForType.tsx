@@ -13,7 +13,7 @@ import { useRecall } from "@/shared/forms/recall";
  * — so a value typed before the type was changed is still posted; the service ignores a race
  * start on anything but a race, and the registration block on a group run.
  *
- * After a refused submit the select re-mounts with the type that was posted (§306), so the
+ * After a refused submit the select re-mounts with the type that was posted (§315), so the
  * subscription is renewed on every answer — an observer on the old, removed input would never
  * hear the new one — and the server render reads the recalled type rather than the page's.
  */

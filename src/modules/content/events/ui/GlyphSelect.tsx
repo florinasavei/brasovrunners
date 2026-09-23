@@ -15,7 +15,7 @@ export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
  * here from a name, never handed across the boundary as an element MUI would inspect. The
  * hidden input keeps `name`, so `OnlyForType`'s observer and the Server Action read it as before.
  *
- * After a refused submit it shows the choice that was posted (§306), keyed on the answer so
+ * After a refused submit it shows the choice that was posted (§315), keyed on the answer so
  * the select — which holds its choice in state of its own — re-mounts from it.
  */
 export default function GlyphSelect({

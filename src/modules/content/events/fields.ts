@@ -142,7 +142,7 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
     .transform((value) => (value === null ? null : Number(value)))
     // The bounds live in the refine above, where `shared/forms/constraints.ts` cannot read
     // them; said once more here, on the schema itself, so the box carries `min`, `max` and
-    // `step` and the browser refuses "0 places" before the server does (§306).
+    // `step` and the browser refuses "0 places" before the server does (§315).
     .meta({ html: { type: "number", min: options.min, max: options.max, step: 1 } });
 
 /** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
@@ -163,7 +163,7 @@ const optionalUuid = z
     { message: "must be an identifier chosen from the list" },
   );
 
-/** What the box for an https link carries, so the browser refuses `http://` and `www.` first (§306). */
+/** What the box for an https link carries, so the browser refuses `http://` and `www.` first (§315). */
 const HTTPS_BOX = { html: { type: "url", pattern: "https://.*" } } as const;
 
 const httpsUrl = (message: string) =>

@@ -48,7 +48,7 @@ import type { EditableEvent } from "../repository";
  * in — a box the action never even read — was a box that promised what nothing saved. The
  * column stays, and the public page still embeds the links older events carry.
  *
- * **Every box refuses first what the server would refuse** (§306; the owner: "nu ar trebui sa
+ * **Every box refuses first what the server would refuse** (§315; the owner: "nu ar trebui sa
  * pot crea evenimentul daca am campuri invalide"): `required`, `maxLength`, `type="url"` with
  * its pattern, `min`/`max` on a number — read off `fields.ts` through `eventInputConstraints`,
  * never typed here a second time. What the browser cannot know — one field against another,
@@ -95,7 +95,7 @@ function timezoneOptions(current: string): readonly string[] {
   return ordered.includes(current) ? ordered : [current, ...ordered];
 }
 
-/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§306). */
+/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
   return textFieldConstraints(eventInputConstraints(field), extra);
 }

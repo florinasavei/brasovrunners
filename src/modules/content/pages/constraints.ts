@@ -2,7 +2,7 @@ import { constraintsOf, type HtmlConstraints } from "@/shared/forms/constraints"
 import { pageFieldsSchema, pageTranslationSchema } from "./fields";
 
 /**
- * The HTML constraints of the page editor's boxes, read off `fields.ts` (`DECISIONS.md` §306):
+ * The HTML constraints of the page editor's boxes, read off `fields.ts` (`DECISIONS.md` §315):
  * the title and the address required, the address's shape as a pattern, every ceiling, and
  * the navigation order's bounds — so the browser refuses first what `savePage` would.
  */

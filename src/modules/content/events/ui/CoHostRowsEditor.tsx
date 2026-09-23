@@ -13,7 +13,7 @@ export type CoHostRowValue = { name: string; url: string };
 
 const EMPTY: CoHostRowValue = { name: "", url: "" };
 
-/** The partners as a refused submit posted them, gathered by index from `event.coHosts[i].<box>` (§306). */
+/** The partners as a refused submit posted them, gathered by index from `event.coHosts[i].<box>` (§315). */
 function recalledRows(names: string[], value: (name: string) => string | undefined): CoHostRowValue[] {
   const rows: CoHostRowValue[] = [];
   for (const name of names) {
@@ -26,7 +26,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
 }
 
 /**
- * The partners' rows, coming back as they were typed after a refused submit (§306): keyed on
+ * The partners' rows, coming back as they were typed after a refused submit (§315): keyed on
  * the answer and handed the recalled rows, exactly as `ScheduleRowsEditor` is.
  */
 export default function CoHostRowsEditor(props: ComponentProps<typeof CoHostRowsEditorIsland>) {

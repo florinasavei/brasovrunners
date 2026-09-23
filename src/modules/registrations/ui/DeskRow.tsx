@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
@@ -12,6 +11,9 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -40,6 +42,16 @@ import {
  * `back` says where the buttons return to — this row inside the desk's search, or the page
  * one scanned code opened — and the hidden fields carry what that page needs to rebuild.
  */
+/**
+ * The bib box's refusal words (§315). A CONFLICT here is "that number is worn by somebody else",
+ * not a colleague's save of the same form, so the sentence under it is the ordinary one — pick
+ * another number and press again — and not "copy what you need, then reload".
+ */
+async function bibRefusalMessages(label: string) {
+  const messages = await refusalMessages({ bibNumber: label });
+  return { ...messages, keptConflict: messages.kept };
+}
+
 export default async function DeskRow({
   row,
   locale,
@@ -268,11 +280,14 @@ export default async function DeskRow({
                 a number was drawn automatically. The number itself is already shown large at
                 the head of the row.
               */}
+              {/* A refused number — taken, retired, out of the band — is answered in this row with
+                  the number still in its box (§315), not at the head of a page the volunteer has
+                  to scroll back from. One form per row, so each carries its own scope. */}
               {number === null && (
-                <form action={setBibNumberAction}>
+                <ActionForm action={setBibNumberAction} messages={await bibRefusalMessages(t("desk.bibField"))} scope={`bib-${row.id}`}>
                   {hidden}
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-                    <TextField
+                    <RecallField
                       name="bibNumber"
                       type="number"
                       size="small"
@@ -284,7 +299,7 @@ export default async function DeskRow({
                       {t("desk.saveBib")}
                     </Button>
                   </Stack>
-                </form>
+                </ActionForm>
               )}
               <form action={checkInAction}>
                 {hidden}

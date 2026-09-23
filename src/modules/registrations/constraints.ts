@@ -3,7 +3,7 @@ import { staffRegistrationSubmissionSchema } from "./fields";
 
 /**
  * The HTML constraints of the staff "new registration" boxes, read off the schema the service
- * validates them with (`DECISIONS.md` §306): the name required with its ceilings, the address
+ * validates them with (`DECISIONS.md` §315): the name required with its ceilings, the address
  * `type="email"` with its ceiling, every optional detail a ceiling and nothing more.
  *
  * `blankIsAbsent`, because `admin/registrations/actions.ts#optional` hands a blank detail to the

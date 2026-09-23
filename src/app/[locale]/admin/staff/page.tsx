@@ -184,7 +184,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         is a form a screen reader cannot find.
       */}
       <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
-        {/* A refused address or name comes back in its box, named in the summary (§306); the
+        {/* A refused address or name comes back in its box, named in the summary (§315); the
             browser refuses first what the schema would (`staffInviteConstraints`). */}
         <ActionForm
           action={inviteStaffAction}

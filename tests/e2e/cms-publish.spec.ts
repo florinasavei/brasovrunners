@@ -170,7 +170,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
   });
 
   /*
-    §306. The owner: "if I submit an invalid form (eg: event creation) the entire page gets
+    §315. The owner: "if I submit an invalid form (eg: event creation) the entire page gets
     cleared" — and an hour later: "nu ar trebui sa pot crea evenimentul daca am campuri invalide!"
     Two refusals, and neither may cost a single box: the browser's own, before anything leaves
     (the title is `required` because the schema requires it), and the server's, for whatever the
@@ -197,6 +197,20 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("translations.en.title").fill(`Untitled ${suffix}`);
     await field("translations.en.slug").fill(`untitled-${suffix}`);
 
+    // The three islands that rebuild themselves from the posted names after a refusal
+    // (`ScheduleRowsEditor`, `CoHostRowsEditor`, `RepeatToggle`): a type that has a programme,
+    // one programme row, one partner, and the repeat tick with a cadence that is not the default.
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Alt eveniment" }).click();
+    await field("event.schedule[0].date").fill("2027-05-02");
+    await field("event.schedule[0].time").fill("10:00");
+    await field("event.schedule[0].ro").fill("Startul");
+    await field("event.schedule[0].en").fill("The start");
+    await field("event.coHosts[0].name").fill("Clubul Prietenilor");
+    await field("event.coHosts[0].url").fill("https://example.org/prieteni");
+    await field("repeat.on").check();
+    await field("repeat.cadence").selectOption("FORTNIGHTLY");
+
     // The button says why it waits, naming the language as well as the box.
     await expect(page.getByText("Completează mai întâi: Română: Titlu")).toBeVisible();
 
@@ -221,6 +235,23 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(field("translations.ro.slug")).toHaveValue(`fara-titlu-${suffix}`);
     await expect(field("translations.ro.excerptBody")).toHaveValue(/Zece kilometri prin parc\./);
     await expect(field("translations.en.title")).toHaveValue(`Untitled ${suffix}`);
+    // The islands, re-mounted from the posted names: the type, the programme row, the partner,
+    // the repeat tick and its cadence — each as it was chosen, none back at its default.
+    await expect(field("event.type")).toHaveValue("MEETUP");
+    await expect(page.getByRole("combobox", { name: /Tip eveniment/ })).toContainText("Alt eveniment");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-02");
+    await expect(field("event.schedule[0].time")).toHaveValue("10:00");
+    await expect(field("event.schedule[0].ro")).toHaveValue("Startul");
+    await expect(field("event.schedule[0].en")).toHaveValue("The start");
+    await expect(field("event.coHosts[0].name")).toHaveValue("Clubul Prietenilor");
+    await expect(field("event.coHosts[0].url")).toHaveValue("https://example.org/prieteni");
+    await expect(field("repeat.on")).toBeChecked();
+    await expect(field("repeat.cadence")).toBeVisible();
+    await expect(field("repeat.cadence")).toHaveValue("FORTNIGHTLY");
+
+    // Unticked before the create that goes through, so each run leaves one draft behind and
+    // not a fortnightly series of them.
+    await field("repeat.on").uncheck();
 
     // And the kept form is a form: the title typed, the same press creates the event.
     await field("translations.ro.title").fill(`Fără titlu ${suffix}`);
@@ -229,7 +260,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 
-  // §306. The owner: "ar trebui sa pot crea si publica dintr-un foc!"
+  // §315. The owner: "ar trebui sa pot crea si publica dintr-un foc!"
   test("creates and publishes in one press, both languages live at once", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `dintr-un-foc-${suffix}`;

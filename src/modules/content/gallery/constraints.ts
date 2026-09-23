@@ -2,7 +2,7 @@ import { constraintsOf, type HtmlConstraints } from "@/shared/forms/constraints"
 import { albumFieldsSchema, albumTranslationSchema } from "./fields";
 
 /**
- * The HTML constraints of an album's boxes, read off `fields.ts` (`DECISIONS.md` §306): the
+ * The HTML constraints of an album's boxes, read off `fields.ts` (`DECISIONS.md` §315): the
  * date, the title and the address required, the address's shape, every ceiling.
  */
 export function albumTranslationConstraints(field: keyof typeof albumTranslationSchema.shape): HtmlConstraints {

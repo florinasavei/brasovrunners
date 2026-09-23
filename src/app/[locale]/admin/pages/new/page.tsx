@@ -45,7 +45,7 @@ export default async function NewPagePage({ params, searchParams }: Props) {
       </Typography>
 
       {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
-          refusal comes back with every box still filled (§306). */}
+          refusal comes back with every box still filled (§315). */}
       <ActionForm action={createPageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />

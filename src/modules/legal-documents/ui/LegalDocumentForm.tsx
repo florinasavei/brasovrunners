@@ -35,7 +35,7 @@ export type LegalDocumentFormValues = {
  * already-approved texts on production safe to open in it.
  *
  * A refusal — a language left empty — comes back with both texts still in their boxes and the
- * summary naming the language (§306). A legal text is tens of kilobytes, so it is the action's
+ * summary naming the language (§315). A legal text is tens of kilobytes, so it is the action's
  * returned state that carries it, never a cookie.
  */
 export default async function LegalDocumentForm({
@@ -59,7 +59,7 @@ export default async function LegalDocumentForm({
   submitLabel: string;
   /** The button while the save is in flight. */
   pendingLabel: string;
-  /** "Fill in first: {field}" — the button's sentence while a box is missing (§306). */
+  /** "Fill in first: {field}" — the button's sentence while a box is missing (§315). */
   incompleteHint: string;
 }) {
   const t = await getTranslations("Admin.legal");

@@ -15,7 +15,7 @@ export type ScheduleRowValue = { date: string; time: string; endTime: string; ro
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
 
-/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§306). */
+/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§315). */
 function recalledRows(names: string[], value: (name: string) => string | undefined): ScheduleRowValue[] {
   const rows: ScheduleRowValue[] = [];
   for (const name of names) {
@@ -28,7 +28,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
 }
 
 /**
- * The programme's rows, coming back as they were typed after a refused submit (§306): the
+ * The programme's rows, coming back as they were typed after a refused submit (§315): the
  * island below holds the rows in state of its own, so it is keyed on the answer and handed the
  * recalled rows as its starting point. With nothing recalled this is the island as it was.
  */

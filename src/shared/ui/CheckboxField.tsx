@@ -30,7 +30,7 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
  *
  * ## After a refused submit
  *
- * The box comes back as it was ticked (`DECISIONS.md` §306): when the form it sits in has been
+ * The box comes back as it was ticked (`DECISIONS.md` §315): when the form it sits in has been
  * answered with a refusal, the tick is whether this box's value was posted — an unticked box
  * posts nothing, so "not posted" is "unticked", never the page's default. A disabled box posts
  * nothing either and keeps the page's word; the caller carries its value in a hidden field.
@@ -58,13 +58,17 @@ export default function CheckboxField({
   const recall = useRecall();
   const checked =
     recall.has && !disabled ? (recall.all(name)?.includes(value ?? "on") ?? false) : defaultChecked;
+  // A single box the refusal named carries the id its summary links to (§47, §315) — "confirm
+  // that this person asked" linked nowhere without it. Never a box of a group: several boxes
+  // with one id would be one label for many.
+  const namedId = value === undefined && recall.named(name) ? recall.idOf(name) : undefined;
 
   return (
     <FormControlLabel
       control={
         <Checkbox
           key={recall.generation}
-          id={id}
+          id={id ?? namedId}
           name={name}
           value={value}
           required={required}

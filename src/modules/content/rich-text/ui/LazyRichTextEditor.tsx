@@ -18,7 +18,7 @@ import RichTextEditor from "./RichTextEditor";
  * write, so they sit behind a summary; until it is opened, the stored document is posted as is
  * from a hidden field, so a save that never touched the rules never changes them either.
  *
- * After a refused submit the document is the one that was posted (§306) — typed into the
+ * After a refused submit the document is the one that was posted (§315) — typed into the
  * editor, or carried unchanged by the hidden field — keyed on the answer so the fold and the
  * editor inside it re-mount from it. Tens of kilobytes of text, which is why the values come
  * back as the action's returned state and not in a cookie.

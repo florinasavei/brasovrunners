@@ -56,7 +56,7 @@ function publicationGaps(form: HTMLFormElement, locales: Props["locales"], label
 }
 
 /**
- * "Creează și publică" (`DECISIONS.md` §306; the owner: "ar trebui sa pot crea si publica
+ * "Creează și publică" (`DECISIONS.md` §315; the owner: "ar trebui sa pot crea si publica
  * dintr-un foc!") — the second submit button of the create form, shown only to a role that may
  * publish, posting the same form with `then=publish` so the action creates the event and walks
  * the two transitions in the create's own transaction.

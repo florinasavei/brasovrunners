@@ -133,23 +133,28 @@ export async function promoteRegistrationAction(form: FormData): Promise<void> {
   backToDesk(form, locale, registrationId, outcome);
 }
 
-export async function setBibNumberAction(form: FormData): Promise<void> {
+/**
+ * A number typed at the desk. A refusal — the number worn by somebody else, retired, out of the
+ * band — comes back as the row form's state with the number still in its box and the box named
+ * (§315); every refusal of this verb is about that one box, so it is the one the summary names.
+ */
+export async function setBibNumberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
   const raw = text(form, "bibNumber").trim();
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
     // An empty field clears the number; anything else must be a whole number, which the
     // service checks — `Number("")` would be 0 and a lie.
     const bibNumber = raw === "" ? null : Number(raw);
     await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());
-    outcome = { saved: "bibSet" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form, {
+      fieldNames: (failure) => (failure.code === "VALIDATION_ERROR" || failure.code === "CONFLICT" ? ["bibNumber"] : failure.fields),
+    });
   }
-  backToDesk(form, locale, registrationId, outcome);
+  backToDesk(form, locale, registrationId, { saved: "bibSet" });
 }
 
 export async function checkInAction(form: FormData): Promise<void> {
@@ -179,7 +184,7 @@ function optional(form: FormData, key: string): string | undefined {
 /**
  * A registration entered by staff (BR-REQ-037-05). A refusal — a duplicate, a missing relay
  * tick, an address the service will not take — comes back with every box still filled
- * (`DECISIONS.md` §306); the event stays selected because it is one of the boxes.
+ * (`DECISIONS.md` §315); the event stays selected because it is one of the boxes.
  */
 export async function createRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -231,7 +236,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     );
     outcome = { saved: "registrationCreated" };
   } catch (error) {
-    // The form comes back as typed, the event still selected (§306).
+    // The form comes back as typed, the event still selected (§315).
     return refused(error, form);
   }
 
@@ -244,7 +249,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
-/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§306). */
+/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§315). */
 export async function correctRegisteredNameAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
@@ -259,7 +264,7 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
-/** Cancel, with a reason. A refusal keeps the reason typed (§306). */
+/** Cancel, with a reason. A refusal keeps the reason typed (§315). */
 export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
@@ -401,6 +406,16 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
  * The shape of `bulkCancelRegistrationsAction` above, with one difference that matters: the
  * confirmation is asserted by the service, not here, so the rule survives a second caller and a
  * dialog that is one day rewritten.
+ *
+ * **Deliberately not an `ActionForm` (§315), and neither is the bulk cancel.** What these two
+ * refuse is the *selection* — nothing ticked, or a typed count that does not match the ticks —
+ * and the selection is the table's checkboxes, joined to this form by their `form` attribute
+ * and rendered outside anything a returned state can refill. React resets every control of a
+ * form when its action completes, the ticks included, so a returned refusal would keep the
+ * reason while unticking the rows it was about: a half-kept form, which is worse than an honest
+ * redirect. The count is a guard and would never be kept anyway (`NEVER_KEPT`); the reason is a
+ * few words typed again with the ticks. A per-row refusal inside the batch is a `failed=N`
+ * count on the banner, not a refusal of the form.
  */
 export async function bulkDeleteRegistrationsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
@@ -437,7 +452,7 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
 
 /**
  * Erase, from the registration's own page (BR-REQ-037-06). A refusal keeps the reason and asks
- * for the "I understand" tick again (§306): the tick is the guard here and is never recalled.
+ * for the "I understand" tick again (§315): the tick is the guard here and is never recalled.
  */
 export async function deleteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -506,7 +521,7 @@ export async function eraseRegistrationFromListAction(_previous: FormOutcome | n
   } catch (error) {
     /*
       The panel stays open on the same row — the page was never left — with the summary above
-      the two boxes (§306). **The reason comes back; the typed name never does.** The reason used
+      the two boxes (§315). **The reason comes back; the typed name never does.** The reason used
       to be dropped because the only way back was a redirect and a free line of somebody's prose
       has no business in a query string; a returned state never leaves the POST, so that reason
       is gone. The name is the guard (§180) and is meant to be typed again (`NEVER_KEPT`).

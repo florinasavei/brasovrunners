@@ -84,7 +84,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
       {events.length === 0 ? (
         <Alert severity="warning">{t("registrations.noEventsAcceptingRegistrations")}</Alert>
       ) : (
-        // A refusal — a duplicate, a missing relay tick — comes back with every box filled (§306).
+        // A refusal — a duplicate, a missing relay tick — comes back with every box filled (§315).
         <ActionForm
           action={createRegistrationAction}
           messages={await refusalMessages({

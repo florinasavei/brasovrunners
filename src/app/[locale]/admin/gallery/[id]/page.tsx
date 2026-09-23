@@ -17,6 +17,7 @@ import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels"
 import PhotoUploader from "@/modules/content/gallery/ui/PhotoUploader";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
+import { RecallHidden } from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { allowedTransitions, canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
@@ -184,12 +185,13 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
       <Divider />
 
       {mayEdit ? (
-        // A refusal comes back with every box still filled (§306).
+        // A refusal comes back with every box still filled (§315).
         <ActionForm action={saveAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="albumId" value={album.id} />
-            <input type="hidden" name="expectedVersion" value={album.version} />
+            {/* The posted version after a refusal, with the edits made against it (§315). */}
+            <RecallHidden name="expectedVersion" value={album.version} />
             <AlbumFieldsForm
               takenOn={album.takenOn.toISOString().slice(0, 10)}
               eventId={album.eventId}

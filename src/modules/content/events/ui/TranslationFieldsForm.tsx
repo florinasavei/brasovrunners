@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { textFieldConstraints } from "@/shared/forms/constraints";
-import RecallField from "@/shared/forms/recall";
+import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { type TranslationFieldName, translationInputConstraints } from "../constraints";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
@@ -59,7 +59,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
   };
 }
 
-/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§306). */
+/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: TranslationFieldName) {
   return textFieldConstraints(translationInputConstraints(field));
 }
@@ -108,7 +108,7 @@ function box(field: TranslationFieldName) {
  *
  * Every box carries the constraints its schema rule implies — `required` on the title and the
  * address, the address's shape as a `pattern`, every `maxLength` — read off `fields.ts` through
- * `translationInputConstraints` (§306), and comes back filled after a refused submit.
+ * `translationInputConstraints` (§315), and comes back filled after a refused submit.
  */
 export default async function TranslationFieldsForm({
   translation,
@@ -158,9 +158,11 @@ export default async function TranslationFieldsForm({
         <>
           {/* The version this panel was rendered from. A save carrying a stale one fails the
               whole save, both languages and the event row together (BR-REQ-051-01 criterion 5).
-              The create form has no row yet and posts neither. */}
+              The create form has no row yet and posts neither. After a refusal it is the
+              version that was posted, not the one the database now holds (`RecallHidden`,
+              §315): the recalled edits were made against that one. */}
           {row && <input type="hidden" name={name("translationId")} value={row.id} />}
-          {row && <input type="hidden" name={name("expectedVersion")} value={row.version} />}
+          {row && <RecallHidden name={name("expectedVersion")} value={row.version} />}
           {/* A locked slug is not sent by the disabled field, so it is sent here. */}
           {slugLocked && <input type="hidden" name={name("slug")} value={translation.slug} />}
 

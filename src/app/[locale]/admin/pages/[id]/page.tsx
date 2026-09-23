@@ -17,6 +17,7 @@ import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
 import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
+import { RecallHidden } from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   allowedTransitions,
@@ -142,12 +143,13 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       <Divider />
 
       {maySave ? (
-        // A refusal — a stale version, an address in use — comes back with every box filled (§306).
+        // A refusal — a stale version, an address in use — comes back with every box filled (§315).
         <ActionForm action={savePageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="pageId" value={page.id} />
-            <input type="hidden" name="expectedVersion" value={page.version} />
+            {/* The posted version after a refusal, with the edits made against it (§315). */}
+            <RecallHidden name="expectedVersion" value={page.version} />
             <PageFieldsForm
               navOrder={page.navOrder}
               translations={translations}

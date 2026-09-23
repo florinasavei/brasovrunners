@@ -97,7 +97,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused plan comes back with the boxes as typed (§306). */}
+      {/* A refused plan comes back with the boxes as typed (§315). */}
       <ActionForm
         action={updateEmailPlanAction}
         messages={await refusalMessages({
@@ -106,6 +106,8 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
           monthlyAllowance: t("emails.plan.monthlyAllowance"),
           note: t("emails.plan.note"),
         })}
+        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        scope="plan"
         data-testid="email-plan-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />

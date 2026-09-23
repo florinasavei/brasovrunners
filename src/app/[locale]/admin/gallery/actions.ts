@@ -64,7 +64,7 @@ function readFields(form: FormData) {
   };
 }
 
-/** A new album. A refusal comes back with every box still filled (`DECISIONS.md` §306). */
+/** A new album. A refusal comes back with every box still filled (`DECISIONS.md` §315). */
 export async function createAlbumAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   let albumId: string;
