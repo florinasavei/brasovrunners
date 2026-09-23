@@ -43,6 +43,7 @@ export default function SignatureField({
   expectedName,
   participantName,
   contactHref,
+  myRegistrationsHref,
   canReply,
   defaultValue,
   refused,
@@ -54,6 +55,11 @@ export default function SignatureField({
   participantName: string | null;
   /** The club's contact page, for somebody whose registered name is itself wrong. */
   contactHref: string;
+  /**
+   * "Înscrierile mele", for a parent whose own name is the mistake: the club can correct the
+   * participant's name but not the guardian's, so that registration is cancelled and made again.
+   */
+  myRegistrationsHref: string;
   /** Whether a reply to the club's emails reaches anybody (`EMAIL_REPLY_TO`). */
   canReply: boolean;
   /** What was typed before a refusal the server made, brought back by the page. */
@@ -94,6 +100,16 @@ export default function SignatureField({
 
   const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
+  const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
+  /*
+    What to do when the name the box wants is itself wrong (§NNN). An adult's registered name is
+    one the club corrects ("Corectează numele") and the same link then signs; a guardian's is not
+    — no staff verb edits it (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and
+    register the minor again with the right name.
+  */
+  const wrongNameSentence = minor
+    ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
+    : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact });
 
   const hint =
     expectedName === null
@@ -118,8 +134,7 @@ export default function SignatureField({
       helperText={
         showError ? (
           <>
-            {mismatchSentence}{" "}
-            {t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
+            {mismatchSentence} {wrongNameSentence}
           </>
         ) : (
           hint

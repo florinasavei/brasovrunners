@@ -54,7 +54,7 @@ describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name",
     expect(signatureNameMatches("FLORIN MUNCA", "Florin Munca")).toBe(true);
     expect(signatureNameMatches("  Florin\tMunca", "Florin Munca")).toBe(true);
     // The non-breaking space a phone's autocorrection leaves behind.
-    expect(signatureNameMatches("Florin Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Florin\u00A0Munca", "Florin Munca")).toBe(true);
   });
 
   /**
@@ -65,9 +65,9 @@ describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name",
   it("forgives the ways Romanian writes the same letter", () => {
     expect(signatureNameMatches("Ștefan", "Ștefan")).toBe(true);
     expect(signatureNameMatches("Stefan", "Ștefan")).toBe(true);
-    expect(signatureNameMatches("ŞTEFAN", "Ștefan")).toBe(true); // U+015E, the cedilla
-    expect(signatureNameMatches("ştefan", "Ștefan")).toBe(true); // U+015F
-    expect(signatureNameMatches("Ștefan", "Ștefan")).toBe(true); // decomposed, comma below
+    expect(signatureNameMatches("\u015ETEFAN", "Ștefan")).toBe(true); // U+015E, the cedilla
+    expect(signatureNameMatches("\u015Ftefan", "Ștefan")).toBe(true); // U+015F
+    expect(signatureNameMatches("S\u0326tefan", "Ștefan")).toBe(true); // decomposed, comma below
     expect(signatureNameMatches("Ștefan Tănase", "Stefan Tanase")).toBe(true);
     expect(signatureNameMatches("tutu ala", "Țuțu Ăla")).toBe(true);
     expect(signatureNameMatches("Ioana Mărginean", "IOANA MARGINEAN")).toBe(true);
@@ -77,15 +77,15 @@ describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name",
 
   it("forgives the shape of an apostrophe, never its absence", () => {
     // An iPhone turns ' into ’ by itself; the registration may have been typed on a laptop.
-    expect(signatureNameMatches("O’Brien Sean", "O'Brien Sean")).toBe(true);
-    expect(signatureNameMatches("O'Brien Sean", "O’Brien Sean")).toBe(true);
+    expect(signatureNameMatches("O\u2019Brien Sean", "O'Brien Sean")).toBe(true);
+    expect(signatureNameMatches("O'Brien Sean", "O\u2019Brien Sean")).toBe(true);
     // A Unicode hyphen is a hyphen; a space is not.
-    expect(signatureNameMatches("Ana‐Maria Pop", "Ana-Maria Pop")).toBe(true);
+    expect(signatureNameMatches("Ana\u2010Maria Pop", "Ana-Maria Pop")).toBe(true);
   });
 
   it("forgives characters nobody can see", () => {
-    expect(signatureNameMatches("Florin​ Munca", "Florin Munca")).toBe(true);
-    expect(signatureNameMatches("Flo­rin Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Florin\u200B Munca", "Florin Munca")).toBe(true);
+    expect(signatureNameMatches("Flo\u00ADrin Munca", "Florin Munca")).toBe(true);
   });
 
   it("refuses a blank signature, whatever the expected name", () => {
@@ -97,7 +97,7 @@ describe("BR-REQ-033-02 §NNN the signature must be the declarant's exact name",
   });
 
   it("folds, and does not rewrite what is kept: the fold is for comparing only", () => {
-    expect(foldName("  Ștefan   O’Brien-Tănase ")).toBe("stefan o'brien-tanase");
+    expect(foldName("  Ștefan   O\u2019Brien-Tănase ")).toBe("stefan o'brien-tanase");
   });
 });
 

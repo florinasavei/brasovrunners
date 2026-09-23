@@ -190,16 +190,28 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const expectedName = registration ? expectedSignatureName(registration) : null;
   const signsForMinor = registration?.guardianName ? registration.registeredName : null;
   const contactHref = getPathname({ locale, href: "/contact" });
+  /*
+    Where a parent whose own name was mistyped goes (§NNN, found in review): "Înscrierile mele",
+    to cancel and register again. The club's "Corectează numele" changes the participant's name
+    and nothing else, so the minor's sentence must not promise the correction the adult's does.
+  */
+  const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
   // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
   const canReply = Boolean(env.EMAIL_REPLY_TO);
   /*
     What the refused press had typed, brought back sealed by the action (§NNN) and read only for
     that refusal — a stale draft never fills a form it was not kept for.
+
+    Read, not consumed: a Server Component cannot delete a cookie, exactly as for the registration
+    form's draft (§142). It lives its ten minutes on the token's own path, and a signature that
+    succeeds clears it (`signDeclarationAction`); whoever can open this path holds the link that
+    signs anyway, so an island whose only job is deleting it would not earn its JavaScript.
   */
   const draft = nameRefused ? await readFormDraft() : null;
   const draftDocumentType = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
   const strong = (chunks: ReactNode) => <strong>{chunks}</strong>;
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
+  const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
@@ -286,7 +298,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 <MuiLink href={`#${SIGNATURE_FIELD_ID}`}>{t("declare.typedName")}</MuiLink>
               </Box>
               <Box sx={{ mt: 0.5 }}>
-                {t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
+                {signsForMinor
+                  ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
+                  : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
               </Box>
             </Alert>
           )}
@@ -366,6 +380,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 expectedName={expectedName}
                 participantName={signsForMinor}
                 contactHref={contactHref}
+                myRegistrationsHref={myRegistrationsHref}
                 canReply={canReply}
                 defaultValue={draft?.typedName}
                 refused={nameRefused}

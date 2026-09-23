@@ -31,9 +31,9 @@
  * Pure and dependency-free: the browser runs the very same function as the server (the signature
  * field's live check), so the two cannot disagree about a name either.
  */
-const INVISIBLE = /[­​-‍⁠﻿]/g;
-const APOSTROPHES = /[`´ʹʼ‘’‛′]/g;
-const HYPHENS = /[‐‑]/g;
+const INVISIBLE = /[\u00AD\u200B-\u200D\u2060\uFEFF]/g;
+const APOSTROPHES = /[`\u00B4\u02B9\u02BC\u2018\u2019\u201B\u2032]/g;
+const HYPHENS = /[\u2010\u2011]/g;
 
 export function foldName(value: string): string {
   return value

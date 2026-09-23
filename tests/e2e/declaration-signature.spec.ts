@@ -22,8 +22,15 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
 
-  /** A registration through the public form, confirmed by its link: waiting for its declaration. */
-  async function awaitingDeclaration(page: Page, tag: string): Promise<RegistrationRow & { link: string }> {
+  /**
+   * A registration through the public form, confirmed by its link: waiting for its declaration.
+   * `minor` registers a child, entered by a parent whose name the declaration then wants (§108).
+   */
+  async function awaitingDeclaration(
+    page: Page,
+    tag: string,
+    { minor = false }: { minor?: boolean } = {},
+  ): Promise<RegistrationRow & { link: string; guardianName: string | null }> {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -31,17 +38,20 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
 
     const suffix = `${tag}-${test.info().project.name}-${Date.now().toString(36)}`;
     const email = `e2e-sign-${suffix}@test.invalid`;
+    const guardianName = minor ? `Maria Munca ${suffix}` : null;
     const values: Record<string, string> = {
       firstName: "Florin",
       lastName: `Munca ${suffix}`,
       email,
-      birthDate: "1990-05-17",
+      birthDate: minor ? "2014-05-17" : "1990-05-17",
       city: "Brașov",
       phone: "+40711111111",
       emergencyContactName: "Ion Popescu",
       emergencyContactPhone: "+40722222222",
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
+    // The parent's box opens once the birth date says the runner is a minor (§188).
+    if (guardianName) await page.locator('[name="guardianName"]').fill(guardianName);
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
@@ -56,7 +66,11 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
 
-    return { ...registration, link: `/ro/inregistrari/declaratie/${await mintActionLink(registration, "COMPLETE_DECLARATION")}` };
+    return {
+      ...registration,
+      guardianName,
+      link: `/ro/inregistrari/declaratie/${await mintActionLink(registration, "COMPLETE_DECLARATION")}`,
+    };
   }
 
   /** The tick and, when the club's text names one, the identity document. */
@@ -131,6 +145,50 @@ test.describe("BR-REQ-033-02 §NNN the signature is the registered name", () => 
 
       await plain.locator('[name="typedName"]').fill(registration.registeredName.toLowerCase());
       await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
+      expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("a minor's declaration wants the parent's name, and a wrong parent name is sent to cancel and register again", async ({ page, browser }) => {
+    const registration = await awaitingDeclaration(page, "minor", { minor: true });
+    const parent = registration.guardianName ?? "";
+
+    const context = await browser.newContext({ javaScriptEnabled: false, baseURL: test.info().project.use.baseURL });
+    try {
+      const plain = await context.newPage();
+      await plain.goto(registration.link);
+      // The parent signs (§108): the hint names the child and wants the parent's name, in bold.
+      await expect(plain.locator("#typedName-helper-text strong")).toHaveText(parent);
+
+      // The child's own name — the mistake a parent is likeliest to make — is refused.
+      await fillTheRest(plain);
+      await plain.locator('[name="typedName"]').fill(registration.registeredName);
+      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
+      const summary = plain.locator("#declaration-errors");
+      await expect(summary.locator("strong")).toHaveText(parent);
+      /*
+        §NNN, found in review: the club can correct a participant's name but not a parent's, so
+        the minor's sentence never promises that. It points at what works — "Înscrierile mele",
+        to cancel and register again.
+      */
+      await expect(summary).not.toContainText("clubul îl corectează");
+      await expect(summary.getByRole("link", { name: "Înscrierile mele" })).toHaveAttribute("href", "/ro/inscrieri/ale-mele");
+      expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+
+      await plain.locator('[name="typedName"]').fill(parent.toLowerCase());
+      /*
+        The parent's refusal is long enough, said twice, to push the button under the sticky
+        footer bar on a 720px desktop. Playwright's "scroll if needed" counts a button under that
+        bar as already in view and retries against the footer until the test times out, so it is
+        brought to the middle first, where a person scrolling would have it.
+      */
+      const sign = plain.getByRole("button", { name: "Semnează și confirmă" });
+      await sign.evaluate((button) => button.scrollIntoView({ block: "center" }));
+      await sign.click();
       await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
       expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
     } finally {

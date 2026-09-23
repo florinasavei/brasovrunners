@@ -2329,6 +2329,8 @@
       "signatureMismatchForMinorRich": "The signature must be exactly the parent or guardian name given at registration: <strong>{name}</strong>.",
       "signatureNameWrong": "If the name given at registration is wrong, <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
       "signatureNameWrongReply": "If the name given at registration is wrong, reply to the email you received or <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
+      "signatureNameWrongForMinor": "If the parent or guardian name given at registration is wrong, it cannot be changed on this registration: cancel it from <mine>My registrations</mine> (or <contact>write to us</contact> and the club cancels it), then register the minor again with the right name. The new registration gets a place like any other, or a place on the waiting list if the race has filled up by then.",
+      "signatureNameWrongForMinorReply": "If the parent or guardian name given at registration is wrong, it cannot be changed on this registration: cancel it from <mine>My registrations</mine> (or reply to the email you received, or <contact>write to us</contact>, and the club cancels it), then register the minor again with the right name. The new registration gets a place like any other, or a place on the waiting list if the race has filled up by then.",
       "nameRefusedTitle": "The signature does not match the name given at registration",
       "nameRefusedNothingRecorded": "Nothing was recorded and your link is fine: correct the name and sign again.",
       "idDocumentTypes": {
