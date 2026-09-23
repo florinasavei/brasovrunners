@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.67-2026-09-23 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.66-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.67-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -136,7 +136,7 @@ sections and in `CHANGELOG.md`.
   that grants nothing (§48); `FEATURE_DISPLAY_NAME` (off) hides nicknames (§95); the event's
   date, place and links to its page, its rules, the terms and the privacy notice on the form
   (§102); an optional **socials** section — Strava link, Instagram username (§106); a parent
-  registers a **minor**: the guardian's name, required under eighteen (§108).
+  registers a **minor**: the guardian's name, required under eighteen (§108); nobody under **14 on the race day**, counted in the race's own zone, at every door (§321).
 - The flow in five steps on the form and the event page (§91): form → email link (48 h) →
   the declaration → confirmed (QR, race number) → race day. **A free race is confirmed a week
   before**: for an event further away than its participation window (per event, default asked
@@ -153,7 +153,7 @@ sections and in `CHANGELOG.md`.
   `{{signedAt}}` — the identity document typed at signing and never scanned, the signature in
   a hand, the signed PDF emailed back and rendered per event, the blank paper form; retention
   three years, the document and the health note seven days after the event (§85–§87, §95).
-  The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99).
+  The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99), the identity document masked (§320).
 - Race numbers in registration order from the event's own first number (§173, reversing §94),
   never reused; a picture of every bib, a bib
   sheet, and the small print the club composes per event — one or two lines, the same on the paper and the preview (§317); a preferential number typed by hand among the free ones, emailed to the runner
@@ -169,7 +169,7 @@ sections and in `CHANGELOG.md`.
   only on production — QA `allowlist`, local `capture` — and live outside production is refused
   at startup (§37, `AGENTS.md` §16). The outbox drains after the request that
   queued it and on the scheduler (§68); a spent Mailgun allowance defers, never discards (§40).
-  The reminder 48 hours before, the thank-you after (§81–§83); the participation confirmation
+  The club's copy of a participant's message is a separate "[Copie club]" message per address, with no token, QR or attachment, and Mailgun open and click tracking are off on every message (§320). The reminder 48 hours before, the thank-you after (§81–§83); the participation confirmation
   when the window opens (§104); the number given by hand (§105).
 - **The Mailgun plan is a setting** on `/admin/emails` — Free, Basic, Foundation, Scale or
   typed ceilings — and every "how much can we still send" figure and the cost table follow it
