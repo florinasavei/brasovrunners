@@ -13,7 +13,8 @@ import { hydrated, signIn } from "./support/featured-event";
  */
 test.describe("§306 a refused form keeps what was typed", () => {
   test("adding a colleague with an address the server refuses keeps the name and the address", async ({ page }) => {
-    await signIn(page, "Dev Administrator");
+    // The team is the Superadministrator's (`canManageStaff`).
+    await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin/staff");
     await hydrated(page);
 

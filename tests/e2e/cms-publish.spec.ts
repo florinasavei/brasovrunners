@@ -264,11 +264,19 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url();
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
     await expect(page.getByText(/Evenimentul a fost creat și publicat/)).toBeVisible();
 
     expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
     expect((await page.goto(`/en/events/${englishSlug}`))?.status()).toBe(200);
+
+    // Off the site again, so every run of this spec does not leave one more card on the public
+    // listing that other specs count.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });
 

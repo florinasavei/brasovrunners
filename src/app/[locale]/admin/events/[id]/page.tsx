@@ -274,8 +274,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The words the save form's refusal summary needs, and the label of every box it can name.
   const refusal = await refusalMessages(await eventFormFieldLabels());
 
+  // Keyed on the dates, so a series made a moment ago on this same page — the repeat form's
+  // redirect lands here without remounting it — opens with every date ticked (§240), as the
+  // editor does when it is opened on an existing series.
+  const seriesKey = dateChips.map((chip) => chip.id).join(",");
+
   return (
-    <SeriesScopeProvider dates={dateChips} currentId={event.id}>
+    <SeriesScopeProvider key={seriesKey} dates={dateChips} currentId={event.id}>
     <Stack spacing={4}>
       <Box>
         <Typography variant="body2">
