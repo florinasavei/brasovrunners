@@ -17,6 +17,7 @@ import {
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -236,8 +237,20 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     );
     outcome = { saved: "registrationCreated" };
   } catch (error) {
-    // The form comes back as typed, the event still selected (§315).
-    return refused(error, form);
+    /*
+      The form comes back as typed, the event still selected (§315).
+
+      Under fourteen on the race day (§321) is the one refusal here about a fact the volunteer
+      typed and can check with the person in front of them, so it keeps its own sentence — the
+      generic "check what you entered" would send them hunting through a form that is correct.
+      The rule's marker is not a box: the summary names the birth date alone, under its label.
+    */
+    const refusal = refused(error, form, {
+      fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE),
+    });
+    return isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE)
+      ? { ...refusal, error: "UNDER_MINIMUM_AGE" }
+      : refusal;
   }
 
   // A success goes to where the new row is visible with the status it actually landed in —

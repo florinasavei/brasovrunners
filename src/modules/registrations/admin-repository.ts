@@ -188,11 +188,14 @@ const latestDeclarationAcceptedAt = sql<Date | null>`(
   LIMIT 1
 )`.mapWith(declarationAcceptances.acceptedAt);
 
+// A club copy (§320) that bounced is a club mailbox's problem, not the participant's address:
+// it never marks the registration as unreachable.
 const emailRejectedReason = sql<string | null>`(
   SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
   FROM ${emailOutbox}
   WHERE ${emailOutbox.registrationId} = ${registrations.id}
     AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
+    AND (${emailOutbox.payloadJson} ->> 'clubCopy') IS DISTINCT FROM 'true'
   ORDER BY ${emailOutbox.createdAt} DESC
   LIMIT 1
 )`;
@@ -759,6 +762,8 @@ export type OutboxHistoryRow = {
   messageType: string;
   status: string;
   isManualResend: boolean;
+  /** The club's copy of the participant's message (§320), labelled so it does not read as a second send to them. */
+  clubCopy: boolean;
   createdAt: Date;
   sentAt: Date | null;
 };
@@ -772,6 +777,7 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
       messageType: emailOutbox.messageType,
       status: emailOutbox.status,
       isManualResend: emailOutbox.isManualResend,
+      clubCopy: sql<boolean>`(${emailOutbox.payloadJson} ->> 'clubCopy') IS NOT DISTINCT FROM 'true'`.mapWith(Boolean),
       createdAt: emailOutbox.createdAt,
       sentAt: emailOutbox.sentAt,
     })

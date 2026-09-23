@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import {
+  clubCopyPayload,
+  clubCopyRecipients,
   clubNoticesSchema,
   confirmationNoticeRecipients,
   declarationArchiveIsConfigured,
+  declarationPdfAudience,
   DEFAULT_CLUB_NOTICES,
+  isClubCopy,
   isParticipantMessage,
   participantMessageBcc,
   resolveDeclarationCopies,
-  withParticipantBcc,
 } from "@/modules/notifications/domain/club-notices";
 
 /**
@@ -142,19 +145,58 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
     }
   });
 
-  it("merges the list into a row's payload without the participant's own address or a repeat", () => {
-    expect(withParticipantBcc({}, "ana@example.ro", [])).toEqual({});
-    expect(withParticipantBcc({ bibNumber: 42 }, "ana@example.ro", ["arhiva@example.ro"])).toEqual({
+});
+
+/**
+ * BR-REQ-033-02 criterion 14 as amended by §320: the club's copy is a message of its own, one per
+ * address, and never the participant's envelope. These are the pure halves of `enqueueClubCopies`
+ * and of the renderer's attachment rule; `tests/integration/notifications/club-copy.test.ts`
+ * renders every participant type through them.
+ */
+describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and attachments (§320)", () => {
+  it("sends one copy per club address, never to the participant, one spelling each", () => {
+    expect(clubCopyRecipients("ana@example.ro", [])).toEqual([]);
+    expect(clubCopyRecipients("ana@example.ro", ["arhiva@example.ro", "presedinte@example.ro"])).toEqual([
+      "arhiva@example.ro",
+      "presedinte@example.ro",
+    ]);
+    // The participant receives their own message; the stripped copy of it would be a second one.
+    expect(clubCopyRecipients("Ana@Example.ro", ["ana@example.ro", "arhiva@example.ro"])).toEqual(["arhiva@example.ro"]);
+    // The same mailbox twice is one copy, compared without regard to case.
+    expect(clubCopyRecipients("ana@example.ro", ["arhiva@example.ro", "ARHIVA@example.ro"])).toEqual(["arhiva@example.ro"]);
+    expect(clubCopyRecipients("ana@example.ro", ["ana@example.ro"])).toEqual([]);
+  });
+
+  it("keeps what the template needs, marks the copy, and never lets it fan out", () => {
+    expect(clubCopyPayload({})).toEqual({ clubCopy: true });
+    expect(clubCopyPayload({ alreadyRegistered: true, bibNumber: 42, url: "https://example.org/poze" })).toEqual({
+      alreadyRegistered: true,
       bibNumber: 42,
-      bcc: ["arhiva@example.ro"],
+      url: "https://example.org/poze",
+      clubCopy: true,
     });
-    // The participant is the recipient, never also a hidden copy — an address in "to" is not Bcc'd.
-    expect(withParticipantBcc({}, "Ana@Example.ro", ["ana@example.ro", "arhiva@example.ro"])).toEqual({ bcc: ["arhiva@example.ro"] });
-    // A row that already carries copies keeps them first and is not sent the same one twice.
-    expect(withParticipantBcc({ bcc: ["arhiva@example.ro"] }, "ana@example.ro", ["ARHIVA@example.ro", "presedinte@example.ro"])).toEqual({
-      bcc: ["arhiva@example.ro", "presedinte@example.ro"],
-    });
-    // Nothing left to add: the payload is returned as it was, with no empty list written into it.
-    expect(withParticipantBcc({}, "ana@example.ro", ["ana@example.ro"])).toEqual({});
+    // A copy goes to the one address its row is for: any list the original carried stays behind.
+    expect(clubCopyPayload({ cc: ["a@example.ro"], bcc: ["b@example.ro"], bibNumber: 7 })).toEqual({ bibNumber: 7, clubCopy: true });
+  });
+
+  it("recognises a club copy by the literal flag and nothing else", () => {
+    expect(isClubCopy({ clubCopy: true })).toBe(true);
+    expect(isClubCopy(clubCopyPayload({ bibNumber: 1 }))).toBe(true);
+    for (const payload of [{}, { clubCopy: "true" }, { clubCopy: 1 }, { clubCopy: false }, null, undefined, "clubCopy", []]) {
+      expect(isClubCopy(payload), JSON.stringify(payload)).toBe(false);
+    }
+  });
+
+  it("attaches the whole declaration to the participant, a masked one to the archive, and nothing to a club copy", () => {
+    expect(declarationPdfAudience("REGISTRATION_CONFIRMED", false)).toBe("participant");
+    expect(declarationPdfAudience("DECLARATION_SIGNED", false)).toBe("participant");
+    expect(declarationPdfAudience("DECLARATION_ARCHIVE", false)).toBe("club");
+    for (const type of emailMessageType.enumValues) {
+      // A club copy of any message attaches no PDF at all.
+      expect(declarationPdfAudience(type, true), type).toBeNull();
+      if (!["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE"].includes(type)) {
+        expect(declarationPdfAudience(type, false), type).toBeNull();
+      }
+    }
   });
 });

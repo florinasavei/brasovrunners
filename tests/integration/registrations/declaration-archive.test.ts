@@ -126,6 +126,10 @@ describe("the club's archive copy (§99)", () => {
     expect(message.html).not.toMatch(/\/api\/registrations\/declaration\//);
     expect(message.text).not.toContain("Salut, Ana Popescu");
     expect(message.text).toContain("Salut,");
+    // The attached copy masks the identity document (§320), and the message says where the whole one is.
+    expect(message.text).toContain("fără seria și numărul actului de identitate");
+    expect(message.text).toContain("până la șapte zile după eveniment");
+    expect(message.text).toContain("without the identity document's series and number");
   });
 
   it("sends no archive copy for a test registration", async () => {

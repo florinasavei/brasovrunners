@@ -21,7 +21,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
         "Opțional, același temei: mărimea de tricou, clubul, un nume de afișare și bifa „membru al echipei Brașov Runners” — neverificate, fără efect asupra locului.",
         "Nota de sănătate (alergie, afecțiune, medicament), doar pentru siguranța ta în ziua cursei, este o categorie specială, păstrată numai cu consimțământul tău explicit, bifat separat (art. 6(1)(a) și art. 9(2)(a) GDPR): niciodată obligatorie, văzută doar de organizatori, retractabilă oricând.",
         "Păstrăm și istoricul înscrierii (stările, momentele, cine a făcut-o), numărul de concurs și prezența la start: art. 6(1)(b) GDPR; după încheierea înscrierii, art. 6(1)(f), ca dovadă că locurile s-au dat corect. Locurile se dau în ordinea sosirii, o regulă pentru toți: fără profiluri, fără decizii automate (art. 22 GDPR).",
-        "Un minor este înscris de părinte sau de tutorele legal, cu datele copilului; părintele semnează declarația în locul lui, dă consimțămintele și răspunde pentru el.",
+        "Data nașterii ne arată și dacă ai vârsta minimă de participare, 14 ani împliniți în ziua evenimentului; nu înscriem pe nimeni mai tânăr. Un minor (14–17 ani) este înscris de părinte sau de tutorele legal, cu datele copilului; părintele semnează declarația în locul lui, dă consimțămintele și răspunde pentru el.",
       ],
     },
     {
@@ -107,7 +107,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
         "Optional, same basis: t-shirt size, club, display name and the “Brașov Runners team member” tick — unverified, without effect on your place.",
         "The health note (allergy, condition, medicine), only for your safety on race day, is special-category data, kept only with your explicit consent, ticked separately (art. 6(1)(a) and art. 9(2)(a) GDPR): never required, seen only by the organisers, withdrawable at any time.",
         "We also keep the registration's history (states, moments, who acted), race number and check-in: art. 6(1)(b) GDPR; after the registration ends, art. 6(1)(f), as proof that places were given fairly. Places go in order of arrival, one rule for all: no profiling, no automated decisions (art. 22 GDPR).",
-        "A minor is registered by a parent or legal guardian with the child's details; the parent signs the declaration for the child, gives the consents and answers for them.",
+        "Your date of birth also tells us whether you meet the minimum age to take part, 14 on the day of the event; we register nobody younger. A minor (14 to 17) is registered by a parent or legal guardian with the child's details; the parent signs the declaration for the child, gives the consents and answers for them.",
       ],
     },
     {

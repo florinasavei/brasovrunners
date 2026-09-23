@@ -192,6 +192,18 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       form.set("subject", message.subject);
       form.set("text", message.text);
       form.set("html", message.html);
+      /*
+        No open or click tracking, on every message, whatever the domain's own setting says
+        (§320). Click tracking rewrites every link through Mailgun's redirect host — the
+        single-use action links included, so a participant's token would pass through a third
+        party's log — and open tracking is a pixel that reports when and where somebody read
+        their mail, where the privacy notice says "fără … urmărire". The per-message options win over
+        the domain's (Mailgun's API reference, "o:tracking-clicks … overrides the domain-level
+        click tracking setting"), so a switch flipped in Mailgun's dashboard cannot undo this.
+      */
+      form.set("o:tracking", "no");
+      form.set("o:tracking-clicks", "no");
+      form.set("o:tracking-opens", "no");
       if (config.replyTo) form.set("h:Reply-To", config.replyTo);
       // Mailgun takes files as repeated `attachment` parts of the same multipart form.
       for (const attachment of message.attachments ?? []) {

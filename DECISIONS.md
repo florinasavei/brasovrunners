@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.67-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.66-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.67-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -13205,3 +13205,81 @@ Baseline `BR-V1.66-2026-09-23`.
 **Decision.** `CardDoor` (`events/ui/CardDoor.tsx`), a Server Component shared by the series card and the single-date card, renders the "read more" glyph (`ReadMore`, one file from `@mui/icons-material`) and the words as a plain link: sentence case, a small bold type in the primary colour, no border, an underline on hover and a visible focus ring. It keeps the 44-pixel tap height BR-REQ-041-01 criterion 6 asks of anything a thumb must hit, as an invisible box around the text rather than a drawn one — what shrinks is what the eye sees, not what the finger gets. The accessible name is unchanged (the glyph is `aria-hidden`), so the e2e that finds the link by name and checks its height still holds. The glyph is rendered in the Server Component itself and never passed as a prop to a client one, which is the hydration defect `shared/ui/action-icons.ts` documents. `card-door.ts`, the button's `sx`, is gone.
 
 Baseline `BR-V1.66-2026-09-23`.
+
+## 320. Fixed — the club's copies carry no live link, no attachment and no identity number; Mailgun tracking is off (2026-09-23)
+
+**Status:** Fixed, amending §293 (the participant-Bcc list) and §99/§244 (the archive copy of the declaration). `notifications/outbox.ts` (`enqueueClubCopies`), `notifications/domain/club-notices.ts` (`clubCopyRecipients`, `clubCopyPayload`, `isClubCopy`, `declarationPdfAudience`; `withParticipantBcc` removed), `notifications/render.ts`, `notifications/templates.ts`, `registrations/declaration-pdf.ts` (`maskIdDocument`), `registrations/signed-declaration.ts` (`DeclarationAudience`), `infrastructure/email/mailgun-adapter.ts`, `registrations/admin-repository.ts`, the registration page's email history, `ClubNoticesPanel` and its messages in both catalogues. BR-REQ-033-02 criteria 11, 14 and 16, BR-REQ-080-01 criterion 12. No migration.
+
+**What the audit found.** The owner, on 2026-09-23: "in order to be GDPR compliant, we need to inform people properly on how their data is used!" The data inventory it produced had one line that was not about wording. The participant-Bcc list of §293 was stamped into the participant's own outbox row and put on the participant's own envelope. So every club mailbox on it got the message byte for byte: the single-use links that confirm the address, sign the declaration, take a freed place and cancel (§12.8); the check-in QR the desk hands the race number against; and, on the confirmation, the signed declaration PDF with the identity document's series and number. §293 had warned about this on the screen and allowed it. The audit's point was simpler: anybody reading a club mailbox (a shared Gmail, a forward, a volunteer's phone) could act for the runner, and the identity document stayed in those mailboxes forever while the database deletes it seven days after the event (§95).
+
+**Decision.**
+
+1. *The participant's message is theirs alone.* `enqueueEmail` writes the participant's row with exactly the payload the caller gave it. No club address rides on it any more.
+
+2. *The club gets a club copy, one row per address.* The copies are queued in the same transaction and only when the participant's row was new: same message type, same registration, `participantId` null, the participant's locale, `{...payload, clubCopy: true}` with any `cc`/`bcc` removed, and the key `<participant key>:club-copy:<address>`. The recipients are the list minus the participant's own address, one spelling each, compared without regard to case. The exclusions stay as §293 had them: TEST registrations, messages with no registration, and the four club and staff types. A copy is never copied again.
+
+   *One row per address, not the audit brief's "first address as To, the rest as Bcc".* This is the shape §245 chose for the confirmation notice, for the same reasons. The addresses were typed into a *hidden*-copy box, so none of them should see the others. One mailbox that bounces does not fail the others' copy. Outside production each address faces the allowlist as the address the message is for, so an authorized mailbox is not captured just because the first one on the list was not (`delivery.ts` decides the whole message on `to`). And one row is exactly one message on the Mailgun allowance, so the day's counts on `/admin/emails` add up. The forecast (`messagesPerCompletedRegistration`) does not change: Mailgun billed each Bcc as a message before, too.
+
+3. *A club copy is rendered with nothing only the participant may hold.* `render.ts` reads the flag and then:
+   - mints no token. The row's null `participantId` already shuts that branch, and the flag shuts it again explicitly;
+   - shows no action button, not even the thank-you's public link, so there is one rule rather than a list of safe actions;
+   - carries no manage link, no list switch and no PDF link;
+   - carries no check-in code and no QR (§245's reasoning for the club's own notice);
+   - attaches nothing: neither the declaration PDF nor the `.ics`.
+
+   The subject gets "[Copie club] " / "[Club copy] " on each language's half, so a mailbox filter on either word finds every copy. The body opens with "Copie pentru club a mesajului trimis participantului. Legăturile personale, codul QR și atașamentele au fost scoase." / "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed." The audit brief's sentence named only the links; the QR and the attachments are named too because the body's own words, "Atașată găsești…", would otherwise mislead. The greeting still names the runner, read through the registration. `buildTemplateContent` drops the same links and the action again, whatever data it is handed, so the template cannot print a personal link into a club copy even if a renderer bug passes one.
+
+4. *Rows already in flight.* A participant message queued before this release carries the old Bcc in its payload. It is now sent to the participant alone: only the club's own types (the archive copy's `cc`/`bcc`, §244) are honoured on the envelope. The club loses one copy of an in-flight message rather than a mailbox receiving live links after the fix.
+
+5. *The identity document is masked in the club's copy of the declaration.* `renderSignedDeclarationPdf` takes a required `audience`, never defaulted, so a caller added later has to choose. `club` is used for the `DECLARATION_ARCHIVE` copy and its `cc`/`bcc`: the copy that leaves the platform for mailboxes nothing sweeps. It masks the document in the text's `{{idDocument}}` and on the signature line, both from one value, so they cannot disagree. `maskIdDocument` keeps the first two and the last two non-space characters around "••••" ("BV 123456" → "BV ••••56"). That is enough to tell whose paper it is and to match it against the card shown at the desk, and not enough to be the number. Spaces are not counted, because people type "BV 123456", "BV123456" and "CI seria BV nr. 123456". Under eight such characters the whole value becomes "••••": the form accepts four to thirty characters, and at five to seven the four kept would be most of the document. The audit brief put the threshold at four or fewer; the stricter one is recorded here. The participant's own copies (the confirmation, the declaration's message, the PDF from their manage link) stay whole. So do the backoffice's single-registration PDF and the event bundle: both are read by signed-in staff inside the platform and lose the document together with the database seven days after the event. The archive email now says the copy is without the series and number, kept three years as the privacy notice says, and that the whole document is in the event's declarations PDF in the backoffice until seven days after the event.
+
+6. *Mailgun open and click tracking are off on every message.* The adapter sets `o:tracking`, `o:tracking-clicks` and `o:tracking-opens` to `no`. The names were checked against Mailgun's API reference, which says per-message options override the domain's setting. Click tracking rewrites every link, action links included, through Mailgun's redirect host, so a token would pass through a third party's log. Open tracking is a pixel that reports when and where somebody read their mail, where the privacy notice says "fără … urmărire". A switch flipped in Mailgun's dashboard cannot undo this.
+
+7. *The backoffice says what a copy is.* The registration's email history labels each club copy ("copie pentru club, fără linkurile participantului"), so two confirmations do not read as two sends to the runner. A bounced or complained club copy no longer fills the registration's "email rejected" reason (§76), because a club mailbox's problem says nothing about the participant's address. The help and warning under the participants' box on `/admin/emails` now say what the copy does and does not carry. The declaration box's warning and the `DECLARATION_ARCHIVE` description say the document is masked. The box's label and the sentence in force are unchanged (the e2e test reads them).
+
+**Rejected.**
+- Keeping the Bcc and trusting the warning. §293's warning was read once, by one person, and the copies went to every mailbox on the list from then on.
+- One row with the rest in `bcc`: see 2.
+- Minting a separate, read-only token for the club. It would be one more secret in a mailbox, and nothing the club does from a copy needs one; the club signs in.
+- Masking by rendering a second template of the declaration. The approved text is what was signed (§57); only the fill-in changes.
+- Masking the event bundle too. It is operational at the desk within the seven days and already loses the document with the database.
+- Leaving tracking to the Mailgun dashboard. It is a setting nobody here watches, and the adapter is the one place that sees every message.
+
+**Not done here.** The privacy notice template (the club copies and the archive mailbox as recipients, with the document masked) is the audit brief's other sections. Links already delivered to a Bcc mailbox before this release stay live until used or expired; whether to invalidate them is the owner's call.
+
+**Tests.**
+- Unit: `notifications/club-copy.test.ts` (every participant type, both languages: no token-shaped secret, no action path, no desk code, no button, both marks, no attachment; the participant's own message unchanged); `notifications/club-notices.test.ts` (recipients, payload, flag, which PDF); `registrations/mask-id-document.test.ts`; `notifications/mailgun-adapter.test.ts` (the three options set once each to `no` on every send).
+- Integration: `notifications/club-copy.test.ts` walks a real registration to confirmation with every club list set. It records every secret `issueActionToken` mints and every input the PDF is drawn from; pdfkit writes an embedded font's text as glyph ids in a deflated stream, so the page itself cannot be searched. It then asserts that no club-bound message (each club copy, the archive copy, the confirmation notice) contains a minted secret, an action path, the desk code or the unmasked document, and that rendering them mints nothing. It also asserts that the archive's PDF input reads "BV ••••56" while the confirmation's reads "BV 123456", that a club copy of every participant type attaches nothing, that a legacy Bcc payload goes to the participant alone, that TEST registrations get no copy, that the history labels copies, and that a bounced copy does not flag the participant. `notifications/club-notices.test.ts`, `registrations/signed-declaration.test.ts` (the club entry masks both places) and `registrations/declaration-archive.test.ts` are amended.
+
+Baseline `BR-V1.67-2026-09-23`.
+
+## 321. A participant is at least fourteen on the day of the race
+
+The owner, 2026-09-23: "Min age must be 14".
+
+**The rule.** A participant is at least fourteen **on the event's start date, in the event's own time zone** (`events.timezone`), counted by calendar years. It uses the same arithmetic `isMinorOn` already uses, including the 29 February rollover. The day is the race day, not the day of submission, because that is the day the person runs and the day the form already counts age categories against. Somebody who turns fourteen on race morning may enter today. A race starting at 00:30 in Brașov is still the 21st on the start line even though it is the 20th in UTC. `MIN_PARTICIPANT_AGE = 14`, `ageOn`, `dayIn` and `latestBirthDateFor` live in `registrations/domain/age.ts`, which still imports nothing (§188).
+
+**One door.** `submitRegistration` adds `minimumAgeRule(eventDay)` to whichever schema its caller passes in. It runs before anything is written and before the throttle is spent. So the public form, a staff entry, the desk's walk-in, a TEST row (`AGENTS.md` §12.6: `kind` decides nothing here) and a restart of a cancelled registration all meet it. A rule proven on one caller is a rule the next caller can walk round. `EventForRegistration` gains an optional `timezone`; the three callers that submit pass it.
+
+**What a refusal says.** The rule names `birthDate` plus a marker, `tooYoung` (`UNDER_MINIMUM_AGE`). This is the shape of §231's `emergencySame`: the field is what lets the summary link to the box, and the marker is what lets the page say *which* rule refused it. "Complete this field correctly" about a real birth date would be untrue.
+- **The public form** names the birth date in the summary with the sentence (`Registration.errors.tooYoung`), repeats it under the box, and keeps every answer (§286).
+- **The staff form** returns the §315 refusal state. The action drops the marker from the named fields and answers `Admin.errors.UNDER_MINIMUM_AGE`, a sentence that tells the volunteer to check the date with the person in front of them. Every box stays filled.
+
+**Said before anybody presses.**
+- The public date picker's `max` is the latest birth date still fourteen on this event's day, computed on the server from the same arithmetic.
+- The birth date's help says the rule, and a line among the form's facts says "from 14; under 18, a parent registers them".
+- The staff form's birth-date field says it too.
+
+**Not counted: a staff entry without a birth date.** BR-REQ-031-04 criterion 5 keeps a missing detail from losing the registration, and the organizer has seen or heard the person. With a date given, the date is counted.
+
+**Unchanged:** the guardian rule (§108). Fourteen to seventeen still register through a parent. The platform's legal templates (terms, privacy notice) now state the minimum age. The texts in effect on production change only when the club approves a new version (§29, §95).
+
+**Known gap, put to the owner, not changed here.** The staff schema applies §108's guardian rule, and the staff form has no box for the parent's name. So a minor entered by staff *with* a birth date is refused for `guardianName`. An under-fourteen refusal names it beside the birth date. The follow-up is either a parent's-name box on the staff form or STAFF exempt from the rule.
+
+**Tests:**
+- unit `registrations/minimum-age.test.ts`: boundaries, 29 February, the time zone, the picker's bound, and the catalogues agreeing on the number.
+- integration `registrations/minimum-age.test.ts`: every door, nothing written, throttle unspent, and the staff action's refusal state.
+- e2e `registration-form.spec.ts`: the picker's `max`, then the server's summary with every value kept.
+- Minor fixtures in `minors.test.ts` and `signature-name.test.ts` move from 12 to 15.
+
+Baseline `BR-V1.67-2026-09-23`.

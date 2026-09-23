@@ -25,7 +25,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!registration || !signed) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, await declarationWords(signed.locale, now), now);
+  // Whole, like the event's bundle: read by signed-in staff inside the platform, and only for as
+  // long as the database keeps the identity document (§95, §320).
+  const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, await declarationWords(signed.locale, now), now, "participant");
   if (!pdf) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   return pdfResponse(pdf, `declaratie-${id.slice(0, 8)}.pdf`);
 }

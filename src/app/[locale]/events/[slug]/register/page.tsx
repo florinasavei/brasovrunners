@@ -25,7 +25,8 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
-import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
+import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
+import { dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
@@ -184,9 +185,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * this said (§231).
    */
   const emergencySame = (fields ?? "").split(",").includes("emergencySame");
+  /**
+   * Under fourteen on the day of the race (§321). The same kind of marker as the one above: the
+   * summary links the birth date, and this says which rule refused it — "complete this field
+   * correctly" about somebody's real birth date would be untrue.
+   */
+  const tooYoung = (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
 
-  // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
-  const latestBirthDate = now.toISOString().slice(0, 10);
+  /*
+    BR-REQ-031-04 criterion 4 and the minimum age (§321), expressed where the browser can enforce
+    them too. The upper bound is the latest birth date that is still fourteen on the race's own
+    day in the race's own zone — computed here, for this event, from the arithmetic the server
+    refuses with — so the picker never offers a date the submission would be turned back for.
+    Today stays a bound as well, for the event absurdly far ahead that would allow a future date.
+  */
+  const today = now.toISOString().slice(0, 10);
+  const youngestAllowed = latestBirthDateFor(MIN_PARTICIPANT_AGE, dayIn(event.startsAt, event.timezone));
+  const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
   const earliestBirthDate = new Date(
     Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
   )
@@ -269,6 +284,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {t("facts.privacy")}
           </LegalLink>
         </Box>
+        {/* Who may enter, among the facts of what is being signed up for and before the first
+            field (§321): the minimum age, and who fills the form in for a minor (§108). A line,
+            not a banner — it is a condition of the race like its date, not a warning. Gone once
+            the form has been sent: by then it has been answered. */}
+        {!submitted && (
+          <Typography variant="body2" color="text.secondary">
+            {t("ageRule")}
+          </Typography>
+        )}
       </Box>
 
       {/*
@@ -393,6 +417,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {rejected.map((name) => (
                       <li key={name}>
                         <MuiLink href={`#${fieldId(name)}`}>{t(`fieldNames.${name}`)}</MuiLink>
+                        {/* The rule, where the browser lands (§321): a birth date refused for age
+                            is not a typo to hunt for, and the sentence says what would be accepted. */}
+                        {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung")}</>}
                       </li>
                     ))}
                   </Box>
@@ -522,14 +549,24 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate", t("birthDateHelp"))}
+                /* The minimum age and the categories, in the help (§321); a refusal for age says
+                   the rule again rather than "complete this field correctly". */
+                helperText={
+                  invalid.has("birthDate")
+                    ? tooYoung
+                      ? t("errors.tooYoung")
+                      : t("errors.field")
+                    : t("birthDateHelp")
+                }
                 type="date"
                 label={t("birthDate")}
                 required
                 autoComplete="bday"
                 slotProps={{
                   inputLabel: { shrink: true },
-                  // The same bounds the schema applies, so a date in the future is refused by
-                  // the picker itself rather than by a round trip that says nothing useful.
+                  // The same bounds the server applies — a date in the future, or one that is
+                  // under fourteen on the race day — so the picker refuses them itself rather
+                  // than a round trip.
                   htmlInput: { min: earliestBirthDate, max: latestBirthDate },
                 }}
               />

@@ -56,9 +56,11 @@ export const MESSAGES_PER_COMPLETED_REGISTRATION =
  *
  * - **Seven when the club's archive mailbox is named** (`DECLARATIONS_ARCHIVE_TO` or the setting,
  *   §99, §244): the archive copy of the declaration is one more message on the same allowance.
- * - **Plus one per hidden-copy address per participant message** (2026-09-22): every Bcc is an
- *   envelope recipient Mailgun bills as a message of its own, so two addresses under "copie
- *   ascunsă la emailurile către participanți" turn a runner's five messages into fifteen. The
+ * - **Plus one per hidden-copy address per participant message** (2026-09-22): each address
+ *   receives a club copy of its own (one outbox row each since §320, where it was one Bcc on the
+ *   participant's envelope before — Mailgun billed each recipient as a message either way), so two
+ *   addresses under "copie ascunsă la emailurile către participanți" turn a runner's five
+ *   messages into fifteen. The
  *   arithmetic is here so the panel that sets the list and the board that forecasts the day
  *   cannot disagree about what it costs.
  *

@@ -131,8 +131,9 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
       {
         declarations: { to: text("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
         confirmations: { to: list("confirmationsTo") },
-        // A hidden copy of every message a real participant receives (2026-09-22). Copied into
-        // each outbox row's payload at enqueue time by `enqueueEmail`, as §244's copies are.
+        // A club copy of every message a real participant receives (2026-09-22): since §320 one
+        // outbox row per address, queued beside the participant's by `enqueueEmail`, stripped of
+        // every token, the QR and the attachments when it is rendered.
         participants: { bcc: list("participantsBcc") },
       },
       new Date(),

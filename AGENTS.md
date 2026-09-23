@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.67-2026-09-23 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.66-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.67-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1964,6 +1964,8 @@ MANAGE_PROFILE
 ```
 
 Never store raw token.
+
+A token is only ever sent to the participant: the club's copies of their messages are separate club-copy rows with no token minted, no action link, no QR and no attachment (`DECISIONS.md` §320).
 
 ### 12.9 Public profiles
 

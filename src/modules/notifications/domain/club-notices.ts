@@ -14,14 +14,18 @@ import { z } from "zod";
  * - **confirmations** — "somebody has confirmed", the new notice (§245). One list: this is a
  *   heads-up, not a document, and a message with three kinds of recipient invites the mistake
  *   below.
- * - **participants** — a hidden copy of every message a *real* participant receives
+ * - **participants** — the club's copy of every message a *real* participant receives
  *   (2026-09-22; the owner: "să putem seta și unde mai merg în BCC mailurile de înregistrare").
- *   One Bcc list. It is copied into each outbox row's payload the moment the message is queued
- *   (`enqueueEmail`), exactly as §244 does for the declaration's copies, so a list edited
- *   tomorrow changes tomorrow's copies and not the ones already queued; the sender puts them on
- *   the envelope, and outside production each faces the allowlist on its own. Never for a test
- *   registration (§12.6), and never for a message that has no registration behind it, because
- *   without one the platform cannot tell a real runner from a synthetic one.
+ *   One list, still labelled "Bcc" on the screen because the participant never sees it. Since
+ *   §320 it is **not** a Bcc on the participant's envelope: each address gets a separate outbox
+ *   row — the *club copy* — queued beside the participant's own in the same transaction
+ *   (`enqueueEmail`), so a list edited tomorrow changes tomorrow's copies and not the ones
+ *   already queued (§244's rule). A club copy is rendered with no token minted, no action link,
+ *   no QR and no attachment (`render.ts`): the GDPR audit of 2026-09-23 found the Bcc receiving
+ *   the runner's live single-use links and the signed declaration with the identity document,
+ *   so anybody reading a club mailbox could act for the runner. Never for a test registration
+ *   (§12.6), and never for a message that has no registration behind it, because without one
+ *   the platform cannot tell a real runner from a synthetic one.
  *
  * ## Why `bcc` is spelled out and warned about in the interface
  *
@@ -31,6 +35,8 @@ import { z } from "zod";
  * personal data to a mailbox that nobody on the message can see, which is exactly the property
  * that makes it useful for an archive and exactly the property that makes it a way to leak
  * quietly. The platform allows it and says so on the screen that sets it; the club decides.
+ * Since §320 the club's copy of the declaration carries the identity document masked
+ * (`maskIdDocument`), so what a hidden copy hands on is the name, the event and the signature.
  *
  * Pure: no database, no environment. The environment's old single address is still read as a
  * fallback by `resolveDeclarationCopies`, so a deployment that has not been touched keeps
@@ -171,14 +177,14 @@ export function confirmationNoticeRecipients(setting: ClubNotices | null): reado
   return setting?.confirmations.to ?? [];
 }
 
-/** Who receives a hidden copy of every message to a real participant. No environment fallback either. */
+/** Who receives a club copy of every message to a real participant (§320). No environment fallback either. */
 export function participantMessageBcc(setting: ClubNotices | null): readonly string[] {
   return setting?.participants.bcc ?? [];
 }
 
 /**
- * The messages a participant receives, from §16.3's list — the ones the club's hidden copy
- * rides on. Spelled out as the exclusions rather than the inclusions, so a message type added
+ * The messages a participant receives, from §16.3's list — the ones the club gets a copy of
+ * (§320). Spelled out as the exclusions rather than the inclusions, so a message type added
  * tomorrow *for a participant* is copied without anybody remembering this set, and one added
  * for the club or the staff has to be named here to stay out:
  *
@@ -201,21 +207,58 @@ export function isParticipantMessage(messageType: EmailMessageType): boolean {
 }
 
 /**
- * The hidden copies one participant message carries, merged into what the row already asked
- * for: the club's list, minus the participant's own address and minus anything already there,
- * compared by spelling without regard to case (§74's rule, as everywhere in this file). The
- * participant is never Bcc'd on their own message — an address in "to" is not also a copy.
+ * Who receives a club copy of one participant message (§320): the club's list, minus the
+ * participant's own address, one spelling each, compared without regard to case (§74's rule, as
+ * everywhere in this file). A participant whose address is also on the club's list gets their
+ * own message, never also the stripped copy of it.
+ *
+ * Each address is one outbox row of its own rather than one row with the rest in `bcc`, the
+ * shape §245 chose for the confirmation notice and for the same reasons: the addresses were typed
+ * into a *hidden*-copy box, so none of them sees the others; one mailbox that bounces does not
+ * mark the others' copy failed; and outside production each faces the allowlist as the address
+ * the message is *for* (`delivery.ts`), so an authorized mailbox is not captured because the
+ * first one on the list was not. One row is also exactly one message on the allowance, which is
+ * what the day's counts on `/admin/emails` add up.
  */
-export function withParticipantBcc(
-  payload: Record<string, unknown>,
-  recipientEmail: string,
-  bcc: readonly string[],
-): Record<string, unknown> {
-  if (bcc.length === 0) return payload;
-  const already = Array.isArray(payload.bcc)
-    ? payload.bcc.filter((entry): entry is string => typeof entry === "string")
-    : [];
-  const seen = new Set<string>([recipientEmail.toLowerCase(), ...already.map((entry) => entry.toLowerCase())]);
-  const merged = [...already, ...withoutRepeats(bcc, seen)];
-  return merged.length === 0 ? payload : { ...payload, bcc: merged };
+export function clubCopyRecipients(recipientEmail: string, bcc: readonly string[]): string[] {
+  return withoutRepeats(bcc, new Set<string>([recipientEmail.toLowerCase()]));
+}
+
+/**
+ * The payload flag that makes an outbox row a club copy. Read by `render.ts`, which then mints
+ * no token and attaches nothing, and by the backoffice's timeline, which labels the row.
+ */
+export const CLUB_COPY_FLAG = "clubCopy";
+
+/** Whether an outbox row's payload is a club copy's. Anything but the literal `true` is not. */
+export function isClubCopy(payload: unknown): boolean {
+  return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[CLUB_COPY_FLAG] === true;
+}
+
+/**
+ * The club copy's payload: what the participant's row asked the template for — "you were already
+ * registered", the thank-you's link, a number given by hand — plus the flag. Never a `cc` or a
+ * `bcc` of its own, so a copy cannot fan out further than the one address its row is for.
+ */
+export function clubCopyPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const kept = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== "cc" && key !== "bcc"));
+  return { ...kept, [CLUB_COPY_FLAG]: true };
+}
+
+/**
+ * Which signed-declaration PDF a message carries, if any (§95, §99, §320).
+ *
+ * - `participant` — the whole document, identity document included: the runner's own copy, on
+ *   the confirmation and on the declaration's own message.
+ * - `club` — the identity document masked (`maskIdDocument`): the archive copy that leaves the
+ *   platform for the club's mailboxes, where nobody deletes it after seven days as the database
+ *   does (§95).
+ * - `null` — no PDF: every other type, and every club copy of a participant's message, which
+ *   attaches nothing at all.
+ */
+export function declarationPdfAudience(messageType: EmailMessageType, clubCopy: boolean): "participant" | "club" | null {
+  if (clubCopy) return null;
+  if (messageType === "DECLARATION_ARCHIVE") return "club";
+  if (messageType === "REGISTRATION_CONFIRMED" || messageType === "DECLARATION_SIGNED") return "participant";
+  return null;
 }
