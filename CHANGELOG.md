@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.55-2026-09-23
+
+- **Fixed: pressing „Trimite înscrierea" a second too early lost the press.** While the anti-bot check was still answering, the button held your press and said so — and then did nothing when the check finished; you had to press again, and nothing told you. With autofill that was the normal case, and it looked like a registration that went through. The held press is now sent by itself the moment the check answers (or after eight seconds if it never does), the sentence says so, and a submit that takes longer than fifteen seconds tells you to wait rather than press again. §304.
 ## BR-V1.54-2026-09-23
 
 - **The create page is the editor** — one tab per language with the rich summary and the folds, "Repetă evenimentul" first, no "Link video" box on either page (a film goes in the description with the editor's YouTube button; stored links stay), every time box picked from the browser's own clock, and the place's name typed per language ("Tractorul Park" on the English page) with the meeting point still asked once — migration `0058`. §303.

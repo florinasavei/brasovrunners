@@ -2237,7 +2237,8 @@
     "emailHelp": "This is where the confirmation link goes. Type it carefully.",
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
     "phoneValid": "Looks right. We will store it as",
-    "botCheckWait": "Checking for a second that you are not a robot — then you can send."
+    "botCheckWait": "One second while we check you are not a robot — we send the form ourselves as soon as it answers; no need to press again.",
+    "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
