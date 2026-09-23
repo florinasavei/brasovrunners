@@ -55,7 +55,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
   it("gives every https link type=url and a pattern that insists on https", () => {
     for (const field of ["mapUrl", "routeUrl", "stravaEventUrl", "facebookEventUrl", "externalRegistrationUrl"] as const) {
       const constraints = eventInputConstraints(field);
-      expect(constraints, field).toMatchObject({ type: "url", pattern: "https://.*" });
+      expect(constraints, field).toMatchObject({ type: "url", pattern: "[Hh][Tt][Tt][Pp][Ss]://.*" });
       expect(constraints.required, field).toBeUndefined();
       expect(EVENT_FORM.includes(`box("${field}"`), `EventFieldsForm reads the constraints of "${field}"`).toBe(true);
     }

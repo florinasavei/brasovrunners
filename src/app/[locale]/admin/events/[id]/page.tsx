@@ -824,7 +824,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     label={t("thanks.url")}
                     helperText={t("thanks.urlHelp")}
                     size="small"
-                    slotProps={{ htmlInput: { pattern: "https://.*", maxLength: 2048 } }}
+                    slotProps={{ htmlInput: { pattern: "[Hh][Tt][Tt][Pp][Ss]://.*", maxLength: 2048 } }}
                   />
                   <Box>
                     <ConfirmSubmitButton
