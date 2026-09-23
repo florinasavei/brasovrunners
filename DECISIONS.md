@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.62-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.63-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.62-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.63-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12914,3 +12914,45 @@ No migration. Both languages use the same keys.
 **From this release on, not before.** `erasedBibNumbers` reads the event and the number from the erasure's audit row, and only erasures written by this release record them: an older `registration.deleted_by_staff` row carries neither, and the number it erased was never stored anywhere, so it cannot be backfilled. A number erased on production before this ships can still be drawn again; the club should check the bib pile against the list once after the release if anything was erased before it. **The write re-checks the refusals.** `setBibNumberByStaff` reads the registration before its transaction; the UPDATE carries the two refusals — not `CANCELLED`/`EXPIRED`, not a printed number — in its own `WHERE`, and no row back is the same refusal, so a cancellation in between cannot slip a number change through.
 
 Baseline `BR-V1.62-2026-09-23`.
+
+## 312. Decided — a second submission is marked for the club, and a name search looks in every event (2026-09-23)
+
+**Context.** Amalia, an organizer testing on QA, registered with her browser's autofill twice. The owner: "both us and the user needs to know he is trying to re-register". The participant already learns it: the re-sent message opens with "Ești deja înscris", underlined (§235, §309). The club did not. A second submission changed no row and left no trace a staff member could see, so "she says she registered but I cannot find anything" had no answer on any screen. And the staff member who searched for her by name found nothing, for a second reason: the list opens on the featured event (§178), and a name typed into the search stayed inside that filter, which nobody had chosen and the screen did not name.
+
+(The first half of the owner's sentence — dropping QA's recipient allowlist — is the mail setting of §307, not this.)
+
+**Decision.**
+
+*Every second submission leaves one audit row.* `registration.resubmitted`, on the registration it found, with the participant's id, no staff actor, and metadata `{ status, resent }`: the state it found and the message type re-sent, or null. `submitRegistration` writes it inside the transaction that queues the re-send, so the record and the message cannot disagree. It is written for every active state, whether or not anything went out. `resent` is taken from what the outbox actually queued: the same idempotency key twice in one millisecond queues nothing, and the row says null rather than naming a message that does not exist.
+
+*Only staff read it.* The screen after the form is word for word the same for a new address and a registered one — the oracle rule (`AGENTS.md` §19.4, BR-REQ-031-01 criterion 3) is the reason this is an audit row and not a flag the confirmation page could consult. It is read behind `canReadRegistrations`: the Administrator and, since §289, the Organizer, who changes nothing by seeing it.
+
+*Nothing personal.* The participant is the row's own column; the metadata names a state and a message type (§12.12). A different spelling of the name typed the second time is recorded nowhere, and the registration keeps the name it has.
+
+*No new throttle.* The per-identity bucket in front of the form (§19.4, five an hour) already bounds how often one address reaches the branch, so the trail grows no faster than the inbox it mirrors.
+
+*The registration's page reads the rows as timeline lines*, under "Trimisă", oldest first: "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”", or "— nu era nimic de retrimis", with the message named in `/admin/emails`'s own words. The found state is the useful half — "Așteaptă confirmarea emailului" is usually the whole answer to "she says she registered". They leave "Ce a făcut echipa", which is for what the team did.
+
+*The list marks the row* "Reînscriere ×N · {date}", with the date visible because a `title` never shows on a phone, read in one grouped query over the page's row ids (`listResubmissionMarks`) on the index the timeline already uses — never a query per row, never a column on the export. A `TEST` row is marked like any other; no count the club is given includes attempts, because the summary counts people (§12.6).
+
+*A name search with no event chosen looks in every event*, and says so in one line: "Caut în toate evenimentele — alege unul ca să restrângi". An explicit event id, or `all`, is honoured as it is. The rule is `defaultEventFilter`, still pure, now taking the search, and still shared by the page and the export (§15.10).
+
+*"Chosen" means in the address, and the select had to stop choosing for people.* The filter form's select always submitted the featured event's id, so the first press of "Filtrează" turned the default into an explicit choice — the search could never have widened — and the sort and page links did the same. The select now carries the automatic answer as an option of its own, the empty value, dropped from every link and labelled for what it means on that render: "Evenimentul principal: {event}", or "Toate evenimentele, pentru căutarea după nume".
+
+*The export names the scope the screen resolved*, and the route runs the same rule over what it receives. Found on the way: `eventId=all` reached the query as an event id, compared a uuid column with "all" and failed, so the export of "Toate evenimentele" had never worked since §178. A file about every event is no longer named after its first row's event.
+
+**Rejected.**
+
+*A sentence on the public screen.* That is the oracle: "this address is registered", said to anybody who types it (§19.4, §235).
+
+*A flag or a counter column on `registrations`.* A migration for a fact the audit trail already has a table, an index and a reader for, and a column every join and the export would carry.
+
+*Keeping the featured filter under a search and adding a hint.* A hint under a wrong answer is still a wrong answer; somebody typing a name is looking for a person, not browsing a race.
+
+*A throttle on the audit row itself.* The form's own bucket is the right bound, and a second one would make the trail disagree with the inbox.
+
+**Consequences.** `AuditAction` gains `registration.resubmitted`, the second action with no staff actor after `list_consent_changed`. No migration: the action is text. BR-REQ-037-03 and BR-REQ-037-05 gain a criterion each. The Administrator's guide says both in one paragraph.
+
+Tests: `tests/integration/registrations/resubmission-marker.test.ts` (12), `tests/unit/registrations/default-event-filter.test.ts` (11), e2e `registration-autofill.spec.ts` (the second submission end to end on both viewports: the identical screen, the list searched across events, the chip, the export, the timeline line).
+
+Baseline `BR-V1.63-2026-09-23`.

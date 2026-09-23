@@ -371,7 +371,8 @@
           "checkin_undone": "Prezență anulată",
           "bibs_printed": "BID marcat ca printat",
           "bibs_unprinted": "BID marcat ca neprintat",
-          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
+          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
+          "resubmitted": "S-a înscris din nou cu aceeași adresă"
         }
       },
       "locale": {
@@ -407,7 +408,14 @@
       "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "registrationsCancelledPrinted": "Numere deja tipărite, retrase acum: {numbers}. Scoate-le din teanc — nu se dau altcuiva.",
-      "searchHelp": "Caută după nume, cu sau fără diacritice.",
+      "searchHelp": "Caută după nume, cu sau fără diacritice — în toate evenimentele, dacă nu alegi unul.",
+      "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
+      "filterAutoFeatured": "Evenimentul principal: {event}",
+      "filterAutoSearch": "Toate evenimentele, pentru căutarea după nume",
+      "resubmittedChip": "Reînscriere ×{count} · {date}",
+      "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată pe {date}. Fiecare trimitere este în cronologia înscrierii.",
+      "resubmittedSent": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”",
+      "resubmittedNothing": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — nu era nimic de retrimis",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
@@ -1987,6 +1995,7 @@
           "who": "Rol: Administrator sau Superadministrator.",
           "steps": [
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
+            "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
