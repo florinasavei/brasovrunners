@@ -1,4 +1,5 @@
-import { and, asc, count, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, max, sql, type SQL } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -388,6 +389,48 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
     summary.byStatus[row.status] = (summary.byStatus[row.status] ?? 0) + row.total;
   }
   return summary;
+}
+
+/** How many times the form was filled again for one registration, and when last (§312). */
+export type ResubmissionMark = { count: number; lastAt: Date };
+
+/**
+ * The "Reînscriere ×2" chip for the rows on one page of the list (§312), in **one grouped
+ * query** over the audit trail — never a query per row, and never a column on every row of the
+ * export, which has no use for it.
+ *
+ * Keyed on the row ids the page already fetched, so it reads exactly the rows on screen and
+ * rides the `(entity_type, entity_id, created_at)` index the registration's own timeline uses.
+ * A `TEST` row is marked like any other (§12.6 forbids a difference in behaviour, and a marker
+ * is not a count); nothing here feeds the summary strip, which counts people, not attempts.
+ */
+export async function listResubmissionMarks<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, ResubmissionMark>> {
+  const marks = new Map<string, ResubmissionMark>();
+  if (registrationIds.length === 0) return marks;
+
+  const rows = await db
+    .select({
+      registrationId: auditLogs.entityId,
+      total: count(),
+      lastAt: max(auditLogs.createdAt),
+    })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.entityType, "registration"),
+        eq(auditLogs.action, "registration.resubmitted"),
+        inArray(auditLogs.entityId, [...registrationIds]),
+      ),
+    )
+    .groupBy(auditLogs.entityId);
+
+  for (const row of rows) {
+    if (row.registrationId && row.lastAt) marks.set(row.registrationId, { count: row.total, lastAt: row.lastAt });
+  }
+  return marks;
 }
 
 /**
