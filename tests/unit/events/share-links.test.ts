@@ -25,7 +25,8 @@ describe("BR-REQ-052-02 criterion 8 — the address every share carries", () => 
   });
 
   it("puts one slash between the host and the path, whatever the base ends in", () => {
-    // `APP_BASE_URL` is typed by a person; `z.url()` accepts a trailing slash.
+    // `env.ts` drops the slash at startup (`config/env.test.ts`); the builder is pure and
+    // tolerates one regardless, since a test hands it whatever base it likes.
     expect(eventPageUrl(`${BASE}/`, "ro", "tura-pe-tampa")).toBe("https://example.test/ro/evenimente/tura-pe-tampa");
     expect(absoluteUrl(`${BASE}//`, "/ro")).toBe("https://example.test/ro");
     expect(absoluteUrl(BASE, "ro/x")).toBe("https://example.test/ro/x");

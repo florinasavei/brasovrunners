@@ -17,12 +17,14 @@ import type { Locale } from "@/i18n/routing";
  */
 
 /**
- * `base + pathname`, whatever the base ends in.
+ * `base + pathname`, with exactly one slash between them.
  *
- * `APP_BASE_URL` is typed by a person into a dashboard, and `z.url()` accepts it with a
- * trailing slash. Concatenated as `${base}${pathname}` that made every share
- * `https://host//ro/…`, which a scraper reads as a different address from the page's own
- * canonical one — and a card with no title is what it draws for an address it cannot match.
+ * `env.ts` drops a trailing slash from `APP_BASE_URL` at startup, so every `${base}${pathname}`
+ * join in the application reads the same; this builder tolerates one regardless, because it is
+ * pure and a test hands it whatever base it likes. The failure it was written for: a base typed
+ * as `https://host/` made every share `https://host//ro/…`, which a scraper reads as a
+ * different address from the page's own canonical one — and a card with no title is what it
+ * draws for an address it cannot match.
  */
 export function absoluteUrl(baseUrl: string, pathname: string): string {
   const base = baseUrl.replace(/\/+$/, "");
