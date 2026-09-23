@@ -77,3 +77,19 @@ export const PLACE_HOLDING_STATUSES: readonly RegistrationStatus[] = [
 export function holdsAPlace(status: RegistrationStatus): boolean {
   return (PLACE_HOLDING_STATUSES as readonly string[]).includes(status);
 }
+
+/**
+ * The two states a registration ends in (§10.5): no place, no priority for one, and nothing
+ * left to happen to it except a restart, which re-enters at the front of the machine.
+ *
+ * Named because a settled race number outlives them (`DECISIONS.md` §173): a bib printed for a
+ * registration that then reaches one of these is a piece of paper with a valid-looking number
+ * and nobody entitled to wear it — a *void* bib, which `bibs.ts#voidBibsFor` lists. Exactly the
+ * complement of `ACTIVE_STATUSES`, and `state-machine.test.ts` asserts that so a new status
+ * cannot fall between the two.
+ */
+export const TERMINAL_STATUSES: readonly RegistrationStatus[] = ["CANCELLED", "EXPIRED"];
+
+export function isTerminalStatus(status: RegistrationStatus): boolean {
+  return (TERMINAL_STATUSES as readonly string[]).includes(status);
+}
