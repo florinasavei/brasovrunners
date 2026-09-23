@@ -277,6 +277,11 @@ it is the authority, this is the summary):
     were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
     in; the two the club alone can decide are marked there (how many places, and how many days
     before the race a confirmation is asked and owed).
+13. **The monitors' cadence, for Neon's bill** (`SETUP.md` §40, 2026-09-23): on cron-job.org
+    the production health monitor hourly at minute 0, QA's at 0/6/12/18; the four job monitors
+    unchanged; after the release that lets an idle ping skip the database, QA's
+    „Cât de des verifică platforma" on `/admin/tasks` → Costuri set to 2 hours. The Neon limits
+    themselves are set (production 100 CU-hours a month, QA 30).
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
@@ -293,7 +298,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22, and **which plan the pages read against is a setting** — `platform_settings.neonPlan`, set once per environment on `/admin/tasks` → Costuri, Free when unset; `/devs` and the cost table follow it (`DECISIONS.md` §280, §306) |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; **the pages read the plan from Neon's own answer** (the project row's `owner.subscription_type`), and `platform_settings.neonPlan` is only the fallback without a key (`DECISIONS.md` §280, §306, §NNN). **Capped since 2026-09-23**: production 0.25–1 CU and 100 CU-hours a month, QA 0.25 CU and 30 — a project that reaches its limit is suspended until the next period (`SETUP.md` §40) |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
