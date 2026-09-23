@@ -35,11 +35,12 @@ export async function submitContactAction(form: FormData): Promise<void> {
   // The bot check, when configured (§97, §216): only a token Cloudflare looked at and
   // rejected is a field error. A widget that never ran, or a Cloudflare that did not answer,
   // is "unavailable" and passes — the honeypot and the timing check are still in front.
+  // The visitor's IP goes to Cloudflare with the token and nowhere else — not into the message,
+  // not into the screening below, not into a row (AGENTS.md §19.4).
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  const verdict = (await botCheckIsOn(getDb(), new Date()))
-    ? await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp)
-    : "not_configured";
+  const token = String(form.get(TURNSTILE_FIELD) ?? "");
+  const verdict = (await botCheckIsOn(getDb(), new Date())) ? await verifyTurnstile(token, remoteIp) : "not_configured";
   if (verdict === "failed") {
     await stashFormDraft(form, path);
     redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${CONTACT_ERROR_SUMMARY_ID}`);
@@ -68,6 +69,19 @@ export async function submitContactAction(form: FormData): Promise<void> {
       },
       new Date(),
       `${env.APP_BASE_URL}${path}`,
+      /*
+        What the gates could not decide, handed on to be marked rather than refused (the owner,
+        2026-09-23: SEO spam through this form). "No token" is read here, from the post itself,
+        and not from the verdict: `unavailable` means both "no token" and "Cloudflare did not
+        answer", and only the first is what a script leaves behind — a Cloudflare outage must
+        not mark every message. `not_configured` is the switch off or the keys missing.
+      */
+      {
+        botCheckOn: verdict !== "not_configured",
+        tokenPresent: token.length > 0,
+        turnstileVerdict: verdict,
+        clubHost: new URL(env.APP_BASE_URL).hostname,
+      },
     );
   } catch (error) {
     if (isDomainError(error)) {
@@ -78,7 +92,8 @@ export async function submitContactAction(form: FormData): Promise<void> {
     throw error;
   }
 
-  // A bot's post is answered exactly like a person's (BR-REQ-031-01 c3). The draft is replaced
+  // A bot's post is answered exactly like a person's (BR-REQ-031-01 c3), and a message delivered
+  // marked "[posibil spam]" is `sent` like any other — nothing here can tell them apart. The draft is replaced
   // by the address alone, so "we answer at <address>" can be said without the address ever
   // touching the URL (§14.5); the cookie is path-scoped, encrypted and gone in ten minutes.
   if (outcome.outcome === "sent" || outcome.outcome === "ignored") {

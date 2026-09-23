@@ -98,8 +98,14 @@ export function rowVerbsFor(
     The printing mark (§264). Only with a settled number, because a provisional one is never
     printed, and only for whoever may manage registrations: the sheet is a read that the
     Organizer has too (§289), and this is the club's record of having put it on paper.
+
+    And only while CONFIRMED (§311). A cancelled registration keeps its settled number and its
+    printed mark — that is what makes the bib *void* and worth listing — but `setBibPrinted`
+    refuses any row the sheet would not print, so offering the mark here was §289's lesson over
+    again: a menu item whose service answers NOT_FOUND. The void mark is read, on the list's
+    bibs panel and on the row's own page; it is not a thing to toggle.
   */
-  if (mayManage && options.bib?.settled) {
+  if (mayManage && status === "CONFIRMED" && options.bib?.settled) {
     verbs.push(options.bib.printed ? "unmarkBibPrinted" : "markBibPrinted");
   }
 

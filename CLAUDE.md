@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.56-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.62-2026-09-23 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.56-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.62-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -232,8 +232,9 @@ it is the authority, this is the summary):
 1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
 2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
    production sends live, webhook signed; `contact@mail.<domain>` forwards to the owner until
-   the club has a mailbox; Zitadel's own mail goes through the same domain. QA still uses the
-   sandbox (its own sending key is optional). Procedure: `SETUP.md` §35.
+   the club has a mailbox; Zitadel's own mail goes through the same domain. QA sends through
+   the same domain with its own key since 2026-09-23, to anyone, tagged `[QA]` (§307).
+   Procedure: `SETUP.md` §35.
 3. ~~Production Zitadel application~~ — done 2026-09-17: application, `STAFF_AUTH_MODE=provider`,
    the owner's SUPERADMIN row. Sign in at `/admin` on the production host.
 4. ~~The club's approved legal texts~~ — the **terms** and the **privacy notice** are approved
@@ -292,13 +293,13 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated: production on `0054`, QA on `0056` (2026-09-22), and `0057_bib_printed` comes with the next release; the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; diagnostics still need the Free-label follow-up — `DECISIONS.md` §280 |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22, and **which plan the pages read against is a setting** — `platform_settings.neonPlan`, set once per environment on `/admin/tasks` → Costuri, Free when unset; `/devs` and the cost table follow it (`DECISIONS.md` §280, §306) |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
-| Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
+| Email | Mailgun, EU region, on the club's `mail.` subdomain — production with its key, QA with its own (§307); the US sandbox was the first step (§37) and is unused. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built | live: production `live`, QA `allowlist` with the star (§163), every QA subject tagged `[QA]`; both share the domain's daily allowance and its webhooks |
 | Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |
-| Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile behind `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (`DECISIONS.md` §97); the privacy notice names it | built; Turnstile on when the keys are set |
+| Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile behind `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (`DECISIONS.md` §97); the privacy notice names it | built; Turnstile on when the keys are set; a contact message that passes every gate but looks automated is delivered marked `[posibil spam]`, never dropped (§310) |
 
 **Before installing anything:** verify the current API against the library's documentation
 (Context7 or the official docs site). Next 16, MUI 9, next-intl 4 and Drizzle 0.45 are newer
