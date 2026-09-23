@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql, type SQLWrapper } from "drizzle-orm";
 import { type AuditLog, auditLogs } from "@/db/schema/audit-logs";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -88,6 +88,14 @@ export type AuditAction =
   | "registration.consent_withdrawn"
   /** The registrations exported to a file (§322): the event, the format and the row count — never a row. */
   | "registration.exported"
+  /**
+   * One registration's signed declaration downloaded as a PDF (§324): a file that names a
+   * person and an identity document and leaves the application, where no erase can reach it.
+   * The reader as the actor, `{ format: "pdf" }` as the metadata — never a value.
+   */
+  | "registration.declaration_downloaded"
+  /** Every signed declaration of one event downloaded as one PDF (§324): the event and how many, never who. */
+  | "event.declarations_downloaded"
   /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
   | "event.emergency_sheet_viewed"
   /**
@@ -203,7 +211,24 @@ export async function scrubRegistrationFromAudit<T extends Record<string, unknow
   db: Database<T>,
   registrationId: string,
 ): Promise<void> {
-  const aboutThisRegistration = and(eq(auditLogs.entityType, "registration"), eq(auditLogs.entityId, registrationId));
+  await scrubRegistrationsFromAudit(db, [registrationId]);
+}
+
+/**
+ * The same scrub for a set of registrations the retention sweep is about to delete (§324): a
+ * lapsed registration's rename kept both names for three years after the row itself had gone,
+ * which is the leftover the manual erase was written to remove. The set is ids or a subquery of
+ * them, run before the delete it describes and in its transaction.
+ */
+export async function scrubRegistrationsFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[] | SQLWrapper,
+): Promise<void> {
+  if (Array.isArray(registrationIds) && registrationIds.length === 0) return;
+  const aboutThisRegistration = and(
+    eq(auditLogs.entityType, "registration"),
+    inArray(auditLogs.entityId, registrationIds as string[] | SQLWrapper),
+  );
   await db
     .update(auditLogs)
     .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })

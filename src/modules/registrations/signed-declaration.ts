@@ -238,6 +238,8 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
   locale: Locale,
   labels: DeclarationLabels,
   now: Date,
+  /** Told how many declarations the file holds, for the audit row the route writes (§324). */
+  onCount?: (count: number) => void,
 ): Promise<Buffer> {
   const entries: DeclarationEntry[] = [];
   const facts = new Map<Locale, Awaited<ReturnType<typeof eventMergeValues>>>();
@@ -246,6 +248,7 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
     const entry = signedEntry(signed, facts.get(signed.locale), labels, "participant");
     if (entry) entries.push(entry);
   }
+  onCount?.(entries.length);
   return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });
 }
 

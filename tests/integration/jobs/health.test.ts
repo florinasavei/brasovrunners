@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { jobRuns } from "@/db/schema/job-runs";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -164,5 +164,42 @@ describe("job health reporting", () => {
 
     const health = await checkJobHealth(db, "registration-maintenance", NOW);
     expect(health.status).toBe("never_run");
+  });
+
+  /**
+   * §324 (review nit on §322): the whole alarm path, end to end — a retention step that throws
+   * inside `runRegistrationMaintenance`, the run's `last_error` written as `retention:<step>`,
+   * and two such runs in a row reading as `failing`. The unit and health tests above insert
+   * `job_runs` rows by hand, so a break in the wiring between the sweep and `last_error` would
+   * have passed them all. The stub is a statement-level trigger, which fires even when the
+   * step's delete matches no row.
+   */
+  it("reports failing after two maintenance runs whose retention sweep threw", async () => {
+    await db.execute(sql`CREATE OR REPLACE FUNCTION refuse_bucket_delete() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'stubbed failure'; END $$ LANGUAGE plpgsql`);
+    await db.execute(sql`CREATE TRIGGER refuse_bucket_delete BEFORE DELETE ON rate_limit_buckets FOR EACH STATEMENT EXECUTE FUNCTION refuse_bucket_delete()`);
+    try {
+      const first = await runRegistrationMaintenance(db, NOW);
+      expect(first.errorCount).toBeGreaterThan(0);
+      // One failing run is not yet an alarm.
+      expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("ok");
+
+      const later = new Date(NOW.getTime() + 5 * 60_000);
+      await runRegistrationMaintenance(db, later);
+
+      const runs = await db.select().from(jobRuns).where(eq(jobRuns.jobName, "registration-maintenance"));
+      expect(runs).toHaveLength(2);
+      for (const run of runs) {
+        expect(run.lastError).toBe("retention:rate-limit-buckets");
+        expect(run.errorCount).toBeGreaterThan(0);
+      }
+      expect((await checkJobHealth(db, "registration-maintenance", later)).status).toBe("failing");
+    } finally {
+      await db.execute(sql`DROP TRIGGER IF EXISTS refuse_bucket_delete ON rate_limit_buckets`);
+      await db.execute(sql`DROP FUNCTION IF EXISTS refuse_bucket_delete()`);
+    }
+
+    // The next clean run clears the alarm.
+    await runRegistrationMaintenance(db, new Date(NOW.getTime() + 10 * 60_000));
+    expect((await checkJobHealth(db, "registration-maintenance", new Date(NOW.getTime() + 10 * 60_000))).status).toBe("ok");
   });
 });

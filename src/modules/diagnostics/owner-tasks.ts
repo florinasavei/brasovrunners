@@ -53,6 +53,7 @@ export type TaskId =
   | "approveLegalText"
   | "liveEmail"
   | "scheduler"
+  | "retentionSweep"
   | "inviteStaff"
   | "inviteKey"
   | "publishEvents"
@@ -72,6 +73,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   liveEmail: "account",
   scheduler: "check",
+  retentionSweep: "check",
   inviteStaff: "account",
   inviteKey: "account",
   publishEvents: "text",
@@ -145,6 +147,13 @@ export type OwnerTaskInputs = {
    * means a lapsed hold keeps occupying a place and the next runner is never offered it.
    */
   staleJobNames: readonly string[];
+  /**
+   * The jobs that run on time and fail their work (`jobs/health.ts`, `failing`, §322): today only
+   * registration-maintenance, whose retention sweep failed two runs in a row. Not a stale
+   * scheduler — the monitors are fine, and the steps for setting them up would send the reader
+   * the wrong way — so it is its own row (§324), pointing at `/devs` and the failed steps.
+   */
+  failingJobNames: readonly string[];
   /**
    * How many staff accounts exist. The first Administrator is a row inserted by hand, because
    * the screen that invites people is itself behind the sign-in it would be granting; a second
@@ -244,6 +253,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     // monitor and a broken one look identical from here; the job name is what tells them apart.
     detail: input.staleJobNames.join(", ") || undefined,
   });
+
+  // Only while it fails (§324): the retention sweep ran and could not do its work, two runs in a
+  // row. Red, the developer's, and never folded into "scheduler", whose steps are about monitors.
+  if (input.failingJobNames.length > 0) {
+    push("retentionSweep", {
+      owner: "developer",
+      state: "broken",
+      detail: input.failingJobNames.join(", "),
+    });
+  }
 
   // Not blocking: one Administrator can run a race alone. It is open because a club with one
   // account is a club whose backoffice goes with that one person's holiday.

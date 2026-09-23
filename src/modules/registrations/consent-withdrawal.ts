@@ -36,6 +36,8 @@ import { findRegistrationById } from "./repository";
  * press writes nothing.
  */
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** The groups a withdrawal names; the audit row carries these words and nothing else. */
 export const OPTIONAL_DATA_FIELDS = ["health", "socials", "results"] as const;
 export type OptionalDataField = (typeof OPTIONAL_DATA_FIELDS)[number];
@@ -139,9 +141,12 @@ export async function withdrawFromManageLink<T extends Record<string, unknown>>(
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
   const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_REGISTRATION", now });
   if (!context.ok) return context;
+  // A manage token always names its registration; one that does not is refused like any bad
+  // token, rather than an empty string reaching a uuid comparison as a 500 (§324).
+  if (!context.token.registrationId) return TOKEN_NOT_FOUND;
 
   const result = await clearOptionalData(db, {
-    registrationId: context.token.registrationId ?? "",
+    registrationId: context.token.registrationId,
     fields: [field],
     via: "MANAGE_LINK",
     actorStaffUserId: null,
@@ -166,6 +171,9 @@ export async function withdrawFromMyRegistrations<T extends Record<string, unkno
   const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_PROFILE", now });
   if (!context.ok) return context;
 
+  // The id comes from a form field: anything but a uuid is nobody's, and must not reach the
+  // uuid comparison as a cast error (§324).
+  if (!UUID.test(registrationId)) throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
   const registration = await findRegistrationById(db, registrationId);
   if (!registration || registration.participantId !== context.token.participantId) {
     throw new DomainError("NOT_FOUND", "not one of this participant's registrations");

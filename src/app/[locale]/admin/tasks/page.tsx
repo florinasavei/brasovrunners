@@ -275,7 +275,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
   // count and different problems.
-  const staleJobNames = jobs.filter((job) => job.status !== "ok").map((job) => job.jobName);
+  const staleJobNames = jobs.filter((job) => job.status === "stale" || job.status === "never_run").map((job) => job.jobName);
+  // A job that runs on time and fails its retention sweep (§322) is not a missing monitor (§324).
+  const failingJobNames = jobs.filter((job) => job.status === "failing").map((job) => job.jobName);
 
   const tasks = sortTasks(
     ownerTasks({
@@ -287,6 +289,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
       appEnv: env.APP_ENV,
       staleJobNames,
+      failingJobNames,
       staffCount,
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,

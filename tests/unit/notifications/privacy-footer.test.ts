@@ -80,6 +80,23 @@ describe("BR-REQ-080-01 the privacy line on every participant message (§323)", 
     });
   }
 
+  // §324: the club's copy of a participant message (§320) lands in the club's mailbox, and a
+  // line telling its reader "this comes to you about your registration" would be to the wrong reader.
+  for (const messageType of ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "WAITLIST_SPOT_OFFER"] as const) {
+    it(`the club's copy of ${messageType} carries no participant privacy line (§324)`, () => {
+      const email = buildOutgoingEmail({
+        to: "arhiva@example.ro",
+        locale: "ro",
+        idempotencyKey: `test:privacy:club-copy:${messageType}`,
+        messageType,
+        data: { ...DATA, clubCopy: true },
+      });
+      expect(email.text).not.toContain("Cum folosim datele tale:");
+      expect(email.text).not.toContain("How we use your data:");
+      expect(email.text).not.toContain("pentru înscrierea ta");
+    });
+  }
+
   it("tells an invited team member what the club keeps about them, with the notice", () => {
     const email = render("STAFF_INVITATION", "ro");
     expect(email.text).toContain("Pentru cont folosim Zitadel");

@@ -27,6 +27,7 @@ const LAUNCHED: OwnerTaskInputs = {
   emailDeliveryMode: "live",
   appEnv: "production",
   staleJobNames: [],
+  failingJobNames: [],
   staffCount: 3,
   inviteKey: { kind: "ok" },
   publishedEventCount: 4,
@@ -145,6 +146,27 @@ describe("owner tasks", () => {
       for (const subject of ["Declarație semnată", "Signed declaration", "Înscriere confirmată", "Registration confirmed", "Copie club", "Club copy"]) {
         expect(steps, subject).toContain(subject);
       }
+    }
+  });
+
+  /*
+    §324 (review nit on §322): a retention sweep that fails two runs in a row is `failing`, not a
+    stale scheduler. Folded into "scheduler" it read as a missing monitor and sent the reader to
+    set up cron jobs that were fine; it is its own red row, the developer's, and only while it fails.
+  */
+  it("shows a failing retention sweep as its own red row, not as a stale scheduler", () => {
+    expect(ownerTasks(LAUNCHED).some((task) => task.id === "retentionSweep")).toBe(false);
+    const failing = { ...LAUNCHED, failingJobNames: ["registration-maintenance"] };
+    expect(ownerTasks(failing).find((task) => task.id === "retentionSweep")).toMatchObject({
+      owner: "developer",
+      state: "broken",
+      detail: "registration-maintenance",
+    });
+    expect(stateOf(failing, "scheduler")).toBe("done");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.retentionSweep;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/devs");
     }
   });
 

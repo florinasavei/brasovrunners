@@ -147,7 +147,7 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Apar aici doar participanții confirmați care au ales să apară pe listă. Te-ai răzgândit? Te scoți dintr-o apăsare, din emailul de confirmare sau din „Înscrierile mele”.",
+      "note": "Apar aici doar participanții confirmați care au ales să apară pe listă. Te-ai răzgândit? Te scoți din „Înscrierile mele” sau din legătura din emailul de confirmare.",
       "anonymous": "Participant anonim",
       "caption": "Participanții confirmați, în ordinea confirmării.",
       "columnPosition": "#",
@@ -403,7 +403,7 @@
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
-      "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare. Copiile de siguranță ale bazei de date (istoricul de restaurare Neon) mai păstrează înscrierea până expiră, cel mult 7 zile — acolo nu e nimic de șters manual.",
+      "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate și pagina ei din PDF-urile cu declarații descărcate, fișa de urgență tipărită, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare. Copiile de siguranță ale bazei de date (istoricul de restaurare Neon) mai păstrează înscrierea până expiră, cel mult 7 zile — acolo nu e nimic de șters manual.",
       "rowActions": "Acțiuni pentru {name}",
       "clubMemberLabel": "Membri Brașov Runners",
       "bouncedLabel": "Email",
@@ -1260,6 +1260,16 @@
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă orele proiectului lui — incluse pe Free, plătite pe Launch.",
             "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header, la 30 de minute (Custom → toate zilele, toate orele, minutele 0 și 30). La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
+          ]
+        },
+        "retentionSweep": {
+          "title": "Ștergerea automată a datelor ajunse la termen eșuează",
+          "todo": "Sarcina automată rulează la timp, dar pasul care șterge datele ajunse la termen a eșuat de două ori la rând. Cât timp eșuează, termenele din nota de confidențialitate (actul de identitate și nota medicală la șapte zile după eveniment, înscrierile la trei ani) nu se mai respectă singure. Monitoarele de pe cron-job.org sunt în regulă — nu e nimic de refăcut acolo",
+          "done": "Ștergerea automată a datelor rulează fără erori.",
+          "how": [
+            "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu retention:registrations-after-event). Numele pașilor sunt în src/modules/jobs/retention.ts.",
+            "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
+            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
           ]
         },
         "inviteStaff": {
@@ -2401,8 +2411,8 @@
     "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Tu completezi datele copilului și tu dai, în numele lui, acordurile de mai jos (lista publică, informațiile medicale). Emailul și telefonul pot fi ale tale. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
     "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
-    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
-    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân doar primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
     "confidentialNote": "Confidențial. Nu se publică.",
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe organizatorii cursei dacă ai nevoie de ajutor — alergii, un tratament, o afecțiune. O văd doar organizatorii; se șterge la șapte zile după eveniment.",
@@ -2459,7 +2469,7 @@
       "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
-      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân doar primele două și ultimele două caractere); nu păstrăm o copie a actului.",
+      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui. Seria și numărul se șterg din baza de date la șapte zile după eveniment, iar în copia clubului apar mascate (rămân cel mult primele două și ultimele două caractere); nu păstrăm o copie a actului.",
       "idDocumentPlaceholder": "BV 123456",
       "nextTitle": "Ce urmează",
       "nextConfirmed": [
@@ -2539,8 +2549,13 @@
         "PENDING_DECLARATION": "Așteaptă declarația",
         "WAITLISTED": "Pe lista de așteptare",
         "WAITLIST_OFFERED": "Loc oferit — semnează declarația",
-        "CONFIRMED": "Confirmată"
-      }
+        "CONFIRMED": "Confirmată",
+        "CHECKED_IN": "Prezent la start",
+        "CANCELLED": "Anulată",
+        "EXPIRED": "Expirată"
+      },
+      "closedTitle": "Înscrieri încheiate",
+      "closedHelp": "Aceste înscrieri nu mai sunt active, dar încă păstrează date pe care ni le-ai dat doar cu acordul tău. Le poți șterge de aici; restul înscrierii îl păstrăm cât scrie în nota de confidențialitate."
     },
     "manage": {
       "title": "Gestionează înscrierea",

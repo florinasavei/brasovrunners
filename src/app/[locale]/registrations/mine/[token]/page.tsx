@@ -83,6 +83,15 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       </Typography>
 
       {started && <Alert severity="info" sx={{ mb: 2 }}>{t("manage.eventStarted")}</Alert>}
+      {/* A closed registration whose last consent data was just withdrawn leaves the list (§324), so the answer is said here. */}
+      {withdrawn &&
+        context.ok &&
+        !context.items.some((item) => item.id === withdrawn) &&
+        !context.closed.some((item) => item.id === withdrawn) && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+          </Alert>
+        )}
 
       {!context.ok ? (
         <>
@@ -280,6 +289,71 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
             </Box>
           ))}
         </Stack>
+      )}
+
+      {/*
+        The registrations that are over — checked in, cancelled, expired — and still hold what
+        was given on consent (§324): the health note until seven days after the event, the
+        Strava and Instagram with the registration. "Delete them at any time from My
+        registrations" is true for these too; the two buttons and nothing else, since there is
+        nothing left to manage.
+      */}
+      {context.ok && context.closed.length > 0 && (
+        <Box component="section" sx={{ mt: 3 }} data-testid="my-closed-registrations">
+          <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 0.5 }}>
+            {t("mine.closedTitle")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("mine.closedHelp")}
+          </Typography>
+          <Stack component="ul" spacing={2} sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {context.closed.map((item) => (
+              <Box component="li" key={item.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ fontWeight: 600 }}>{item.eventTitle ?? item.eventId}</Typography>
+                  <Chip size="small" label={t(`mine.status.${item.status}`)} />
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {format.dateTime(item.eventStartsAt, { timeZone: item.eventTimezone, dateStyle: "long" })}
+                </Typography>
+                {withdrawn === item.id && (
+                  <Alert severity="success" sx={{ py: 0, mb: 1 }}>
+                    {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+                  </Alert>
+                )}
+                {withdrawFailed === item.id && (
+                  <Alert severity="warning" sx={{ py: 0, mb: 1 }}>
+                    {t("withdraw.failed")}
+                  </Alert>
+                )}
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                  {item.holdsHealthNote && (
+                    <form action={withdrawFromMyRegistrationsAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="registrationId" value={item.id} />
+                      <input type="hidden" name="field" value="health" />
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        {t("withdraw.health")}
+                      </Button>
+                    </form>
+                  )}
+                  {item.holdsSocials && (
+                    <form action={withdrawFromMyRegistrationsAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="registrationId" value={item.id} />
+                      <input type="hidden" name="field" value="socials" />
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        {t("withdraw.socials")}
+                      </Button>
+                    </form>
+                  )}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       )}
     </Container>
   );

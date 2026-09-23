@@ -985,7 +985,9 @@ export function buildTemplateContent(
     })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
-    privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType)
+    // Not on the club's copy either (§320, §324): "this message comes to you about your
+    // registration" is addressed to the participant, and the copy lands in the club's mailbox.
+    privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
       ? undefined
       : {
           text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, notInArray, or, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { ACTIVE_REGISTRATION_STATUSES, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -138,6 +138,52 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
   }));
 }
 
+/**
+ * A registration that is no longer active — checked in, cancelled, expired — but still holds
+ * something given on consent (§324). The health note stays until seven days after the event and
+ * the Strava and Instagram with the registration, three years; "delete them at any time from My
+ * registrations" has to be true for these as well, so the page lists them below the active ones
+ * with the two withdrawal buttons and nothing else. Whether, never what: the values stay in SQL.
+ */
+export type ClosedRegistrationWithConsentData = Pick<
+  MyRegistration,
+  "id" | "status" | "eventId" | "eventTitle" | "eventStartsAt" | "eventTimezone" | "holdsHealthNote" | "holdsSocials"
+>;
+
+export async function listClosedRegistrationsHoldingConsentData<T extends Record<string, unknown>>(
+  db: Database<T>,
+  participantId: string,
+  locale: Locale,
+): Promise<ClosedRegistrationWithConsentData[]> {
+  const holdsHealthNote = sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`;
+  const holdsSocials = sql<boolean>`(${registrations.stravaUrl} IS NOT NULL OR ${registrations.instagramHandle} IS NOT NULL)`;
+  return db
+    .select({
+      id: registrations.id,
+      status: registrations.status,
+      eventId: registrations.eventId,
+      eventTitle: eventTranslations.title,
+      eventStartsAt: events.startsAt,
+      eventTimezone: events.timezone,
+      holdsHealthNote: holdsHealthNote.mapWith(Boolean),
+      holdsSocials: holdsSocials.mapWith(Boolean),
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .leftJoin(
+      eventTranslations,
+      and(eq(eventTranslations.eventId, registrations.eventId), eq(eventTranslations.locale, locale)),
+    )
+    .where(
+      and(
+        eq(registrations.participantId, participantId),
+        notInArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+        or(holdsHealthNote, holdsSocials),
+      ),
+    )
+    .orderBy(desc(events.startsAt), asc(registrations.id));
+}
+
 /** The page's one read: throttled per presented token, `MANAGE_PROFILE` only. */
 export async function readMyRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -150,7 +196,8 @@ export async function readMyRegistrations<T extends Record<string, unknown>>(
   if (!context.ok) return context;
 
   const items = await listActiveRegistrationsForParticipant(db, context.token.participantId, locale, now);
-  return { ok: true as const, participantId: context.token.participantId, items };
+  const closed = await listClosedRegistrationsHoldingConsentData(db, context.token.participantId, locale);
+  return { ok: true as const, participantId: context.token.participantId, items, closed };
 }
 
 async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<EventForRegistration> {

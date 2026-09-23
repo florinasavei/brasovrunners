@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, lt, notExists, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, lt, notExists, or, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -9,6 +9,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
+import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
 
 /**
  * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
@@ -16,6 +17,7 @@ import type { Database } from "@/db/types";
  * Every window this sweep enforces, in the order it runs them (§322):
  *
  *     identity document, health note   7 days after the event's start (cleared, the rows stay)
+ *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
  *     throttle buckets                 1 day
  *     action tokens                    30 days after use, invalidation or expiry
@@ -123,6 +125,8 @@ export type PruneCounts = {
   participants: number;
   identityDocuments: number;
   healthNotes: number;
+  /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
+  minorSocials: number;
   auditLogs: number;
 };
 
@@ -132,6 +136,7 @@ export type PruneCounts = {
  */
 export const PRUNE_STEPS = [
   "identity-and-health",
+  "minor-socials",
   "job-runs",
   "rate-limit-buckets",
   "action-tokens",
@@ -188,6 +193,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     participants: 0,
     identityDocuments: 0,
     healthNotes: 0,
+    minorSocials: 0,
     auditLogs: 0,
   };
   const failures: PruneFailure[] = [];
@@ -223,6 +229,28 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: registrations.id });
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
+  });
+
+  /*
+    No Strava or Instagram for a minor (§323): new submissions store none, decided on the day of
+    registering — somebody under eighteen on the day the row was written. Rows written before
+    that rule kept what they were given, and the privacy notice says the club keeps none, so the
+    sweep makes it true for them (§324) and keeps it true for any row written some other way.
+    The same calendar rule as `isMinorOn`: the eighteenth birthday at midnight UTC.
+  */
+  await step("minor-socials", async (tx) => {
+    const cleared = await tx
+      .update(registrations)
+      .set({ stravaUrl: null, instagramHandle: null, updatedAt: now })
+      .where(
+        and(
+          or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle)),
+          isNotNull(registrations.birthDate),
+          sql`${registrations.createdAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
+        ),
+      )
+      .returning({ id: registrations.id });
+    counts.minorSocials = cleared.length;
   });
 
   await step("job-runs", async (tx) => {
@@ -307,6 +335,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
           lt(registrations.expiredAt, daysBefore(now, RETENTION.unconfirmedRegistrationDays)),
         ),
       );
+    // The trail loses what the manual erase takes from it (§324) — a rename's two names, a typed
+    // reason, the participant id — before the rows it describes go, in the same transaction.
+    await scrubRegistrationsFromAudit(tx, lapsed);
     await tx.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, lapsed));
     const deleted = await tx.delete(registrations).where(inArray(registrations.id, lapsed)).returning({ id: registrations.id });
     counts.unconfirmedRegistrations = deleted.length;
@@ -325,6 +356,10 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .from(registrations)
       .innerJoin(events, eq(events.id, registrations.eventId))
       .where(lt(events.startsAt, eventCutoff));
+    // An audit row written after the event (a check-in, a rename on race day) is younger than
+    // the registration's window and would outlive it with the name in it: scrubbed as an erase
+    // scrubs (§324), before the delete.
+    await scrubRegistrationsFromAudit(tx, stale);
     await tx.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, stale));
     const deleted = await tx.delete(registrations).where(inArray(registrations.id, stale)).returning({ id: registrations.id });
     counts.registrations = deleted.length;
@@ -355,6 +390,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.participants +
     counts.identityDocuments +
     counts.healthNotes +
+    counts.minorSocials +
     counts.auditLogs
   );
 }

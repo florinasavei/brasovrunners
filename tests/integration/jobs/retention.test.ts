@@ -476,4 +476,92 @@ describe("retention sweep", () => {
       await db.execute(sql`DROP FUNCTION IF EXISTS refuse_declaration_delete()`);
     }
   });
+
+  /**
+   * §324 (review nit on §322) — the purge of a lapsed registration takes from the trail what a
+   * manual erase takes: a rename's two names, a typed reason, the participant id. The rows stay,
+   * saying what was done and by whom; a younger lapsed registration's rows are untouched.
+   */
+  it("scrubs the audit trail of a lapsed registration it deletes, as an erase does", async () => {
+    const old = await lapsedRegistration("old@example.ro", RETENTION.unconfirmedRegistrationDays + 1);
+    const young = await lapsedRegistration("young@example.ro", RETENTION.unconfirmedRegistrationDays - 1);
+    const [oldRow] = await db.select().from(registrations).where(eq(registrations.id, old));
+    const [youngRow] = await db.select().from(registrations).where(eq(registrations.id, young));
+    for (const row of [oldRow, youngRow]) {
+      await db.insert(auditLogs).values([
+        {
+          actorStaffUserId: null,
+          participantId: row.participantId,
+          action: "registration.name_corrected",
+          entityType: "registration",
+          entityId: row.id,
+          metadataJson: { from: "Ana Pop", to: "Ana Popescu" },
+          createdAt: daysAgo(40),
+        },
+        {
+          actorStaffUserId: null,
+          participantId: row.participantId,
+          action: "registration.cancelled_by_staff",
+          entityType: "registration",
+          entityId: row.id,
+          metadataJson: { reason: "Ana Popescu a sunat" },
+          createdAt: daysAgo(40),
+        },
+      ]);
+    }
+
+    const counts = await pruneExpiredRows(db, NOW);
+
+    expect(counts.failures).toEqual([]);
+    const oldTrail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, old));
+    expect(oldTrail).toHaveLength(2);
+    for (const row of oldTrail) {
+      expect(row.participantId).toBeNull();
+      expect(JSON.stringify(row.metadataJson)).not.toContain("Ana");
+    }
+    const youngTrail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, young));
+    expect(youngTrail.map((row) => JSON.stringify(row.metadataJson)).join()).toContain("Ana Popescu");
+  });
+
+  /**
+   * §323, §324 — for a minor the club keeps no Strava or Instagram. New rows store none; a row
+   * written before the rule (or some other way) is cleared by the sweep, decided on the day the
+   * row was written, like the guardian rule. An adult's are kept.
+   */
+  it("clears a minor's Strava and Instagram and keeps an adult's", async () => {
+    const [{ eventId }] = await db.select({ eventId: registrations.eventId }).from(registrations).where(eq(registrations.id, registrationId));
+    const base = {
+      eventId,
+      status: "CONFIRMED" as const,
+      locale: "ro" as const,
+      privacyNoticeVersion: 1,
+      privacyAcknowledgedAt: NOW,
+      resultsNameConsent: false,
+      listOptOut: true,
+      resultsConsentVersion: 1,
+      stravaUrl: "https://www.strava.com/athletes/1",
+      instagramHandle: "runner",
+      createdAt: new Date("2026-09-01T09:00:00.000Z"),
+    };
+    const [minor] = await db
+      .insert(registrations)
+      .values({ ...base, participantId: await participant("kid@example.ro"), registeredName: "Kid", displayName: "Kid", birthDate: "2010-05-01" })
+      .returning();
+    // Eighteen the day before the row was written: an adult then, whatever the event's date.
+    const [adult] = await db
+      .insert(registrations)
+      .values({ ...base, participantId: await participant("adult@example.ro"), registeredName: "Adult", displayName: "Adult", birthDate: "2008-08-31" })
+      .returning();
+
+    const counts = await pruneExpiredRows(db, NOW);
+
+    expect(counts.failures).toEqual([]);
+    expect(counts.minorSocials).toBe(1);
+    const [minorAfter] = await db.select().from(registrations).where(eq(registrations.id, minor.id));
+    expect([minorAfter.stravaUrl, minorAfter.instagramHandle]).toEqual([null, null]);
+    const [adultAfter] = await db.select().from(registrations).where(eq(registrations.id, adult.id));
+    expect([adultAfter.stravaUrl, adultAfter.instagramHandle]).toEqual(["https://www.strava.com/athletes/1", "runner"]);
+    // Nothing else on the minor's row moved.
+    expect(minorAfter.status).toBe("CONFIRMED");
+  });
 });

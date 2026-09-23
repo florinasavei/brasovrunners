@@ -210,6 +210,44 @@ describe("BR-REQ-031-05 the participant withdraws their own health note and soci
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
+  /**
+   * §324 (review nit on §322) — a cancelled registration keeps its health note until seven days
+   * after the event, and its Strava and Instagram with the registration. "Înscrierile mele" lists
+   * only active registrations, so these came back below them, with the withdrawal buttons: the
+   * form's "delete them at any time from My registrations" is then true for every state.
+   */
+  it("offers and clears the health note of a cancelled registration from \"Înscrierile mele\"", async () => {
+    const id = await seedRegistration();
+    await db.update(registrations).set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "PARTICIPANT" }).where(eq(registrations.id, id));
+    const secret = await profileToken();
+
+    const mine = await readMyRegistrations(db, secret, "ro", NOW);
+    expect(mine.ok).toBe(true);
+    if (mine.ok) {
+      expect(mine.items).toHaveLength(0);
+      expect(mine.closed.map((item) => [item.id, item.status, item.holdsHealthNote, item.holdsSocials])).toEqual([[id, "CANCELLED", true, true]]);
+      expect(JSON.stringify(mine.closed)).not.toMatch(/astm|strava\.com|ana\.pop/);
+    }
+
+    expect(await withdrawFromMyRegistrations(db, secret, id, "health", NOW)).toEqual({ ok: true, cleared: ["health"] });
+    expect((await row(id)).healthNotes).toBeNull();
+    expect((await row(id)).status).toBe("CANCELLED");
+
+    // Once nothing given on consent is left, the registration leaves the list.
+    await withdrawFromMyRegistrations(db, secret, id, "socials", NOW);
+    const after = await readMyRegistrations(db, secret, "ro", NOW);
+    expect(after.ok && after.closed).toEqual([]);
+  });
+
+  it("refuses a registration id that is not a uuid as nobody's, not as a server error (§324)", async () => {
+    await expect(withdrawFromMyRegistrations(db, await profileToken(), "", "health", NOW)).rejects.toSatisfy(
+      (error: unknown) => isDomainError(error) && error.code === "NOT_FOUND",
+    );
+    await expect(withdrawFromMyRegistrations(db, await profileToken(), "not-a-uuid", "health", NOW)).rejects.toSatisfy(
+      (error: unknown) => isDomainError(error) && error.code === "NOT_FOUND",
+    );
+  });
+
   it("refuses a token that is not a manage link, and changes nothing", async () => {
     const id = await seedRegistration();
     const wrong = (await issueActionToken(db, { participantId, registrationId: id, purpose: "LIST_CONSENT", expiresAt: RACE_DAY, now: NOW })).secret;
