@@ -1726,6 +1726,7 @@
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
         "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
         "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, fără să apară în mesaj, o copie a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea cu codul QR, reminderul, numărul dat de mână. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
+        "participantsBccWarning": "O copie ascunsă a acestor emailuri primește și linkurile personale ale participantului — confirmarea adresei, semnarea declarației, „nu mai pot veni” — și codul QR de la start. Cine citește acea cutie poștală poate face acești pași în locul lui. Doar o cutie poștală a clubului, ca decizie a clubului.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",

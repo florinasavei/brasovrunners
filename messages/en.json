@@ -1726,6 +1726,7 @@
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
         "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
         "participantsBccHelp": "Addresses separated by commas. Each receives, without appearing in the message, a copy of every email sent to a real participant — the address check, the declaration, the confirmation with the QR code, the reminder, a number given by hand. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccWarning": "A hidden copy of these emails also receives the participant's personal links — confirming the address, signing the declaration, “I can't make it any more” — and the QR code for the start. Whoever reads that mailbox can take those steps in their place. A club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",

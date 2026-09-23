@@ -121,6 +121,14 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             against the Mailgun allowance for every participant message — the figure the plan panel
             above and `/admin/tasks` count through `messagesPerCompletedRegistration`.
           */}
+          {/*
+            The warning sits above the box, as the declaration's does (§244) — and this copy is the
+            stronger one: every email to a participant carries their own action links and, on the
+            confirmation, the QR code, so a mailbox on the Bcc can act in their place (§12.8).
+          */}
+          <Alert severity="warning" sx={{ py: 0.5 }}>
+            {t("emails.clubNotices.participantsBccWarning")}
+          </Alert>
           <TextField
             name="participantsBcc"
             label={t("emails.clubNotices.participantsBcc")}
