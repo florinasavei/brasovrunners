@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.56-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.60-2026-09-23 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.56-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.60-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1059,9 +1059,9 @@ only worth it once the `r2.dev` address in the gallery's image URLs bothers some
 Two minutes, optional, read-only (BR-REQ-090-07). Launch bills CU-hours instead of suspending the
 project at Free's former 100-hour allowance, and the figure lives in Neon's console, which no
 organizer opens. With these two variables `/devs` reads CU-hours, active hours and the billing
-period. **Implementation gap, recorded 2026-09-22:** the current UI still says “against 100”,
-warns at 80%, calls the active plan Free, and measures storage against Free's 0.5 GB. Those are
-stale labels and thresholds, not provider limits; BR-REQ-090-07 criteria 1–2 define the follow-up.
+period. **Which plan the figures are read against is a setting** (`DECISIONS.md` §306): an
+Administrator picks Free or Launch once per environment on `/admin/tasks` → Costuri → „Planul Neon
+(baza de date)"; unset reads as Free. Neon's API gives consumption, never the plan or the invoice.
 
 1. Neon console → your avatar → **Account settings** → **API keys** → **Create API key**, name
    `brasovrunners-devs-readonly`. Copy it once. (Neon API keys are account-wide; this one is only
@@ -1070,8 +1070,9 @@ stale labels and thresholds, not provider limits; BR-REQ-090-07 criteria 1–2 d
    or `npx neonctl projects list`.
 3. `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`
    with the production project's values; the same for QA with QA's project id. Redeploy.
-4. `/devs` → "Database (Neon)" shows the figures. Until the BR-REQ-090-07 follow-up is built,
-   disregard the obsolete 100-CU-hour denominator and 80% warning. Nothing else reads the key.
+4. `/devs` → "Database (Neon)" shows the figures: on Launch the hours as an estimated charge,
+   with no ceiling and nothing red; on Free against the 100 CU-hours, red past 80%. Nothing else
+   reads the key.
 
 **The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
 has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
@@ -1163,9 +1164,11 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    Failure" is ignored by the route.
 6. **Rehearse on QA first** — production refuses every registration until the club's legal
    texts are approved (§30), so a registration there cannot be walked yet. On the QA Vercel
-   project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (step 4),
-   `MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3`, keep `EMAIL_DELIVERY_MODE=allowlist`
-   and `EMAIL_ALLOWLIST=<your address>`, redeploy, register on QA with a dotted spelling of your
+   project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (QA's **own** sending key,
+   `brasovrunners-qa` — created like step 4's, so revoking one never stops the other; the owner
+   keeps it in `.env.local` as `MAILGUN_API_KEY_QA`), `MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3`,
+   keep `EMAIL_DELIVERY_MODE=allowlist` with `EMAIL_ALLOWLIST=*` (`DECISIONS.md` §163, §307 — every
+   subject carries `[QA]`), redeploy, register on QA with a dotted spelling of your
    Gmail (`DECISIONS.md` §74 — each spelling is a new participant, all land in one inbox): the
    verification, the declaration link and the confirmation with its QR arrive from
    `noreply@mail.<club domain>`. `/devs` on QA shows the email check "limited (allowlist)" and
@@ -1186,8 +1189,10 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
    against the free plan's hundred — and "Trimite acum" (`DECISIONS.md` §80). A spent
    allowance defers the rest to the reset, never drops it (`DECISIONS.md` §40).
 
-Sandbox afterwards: leave it; QA can keep the club domain in allowlist mode (step 6), which
-frees it from the sandbox's five-recipient limit.
+Sandbox afterwards: unused since 2026-09-23 — QA sends through the club domain with its own key
+(step 6, `DECISIONS.md` §307). Two consequences to remember: QA and production share the domain's
+daily allowance (a rehearsal's messages count against the same hundred a day), and the domain's
+webhooks point at production, so a QA bounce is recorded on production's outbox, not QA's.
 
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)
 

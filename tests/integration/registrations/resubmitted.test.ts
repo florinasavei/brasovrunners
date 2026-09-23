@@ -194,6 +194,11 @@ describe("§199 the form filled a second time with the same address", () => {
     );
     expect(message.html).toContain("nu s-a creat o a doua înscriere");
     expect(message.text).toContain("nu s-a creat o a doua înscriere");
+    // The sentence they are hunting for is underlined in the HTML and plain in the text (§309):
+    // the marker never reaches a reader as underscores.
+    expect(message.html).toContain(`<u style="text-decoration:underline">Ești deja înscris</u>`);
+    expect(message.text).toContain("Ești deja înscris la acest eveniment");
+    expect(message.text).not.toContain("__");
   });
   it("sends what the state can offer once the address is already confirmed", async () => {
     /*

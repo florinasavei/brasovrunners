@@ -105,7 +105,7 @@ describe("BR-REQ-090-05 criterion 1 the money question, answered with a number",
     // and the club still pays for it, so the figure does not depend on where this runs.
     for (const facts of [BASE, { ...BASE, clubDomainBound: true }]) {
       expect(annualCostToday(platformServices(facts))).toEqual([
-        { currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true },
+        { currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true, estimated: false },
       ]);
     }
   });
@@ -250,14 +250,20 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     const variants = [
       platformServices(BASE),
       platformServices({ ...BASE, clubDomainBound: true, emailSentToday: 100, jobsHealthy: false }),
+      // The Neon row under the Launch setting (§280's follow-up), measured and not: its fixed
+      // sentences are read under `services.neon.launch.*`, and "how close" is the estimate.
+      platformServices({ ...BASE, neonPlan: "LAUNCH", databaseBytes: 1024 ** 2, neonCuHoursThisMonth: 2, neonHoursElapsed: 24 }),
+      platformServices({ ...BASE, neonPlan: "LAUNCH" }),
     ];
 
     for (const rows of variants) {
       for (const row of rows) {
+        // The page reads a row's fixed sentences under its variant where it has one.
+        const wording = (key: string) => (row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
         for (const [locale, messages] of LOCALES) {
-          for (const key of ["name", "freeGives", "ceiling", "whenCrossed"]) {
-            expect(messageAt(messages, `services.${row.id}.${key}`), `${locale} ${row.id}.${key}`)
-              .toBeTruthy();
+          expect(messageAt(messages, `services.${row.id}.name`), `${locale} ${row.id}.name`).toBeTruthy();
+          for (const key of ["freeGives", "ceiling", "whenCrossed"]) {
+            expect(messageAt(messages, wording(key)), `${locale} ${wording(key)}`).toBeTruthy();
           }
 
           const closeKey =
@@ -272,12 +278,21 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
             messageAt(messages, `services.${row.id}.${closeKey}`),
             `${locale} ${row.id}.${closeKey}`,
           ).toBeTruthy();
+          if (row.variant) {
+            // Both sentences the page can print for a usage row: with a measured pace, and without.
+            expect(messageAt(messages, wording("close")), `${locale} ${wording("close")}`).toBeTruthy();
+            expect(messageAt(messages, wording("closeUnknown")), `${locale} ${wording("closeUnknown")}`).toBeTruthy();
+          }
 
           if (row.bump) {
-            expect(messageAt(messages, `services.${row.id}.bumpBack`), `${locale} ${row.id}`)
+            expect(messageAt(messages, wording("bumpBack")), `${locale} ${wording("bumpBack")}`)
               .toBeTruthy();
             expect(messageAt(messages, `bump.${row.bump}`), `${locale} ${row.bump}`).toBeTruthy();
           }
+          expect(
+            messageAt(messages, `costToday.${row.costToday.kind === "usage" ? (row.costToday.estimatedPerMonth === null ? "usageUnknown" : "usage") : row.costToday.kind === "paid" ? "amount" : row.costToday.kind}`),
+            `${locale} ${row.id} costToday`,
+          ).toBeTruthy();
           expect(messageAt(messages, `severity.${row.severity}`), `${locale} ${row.severity}`)
             .toBeTruthy();
         }
@@ -359,5 +374,74 @@ describe("the Neon monthly figure (§88)", () => {
     // Without the API figure there is no pace to project.
     expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: null, neonHoursElapsed: 100 })).toBeNull();
     expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: 10, neonHoursElapsed: 0 })).toBeNull();
+  });
+
+  it("states the daily rate it projected from, so a reader can check the arithmetic", async () => {
+    const { neonCuHoursPerDay } = await import("@/modules/diagnostics/platform-plans");
+    // §280 reasoned from 1.8 CU-hours a day; 54 in 30 days reads back as 1.8.
+    expect(neonCuHoursPerDay({ neonCuHoursThisMonth: 54, neonHoursElapsed: 30 * 24 })).toBe(1.8);
+    expect(neonCuHoursPerDay({ neonCuHoursThisMonth: null, neonHoursElapsed: 24 })).toBeNull();
+    expect(neonCuHoursPerDay({ neonCuHoursThisMonth: 3, neonHoursElapsed: 0 })).toBeNull();
+  });
+});
+
+/**
+ * BR-REQ-090-07 criterion 2, `DECISIONS.md` §280's follow-up — the Neon row follows the plan
+ * the club states. On Free the row is what it always was; on Launch nothing is a ceiling, the
+ * cost is an estimate at the catalogue's rate, and the verdict stops calling the club free.
+ */
+describe("the Neon row follows the plan setting", () => {
+  const LAUNCH: PlatformFacts = { ...BASE, neonPlan: "LAUNCH", databaseBytes: 1024 ** 2, neonCuHoursThisMonth: 1.8, neonHoursElapsed: 24 };
+
+  it("reads as Free when nothing says otherwise — the setting's own default", () => {
+    const row = platformServices(BASE).find((r) => r.id === "neon");
+    expect(row).toMatchObject({ planToday: "Free", costToday: { kind: "free" }, nextPlan: "Launch", nextCost: "$0.106/CU-hour" });
+    expect(row?.variant).toBeUndefined();
+    // Free's ceiling is measured from the database and read from the one catalogue: 0.5 GB.
+    const measured = platformServices({ ...BASE, databaseBytes: 450 * 1024 * 1024 }).find((r) => r.id === "neon");
+    expect(measured?.headroom).toEqual({ kind: "measured", used: 450, of: 512, state: "close" });
+    expect(measured?.severity).toBe("watch");
+  });
+
+  it("on Launch is a usage estimate with no ceiling and no next plan, and stays calm past Free's allowance", () => {
+    const row = platformServices(LAUNCH).find((r) => r.id === "neon");
+    // 1.8 a day is 54 a month at $0.106 = $5.72 (§280), plus a mebibyte of storage.
+    expect(row).toMatchObject({ planToday: "Launch", costToday: { kind: "usage", currency: "USD", estimatedPerMonth: 5.72 }, nextPlan: null, nextCost: null, bump: "temporary", variant: "launch" });
+    expect(row?.headroom).toEqual({ kind: "derived", reached: false });
+    expect(row?.severity).toBe("ok");
+    expect(row?.checkedOn).toBe("2026-09-22");
+    // Far past a hundred hours and half a gigabyte: on Launch that is a bill, not a limit.
+    const heavy = platformServices({ ...LAUNCH, databaseBytes: 3 * 1024 ** 3, neonCuHoursThisMonth: 180, neonHoursElapsed: 30 * 24 }).find((r) => r.id === "neon");
+    expect(heavy?.severity).toBe("ok");
+    expect(heavy?.headroom).toEqual({ kind: "derived", reached: false });
+    expect(heavy?.costToday).toEqual({ kind: "usage", currency: "USD", estimatedPerMonth: 20.13 });
+  });
+
+  it("on Launch without a key says the pace is unknown rather than free or fine", () => {
+    const row = platformServices({ ...BASE, neonPlan: "LAUNCH" }).find((r) => r.id === "neon");
+    expect(row?.costToday).toEqual({ kind: "usage", currency: "USD", estimatedPerMonth: null });
+    expect(row?.severity).toBe("unknown");
+  });
+
+  it("adds the estimate to the year's total and marks the total an estimate", () => {
+    const free = annualCostToday(platformServices(BASE));
+    expect(free).toEqual([{ currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true, estimated: false }]);
+    const launch = annualCostToday(platformServices(LAUNCH));
+    expect(launch).toEqual([{ currency: "USD", amount: Math.round((DOMAIN_PRICE_USD_PER_YEAR + 5.72 * 12) * 100) / 100, plusVat: true, estimated: true }]);
+    // Unmeasured usage adds nothing and still marks the total: it is known to be incomplete.
+    const unknown = annualCostToday(platformServices({ ...BASE, neonPlan: "LAUNCH" }));
+    expect(unknown).toEqual([{ currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true, estimated: true }]);
+  });
+
+  it("changes the verdict to 'pays for usage' — a choice, not a limit — and never the next spend", () => {
+    expect(freeTierVerdict(LAUNCH)).toBe("paysForUsage");
+    expect(freeTierVerdict({ ...LAUNCH, emailSentToday: 100 })).toBe("freeButAtALimit");
+    expect(freeTierVerdict({ ...LAUNCH, hasPaidEvent: true })).toBe("notFree");
+    // Launch is already paid for; the next thing to cost money is still email.
+    expect(nextSpend(platformServices(LAUNCH))?.id).toBe("mailgun");
+    for (const [locale, messages] of LOCALES) {
+      expect(messageAt(messages, "freeVerdict.paysForUsage"), `${locale} paysForUsage`).toBeTruthy();
+      expect(messageAt(messages, "costToday.estimated"), `${locale} costToday.estimated`).toBeTruthy();
+    }
   });
 });
