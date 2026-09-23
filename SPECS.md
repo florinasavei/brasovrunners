@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.49-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.50-2026-09-23 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.49-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.50-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1163,6 +1163,7 @@ way through every step, and none of them is a way around the allocator.
 20. Given a save or a publication that is refused, when the screen says so, then it names the field as the screen labels it and the language in its own endonym ("Română: Rezumat", never "RO: excerpt"); given an event with registrations against it, then the editor replaces Delete with the count and, when every row is test data, says so and points at the button that clears them; given a queue made only of test registrations, then the race-number section says numbers are for real, confirmed registrations rather than "none yet"; given nothing ticked in the events list, then the bulk verbs are dimmed wherever the counter is running, and still post where it is not (2026-09-20, `DECISIONS.md` §170).
 21. Given the public registration form, when it renders, then one sentence above the first field says what is published and what is not — naming the start list as the single exception, and only for an event that has one — each block of fields repeats it beneath its heading, the answers for sex carry a glyph and every country its flag, and the medical block is a required "I declare I am medically fit to take part" among the consents with the optional free-text note folded beneath its own consent; a registration an organizer enters, and a walk-in at the desk, make that statement on paper instead (2026-09-20, `DECISIONS.md` §171).
 22. Given the editor of one date of a series, when the header's chips render, then the date being edited is filled and current and carries no tick box — the save always reaches it — while every other date carries the box that ticks it into the save (2026-09-20, `DECISIONS.md` §175, §134).
+23. Given an event whose programme rows carry dates, when the event's start date is changed in the editor from one day to another, then every dated row moves by the same number of calendar days before anything is saved — a two-day programme keeps its second day — a row with no date is untouched, a new row starts on the event's day, and the shift is a pure function with an injected clock, tested across month and year boundaries and a change of zero days; and given the editor's per-language "Programul evenimentului" fold, when it renders, then it is titled as the notes beneath the programme and its hint says the timed rows in "Când și unde" are the programme itself (2026-09-22, `DECISIONS.md` §295, §294).
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
