@@ -149,7 +149,7 @@ describe("the club's declaration (§95)", () => {
     const signed = await findSignedDeclaration(db, pending.id);
     expect(signed?.typedName).toBe("Ana Popescu");
     expect(signed?.idDocument).toBe("bv 123456");
-    const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS);
+    const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
     // The entry carries the approved template and its fill-ins apart, so the PDF can set the
     // filled-in parts in bold (§225). What a reader sees is the two merged, which is what is
     // asserted here — the same function the renderer and the screen both use.
@@ -159,12 +159,44 @@ describe("the club's declaration (§95)", () => {
     expect(text).toContain("Subsemnatul/a Ana Popescu, posesor/posesoare al actului de identitate bv 123456");
     expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de 11 octombrie 2026, în locația Parcul Tractorul");
     expect(text).not.toContain("{{");
+    expect(entry!.signature?.idDocument).toBe("bv 123456");
 
-    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW);
+    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "participant");
     const raw = pdf!.toString("latin1");
     expect(raw.startsWith("%PDF-1.")).toBe(true);
     expect(raw).toMatch(/Caveat/); // the signature in the hand the page showed it in
     expect(raw).toMatch(/Roboto/);
+  });
+
+  /**
+   * BR-REQ-033-02 criterion 11 as amended by §NNN: the copy that leaves for a club mailbox prints
+   * the identity document masked — in the text's blank and on the signature line alike — while
+   * the name, the event and the signature are the participant's copy's.
+   */
+  it("BR-REQ-033-02 criterion 11 masks the identity document in the club's copy, everywhere the page prints it", async () => {
+    await approve(db, CLUB_DECLARATION);
+    const event = await createEvent(db);
+    const pending = await pendingRegistration(event);
+    await signDeclaration(db, event, pending.id, { ...(await signingInput(db, NOW, "Ana Popescu")), idDocument: "BV 123456" }, NOW);
+    const signed = await findSignedDeclaration(db, pending.id);
+
+    const club = await signedDeclarationEntry(db, signed!, event.id, LABELS, "club");
+    const whole = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
+    expect(club!.signature?.idDocument).toBe("BV ••••56");
+    expect(club!.values?.idDocument).toBe("BV ••••56");
+    expect(JSON.stringify(club)).not.toContain("123456");
+    const text = mergeLegalBody(club!.body, club!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
+    expect(text).toContain("posesor/posesoare al actului de identitate BV ••••56");
+    expect(text).not.toContain("123456");
+    // Everything else is the same page.
+    expect({ ...club!.signature, idDocument: null }).toEqual({ ...whole!.signature, idDocument: null });
+    expect(club!.values?.participant).toBe(whole!.values?.participant);
+
+    // A declaration with no document named has nothing to mask, and prints no line for one.
+    expect((await signedDeclarationEntry(db, { ...signed!, idDocument: null }, event.id, LABELS, "club"))!.signature?.idDocument).toBeNull();
+    // It still renders.
+    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "club");
+    expect(pdf!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
   });
 
   it("does not ask for a document the text never names, and prints the blank form for the desk", async () => {

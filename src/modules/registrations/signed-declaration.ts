@@ -9,7 +9,21 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
+import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
+
+/**
+ * Who a rendering of a signed declaration is for (§NNN).
+ *
+ * - `participant` — the whole document, the identity document as it was typed: the runner's own
+ *   copy (their link, their emails) and the backoffice's operational copies, which live inside
+ *   the platform and lose the identity document with the database seven days after the event (§95).
+ * - `club` — a copy that leaves the platform for a club mailbox (the archive, §99, §244), where
+ *   nothing sweeps it: the identity document masked (`maskIdDocument`) wherever the page prints
+ *   it, in the text's `{{idDocument}}` and on the signature line alike.
+ *
+ * Required, never defaulted, so a caller added tomorrow has to say which one it is.
+ */
+export type DeclarationAudience = "participant" | "club";
 
 /**
  * A signed declaration, reassembled from what was recorded (`DECISIONS.md` §95): the exact
@@ -155,17 +169,21 @@ export async function signedDeclarationEntry<T extends Record<string, unknown>>(
   signed: SignedDeclaration,
   eventId: string,
   labels: DeclarationLabels,
+  audience: DeclarationAudience,
 ): Promise<DeclarationEntry | undefined> {
-  return signedEntry(signed, await eventMergeValues(db, eventId, signed.locale), labels);
+  return signedEntry(signed, await eventMergeValues(db, eventId, signed.locale), labels, audience);
 }
 
 function signedEntry(
   signed: SignedDeclaration,
   event: Awaited<ReturnType<typeof eventMergeValues>>,
   labels: DeclarationLabels,
+  audience: DeclarationAudience,
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
   const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
+  // Masked once, here, so the text's blank and the signature line cannot disagree (§NNN).
+  const idDocument = audience === "club" && signed.idDocument !== null ? maskIdDocument(signed.idDocument) : signed.idDocument;
   return {
     title: signed.title,
     // The template and its values, kept apart so the PDF can set the fill-ins in bold (§225).
@@ -175,7 +193,7 @@ function signedEntry(
       // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
       participant: signed.registeredName,
       ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
-      idDocument: signed.idDocument,
+      idDocument,
       signedAt: when,
     },
     eventTitle: event.title,
@@ -183,7 +201,7 @@ function signedEntry(
     contentSha256: signed.contentSha256,
     signature: {
       typedName: signed.typedName,
-      idDocument: signed.idDocument,
+      idDocument,
       signedAt: when,
       method:
         signed.method === "PAPER"
@@ -193,20 +211,27 @@ function signedEntry(
   };
 }
 
-/** One signed declaration as a PDF — the runner's copy, the organizer's record. */
+/** One signed declaration as a PDF — the runner's copy, the organizer's record, the club's archive copy. */
 export async function renderSignedDeclarationPdf<T extends Record<string, unknown>>(
   db: Database<T>,
   signed: SignedDeclaration,
   eventId: string,
   labels: DeclarationLabels,
   now: Date,
+  audience: DeclarationAudience,
 ): Promise<Buffer | undefined> {
-  const entry = await signedDeclarationEntry(db, signed, eventId, labels);
+  const entry = await signedDeclarationEntry(db, signed, eventId, labels, audience);
   if (!entry) return undefined;
   return renderDeclarationPdf({ entries: [entry], locale: signed.locale, generatedAt: now, labels });
 }
 
-/** Every signed declaration of an event in one PDF, oldest first — what the club archives. */
+/**
+ * Every signed declaration of an event in one PDF, oldest first — what the club archives.
+ *
+ * Whole, identity documents included (§NNN): it is downloaded by signed-in staff from the
+ * backoffice, and it is operational for exactly as long as the database keeps the identity
+ * document — seven days after the event (§95) — after which the same bundle prints without it.
+ */
 export async function renderEventDeclarationsPdf<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -218,7 +243,7 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
   const facts = new Map<Locale, Awaited<ReturnType<typeof eventMergeValues>>>();
   for (const signed of await listSignedDeclarations(db, eventId)) {
     if (!facts.has(signed.locale)) facts.set(signed.locale, await eventMergeValues(db, eventId, signed.locale));
-    const entry = signedEntry(signed, facts.get(signed.locale), labels);
+    const entry = signedEntry(signed, facts.get(signed.locale), labels, "participant");
     if (entry) entries.push(entry);
   }
   return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });

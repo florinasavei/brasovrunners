@@ -30,7 +30,8 @@ type Props = {
  * there rather than re-implemented, because two parsers for one typed line is two behaviours.
  *
  * **The warning above the Bcc box is not decoration.** A signed declaration carries the
- * participant's name and the identity document they typed at signing. A Bcc delivers that to a
+ * participant's name, their signature and — masked in the club's copy since §NNN — the identity
+ * document they typed at signing. A Bcc delivers that to a
  * mailbox nobody on the message can see, which is exactly why somebody asks for it and exactly
  * why the person setting it should be looking at those words when they do.
  */
@@ -122,9 +123,10 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             above and `/admin/tasks` count through `messagesPerCompletedRegistration`.
           */}
           {/*
-            The warning sits above the box, as the declaration's does (§244) — and this copy is the
-            stronger one: every email to a participant carries their own action links and, on the
-            confirmation, the QR code, so a mailbox on the Bcc can act in their place (§12.8).
+            The warning sits above the box, as the declaration's does (§244). Until §NNN this copy
+            was a Bcc on the participant's own envelope, action links and QR included, so a mailbox
+            on it could act in their place (§12.8); it is a separate club copy now, stripped of all
+            of that (`render.ts`), and the warning says what it does still carry.
           */}
           <Alert severity="warning" sx={{ py: 0.5 }}>
             {t("emails.clubNotices.participantsBccWarning")}

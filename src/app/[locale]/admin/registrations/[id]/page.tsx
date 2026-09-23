@@ -619,6 +619,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography key={index} variant="body2" color="text.secondary">
             {dt(row.createdAt)} · {row.messageType} · {row.status}
             {row.isManualResend ? ` · ${tr("registrations.resend")}` : ""}
+            {/* A club mailbox's copy (§NNN), so it does not read as the participant being sent it twice. */}
+            {row.clubCopy ? ` · ${tr("registrations.outboxClubCopy")}` : ""}
           </Typography>
         ))}
       </Stack>
