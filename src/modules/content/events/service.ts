@@ -355,8 +355,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     // would be indistinguishable from "remove them", and on a row saved before the list
     // existed that would erase the partner its two old columns still hold.
     ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
+    // Whatever was typed is written even while the place is to be announced (§NNN): it is kept
+    // for staff and shown the moment the switch goes off, and no public reader is handed it.
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
+    locationToBeAnnounced: fields.locationToBeAnnounced,
     difficulty: fields.difficulty,
     costType: fields.costType,
     distanceMeters: fields.distanceMeters,
@@ -610,8 +613,13 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
  * The meeting point is one value for the whole event now, so its completeness is not a per-locale
  * question any more. Every save through this module fills it; this catches a row written before
  * the column existed and never saved since.
+ *
+ * An event whose place is to be announced (§NNN) is complete without one: every public surface
+ * says "Locația se anunță în curând" instead, which is a whole answer to "where", and publishing
+ * the race before the venue is settled is exactly what the switch is for.
  */
-export function missingPublicEventFields(event: Pick<EditableEvent, "locationName">): string[] {
+export function missingPublicEventFields(event: Pick<EditableEvent, "locationName" | "locationToBeAnnounced">): string[] {
+  if (event.locationToBeAnnounced) return [];
   return (event.locationName ?? "").trim() === "" ? ["locationName"] : [];
 }
 
@@ -808,6 +816,9 @@ const SERIES_COLUMNS = [
   "coHosts",
   "locationName",
   "locationAddress",
+  // Whether the place is announced travels with the place (§NNN): a series moved to a venue
+  // not yet settled is moved on every date it reaches, and announced on them all at once.
+  "locationToBeAnnounced",
   "difficulty",
   "costType",
   "distanceMeters",
@@ -1064,7 +1075,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(tx: Transa
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<{ appliedTo: number; offered: number }> {
+): Promise<{ appliedTo: number; offered: number; placeAnnounced: boolean }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -1158,7 +1169,14 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       appliedTo = series.applied;
       offered += series.offered;
     }
-    return { appliedTo, offered };
+    /*
+      This save announced the place (§NNN): the switch was on and is off now, so the place is on
+      every public surface from this commit. Nobody is written to about it — the platform has no
+      message for "the place changed", and one sent on a save would reach every entrant for a
+      typo fixed the minute after — so the editor's banner says so instead.
+    */
+    const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
+    return { appliedTo, offered, placeAnnounced };
   });
 }
 
@@ -1409,6 +1427,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     repeatOf: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
+    // A copy of an event whose place is not announced is not announced either (§NNN): the
+    // hidden place travels with it and stays hidden until somebody switches it on.
+    locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
     costType: source.costType,
     distanceMeters: source.distanceMeters,

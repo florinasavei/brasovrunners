@@ -208,6 +208,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     .toISOString()
     .slice(0, 10);
   const t = await getTranslations("Registration");
+  // The event page's own words for a place still to be announced (§NNN), one key for every surface.
+  const tEvent = await getTranslations("Event");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
 
@@ -264,7 +266,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       <Box sx={{ mb: 2 }}>
         <Typography variant="body1" sx={{ fontWeight: 500 }}>
           {whenLabel}
-          {event.locationName ? ` · ${event.locationName}` : ""}
+          {/* The place, or the sentence that it is still to be announced (§NNN) — the same words
+              as the event page; the query withholds the typed place itself. */}
+          {event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}` : event.locationName ? ` · ${event.locationName}` : ""}
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <Link href={{ pathname: "/events/[slug]", params: { slug } }} style={factLink}>

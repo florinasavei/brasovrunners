@@ -177,6 +177,9 @@ function eventFieldsFrom(form: FormData) {
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
     locationAddress: null,
+    // "Locația se anunță mai târziu" (§NNN): a switch, so an absent value is "announced" —
+    // the state every event was in before the switch existed.
+    locationToBeAnnounced: form.get("event.locationToBeAnnounced") === "on",
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,
@@ -456,7 +459,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string; applied?: string; offered?: string };
+  let outcome: { error?: string; saved?: string; applied?: string; offered?: string; announced?: string };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
@@ -465,7 +468,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
-    const { appliedTo, offered } = await saveEventAndTranslations(getDb(), {
+    const { appliedTo, offered, placeAnnounced } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -480,6 +483,9 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
     outcome = {
       ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
       offered: offered > 0 ? String(offered) : undefined,
+      // The save that announced the place (§NNN): the banner says it is public now and that
+      // nobody was written to. A flag, never the place itself — nothing typed goes in a URL.
+      announced: placeAnnounced ? "1" : undefined,
     };
   } catch (error) {
     return refused(error, form, { fieldNames: eventFormFieldNames });

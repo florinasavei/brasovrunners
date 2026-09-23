@@ -226,6 +226,22 @@ const scheduleRowSchema = z
 export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
 
 /**
+ * A meeting point, unless the place is to be announced (§NNN).
+ *
+ * On the object because it reads two fields, and named on `locationName` so the refusal
+ * summary links to the box (§47). With the switch off it is exactly the rule the field used to
+ * carry on its own (`min(1)`, §36); with it on, a blank place is accepted and a typed one kept.
+ */
+function placeRule(fields: { locationName: string | null; locationToBeAnnounced: boolean }, ctx: z.RefinementCtx): void {
+  if (fields.locationToBeAnnounced || fields.locationName !== null) return;
+  ctx.addIssue({
+    code: "custom",
+    path: ["locationName"],
+    message: "a meeting point is required, unless the place is to be announced later",
+  });
+}
+
+/**
  * The event-level fields, as the form sends them — every column an organizer owns.
  *
  * The times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00" means
@@ -269,13 +285,25 @@ export const eventFieldsSchema = z
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).
      *
-     * The meeting point is required here rather than nullable, even though the column accepts
-     * null: the column has to tolerate rows written before it existed, and every save from this
-     * form fills it. A public event page without a meeting point is missing the one fact a
-     * runner actually needs.
+     * The meeting point is required, even though the column accepts null: the column has to
+     * tolerate rows written before it existed, and a public event page without a meeting point
+     * is missing the one fact a runner actually needs — **unless the place is to be announced**
+     * (`locationToBeAnnounced` below, §NNN), when blank is the honest answer and whatever was
+     * typed is kept without being shown.
+     *
+     * So the refusal is the object's (`placeRule`, at the foot of this schema), which is the one
+     * place both fields are known; the box still declares itself required, through the `html`
+     * metadata a rule the walker cannot see uses (`shared/forms/constraints.ts`), and the editor
+     * drops that `required` while the switch is on (`PlaceToBeAnnounced`). One rule, read in both
+     * places: the browser refuses a blank place exactly when the server would.
      */
-    locationName: z.string().trim().min(1).max(200),
+    locationName: optionalText(200).meta({ html: { required: true } }),
     locationAddress: optionalText(300),
+    /**
+     * "Locația se anunță mai târziu" (§NNN): the place is not announced yet. A switch, so absent
+     * — an older caller, a fixture — is "announced", like `isSpecial`: every row before it was.
+     */
+    locationToBeAnnounced: z.boolean().optional().default(false),
     /**
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
@@ -423,7 +451,8 @@ export const eventFieldsSchema = z
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
-  .strict();
+  .strict()
+  .superRefine(placeRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

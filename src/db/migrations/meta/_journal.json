@@ -421,6 +421,13 @@
       "when": 1790145893598,
       "tag": "0059_translation_location_name",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790188107970,
+      "tag": "0060_location_to_be_announced",
+      "breakpoints": true
     }
   ]
 }

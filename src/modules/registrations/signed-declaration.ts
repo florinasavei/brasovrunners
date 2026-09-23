@@ -5,6 +5,7 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -156,7 +157,9 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     values: {
       event: event.title,
       eventDate: dateFormatter(locale, event.timezone, false).format(event.startsAt),
-      eventLocation: event.locationName,
+      // The city while the place is to be announced (§NNN), never the typed place: a signed PDF
+      // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
+      eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
     },
     title: event.title,
     timezone: event.timezone,

@@ -240,6 +240,7 @@ export function renderBilingual(
   const otherData: TemplateData = {
     ...data,
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
+    ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
@@ -274,6 +275,11 @@ export type TemplateData = {
   bibProvisional?: boolean;
   eventTitle?: string;
   eventLocationName?: string;
+  /**
+   * The place in the other language's words, for the bilingual message's second half — set only
+   * while the place is to be announced (§NNN), when the "place" is a sentence and not a name.
+   */
+  eventLocationNameOther?: string;
   eventStartsAtFormatted?: string;
   /** The same instant in the other language's words, for the bilingual message's second half (§96). */
   eventStartsAtFormattedOther?: string;

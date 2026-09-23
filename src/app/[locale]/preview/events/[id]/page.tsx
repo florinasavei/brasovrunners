@@ -13,6 +13,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
+import { withoutPlaces } from "@/modules/events/domain/schedule";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
@@ -83,6 +84,9 @@ export default async function PreviewEventPage({ params }: Props) {
    * `events` or `event_translations` cannot arrive on a public component by accident — the
    * public queries name their columns for the same reason (BR-REQ-070-01).
    */
+  // The place not announced yet (§NNN) is withheld here exactly as the public query withholds it,
+  // so the preview shows the sentence the page will show — including the programme rows' places.
+  const placeLater = event.locationToBeAnnounced;
   const preview: PublicEvent = {
     id: event.id,
     type: event.type,
@@ -92,7 +96,7 @@ export default async function PreviewEventPage({ params }: Props) {
     endsAt: event.endsAt,
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
-    mapUrl: event.mapUrl,
+    mapUrl: placeLater ? null : event.mapUrl,
     routeUrl: event.routeUrl,
     videoUrl: event.videoUrl,
     stravaEventUrl: event.stravaEventUrl,
@@ -112,8 +116,9 @@ export default async function PreviewEventPage({ params }: Props) {
     // One value for the whole event (`DECISIONS.md` §36), so the preview reads them from the
     // event row exactly as the public page does — the place's *name* in this language first,
     // when the club gave it one (migration `0058`), as `PUBLIC_COLUMNS` reads it.
-    locationName: translation.locationName?.trim() || event.locationName,
-    locationAddress: event.locationAddress,
+    locationName: placeLater ? null : translation.locationName?.trim() || event.locationName,
+    locationAddress: placeLater ? null : event.locationAddress,
+    locationToBeAnnounced: placeLater,
     difficulty: event.difficulty,
     costType: event.costType,
     slug: translation.slug,
@@ -124,7 +129,7 @@ export default async function PreviewEventPage({ params }: Props) {
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
-    scheduleItems: event.scheduleItems,
+    scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,

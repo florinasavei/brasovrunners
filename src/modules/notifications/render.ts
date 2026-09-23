@@ -9,7 +9,7 @@ import { issueActionToken } from "@/modules/action-tokens/repository";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
 import { toCalendarEvent } from "@/modules/events/calendar";
-import { calendarLabels } from "@/modules/events/calendar-labels";
+import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
@@ -105,13 +105,18 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
   const eventDetails = eventId ? await findEventNotificationDetails(db, eventId, locale) : undefined;
+  // The place is not announced yet (§NNN): the query has withheld the place and the map, and the
+  // facts line — and a `{eventLocationName}` in the club's own copy — says so in the page's words,
+  // each half of the bilingual message in its own language.
+  const placeLater = eventDetails?.locationToBeAnnounced === true;
 
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
     // Nullable on the event row now that the meeting point is one value for the whole event
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
-    eventLocationName: eventDetails?.locationName ?? undefined,
+    eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
+    ...(placeLater ? { eventLocationNameOther: placeToBeAnnouncedWords(locale === "ro" ? "en" : "ro") } : {}),
     eventStartsAtFormatted: formatEventStart(eventDetails, locale),
     // The other language's half of the bilingual message reads its own date (§96).
     eventStartsAtFormattedOther: formatEventStart(eventDetails, locale === "ro" ? "en" : "ro"),

@@ -29,8 +29,8 @@ type Gap = { name: string; label: string };
 /**
  * What publication would refuse, read off the form as it stands — the same rule the server
  * applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): the meeting
- * point, and a title, an address and a summary in every language. In the order the sentence
- * names them.
+ * point unless the place is to be announced, and a title, an address and a summary in every
+ * language. In the order the sentence names them.
  */
 function publicationGaps(form: HTMLFormElement, locales: Props["locales"], labels: Props["labels"]): Gap[] {
   const data = new FormData(form);
@@ -46,7 +46,10 @@ function publicationGaps(form: HTMLFormElement, locales: Props["locales"], label
   };
 
   const gaps: Gap[] = [];
-  if (text("event.locationName") === "") gaps.push({ name: "event.locationName", label: labels.locationName });
+  // No meeting point is a gap only while the place is announced (§NNN): with the switch on, the
+  // server publishes without one and every surface says it is to be announced.
+  const announcedLater = data.get("event.locationToBeAnnounced") === "on";
+  if (!announcedLater && text("event.locationName") === "") gaps.push({ name: "event.locationName", label: labels.locationName });
   for (const { locale, name } of locales) {
     const field = (box: string) => `translations.${locale}.${box}`;
     if (text(field("title")) === "") gaps.push({ name: field("title"), label: `${name}: ${labels.title}` });

@@ -256,7 +256,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     // One more place: Bogdan is offered it in the same save, with his email queued.
     const raisedAt = new Date(NOW.getTime() + 60_000);
     const raised = await saveCapacity(row.id, "2", raisedAt);
-    expect(raised).toEqual({ appliedTo: 0, offered: 1 });
+    expect(raised).toMatchObject({ appliedTo: 0, offered: 1 });
     expect((await reload(row.id)).capacity).toBe(2);
     const offered = (await registrationsOf(row.id)).find((r) => r.id === bogdan.id)!;
     expect(offered.status).toBe("WAITLIST_OFFERED");
@@ -265,7 +265,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await offersQueued()).toBe(1);
 
     // The same number again offers nothing and queues nothing.
-    expect(await saveCapacity(row.id, "2", new Date(raisedAt.getTime() + 1000))).toEqual({ appliedTo: 0, offered: 0 });
+    expect(await saveCapacity(row.id, "2", new Date(raisedAt.getTime() + 1000))).toMatchObject({ appliedTo: 0, offered: 0 });
     expect(await offersQueued()).toBe(1);
 
     // Criterion 3: the offer holds a place, so 1 is below the two places taken.
@@ -285,7 +285,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     // A day and an hour later Bogdan's offer has lapsed and Carmen is next. The allocator, if
     // asked, would expire him and offer her; the same number saved again asks it nothing.
     const later = new Date(raisedAt.getTime() + 25 * HOUR);
-    expect(await save(row.id, { capacity: "2", locationName: "Parcul Tractorul, la lac" }, later)).toEqual({ appliedTo: 0, offered: 0 });
+    expect(await save(row.id, { capacity: "2", locationName: "Parcul Tractorul, la lac" }, later)).toMatchObject({ appliedTo: 0, offered: 0 });
     expect(await statusOf(row.id, bogdan.id)).toBe("WAITLIST_OFFERED");
     expect(await statusOf(row.id, carmen.id)).toBe("WAITLISTED");
     expect(await offersQueued()).toBe(1);
@@ -319,7 +319,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     const bogdan = await enter(row, "Bogdan", new Date(NOW.getTime() + 1000));
     expect(bogdan.status).toBe("WAITLISTED");
 
-    expect(await save(row.id, { capacity: "", eventStatus: "CANCELLED" }, new Date(NOW.getTime() + 60_000))).toEqual({ appliedTo: 0, offered: 0 });
+    expect(await save(row.id, { capacity: "", eventStatus: "CANCELLED" }, new Date(NOW.getTime() + 60_000))).toMatchObject({ appliedTo: 0, offered: 0 });
     const cancelled = await reload(row.id);
     expect(cancelled.eventStatus).toBe("CANCELLED");
     expect(cancelled.capacity).toBeNull();
@@ -327,7 +327,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await offersQueued()).toBe(0);
 
     // A raise on an event already cancelled offers nothing either.
-    expect(await save(row.id, { capacity: "5" }, new Date(NOW.getTime() + 120_000))).toEqual({ appliedTo: 0, offered: 0 });
+    expect(await save(row.id, { capacity: "5" }, new Date(NOW.getTime() + 120_000))).toMatchObject({ appliedTo: 0, offered: 0 });
     expect(await statusOf(row.id, bogdan.id)).toBe("WAITLISTED");
     expect(await offersQueued()).toBe(0);
   });
@@ -349,7 +349,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     ]);
 
     const result = await saveCapacity(source.id, "2", new Date(NOW.getTime() + 60_000), "all");
-    expect(result).toEqual({ appliedTo: 3, offered: 2 });
+    expect(result).toMatchObject({ appliedTo: 3, offered: 2 });
     for (const id of [source.id, ...dates.map((d) => d.id)]) expect((await reload(id)).capacity).toBe(2);
     const statuses = async (eventId: string) => (await registrationsOf(eventId)).map((r) => r.status).sort();
     expect(await statuses(source.id)).toEqual(["CONFIRMED", "WAITLIST_OFFERED"]);

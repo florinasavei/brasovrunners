@@ -1,5 +1,6 @@
 import { env } from "@/shared/config/env";
 import { readCoHosts } from "./domain/co-hosts";
+import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
 
 /**
@@ -111,6 +112,40 @@ function organizers(event: PublicEvent, organizationName: string) {
   ];
 }
 
+/**
+ * Where the event is, as a schema.org `Place` — which Google's event result requires.
+ *
+ * While the place is to be announced (§NNN) it is the city and nothing more: `name` and
+ * `addressLocality` "Brașov", the country, no street, no map. That is true, it is what a
+ * search engine may show ("Brașov"), and it keeps the block valid without inventing a venue.
+ * The query has already withheld the typed place; this does not reach for it.
+ */
+function eventPlace(event: PublicEvent) {
+  if (event.locationToBeAnnounced) {
+    return {
+      "@type": "Place",
+      name: CLUB_LOCALITY,
+      address: { "@type": "PostalAddress", addressLocality: CLUB_LOCALITY, addressCountry: "RO" },
+    };
+  }
+  return {
+    "@type": "Place",
+    name: event.locationName,
+    address: {
+      "@type": "PostalAddress",
+      ...(event.locationAddress ? { streetAddress: event.locationAddress } : {}),
+      addressLocality: CLUB_LOCALITY,
+      addressCountry: "RO",
+    },
+    /**
+     * The map link a person follows — the same one the page renders, so the two cannot
+     * disagree. No `geo` any more: the coordinates it was built from left with migration
+     * `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be wrong.
+     */
+    ...(event.mapUrl ? { hasMap: event.mapUrl } : {}),
+  };
+}
+
 /** BR-REQ-052-02 criteria 2 and 4. */
 export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string, images: readonly string[] = []) {
   return {
@@ -160,22 +195,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
           },
         }
       : {}),
-    location: {
-      "@type": "Place",
-      name: event.locationName,
-      address: {
-        "@type": "PostalAddress",
-        ...(event.locationAddress ? { streetAddress: event.locationAddress } : {}),
-        addressLocality: "Brașov",
-        addressCountry: "RO",
-      },
-      /**
-       * The map link a person follows — the same one the page renders, so the two cannot
-       * disagree. No `geo` any more: the coordinates it was built from left with migration
-       * `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be wrong.
-       */
-      ...(event.mapUrl ? { hasMap: event.mapUrl } : {}),
-    },
+    location: eventPlace(event),
     sport: "Running",
     // No `remainingAttendeeCapacity`: criterion 3 requires it to equal the free-place count
     // shown on the page, and the pilot has no capped events — the database refuses a capacity.

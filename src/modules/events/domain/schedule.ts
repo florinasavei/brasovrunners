@@ -30,6 +30,15 @@ export function readScheduleItems(json: unknown): ScheduleItem[] {
   return [...parsed.data].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
+/**
+ * The same rows, none with a place (`DECISIONS.md` §NNN): what the public reads while the event's
+ * place is to be announced, for the staff preview. The public queries do the same in SQL
+ * (`events/repository.ts#publicScheduleItems`).
+ */
+export function withoutPlaces(json: unknown): ScheduleItem[] {
+  return readScheduleItems(json).map((item) => ({ ...item, place: null }));
+}
+
 /** A row in one language, with real instants — what a page, a mail or a calendar renders. */
 export type ProgrammeRow = { startsAt: Date; endsAt: Date | null; label: string; place: string | null };
 
