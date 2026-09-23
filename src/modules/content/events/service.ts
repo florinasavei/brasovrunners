@@ -765,6 +765,11 @@ const SERIES_COLUMNS = [
   "participantListVisibility",
   "externalProvider",
   "externalRegistrationUrl",
+  // A recurring Strava club event and a Facebook event with several dates each keep one address
+  // for every occurrence, so the series' links are the series' (§300): change them on one date
+  // and "the following" or "all" carry them, like the place.
+  "stravaEventUrl",
+  "facebookEventUrl",
 ] as const;
 /** The instants: carried at the same wall-clock time on each date's own day. */
 const SERIES_TIME_COLUMNS = ["startsAt", "endsAt", "raceStartsAt", "registrationOpensAt", "registrationClosesAt"] as const;
@@ -801,8 +806,9 @@ function wallDay(date: Date, zone: string): number {
  * rows shifted by the same days as when the date was made; a partner is the series' and
  * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
  * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
- * rule, the publication state, a film and a Strava event are one date's own and never travel; a slug is
- * a public address and never changes. Capacity is checked against each date's own places
+ * rule, the publication state and a film are one date's own and never travel; the Strava and
+ * Facebook event links do travel since §300, because both platforms give a recurring event one
+ * address for all its dates; a slug is a public address and never changes. Capacity is checked against each date's own places
  * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
  * a new version, in the caller's transaction.
  */
@@ -1225,9 +1231,12 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
-    // Not carried: a film is of one edition, and last year's would be wrong on next year's;
-    // a Strava group event is one occurrence's page. The co-host is: a series held with a
-    // partner is held with them every time.
+    // Not carried by a *duplicate*: a film is of one edition, and last year's would be wrong on
+    // next year's; next year's race has its own Strava and Facebook event pages. A *repeat* is
+    // different — a recurring Strava club event and a Facebook event with several dates keep one
+    // address for every occurrence — so `repeatEvent` and the job put the source's two links
+    // back on top of this (§300). The co-host is carried by both: a series held with a partner
+    // is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
     facebookEventUrl: null,
@@ -1424,6 +1433,11 @@ async function materializeSeries<T extends Record<string, unknown>>(
         .insert(events)
         .values({
           ...copiedEventValues(source, { id: by ?? source.updatedByStaffUserId ?? "", role: "MODERATOR" }, now),
+          // A series inherits the source's event pages (§300): a recurring Strava club event and
+          // a Facebook event with several dates keep one address for every occurrence, so the
+          // address on the source is the address of this date. A duplicate does not get them.
+          stravaEventUrl: source.stravaEventUrl,
+          facebookEventUrl: source.facebookEventUrl,
           createdByStaffUserId: by,
           updatedByStaffUserId: by,
           repeatOf: source.id,

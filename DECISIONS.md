@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.52-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.53-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.52-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.53-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12609,3 +12609,108 @@ Four reports from one evening, all on a phone or a tablet: the footer's Strava m
 **What this section is also for.** Two of four reports were symptoms of something that was already right, and the first draft of this text claimed both as fixed. The reviewer's job was to refute, and it did; the honest record is worth more to the club than a fourth "fixed" — the next person who sees a blank card on QA now knows to look at `robots.txt` and not at the share button.
 
 Baseline `BR-V1.52-2026-09-23`.
+
+## 300. Decided — a series inherits its source’s Strava and Facebook event links, a duplicate still does not; and the series says what it did (2026-09-23)
+
+**Context.** The owner, of the weekly run: "if I put the root links (https://www.strava.com/clubs/…/group_events/…, https://www.facebook.com/events/…) somehow strava and facebook should be smart enough to inherit this (I hope)" — after asking that the series be "super efficient from a DB perspective" and that what differs between dates (the place, the time, and these two links) be editable per date.
+
+**What §71 and §130 decided, and why the half about the links is being changed.** §71 added the Strava event link as "one occurrence's — never carried onto a duplicate or a repeat, because next week's occurrence has its own address"; §130 listed "a film and a Strava event" among what never travels when a save on one date reaches the following ones; the Facebook link (§106-era) followed the same rule. The premise was wrong for a *series*. A **recurring Strava club event** keeps one `group_events/<id>` address for every occurrence, and a **Facebook event with several dates** keeps one `events/<id>` — the platforms themselves treat the series as one thing with one page. So the address typed on the source event *is* the address of every date, and a rule that refuses to copy it makes the Organizer paste the same link into eight rows and again every week the job makes a new one.
+
+**Decision.** *A repeat inherits both links; a duplicate inherits neither.* `repeatEvent` and the standing job (`materializeStandingRepeats`, §122) put the source's `stravaEventUrl` and `facebookEventUrl` on every date they make; `duplicateEvent` — next year's edition — still leaves both empty, because next year's race has its own Strava and Facebook pages, exactly as §71 said. The distinction is the one the platforms make: the same event on another date, against another event.
+
+*The links travel with a scoped save.* Both columns join `SERIES_COLUMNS` (§130): change the link on one date and "this and the following" or "all" carry the change like a changed place; save with "this date" and only that date has the new address — which is how a single date that really does have its own page (a special edition run under somebody else's event) keeps it. Nothing new is stored: each date is still its own row (§122), and the copy is made once, when the row is.
+
+*The hints say so.* "Doar pentru această ediție; nu se copiază" becomes "Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei" — and the same for Facebook — in both languages.
+
+**What was rejected.** *Inheritance by reference* — members store no link and readers resolve through the source — offered when the owner asked for DB efficiency. It would make every reader of the link (the event page, the calendar's entries, the reminder) look up the source, for a saving of two short strings per row on a series the job keeps eight rows deep. The row-per-date model is the efficient one at this scale; what was inefficient was the Organizer's evening, and that is what this fixes. *Carrying the film too.* Left as it was: a film is of one edition, and last year's on this year's date is wrong (§71).
+
+**And the banner says what the series did.** The same hour: "ce se intampla cu seriile? se creaza automat? nu e clar cand creeze si zice ‘urmatoarele 7 serii’". "{created} ediții create." was a number that depends on the day of the press — how many dates fit in the next eight weeks (§122) — with nothing about the weeks after it, so it read as a job half done. It now names the horizon it reached ("până pe 18 noiembrie") and says the platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever. The create page’s repeat hint still described §64’s world — "the following editions are created as drafts, publish them all from the list" — and now describes §122’s: eight weeks made with the event, the job keeps it ahead, drafts unless publish is ticked. Copy only; the mechanism was always right and never explained itself.
+
+Baseline `BR-V1.53-2026-09-23`.
+
+## 301. Added — the bib is previewed in the design panel as the boxes change (2026-09-23)
+
+**Context.** The owner, on the event editor's "Cum arată numărul de concurs" panel (§249): "la BID
+îmi trebuie un preview aici". The panel had five switches, two selects and two picture pickers,
+and §249 had deliberately given it no JavaScript — the preview was the bibs page's picture,
+after a save. Designing a bib by saving, opening another page, coming back and saving again is
+not designing it.
+
+**Decision.** *One picture, the renderer's own, with the unsaved design in its address.* The
+panel opens with an `<img>` whose `src` is the existing picture route,
+`/api/admin/events/<id>/bibs/preview`, in a new `?sample=1` mode: the card `bib-image.tsx` draws
+for every participant, drawn for a placeholder runner — "Nume Prenume", numbered with the
+event's start number (or the box's current value), the event's real title and date from the
+row — with the design read from the query string rather than from the row. It is the same
+`renderBibImage`, never a second drawing of the bib: the property §180 bought, that the preview
+is a preview of the paper, is exactly what would have been spent by a client-side sketch.
+
+*The unsaved design is validated by the schema the save uses.* `bibDesignFromQuery` turns the
+query into a design through `readBibDesign` and `bibDesignSchema`, field by field: a query that
+says nothing draws the platform's design, a query with one nonsense value draws the platform's
+choice for that one field, and a picture from somebody else's server is refused where every
+stored one is (§249). The sample carries no participant — a placeholder name and a number the
+club chose — so the gate is the one every staff role already passes for a real bib; it is a GET
+that mutates nothing (`AGENTS.md` §12.8) and is never cached, because the title and the date in
+it belong to the row and a preview that lags a save is a preview of the wrong thing. With a
+`registration=` named, the design parameters are ignored and the stored design is drawn — that
+is what will print.
+
+*One reader for the form, shared by the save and the preview.* `bib-design-query.ts` holds the
+wire shape and imports nothing: `readBibDesignForm`, which `admin/actions.ts` had inline since
+§249 and now shares, so the picture on the screen is drawn from exactly what the save would
+post; the encoder and the decoder, whose keys are the schema's own field names so the round trip
+is exact; the number bound; the address builder. It is a file of its own rather than part of
+`bib-design.ts` because that module carries Zod and this one is imported by a client island —
+no client module in this application carries Zod, and a preview is not the reason to start.
+
+*The island is the panel's only JavaScript.* `BibDesignPreview` renders the `<img>` and a
+caption, "Previzualizare — așa se tipărește", and keeps one debounced listener (300 ms) on the
+`<form>` it sits in, for `input` and `change` from the panel's boxes, the band's colour and the
+start number — the two live a little above the panel in the same form, and a colour the preview
+ignored would be a surprise. It reads the form with `new FormData(form)`, the way the action
+does; a keystroke in the title asks for no picture. The Server Component computes the first
+address from the stored design, so the picture is on the page before any script runs and the
+island only rebuilds it. 320 px wide at most, the card's 900×600 proportion declared so the
+panel does not jump while a fresh picture loads, lazy so a closed fold costs nothing.
+
+**Rejected.** *Drawing the bib in the browser* (CSS, canvas): a second renderer that would drift
+from the paper — the thing §180 exists to prevent. *A separate route for the sample*: the same
+handler, the same authorization, the same renderer; a mode is one branch, a route is a second
+place to keep in step. *Posting the design and reading a response*: a GET whose address is the
+design is cacheable, linkable and honest, and the URL is the round trip's own test. *Shipping
+Zod to the client so `bib-design.ts` could be imported whole*: the island only reads boxes and
+writes a query; validation is the server's, once.
+
+**Consequences.** `bib-design-query.ts` (new); `bibDesignFromQuery` in `bib-design.ts`;
+`findEventForBibs` returns `bibStartNumber`; the preview route's sample mode;
+`BibDesignPreview.tsx` (new island) mounted by `BibDesignPanel`, which now takes the event's id,
+start number and colour from `EventFieldsForm`; `readBibDesignForm` in `admin/actions.ts`;
+`editor.bibDesign.previewCaption`, `previewAlt` and a reworded `previewNote` in both catalogues.
+Tests: `tests/unit/registrations/bib-design-query.test.ts` — the round trip exact for the
+platform's design and for one with every choice away from its default, through a real address;
+garbage to defaults field by field, a third party's picture refused; the form reader; which
+inputs the preview follows; the number bound. `bibs.test.ts` asserts the start number
+`findEventForBibs` returns.
+
+Baseline `BR-V1.53-2026-09-23`.
+
+## 302. Decided — a participant leaves or rejoins the public list from their own link (2026-09-23)
+
+**Context.** The owner: "people should be able to choose to not be shown on the public list if they don't want to, even after the registration, basically they can do that via email."
+
+§32 built the public participant list and shipped it `HIDDEN`, with `registrations.list_opt_out` as the participant's own refusal, asked on every event; §143 turned the box round — "Vreau să apar pe lista de participanți", unticked, a tick puts the name on — and recorded that the answer is withdrawn "by writing to the club"; §186 made the opted-out runner a counted "Participant anonim" rather than a silently missing row. What none of them gave the participant was a way to change the answer themselves after pressing Submit. This completes that: the consent already exists, and this is the door for changing it. Not a rule change — the column, the published set (`list_opt_out = false`), the privacy test and the wording of the box are all exactly as §143 left them.
+
+**Decision.** *One column, one write, three doors.*
+
+- `registrations/list-consent.ts#setListConsent` is the only writer: it **sets** `list_opt_out` (never "toggles" — the form carries the answer it is making, so a double submission or two tabs land on the state the button said), bumps `updated_at`, and writes one audit row `registration.list_consent_changed` with **no staff actor** and metadata `{from: LISTED|NOT_LISTED, to, via}` — the shape of the change and the door, never the name (AGENTS.md §12.12). The same answer twice is one change and one row. The audit row is written inside the same transaction as the change: nothing here goes through the allocator or takes the event-row lock, so §12.12's reason for writing it afterwards does not apply.
+- **The confirmation email carries a second link**, under a sixth token purpose, `LIST_CONSENT` (migration `0058`, expand only). Its own purpose rather than a second use of the manage token beside it, because spending one must not spend the other, and one active token per (registration, purpose) is what the table enforces. The link is worded by the row at send time: "Nu vreau să apar pe lista publică de participanți" when the name is on, "Vreau să apar…" when it is not. Same fortnight lifetime as the manage link; a resent confirmation supersedes it.
+- **`/registrations/list/[token]`** (`/inregistrari/lista/[token]`): the GET says how the answer stands for this registration and event and shows one button; the token read and the page's own reads run in READ ONLY transactions, so a mail scanner opening the link changes nothing (BR-REQ-036-02 criterion 4). The POST spends the token in one statement, sets the answer, mints a fresh `LIST_CONSENT` token in the same transaction and lands on the same page under it — "I changed my mind" is the same button a second time. A used, expired or wrong-purpose link gets the one generic notice every token page gives, with the resend path; `mayReportState` was deliberately not widened to it.
+- **The manage page and "Înscrierile mele"** carry the same button, under their own `MANAGE_REGISTRATION` / `MANAGE_PROFILE` links, **read and never spent** — the §77 precedent for "I am here": the choice is reversible and low-stakes, and spending a link on it would cost the person the cancel button on the same page. The registration must be the holder's own, checked against the token's participant, never trusted from the form; a stranger's id gets NOT_FOUND.
+- The public list and the §186 count already read the column, so a name leaves the list the moment the row changes and returns the same way; no second query and no cache stand between the choice and the page (§281). The backoffice timeline labels the action and reads a null actor on it as "participantul, din linkul propriu" rather than "cont șters".
+
+**Rejected.** *A preferences centre* (one page, many switches): one link, one flip is what was asked, and the manage page is where a second switch would go if one ever exists. *A new column*: `list_opt_out` is the answer; a second column would let the two disagree. *Spending the manage or profile link on the change*: it would take the cancel button away for a flip the person can undo a minute later. *Minting a `LIST_CONSENT` token on the GET of the manage or "mine" page so they could link to the list page*: a token insert on a GET is a mutation on a GET (§12.8).
+
+**Consequences.** `registrations/list-consent.ts` (new), `app/[locale]/registrations/list/[token]/{page,actions}.tsx`, the manage and "mine" pages and actions, `my-registrations.ts` (`listed` on each row), `notifications/render.ts` and `templates.ts`, the `/admin/emails` preview data, `audit/repository.ts` (the action; `actorStaffUserId` on `AuditEntry`), `events/locale-switch.ts`, `i18n/routing.ts`, `schema/email-action-tokens.ts` + migration `0058_list_consent_purpose`, the `Registrations.list.*` and two `Admin` keys in both catalogues; `tests/integration/registrations/list-consent.test.ts`. BR-REQ-039-01 gains, in effect, a criterion — "after registration, the participant changes the answer from the link in the confirmation, from the manage page or from 'Înscrierile mele'; the list follows the row at once" — which `SPECS.md` should carry.
+
+Baseline `BR-V1.53-2026-09-23`.

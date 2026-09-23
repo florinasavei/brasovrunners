@@ -55,6 +55,14 @@ export const routing = defineRouting({
       en: "/registrations/manage/[token]",
     },
     /**
+     * The public participant list, the participant's own switch (BR-REQ-039-01; `DECISIONS.md`
+     * §143): the page a `LIST_CONSENT` token opens — the choice as it stands, one button.
+     */
+    "/registrations/list/[token]": {
+      ro: "/inregistrari/lista/[token]",
+      en: "/registrations/list/[token]",
+    },
+    /**
      * "Send me that link again" (§19.4's second surface). No token in the path — this is the
      * route somebody reaches precisely because they have no token, so it takes an address and
      * answers the same way whatever that address turns out to mean.

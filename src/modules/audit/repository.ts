@@ -53,6 +53,13 @@ export type AuditAction =
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"
+  /**
+   * The participant's own answer to the public list, changed after registration
+   * (BR-REQ-039-01; `registrations/list-consent.ts`). The one action with no staff actor: the
+   * person did it themselves, from a link. Metadata is the shape — LISTED or NOT_LISTED, before
+   * and after, and which door — never the name that went on or came off the list.
+   */
+  | "registration.list_consent_changed"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
@@ -135,7 +142,12 @@ export async function recordAuditEvent<T extends Record<string, unknown>>(
   });
 }
 
-export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt"> & {
+export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt" | "actorStaffUserId"> & {
+  /**
+   * Null in two cases the timeline must tell apart: the staff account was removed
+   * (`actorStaffUserId` set, no row to join), or there never was one — the participant acted
+   * from their own link (`actorStaffUserId` null).
+   */
   actorName: string | null;
 };
 
@@ -150,6 +162,7 @@ export async function listAuditTrail<T extends Record<string, unknown>>(
       action: auditLogs.action,
       metadataJson: auditLogs.metadataJson,
       createdAt: auditLogs.createdAt,
+      actorStaffUserId: auditLogs.actorStaffUserId,
       actorName: staffUsers.displayName,
     })
     .from(auditLogs)

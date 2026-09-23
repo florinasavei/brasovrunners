@@ -15,11 +15,11 @@ import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { cancelRegistrationAction, selfCheckInAction } from "./actions";
+import { cancelRegistrationAction, selfCheckInAction, setListConsentFromManageAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; started?: string; here?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; started?: string; here?: string; list?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here } = await searchParams;
+  const { done, invalid, started, here, list } = await searchParams;
   const t = await getTranslations("Registrations");
   const format = await getFormatter();
 
@@ -70,8 +70,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         )
       : null;
   const blocked = context === null || !context.ok || Boolean(invalid);
-  const confirmed =
-    context !== null && context.ok && !invalid && context.registration.status === "CONFIRMED" ? context : null;
+  const live = context !== null && context.ok && !invalid ? context : null;
+  const confirmed = live !== null && live.registration.status === "CONFIRMED" ? live : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
@@ -134,6 +134,42 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 <a href={`/api/registrations/declaration/${token}`} target="_blank" rel="noopener">
                   {t("manage.declarationPdf")}
                 </a>
+              </Typography>
+              <Divider sx={{ mt: 3 }} />
+            </Box>
+          )}
+
+          {/*
+            The public participant list, the participant's own switch (BR-REQ-039-01;
+            `DECISIONS.md` §143). The manage token is read, never spent — the same page must
+            still be able to cancel — and the sentence reads the row as it stands now.
+          */}
+          {live && (
+            <Box component="section" id="list">
+              <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                {t("list.title")}
+              </Typography>
+              {list === "1" && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {t("list.changed")}
+                </Alert>
+              )}
+              {list === "0" && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {t("list.failed")}
+                </Alert>
+              )}
+              <Typography sx={{ mb: 2 }}>{live.registration.listOptOut ? t("list.notListed") : t("list.listed")}</Typography>
+              <form action={setListConsentFromManageAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="token" value={token} />
+                <input type="hidden" name="listed" value={live.registration.listOptOut ? "1" : "0"} />
+                <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                  {live.registration.listOptOut ? t("list.optIn") : t("list.optOut")}
+                </Button>
+              </form>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {t("list.help")}
               </Typography>
               <Divider sx={{ mt: 3 }} />
             </Box>

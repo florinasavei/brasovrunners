@@ -356,6 +356,7 @@
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
+      "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
           "created_by_staff": "Registration entered by staff",
@@ -366,7 +367,8 @@
           "confirmed_by_staff": "Confirmed at the desk (address vouched for, declaration on paper)",
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
-          "checkin_undone": "Check-in undone"
+          "checkin_undone": "Check-in undone",
+          "list_consent_changed": "Public-list choice changed by the participant"
         }
       },
       "locale": {
@@ -506,7 +508,7 @@
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
-      "eventsRepeated": "{created} editions created.",
+      "eventsRepeated": "The series is running: {created} dates created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
@@ -722,7 +724,7 @@
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
-      "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
+      "repeatOnCreateHelp": "Optional. Tick it and choose the interval: the dates of the next eight weeks are created with the event, and the platform creates the ones that follow by itself, always eight weeks ahead, until the chosen date or for ever. Each date is its own event with its day's address; they are drafts unless you tick publish.",
       "weekdays": {
         "1": "Mo",
         "2": "Tu",
@@ -744,9 +746,9 @@
       },
       "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
-      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
+      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",
-      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
+      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
       "bodyHelp": "The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
@@ -799,7 +801,9 @@
         "sponsorImageSrc": "A sponsors' strip",
         "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
         "noPicture": "No picture",
-        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview and the PDF follow a save."
+        "previewCaption": "Preview — this is how it prints",
+        "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
+        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -2284,6 +2288,21 @@
         "RESIDENCE_PERMIT": "Residence permit",
         "OTHER": "Other document"
       }
+    },
+    "list": {
+      "title": "The public participant list",
+      "event": "For the event: {event}",
+      "listed": "Your name appears on this event's public participant list.",
+      "notListed": "Your name does not appear on this event's public participant list.",
+      "help": "The list shows the name (or the display name you chose) and the club, and only on events where the club publishes one. The choice is yours and you can change it at any time: here, from the confirmation email or from \"My registrations\".",
+      "optOut": "Take me off the public list",
+      "optIn": "Show my name on the public list",
+      "changed": "Your choice has been saved.",
+      "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
+      "failed": "Could not save your choice. Try again or write to us.",
+      "shortListed": "You are on the public participant list.",
+      "shortNotListed": "You are not on the public participant list.",
+      "eventPage": "The event's page"
     },
     "mine": {
       "title": "My registrations",

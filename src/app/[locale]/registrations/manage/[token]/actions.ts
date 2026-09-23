@@ -1,8 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -37,6 +39,27 @@ export async function selfCheckInAction(form: FormData): Promise<void> {
     redirect(result.ok ? `${path}?here=1` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?here=0`);
+    throw error;
+  }
+}
+
+/**
+ * The public participant list, from the participant's own link (BR-REQ-039-01; `DECISIONS.md`
+ * §143). Read, not spent, for the same reason as "I am here": the page must still be able to
+ * cancel, and the choice is reversible. `listed` is the answer the button carried, so a double
+ * submission lands on the state the person pressed for.
+ */
+export async function setListConsentFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const listed = form.get("listed") === "1";
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+
+  try {
+    const result = await setListConsentFromManageLink(getDb(), token, listed, new Date());
+    redirect(result.ok ? `${path}?list=1#list` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?list=0#list`);
     throw error;
   }
 }
