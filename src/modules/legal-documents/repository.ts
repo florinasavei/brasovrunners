@@ -368,6 +368,48 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
 }
 
 /**
+ * How many registrations of this environment were submitted while a version was in force — the
+ * evidence a terms version has instead of a count (`DECISIONS.md` §NNN).
+ *
+ * A registration records `privacy_notice_version` and never a terms version, so nothing points at
+ * a TERMS row. But the terms are accepted at the instant the form is submitted, and whatever was
+ * in force at that instant is what was accepted; so "did anybody accept version 2" is "was any
+ * registration submitted inside version 2's window", and that needs no new column.
+ *
+ * **Every submission this table can still see, and a little more.** A registration's first
+ * submission is `created_at` (and `submitted_at`, set with it); each re-submission of a cancelled
+ * or expired row rewrites `privacy_acknowledged_at` to its own instant. A restart in between two
+ * others is overwritten and leaves no trace — so a row whose earliest and latest submissions
+ * *straddle* the window counts too, because one of its lost restarts may have fallen inside it.
+ * That can refuse a version nobody in fact accepted; it cannot pass one somebody did.
+ *
+ * **Every kind and every source.** A `TEST` registration on QA ticked the same box as a real one,
+ * and a staff-entered registration was entered under the terms in force; neither is a count the
+ * club is given as a figure about its participants (§30), so counting them costs nothing and
+ * leaving them out would be the one way to be wrong. An erased registration is gone and is not
+ * counted, exactly as it is not counted for the privacy notice.
+ */
+export async function countRegistrationsSubmittedWithin<T extends Record<string, unknown>>(
+  db: Database<T>,
+  window: { from: Date; until: Date | null },
+): Promise<number> {
+  const earliest = sql`least(${registrations.createdAt}, ${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`;
+  const latest = sql`greatest(${registrations.createdAt}, ${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`;
+
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(
+      and(
+        sql`${latest} >= ${window.from.toISOString()}::timestamptz`,
+        window.until ? sql`${earliest} < ${window.until.toISOString()}::timestamptz` : undefined,
+      ),
+    );
+
+  return row?.count ?? 0;
+}
+
+/**
  * One version's text in every locale it has, for reading in the backoffice.
  *
  * Approved or not: an unapproved draft is exactly what somebody needs to look at before

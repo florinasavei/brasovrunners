@@ -563,7 +563,7 @@
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
-      "LEGAL_TERMS_IN_FORCE": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge: cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
+      "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri din perioada în care a fost în vigoare, iar o înscriere nu reține ce versiune a termenilor a acceptat. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -989,6 +989,8 @@
       "legalDraftSaved": "Ciorna a fost salvată.",
       "legalVersionApproved": "Versiunea a fost aprobată și este acum publică.",
       "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
+      "termsSubmissions": "Înscrieri cât a fost în vigoare: {count}",
+      "termsSubmissionsSoFar": "Înscrieri de când e în vigoare: {count}",
       "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
       "delete": "Șterge ciorna",
       "deletePending": "Se șterge…",
@@ -996,6 +998,7 @@
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
       "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri ({count}), iar o înscriere nu reține ce versiune a termenilor a acceptat.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
@@ -1055,6 +1058,8 @@
         "numberRetired": "Numărul {version} rămâne retras pentru totdeauna. Următoarea versiune a acestui document va primi numărul următor, niciodată {version}, ca să nu ajungă pe alt text un număr pe care oamenii l-au bifat deja la înscriere.",
         "auditOnly": "Rămâne o singură urmă: o linie în jurnal cu documentul, numărul, data intrării în vigoare, cine a aprobat-o, amprenta SHA-256 a fiecărei limbi și motivul scris de tine. Textul nu se păstrează nicăieri.",
         "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
+        "termsNobodyAccepted": "Se poate șterge pentru că nimeni nu a acceptat-o: a fost în vigoare {window} și în acest timp nu s-a trimis nicio înscriere — iar acum nu mai este textul în vigoare.",
+        "termsNeverInForce": "Se poate șterge pentru că nimeni nu a acceptat-o: nu a fost niciodată textul în vigoare — a fost înlocuită înainte să intre.",
         "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
         "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
         "phraseLabel": "Confirmarea",
@@ -1065,7 +1070,9 @@
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
-        "blockedTermsInForce": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge. Cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul. Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui."
+        "blockedTermsAccepted": "Nu se poate șterge: cât a fost în vigoare această versiune a termenilor ({window}) s-au trimis înscrieri ({count}). Oricare dintre ele poate s-o fi acceptat, iar o înscriere nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul.",
+        "termsWithdrawInstead": "Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui.",
+        "termsAlreadyWithdrawn": "Ai retras-o deja, așa că nu se mai oferă nimănui; rămâne în evidență, cu numărul ei, pentru cine a acceptat-o."
       },
       "editor": {
         "heading": "Titlu de secțiune",
