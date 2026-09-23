@@ -72,7 +72,6 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "firstName",
       "lastName",
       "birthDate",
-      "city",
       "email",
       "emailConfirm",
       "phone",
@@ -85,9 +84,11 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
     }
 
-    // BR-REQ-072-01 criterion 1 and BR-REQ-039-01: these two are optional and still *presented*
-    // — a consent behind a summary somebody never opens has not been put to them.
-    await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
+    // The public-results consent is not asked (§322): there are no results to consent to.
+    await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
+    // Where the runner is from is optional and on the optional side, open (§322).
+    await expect(page.locator('[name="city"]')).toBeVisible();
+    await expect(page.locator('[name="city"]')).not.toHaveAttribute("required", "");
     // "I want to appear on the participant list" is asked only on an event whose list is switched
     // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);

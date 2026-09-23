@@ -512,6 +512,16 @@ export type RegistrationDetail = {
   emailVerifiedAt: Date | null;
   /** The latest declaration acceptance, online or on paper; the journey's fourth step (§145). */
   declarationAcceptedAt: Date | null;
+  /**
+   * Whether a health note (or its consent) is on the row — a boolean, computed in SQL, so the
+   * note itself never rides along with the page's main query (§322). What the withdrawal panel
+   * reads to know whether there is anything to withdraw.
+   */
+  holdsHealthNote: boolean;
+  /** The results consent (BR-REQ-072-01), no longer asked (§322) but withdrawable where given. */
+  resultsNameConsent: boolean;
+  /** For the link to everything held about this person (§322): the identity it is looked up by. */
+  participantCanonicalEmail: string;
 };
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
@@ -561,6 +571,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       cycleStartedAt: registrations.privacyAcknowledgedAt,
       emailVerifiedAt: participants.emailVerifiedAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
+      holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
+      resultsNameConsent: registrations.resultsNameConsent,
+      participantCanonicalEmail: participants.canonicalEmail,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -578,6 +591,127 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .limit(1);
 
   return row;
+}
+
+/**
+ * The four things somebody needs when a runner is on the ground (§322): how to reach them,
+ * whom to call instead, and what the medical team should know.
+ *
+ * **Its own query, for its own section, and nowhere else.** The registration's detail query
+ * above does not carry these columns, so no other part of that page — and no page that reuses
+ * that query — can render them by accident; the desk's `DESK_COLUMNS` below never will
+ * (`AGENTS.md` §15.11: a name, a state and a number). The export leaves all four out
+ * (`csv.ts`, `workbook.ts`). The one caller asserts the role and writes the audit row first
+ * (`admin-service.ts#readEmergencyDetails`).
+ */
+export type EmergencyDetails = {
+  phone: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
+  healthNotes: string | null;
+  /** When the health consent was given — shown beside the note, so it reads as consented. */
+  healthConsentAt: Date | null;
+};
+
+export async function findEmergencyDetails<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<EmergencyDetails | undefined> {
+  const [row] = await db
+    .select({
+      phone: registrations.phone,
+      emergencyContactName: registrations.emergencyContactName,
+      emergencyContactPhone: registrations.emergencyContactPhone,
+      healthNotes: registrations.healthNotes,
+      healthConsentAt: registrations.healthConsentAt,
+    })
+    .from(registrations)
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  return row;
+}
+
+/**
+ * One event's emergency sheet (§322): everyone confirmed — checked in or not, since a runner
+ * who has not reached the desk is still on the course — with the four details and the race
+ * number, in number order and then by name, so the sheet reads like the start list.
+ *
+ * `REAL` rows only, as the export (§30): the sheet is printed and carried, and a synthetic
+ * runner on paper is a phone number nobody should ring. The health column is simply empty after
+ * the seven-day clearing, which is what `jobs/retention.ts` does to the row.
+ */
+export type EmergencySheetRow = EmergencyDetails & {
+  id: string;
+  registeredName: string;
+  bibNumber: number | null;
+  provisionalBibNumber: number | null;
+  checkedInAt: Date | null;
+};
+
+export async function listEmergencySheet<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<EmergencySheetRow[]> {
+  return db
+    .select({
+      id: registrations.id,
+      registeredName: registrations.registeredName,
+      bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
+      checkedInAt: registrations.checkedInAt,
+      phone: registrations.phone,
+      emergencyContactName: registrations.emergencyContactName,
+      emergencyContactPhone: registrations.emergencyContactPhone,
+      healthNotes: registrations.healthNotes,
+      healthConsentAt: registrations.healthConsentAt,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL")))
+    .orderBy(
+      sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) asc nulls last`,
+      asc(registrations.registeredName),
+      asc(registrations.id),
+    );
+}
+
+/**
+ * The extra columns the spreadsheet carries and the CSV does not (§322): sex, the age on race
+ * day, where the runner is from, and the t-shirt size — what a category ranking, the club's
+ * "where do our runners come from" and the kit order need, and nothing the start list itself
+ * reads. One query for the exported ids rather than four more columns on every page of the list.
+ */
+export type WorkbookDetails = {
+  id: string;
+  sex: "FEMALE" | "MALE" | "UNSPECIFIED" | null;
+  birthDate: string | null;
+  nationality: string | null;
+  city: string | null;
+  tshirtSize: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | null;
+  eventStartsAt: Date;
+  /** The event's own zone: race day is the day on the start line's clock (§321). */
+  eventTimezone: string;
+};
+
+export async function listWorkbookDetails<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, WorkbookDetails>> {
+  if (registrationIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      id: registrations.id,
+      sex: registrations.sex,
+      birthDate: registrations.birthDate,
+      nationality: registrations.nationality,
+      city: registrations.city,
+      tshirtSize: registrations.tshirtSize,
+      eventStartsAt: events.startsAt,
+      eventTimezone: events.timezone,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(inArray(registrations.id, [...registrationIds]));
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 /**

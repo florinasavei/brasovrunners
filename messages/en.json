@@ -316,6 +316,8 @@
       "summaryTotal": "Registrations: {count}",
       "summaryTest": "Test: {count}",
       "export": "Export CSV",
+      "personLink": "Everything held about a person",
+      "personThis": "Everything held about this person",
       "backToList": "Back to registrations",
       "resend": "Resend email",
       "resendSent": "The email has been queued again.",
@@ -357,6 +359,16 @@
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
+      "withdraw": {
+        "title": "Withdraw consent",
+        "help": "For a person who asked, in writing, to have what they gave on consent deleted. Only what you tick is deleted; the registration's state, place and number stay as they are, and the person is sent no message.",
+        "health": "The health note and its consent",
+        "socials": "The Strava link and the Instagram username",
+        "results": "The public-results consent",
+        "reason": "Reason",
+        "action": "Withdraw",
+        "nothing": "There is nothing left to withdraw: the health note, the socials and the results consent are already empty."
+      },
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
       "auditActorParticipant": "the participant, from their own link",
@@ -374,7 +386,9 @@
           "bibs_printed": "Bib marked as printed",
           "bibs_unprinted": "Bib marked as not printed",
           "list_consent_changed": "Public-list choice changed by the participant",
-          "resubmitted": "Registered again with the same address"
+          "resubmitted": "Registered again with the same address",
+          "health_viewed": "Emergency details and health note opened",
+          "consent_withdrawn": "Consent withdrawn"
         }
       },
       "locale": {
@@ -384,9 +398,11 @@
       "deleteTitle": "Delete permanently",
       "deleteHelp": "Deletes the registration and the signed declaration, permanently. The place is released to the waiting list, and the log keeps who deleted it and why — not the person’s data. Use it for an erasure request; for an ordinary withdrawal, cancel instead.",
       "deleteReason": "Reason for deletion",
+      "reasonNoIdentity": "Do not write the person's name, address or anything that identifies them.",
       "deleteAction": "Delete permanently",
       "deleteConfirm": "I confirm this deletion is permanent",
       "registrationDeleted": "The registration was permanently deleted.",
+      "eraseLeftovers": "Also delete by hand: the person's “Signed declaration” messages in the archive mailbox and its Cc/Bcc copies, their row in any downloaded export, the paper declaration, and their address in Mailgun → Suppressions if it is there. The database's backups (Neon's restore history) still hold the registration until they expire, at most 7 days later — nothing to do there by hand.",
       "rowActions": "Actions for {name}",
       "clubMemberLabel": "Brașov Runners members",
       "bouncedLabel": "Email",
@@ -423,6 +439,19 @@
       "sendReminder": "Send the reminder",
       "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
+      "emergency": {
+        "title": "Emergency and health",
+        "show": "Show the phone, the emergency contact and the health note",
+        "showHelp": "Who opened this section, and when, is recorded in the audit trail.",
+        "phone": "Phone",
+        "contact": "Emergency contact",
+        "none": "—",
+        "health": "Health note",
+        "healthNone": "No note",
+        "healthConsented": "consent given on {date}",
+        "hide": "Hide",
+        "viewed": "Opening it was recorded in the audit trail."
+      },
       "bibNumber": "Race number (BIB)",
       "checkinCode": "Pickup code",
       "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
@@ -509,6 +538,7 @@
       "editNamed": "Edit {title}",
       "moreActions": "More actions",
       "registrationsLink": "Registrations ({count})",
+      "emergencySheet": "Emergency sheet",
       "new": "New event",
       "registrations": "Registrations",
       "columnTitle": "Event",
@@ -1719,6 +1749,40 @@
       "downloadAll": "Download every number ({count}) — a PDF to print",
       "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
     },
+    "emergency": {
+      "title": "Emergency sheet — confidential. Destroy after the event.",
+      "event": "{event} · {date}",
+      "backToEvent": "Back to the event",
+      "print": "Print",
+      "help": "Every confirmed participant, checked in or not. The health note deletes itself seven days after the event; after that the column is empty. Opening this page is recorded in the audit trail.",
+      "columnBib": "No.",
+      "columnName": "Name",
+      "columnPhone": "Phone",
+      "columnContact": "Emergency contact",
+      "columnHealth": "Health note",
+      "present": "checked in",
+      "empty": "No confirmed participant yet.",
+      "count": "Confirmed participants: {count}"
+    },
+    "person": {
+      "title": "Everything held about a person",
+      "intro": "For an access request, or before an erasure: everything the platform holds about one email address — every registration in every state with every field, the declarations, the consents and their versions, the messages sent, the “Tell me” requests and the audit rows. The address is matched by its canonical form, so “Ana.Pop+club@gmail.com” and “ana.pop@gmail.com” are the same person.",
+      "email": "Email address",
+      "lookUp": "Look up",
+      "expired": "The lookup expired (after {minutes} minutes). Type the address again.",
+      "audited": "Opening this page is recorded in the audit trail, for every registration shown.",
+      "canonical": "Canonical form: {email}",
+      "notFound": "No registration, no message and no “Tell me” request for this address.",
+      "downloadJson": "Download JSON",
+      "participant": "Participant",
+      "registrations": "Registrations ({count})",
+      "acceptances": "Accepted declarations ({count})",
+      "messages": "Messages ({count})",
+      "interests": "“Tell me” requests ({count})",
+      "audit": "Audit trail ({count})",
+      "none": "None.",
+      "newSearch": "Another lookup"
+    },
     "desk": {
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
@@ -2119,7 +2183,6 @@
     "email": "Email address",
     "privacyPrefix": "I have read and agree to the",
     "privacyLinkLabel": "privacy notice",
-    "resultsNameConsent": "My name may appear in public results",
     "listOptIn": "I want to appear on the participant list",
     "submit": "Submit registration",
     "submitting": "Sending…",
@@ -2190,8 +2253,11 @@
       "MALE": "Male",
       "UNSPECIFIED": "Prefer not to say"
     },
+    "sexHelp": "For category rankings; you may choose “Prefer not to say”.",
     "nationality": "Citizenship",
     "city": "City",
+    "originHelp": "Optional. Tells the club where its events' participants come from.",
+    "nationalityNone": "Prefer not to say",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
     "preferredLocaleOptions": {
@@ -2203,6 +2269,7 @@
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
+    "emergencyContactHelp": "Tell this person you gave us their name and number: we call only if something happens to you at the race. We keep them as long as the registration.",
     "tshirtSize": "T-shirt size",
     "tshirtSizes": {
       "NONE": "No t-shirt"
@@ -2211,7 +2278,7 @@
     "optional": "Optional",
     "healthNotes": "Conditions, allergies or medication",
     "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
-    "healthConsent": "This health information may be kept, only for my safety on race day",
+    "healthConsent": "I agree that the race organizers may keep this health information, only for my safety on race day. I can withdraw it at any time from “My registrations”.",
     "displayNameToggle": "Want to appear publicly under a different name?",
     "displayNamePlaceholder": "Ana P.",
     "fieldNames": {
@@ -2296,6 +2363,7 @@
     },
     "disclosure": {
       "race": "Brașov Runners member, club and t-shirt — optional",
+      "origin": "Where you're from — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
@@ -2320,7 +2388,7 @@
     "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth.",
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
-    "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
+    "healthIntro": "Optional, and only if you want to. Write only what the race organizers should know if you need help — an allergy, a treatment, a condition. Only the organizers see it; it is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
     "clubMemberHint": "I have been to at least 3 group runs in the past year.",
     "rules": {
@@ -2421,6 +2489,15 @@
       "shortListed": "You are on the public participant list.",
       "shortNotListed": "You are not on the public participant list.",
       "eventPage": "The event's page"
+    },
+    "withdraw": {
+      "title": "What you gave us with your consent",
+      "help": "The health note and your Strava and Instagram accounts are here only because you chose to give them. You can delete them here at any time; your registration and your place stay as they are.",
+      "health": "Delete my health note",
+      "socials": "Delete my Strava and Instagram",
+      "healthDone": "Your health note and its consent are deleted.",
+      "socialsDone": "Your Strava link and Instagram username are deleted.",
+      "failed": "We could not delete it. Try again or write to us."
     },
     "mine": {
       "title": "My registrations",
@@ -2532,7 +2609,8 @@
     "jobStatus": {
       "ok": "running",
       "stale": "stale",
-      "never_run": "never run"
+      "never_run": "never run",
+      "failing": "failing"
     },
     "checks": {
       "emailCaptureLocal": {

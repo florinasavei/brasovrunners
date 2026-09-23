@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
@@ -109,15 +109,27 @@ describe("retention sweep", () => {
     expect(survivor.key).toBe("live");
   });
 
-  it("deletes a used token but never one that is still live in somebody's inbox", async () => {
+  it("deletes a token thirty days after it was used, and never one that is still live in somebody's inbox", async () => {
     await db.insert(emailActionTokens).values([
       {
+        // Used thirty-one days ago, with an expiry still months ahead (§322): it can never be
+        // accepted again, and the old rule kept it until that expiry.
         participantId,
         registrationId,
         purpose: "MANAGE_REGISTRATION",
         tokenHash: "a".repeat(64),
         // `created_at` is explicit throughout: the table refuses a token that expires before it
         // was created, and these fixtures back-date expiry.
+        createdAt: daysAgo(40),
+        expiresAt: new Date(NOW.getTime() + 60 * 24 * 60 * 60_000),
+        usedAt: daysAgo(RETENTION.spentTokensDays + 1),
+      },
+      {
+        // Used yesterday: inside the thirty days, kept to answer "did this link work?".
+        participantId,
+        registrationId,
+        purpose: "WAITLIST_OFFER",
+        tokenHash: "d".repeat(64),
         createdAt: daysAgo(2),
         expiresAt: daysAgo(1),
         usedAt: daysAgo(1),
@@ -148,8 +160,9 @@ describe("retention sweep", () => {
     const counts = await pruneExpiredRows(db, NOW);
 
     expect(counts.actionTokens).toBe(1);
+    expect(counts.failures).toEqual([]);
     const hashes = (await db.select().from(emailActionTokens)).map((row) => row.tokenHash);
-    expect(hashes.sort()).toEqual(["b".repeat(64), "c".repeat(64)]);
+    expect(hashes.sort()).toEqual(["b".repeat(64), "c".repeat(64), "d".repeat(64)]);
   });
 
   it("deletes long-sent messages and keeps the ones somebody investigates", async () => {
@@ -269,5 +282,198 @@ describe("retention sweep", () => {
     // Three years and a day after the action: the audit row goes.
     const old = await pruneExpiredRows(db, new Date("2029-09-07T12:00:00.000Z"));
     expect(old.auditLogs).toBe(1);
+  });
+
+  /** A participant of their own, so the orphan-participant delete is visible in the counts. */
+  async function participant(email: string): Promise<string> {
+    const identity = canonicalizeEmail(email);
+    const [row] = await db
+      .insert(participants)
+      .values({
+        deliveryEmail: identity.deliveryEmail,
+        normalizedEmail: identity.normalizedEmail,
+        canonicalEmail: identity.canonicalEmail,
+        canonicalizationVersion: identity.canonicalizationVersion,
+        defaultName: email,
+      })
+      .returning();
+    return row.id;
+  }
+
+  async function lapsedRegistration(email: string, expiredDaysAgo: number): Promise<string> {
+    const [{ eventId }] = await db.select({ eventId: registrations.eventId }).from(registrations).where(eq(registrations.id, registrationId));
+    const [row] = await db
+      .insert(registrations)
+      .values({
+        eventId,
+        participantId: await participant(email),
+        status: "EXPIRED",
+        expiryReason: "EMAIL_CONFIRMATION_LAPSED",
+        expiredAt: daysAgo(expiredDaysAgo),
+        locale: "ro",
+        registeredName: email,
+        displayName: email,
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: daysAgo(expiredDaysAgo + 2),
+        resultsNameConsent: false,
+        listOptOut: false,
+        resultsConsentVersion: 1,
+      })
+      .returning();
+    return row.id;
+  }
+
+  /**
+   * §322 — "an address never confirmed, a place never held: nothing to prove". A registration
+   * whose email link lapsed goes thirty days after it lapsed, with the participant it leaves
+   * behind; one inside the thirty days stays, and so does a registration that lapsed for any
+   * other reason.
+   */
+  it("deletes a registration whose address lapsed unconfirmed thirty days ago, and keeps a younger one", async () => {
+    const old = await lapsedRegistration("old@example.ro", RETENTION.unconfirmedRegistrationDays + 1);
+    const young = await lapsedRegistration("young@example.ro", RETENTION.unconfirmedRegistrationDays - 1);
+
+    const counts = await pruneExpiredRows(db, NOW);
+
+    expect(counts.failures).toEqual([]);
+    expect(counts.unconfirmedRegistrations).toBe(1);
+    expect(counts.participants).toBe(1);
+    expect(await db.select().from(registrations).where(eq(registrations.id, old))).toHaveLength(0);
+    expect(await db.select().from(registrations).where(eq(registrations.id, young))).toHaveLength(1);
+    // The confirmed registration of the fixture is untouched, and so is its participant.
+    expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(1);
+    expect(await db.select().from(participants).where(eq(participants.id, participantId))).toHaveLength(1);
+  });
+
+  /**
+   * §322 — a message about nobody (no registration, no participant) has no row that will ever
+   * take it away with it, so it goes ninety days after it was queued, whatever its status.
+   */
+  it("deletes a message about nobody after ninety days, whatever its status", async () => {
+    await db.insert(emailOutbox).values([
+      {
+        participantId: null,
+        registrationId: null,
+        messageType: "REGISTRATION_OPENED",
+        locale: "ro",
+        recipientEmail: "interest@example.ro",
+        payloadJson: {},
+        idempotencyKey: "orphan-old-bounced",
+        status: "BOUNCED",
+        createdAt: daysAgo(RETENTION.orphanOutboxDays + 1),
+      },
+      {
+        participantId: null,
+        registrationId: null,
+        messageType: "REGISTRATION_OPENED",
+        locale: "ro",
+        recipientEmail: "interest@example.ro",
+        payloadJson: {},
+        idempotencyKey: "orphan-recent-bounced",
+        status: "BOUNCED",
+        createdAt: daysAgo(RETENTION.orphanOutboxDays - 1),
+      },
+      {
+        // As old, but about somebody: the registration takes it with it, not this rule.
+        participantId,
+        registrationId,
+        messageType: "REGISTRATION_CONFIRMED",
+        locale: "ro",
+        recipientEmail: "ana@example.ro",
+        payloadJson: {},
+        idempotencyKey: "registration-old-bounced",
+        status: "BOUNCED",
+        createdAt: daysAgo(RETENTION.orphanOutboxDays + 1),
+      },
+    ]);
+
+    const counts = await pruneExpiredRows(db, NOW);
+
+    expect(counts.orphanOutboxMessages).toBe(1);
+    const keys = (await db.select().from(emailOutbox)).map((row) => row.idempotencyKey).sort();
+    expect(keys).toEqual(["orphan-recent-bounced", "registration-old-bounced"]);
+  });
+
+  /**
+   * §322 — each step on its own, and the seven-day clearing first. A three-year step that throws
+   * (here: the database refusing to delete a declaration, as a lock timeout or a constraint
+   * would) is reported by name, and the identity documents are still cleared and the audit log
+   * still pruned.
+   */
+  it("clears identity documents and runs the later steps even when the three-year step throws", async () => {
+    const translations = [
+      { locale: "ro" as const, title: "Declarație", body: { sections: [{ paragraphs: ["{{idDocument}}"] }] } },
+      { locale: "en" as const, title: "Declaration", body: { sections: [{ paragraphs: ["{{idDocument}}"] }] } },
+    ];
+    const version = await insertLegalDocumentVersion(db, {
+      key: "EVENT_DECLARATION",
+      version: 1,
+      effectiveAt: NOW,
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+    // An event four years ago, whose registration the three-year step will try to delete.
+    const [oldEvent] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date("2022-09-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
+      .returning();
+    const [oldRegistration] = await db
+      .insert(registrations)
+      .values({
+        eventId: oldEvent.id,
+        participantId: await participant("veteran@example.ro"),
+        status: "CONFIRMED",
+        locale: "ro",
+        registeredName: "Veteran",
+        displayName: "Veteran",
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: new Date("2022-08-01T09:00:00.000Z"),
+        resultsNameConsent: false,
+        listOptOut: false,
+        resultsConsentVersion: 1,
+      })
+      .returning();
+    for (const id of [oldRegistration.id]) {
+      await db.insert(declarationAcceptances).values({
+        registrationId: id,
+        legalDocumentId: version,
+        declarationVersion: 1,
+        contentSha256: computeContentHash(translations),
+        locale: "ro",
+        typedName: "Veteran",
+        idDocument: "BV 999999",
+        acceptedAt: new Date("2022-08-02T09:00:00.000Z"),
+      });
+    }
+    await db.insert(auditLogs).values({
+      actorStaffUserId: null,
+      action: "registration.cancelled_by_staff",
+      entityType: "registration",
+      entityId: oldRegistration.id,
+      metadataJson: {},
+      createdAt: new Date("2022-08-03T09:00:00.000Z"),
+    });
+
+    // The stub: the database refuses to delete any declaration while the trigger exists.
+    await db.execute(sql`CREATE OR REPLACE FUNCTION refuse_declaration_delete() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'stubbed failure'; END $$ LANGUAGE plpgsql`);
+    await db.execute(sql`CREATE TRIGGER refuse_declaration_delete BEFORE DELETE ON declaration_acceptances FOR EACH ROW EXECUTE FUNCTION refuse_declaration_delete()`);
+    try {
+      const counts = await pruneExpiredRows(db, NOW);
+
+      expect(counts.failures.map((failure) => failure.step)).toEqual(["registrations-after-event"]);
+      // The seven-day clearing ran, and ran first.
+      expect(counts.identityDocuments).toBe(1);
+      const [acceptance] = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, oldRegistration.id));
+      expect(acceptance.idDocument).toBeNull();
+      // The failed step rolled back as a whole: the registration is still there.
+      expect(await db.select().from(registrations).where(eq(registrations.id, oldRegistration.id))).toHaveLength(1);
+      // And the step after it still ran.
+      expect(counts.auditLogs).toBe(1);
+    } finally {
+      await db.execute(sql`DROP TRIGGER IF EXISTS refuse_declaration_delete ON declaration_acceptances`);
+      await db.execute(sql`DROP FUNCTION IF EXISTS refuse_declaration_delete()`);
+    }
   });
 });

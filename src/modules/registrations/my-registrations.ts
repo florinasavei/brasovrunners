@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { ACTIVE_REGISTRATION_STATUSES, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -9,6 +9,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
@@ -41,7 +42,8 @@ export async function requestMyRegistrationsLink<T extends Record<string, unknow
     return;
   }
 
-  const verdict = await consumeRateLimit(db, "link-request", identity.canonicalEmail, now);
+  // The same hashed bucket as the other link request (§322): one mailbox, one allowance.
+  const verdict = await consumeRateLimit(db, "link-request", emailBucketKey("link-request", identity.canonicalEmail), now);
   if (!verdict.allowed) return;
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -80,6 +82,12 @@ export type MyRegistration = {
   selfCheckinOpen: boolean;
   /** On the public participant list, or not — the participant's own answer (BR-REQ-039-01; §143). */
   listed: boolean;
+  /**
+   * Whether there is a health note, or a Strava link or Instagram username, to withdraw (§322).
+   * Booleans and never the values: the page offers the button and does not print the note.
+   */
+  holdsHealthNote: boolean;
+  holdsSocials: boolean;
 };
 
 /** Every active registration of one participant, soonest event first, with the event as the page names it. */
@@ -103,6 +111,9 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       bibNumber: registrations.bibNumber,
       provisionalBibNumber: registrations.provisionalBibNumber,
       listOptOut: registrations.listOptOut,
+      // Whether each is set, computed in SQL so the values never leave the database (§322).
+      holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
+      holdsSocials: sql<boolean>`(${registrations.stravaUrl} IS NOT NULL OR ${registrations.instagramHandle} IS NOT NULL)`.mapWith(Boolean),
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))

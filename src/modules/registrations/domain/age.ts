@@ -96,3 +96,16 @@ export function latestBirthDateFor(years: number, day: string): string {
       : new Date(Date.UTC(on.getUTCFullYear() - years, on.getUTCMonth() + 1, 0));
   return latest.toISOString().slice(0, 10);
 }
+
+/**
+ * The age in whole years on a given day — the race's, for the spreadsheet's category column
+ * (§322). The club has defined no age bands, so the column is the age itself, which is what a
+ * band is computed from the day it has some. `ageOn` on the event's own calendar day (§321), so
+ * the column, the minimum age and the minor rule can never disagree about who is seventeen.
+ * Null for no date, one that cannot be read, or one after the race.
+ */
+export function ageOnRaceDay(birthDate: string | null, startsAt: Date, timeZone: string): number | null {
+  if (!birthDate) return null;
+  const age = ageOn(birthDate, dayIn(startsAt, timeZone));
+  return age === null || age < 0 ? null : age;
+}

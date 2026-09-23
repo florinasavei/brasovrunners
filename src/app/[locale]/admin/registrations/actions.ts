@@ -15,6 +15,7 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
+  withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
@@ -300,6 +301,32 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
 export async function cancelRegistrationFromRowAction(form: FormData): Promise<void> {
   const refusal = await cancelRegistrationAction(null, form);
   if (refusal) backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
+}
+
+/**
+ * Withdraw a participant's optional data on their behalf (§322, `AGENTS.md` §15.11): the ticked
+ * groups, the reason typed. `requireStaffRole("ADMIN")` is the coarse gate and the service asks
+ * `canManageRegistrations` again, so a replayed POST from an Organizer's session goes nowhere.
+ */
+export async function withdrawConsentAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const fields = {
+      ...(form.get("health") === "on" ? { health: true as const } : {}),
+      ...(form.get("socials") === "on" ? { socials: true as const } : {}),
+      ...(form.get("results") === "on" ? { results: true as const } : {}),
+    };
+    await withdrawOptionalData(getDb(), actor, registrationId, fields, text(form, "reason"), new Date());
+    outcome = { saved: "consentWithdrawn" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**

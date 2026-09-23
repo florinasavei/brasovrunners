@@ -6,8 +6,9 @@ import { E164_PHONE } from "./phone";
 
 /**
  * The registration form's editable fields (BR-REQ-031-01 criterion 1): full name, email,
- * locale, the privacy-notice acknowledgment, and the public-results consent. No password
- * field and no login link exist because none is in this schema to render.
+ * locale and the privacy-notice acknowledgment. The public-results consent is no longer asked
+ * (§322) and defaults to false. No password field and no login link exist because none is in
+ * this schema to render.
  *
  * `honeypot` and `renderedAt` are the spam defenses of AGENTS.md §19.4 / WEEKEND.md — a hidden
  * field a human never fills in, and a submission-timing check. Both are validated in
@@ -51,9 +52,16 @@ const submissionFields = z.object({
     }, "birthDate is outside the accepted range"),
 
   sex: z.enum(["FEMALE", "MALE", "UNSPECIFIED"]),
-  /** ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists. */
-  nationality: z.string().trim().length(2).toUpperCase(),
-  city: z.string().trim().min(1).max(120),
+  /**
+   * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
+   *
+   * Optional since §322, with the city beside it. Nothing the club does with a registration
+   * needs either — no place, no category, no message — and the notice had to say why they were
+   * compulsory and could not: "ne arată de unde vin participanții" is a reason to *ask*, not to
+   * insist. The form offers them in the optional column, and blank is absent.
+   */
+  nationality: z.string().trim().length(2).toUpperCase().optional(),
+  city: z.string().trim().min(1).max(120).optional(),
 
   /**
    * The organizer's way of reaching somebody on race day, and somebody else if that fails.
@@ -153,7 +161,16 @@ const submissionFields = z.object({
   emailConfirm: z.email().max(320).optional(),
   locale: z.enum(["ro", "en"]),
   privacyAcknowledged: z.literal(true),
-  resultsNameConsent: z.boolean(),
+  /**
+   * "My name may appear in the public results" (BR-REQ-072-01) — no longer asked (§322).
+   *
+   * There are no results on this site and none are planned before M2, so the form was asking a
+   * person to consent to a publication that does not exist, and a consent to nothing is not a
+   * consent anybody can be informed about. The column stays (a later contract step drops it) and
+   * every new row carries `false`; when results exist, the question comes back with a text that
+   * can say what it is for.
+   */
+  resultsNameConsent: z.boolean().default(false),
   /**
    * "Do not put my name on the public start list" (BR-REQ-039-01).
    *
@@ -370,8 +387,6 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .partial({
     birthDate: true,
     sex: true,
-    nationality: true,
-    city: true,
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,

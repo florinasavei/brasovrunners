@@ -121,6 +121,40 @@ describe("job health reporting", () => {
     expect(health.status).toBe("ok");
   });
 
+  /**
+   * §322 — the retention sweep fails loudly. Two runs in a row that wrote a retention failure
+   * make the job `failing`, which `/api/health` answers with a 503 like anything but `ok`; one
+   * failed run is retried by the next and does not raise the alarm.
+   */
+  it("reports failing when the two most recent runs both failed the retention sweep", async () => {
+    const run = (minutesAgo: number, lastError: string | null) => ({
+      jobName: "registration-maintenance",
+      startedAt: new Date(NOW.getTime() - minutesAgo * 60_000),
+      finishedAt: new Date(NOW.getTime() - minutesAgo * 60_000 + 5_000),
+      errorCount: lastError ? 1 : 0,
+      lastError,
+    });
+
+    await db.insert(jobRuns).values(run(10, "retention:registrations-after-event"));
+    // One failing run, and nothing before it: not yet an alarm.
+    expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("ok");
+
+    await db.insert(jobRuns).values(run(5, "retention:registrations-after-event,audit-log"));
+    expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("failing");
+
+    // A clean run clears it: the two most recent are no longer both failing.
+    await db.insert(jobRuns).values(run(1, null));
+    expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("ok");
+  });
+
+  it("does not report failing for errors that are not the retention sweep's", async () => {
+    await db.insert(jobRuns).values([
+      { jobName: "registration-maintenance", startedAt: new Date(NOW.getTime() - 10 * 60_000), finishedAt: new Date(NOW.getTime() - 9 * 60_000), errorCount: 1, lastError: null },
+      { jobName: "registration-maintenance", startedAt: new Date(NOW.getTime() - 5 * 60_000), finishedAt: new Date(NOW.getTime() - 4 * 60_000), errorCount: 2, lastError: null },
+    ]);
+    expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("ok");
+  });
+
   it("does not confuse a still-running (unfinished) run with a completed one", async () => {
     await db.insert(jobRuns).values({
       jobName: "registration-maintenance",
