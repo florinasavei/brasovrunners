@@ -407,6 +407,13 @@
       "when": 1790021240895,
       "tag": "0057_bib_printed",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1790143063288,
+      "tag": "0058_translation_location_name",
+      "breakpoints": true
     }
   ]
 }

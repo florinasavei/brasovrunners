@@ -62,8 +62,11 @@ const PUBLIC_COLUMNS = {
   // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are
   // a separate query, made only when this says NAMES.
   participantListVisibility: events.participantListVisibility,
-  // The same event in either language (`DECISIONS.md` §36): one value, on the event row.
-  locationName: events.locationName,
+  // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
+  // the page's language when the club gave it one (migration `0058`), else in the club's own
+  // words as before. Never the other language's: a blank name reads the event, not the other
+  // row (BR-REQ-040-02).
+  locationName: sql<string | null>`COALESCE(NULLIF(btrim(${eventTranslations.locationName}), ''), ${events.locationName})`,
   locationAddress: events.locationAddress,
   difficulty: events.difficulty,
   costType: events.costType,
@@ -341,9 +344,10 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       // The rows themselves, for the reminder (§117).
       scheduleItems: events.scheduleItems,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
-      // event's own.
+      // event's own. The place's name in the runner's language when the club gave it one
+      // (migration `0058`), else the event's — the same rule as `PUBLIC_COLUMNS`.
       checklist: eventTranslations.checklist,
-      locationName: events.locationName,
+      locationName: sql<string | null>`COALESCE(NULLIF(btrim(${eventTranslations.locationName}), ''), ${events.locationName})`,
       mapUrl: events.mapUrl,
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,

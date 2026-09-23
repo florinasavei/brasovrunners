@@ -43,6 +43,7 @@ import {
   eventFieldsSchema,
   missingPublicFields,
   newEventSchema,
+  type TranslationFields,
   translationFieldsSchema,
 } from "./fields";
 import {
@@ -323,7 +324,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     scheduleItems: times.scheduleItems.length > 0 ? times.scheduleItems : null,
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
-    videoUrl: fields.videoUrl,
+    // No form posts a film any more (a film is a figure in the description, §266), and a
+    // column nobody mentioned is a column nobody may erase: the stored link of an older event
+    // survives every save. Only a caller that says `videoUrl` writes it.
+    ...(fields.videoUrl === undefined ? {} : { videoUrl: fields.videoUrl }),
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
     // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
@@ -485,24 +489,12 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
-  const { body, rules, schedule, excerptBody, ...columns } = fields;
-  // The rich excerpt, when the editor posted one, and its words as the plain `excerpt` — the
-  // listing card, the meta description and the publish check all read the plain column
-  // (`DECISIONS.md` §73). An editor that posted nothing leaves the plain text as typed.
-  const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return updateTranslationWithVersionGuard(
     db,
     input.current.id,
     input.expectedVersion,
     {
-      ...columns,
-      excerpt: excerptJson ? richTextToPlainText(excerptJson).replace(/\s+/g, " ").trim().slice(0, 500) || null : columns.excerpt,
-      excerptJson,
-      bodyJson: body,
-      rulesJson: hasRichTextContent(rules) ? rules : null,
-      // A group run has no programme (§111): the editor hides the field, and this is what
-      // holds when the type changed in the same save or the hidden field still posted text.
-      scheduleJson: hasProgramme(input.eventType) && hasRichTextContent(schedule) ? schedule : null,
+      ...translationColumnsFrom(fields, input.eventType),
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -510,6 +502,34 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     },
     input.now,
   );
+}
+
+/**
+ * The columns of `event_translations` one language's fields write, in one place, so the create
+ * and the save cannot drift — `eventColumnsFrom`'s sibling for the words. The create form
+ * renders the editor's own language panel now, so what it posts is what a save posts, and
+ * "the excerpt is the summary's words" has to be true from the first insert rather than from
+ * the first save.
+ *
+ * The rich excerpt, when the editor posted one, and its words as the plain `excerpt` — the
+ * listing card, the meta description and the publish check all read the plain column
+ * (`DECISIONS.md` §73). An editor that posted nothing leaves the plain text as typed. A field
+ * the caller did not post at all is `undefined` here, which a save leaves as it is and an
+ * insert leaves at the column's default.
+ */
+function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"]) {
+  const { body, rules, schedule, excerptBody, ...columns } = fields;
+  const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
+  return {
+    ...columns,
+    excerpt: excerptJson ? richTextToPlainText(excerptJson).replace(/\s+/g, " ").trim().slice(0, 500) || null : columns.excerpt,
+    excerptJson,
+    bodyJson: body,
+    rulesJson: hasRichTextContent(rules) ? rules : null,
+    // A group run has no programme (§111): the editor hides the field, and this is what
+    // holds when the type changed in the same save or the hidden field still posted text.
+    scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
+  };
 }
 
 export async function saveEventTranslation<T extends Record<string, unknown>>(
@@ -778,6 +798,8 @@ const SERIES_TRANSLATION_COLUMNS = [
   "scheduleJson",
   "checklist",
   "coverAltText",
+  // The place's name in this language (migration `0058`): a word, so it travels like one.
+  "locationName",
   "seoTitle",
   "seoDescription",
 ] as const;
@@ -1135,11 +1157,13 @@ export async function createEvent<T extends Record<string, unknown>>(
       })
       .returning();
 
+    // Through the same function a save writes with: the rich summary's words become the
+    // plain `excerpt`, the empty documents become null, a group run gets no programme.
     await tx.insert(eventTranslations).values(
       routing.locales.map((locale) => ({
         eventId: event.id,
         locale,
-        ...parsed.translations[locale],
+        ...translationColumnsFrom(parsed.translations[locale], parsed.type),
         authorStaffUserId: input.actor.id,
         createdAt: now,
         updatedAt: now,
@@ -1288,6 +1312,8 @@ function copiedTranslationValues(
     scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
     coverAltText: translation.coverAltText,
+    // The place's name in this language goes with the copy: the same place, the same word.
+    locationName: translation.locationName,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     authorStaffUserId: actor.id,

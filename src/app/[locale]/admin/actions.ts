@@ -215,32 +215,44 @@ function eventFieldsFrom(form: FormData) {
 }
 
 /**
- * One language's text, read back out of the single form.
+ * One language's fields, as `TranslationFieldsForm` posts them — the one reader for the save
+ * and the create, so the two cannot drift in what they read (`eventFieldsFrom`'s sibling).
+ * Every value stays a string here; `fields.ts` turns "" into "not stated" and refuses the rest.
+ */
+function translationInputFrom(form: FormData, locale: Locale) {
+  const value = (field: string) => text(form, `translations.${locale}.${field}`);
+  return {
+    slug: value("slug"),
+    title: value("title"),
+    excerpt: value("excerpt"),
+    excerptBody: value("excerptBody"),
+    checklist: value("checklist"),
+    body: value("body"),
+    rules: value("rules"),
+    schedule: value("schedule"),
+    // The place's name in this language, or "" for the event's own (migration `0058`).
+    locationName: value("locationName"),
+    seoTitle: value("seoTitle"),
+    seoDescription: value("seoDescription"),
+  };
+}
+
+/**
+ * One language's text, read back out of the single form, with the row it belongs to.
  *
  * A locale the actor may not edit renders no inputs at all, so `translationId` is absent and
  * this returns `undefined` — the save then carries nothing for that language rather than an
- * empty one, which is what would overwrite somebody's text with blanks.
+ * empty one, which is what would overwrite somebody's text with blanks. The create form has
+ * no row yet and posts no id either; it reads the fields with `translationInputFrom` directly.
  */
 function translationFieldsFrom(form: FormData, locale: Locale) {
-  const value = (field: string) => text(form, `translations.${locale}.${field}`);
-  const translationId = value("translationId");
+  const translationId = text(form, `translations.${locale}.translationId`);
   if (translationId === "") return undefined;
 
   return {
     translationId,
-    expectedVersion: Number(value("expectedVersion")),
-    fields: {
-      slug: value("slug"),
-      title: value("title"),
-      excerpt: value("excerpt"),
-      excerptBody: value("excerptBody"),
-      checklist: value("checklist"),
-      body: value("body"),
-      rules: value("rules"),
-      schedule: value("schedule"),
-      seoTitle: value("seoTitle"),
-      seoDescription: value("seoDescription"),
-    },
+    expectedVersion: Number(text(form, `translations.${locale}.expectedVersion`)),
+    fields: translationInputFrom(form, locale),
   };
 }
 
@@ -474,21 +486,16 @@ export async function createEventAction(form: FormData): Promise<void> {
   let outcome: { error?: string; saved?: string; created?: string } | undefined;
   try {
     const actor = await requireStaff();
+    // The create form renders the editor's own language panels, so each language is read
+    // with the save's reader — the rich summary, the description, the folds — and not a
+    // title-slug-excerpt triple of its own that would drift from the editor by the next field.
     const created = await createEvent(getDb(), {
       actor,
       fields: {
         ...eventFieldsFrom(form),
         translations: {
-          ro: {
-            slug: text(form, "translations.ro.slug"),
-            title: text(form, "translations.ro.title"),
-            excerpt: text(form, "translations.ro.excerpt"),
-          },
-          en: {
-            slug: text(form, "translations.en.slug"),
-            title: text(form, "translations.en.title"),
-            excerpt: text(form, "translations.en.excerpt"),
-          },
+          ro: translationInputFrom(form, "ro"),
+          en: translationInputFrom(form, "en"),
         },
       },
     });

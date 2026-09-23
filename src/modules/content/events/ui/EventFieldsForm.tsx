@@ -40,9 +40,12 @@ import type { EditableEvent } from "../repository";
  * **The panels** (`DECISIONS.md` §170; the owner asked for "a WordPress-like editor"): forty
  * fields in one column was a list nobody could hold in their head, and the order was the order
  * the columns were added to the table. They are grouped by the question they answer now —
- * when and where, registration, route and details, film — each an open box. Nothing was
- * removed and no field was renamed: the same names post the same values, and every end-to-end
- * locator still finds what it looked for.
+ * when and where, registration, route and details — each an open box. No field was renamed:
+ * the same names post the same values, and every end-to-end locator still finds what it
+ * looked for. One box is gone: the film. A YouTube link is a figure in the description now,
+ * placed and sized like a picture with the rich text's own button (§266), and a second way
+ * in — a box the action never even read — was a box that promised what nothing saved. The
+ * column stays, and the public page still embeds the links older events carry.
  *
  * It renders the inputs, not the `<form>`: `<Stack component="form" action={...}>` crashes in
  * MUI 9, so every caller wraps a plain `<form>` around this.
@@ -642,19 +645,6 @@ export default async function EventFieldsForm({
             </Typography>
           </Box>
         </Stack>
-      </EditorPanel>
-
-      {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
-      <EditorPanel title={t("editor.panels.video")} headingId="panel-video">
-        <TextField
-          name="event.videoUrl"
-          type="url"
-          label={t("editor.videoUrl")}
-          helperText={t("editor.videoUrlHelp")}
-          defaultValue={event?.videoUrl ?? ""}
-          inputMode="url"
-          fullWidth
-        />
       </EditorPanel>
     </Stack>
   );

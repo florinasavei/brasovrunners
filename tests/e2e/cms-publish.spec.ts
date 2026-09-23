@@ -138,6 +138,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
+    await hydrated(page);
 
     // By field name rather than by label: MUI marks a required label with an asterisk, and the
     // names are the contract the Server Action actually reads.
@@ -145,14 +146,17 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
-    // A date and a 24-hour time, two fields (`DECISIONS.md` §70).
+    // A date and a time, two fields, each with the browser's own picker (`DECISIONS.md` §70).
     await field("event.startsAtDate").fill("2027-05-01");
     await field("event.startsAtTime").fill("09:00");
     // The meeting point is asked once, in Settings: it is the same place whichever language the
     // page is read in (`DECISIONS.md` §36).
     await field("event.locationName").fill("Parcul Tractorul");
+    // The languages are the editor's own tabs on the create form too: the Romanian panel is
+    // in view, the English one behind its tab, and a hidden box cannot be filled.
     await field("translations.ro.title").fill(`Cros de probă ${suffix}`);
     await field("translations.ro.slug").fill(`cros-de-proba-${suffix}`);
+    await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Trial cross ${suffix}`);
     await field("translations.en.slug").fill(`trial-cross-${suffix}`);
 

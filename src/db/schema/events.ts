@@ -635,6 +635,18 @@ export const eventTranslations = pgTable(
      */
     coverAltText: text("cover_alt_text"),
 
+    /**
+     * The place's *name* in this language, since migration `0058` — the one part of §36's
+     * move the owner took back ("ar trebui să pot pune și denumirea locației în română și în
+     * engleză"). The fact stays one: `events.location_name` is still required, still what the
+     * desk, the calendar, the declaration and every reader without a translation at hand
+     * shows. This is the word for it on this language's page — "Tractorul Park" on the English
+     * one — and null means "the event's own name", which is what every row written before
+     * this column has. Never a fallback to the *other* language: a blank here reads the event
+     * row, exactly as before (BR-REQ-040-02 is untouched).
+     */
+    locationName: text("location_name"),
+
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 
