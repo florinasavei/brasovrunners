@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.55-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.56-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.55-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.56-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12758,3 +12758,15 @@ Baseline `BR-V1.54-2026-09-23`.
 **Left open.** Whether Amalia's widget ever answered on her laptop is unknown (a work network can block `challenges.cloudflare.com`); either way the press is now sent within eight seconds. Her earlier registration was cancelled by staff on the 22nd, so her retry was a genuine re-registration — the server handles that (§235) and would have emailed her; staff still have no marker for a repeated submission, which is queued separately.
 
 Baseline `BR-V1.55-2026-09-23`.
+
+## 305. Changed — every listing card has a door to its page in words, and a standing series says on the backoffice list that it renews itself (2026-09-23)
+
+**Context.** Two reports from the owner, minutes apart, both about a list that did not say what it meant. On the public listing, with the two weekly runs in front of him: "am nevoie de un buton pe carduri pentru 'descrierea completa a evenimentului'". On the backoffice events list, whose series row read "În fiecare luni, la 18:30 · Publicat · 9 date · 21 sept. – 16 nov. 2026": "I need to know here that the event is gonna be auto-renewed".
+
+**The card.** The title was the card's only link, and a title does not announce that a page exists behind it — a reader who wants the rules or the programme has no word telling them where to press. A plain anchor styled as a button now sits at the card's foot: "Descrierea completă a evenimentului" / "Full event description", 44 px, to the next date's page — the same door the title opens, and `listing-card-button.spec.ts` asserts the two agree. A Server Component still: `Button component="a"` with a string `href` from `getPathname`, no client island (§1.5). The card's height rule (§275, equal heights in a row) is untouched: the button is the last child of every card alike.
+
+**The series row.** "21 sept. – 16 nov. 2026" was the span of the dates the standing job had materialised so far — eight weeks (§122) — and it read as an end date; "9 date" read as a total. The rule itself was on the row's source event and nowhere on the screen. `renewalOf` (pure, `series-sentence.ts`) looks through the group for the one row that carries a `repeat_rule` and answers with its `until`; the row then says, under the cadence: "Se reînnoiește automat: platforma creează datele mereu 8 săptămâni înainte, la nesfârșit" — or "până pe 14 decembrie 2026" for a rule with an end. A set of dates made once (§64) has no rule and gets no line, because it really does end. The number of weeks is `HORIZON_DAYS / 7`, the constant the job reads, so the sentence cannot drift from the mechanism. This completes what §300's banner did for the moment of creation: the list is where the club looks afterwards.
+
+**What was rejected.** *Changing the date column to "de la 21 sept." for a ruled series.* The span is true — those dates exist — and the sentence beneath it now says what it is; rewriting the column would have hidden useful information to fix a misreading a sentence fixes better. *A tooltip.* It repeats the line it covers and pops on every tap (§261).
+
+Baseline `BR-V1.56-2026-09-23`.
