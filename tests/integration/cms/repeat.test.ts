@@ -59,7 +59,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
         editorialStatus: options.published ? "PUBLISHED" : "DRAFT",
         publishedAt: options.published ? new Date("2026-09-01T00:00:00Z") : null,
         // A recurring Strava club event and a Facebook event with several dates: one address
-        // each for every occurrence, which is why a series inherits them (§297).
+        // each for every occurrence, which is why a series inherits them (§300).
         stravaEventUrl: "https://www.strava.com/clubs/1147727/group_events/3393210254679131656",
         facebookEventUrl: "https://www.facebook.com/events/885822964531556",
       })
@@ -105,7 +105,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(third.repeatOf).toBe(source.id);
     expect(third.repeatRule).toBeNull();
     /*
-      The series inherits the source's Strava and Facebook event links (§297; the owner: "if I
+      The series inherits the source's Strava and Facebook event links (§300; the owner: "if I
       put the root links … strava and facebook should be smart enough to inherit this"). Both
       platforms give a recurring event one address for all its dates, so the address on the
       source IS the address of every occurrence — where §71 had assumed each occurrence has its
