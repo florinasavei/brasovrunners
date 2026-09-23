@@ -2744,7 +2744,17 @@ BIB_ASSIGNED
 STAFF_INVITATION
 REGISTRATION_OPENED
 CLUB_CONFIRMATION_NOTICE
+EVENT_UPDATE_NOTICE
+EVENT_CANCELLED
 ```
+
+`EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED` are never automatic (§NNN): the first goes only
+when an organizer ticks "Anunță participanții despre schimbare" on a save that moved the place,
+the start or the programme, put a cancelled event back on, or carries a note; the second when a
+save cancels the event and "tell them" is left ticked, with the reason the organizer typed. Both
+go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_OFFERED`,
+`CONFIRMED`, `WAITLISTED`) in its own language, carry no token, are queued in the save's
+transaction and audited with the count, never who.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event 48 hours before its start, once per registration (`registration:<id>:reminder`), with
