@@ -310,7 +310,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       nothing: it reads what `deletionObstacle` (a pure function in `domain/deletability.ts`,
       beside `isReliedOn`, which moved there with it) decides on, and it is exported so the
       service, the delete screen and the backoffice list ask one question and cannot disagree
-      about whether a version may go (§290, §NNN). `approvePlatformTemplates`
+      about whether a version may go (§290, §316). `approvePlatformTemplates`
       (`DECISIONS.md` §132) is not a sixth writer but the first two in one act — it calls
       `createDraftVersion` and `approveVersion` for each document that has no approved
       version and touches nothing that has one.

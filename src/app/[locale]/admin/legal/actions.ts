@@ -230,7 +230,7 @@ export async function deleteApprovedLegalVersionAction(form: FormData): Promise<
     const mistyped = isDomainError(error) && error.fields.includes("typedConfirmation");
     const noReason = isDomainError(error) && error.fields.includes("reason");
     /*
-      The terms refusal, told apart from a genuine race (§290, §NNN). Both are `CONFLICT`, and the
+      The terms refusal, told apart from a genuine race (§290, §316). Both are `CONFLICT`, and the
       backoffice renders a bare CONFLICT as "somebody else saved meanwhile" — true of a race and
       a lie about this, which is a rule the screen already names before the press. This is what
       is left if the answer changed between the two: a restart that stretched a registration

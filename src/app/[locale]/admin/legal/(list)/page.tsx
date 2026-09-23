@@ -80,7 +80,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * Where neither is possible the row says why, from the service's own verdict (`deletionObstacle`)
  * — the three counts, then "in force right now" — and it says it about both verbs at once,
  * because the condition is the same condition. Where only deletion is refused — a terms version
- * somebody registered or signed a declaration under while it was in force (§NNN) — the withdraw
+ * somebody registered or signed a declaration under while it was in force (§316) — the withdraw
  * button stays and the link gives way to the reason, with the count and the dates. A missing button
  * explains nothing; a count is a reason an organizer accepts. The server refuses regardless
  * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
@@ -144,7 +144,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   ).filter((key): key is "PRIVACY_NOTICE" | "TERMS" | "EVENT_DECLARATION" => key !== null);
   /*
     What the service would answer about each row, asked of the service before anything is drawn
-    (§290, §NNN): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
+    (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
     asks before it destroys anything. The row's link, its sentence and its "Folosit" cell all read
     from this, so the list cannot offer a press the server will refuse.
 
@@ -465,7 +465,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 A terms version somebody registered or signed under keeps its withdraw button
                 and loses the link: withdrawal keeps the words, so it is still open to it, and
                 deletion would destroy text somebody may have accepted — the row says that, with
-                the count and the dates, instead of a link to a page that would refuse (§NNN).
+                the count and the dates, instead of a link to a page that would refuse (§316).
               */
               return (
                 <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>

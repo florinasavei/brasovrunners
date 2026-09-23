@@ -3,7 +3,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 /**
  * What stands between an approved legal version and its deletion, as pure functions every caller
  * asks — the service before it destroys anything, the delete screen before it offers the form, and
- * the list before it offers the link (`DECISIONS.md` §203, §290, §NNN).
+ * the list before it offers the link (`DECISIONS.md` §203, §290, §316).
  *
  * **One rule, three callers.** Twice now a screen and the service have disagreed about this: §290
  * found the delete screen promising "nimic nu depinde de ea" about a version the service refused,

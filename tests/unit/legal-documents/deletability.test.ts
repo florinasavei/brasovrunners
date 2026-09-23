@@ -8,7 +8,7 @@ import {
 } from "@/modules/legal-documents/domain/deletability";
 
 /**
- * BR-REQ-053-02, `DECISIONS.md` §203, §290 and §NNN — whether an approved legal version may be
+ * BR-REQ-053-02, `DECISIONS.md` §203, §290 and §316 — whether an approved legal version may be
  * deleted, as pure functions the service, the delete screen and the list all ask.
  *
  * §203 refused every terms version that had *ever* been in force, because a registration records
@@ -52,7 +52,7 @@ const v2 = version(2, "2026-09-20T10:00:00.000Z", { withdrawnAt: "2026-09-21T12:
 const v3 = version(3, "2026-09-21T09:00:00.000Z");
 const history = [v3, v2, v1];
 
-describe("§NNN when a version was the text in force", () => {
+describe("§316 when a version was the text in force", () => {
   it("the first version: from its date until its successor took effect, not until its own withdrawal", () => {
     // v1 was withdrawn at noon on the 20th, but v2 had taken over at ten: from then on a
     // registration accepted v2, whatever v1's row said.
@@ -161,7 +161,7 @@ const unused: DeletionFacts = {
 };
 const window = { from: at("2026-09-04T08:00:00.000Z"), until: at("2026-09-20T10:00:00.000Z") };
 
-describe("§NNN the reasons a version may not be deleted, in the order they are given", () => {
+describe("§316 the reasons a version may not be deleted, in the order they are given", () => {
   it("nothing stands on an unused, superseded version of the notice or the declaration", () => {
     expect(deletionObstacle(unused)).toBeNull();
   });

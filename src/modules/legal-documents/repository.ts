@@ -369,7 +369,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
 
 /**
  * How many registrations of this environment agreed to "the terms" while a version was in force —
- * the evidence a terms version has instead of a count (`DECISIONS.md` §NNN).
+ * the evidence a terms version has instead of a count (`DECISIONS.md` §316).
  *
  * A registration records `privacy_notice_version` and never a terms version, so nothing points at
  * a TERMS row. But agreeing leaves an instant behind, and whatever was in force at that instant is

@@ -80,7 +80,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
     so the sentence this screen gives and the refusal the server would give cannot name different
     things.
 
-    **They did, twice (§290, §NNN).** First the screen carried a copy of the obstacle list that was
+    **They did, twice (§290, §316).** First the screen carried a copy of the obstacle list that was
     one item short and promised "nimic nu depinde de ea" about a terms version the service refused.
     Then both refused every terms version that had ever been in force, while the list beside them
     offered the delete link: the owner pressed it three times. A copy is a thing that drifts; there

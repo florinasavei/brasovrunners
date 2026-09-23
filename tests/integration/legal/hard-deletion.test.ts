@@ -88,7 +88,7 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   /*
     The default key is the privacy notice since §203: TERMS is the one key a registration
     records nothing about, and whether one of its versions may go depends on the registrations
-    submitted while it was in force (§NNN) — its own cases are at the bottom, with dates.
+    submitted while it was in force (§316) — its own cases are at the bottom, with dates.
   */
   async function twoApproved(key: "TERMS" | "PRIVACY_NOTICE" | "EVENT_DECLARATION" = "PRIVACY_NOTICE") {
     const first = await createDraftVersion(db, superadmin, { key, translations: translations("v1") }, NOW);
@@ -459,7 +459,7 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   });
 
   /*
-    §NNN — a terms version is deletable when nobody submitted a registration, or signed a
+    §316 — a terms version is deletable when nobody submitted a registration, or signed a
     declaration, while it was in force.
 
     §203 found the three dependant counts vacuous for TERMS — a registration records
@@ -700,7 +700,7 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   });
 
   /*
-    §290 and §NNN — one rule, every caller.
+    §290 and §316 — one rule, every caller.
 
     The list offered "Șterge definitiv" on rows the service refused, because it carried its own
     copy of the obstacles. It now renders `deletionObstacle` over `readDeletionFacts`, the same two

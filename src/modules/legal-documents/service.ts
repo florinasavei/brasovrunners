@@ -164,7 +164,7 @@ function refusalFor(obstacle: DeletionObstacle): DomainError {
 }
 
 /**
- * Everything the deletion rule reads about each of `rows`, for `deletionObstacle` (§290, §NNN) —
+ * Everything the deletion rule reads about each of `rows`, for `deletionObstacle` (§290, §316) —
  * one `DeletionFacts` per row, in the order given.
  *
  * Exported because three callers must get the same answer — the service before it destroys, the
@@ -639,7 +639,7 @@ export type DeleteApprovedVersionInput = {
  * is refused too, and told which verb applies: `deleteDraftVersion` needs no confirmation and
  * retires no number, and quietly doing one verb's work under the other's name is how a draft
  * would start costing a version number. And a terms version is refused while any registration
- * was submitted, or had its declaration signed, during its time in force (§NNN), because neither
+ * was submitted, or had its declaration signed, during its time in force (§316), because neither
  * records a terms version and those two instants are the only evidence of which text was agreed
  * to.
  *
