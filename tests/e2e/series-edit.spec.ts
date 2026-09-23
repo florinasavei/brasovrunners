@@ -31,6 +31,9 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await signIn(page, "Dev Superadministrator");
 
     await page.goto("/ro/admin/events/new");
+    // The tabs switch with React state: a click before hydration is discarded when React
+    // takes over, the English panel stays hidden, and a hidden box cannot be filled.
+    await hydrated(page);
     await field("event.startsAtDate").fill(ymd(first));
     await field("event.startsAtTime").fill("08:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
