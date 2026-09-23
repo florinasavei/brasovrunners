@@ -310,7 +310,11 @@ describe("§NNN the platform's legal templates leave the number to the event", (
         const sentence = paragraphs.find((paragraph) => /vârst[aă] minimă|minimum age/i.test(paragraph));
         expect(sentence, "the template still states the rule").toBeDefined();
         expect(sentence).toMatch(locale === "ro" ? /pagina/ : /page/);
-        expect(sentence!.replace(/\b18\b/g, "")).not.toMatch(/\d/);
+        // No number of the template's own but the guardian's eighteen. The privacy notice's
+        // paragraph also cites its legal bases since the GDPR rewrite (§323) — "art. 8 GDPR",
+        // "art. 6(1)(b)" — which are articles, not ages, so they are set aside before the check.
+        const withoutCitations = sentence!.replace(/\bart\.\s*\d+(\(\d+\))*(\([a-z]\))?/g, "");
+        expect(withoutCitations.replace(/\b18\b/g, "")).not.toMatch(/\d/);
       });
     }
   }
