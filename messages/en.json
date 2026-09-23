@@ -590,7 +590,8 @@
         "checklist": "What to bring (one line, in the emails and the calendar)",
         "body": "Content — shown on the event page, under the title",
         "rules": "Event rules",
-        "schedule": "Event programme"
+        "schedule": "Event programme",
+        "scheduleNotes": "Notes under the programme"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
@@ -608,9 +609,10 @@
       "rulesEmpty": "(none yet — press to write)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
+      "scheduleHelp": "The programme itself is the timed rows under “{panel}” → “{section}”, shared by both languages. Here you write, in this language, what does not fit a row — how the kit is collected, the cut-off rules. On the event page it appears beneath the rows; the reminder email repeats the rows and points here.",
       "programmeSection": "Programme",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
+      "programmeNotesHint": "What does not fit a row — how the kit is collected, the cut-off rules — is written under “{panel}”, in each language, at “{fold}”; it appears on the page beneath these rows.",
       "programmeRows": {
         "date": "Date",
         "time": "Time",

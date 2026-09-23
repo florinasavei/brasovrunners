@@ -56,7 +56,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
 import SubNav from "@/shared/ui/SubNav";
-import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -509,11 +509,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                 once the task is done; the steps are for doing it, not for reading about it.
               */}
               {task.state !== "done" && (
-                <Box component="details" sx={{ mt: 1.5 }}>
-                  <Box component="summary" sx={{ ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5, fontSize: "0.875rem", fontWeight: 500 }}>
+                <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1.5 }}>
+                  <Box component="summary" sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
                     {t("howTitle")}
                   </Box>
-                  <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>
+                  <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
                     {(t.raw(`items.${task.id}.how`) as string[]).map((step, index) => (
                       <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
                         {fill(step)}

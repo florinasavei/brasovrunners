@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import EditionMark from "@/modules/events/ui/EditionMark";
 import type { SeriesDate } from "@/modules/events/ui/SeriesDates";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 /**
  * Which dates of a series a save reaches (`DECISIONS.md` §134; the owner, on the header's
@@ -178,7 +179,7 @@ export function SeriesScopeBox() {
           ? `${t("editor.scope.all")} (${ticked.size})`
           : t("editor.scope.chosen", { count: String(ticked.size) });
   return (
-    <Box component="details" sx={{ border: 1, borderColor: "divider", borderRadius: 2, px: 2, py: 1, "& > summary": { cursor: "pointer", py: 1.25 } }}>
+    <Box component="details" sx={BOXED_DISCLOSURE_SX}>
       <Typography component="summary" variant="body2">
         {t("editor.scope.title")}{" "}
         <Box component="strong" sx={{ fontWeight: 600 }}>
@@ -195,13 +196,13 @@ export function SeriesScopeBox() {
         value={preset}
         onChange={(_event, next: Preset | null) => next && setPreset(next)}
         aria-label={t("editor.scope.title")}
-        sx={{ my: 1, flexWrap: "wrap", "& .MuiToggleButton-root": { textTransform: "none", minHeight: 44 } }}
+        sx={{ mb: 1, flexWrap: "wrap", "& .MuiToggleButton-root": { textTransform: "none", minHeight: 44 } }}
       >
         <ToggleButton value="this">{t("editor.scope.this")}</ToggleButton>
         <ToggleButton value="following">{t("editor.scope.following")}</ToggleButton>
         <ToggleButton value="all">{t("editor.scope.all")}</ToggleButton>
       </ToggleButtonGroup>
-      <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 1 }}>
+      <Typography variant="caption" color="text.secondary" component="p">
         {t("editor.scope.help")}
       </Typography>
     </Box>

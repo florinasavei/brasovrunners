@@ -30,6 +30,7 @@ import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-id
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { env } from "@/shared/config/env";
 import {
   cancelRegistrationAction,
@@ -254,16 +255,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })
                       : tr("registrations.bibNone")}
                   </Typography>
-                  <Box
-                    component="details"
-                    sx={{ "& > summary": { cursor: "pointer", py: 1, minHeight: 44 } }}
-                  >
+                  {/* The box spans the section, whatever the Stack does with its other children. */}
+                  <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, alignSelf: "stretch" }}>
                     <Typography component="summary" variant="body2" color="primary">
                       {tr("registrations.bibChange")}
                     </Typography>
                     <form action={setBibNumberAction}>
                       {deskHidden}
-                      <Stack direction="row" spacing={1} sx={{ alignItems: "center", mt: 1 }}>
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <TextField
                           name="bibNumber"
                           type="number"
@@ -449,14 +448,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       */}
       {canManageRegistrations(actor.role) && (
         <Box component="section">
-          <Box component="details" sx={{ mt: 3, border: 1, borderColor: "error.light", borderRadius: 1, px: 2, "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" } }}>
+          {/* The shared box, red: the one fold on the screen that destroys, and its border says so. */}
+          <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
             </Typography>
             <form action={deleteRegistrationAction}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="registrationId" value={registration.id} />
-              <Stack spacing={2} sx={{ pb: 2 }}>
+              <Stack spacing={2} sx={{ pb: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>

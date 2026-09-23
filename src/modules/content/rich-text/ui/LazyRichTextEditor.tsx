@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useState } from "react";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { isRichTextEmpty, readRichText } from "../domain/schema";
 import RichTextEditor from "./RichTextEditor";
 
@@ -27,7 +28,7 @@ export default function LazyRichTextEditor({
     <Box
       component="details"
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
-      sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 1.5, "& > summary": { cursor: "pointer", py: 1.25, minHeight: 44, listStyle: "revert" } }}
+      sx={BOXED_DISCLOSURE_SX}
     >
       <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
         {summary}
@@ -37,7 +38,7 @@ export default function LazyRichTextEditor({
           </Typography>
         )}
       </Typography>
-      <Box sx={{ pb: 1.5 }}>
+      <Box>
         {open ? <RichTextEditor {...editor} /> : <input type="hidden" name={editor.name} value={JSON.stringify(stored)} readOnly />}
       </Box>
     </Box>
