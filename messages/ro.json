@@ -331,6 +331,7 @@
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "outboxHistory": "Istoric email",
+      "outboxClubCopy": "copie pentru club, fără linkurile participantului",
       "emailRejected": "Email respins",
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
@@ -342,6 +343,7 @@
       "participantName": "Numele participantului",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
+      "birthDateMinimumAge": "Opțional aici. Vârsta minimă este 14 ani împliniți în ziua cursei: o dată care arată mai puțin este refuzată.",
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
       "listOptIn": "Persoana vrea să apară pe lista publică de participanți",
@@ -371,7 +373,8 @@
           "checkin_undone": "Prezență anulată",
           "bibs_printed": "BID marcat ca printat",
           "bibs_unprinted": "BID marcat ca neprintat",
-          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
+          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
+          "resubmitted": "S-a înscris din nou cu aceeași adresă"
         }
       },
       "locale": {
@@ -407,7 +410,14 @@
       "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "registrationsCancelledPrinted": "Numere deja tipărite, retrase acum: {numbers}. Scoate-le din teanc — nu se dau altcuiva.",
-      "searchHelp": "Caută după nume, cu sau fără diacritice.",
+      "searchHelp": "Caută după nume, cu sau fără diacritice — în toate evenimentele, dacă nu alegi unul.",
+      "searchEverywhere": "Caut în toate evenimentele — alege unul ca să restrângi.",
+      "filterAutoFeatured": "Evenimentul principal: {event}",
+      "filterAutoSearch": "Toate evenimentele, pentru căutarea după nume",
+      "resubmittedChip": "Reînscriere ×{count} · {date}",
+      "resubmittedHint": "Formularul a fost trimis din nou cu aceeași adresă ({count}), ultima dată pe {date}. Fiecare trimitere este în cronologia înscrierii.",
+      "resubmittedSent": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — i-am retrimis „{message}”",
+      "resubmittedNothing": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — nu era nimic de retrimis",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
@@ -444,6 +454,8 @@
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele de concurs, dar nu poți modifica nimic aici: anulările, ștergerile, retrimiterile de email și marcajul „BID printat” sunt ale Administratorului. La ziua cursei poți confirma pe declarație, da un loc, pune un număr și bifa prezența — de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
+      "bibColumnHint": "Numărul cu steluță (de ex. 2*) e provizoriu: se poate schimba până se închid înscrierile, apoi devine definitiv, i se trimite alergătorului pe email și abia atunci se tipărește. Numărul îngroșat (de ex. 1) e definitiv; bifa ✓ de lângă el înseamnă că e deja tipărit.",
+      "bibProvisionalShort": "provizoriu",
       "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
       "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
@@ -563,7 +575,8 @@
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
-      "LEGAL_TERMS_IN_FORCE": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge: cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
+      "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui.",
+      "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are 14 ani împliniți în ziua cursei, iar vârsta minimă de participare este 14 ani. Verifică data cu persoana."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -811,6 +824,18 @@
         "sponsorImageSrc": "Bandă cu sponsori",
         "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
         "noPicture": "Fără imagine",
+        "footer": {
+          "title": "Subsol",
+          "intro": "Rândul mic de jos, în ordinea de mai jos. Ce nu încape pe un rând trece pe al doilea; ce nu încape nici acolo se taie cu „…” — previzualizarea arată exact unde.",
+          "showEventInFooter": "Numele și data evenimentului, dacă nu apar sus",
+          "showPartners": "Partenerii",
+          "footerText": "Rândul clubului",
+          "footerTextPlaceholder": "ex. Cronometraj: … · Urgențe organizator: 07xx xxx xxx",
+          "footerTextHelp": "Apare pe fiecare număr, purtat în public — nu scrie date personale ale participanților.",
+          "showWebsite": "Site-ul clubului",
+          "showEmail": "Adresa de email a clubului",
+          "notConfigured": "nesetată pe acest mediu"
+        },
         "previewCaption": "Previzualizare — așa se tipărește",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
         "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
@@ -826,7 +851,15 @@
         "teal": "Turcoaz",
         "black": "Negru"
       },
-      "confirmationWindowTitle": "Confirmarea participării"
+      "confirmationWindowTitle": "Confirmarea participării",
+      "createAndPublish": "Creează și publică",
+      "publishing": "Se publică…",
+      "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
+      "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
+      "createdPublishedWithSeries": "Evenimentul și {created} ediții au fost create și publicate.",
+      "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
+      "createdNotPublishedRole": "Evenimentul a fost creat ca ciornă. Publicarea este a Administratorului — trimite-l spre verificare.",
+      "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -899,7 +932,8 @@
       "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
       "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
-      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
+      "inviting": "Se adaugă…"
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -989,6 +1023,8 @@
       "legalDraftSaved": "Ciorna a fost salvată.",
       "legalVersionApproved": "Versiunea a fost aprobată și este acum publică.",
       "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
+      "termsRegistrations": "Înscrieri cât a fost în vigoare: {count}",
+      "termsRegistrationsSoFar": "Înscrieri de când e în vigoare: {count}",
       "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
       "delete": "Șterge ciorna",
       "deletePending": "Se șterge…",
@@ -996,6 +1032,7 @@
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
       "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), iar niciuna nu reține ce versiune a termenilor a fost acceptată.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
@@ -1055,6 +1092,8 @@
         "numberRetired": "Numărul {version} rămâne retras pentru totdeauna. Următoarea versiune a acestui document va primi numărul următor, niciodată {version}, ca să nu ajungă pe alt text un număr pe care oamenii l-au bifat deja la înscriere.",
         "auditOnly": "Rămâne o singură urmă: o linie în jurnal cu documentul, numărul, data intrării în vigoare, cine a aprobat-o, amprenta SHA-256 a fiecărei limbi și motivul scris de tine. Textul nu se păstrează nicăieri.",
         "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
+        "termsNobodyAccepted": "Se poate șterge pentru că nimeni nu a acceptat-o: a fost în vigoare {window} și în acest timp nu s-a trimis nicio înscriere și nu s-a semnat nicio declarație — iar acum nu mai este textul în vigoare.",
+        "termsNeverInForce": "Se poate șterge pentru că nimeni nu a acceptat-o: nu a fost niciodată textul în vigoare.",
         "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
         "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
         "phraseLabel": "Confirmarea",
@@ -1065,7 +1104,9 @@
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
-        "blockedTermsInForce": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge. Cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul. Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui."
+        "blockedTermsAccepted": "Nu se poate șterge: cât a fost în vigoare această versiune a termenilor ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}). Oricare dintre ele poate s-o fi acceptat — declarația spune „Sunt de acord cu termenii, condițiile și regulamentul evenimentului” — și niciuna nu reține care versiune a termenilor a fost, deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul.",
+        "termsWithdrawInstead": "Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui.",
+        "termsAlreadyWithdrawn": "Ai retras-o deja, așa că nu se mai oferă nimănui; rămâne în evidență, cu numărul ei, pentru cine a acceptat-o."
       },
       "editor": {
         "heading": "Titlu de secțiune",
@@ -1788,7 +1829,7 @@
         "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
         "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
-        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
+        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
         "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
@@ -1810,12 +1851,12 @@
         "declarationsCcHelp": "Adrese separate prin virgulă. Toți destinatarii se văd între ei.",
         "declarationsBcc": "Copie ascunsă (Bcc)",
         "declarationsBccHelp": "Adrese separate prin virgulă. Nu apar în mesaj.",
-        "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
+        "bccWarning": "Declarația conține numele participantului și semnătura lui; în copia clubului, seria și numărul actului de identitate apar mascate (de exemplu „BV ••••56”). O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
         "confirmationsTo": "Anunță-ne când cineva confirmă",
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
         "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
-        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, fără să apară în mesaj, o copie a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea cu codul QR, reminderul, numărul dat de mână. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
-        "participantsBccWarning": "O copie ascunsă a acestor emailuri primește și linkurile personale ale participantului — confirmarea adresei, semnarea declarației, „nu mai pot veni” — și codul QR de la start. Cine citește acea cutie poștală poate face acești pași în locul lui. Doar o cutie poștală a clubului, ca decizie a clubului.",
+        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, separat și fără ca participantul să afle, o copie pentru club a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea, reminderul, numărul dat de mână —, cu „[Copie club]” în subiect. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
+        "participantsBccWarning": "Copia pentru club nu are linkurile personale ale participantului (confirmarea adresei, semnarea declarației, „nu mai pot veni”), codul QR sau atașamentele, așa că nimeni nu poate face un pas în locul lui din acea cutie poștală. Are totuși numele lui, evenimentul și numărul de concurs: doar o cutie poștală a clubului, ca decizie a clubului.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
@@ -1985,6 +2026,7 @@
           "who": "Rol: Administrator sau Superadministrator.",
           "steps": [
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
+            "Căutarea după nume, fără un eveniment ales, caută în toate evenimentele. „Reînscriere ×2” pe un rând înseamnă că persoana a mai trimis formularul de două ori cu aceeași adresă; în cronologia înscrierii vezi când, în ce stare era și ce email i-am retrimis. Ea află din email că era deja înscrisă — pe ecranul formularului nu scrie nimic, ca să nu poată afla oricine cine e înscris.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
@@ -2039,6 +2081,14 @@
       "summary": "Cine s-a înscris",
       "outbox": "Emailuri de trimis",
       "filters": "Caută și filtrează"
+    },
+    "forms": {
+      "fieldsIntro": "Câmpurile de verificat:",
+      "fieldError": "Verifică acest câmp.",
+      "kept": "Ce ai scris a rămas în câmpuri; corectează și trimite din nou.",
+      "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
+      "keptExceptConfirmation": "Ce ai scris a rămas în câmpuri, în afară de confirmare, care se cere din nou.",
+      "incompleteFirst": "Completează mai întâi: {field}"
     }
   },
   "NotFound": {
@@ -2110,6 +2160,7 @@
       "fieldsIntro": "Verifică aceste câmpuri:",
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "emergencySame": "Persoana de contact trebuie să aibă alt număr decât al tău — pe al tău nu te sună nimeni dacă ți se întâmplă ceva.",
+      "tooYoung": "Vârsta minimă de participare este 14 ani împliniți în ziua cursei.",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
@@ -2131,7 +2182,8 @@
     "displayName": "Nume afișat public",
     "displayNameHelp": "Implicit, pe lista de participanți și în rezultate apare numele tău complet. Dacă preferi altceva — de exemplu „Ana P.” — scrie-l aici. Dacă nu vrei să apari deloc pe listă, bifează opțiunea de mai jos.",
     "birthDate": "Data nașterii",
-    "birthDateHelp": "Categoriile de vârstă se calculează la data cursei.",
+    "birthDateHelp": "Vârsta minimă este 14 ani împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
+    "ageRule": "Participanți de la 14 ani; sub 18 ani, înscrierea o face un părinte.",
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Feminin",
@@ -2336,7 +2388,18 @@
       "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă.",
       "idDocumentType": "Ce act prezinți",
       "idDocumentTypeHelp": "Alege tipul actului — apare în declarație, împreună cu seria și numărul.",
-      "typedNameHelpWithName": "Te-ai înscris ca {name} — scrie același nume. Apare ca o semnătură.",
+      "typedNameHelpWithName": "Te-ai înscris ca <strong>{name}</strong> — scrie exact acest nume. Apare ca semnătură.",
+      "typedNameHelpForMinor": "Semnează părintele sau tutorele legal al minorului {participant}, cu numele dat la înscriere: <strong>{name}</strong> — scrie exact acest nume. Apare ca semnătură.",
+      "signatureMismatch": "Semnătura trebuie să fie exact numele cu care te-ai înscris: {name}.",
+      "signatureMismatchForMinor": "Semnătura trebuie să fie exact numele părintelui sau tutorelui dat la înscriere: {name}.",
+      "signatureMismatchRich": "Semnătura trebuie să fie exact numele cu care te-ai înscris: <strong>{name}</strong>.",
+      "signatureMismatchForMinorRich": "Semnătura trebuie să fie exact numele părintelui sau tutorelui dat la înscriere: <strong>{name}</strong>.",
+      "signatureNameWrong": "Dacă numele de la înscriere este greșit, <contact>scrie-ne</contact>: clubul îl corectează, iar tu semnezi apoi din același link.",
+      "signatureNameWrongReply": "Dacă numele de la înscriere este greșit, răspunde la emailul primit sau <contact>scrie-ne</contact>: clubul îl corectează, iar tu semnezi apoi din același link.",
+      "signatureNameWrongForMinor": "Dacă numele părintelui sau tutorelui dat la înscriere este greșit, el nu se poate schimba pe această înscriere: renunță la ea din <mine>Înscrierile mele</mine> (sau <contact>scrie-ne</contact> și clubul o anulează), apoi fă din nou înscrierea minorului, cu numele corect. Noua înscriere primește un loc ca oricare alta, sau un loc pe lista de așteptare dacă între timp cursa s-a umplut.",
+      "signatureNameWrongForMinorReply": "Dacă numele părintelui sau tutorelui dat la înscriere este greșit, el nu se poate schimba pe această înscriere: renunță la ea din <mine>Înscrierile mele</mine> (sau răspunde la emailul primit ori <contact>scrie-ne</contact>, și clubul o anulează), apoi fă din nou înscrierea minorului, cu numele corect. Noua înscriere primește un loc ca oricare alta, sau un loc pe lista de așteptare dacă între timp cursa s-a umplut.",
+      "nameRefusedTitle": "Semnătura nu se potrivește cu numele de la înscriere",
+      "nameRefusedNothingRecorded": "Nu s-a înregistrat nimic, iar linkul tău este în regulă: corectează numele și semnează din nou.",
       "idDocumentTypes": {
         "ID_CARD": "Carte de identitate",
         "PASSPORT": "Pașaport",

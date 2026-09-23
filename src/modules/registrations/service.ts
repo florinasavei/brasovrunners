@@ -9,10 +9,11 @@ import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
-import { enqueueEmail } from "@/modules/notifications/outbox";
+import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
@@ -29,10 +30,13 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
+import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
+import { dayIn } from "./domain/age";
 import {
   declarationSigningSchema,
   isMinorOn,
+  minimumAgeRule,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
 } from "./fields";
@@ -79,7 +83,15 @@ export type EventForRegistration = {
   /** The participation window (§104); absent on a partial row means the thirty-minute hold. */
   confirmationOpensDaysBefore?: number | null;
   confirmationDeadlineDaysBefore?: number | null;
+  /**
+   * The event's own zone (`events.timezone`), for the day the minimum age is counted against
+   * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
+   */
+  timezone?: string;
 };
+
+/** `events.timezone`'s column default: what a partial `EventForRegistration` is read in. */
+const EVENT_TIMEZONE_DEFAULT = "Europe/Bucharest";
 
 /**
  * The event as the allocator must see it once the row is locked: the caller's row, with every
@@ -553,13 +565,14 @@ export type RegistrationOrigin = {
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
 
+/** The queued row, or null when the idempotency key had already been used (`enqueueEmail`). */
 async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   db: Transaction<T>,
   participant: Participant,
   registration: Registration,
   now: Date,
-): Promise<void> {
-  await enqueueEmail(db, {
+): Promise<OutboxRow | null> {
+  return enqueueEmail(db, {
     participantId: participant.id,
     registrationId: registration.id,
     messageType: "VERIFY_REGISTRATION_EMAIL",
@@ -673,8 +686,20 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * deliberately not consulted here: a TEST row carries a full set of synthetic details and
    * goes through exactly the path a real one does (AGENTS.md §12.6).
    */
-  const schema =
-    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema;
+  /*
+    …and one rule is added here for every caller alike: fourteen on the day of the event (§321).
+
+    Here because this is the first line that knows the event, and the one door every
+    registration passes — the public form, a staff entry and the desk's walk-in behind it, a
+    restart of a cancelled row further down, and a TEST row, which must be refused exactly as a
+    real one would (AGENTS.md §12.6). Checked with the rest of the schema rather than after it,
+    so a refusal names every field at once instead of one per round trip, and before anything
+    is written or the throttle is spent: a refused birth date leaves no trace but the refusal.
+  */
+  const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
+  const schema = (
+    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema
+  ).superRefine(minimumAgeRule(eventDay));
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     throw new DomainError(
@@ -884,10 +909,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       const messageType = existing.status === "WAITLISTED"
         ? ("WAITLIST_JOINED" as const)
         : deriveAllowedResendMessageType(existing.status);
+      // Whether a row was actually queued, for the club's record below: a key already used — two
+      // presses in the same millisecond — queues nothing, and the record must not say otherwise.
+      let queued: OutboxRow | null = null;
       if (messageType === "VERIFY_REGISTRATION_EMAIL") {
-        await enqueueVerificationEmail(tx, participant, existing, now);
+        queued = await enqueueVerificationEmail(tx, participant, existing, now);
       } else if (messageType) {
-        await enqueueEmail(tx, {
+        queued = await enqueueEmail(tx, {
           participantId: participant.id,
           registrationId: existing.id,
           messageType,
@@ -903,6 +931,43 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
       }
+      /*
+        …and the club learns it too (§312).
+
+        Amalia registered with her browser's autofill, twice; she was told in the second
+        message that she already was (§235), and the club was told nothing — "she says she
+        registered but I cannot find anything" had no answer on any screen. So every pass through
+        this branch leaves one audit row on the registration it found, whatever the state and
+        whether or not anything went out: the state it found and the message type re-sent, or
+        null. The registration's page reads it as a line of its timeline and the list as a chip.
+
+        What it deliberately is not:
+        - *A second answer on the public screen.* The row is read only behind
+          `canReadRegistrations`; the visitor's screen is byte for byte the one everybody gets,
+          which is the oracle rule (§19.4) and the reason this is an audit row and not a flag
+          the confirmation page could consult.
+        - *Personal.* The participant is the row's own column; the metadata names a state and a
+          message type, never what was typed (§12.12). A second name typed into the form is
+          not recorded anywhere — the registration keeps the name it has.
+        - *Another throttle.* The public form's per-identity bucket above already bounds how
+          often one address reaches this line (§19.4), so the trail cannot be flooded faster
+          than the inbox it mirrors.
+
+        In the same transaction as the re-send, so the record and the message cannot disagree:
+        either both happened or neither did.
+      */
+      await recordAuditEvent(tx, {
+        // The person themselves, so no actor. A staff entry refuses a duplicate out loud before
+        // calling in (`createRegistrationByStaff`) and reaches this line only by racing another
+        // entry past that check — and then the row names who typed it, which is the truth.
+        actorStaffUserId: origin.source === "STAFF" ? (origin.createdByStaffUserId ?? null) : null,
+        participantId: participant.id,
+        action: "registration.resubmitted",
+        entityType: "registration",
+        entityId: existing.id,
+        metadata: { status: existing.status, resent: queued && messageType ? messageType : null },
+        now,
+      });
       return;
     }
 
@@ -1060,6 +1125,9 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      // The field names, never the values (§14.5): a blank signature is answered on the page as
+      // the signature it is, not as a broken link (§314).
+      [...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "")).filter(Boolean))],
     );
   }
 
@@ -1082,6 +1150,28 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
     if (before.status !== "PENDING_DECLARATION" && before.status !== "WAITLIST_OFFERED") {
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
+    }
+
+    /**
+     * The signature is the declarant's name (§314, reversing that half of §283): the name given
+     * at registration, or the parent's for a minor (§108) — the name the text above it already
+     * prints as the one who declares. Asserted here, in the transaction that writes the
+     * acceptance, and not only in the browser that refuses it first: a form with JavaScript off,
+     * or a second caller, meets the same rule. A refusal is a throw, so the whole transaction
+     * rolls back with it — the token spend included — and the same link signs with the right
+     * name a moment later.
+     *
+     * Before the hold expiry and the re-allocation below, not after them (found in review): a
+     * lapsed hold that re-allocates to the waiting list returns early, so a check placed later
+     * never ran on that path, and the early return committed the token spend with a name nobody
+     * had compared. Neither name changes under the expiry, so nothing is lost by asking first,
+     * and a refused name never reaches the allocator.
+     *
+     * What is recorded stays what was typed, casing and diacritics and all: the rule decides
+     * whether the signature is accepted, never what it says.
+     */
+    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(before))) {
+      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
     }
 
     // Re-verify the hold is still live at the moment of signing — never trusting that it was

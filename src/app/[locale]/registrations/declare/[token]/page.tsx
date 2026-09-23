@@ -1,7 +1,9 @@
 import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -10,17 +12,24 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
+import { expectedSignatureName } from "@/modules/registrations/domain/signature-name";
+import { readFormDraft } from "@/modules/registrations/form-draft";
+import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { declarantValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
+import SignatureField from "@/modules/registrations/ui/SignatureField";
 import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
 
@@ -28,6 +37,11 @@ type Props = {
   params: Promise<{ locale: string; token: string }>;
   searchParams: Promise<{ done?: string; invalid?: string; changed?: string }>;
 };
+
+/** The signature box's id: what the refusal's link points at, so following it focuses the box. */
+const SIGNATURE_FIELD_ID = "typedName";
+
+const ID_DOCUMENT_TYPES = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const;
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +119,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    * happened.
    */
   const blocked = !context.ok;
-  const pressFailed = context.ok && Boolean(invalid);
+  /*
+    `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
+    said beside the box with the name it wants — never the generic sentence above, which was
+    written for an unticked box, and never anything that reads as a broken link.
+  */
+  const nameRefused = context.ok && invalid === "name";
+  const pressFailed = context.ok && Boolean(invalid) && !nameRefused;
   const journeyStep = spent ? spent.step : ("declare" as const);
 
   const db = getDb();
@@ -162,6 +182,35 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     registration.status === "PENDING_DECLARATION" &&
     registration.holdExpiresAt <= new Date() &&
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
+
+  /*
+    Whose name the signature must be (§314, §108): the parent's for a minor, the participant's
+    otherwise — the same person the text above names as the declarant.
+  */
+  const expectedName = registration ? expectedSignatureName(registration) : null;
+  const signsForMinor = registration?.guardianName ? registration.registeredName : null;
+  const contactHref = getPathname({ locale, href: "/contact" });
+  /*
+    Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
+    to cancel and register again. The club's "Corectează numele" changes the participant's name
+    and nothing else, so the minor's sentence must not promise the correction the adult's does.
+  */
+  const myRegistrationsHref = getPathname({ locale, href: "/registrations/mine" });
+  // "Reply to the email" only where a reply reaches somebody (the emails' own footer, §96).
+  const canReply = Boolean(env.EMAIL_REPLY_TO);
+  /*
+    What the refused press had typed, brought back sealed by the action (§314) and read only for
+    that refusal — a stale draft never fills a form it was not kept for.
+
+    Read, not consumed: a Server Component cannot delete a cookie, exactly as for the registration
+    form's draft (§142). It lives its ten minutes on the token's own path, and a signature that
+    succeeds clears it (`signDeclarationAction`); whoever can open this path holds the link that
+    signs anyway, so an island whose only job is deleting it would not earn its JavaScript.
+  */
+  const draft = nameRefused ? await readFormDraft() : null;
+  const draftDocumentType = ID_DOCUMENT_TYPES.find((kind) => kind === draft?.idDocumentType) ?? "ID_CARD";
+  const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
+  const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
@@ -225,6 +274,32 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               {t("declare.changed")}
             </Alert>
           )}
+          {/*
+            The signature was refused on the server (§314) — reached with JavaScript off, or past
+            the browser's own check. Where the redirect lands (`#declaration-errors`), right above
+            the form rather than above a page of legal text, focusable and announced like the
+            registration form's summary (§47): what was wrong, that nothing was recorded and the
+            link still works, a link that puts focus in the box, and what to do when the
+            registered name is itself the mistake.
+
+            Which name is wanted is said once, under the box, in bold (`SignatureField`) — where
+            the eye goes to retype it, and where it stays while the box is still wrong. Said here
+            as well it was the same sentence twice, a screen apart (found in review).
+          */}
+          {nameRefused && (
+            <Alert severity="error" id={DECLARATION_ERROR_SUMMARY_ID} role="alert" tabIndex={-1} sx={{ mb: 3 }}>
+              <AlertTitle>{t("declare.nameRefusedTitle")}</AlertTitle>
+              <Box>{t("declare.nameRefusedNothingRecorded")}</Box>
+              <Box sx={{ mt: 0.5 }}>
+                <MuiLink href={`#${SIGNATURE_FIELD_ID}`}>{t("declare.typedName")}</MuiLink>
+              </Box>
+              <Box sx={{ mt: 0.5 }}>
+                {signsForMinor
+                  ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
+                  : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
+              </Box>
+            </Alert>
+          )}
           <form action={signDeclarationAction}>
             <Stack spacing={2} sx={{ mt: 3 }}>
               <input type="hidden" name="locale" value={locale} />
@@ -235,7 +310,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
-              <CheckboxField name="accepted" required>
+              <CheckboxField name="accepted" required defaultChecked={draft?.accepted === "on"}>
                 {t("declare.accept")}
               </CheckboxField>
               {/*
@@ -267,10 +342,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     helperText={t("declare.idDocumentTypeHelp")}
                     select
                     required
-                    defaultValue="ID_CARD"
+                    defaultValue={draftDocumentType}
                     slotProps={{ select: { native: true } }}
                   >
-                    {(["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const).map((kind) => (
+                    {ID_DOCUMENT_TYPES.map((kind) => (
                       <option key={kind} value={kind}>
                         {t(`declare.idDocumentTypes.${kind}`)}
                       </option>
@@ -281,32 +356,30 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   label={t("declare.idDocument")}
                   helperText={t("declare.idDocumentHelp")}
                   placeholder={t("declare.idDocumentPlaceholder")}
+                  defaultValue={draft?.idDocument ?? ""}
                   required
                   autoComplete="off"
                   slotProps={{ htmlInput: { maxLength: 30, pattern: "[A-Za-z0-9][A-Za-z0-9 .\\-/]{2,28}[A-Za-z0-9]" } }}
                 />
                 </>
               )}
-              <TextField
-                name="typedName"
-                label={t("declare.typedName")}
-                /*
-                  The name they registered with, shown rather than described (§283; Amalia: "user
-                  must type the same name as when he registered (as a hint, not a hard
-                  validation)"). A hint, deliberately: somebody whose document reads "Ana-Maria"
-                  and who registered as "Ana Maria" must still be able to sign — this is their
-                  signature, and refusing it on a string comparison would be the platform
-                  deciding what a person's name is.
-                */
-                helperText={
-                  registration?.registeredName
-                    ? t("declare.typedNameHelpWithName", { name: registration.registeredName })
-                    : t("declare.typedNameHelp")
-                }
-                required
-                autoComplete="off"
-                slotProps={{ htmlInput: { maxLength: 200 } }}
-                sx={{ "& input": { fontFamily: "var(--font-signature), cursive", fontSize: "1.75rem", py: 1 } }}
+              {/*
+                The name they registered with — or the parent's, for a minor (§108) — shown in bold,
+                and since §314 required: the owner, of a signature reading "Florin Munca2", "can I
+                also have this validation here? So I have to type the exact name?" This reverses
+                the "hint, not a validation" half of §283; the island refuses a mismatch before
+                the press and `signDeclaration` refuses it regardless. Strings in, never elements
+                (`AGENTS.md` §14.1).
+              */}
+              <SignatureField
+                id={SIGNATURE_FIELD_ID}
+                expectedName={expectedName}
+                participantName={signsForMinor}
+                contactHref={contactHref}
+                myRegistrationsHref={myRegistrationsHref}
+                canReply={canReply}
+                defaultValue={draft?.typedName}
+                refused={nameRefused}
               />
               <Button type="submit" variant="contained" sx={TAP_TARGET}>
                 {t("declare.action")}

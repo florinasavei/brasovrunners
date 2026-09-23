@@ -8,7 +8,9 @@ import type { Database } from "@/db/types";
  *
  * One writer, and it is deliberately the only one: every administrative change to a
  * registration goes through `modules/registrations/admin-service.ts`, which calls this
- * immediately after the change it describes.
+ * immediately after the change it describes. The two rows that record what a participant did
+ * rather than what staff did — the public-list answer changed from their own link, and the
+ * form filled a second time (§312) — are written by the participant's own path, with no actor.
  *
  * Not inside the same transaction, and that is a trade rather than an oversight. Each of those
  * changes runs through the registration allocator, which owns its own transaction around the
@@ -60,6 +62,16 @@ export type AuditAction =
    * and after, and which door — never the name that went on or came off the list.
    */
   | "registration.list_consent_changed"
+  /**
+   * The public form filled again, with the same address, for a registration that is still
+   * active (§312). Written by `submitRegistration` itself, inside the transaction that queues
+   * the re-send, with no staff actor: nobody at the club did anything, the person did. It is
+   * here so the club can answer "she says she registered twice" from the screen — the
+   * participant is told in the re-sent message (§235), and the public screen stays generic for
+   * everybody (§19.4). Metadata is the state it found and the message type re-sent, or null;
+   * never the address or the name that was typed.
+   */
+  | "registration.resubmitted"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */

@@ -1,10 +1,11 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { updateEmailCopyAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import type { Locale } from "@/i18n/routing";
@@ -12,7 +13,8 @@ import { EMAIL_COPY_PLACEHOLDERS, type EmailCopyEntry } from "@/modules/notifica
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -50,10 +52,15 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
 
   return (
     <Box
-      component="form"
-      action={updateEmailCopyAction}
       sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }}
       data-testid={`email-copy-${messageType}`}
+    >
+    {/* A refused wording — a placeholder misspelt — comes back as typed (§315). */}
+    <ActionForm
+      action={updateEmailCopyAction}
+      messages={await refusalMessages({ subject: t("emails.copy.subject"), body: t("emails.copy.paragraphs") })}
+      // One form per message and language on the same page, each with a "subject" (`fieldId`).
+      scope={`${messageType}-${emailLocale}`}
     >
       <input type="hidden" name="uiLocale" value={locale} />
       <input type="hidden" name="messageType" value={messageType} />
@@ -64,7 +71,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
       </Typography>
 
       <Stack spacing={1.5}>
-        <TextField
+        <RecallField
           name="subject"
           label={t("emails.copy.subject")}
           defaultValue={current.subject}
@@ -95,16 +102,17 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
           {t("emails.copy.machinery")}
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-          <SubmitButton label={t("emails.copy.save")} pendingLabel={t("emails.copy.saving")} />
+          <GlyphSubmitButton label={t("emails.copy.save")} pendingLabel={t("emails.copy.saving")} icon="save" />
           {/* A second submit on the same form, named: the browser sends the one that was
               pressed, so no JavaScript decides which verb this form runs. */}
           {written && (
-            <Button type="submit" name="reset" value="1" color="inherit" variant="outlined" sx={{ minHeight: 44 }}>
+            <GlyphButton icon="reset" type="submit" name="reset" value="1" color="inherit" variant="outlined" sx={{ minHeight: 44 }}>
               {t("emails.copy.reset")}
-            </Button>
+            </GlyphButton>
           )}
         </Stack>
       </Stack>
+    </ActionForm>
     </Box>
   );
 }

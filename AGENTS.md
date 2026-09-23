@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.62-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.62-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.68-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1321,7 +1321,7 @@ V1 internal registration requires approved declaration version.
 - localized title/body;
 - deterministic content SHA-256 over canonical serialized JSON;
 - participant sees exact version;
-- acceptance requires explicit checkbox + typed full name;
+- acceptance requires explicit checkbox + typed full name, which must be the declarant's own — the registered name, or the parent's or guardian's for a minor — compared after folding case, whitespace, diacritics, typographic punctuation and invisible characters, and refused otherwise before anything is recorded (`DECISIONS.md` §314);
 - acceptance stores version/hash/locale/name/server timestamp;
 - no raw IP/user-agent stored by default;
 - staff cannot sign on participant's behalf;
@@ -1965,6 +1965,8 @@ MANAGE_PROFILE
 
 Never store raw token.
 
+A token is only ever sent to the participant: the club's copies of their messages are separate club-copy rows with no token minted, no action link, no QR and no attachment (`DECISIONS.md` §320).
+
 ### 12.9 Public profiles
 
 ```text
@@ -2418,7 +2420,7 @@ On explicit POST with valid token/action session:
 
 1. verify action session/registration/state;
 2. load the current approved declaration version and hash;
-3. validate the checkbox, the typed name, and that the posted document id and content hash are
+3. validate the checkbox, the typed name (the declarant's own, §314 — refused before any hold expiry or allocation), and that the posted document id and content hash are
    the current version's — a signature against any other text is refused with CONFLICT inside
    the transaction, so the token is not spent and the participant re-reads the current text
    (BR-REQ-033-02 criterion 6, `DECISIONS.md` §57);

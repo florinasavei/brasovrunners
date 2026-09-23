@@ -1,14 +1,16 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { updateNeonPlanAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
 import { NEON_PLAN_IDS, NEON_PLANS, NEON_PLANS_CHECKED_ON, type NeonBlockModel } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonPlanState } from "@/modules/diagnostics/neon-plan";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import Panel from "@/shared/ui/Panel";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -34,6 +36,9 @@ type Props = {
  * the note post as ordinary fields; the service validates and the audit row records who said
  * what. The options quote the catalogue's own figures through placeholders, so the price lives
  * in `domain/neon-plan.ts` and nowhere else.
+ *
+ * Like its twin on `/admin/emails`, a refusal comes back as the form's state with the plan and
+ * the note as they were chosen (`DECISIONS.md` §315), rather than a redirect that dropped the note.
  */
 export default async function NeonPlanPanel({ locale, plan, block, mayEdit }: Props) {
   const t = await getTranslations("Admin");
@@ -83,10 +88,16 @@ export default async function NeonPlanPanel({ locale, plan, block, mayEdit }: Pr
           {t("tasks.neonPlan.readOnly")}
         </Typography>
       ) : (
-        <Box component="form" action={updateNeonPlanAction} sx={{ mt: 1.5 }}>
+        <Box sx={{ mt: 1.5 }}>
+        <ActionForm
+          action={updateNeonPlanAction}
+          messages={await refusalMessages({ plan: t("tasks.neonPlan.field"), note: t("tasks.neonPlan.note") })}
+          scope="neon"
+          data-testid="neon-plan-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
-            <TextField
+            <RecallField
               select
               name="plan"
               label={t("tasks.neonPlan.field")}
@@ -113,16 +124,17 @@ export default async function NeonPlanPanel({ locale, plan, block, mayEdit }: Pr
                   </option>
                 );
               })}
-            </TextField>
-            <TextField name="note" label={t("tasks.neonPlan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
+            </RecallField>
+            <RecallField name="note" label={t("tasks.neonPlan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
             {/* The December review (§280) is one select on this screen, and the panel says so. */}
             <Typography variant="caption" color="text.secondary">
               {t("tasks.neonPlan.december")}
             </Typography>
             <Box>
-              <SubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} />
+              <GlyphSubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} icon="save" />
             </Box>
           </Stack>
+        </ActionForm>
         </Box>
       )}
     </Panel>

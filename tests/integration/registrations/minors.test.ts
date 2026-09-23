@@ -65,7 +65,8 @@ async function createEvent(db: TestDatabase): Promise<EventForRegistration> {
 const submission = (overrides: Record<string, unknown>) => ({
   firstName: "Maria",
   lastName: "Popescu",
-  birthDate: "2014-03-02",
+  // Fifteen on the race day: a minor, and over the minimum age of fourteen (§321).
+  birthDate: "2011-03-02",
   sex: "FEMALE",
   nationality: "RO",
   city: "Brașov",
@@ -126,7 +127,7 @@ describe("a minor registered by a parent (§108)", () => {
     await signDeclaration(db, event, minor.id, { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 654321" }, NOW);
     const signed = await findSignedDeclaration(db, minor.id);
     expect(signed?.guardianName).toBe("Ion Popescu");
-    const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS);
+    const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
     // The entry carries the approved template and its fill-ins apart, so the PDF can set the
     // filled-in parts in bold (§225). What a reader sees is the two merged, which is what is
     // asserted here — the same function the renderer and the screen both use.

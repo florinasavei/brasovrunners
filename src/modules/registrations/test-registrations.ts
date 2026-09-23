@@ -83,6 +83,7 @@ async function loadEvent<T extends Record<string, unknown>>(
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: event.publishedAt,
+    timezone: event.timezone,
   };
 }
 
@@ -130,6 +131,8 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       `count: between 1 and ${MAX_TEST_REGISTRATIONS_PER_BATCH}`,
+      // The box the form posts, so its summary can point at it (`DECISIONS.md` §315).
+      ["count"],
     );
   }
 

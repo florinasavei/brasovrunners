@@ -1,7 +1,8 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { type ReactNode, useSyncExternalStore } from "react";
+import { type ReactNode, useCallback, useSyncExternalStore } from "react";
+import { useRecall } from "@/shared/forms/recall";
 
 /**
  * Shows its children while the form's type select says one of `type` (`DECISIONS.md` §71):
@@ -11,6 +12,10 @@ import { type ReactNode, useSyncExternalStore } from "react";
  * is MUI's and the form is one save. The children are always in the DOM — hidden, not removed
  * — so a value typed before the type was changed is still posted; the service ignores a race
  * start on anything but a race, and the registration block on a group run.
+ *
+ * After a refused submit the select re-mounts with the type that was posted (§315), so the
+ * subscription is renewed on every answer — an observer on the old, removed input would never
+ * hear the new one — and the server render reads the recalled type rather than the page's.
  */
 export default function OnlyForType({
   type,
@@ -24,18 +29,26 @@ export default function OnlyForType({
   initialType: string;
   children: ReactNode;
 }) {
+  const recall = useRecall();
+  const fallback = recall.value(selectName) ?? initialType;
   // MUI's Select keeps its value on a hidden input and fires no native change event; the
   // value attribute is what changes, so a mutation observer is the honest subscription.
-  const current = useSyncExternalStore(
-    (notify) => {
+  const subscribe = useCallback(
+    (notify: () => void) => {
       const input = document.querySelector<HTMLInputElement>(`input[name="${selectName}"]`);
       if (!input) return () => undefined;
       const observer = new MutationObserver(notify);
       observer.observe(input, { attributes: true, attributeFilter: ["value"] });
       return () => observer.disconnect();
     },
-    () => document.querySelector<HTMLInputElement>(`input[name="${selectName}"]`)?.value ?? initialType,
-    () => initialType,
+    // The generation is what renews the subscription after a re-mount of the select.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectName, recall.generation],
+  );
+  const current = useSyncExternalStore(
+    subscribe,
+    () => document.querySelector<HTMLInputElement>(`input[name="${selectName}"]`)?.value ?? fallback,
+    () => fallback,
   );
 
   const shown = typeof type === "string" ? current === type : type.includes(current);

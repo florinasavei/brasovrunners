@@ -20,6 +20,7 @@ import {
 } from "@/modules/legal-documents/service";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
  * Writing the club's legal text from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -63,46 +64,42 @@ function outcomeOf(error: unknown): { error: string } {
   throw error;
 }
 
-export async function createLegalVersionAction(form: FormData): Promise<void> {
+/**
+ * A new version, as a draft. A refusal — a language left empty — comes back with both texts
+ * still in their boxes (`DECISIONS.md` §315): a legal text runs to tens of kilobytes, which is
+ * why it is the action's returned state and never a cookie.
+ */
+export async function createLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const key = text(form, "key") as LegalDocumentKey;
 
-  let created: string | undefined;
-  let outcome: { error?: string; saved?: string };
+  let created: string;
   try {
     const actor = await requireStaffRole("SUPERADMIN");
     created = await createDraftVersion(getDb(), actor, { key, translations: translationsFrom(form) }, new Date());
-    outcome = { saved: "legalDraftCreated" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   // On success, straight to the new draft: the next thing anybody does is read it before
   // approving, and approval is the one action here that cannot be undone.
-  backTo(
-    created
-      ? getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: created } } })
-      : getPathname({ locale, href: "/admin/legal/new" }),
-    outcome,
-  );
+  backTo(getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: created } } }), { saved: "legalDraftCreated" });
 }
 
-export async function updateLegalVersionAction(form: FormData): Promise<void> {
+export async function updateLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const versionId = text(form, "versionId");
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaffRole("SUPERADMIN");
     await updateDraftVersion(getDb(), actor, versionId, translationsFrom(form), new Date());
-    outcome = { saved: "legalDraftSaved" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   backTo(
     getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: versionId } } }),
-    outcome,
+    { saved: "legalDraftSaved" },
   );
 }
 
@@ -206,15 +203,13 @@ export async function withdrawLegalVersionAction(form: FormData): Promise<void> 
  *
  * The reason itself never goes into the query string, even on a refusal: it is a free line of
  * somebody's prose, and a query string is the server log, the browser history and the referrer.
- * Re-typing a few words is cheaper than that.
+ * Since §315 a refusal is the form's returned state rather than a redirect, so the reason comes
+ * back in its box without ever leaving the POST; the typed phrase never comes back — it is the
+ * guard, and it is meant to be typed again (`NEVER_KEPT`).
  */
-export async function deleteApprovedLegalVersionAction(form: FormData): Promise<void> {
+export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const versionId = text(form, "versionId");
-  const deletePath = getPathname({
-    locale,
-    href: { pathname: "/admin/legal/[id]/delete", params: { id: versionId } },
-  });
 
   let deleted: { key: LegalDocumentKey; version: number };
   try {
@@ -226,25 +221,29 @@ export async function deleteApprovedLegalVersionAction(form: FormData): Promise<
       now: new Date(),
     });
   } catch (error) {
-    const failure = outcomeOf(error);
+    const failure = refused(error, form);
     const mistyped = isDomainError(error) && error.fields.includes("typedConfirmation");
     const noReason = isDomainError(error) && error.fields.includes("reason");
     /*
-      The §203 refusal, told apart from a genuine race (§290). Both are `CONFLICT`, and the
+      The terms refusal, told apart from a genuine race (§290, §316). Both are `CONFLICT`, and the
       backoffice renders a bare CONFLICT as "somebody else saved meanwhile" — true of a race and
-      a lie about this, which is a rule the screen should already have named before the press.
-      It does now; this is what is left if the version takes effect between the two.
+      a lie about this, which is a rule the screen already names before the press. This is what
+      is left if the answer changed between the two: a restart that stretched a registration
+      across the version's time in force.
     */
-    const termsInForce = isDomainError(error) && error.fields.includes("termsInForce");
-    backTo(deletePath, {
+    const termsAccepted = isDomainError(error) && error.fields.includes("termsAccepted");
+    return {
+      ...failure,
       error: mistyped
         ? "LEGAL_CONFIRMATION_MISMATCH"
         : noReason
           ? "LEGAL_DELETE_NEEDS_REASON"
-          : termsInForce
-            ? "LEGAL_TERMS_IN_FORCE"
+          : termsAccepted
+            ? "LEGAL_TERMS_ACCEPTED"
             : failure.error,
-    });
+      // The two boxes are the only fields this form has; a rule about the version names neither.
+      fields: failure.fields.filter((field) => field === "typedConfirmation" || field === "reason"),
+    };
   }
 
   /*

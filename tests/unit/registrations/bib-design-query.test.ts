@@ -33,6 +33,13 @@ const EVERYTHING_OFF: BibDesign = {
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
   cutMarks: true,
+  // The footer (§317): every switch the other way, and a line with the characters a URL must
+  // escape — the separator's dot, a colon, an ampersand, a plus, diacritics.
+  showEmail: false,
+  showPartners: false,
+  showEventInFooter: true,
+  showWebsite: true,
+  footerText: "Cronometraj: Start & Go + 50% · Urgențe organizator 0722 000 000",
 };
 
 describe("§249 the design on the wire: encode, then parse", () => {
@@ -84,6 +91,9 @@ describe("§249 the design on the wire: encode, then parse", () => {
       sponsorImageSrc: LOCAL,
       cutMarks: "1",
       watermark: "1",
+      showEmail: "off",
+      showWebsite: "1",
+      footerText: `  ${"a".repeat(200)}\n`,
     });
     expect(bibDesignFromQuery(garbage)).toEqual({
       ...DEFAULT_BIB_DESIGN,
@@ -93,11 +103,35 @@ describe("§249 the design on the wire: encode, then parse", () => {
       headerImageSrc: null,
       sponsorImageSrc: LOCAL,
       cutMarks: true,
+      showWebsite: true,
+      // Trimmed and cut by the schema the save uses, so the preview never draws a line the
+      // save would not keep.
+      footerText: "a".repeat(120),
     });
   });
 
+  it("says nothing about the club's line when it is empty, and draws the platform's footer", () => {
+    const params = bibDesignSearchParams({ ...DEFAULT_BIB_DESIGN, footerText: "   " });
+    expect(params.has("footerText")).toBe(false);
+    expect(params.get("showEmail")).toBe("1");
+    expect(bibDesignFromQuery(params)).toEqual(DEFAULT_BIB_DESIGN);
+  });
+
+  it("turns the email off in the address when the switch is off, and nothing else", () => {
+    const on = new URL(bibPreviewUrl({ eventId: "evt-1", locale: "ro", number: "1", colour: "", design: DEFAULT_BIB_DESIGN }), "http://localhost");
+    const off = new URL(
+      bibPreviewUrl({ eventId: "evt-1", locale: "ro", number: "1", colour: "", design: { ...DEFAULT_BIB_DESIGN, showEmail: false } }),
+      "http://localhost",
+    );
+    expect(on.searchParams.get("showEmail")).toBe("1");
+    expect(off.searchParams.get("showEmail")).toBe("0");
+    off.searchParams.set("showEmail", "1");
+    expect(off.toString()).toBe(on.toString());
+    expect(bibDesignFromQuery(new URLSearchParams({ showEmail: "0" }))).toEqual({ ...DEFAULT_BIB_DESIGN, showEmail: false });
+  });
+
   it("reads only what means something, so the schema's own fallbacks apply to the rest", () => {
-    expect(bibDesignValuesFromQuery(new URLSearchParams("showName=1&showDate=x&numberScale=&headerImageSrc="))).toEqual({
+    expect(bibDesignValuesFromQuery(new URLSearchParams("showName=1&showDate=x&numberScale=&headerImageSrc=&footerText="))).toEqual({
       showName: true,
       headerImageSrc: null,
       sponsorImageSrc: null,
@@ -109,7 +143,15 @@ describe("§249 the form, read the same way for the save and for the preview", (
   const posted = (entries: Record<string, string>) => (name: string) => entries[name] ?? null;
 
   it("reads a checkbox that posted nothing as off, and an empty select as the platform's choice", () => {
-    expect(readBibDesignForm(posted({}))).toEqual({ ...DEFAULT_BIB_DESIGN, showName: false, showEventTitle: false, showDate: false, showLogo: false });
+    expect(readBibDesignForm(posted({}))).toEqual({
+      ...DEFAULT_BIB_DESIGN,
+      showName: false,
+      showEventTitle: false,
+      showDate: false,
+      showLogo: false,
+      showEmail: false,
+      showPartners: false,
+    });
   });
 
   it("reads what the panel posts", () => {
@@ -121,6 +163,9 @@ describe("§249 the form, read the same way for the save and for the preview", (
       [`${BIB_DESIGN_FORM_PREFIX}headerImageSrc`]: "",
       [`${BIB_DESIGN_FORM_PREFIX}sponsorImageSrc`]: OURS,
       [`${BIB_DESIGN_FORM_PREFIX}cutMarks`]: "on",
+      [`${BIB_DESIGN_FORM_PREFIX}showPartners`]: "on",
+      [`${BIB_DESIGN_FORM_PREFIX}showWebsite`]: "on",
+      [`${BIB_DESIGN_FORM_PREFIX}footerText`]: " Cronometraj: StartTime ",
     });
     expect(readBibDesignForm(form)).toEqual({
       showName: true,
@@ -132,7 +177,19 @@ describe("§249 the form, read the same way for the save and for the preview", (
       headerImageSrc: null,
       sponsorImageSrc: OURS,
       cutMarks: true,
+      // The email box was unticked: the footer prints no address (§317).
+      showEmail: false,
+      showPartners: true,
+      showEventInFooter: false,
+      showWebsite: true,
+      // As typed; the schema trims it, for the save and the preview alike.
+      footerText: " Cronometraj: StartTime ",
     });
+  });
+
+  it("follows the footer's boxes too", () => {
+    expect(isBibDesignInput("event.bibDesign.showEmail")).toBe(true);
+    expect(isBibDesignInput("event.bibDesign.footerText")).toBe(true);
   });
 
   it("follows the panel's boxes, the band's colour and the start number, and nothing else", () => {

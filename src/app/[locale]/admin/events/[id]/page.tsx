@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -27,7 +26,7 @@ import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
-import { areTestRegistrationsAvailable } from "@/modules/registrations/test-registrations";
+import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
   canDeleteEvent,
@@ -40,19 +39,24 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
+  EDITORIAL_TRANSITION_ICON,
   EDITORIAL_TRANSITION_LABEL,
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import SubmitIconButton from "@/shared/ui/SubmitIconButton";
-import type { ActionIconName } from "@/shared/ui/action-icons";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   addTestRegistrationsAction,
   deleteEventAction,
@@ -74,22 +78,10 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string }>;
 };
 
 export const dynamic = "force-dynamic";
-
-/**
- * The glyph on each publication verb (§170), by name — an element may not cross the
- * server/client boundary as a prop (`shared/ui/action-icons.ts`). Keyed on the state the
- * transition leads to, which is what the button is named after.
- */
-const TRANSITION_ICON: Record<string, ActionIconName> = {
-  DRAFT: "draft",
-  IN_REVIEW: "review",
-  PUBLISHED: "publish",
-  ARCHIVED: "archive",
-};
 
 /**
  * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), in three parts and one save.
@@ -128,7 +120,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam } = await searchParams;
+  // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
+  // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
+  const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -253,8 +248,28 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const dateWords = (member: { startsAt: Date; timezone: string }) =>
     format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
+  /**
+   * What "not ready to publish" names, in the words on the screen (§170) — read once, because
+   * the same sentence is the publication panel's alert and, after "create and publish" was
+   * refused, the banner that says what the draft still needs (§315).
+   */
+  const missingDetail = [
+    ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
+    ...incomplete.map(
+      (entry) => `${tSite(`languageName.${entry.locale as "ro" | "en"}`)}: ${entry.missing.map(fieldLabel).join(", ")}`,
+    ),
+  ].join(" · ");
+
+  // The words the save form's refusal summary needs, and the label of every box it can name.
+  const refusal = await refusalMessages(await eventFormFieldLabels());
+
+  // Keyed on the dates, so a series made a moment ago on this same page — the repeat form's
+  // redirect lands here without remounting it — opens with every date ticked (§240), as the
+  // editor does when it is opened on an existing series.
+  const seriesKey = dateChips.map((chip) => chip.id).join(",");
+
   return (
-    <SeriesScopeProvider dates={dateChips} currentId={event.id}>
+    <SeriesScopeProvider key={seriesKey} dates={dateChips} currentId={event.id}>
     <Stack spacing={4}>
       <Box>
         <Typography variant="body2">
@@ -276,8 +291,27 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
           </Alert>
         )}
-        {saved === "created" && created && (
+        {saved === "created" && created && !notPublished && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
+        )}
+        {/* Created and published in one press (§315), the series with it when there is one. */}
+        {saved === "createdPublished" && (
+          <Alert severity="success">
+            {created ? t("editor.createdPublishedWithSeries", { created }) : t("editor.createdPublished")}
+          </Alert>
+        )}
+        {/* Created, but the second button could not publish: the draft stands, and this says
+            exactly what it still needs — §170's words, the same the publication panel uses —
+            or that the role may not publish. Nothing typed was lost. */}
+        {saved === "created" && notPublished && (
+          <Alert severity="warning" data-testid="created-not-published">
+            {notPublished === "FORBIDDEN"
+              ? t("editor.createdNotPublishedRole")
+              : missingDetail
+                ? t("editor.createdNotPublished", { detail: missingDetail })
+                : t("editor.createdNotPublishedOther", { reason: t(`errors.${notPublished}`) })}
+            {created ? ` ${t("editor.createdWithSeries", { created })}` : ""}
+          </Alert>
         )}
         {/* "{created} ediții create." read as a job half done — the owner: "nu e clar cand
             creeze si zice 'urmatoarele 7 serii'". The number is how many dates fit in the next
@@ -301,7 +335,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound"].includes(saved) && !(saved === "created" && created) && !(saved === "event" && offered) && (
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -325,8 +359,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }}
       >
       <Box sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
-      {/* Settings and content: one form, one save. */}
-      <form action={saveEventAndTranslationsAction}>
+      {/* Settings and content: one form, one save — and a refusal that keeps every box (§315). */}
+      <ActionForm action={saveEventAndTranslationsAction} messages={refusal} data-testid="event-save-form">
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={event.id} />
         {/*
@@ -334,9 +368,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           event row at all: an Author sees no settings panel, so this field is absent and the
           service writes no event row rather than assuming a version it was never given.
         */}
-        {maySaveSettings && (
-          <input type="hidden" name="event.expectedVersion" value={event.version} />
-        )}
+        {/* Recalled after a refusal, never re-read (§315): with JavaScript off a refused POST
+            renders this page from the database, and the boxes' edits must travel with the
+            version they were made against — or a CONFLICT would pass on the second press. */}
+        {maySaveSettings && <RecallHidden name="event.expectedVersion" value={event.version} />}
 
         <Stack spacing={3}>
           {/* The words first (§170): this is what somebody opened the editor to write. */}
@@ -429,17 +464,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   borderColor: "divider",
                 }}
               >
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("editor.save")}
                   pendingLabel={t("editor.saving")}
+                  icon="save"
                   incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                  incompleteHintNamed={t("forms.incompleteFirst")}
                   size="medium"
                 />
               </Box>
             </Box>
           )}
         </Stack>
-      </form>
+      </ActionForm>
       </Box>
 
       <Stack spacing={3} sx={{ order: { xs: 1, md: 2 }, minWidth: 0, position: { md: "sticky" }, top: { md: 16 } }}>
@@ -453,17 +490,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
         {live && <Alert severity="warning" sx={{ mb: 2 }}>{t("editor.liveWarning")}</Alert>}
 
-        {(incomplete.length > 0 || missingOnEvent.length > 0) && (
+        {missingDetail && (
           <Alert severity="info" sx={{ mb: 2 }}>
-            {t("editor.incompleteForPublication", {
-              detail: [
-                ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
-                ...incomplete.map(
-                  (entry) =>
-                    `${tSite(`languageName.${entry.locale as "ro" | "en"}`)}: ${entry.missing.map(fieldLabel).join(", ")}`,
-                ),
-              ].join(" · "),
-            })}
+            {t("editor.incompleteForPublication", { detail: missingDetail })}
           </Alert>
         )}
 
@@ -481,14 +510,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 {to === "ARCHIVED" ? (
                   <ConfirmSubmitButton
                     label={EDITORIAL_TRANSITION_LABEL[to]}
-                    icon={TRANSITION_ICON[to]}
+                    icon={EDITORIAL_TRANSITION_ICON[to]}
                     title={t("confirm.archiveTitle")}
                     body={t("confirm.archiveBody")}
                     confirmLabel={EDITORIAL_TRANSITION_LABEL[to]}
                     cancelLabel={t("confirm.cancel")}
                   />
                 ) : (
-                  <SubmitIconButton label={EDITORIAL_TRANSITION_LABEL[to]} icon={TRANSITION_ICON[to]} />
+                  <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                    {EDITORIAL_TRANSITION_LABEL[to]}
+                  </GlyphButton>
                 )}
               </form>
             ))}
@@ -555,6 +586,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                 <ConfirmSubmitButton
                   label={t("editor.repeatStop")}
+                  icon="repeatStop"
                   title={t("editor.repeatStop")}
                   body={t("editor.repeatStopHelp")}
                   confirmLabel={t("editor.repeatStop")}
@@ -570,7 +602,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         </Box>
       ) : (
       <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
-        <form action={repeatEventAction}>
+        {/* A refused rule — an end before the event — comes back as it was chosen (§315). */}
+        <ActionForm
+          action={repeatEventAction}
+          messages={await refusalMessages({
+            repeatOn: t("editor.repeatOn"),
+            cadence: t("editor.repeatCadence"),
+            until: t("editor.repeatUntil"),
+            weekday: t("editor.repeatWeekdays"),
+          })}
+          scope="repeat"
+          data-testid="repeat-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
           {/* The tick first, the frequency after it (§170; the owner: "repetă evenimentul
@@ -603,7 +646,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               />
             </Box>
           </RepeatToggle>
-        </form>
+        </ActionForm>
       </EditorPanel>
       )}
       </Stack>
@@ -620,41 +663,41 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t("nav.registrations")}
           </Typography>
           <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
-            <Button
-              component="a"
+            <GlyphButton
+              icon="addPerson"
               href={`${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${event.id}`}
               variant="outlined"
               size="small"
               sx={{ minHeight: 44 }}
             >
               {t("registrations.new")}
-            </Button>
-            <Button
-              component="a"
+            </GlyphButton>
+            <GlyphButton
+              icon="registrations"
               href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`}
               variant="text"
               size="small"
               sx={{ minHeight: 44 }}
             >
               {t("registrations.viewForEvent")}
-            </Button>
+            </GlyphButton>
             {/* The declarations (§95): every signed one as the club's archive; the blank one to print. */}
-            <Button component="a" href={`/api/admin/events/${event.id}/declarations?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+            <GlyphButton icon="pdf" href={`/api/admin/events/${event.id}/declarations?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationsPdf")}
-            </Button>
-            <Button component="a" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+            </GlyphButton>
+            <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationForm")}
-            </Button>
+            </GlyphButton>
             {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
-            <Button
-              component="a"
+            <GlyphButton
+              icon="desk"
               href={`${getPathname({ locale, href: "/admin/checkin" })}?eventId=${event.id}`}
               variant="text"
               size="small"
               sx={{ minHeight: 44 }}
             >
               {t("desk.title")}
-            </Button>
+            </GlyphButton>
           </Stack>
 
           {/*
@@ -686,6 +729,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 <input type="hidden" name="eventId" value={event.id} />
                 <ConfirmSubmitButton
                   label={t("bibs.assign")}
+                  icon="number"
                   title={t("confirm.bibsTitle")}
                   body={t("confirm.bibsBody")}
                   confirmLabel={t("bibs.assign")}
@@ -714,24 +758,32 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     sx={{ width: 100 }}
                   />
                   {/* Two submit buttons, one form: the second names the layout it asks for. */}
-                  <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                  <GlyphButton icon="pdf" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                     {t("bibs.download")}
-                  </Button>
-                  <Button type="submit" name="layout" value="one" variant="text" size="small" sx={{ minHeight: 44 }}>
+                  </GlyphButton>
+                  <GlyphButton icon="print" type="submit" name="layout" value="one" variant="text" size="small" sx={{ minHeight: 44 }}>
                     {t("bibs.downloadOnePerPage")}
-                  </Button>
+                  </GlyphButton>
                 </Stack>
               </form>
             )}
           </Stack>
 
-          {/* Every bib as it will print, on its own page (§94): drawn on request, not on every visit here. */}
+          {/* Every bib as it will print, on its own page (§94): drawn on request, not on every
+              visit here. Still a link — it goes to a page — but on a line of its own it was a
+              button in all but looks, and now it wears the picture it leads to (§318). */}
           {bibs.length > 0 && (
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              <Link href={{ pathname: "/admin/events/[id]/bibs", params: { id: event.id } }}>
+            <Box sx={{ mt: 2 }}>
+              <GlyphButtonLink
+                icon="picture"
+                href={{ pathname: "/admin/events/[id]/bibs", params: { id: event.id } }}
+                variant="text"
+                size="small"
+                sx={{ minHeight: 44 }}
+              >
                 {t("bibs.preview", { count: bibs.length })}
-              </Link>
-            </Typography>
+              </GlyphButtonLink>
+            </Box>
           )}
         </Box>
       )}
@@ -754,24 +806,31 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short", hourCycle: "h23" }) })}
               </Typography>
             ) : (
-              <form action={sendEventThanksAction}>
+              // A refused link comes back in its box (§315).
+              <ActionForm
+                action={sendEventThanksAction}
+                messages={await refusalMessages({ url: t("thanks.url") })}
+                scope="thanks"
+                data-testid="thanks-form"
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
                   <Typography variant="body2" color="text.secondary">
                     {t("thanks.help")}
                   </Typography>
-                  <TextField
+                  <RecallField
                     name="url"
                     type="url"
                     label={t("thanks.url")}
                     helperText={t("thanks.urlHelp")}
                     size="small"
-                    slotProps={{ htmlInput: { pattern: "https://.*", maxLength: 2048 } }}
+                    slotProps={{ htmlInput: { pattern: "[Hh][Tt][Tt][Pp][Ss]://.*", maxLength: 2048 } }}
                   />
                   <Box>
                     <ConfirmSubmitButton
                       label={t("thanks.send")}
+                      icon="send"
                       title={t("thanks.confirmTitle")}
                       body={t("thanks.confirmBody")}
                       confirmLabel={t("thanks.send")}
@@ -780,7 +839,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     />
                   </Box>
                 </Stack>
-              </form>
+              </ActionForm>
             )}
           </Box>
         )}
@@ -804,16 +863,22 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {t("queue.interestHelp")}
               </Typography>
-              <form action={withdrawInterestAction}>
+              {/* An address the service refuses comes back in its box (§315). */}
+              <ActionForm
+                action={withdrawInterestAction}
+                messages={await refusalMessages({ email: t("queue.interestEmail") })}
+                scope="interest"
+                data-testid="interest-withdraw-form"
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
-                  <TextField name="email" type="email" label={t("queue.interestEmail")} required size="small" sx={{ minWidth: 260 }} />
-                  <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                  <RecallField name="email" type="email" label={t("queue.interestEmail")} required size="small" sx={{ minWidth: 260 }} />
+                  <GlyphButton icon="delete" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                     {t("queue.interestRemove")}
-                  </Button>
+                  </GlyphButton>
                 </Stack>
-              </form>
+              </ActionForm>
             </Box>
           )}
         </Box>
@@ -830,29 +895,38 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-            <form action={addTestRegistrationsAction}>
+            {/* The service's bounds as the browser's, and a refused count back in its box (§315). */}
+            <ActionForm
+              action={addTestRegistrationsAction}
+              messages={await refusalMessages({ count: t("testRegistrations.count") })}
+              scope="test"
+              data-testid="test-registrations-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={event.id} />
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <TextField
+                <RecallField
                   name="count"
                   label={t("testRegistrations.count")}
                   defaultValue="3"
-                  inputMode="numeric"
+                  type="number"
+                  required
                   size="small"
+                  slotProps={{ htmlInput: { min: 1, max: MAX_TEST_REGISTRATIONS_PER_BATCH, step: 1, inputMode: "numeric" } }}
                   sx={{ width: 120 }}
                 />
-                <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                <GlyphButton icon="add" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                   {t("testRegistrations.add")}
-                </Button>
+                </GlyphButton>
               </Stack>
-            </form>
+            </ActionForm>
 
             <form action={removeTestRegistrationsAction}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={event.id} />
               <ConfirmSubmitButton
                 label={t("testRegistrations.remove")}
+                icon="delete"
                 title={t("confirm.removeTestTitle")}
                 body={t("confirm.removeTestBody")}
                 confirmLabel={t("testRegistrations.remove")}

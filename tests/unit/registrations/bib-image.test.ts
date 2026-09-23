@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { BIB_IMAGE, renderBibImage } from "@/modules/registrations/bib-image";
+import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { BIB_IMAGE, bibImageFooterLines, renderBibImage } from "@/modules/registrations/bib-image";
 
 /**
  * §94, §180 — the picture the preview route answers with, and the club's only look at a bib
@@ -44,6 +45,24 @@ describe("§94 the bib preview", () => {
     expect((await png({ bandColour: null, partners: [], replyTo: null })).byteLength).toBeGreaterThan(1000);
     // Five digits, which is the widest the band allows for.
     expect((await png({ bibNumber: 99_999 })).byteLength).toBeGreaterThan(1000);
+  });
+
+  it("draws a footer the club composed, on two lines when it needs them (§317)", async () => {
+    const long = {
+      partners: ["Primăria Municipiului Brașov", "Salvamont Brașov", "Asociația Sportivă Carpați", "Decathlon Brașov", "Clubul Sportiv Olimpia"],
+      siteUrl: "https://www.example.test",
+      design: {
+        ...DEFAULT_BIB_DESIGN,
+        showWebsite: true,
+        footerText: "Cronometraj: StartTime România · Urgențe organizator: 0722 000 000",
+      },
+    };
+    expect(bibImageFooterLines({ ...long, eventTitle: "x", eventDate: "y", replyTo: "contact@example.test" }, false)).toHaveLength(2);
+    const drawn = await png(long);
+    expect(drawn.byteLength).toBeGreaterThan(1000);
+    if (process.env.BIB_IMAGE_SAMPLE_FOOTER) writeFileSync(process.env.BIB_IMAGE_SAMPLE_FOOTER, drawn);
+    // And with every footer switch off, a card with no small print at all.
+    expect((await png({ design: { ...DEFAULT_BIB_DESIGN, showEmail: false, showPartners: false } })).byteLength).toBeGreaterThan(1000);
   });
 
   it("writes a sample to disk for a person to look at, when asked", async () => {

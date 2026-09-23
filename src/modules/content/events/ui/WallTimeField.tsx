@@ -1,6 +1,6 @@
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import RecallField from "@/shared/forms/recall";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
@@ -21,6 +21,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  *
  * The two post as `<name>Date` and `<name>Time`; `admin/actions.ts` joins them into the
  * `<name>WallTime` string the service has always read, so nothing below the form changed.
+ * Both come back filled after a refused submit (§315), like every other box on the form.
  */
 export default function WallTimeField({
   name,
@@ -45,7 +46,7 @@ export default function WallTimeField({
   return (
     <Stack spacing={0.5}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
-        <TextField
+        <RecallField
           name={`${name}Date`}
           type="date"
           label={label}
@@ -54,7 +55,7 @@ export default function WallTimeField({
           required={required}
           sx={{ flex: 1 }}
         />
-        <TextField
+        <RecallField
           name={`${name}Time`}
           type="time"
           label={timeLabel}

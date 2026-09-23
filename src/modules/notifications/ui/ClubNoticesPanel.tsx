@@ -1,16 +1,18 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
 import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import type { Locale } from "@/i18n/routing";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -30,7 +32,8 @@ type Props = {
  * there rather than re-implemented, because two parsers for one typed line is two behaviours.
  *
  * **The warning above the Bcc box is not decoration.** A signed declaration carries the
- * participant's name and the identity document they typed at signing. A Bcc delivers that to a
+ * participant's name, their signature and — masked in the club's copy since §320 — the identity
+ * document they typed at signing. A Bcc delivers that to a
  * mailbox nobody on the message can see, which is exactly why somebody asks for it and exactly
  * why the person setting it should be looking at those words when they do.
  */
@@ -76,10 +79,24 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           {t("emails.clubNotices.readOnly")}
         </Typography>
       ) : (
-      <Box component="form" action={updateClubNoticesAction} sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1.5 }}>
+      {/* A refused list comes back as typed (§315). */}
+      <ActionForm
+        action={updateClubNoticesAction}
+        messages={await refusalMessages({
+          declarationsTo: t("emails.clubNotices.declarationsTo"),
+          declarationsCc: t("emails.clubNotices.declarationsCc"),
+          declarationsBcc: t("emails.clubNotices.declarationsBcc"),
+          confirmationsTo: t("emails.clubNotices.confirmationsTo"),
+          participantsBcc: t("emails.clubNotices.participantsBcc"),
+        })}
+        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        scope="notices"
+        data-testid="club-notices-form"
+      >
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
-          <TextField
+          <RecallField
             name="declarationsTo"
             label={t("emails.clubNotices.declarationsTo")}
             defaultValue={notices.declarations.to}
@@ -87,7 +104,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             helperText={t("emails.clubNotices.declarationsToHelp")}
             slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false, inputMode: "email" } }}
           />
-          <TextField
+          <RecallField
             name="declarationsCc"
             label={t("emails.clubNotices.declarationsCc")}
             defaultValue={formatAddressList(notices.declarations.cc)}
@@ -99,7 +116,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           <Alert severity="warning" sx={{ py: 0.5 }}>
             {t("emails.clubNotices.bccWarning")}
           </Alert>
-          <TextField
+          <RecallField
             name="declarationsBcc"
             label={t("emails.clubNotices.declarationsBcc")}
             defaultValue={formatAddressList(notices.declarations.bcc)}
@@ -107,7 +124,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             helperText={t("emails.clubNotices.declarationsBccHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
-          <TextField
+          <RecallField
             name="confirmationsTo"
             label={t("emails.clubNotices.confirmationsTo")}
             defaultValue={formatAddressList(notices.confirmations.to)}
@@ -122,14 +139,15 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             above and `/admin/tasks` count through `messagesPerCompletedRegistration`.
           */}
           {/*
-            The warning sits above the box, as the declaration's does (§244) — and this copy is the
-            stronger one: every email to a participant carries their own action links and, on the
-            confirmation, the QR code, so a mailbox on the Bcc can act in their place (§12.8).
+            The warning sits above the box, as the declaration's does (§244). Until §320 this copy
+            was a Bcc on the participant's own envelope, action links and QR included, so a mailbox
+            on it could act in their place (§12.8); it is a separate club copy now, stripped of all
+            of that (`render.ts`), and the warning says what it does still carry.
           */}
           <Alert severity="warning" sx={{ py: 0.5 }}>
             {t("emails.clubNotices.participantsBccWarning")}
           </Alert>
-          <TextField
+          <RecallField
             name="participantsBcc"
             label={t("emails.clubNotices.participantsBcc")}
             defaultValue={formatAddressList(notices.participants.bcc)}
@@ -138,9 +156,10 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
-            <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} />
+            <GlyphSubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} icon="save" />
           </Box>
         </Stack>
+      </ActionForm>
       </Box>
       )}
     </Panel>

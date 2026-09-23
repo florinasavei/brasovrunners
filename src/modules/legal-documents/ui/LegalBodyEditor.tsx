@@ -10,7 +10,9 @@ import Typography from "@mui/material/Typography";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
+import { useRecall } from "@/shared/forms/recall";
+import ValidityProxy from "@/shared/forms/ValidityProxy";
 import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
 
 /**
@@ -41,7 +43,7 @@ import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
  * still carries the text it was handed, so a save writes the document back unchanged rather than
  * blanking a legal text.
  */
-export default function LegalBodyEditor({
+function LegalBodyEditorIsland({
   name,
   initialText,
   label,
@@ -259,6 +261,10 @@ export default function LegalBodyEditor({
         {help}
       </Typography>
       <input type="hidden" name={name} value={text} readOnly />
+      {/* A legal text is never saved empty (`service.ts#assertTranslationsUsable`), so the browser
+          refuses an empty one first, with its bubble at this box — a hidden field cannot carry
+          the constraint (§315). */}
+      <ValidityProxy name={name} label={accessibleName} required={text.trim() === ""} />
     </Box>
   );
 }
@@ -290,4 +296,16 @@ function Control({
       {text}
     </ToggleButton>
   );
+}
+
+/**
+ * After a refused submit the text comes back as it was typed (`DECISIONS.md` §315): the
+ * recalled text is the starting point, keyed on the answer so the island re-mounts from it.
+ * A legal body runs to tens of kilobytes, which is why this is the action's returned state
+ * and not a cookie.
+ */
+export default function LegalBodyEditor(props: ComponentProps<typeof LegalBodyEditorIsland>) {
+  const recall = useRecall();
+  const recalled = recall.value(props.name);
+  return <LegalBodyEditorIsland key={recall.generation} {...props} initialText={recalled ?? props.initialText} />;
 }

@@ -226,6 +226,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
                     <input type="hidden" name="assetId" value={row.id} />
                     <ConfirmSubmitButton
                       label={t("pictures.delete")}
+                      icon="delete"
                       title={t("pictures.deleteConfirm")}
                       body={row.originalFilename}
                       confirmLabel={t("pictures.delete")}

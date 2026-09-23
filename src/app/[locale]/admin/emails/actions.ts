@@ -14,6 +14,7 @@ import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { emailBodyToParagraphs, readEmailBody } from "@/modules/notifications/domain/email-rich-text";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
@@ -25,9 +26,10 @@ function localeOf(form: FormData): Locale {
 /**
  * "The plan we are on" (`DECISIONS.md` §100). Administrator only — the same gate as "send
  * now", because both spend the club's allowance — and the service asserts the role again.
- * Lands back on `/admin/emails` with the outcome in the query, like every backoffice action.
+ * Lands back on `/admin/emails` with the outcome in the query, like every backoffice action;
+ * a refusal comes back as the form's state with every box still filled (§315).
  */
-export async function updateEmailPlanAction(form: FormData): Promise<void> {
+export async function updateEmailPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
 
@@ -38,7 +40,6 @@ export async function updateEmailPlanAction(form: FormData): Promise<void> {
     return Number.isFinite(parsed) ? Math.round(parsed) : Number.NaN;
   };
 
-  let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
     await updateEmailPlan(
@@ -52,16 +53,14 @@ export async function updateEmailPlanAction(form: FormData): Promise<void> {
       },
       new Date(),
     );
-    outcome = "saved=emailPlan";
   } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    return refused(error, form);
   }
   // The action and the render that follows are one request, and the router keeps the payload
   // it already has for this path: without this the page comes back saying what it said before
   // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
   revalidatePath(path);
-  redirect(`${path}?${outcome}#admin-alert`);
+  redirect(`${path}?saved=emailPlan#admin-alert`);
 }
 
 /**
@@ -70,25 +69,22 @@ export async function updateEmailPlanAction(form: FormData): Promise<void> {
  * each address validated there, and the outcome in the query. Two typed lines come in; the
  * service is what decides whether they are addresses.
  */
-export async function updateContactRecipientsAction(form: FormData): Promise<void> {
+export async function updateContactRecipientsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
   const list = (name: string): string[] => parseAddressList(typeof form.get(name) === "string" ? String(form.get(name)) : "");
 
-  let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
     await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
-    outcome = "saved=contactRecipients";
   } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    return refused(error, form);
   }
   // The action and the render that follows are one request, and the router keeps the payload
   // it already has for this path: without this the page comes back saying what it said before
   // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
   revalidatePath(path);
-  redirect(`${path}?${outcome}#admin-alert`);
+  redirect(`${path}?saved=contactRecipients#admin-alert`);
 }
 
 /**
@@ -121,13 +117,12 @@ export async function sendOutboxNowFromEmailsAction(form: FormData): Promise<voi
  * The same gate and the same shape as the two above: Administrator at the door, the service
  * asserting the role again and validating every address, the outcome in the query.
  */
-export async function updateClubNoticesAction(form: FormData): Promise<void> {
+export async function updateClubNoticesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
   const text = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)).trim() : "");
   const list = (name: string): string[] => parseAddressList(text(name));
 
-  let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
     await updateClubNotices(
@@ -136,19 +131,18 @@ export async function updateClubNoticesAction(form: FormData): Promise<void> {
       {
         declarations: { to: text("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
         confirmations: { to: list("confirmationsTo") },
-        // A hidden copy of every message a real participant receives (2026-09-22). Copied into
-        // each outbox row's payload at enqueue time by `enqueueEmail`, as §244's copies are.
+        // A club copy of every message a real participant receives (2026-09-22): since §320 one
+        // outbox row per address, queued beside the participant's by `enqueueEmail`, stripped of
+        // every token, the QR and the attachments when it is rendered.
         participants: { bcc: list("participantsBcc") },
       },
       new Date(),
     );
-    outcome = "saved=clubNotices";
   } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    return refused(error, form);
   }
   revalidatePath(path);
-  redirect(`${path}?${outcome}#admin-alert`);
+  redirect(`${path}?saved=clubNotices#admin-alert`);
 }
 
 /**
@@ -190,7 +184,7 @@ function emailCopyEntryFrom(subject: string, body: string): { subject: string; p
   return { subject, paragraphs: emailBodyToParagraphs(doc), body: doc };
 }
 
-export async function updateEmailCopyAction(form: FormData): Promise<void> {
+export async function updateEmailCopyAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const lang = form.get("lang") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/admin/emails" });
@@ -219,8 +213,8 @@ export async function updateEmailCopyAction(form: FormData): Promise<void> {
     );
     outcome = form.get("reset") === "1" ? "saved=emailCopyReset" : "saved=emailCopy";
   } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    // The subject and the words come back as typed (§315); the `reset` press is not a value.
+    return refused(error, form, { never: ["reset"] });
   }
   revalidatePath(path);
   redirect(`${back}&${outcome}#admin-alert`);

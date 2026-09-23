@@ -1,12 +1,16 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
+import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -20,7 +24,7 @@ import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu from "@/shared/ui/RowMenu";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   changeStaffRoleAction,
   inviteStaffAction,
@@ -180,17 +184,36 @@ export default async function StaffPage({ params, searchParams }: Props) {
         is a form a screen reader cannot find.
       */}
       <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
-        <form action={inviteStaffAction}>
+        {/* A refused address or name comes back in its box, named in the summary (§315); the
+            browser refuses first what the schema would (`staffInviteConstraints`). */}
+        <ActionForm
+          action={inviteStaffAction}
+          messages={await refusalMessages({
+            email: t("staff.email"),
+            displayName: t("staff.name"),
+            role: t("staff.role"),
+            preferredLocale: t("staff.preferredLocale"),
+          })}
+          data-testid="staff-invite-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={2}>
-            <TextField name="email" type="email" label={t("staff.email")} required />
-            <TextField name="displayName" label={t("staff.name")} required />
-            <TextField
+            <RecallField
+              name="email"
+              label={t("staff.email")}
+              {...textFieldConstraints(staffInviteConstraints("email"))}
+            />
+            <RecallField
+              name="displayName"
+              label={t("staff.name")}
+              {...textFieldConstraints(staffInviteConstraints("displayName"))}
+            />
+            <RecallField
               name="role"
               label={t("staff.role")}
               defaultValue="CONTRIBUTOR"
               select
-              required
+              required={staffInviteConstraints("role").required}
               helperText={t("staff.roleHelp")}
             >
               {STAFF_ROLES.map((role) => (
@@ -198,21 +221,25 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   {STAFF_ROLE_LABEL[role]} — {t(`staff.roles.${role}`)}
                 </MenuItem>
               ))}
-            </TextField>
-            <TextField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
+            </RecallField>
+            <RecallField name="preferredLocale" label={t("staff.preferredLocale")} defaultValue="ro" select>
               {routing.locales.map((value) => (
                 <MenuItem key={value} value={value}>
                   {value.toUpperCase()}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
             <Box>
-              <Button type="submit" variant="contained">
-                {t("staff.invite")}
-              </Button>
+              <GlyphSubmitButton
+                label={t("staff.invite")}
+                pendingLabel={t("staff.inviting")}
+                icon="addPerson"
+                incompleteHintNamed={t("forms.incompleteFirst")}
+                size="medium"
+              />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           {invitesSend ? t("staff.inviteHelpSends") : t("staff.inviteHelp")}
@@ -297,9 +324,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
                       </MenuItem>
                     ))}
                   </TextField>
-                  <SubmitButton
+                  <GlyphSubmitButton
                     label={t("staff.changeRole")}
                     pendingLabel={t("staff.changeRolePending")}
+                    icon="role"
                     variant="outlined"
                   />
                 </Stack>
@@ -347,7 +375,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     ? {
                         kind: "submit" as const,
                         label: t("staff.passwordReset"),
-                        icon: "invite" as const,
+                        icon: "resend" as const,
                         formId: `password-${member.id}`,
                         confirm: {
                           title: t("staff.passwordResetTitle"),
@@ -358,7 +386,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     : {
                         kind: "submit" as const,
                         label: t("staff.resendInvite"),
-                        icon: "invite" as const,
+                        icon: "resend" as const,
                         formId: `invite-${member.id}`,
                         confirm: {
                           title: t("staff.resendInviteTitle"),

@@ -3,7 +3,8 @@ import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { buildRegistrationsWorkbook } from "@/modules/registrations/workbook";
-import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { listEventsWithRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -56,6 +57,18 @@ export async function GET(request: Request): Promise<Response> {
   const emailBounced = url.searchParams.get("bounced");
   const search = url.searchParams.get("q");
 
+  /*
+    The event scope, by the rule the screen uses (§178, §312) rather than the raw parameter.
+
+    The list's button names the scope it resolved, so this normally just reads it back — but
+    `all` is a word, not an event id, and handed to the query as one it compared a uuid column
+    with "all" and failed, so "Toate evenimentele" had no file. And a link typed or bookmarked
+    without an event means here what it means on the screen: the featured event, or every
+    event while a name is searched.
+  */
+  const db = getDb();
+  const scope = defaultEventFilter(eventId ?? undefined, await listEventsWithRegistrations(db), search ?? undefined);
+
   /**
    * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own
    * count of who is coming: it leaves this application, is sorted and filtered in a spreadsheet,
@@ -68,8 +81,8 @@ export async function GET(request: Request): Promise<Response> {
    * pressed it — and one that honoured the page would export whichever 25 rows were on screen.
    * Filters narrow what the file is *about*; a page is only how much of it fits.
    */
-  const rows = await listRegistrationsForAdmin(getDb(), {
-    eventId: eventId || undefined,
+  const rows = await listRegistrationsForAdmin(db, {
+    eventId: scope.eventId,
     status: isRegistrationStatus(status) ? status : undefined,
     clubMemberDeclared: clubMember === "1" || undefined,
     emailBounced: emailBounced === "1" || undefined,
@@ -88,7 +101,9 @@ export async function GET(request: Request): Promise<Response> {
    * downloads folder telling you nothing.
    */
   if (url.searchParams.get("format") === "xlsx") {
-    const eventTitle = rows.find((row) => row.eventTitle)?.eventTitle ?? null;
+    // Named after the event only when the file is about one: a search across every event is
+    // not the start list of whichever race its first row happens to belong to.
+    const eventTitle = scope.eventId ? (rows.find((row) => row.eventTitle)?.eventTitle ?? null) : null;
     const workbook = await buildRegistrationsWorkbook(
       rows.map((row) => ({
         id: row.id,

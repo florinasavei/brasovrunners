@@ -126,6 +126,10 @@ describe("the club's archive copy (§99)", () => {
     expect(message.html).not.toMatch(/\/api\/registrations\/declaration\//);
     expect(message.text).not.toContain("Salut, Ana Popescu");
     expect(message.text).toContain("Salut,");
+    // The attached copy masks the identity document (§320), and the message says where the whole one is.
+    expect(message.text).toContain("fără seria și numărul actului de identitate");
+    expect(message.text).toContain("până la șapte zile după eveniment");
+    expect(message.text).toContain("without the identity document's series and number");
   });
 
   it("sends no archive copy for a test registration", async () => {
@@ -136,7 +140,7 @@ describe("the club's archive copy (§99)", () => {
     await addTestRegistrations(db, admin, { eventId: event.id, count: 1, now: NOW });
     const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(row.kind).toBe("TEST");
-    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Runner Test")), idDocument: "BV 000000" }, NOW);
+    await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, row.registeredName)), idDocument: "BV 000000" }, NOW);
 
     const types = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id))).map((r) => r.messageType);
     expect(types).toContain("REGISTRATION_CONFIRMED");

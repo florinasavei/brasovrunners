@@ -2,7 +2,8 @@
 
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type ComponentProps, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRecall } from "@/shared/forms/recall";
 import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "../phone";
 
 /**
@@ -82,7 +83,7 @@ function onlyDigits(value: string): string {
   return plus + value.replace(/\D+/g, "");
 }
 
-export default function PhoneField({
+function PhoneFieldIsland({
   name,
   label,
   countryLabel,
@@ -365,4 +366,16 @@ export default function PhoneField({
       />
     </Stack>
   );
+}
+
+/**
+ * The two boxes come back as they were typed after a refused submit, whichever form they are on
+ * (`DECISIONS.md` §315): the public form hands the cookie's draft in through `draft`; a
+ * backoffice form provides the returned values through `RecallProvider`, and this reads them
+ * under the same two names the boxes post. Keyed on the answer so the island re-mounts from them.
+ */
+export default function PhoneField(props: ComponentProps<typeof PhoneFieldIsland>) {
+  const recall = useRecall();
+  const recalled = recall.has ? { country: recall.value(`${props.name}Country`), national: recall.value(props.name) } : undefined;
+  return <PhoneFieldIsland key={recall.generation} {...props} draft={props.draft ?? recalled} />;
 }

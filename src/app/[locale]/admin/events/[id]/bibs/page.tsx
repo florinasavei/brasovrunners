@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -12,6 +11,7 @@ import { findEventForEditing } from "@/modules/content/events/repository";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -58,14 +58,14 @@ export default async function EventBibsPage({ params }: Props) {
       */}
       {bibs.length > 0 && (
         <Box>
-          <Button
-            component="a"
+          <GlyphButton
+            icon="pdf"
             href={`/api/admin/events/${id}/bibs?locale=${locale}`}
             variant="contained"
             sx={{ minHeight: 44 }}
           >
             {t("bibs.downloadAll", { count: bibs.length })}
-          </Button>
+          </GlyphButton>
         </Box>
       )}
       {bibs.length === 0 ? (

@@ -217,7 +217,8 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
   }
   const url = input.url?.trim() || null;
   if (url && !url.startsWith("https://")) {
-    throw new DomainError("VALIDATION_ERROR", "the link must start with https://");
+    // Named, so the form's summary links to the box (`DECISIONS.md` §315).
+    throw new DomainError("VALIDATION_ERROR", "the link must start with https://", ["url"]);
   }
 
   return db.transaction(async (tx) => {

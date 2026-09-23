@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
 
@@ -23,6 +23,10 @@ import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
  * There is no "does not repeat" cadence any more (§170): `RepeatToggle`'s checkbox is what
  * says whether the event repeats at all, and these fields are not shown until it is ticked.
  * The enum value stays in the domain for the rows that carry it.
+ *
+ * After a refused submit every one of them comes back as it was chosen (`DECISIONS.md` §315): the
+ * cadence and the end are `RecallField`s, the weekday ticks `CheckboxField`s, which read the
+ * form's returned state wherever the form is an `ActionForm`.
  */
 export default async function RepeatFields({
   prefix = "",
@@ -38,7 +42,7 @@ export default async function RepeatFields({
   return (
     <Stack spacing={1.5}>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-        <TextField
+        <RecallField
           select
           name={name("cadence")}
           label={t("editor.repeatCadence")}
@@ -52,8 +56,8 @@ export default async function RepeatFields({
               {t(`editor.repeatCadences.${cadence}`)}
             </option>
           ))}
-        </TextField>
-        <TextField
+        </RecallField>
+        <RecallField
           name={name("until")}
           type="date"
           label={t("editor.repeatUntil")}
