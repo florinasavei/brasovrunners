@@ -25,6 +25,8 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
+import { instagramFileName } from "@/modules/events/instagram-share";
+import { absoluteUrl, eventPageUrl } from "@/modules/events/share-links";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import StartList from "@/modules/events/ui/StartList";
@@ -64,7 +66,7 @@ function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
 function eventUrl(locale: "ro" | "en", slug: string): string {
-  return `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}`;
+  return eventPageUrl(env.APP_BASE_URL, locale, slug);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -148,8 +150,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <JsonLd
         data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"), [
-          `${env.APP_BASE_URL}/${locale}/events/${slug}/opengraph-image`,
-          `${env.APP_BASE_URL}/${locale}/events/${slug}/share-image`,
+          absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/opengraph-image`),
+          absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/share-image`),
         ])}
       />
 
@@ -252,6 +254,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           url={eventUrl(locale, slug)}
           title={event.title}
           imageHref={`/${locale}/events/${slug}/share-image`}
+          fileName={instagramFileName(slug)}
           calendar={{
             icsHref: `/${locale}/events/${slug}/calendar.ics`,
             googleUrl: googleCalendarUrl(toCalendarEvent(event, locale, now), { locale, t }),
