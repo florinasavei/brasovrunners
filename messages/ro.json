@@ -590,7 +590,8 @@
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
         "rules": "Regulamentul evenimentului",
-        "schedule": "Programul evenimentului"
+        "schedule": "Programul evenimentului",
+        "scheduleNotes": "Note sub program"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
@@ -608,9 +609,10 @@
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
+      "scheduleHelp": "Programul propriu-zis sunt rândurile cu ore de la „{panel}” → „{section}”, comune ambelor limbi. Aici scrii, în această limbă, ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Pe pagina evenimentului apare sub rânduri; emailul de reamintire repetă rândurile și trimite aici.",
       "programmeSection": "Program",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
+      "programmeNotesHint": "Ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp — se scrie la „{panel}”, în fiecare limbă, la „{fold}”; apare pe pagină sub aceste rânduri.",
       "programmeRows": {
         "date": "Data",
         "time": "Ora",

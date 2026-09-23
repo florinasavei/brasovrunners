@@ -46,7 +46,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitIconButton from "@/shared/ui/SubmitIconButton";
 import type { ActionIconName } from "@/shared/ui/action-icons";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -568,11 +568,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               actually does is folded under it: six lines of explanation open on every event
               was six lines of explanation about something most events are not. */}
           <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
-            <Box component="details" sx={{ ...DISCLOSURE_SX, mb: 1 }}>
+            <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mb: 1 }}>
               <Typography component="summary" variant="body2">
                 {t("editor.repeatHelpSummary")}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ pb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
                 {t("editor.repeatHelp")}
               </Typography>
             </Box>

@@ -38,6 +38,7 @@ import {
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import Panel from "@/shared/ui/Panel";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
@@ -1056,18 +1057,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       />
 
-      {/* Cancel and erase in a batch: the Administrator's, like the single-row verbs above (§289). */}
+      {/* Cancel and erase in a batch: the Administrator's, like the single-row verbs above (§289).
+          The shared box, amber: destructive, so it says so on its border and keeps the rest. */}
       {mayManage && rows.length > 0 && (
-        <Box
-          component="details"
-          sx={{
-            border: 1,
-            borderColor: "warning.light",
-            borderRadius: 1,
-            px: 2,
-            "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
-          }}
-        >
+        <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, borderColor: "warning.light" }}>
           <Typography component="summary" variant="body2">
             {t("registrations.bulkCancelTitle")}
           </Typography>
@@ -1076,7 +1069,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {/* Only the query, never a path: `actions.ts` rebuilds the path itself so this
                 field cannot become an open redirect. */}
             <input type="hidden" name="listQuery" value={listQueryString} />
-            <Stack spacing={1.5} sx={{ pb: 2 }}>
+            <Stack spacing={1.5}>
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.bulkCancelHelp")}
               </Typography>

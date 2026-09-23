@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -52,25 +53,14 @@ export default async function GuidePage({ params }: Props) {
         <Link href="/admin/emails">{t("emails.link")}</Link>
       </Typography>
       {sections.map((section, index) => (
-        <Box
-          key={index}
-          component="details"
-          open={index < Math.max(1, mine.length)}
-          sx={{
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 1,
-            px: 2,
-            "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" },
-          }}
-        >
+        <Box key={index} component="details" open={index < Math.max(1, mine.length)} sx={BOXED_DISCLOSURE_SX}>
           <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
             {section.title}
             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
               {section.who}
             </Typography>
           </Typography>
-          <Box component="ol" sx={{ m: 0, mb: 1.5, pl: 2.5, "& li": { mb: 0.75 } }}>
+          <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
             {section.steps.map((step, stepIndex) => (
               <Typography component="li" variant="body1" key={stepIndex}>
                 {step}
