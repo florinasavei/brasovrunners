@@ -227,19 +227,28 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     expect(untouched.status).toBe("PENDING_DECLARATION");
   });
 
-  it("closes a lapsed declaration hold on a cancelled event, so nobody holds a place on a race that will not run", async () => {
+  it("leaves a cancelled event's registrations as they were when it was cancelled (§NNN, amending §160)", async () => {
     const event = await createInternalEvent(db, { capacity: 1 });
     await submitRegistration(db, event, submissionInput("late@example.ro"), NOW);
     const [pending] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     await confirmEmail(db, event, pending.id, NOW);
+    await submitRegistration(db, event, submissionInput("waiter@example.ro"), NOW);
+    const waiter = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).find((row) => row.id !== pending.id)!;
+    expect((await confirmEmail(db, event, waiter.id, NOW)).status).toBe("WAITLISTED");
     await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    const queuedBefore = (await db.select().from(emailOutbox)).length;
 
-    const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);
-    expect((await runRegistrationMaintenance(db, past31Minutes)).eventsProcessed).toBe(1);
+    // A lapsed hold with somebody waiting, then the start itself: neither moves anything.
+    for (const at of [new Date(NOW.getTime() + 31 * 60_000), new Date(event.startsAt.getTime() + 60_000)]) {
+      expect((await runRegistrationMaintenance(db, at)).eventsProcessed).toBe(0);
+    }
 
-    const [closed] = await db.select().from(registrations).where(eq(registrations.id, pending.id));
-    expect(closed.status).toBe("EXPIRED");
-    expect(closed.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+    const [kept] = await db.select().from(registrations).where(eq(registrations.id, pending.id));
+    expect(kept.status).toBe("PENDING_DECLARATION");
+    const [stillWaiting] = await db.select().from(registrations).where(eq(registrations.id, waiter.id));
+    expect(stillWaiting.status).toBe("WAITLISTED");
+    // And nothing was sent about it: no offer, no reminder, no number.
+    expect((await db.select().from(emailOutbox)).length).toBe(queuedBefore);
   });
 
   it("closes a lapsed declaration hold once the event has started, even with nobody waiting", async () => {

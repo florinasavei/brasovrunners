@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lte, ne, sql } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -223,14 +223,15 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
 
   return db.transaction(async (tx) => {
     // Claimed first, in the same transaction as the rows: two organizers pressing at once
-    // means one of them finds `thanks_sent_at` already set.
+    // means one of them finds `thanks_sent_at` already set. Never for a cancelled event
+    // (§NNN): "thank you for running with us" about a race that did not run.
     const [event] = await tx
       .update(events)
       .set({ thanksSentAt: now })
-      .where(and(eq(events.id, input.eventId), isNull(events.thanksSentAt), lte(events.startsAt, now)))
+      .where(and(eq(events.id, input.eventId), isNull(events.thanksSentAt), lte(events.startsAt, now), ne(events.eventStatus, "CANCELLED")))
       .returning({ id: events.id });
     if (!event) {
-      throw new DomainError("CONFLICT", "the thank-you was already sent for this event, or the event has not started");
+      throw new DomainError("CONFLICT", "the thank-you was already sent for this event, the event has not started, or it was cancelled");
     }
 
     const rows = await tx

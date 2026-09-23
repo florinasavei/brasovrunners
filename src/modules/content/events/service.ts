@@ -868,6 +868,11 @@ function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[])
  * Tell every date the save reached (§NNN): this one, then each date of the series it carried
  * the change to — each date's own registrants once, about their own date. The save is named by
  * the event that was saved and the version it now has, so a retried press queues nothing twice.
+ *
+ * Another date of the series that has already begun is not told anything: "every date" reaches
+ * last month's too (§130), and a runner who ran it is owed no "details updated" and no "it is
+ * cancelled" about a morning that is over. The date being edited is always told when asked —
+ * the organizer is looking at it, and a race called off at the start line is still news.
  */
 async function announceSave<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -876,7 +881,8 @@ async function announceSave<T extends Record<string, unknown>>(
   if (!input.request.notify && !input.request.cancellation) return undefined;
   const saveKey = `${input.saved.id}:v${input.saved.version}`;
   const outcomes: (EventNoticeOutcome | null)[] = [];
-  for (const date of input.dates) {
+  for (const [index, date] of input.dates.entries()) {
+    if (index > 0 && date.before.startsAt.getTime() <= input.now.getTime()) continue;
     outcomes.push(await announceSavedDate(tx, { ...date, actor: input.actor, request: input.request, saveKey, now: input.now }));
   }
   return combineNoticeOutcomes(outcomes);

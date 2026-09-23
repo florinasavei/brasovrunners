@@ -1115,9 +1115,10 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       The event is not being run any more (§NNN): cancelled, or over. Confirming the address
       would allocate a place, draw a provisional number and send "sign the declaration" for a
       race that will not happen — so nothing is written and nothing is sent. The registration is
-      returned still unconfirmed, which is how the page knows to say why (`token-actions.ts`),
-      and it lapses with the other unconfirmed ones after 48 hours. Read under the event lock,
-      so a cancellation that lands between the click and this line is the one that counts.
+      returned still unconfirmed, which is how the confirmation page knows to say why rather
+      than "confirmed, now sign" (`registrations/confirm/[token]/actions.ts`), and it lapses with
+      the other unconfirmed ones after 48 hours. Read under the event lock, so a cancellation
+      that lands between the click and this line is the one that counts.
     */
     if (lockedEvent.eventStatus !== "SCHEDULED") return current;
 
@@ -1565,6 +1566,11 @@ export async function checkIn<T extends Record<string, unknown>>(
     .limit(1);
   if (event?.eventStatus === "COMPLETED") {
     throw new DomainError("VALIDATION_ERROR", "the event is completed; the desk is closed");
+  }
+  // Nor at a race that will not run (§NNN): a check-in there would put somebody on the
+  // thank-you's list for an event that never happened.
+  if (event?.eventStatus === "CANCELLED") {
+    throw new DomainError("VALIDATION_ERROR", "the event is cancelled; the desk is closed");
   }
   if (current.checkedInAt) return current;
   const [updated] = await db

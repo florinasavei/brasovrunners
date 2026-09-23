@@ -230,6 +230,8 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
       translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: { slug: ro.slug, title: ro.title, excerpt: ro.excerpt ?? "", seoTitle: "", seoDescription: "" } }],
       acknowledgeLiveEdit: true,
       scope,
+      // A save that cancels says why (§NNN); these tests are about the offers, so nobody is told.
+      ...(changes.eventStatus === "CANCELLED" && row.eventStatus !== "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
       now: at,
     });
   }
@@ -319,7 +321,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     const bogdan = await enter(row, "Bogdan", new Date(NOW.getTime() + 1000));
     expect(bogdan.status).toBe("WAITLISTED");
 
-    expect(await save(row.id, { capacity: "", eventStatus: "CANCELLED" }, new Date(NOW.getTime() + 60_000))).toEqual({ appliedTo: 0, offered: 0 });
+    expect(await save(row.id, { capacity: "", eventStatus: "CANCELLED" }, new Date(NOW.getTime() + 60_000))).toMatchObject({ appliedTo: 0, offered: 0 });
     const cancelled = await reload(row.id);
     expect(cancelled.eventStatus).toBe("CANCELLED");
     expect(cancelled.capacity).toBeNull();

@@ -22,6 +22,10 @@ import {
 } from "@/modules/content/events/service";
 import EditorPanel from "@/modules/content/events/ui/EditorPanel";
 import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
+import EventNoticeFields from "@/modules/content/events/ui/EventNoticeFields";
+import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
+import { countEventNoticeRecipients } from "@/modules/notifications/event-notices";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
@@ -78,7 +82,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; notice?: string; queued?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -120,7 +124,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, notice: noticeParam, queued } = await searchParams;
+  // What the save told the participants (§NNN), matched against the words there are — the query
+  // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
+  const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet"] as const).find((kind) => kind === noticeParam);
+  const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
   const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
@@ -176,6 +184,29 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     event.registrationMode === "INTERNAL" && (maySaveSettings || canReadRegistrations(staffUser.role))
       ? await countEligibleWaitlisted(db, event.id)
       : 0;
+
+  /*
+    "Anunță participanții despre schimbare", and the cancellation's "tell them" (§NNN): how many
+    would be emailed, said before the press, and what that costs against the plan (§100). The
+    count is of real registrations — a test row is written to as well, and counted nowhere the
+    club looks (`AGENTS.md` §12.6) — while the messages include it and the club's copies (§320),
+    because the allowance pays for every one. The plan's figures are read only when somebody
+    would be written to: five counts are worth it only when the answer matters.
+  */
+  const noticeRecipients =
+    maySaveSettings && event.registrationMode === "INTERNAL" ? await countEventNoticeRecipients(db, event.id) : { real: 0, test: 0 };
+  const noticeVolume = noticeRecipients.real + noticeRecipients.test > 0 ? await readEmailVolumeToday(db, now) : null;
+  const noticeMessages = noticeVolume
+    ? String(noticeRecipients.real * (1 + noticeVolume.participantBccCount) + noticeRecipients.test)
+    : "0";
+  const noticeAllowance = !noticeVolume
+    ? ""
+    : noticeVolume.remaining === null
+      ? t("editor.notice.allowanceNone", { plan: noticeVolume.planName })
+      : t(noticeVolume.period === "day" ? "editor.notice.allowanceDay" : "editor.notice.allowanceMonth", {
+          plan: noticeVolume.planName,
+          remaining: String(noticeVolume.remaining),
+        });
 
   /**
    * Why Delete is, or is not, offered (§170; the owner: "aparent nu pot șterge evenimente").
@@ -335,6 +366,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
+        {/* What the save told the participants (§NNN), under whichever banner the save gave. */}
+        {noticeOutcome && (
+          <Alert severity={noticeOutcome === "none" || noticeOutcome === "cancelledQuiet" ? "info" : "success"} sx={{ mt: 1 }} data-testid="notice-outcome">
+            {t(`editor.notice.outcome.${noticeOutcome}`, { queued: queuedCount })}
+          </Alert>
+        )}
         {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
@@ -432,6 +469,42 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   without it whatever the browser did ("I shouldn't be able to save without
                   ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
                   (§152): on a phone the bar had grown to a third of the screen. */}
+              {/*
+                Whether the participants hear about this save (§NNN; the owner: "I want to know
+                exactly when and if participants get email alerts"): unticked, nobody is emailed.
+                Beside the button, with the number of people it would reach, because it is a
+                decision made at the moment of the press. When the status select says "Anulat"
+                it becomes the cancellation's reason and its "tell them", ticked.
+              */}
+              {maySaveSettings && (
+                <Box sx={{ mb: 2 }}>
+                  <EventNoticeFields
+                    statusSelectName="event.eventStatus"
+                    initialStatus={event.eventStatus}
+                    wasCancelled={event.eventStatus === "CANCELLED"}
+                    offerNotice={event.registrationMode === "INTERNAL"}
+                    maxLength={EVENT_NOTICE_TEXT_MAX}
+                    labels={{
+                      notify: t("editor.notice.notify"),
+                      notifyHelp:
+                        noticeRecipients.real + noticeRecipients.test === 0
+                          ? t("editor.notice.countNone")
+                          : `${t("editor.notice.count", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${inSeries ? ` ${t("editor.notice.countSeries")}` : ""}`,
+                      note: t("editor.notice.note"),
+                      noteHelp: t("editor.notice.noteHelp", { max: String(EVENT_NOTICE_TEXT_MAX) }),
+                      cancelTitle: t("editor.notice.cancelTitle"),
+                      cancelIntro: t("editor.notice.cancelIntro"),
+                      cancelReason: t("editor.notice.cancelReason"),
+                      cancelReasonHelp: t("editor.notice.cancelReasonHelp", { max: String(EVENT_NOTICE_TEXT_MAX) }),
+                      cancelNotify: t("editor.notice.cancelNotify"),
+                      cancelNotifyHelp:
+                        noticeRecipients.real + noticeRecipients.test === 0
+                          ? t("editor.notice.cancelCountNone")
+                          : t("editor.notice.cancelCount", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance }),
+                    }}
+                  />
+                </Box>
+              )}
               {live && (
                 <Box sx={{ mb: 2 }}>
                   <CheckboxField name="acknowledgeLiveEdit" required>
@@ -795,6 +868,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       */}
       {canManageRegistrations(staffUser.role) &&
         event.registrationMode === "INTERNAL" &&
+        // Not for a race that did not run (§NNN): the service refuses it too.
+        event.eventStatus !== "CANCELLED" &&
         event.startsAt.getTime() <= now.getTime() && (
           <Box component="section">
             <Divider sx={{ mb: 3 }} />

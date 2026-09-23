@@ -85,7 +85,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <Stack spacing={3}>
-          {confirmed?.registration.checkinCode && (
+          {/* The race will not run (§NNN): said first, and no race-day block under it. */}
+          {live?.eventCancelled && <Alert severity="info">{t("mine.eventCancelled")}</Alert>}
+          {confirmed?.registration.checkinCode && !confirmed.eventCancelled && (
             <Box component="section">
               <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
                 {t("manage.raceDayTitle")}

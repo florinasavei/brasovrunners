@@ -618,6 +618,7 @@ const T = {
       body: (d: TemplateData) => [
         `Ne pare rău: evenimentul „${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
         "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
+        `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
     },
     /** What the update and the cancellation add around the club's words (§NNN): the facts named as new, the labels of the organizer's text. */
@@ -862,6 +863,7 @@ const T = {
       body: (d: TemplateData) => [
         `We are sorry: “${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
         "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
+        `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
       ],
     },
     noticeWords: {

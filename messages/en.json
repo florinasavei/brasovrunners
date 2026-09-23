@@ -859,7 +859,31 @@
       "createdPublishedWithSeries": "The event and {created} dates were created and published.",
       "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
       "createdNotPublishedRole": "The event was created as a draft. Publishing is the Administrator's — submit it for review.",
-      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}"
+      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}",
+      "notice": {
+        "notify": "Tell participants about the change",
+        "count": "Participants who would get the “Updated details” email: {count}, each in the language they registered in. It goes only if the place, the date and time or the programme changed, or if you write a note below. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "countNone": "Nobody is registered for this date right now, so the box sends no email.",
+        "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
+        "note": "What changed (optional)",
+        "noteHelp": "Plain text, at most {max} characters. It appears in the email under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
+        "cancelTitle": "You are cancelling the event",
+        "cancelIntro": "The registrations stay as they are, as a record: nobody is withdrawn and no status changes. No more places are offered, no numbers are given and no automatic emails go out for this event.",
+        "cancelReason": "Why the event is cancelled",
+        "cancelReasonHelp": "Required. Plain text, at most {max} characters. It appears in the email to the participants and in the audit log, with your name.",
+        "cancelNotify": "Tell the participants that the event is cancelled",
+        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "cancelCountNone": "Nobody is registered right now, so no email goes out.",
+        "allowanceDay": "the {plan} plan: {remaining} left today",
+        "allowanceMonth": "the {plan} plan: {remaining} left this month",
+        "allowanceNone": "the {plan} plan, no limit",
+        "outcome": {
+          "update": "“Updated details” emails queued: {queued}. They go within minutes, each in the participant's language.",
+          "none": "No email went out: the place, the date and time and the programme did not change, and the note for the participants was empty.",
+          "cancelled": "The event is cancelled. “Event cancelled” emails queued: {queued}.",
+          "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked."
+        }
+      }
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -1813,7 +1837,9 @@
         "BIB_ASSIGNED": "A race number given by hand",
         "STAFF_INVITATION": "The team invitation",
         "REGISTRATION_OPENED": "Registration is open",
-        "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed"
+        "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed",
+        "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
+        "EVENT_CANCELLED": "Event cancelled"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1822,18 +1848,20 @@
         "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
         "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
         "REGISTRATION_CANCELLED": "When the participant withdraws or an organizer cancels the registration.",
-        "WAITLIST_OFFER_EXPIRED": "When the offer's 24 hours pass without a signature.",
-        "REGISTRATION_MANAGE_LINK": "On request, from “Resend the link” (site or backoffice).",
+        "WAITLIST_OFFER_EXPIRED": "Not sent any more: when an offered place's 24 hours pass without a signature, the place moves to the next person in line with no email to the one who did not sign.",
+        "REGISTRATION_MANAGE_LINK": "Not sent any more: “Resend the link” sends the whole confirmation (with the manage link, the QR code and the number), and “My registrations” has its own message.",
         "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
-        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
-        "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
-        "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
-        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link; in the attached PDF the identity document's series and number are masked.",
-        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link.",
+        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
+        "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
+        "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
+        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, when none is set here) — only for real registrations. No action link; in the attached PDF the identity document's series and number are masked.",
+        "BIB_ASSIGNED": "Automatically, once, when registration closes and the numbers become final; and when an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link. Never for a cancelled event.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form.",
-        "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token."
+        "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
+        "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
+        "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link."
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -1942,7 +1970,8 @@
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
-      }
+      },
+      "neverSent": "not sent any more"
     },
     "guide": {
       "title": "How to use the platform",
@@ -2356,7 +2385,8 @@
       "action": "Confirm",
       "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
-      "doneTitle": "Your email address is confirmed"
+      "doneTitle": "Your email address is confirmed",
+      "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do."
     },
     "declare": {
       "title": "Event declaration",
@@ -2444,7 +2474,9 @@
         "WAITLISTED": "On the waiting list",
         "WAITLIST_OFFERED": "Place offered — sign the declaration",
         "CONFIRMED": "Confirmed"
-      }
+      },
+      "eventCancelledChip": "Event cancelled",
+      "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do."
     },
     "manage": {
       "title": "Manage your registration",

@@ -491,8 +491,9 @@ export type EventForExpiry = {
  * The whole of `DECISIONS.md` §160 is here. A hold past its deadline is released only when
  * the place it is holding is actually wanted, and then only as many holds as are wanted:
  *
- * - the event has started, or will never be run (`CANCELLED`) — every hold is over, because
- *   nobody may be left holding a place on a race that has begun or that will not happen;
+ * - the event has started, or is over (`COMPLETED`) — every hold is over, because nobody may
+ *   be left holding a place on a race that has begun. A `CANCELLED` event never reaches here
+ *   any more: `fillAvailableSpots` and the job leave its registrations as they stood (§NNN);
  * - otherwise, the waiting list wants `waiting - free` places, where `free` is what the event
  *   has without touching any hold. One person joining the queue releases one hold, the oldest
  *   deadline first — never the whole event's worth of kept places, which would silently evict
@@ -595,11 +596,11 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
 }
 
 /**
- * Every event with a registration the maintenance job (AGENTS.md §16.2) needs to look at: an
- * offer past its deadline, a lapsed declaration hold that somebody is waiting for or that
- * stands on a cancelled event (§160 — with nobody waiting and the race still to be run the
- * hold is kept, and the job would lock the event to do nothing, on every run until the race),
- * or a hold or waiting-list entry left open on an event that has started.
+ * Every scheduled event with a registration the maintenance job (AGENTS.md §16.2) needs to
+ * look at: an offer past its deadline, a lapsed declaration hold that somebody is waiting for
+ * (§160 — with nobody waiting the hold is kept, and the job would lock the event to do
+ * nothing, on every run until the race), a hold or waiting-list entry left open on an event
+ * that has started, or numbers to settle. Never a cancelled or completed event (§NNN, §82).
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
  * expiry messages and retry delivery, not to make capacity correct, so missing an event here
@@ -622,17 +623,19 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        // A completed event is over: the job leaves it alone (§82). Cancelled ones still
-        // expire their holds and their offers, so nobody is left holding a place on a race
-        // that will not run — the one case §160's lenience does not cover.
-        sql`${events.eventStatus} <> 'COMPLETED'`,
+        /*
+          Only an event that will still be run (§NNN). A completed event is over: the job
+          leaves it alone (§82). A cancelled one is left alone too, since §NNN: its
+          registrations stay as they were when it was cancelled — the record of who had
+          entered, which the participants were told in so many words — so nothing about it is
+          expired, offered, settled or numbered, and a race put back on finds its queue where it
+          left it. It used to be selected so its lapsed holds would expire (§160); that was a
+          silent status change on a race nobody can take a place in, and it sent nothing either.
+        */
+        sql`${events.eventStatus} = 'SCHEDULED'`,
         or(
           and(eq(registrations.status, "WAITLIST_OFFERED"), lte(registrations.holdExpiresAt, now)),
-          and(
-            eq(registrations.status, "PENDING_DECLARATION"),
-            lte(registrations.holdExpiresAt, now),
-            or(somebodyWaits, sql`${events.eventStatus} <> 'SCHEDULED'`),
-          ),
+          and(eq(registrations.status, "PENDING_DECLARATION"), lte(registrations.holdExpiresAt, now), somebodyWaits),
           and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
           /*
             An event whose registration has closed and whose numbers have not been settled

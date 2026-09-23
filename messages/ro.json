@@ -859,7 +859,31 @@
       "createdPublishedWithSeries": "Evenimentul și {created} ediții au fost create și publicate.",
       "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
       "createdNotPublishedRole": "Evenimentul a fost creat ca ciornă. Publicarea este a Administratorului — trimite-l spre verificare.",
-      "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}"
+      "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}",
+      "notice": {
+        "notify": "Anunță participanții despre schimbare",
+        "count": "Participanți care ar primi emailul „Detalii actualizate”: {count}, fiecare în limba în care s-a înscris. Pleacă doar dacă s-a schimbat locul, data și ora sau programul, ori dacă scrii un mesaj mai jos. Mesaje cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
+        "countNone": "Nu e nimeni înscris acum la această dată, așa că bifa nu trimite niciun email.",
+        "countSeries": "Dacă modificarea ajunge și la alte date ale seriei, sunt anunțați și participanții acelor date, fiecare o singură dată, despre data lui.",
+        "note": "Ce s-a schimbat (opțional)",
+        "noteHelp": "Text simplu, cel mult {max} de caractere. Apare în email sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
+        "cancelTitle": "Anulezi evenimentul",
+        "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
+        "cancelReason": "Motivul anulării",
+        "cancelReasonHelp": "Obligatoriu. Text simplu, cel mult {max} de caractere. Apare în emailul către participanți și în jurnalul de audit, cu numele tău.",
+        "cancelNotify": "Anunță participanții că evenimentul a fost anulat",
+        "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
+        "cancelCountNone": "Nu e nimeni înscris acum, așa că nu pleacă niciun email.",
+        "allowanceDay": "planul {plan}: încă {remaining} azi",
+        "allowanceMonth": "planul {plan}: încă {remaining} luna aceasta",
+        "allowanceNone": "planul {plan}, fără limită",
+        "outcome": {
+          "update": "Emailuri „Detalii actualizate” puse la coadă: {queued}. Pleacă în câteva minute, fiecare în limba participantului.",
+          "none": "Nu a plecat niciun email: nu s-a schimbat locul, data și ora sau programul, iar mesajul pentru participanți era gol.",
+          "cancelled": "Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: {queued}.",
+          "cancelledQuiet": "Evenimentul a fost anulat. Participanții nu au fost anunțați, pentru că bifa era debifată."
+        }
+      }
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -1813,7 +1837,9 @@
         "BIB_ASSIGNED": "Numărul de concurs dat de mână",
         "STAFF_INVITATION": "Invitația în echipă",
         "REGISTRATION_OPENED": "Înscrierile s-au deschis",
-        "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat"
+        "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat",
+        "EVENT_UPDATE_NOTICE": "Detalii actualizate (loc, oră, program)",
+        "EVENT_CANCELLED": "Eveniment anulat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1822,18 +1848,20 @@
         "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
         "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
         "REGISTRATION_CANCELLED": "Când participantul se retrage sau un organizator anulează înscrierea.",
-        "WAITLIST_OFFER_EXPIRED": "Când cele 24 de ore ale ofertei trec fără semnătură.",
-        "REGISTRATION_MANAGE_LINK": "La cerere, din „Retrimite linkul” (site sau backoffice).",
+        "WAITLIST_OFFER_EXPIRED": "Nu se mai trimite: când cele 24 de ore ale unui loc oferit trec fără semnătură, locul trece la următorul de pe listă fără niciun email către cel care nu a semnat.",
+        "REGISTRATION_MANAGE_LINK": "Nu se mai trimite: „Retrimite linkul” trimite confirmarea întreagă (cu linkul de gestionare, codul QR și numărul), iar „Înscrierile mele” are mesajul lui.",
         "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
-        "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
-        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
-        "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
-        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
-        "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
+        "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată. Doar pentru evenimentele programate: unul anulat nu mai trimite nimic automat.",
+        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce a trecut ora de start; o singură dată, celor bifați ca prezenți la masă. Niciodată pentru un eveniment anulat.",
+        "DECLARATION_SIGNED": "Nu se mai trimite: declarația semnată, în PDF, pleacă atașată la „Înscriere confirmată”, împreună cu linkul către ea.",
+        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța clubului pentru declarații setată mai sus (sau DECLARATIONS_ARCHIVE_TO, dacă nu e setată aici) — doar pentru înscrieri reale. Fără niciun link de acțiune; în PDF-ul atașat, seria și numărul actului de identitate sunt mascate.",
+        "BIB_ASSIGNED": "Automat, o dată, când se închid înscrierile și numerele devin definitive; și când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare. Niciodată pentru un eveniment anulat.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
-        "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token."
+        "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",
+        "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
+        "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune."
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -1942,7 +1970,8 @@
         "saving": "Se salvează…",
         "saved": "Destinatarii formularului de contact au fost salvați.",
         "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
-      }
+      },
+      "neverSent": "nu se mai trimite"
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -2356,7 +2385,8 @@
       "action": "Confirmă",
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
-      "doneTitle": "Adresa a fost confirmată"
+      "doneTitle": "Adresa a fost confirmată",
+      "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic."
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -2444,7 +2474,9 @@
         "WAITLISTED": "Pe lista de așteptare",
         "WAITLIST_OFFERED": "Loc oferit — semnează declarația",
         "CONFIRMED": "Confirmată"
-      }
+      },
+      "eventCancelledChip": "Eveniment anulat",
+      "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic."
     },
     "manage": {
       "title": "Gestionează înscrierea",
