@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.64-2026-09-23
+
+- **The registrations list says what "2*" means** — a tap-friendly hint on the race-number column: an asterisk is a provisional number, a bold one is final, a tick means printed. **Feature branches create no Vercel deployment** (`vercel.json`): cancelled previews had spent the Hobby plan's hundred a day and blocked the V1.62 release. `DECISIONS.md` §313.
 ## BR-V1.63-2026-09-23
 
 - **The club sees a second registration attempt, and a name search looks in every event.** Filling the form again with the same address now leaves a dated line on the registration's timeline ("S-a înscris din nou cu aceeași adresă … — i-am retrimis …", with the state it found) and a "Reînscriere ×N" chip on the list, for the Administrator and the Organizer; the visitor's screen is unchanged. Searching the list by name without choosing an event searches every event and says so in one line, the export follows the screen, and exporting "Toate evenimentele" now works. `DECISIONS.md` §312.
