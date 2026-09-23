@@ -43,7 +43,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { countBibs } from "@/modules/registrations/bibs";
+import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import {
@@ -141,7 +141,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const eventFilter = defaultEventFilter(eventId, events);
   filters.eventId = eventFilter.eventId;
 
-  const [rows, total, summary, bibs] = await Promise.all([
+  const [rows, total, summary, bibs, voidBibs] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -162,6 +162,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       the club's database bills compute time (§68).
     */
     filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
+    /*
+      The printed bibs that belong to nobody any more (§305) — the numbers themselves, because
+      the panel names each one as a link and there are a handful per race. `countBibs` cannot
+      carry them: its scope is the sheet's, which is confirmed rows only, and that exclusion is
+      the rule this list is the other half of.
+    */
+    filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
   ]);
 
   const t = await getTranslations("Admin");
@@ -557,15 +564,45 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
         Only with an event selected and only when it has numbers: an empty toolbar row would be
         two dead buttons on the screen the club uses most.
+
+        The figures in the aside count **confirmed** registrations only — the sheet's own scope
+        — and the sentence says so, because a cancelled registration keeps its settled number and
+        its printed mark and would otherwise be the silent difference between "5 printed" and
+        the six bibs in the box. Those are the void line below (§305): each number a link to the
+        row it belongs to, sorted, and the panel stays open while there is one to pull. The panel
+        renders for them even when every confirmed bib is gone, or the line would vanish with the
+        very cancellation that produced it.
       */}
-      {filters.eventId && bibs.total > 0 && (
+      {filters.eventId && (bibs.total > 0 || voidBibs.length > 0) && (
         <Panel
           title={t("panels.bibs")}
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
-          defaultOpen={bibs.unprinted > 0}
+          defaultOpen={bibs.unprinted > 0 || voidBibs.length > 0}
           data-testid="registrations-bibs"
         >
+        {voidBibs.length > 0 && (
+          <Alert severity="warning" data-testid="registrations-void-bibs" sx={{ mb: bibs.total > 0 ? 1.5 : 0 }}>
+            {t("registrations.bibsVoid", { count: voidBibs.length })}{" "}
+            {voidBibs.map((bib, index) => (
+              <Box component="span" key={bib.id} sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+                {index > 0 && ", "}
+                <Link
+                  href={{ pathname: "/admin/registrations/[id]", params: { id: bib.id } }}
+                  title={t("registrations.bibsVoidLink", {
+                    number: bib.bibNumber,
+                    name: bib.registeredName,
+                    status: REGISTRATION_STATUS_LABEL[bib.status],
+                    date: format.dateTime(bib.voidedAt, { dateStyle: "medium" }),
+                  })}
+                >
+                  {bib.bibNumber}
+                </Link>
+              </Box>
+            ))}
+          </Alert>
+        )}
+        {bibs.total > 0 && (
         <Stack
           direction="row"
           spacing={1}
@@ -623,6 +660,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
         </Stack>
+        )}
         </Panel>
       )}
 
@@ -960,6 +998,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("cancel")) {
+                // A printed bib is named before the press (§305): after this the number stays
+                // retired and the paper has to come out of the pile.
+                const printedWarning =
+                  row.bibPrintedAt !== null && row.bibNumber !== null
+                    ? `${t("confirm.cancelRegistrationPrintedBody", { number: row.bibNumber })} `
+                    : "";
                 items.push({
                   kind: "submit",
                   icon: "cancel",
@@ -968,7 +1012,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   color: "error",
                   confirm: {
                     title: t("registrations.cancel"),
-                    body: t("registrations.cancelBody"),
+                    body: `${printedWarning}${t("registrations.cancelBody")}`,
                     confirmLabel: t("registrations.cancel"),
                   },
                 });

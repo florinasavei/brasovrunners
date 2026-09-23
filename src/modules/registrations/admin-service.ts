@@ -575,13 +575,27 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   const event = await eventForRegistration(db, current.eventId);
   const cancelled = await unregister(db, event, registrationId, "ADMIN", now);
 
+  /*
+    A printed bib going void is written into the row's own record (§305; the owner: "trebuie sa
+    avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja printat!").
+
+    The number stays retired (§173) and the printed mark stays on the row, so `voidBibsFor`
+    finds it; this is so the timeline says "cancelled; bib 27 was printed" on its own, without
+    a join and after an erasure. The number and the fact — never the name, which the row id
+    already reaches and an erased row must not keep (`AGENTS.md` §12.12).
+  */
+  const printedBib =
+    current.bibPrintedAt !== null && current.bibNumber !== null
+      ? { bibNumber: current.bibNumber, bibPrinted: true as const }
+      : {};
+
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     participantId: current.participantId,
     action: "registration.cancelled_by_staff",
     entityType: "registration",
     entityId: registrationId,
-    metadata: { from: current.status, reason: reason.trim().slice(0, 500) },
+    metadata: { from: current.status, reason: reason.trim().slice(0, 500), ...printedBib },
     now,
   });
 
@@ -751,6 +765,21 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     await unregister(db, event, current.id, "ADMIN", now);
   }
 
+  /*
+    The number goes with the row, and this row is where it survives (§305).
+
+    `pickBibNumber` reads the numbers live rows wear, so erasing a registration frees its
+    settled number for the next runner — which is right for a number nobody printed and is the
+    one way a printed 27 can end up on two chests: the void bib in the pile and a fresh one.
+    Until the draw also reads retired numbers (a decision recorded in §305 as still owed), the
+    event, the number and whether it was on paper are written here so the fact outlives the
+    deletion, as the deletion itself does. An event id and a number are not who somebody was.
+  */
+  const worn =
+    current.bibNumber !== null
+      ? { eventId: current.eventId, bibNumber: current.bibNumber, bibPrinted: current.bibPrintedAt !== null }
+      : {};
+
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
     participantId: current.participantId,
@@ -759,7 +788,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     entityId: current.id,
     // The status it was in, and why — not who it was. The row exists to show that a deletion
     // happened and who authorised it, not to keep a copy of what was deleted.
-    metadata: { from: current.status, reason: reason.trim().slice(0, 500) },
+    metadata: { from: current.status, reason: reason.trim().slice(0, 500), ...worn },
     now,
   });
 

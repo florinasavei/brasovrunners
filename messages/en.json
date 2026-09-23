@@ -448,7 +448,10 @@
       "bibPrintedOn": "Bib printed on {date}",
       "bibMarkPrinted": "Mark the bib as printed",
       "bibMarkUnprinted": "The bib is not printed",
-      "bibsPrintedCount": "Bibs: {printed} of {total} printed",
+      "bibsPrintedCount": "Bibs: {printed} of {total} printed — confirmed registrations only",
+      "bibsVoid": "Printed numbers belonging to cancelled or expired registrations — pull them out of the pile ({count}):",
+      "bibsVoidLink": "Number {number}: {name}, {status} on {date}",
+      "bibVoid": "Bib {number} printed — pull it from the pile",
       "bibsDownloadUnprinted": "Download the unprinted bibs ({count})",
       "bibsDownloadAll": "Download every bib ({count})",
       "bibsMarkPrinted": "Mark these {count} as printed",
@@ -533,6 +536,7 @@
       "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
       "cancelRegistrationTitle": "Cancel this registration?",
       "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled.",
+      "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
       "repeatTitle": "Create the editions?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
@@ -1639,7 +1643,8 @@
         "No email arrived, or they cannot find the QR: search by name. If it says “pending”, give them the paper declaration to sign, press “Confirm here”, then “Here”.",
         "Never registered at all: “Add somebody” — name and email; the “is at the desk” tick is already set. They sign the paper declaration, then “Here”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
         "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
-        "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”."
+        "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”.",
+        "A red box saying “Registration cancelled” or “expired”? The person no longer has a place, even with the email in hand: no number, no check-in. If it says the number was printed, pull that bib out of the pile — numbers are never reused."
       ],
       "noEvents": "No event with local registration in this period.",
       "event": "Event",
@@ -1689,7 +1694,10 @@
       "guardian": "Minor — parent/guardian: {name}",
       "confirmOnPaper": "Confirm on paper",
       "showBib": "Show the race number (BID)",
-      "bibAlt": "Race number (BID) {number}"
+      "bibAlt": "Race number (BID) {number}",
+      "voidCancelled": "Registration cancelled on {date}",
+      "voidExpired": "Registration expired on {date}",
+      "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused."
     },
     "emails": {
       "title": "The emails participants receive",

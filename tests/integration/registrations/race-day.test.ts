@@ -373,6 +373,33 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
+   * §305 — a cancelled runner is found by their number, and by nothing else.
+   *
+   * A settled number is never reused (§173), so "who is 27" has one answer at the event after
+   * 27 cancelled — and a volunteer holding the bib somebody just handed over must get that
+   * answer, in red, rather than "nobody matches". By name and in the whole-event list a
+   * cancelled row stays out, as BR-REQ-037-08 criterion 4 says.
+   */
+  it("finds a cancelled runner by their settled number, so the desk can say why nothing is handed out", async () => {
+    const event = await createInternalEvent(10);
+    const ana = await enter(event, "ana@example.org", { fastTrack: true });
+    // The window is open, so the number is provisional; typing one by hand settles it (§230).
+    await setBibNumberByStaff(db, admin, ana.registration.id, 27, NOW);
+    await cancelRegistrationByStaff(db, admin, ana.registration.id, "accidentare", new Date(NOW.getTime() + 60_000));
+
+    const byNumber = await listDeskRegistrations(db, { eventId: event.id, query: "27", locale: "ro" });
+    expect(byNumber.map((row) => row.id)).toEqual([ana.registration.id]);
+    // What the red line is built from: the state, its date, the number, and whether it is on paper.
+    expect(byNumber[0]).toMatchObject({ status: "CANCELLED", bibNumber: 27, bibPrintedAt: null });
+    expect(byNumber[0].cancelledAt).toEqual(new Date(NOW.getTime() + 60_000));
+
+    expect(await listDeskRegistrations(db, { eventId: event.id, query: "ana@", locale: "ro" })).toEqual([]);
+    expect(await listDeskRegistrations(db, { eventId: event.id, query: "", locale: "ro" })).toEqual([]);
+    // The scanned code finds the row whatever its state — it always did.
+    expect((await findRegistrationByCheckinCode(db, ana.registration.checkinCode as string, "ro"))?.status).toBe("CANCELLED");
+  });
+
+  /**
    * §173 — numbers run in order from the event's own start, and a confirmed runner's number is
    * settled. §94's random draw is gone: sequential is how every race does it, it is a list a
    * volunteer can check off, and the band a number falls in says which start line it belongs on.

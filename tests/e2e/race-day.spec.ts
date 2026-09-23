@@ -103,4 +103,100 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
+
+  /**
+   * §305 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
+   * surprise. The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost
+   * deja printat!"
+   *
+   * One Administrator, one story: a walk-in is confirmed at the desk, given a settled number by
+   * hand, marked printed from the list, then cancelled — and the cancel dialog names the printed
+   * number before the press. Scanned afterwards, the desk answers in red with no button; the
+   * registration's own page wears the chip; the list's bibs panel names the number as a link.
+   */
+  test("a cancelled registration's printed bib is void: the desk says so in red, the page and the list name it", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+
+    // A walk-in at the desk, confirmed on the spot (§67).
+    await page.goto("/ro/admin/checkin");
+    const option = page.locator('select[name="eventId"] option', { hasText: FEATURED.title });
+    const eventId = (await option.getAttribute("value")) as string;
+    await page.selectOption('select[name="eventId"]', eventId);
+    await page.getByRole("button", { name: "Caută" }).click();
+
+    const suffix = `${test.info().project.name}-void-${Date.now().toString(36)}`;
+    const name = `Anulat ${suffix}`;
+    await page.getByRole("link", { name: "Adaugă pe cineva" }).click();
+    await hydrated(page);
+    await page.locator('[name="firstName"]').fill("Anulat");
+    await page.locator('[name="lastName"]').fill(suffix);
+    await page.locator('[name="email"]').fill(`void-${suffix}@test.invalid`);
+    await page.getByRole("checkbox", { name: /a cerut/ }).check();
+    await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+    await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
+    await hydrated(page);
+    await page.getByRole("textbox", { name: "Nume, număr sau cod" }).fill(suffix);
+    await page.getByRole("button", { name: "Caută" }).click();
+    await hydrated(page);
+    const deskRow = page.getByTestId("desk-row").filter({ hasText: suffix });
+    await expect(deskRow).toHaveCount(1);
+    const code = (await deskRow.locator("span, p").filter({ hasText: /^[A-HJ-NP-Z2-9]{10}$/ }).first().textContent()) as string;
+
+    // The registration's own page. The window is open, so the number is provisional (§214);
+    // saving it by hand settles it (§230) — which is what makes it printable.
+    await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
+    await hydrated(page);
+    await page.getByRole("link", { name: `Deschide înscrierea lui ${name}` }).click();
+    await expect(page).toHaveURL(/\/admin\/registrations\/[0-9a-f-]{36}/);
+    const detailUrl = page.url();
+    await page.locator("summary", { hasText: "Schimbă numărul" }).click();
+    await page.getByRole("button", { name: "Salvează nr." }).click();
+    await page.waitForURL(/saved=bibSet/);
+    const settled = (await page.getByText(/Numărul de concurs este \d+/).textContent()) as string;
+    const bib = (settled.match(/Numărul de concurs este (\d+)/) as RegExpMatchArray)[1];
+
+    // "This bib is on paper" from the list's ⋮ menu (§264).
+    await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
+    await hydrated(page);
+    await page.getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
+    await page.getByRole("menuitem", { name: "Marchează BID-ul ca printat" }).click();
+    await page.waitForURL(/saved=bibsPrinted/);
+
+    // Cancel, and be told about the paper before the press.
+    await page.goto(detailUrl);
+    await hydrated(page);
+    await page.locator('[name="reason"]').fill("nu mai vine");
+    await page.getByRole("button", { name: "Anulează înscrierea" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(`Numărul ${bib} e deja tipărit`);
+    await dialog.getByRole("button", { name: "Anulează înscrierea" }).click();
+    await page.waitForURL(/saved=registrationCancelled/);
+    await expect(page.getByTestId("void-bib")).toContainText(`BID ${bib} tipărit`);
+    await expect(page.getByText(/Anulată:/)).toContainText(`BID ${bib} tipărit`);
+
+    // The desk, scanned: red first, and nothing to press.
+    await page.goto(`/ro/admin/checkin/${code}`);
+    const scanned = page.getByTestId("desk-row");
+    await expect(scanned).toContainText(suffix);
+    const red = page.getByTestId("desk-void");
+    await expect(red).toContainText("Înscriere anulată pe");
+    await expect(red).toContainText(`Numărul ${bib} a fost tipărit — nu se dă`);
+    await expect(scanned.getByRole("button", { name: "Marchează prezent" })).toHaveCount(0);
+    await expect(scanned.getByRole("button", { name: "Confirmă pe hârtie" })).toHaveCount(0);
+    await expect(scanned.getByRole("spinbutton")).toHaveCount(0);
+
+    // And by its number, typed at the desk: the same row, the same red line — never "nobody".
+    await page.goto(`/ro/admin/checkin?eventId=${eventId}&q=${bib}`);
+    await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toHaveCount(1);
+    await expect(page.getByTestId("desk-void")).toContainText("Înscriere anulată pe");
+
+    // The list's bibs panel names the number as a link to the row.
+    await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
+    const voidLine = page.getByTestId("registrations-void-bibs");
+    await expect(voidLine).toContainText("de scos din teanc");
+    await voidLine.getByRole("link", { name: bib, exact: true }).click();
+    await expect(page).toHaveURL(detailUrl.replace(/\?.*$/, ""));
+  });
 });

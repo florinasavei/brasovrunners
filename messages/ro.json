@@ -448,7 +448,10 @@
       "bibPrintedOn": "BID printat pe {date}",
       "bibMarkPrinted": "Marchează BID-ul ca printat",
       "bibMarkUnprinted": "BID-ul nu e printat",
-      "bibsPrintedCount": "BID-uri: {printed} din {total} printate",
+      "bibsPrintedCount": "BID-uri: {printed} din {total} printate — doar înscrierile confirmate",
+      "bibsVoid": "Numere tipărite ale unor înscrieri anulate sau expirate — de scos din teanc ({count}):",
+      "bibsVoidLink": "Numărul {number}: {name}, {status} pe {date}",
+      "bibVoid": "BID {number} tipărit — de retras",
       "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
       "bibsDownloadAll": "Descarcă toate BID-urile ({count})",
       "bibsMarkPrinted": "Marchează cele {count} ca printate",
@@ -533,6 +536,7 @@
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
       "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
+      "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
@@ -1639,7 +1643,8 @@
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă apare „în așteptare”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă aici”, apoi „Prezent”.",
         "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email, bifa „este la masă” e deja pusă. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
-        "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”."
+        "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
+        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
       ],
       "noEvents": "Niciun eveniment cu înscriere locală în perioada asta.",
       "event": "Eveniment",
@@ -1689,7 +1694,10 @@
       "guardian": "Minor — părinte/tutore: {name}",
       "confirmOnPaper": "Confirmă pe hârtie",
       "showBib": "Vezi numărul de concurs (BID)",
-      "bibAlt": "Numărul de concurs (BID) {number}"
+      "bibAlt": "Numărul de concurs (BID) {number}",
+      "voidCancelled": "Înscriere anulată pe {date}",
+      "voidExpired": "Înscriere expirată pe {date}",
+      "voidPrinted": "Numărul {number} a fost tipărit — nu se dă. Numerele nu se refolosesc."
     },
     "emails": {
       "title": "Emailurile trimise participanților",

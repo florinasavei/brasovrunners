@@ -134,6 +134,31 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
     }
   });
 
+  /**
+   * §305 — the printing mark is a CONFIRMED row's verb. A cancelled registration keeps its
+   * settled number and its printed mark — that is what makes the bib void and worth listing —
+   * but `setBibPrinted` refuses any row the sheet would not print, so offering the mark on it
+   * was §289's lesson again: a menu item whose service answers NOT_FOUND.
+   */
+  it("offers the printing mark only on a confirmed row with a settled number", () => {
+    const settled = { settled: true, printed: false };
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: settled })).toContain("markBibPrinted");
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: true, printed: true } })).toContain(
+      "unmarkBibPrinted",
+    );
+    for (const status of ALL.filter((s) => s !== "CONFIRMED")) {
+      for (const printed of [false, true]) {
+        const verbs = rowVerbsFor(status, "ADMIN", { checkedIn: false, bib: { settled: true, printed } });
+        expect(verbs, `${status}/${printed}`).not.toContain("markBibPrinted");
+        expect(verbs, `${status}/${printed}`).not.toContain("unmarkBibPrinted");
+      }
+    }
+    // A provisional number is printed nowhere (§214): nothing to mark even when confirmed.
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } })).not.toContain(
+      "markBibPrinted",
+    );
+  });
+
   it("always offers the way into the registration itself", () => {
     for (const status of ALL) {
       expect(rowVerbsFor(status, "ADMIN", { checkedIn: false }), status).toContain("open");

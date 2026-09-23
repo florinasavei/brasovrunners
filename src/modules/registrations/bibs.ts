@@ -9,7 +9,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
+import { holdsAPlace, PLACE_HOLDING_STATUSES, TERMINAL_STATUSES } from "./domain/state-machine";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -453,7 +453,15 @@ export type BibRow = { id: string; bibNumber: number; registeredName: string };
  */
 export type BibScope = { from?: number; to?: number; only?: "unprinted" };
 
-/** The scope as one `WHERE`, so the list, the count and the marking cannot drift apart. */
+/**
+ * The scope as one `WHERE`, so the list, the count and the marking cannot drift apart.
+ *
+ * `CONFIRMED` is load-bearing and not a default: a cancelled registration keeps its settled
+ * number (§173) and may keep a printed mark, and neither a range reprint nor the unprinted batch
+ * may ever put that number on paper again — the paper that exists is void (`voidBibsFor`), and
+ * a second copy of it would be two bibs with one number in one pile.
+ * `void-bibs.test.ts` asks for 1–50 around a cancelled, printed 27 and expects 49.
+ */
 const bibScopeWhere = (eventId: string, scope: BibScope) =>
   and(
     eq(registrations.eventId, eventId),
@@ -501,6 +509,79 @@ export async function countBibs<T extends Record<string, unknown>>(
     .from(registrations)
     .where(bibScopeWhere(eventId, {}));
   return { total: row?.total ?? 0, unprinted: row?.unprinted ?? 0 };
+}
+
+/** One printed bib nobody is entitled to wear any more (`DECISIONS.md` §305). */
+export type VoidBib = {
+  id: string;
+  bibNumber: number;
+  registeredName: string;
+  status: "CANCELLED" | "EXPIRED";
+  /** When the registration left the live states: `cancelled_at` or `expired_at`, whichever the status names. */
+  voidedAt: Date;
+};
+
+/**
+ * The printed bibs of this event that belong to nobody any more (`DECISIONS.md` §305; the
+ * owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost deja
+ * printat!").
+ *
+ * A settled number is never reused (§173) and is never renumbered, so a registration that is
+ * cancelled — by the participant's link, by an Administrator, or by a restart that lapses — after
+ * its bib was printed leaves the number retired, which is right, and a piece of paper in the
+ * club's pile with a valid-looking number on it, which is the problem. The person may still turn
+ * up with the email. This is the one reader of that fact, and everything that shows it — the
+ * registrations list's bibs panel, the desk's red line, the registration's own chip — reads the
+ * same columns it does: a **real** registration, a **settled** number, a **printed** mark, and a
+ * **terminal** status.
+ *
+ * Terminal, not merely "not CONFIRMED": a cancelled entry that restarts keeps its number and its
+ * printed mark (`submitRegistration` carries neither away), and while it is pending again the bib
+ * is a bib that will be right the moment they sign — not paper to pull. Once they lapse it is
+ * void again, which is why `EXPIRED` is here although nothing goes from `CONFIRMED` to it
+ * directly.
+ *
+ * The date is the row's own: `cancelled_at` for a cancellation and `expired_at` for a lapse,
+ * each written with its status in the one guarded transition (`registrations.ts` says why the two
+ * pairs are checked). Pure SQL on `registrations_event_status_idx`, lowest number first — the
+ * order somebody pulling bibs out of a numbered pile reads in. A test registration never wears a
+ * number and is excluded here as everywhere the club counts (`AGENTS.md` §12.6).
+ */
+export async function voidBibsFor<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<VoidBib[]> {
+  const rows = await db
+    .select({
+      id: registrations.id,
+      bibNumber: registrations.bibNumber,
+      registeredName: registrations.registeredName,
+      status: registrations.status,
+      cancelledAt: registrations.cancelledAt,
+      expiredAt: registrations.expiredAt,
+      updatedAt: registrations.updatedAt,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.kind, "REAL"),
+        inArray(registrations.status, [...TERMINAL_STATUSES]),
+        isNotNull(registrations.bibNumber),
+        isNotNull(registrations.bibPrintedAt),
+      ),
+    )
+    .orderBy(asc(registrations.bibNumber));
+
+  return rows.map((row) => ({
+    id: row.id,
+    bibNumber: row.bibNumber as number,
+    registeredName: row.registeredName,
+    status: row.status as "CANCELLED" | "EXPIRED",
+    // The pair the status names, then `updated_at` for a row written before the pairs existed —
+    // which the CHECKs make impossible for anything this code has written.
+    voidedAt: (row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt) ?? row.updatedAt,
+  }));
 }
 
 /**
