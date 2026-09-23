@@ -2055,7 +2055,8 @@
             "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
             "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
             "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate.",
-            "Minori: un participant sub 18 ani este înscris de părinte/tutore, care își scrie numele în secțiunea „Înscriu un minor” a formularului (obligatorie sub 18 ani), semnează declarația cu actul lui de identitate și ridică kitul; la masă și în export apare „Minor — părinte/tutore: <nume>”."
+            "Minori: un participant sub 18 ani este înscris de părinte/tutore, care își scrie numele în secțiunea „Înscriu un minor” a formularului (obligatorie sub 18 ani), semnează declarația cu actul lui de identitate și ridică kitul; la masă și în export apare „Minor — părinte/tutore: <nume>”.",
+            "Vârsta minimă: fiecare eveniment o are pe a lui, în panoul „Înscrieri” al evenimentului — „Vârsta minimă (ani)”, 14 dacă nu o schimbi, 0 pentru fără. Se socotește în ziua evenimentului, la orice ușă (formularul, masa, o înscriere introdusă de tine, datele de test); formularul, pagina evenimentului și calendarul datei nașterii spun numărul evenimentului, iar formularul echipei îl arată lângă numele fiecărui eveniment („16+”)."
           ],
           "roles": [
             "ADMIN",

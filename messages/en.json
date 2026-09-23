@@ -2055,7 +2055,8 @@
             "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
             "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
             "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document.",
-            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”."
+            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”.",
+            "Minimum age: each event has its own, in the event's “Registration” panel — “Minimum age (years)”, 14 unless you change it, 0 for none. It is counted on the day of the event, at every door (the form, the desk, a registration you enter, test data); the form, the event page and the date picker say the event's number, and the staff form shows it beside each event's name (“16+”)."
           ],
           "roles": [
             "ADMIN",

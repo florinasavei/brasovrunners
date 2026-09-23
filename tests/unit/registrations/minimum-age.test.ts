@@ -2,6 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import {
   ageOn,
   ageRuleVariant,
@@ -283,5 +284,34 @@ describe("§NNN every sentence about the minimum age says the event's number, th
     expect(t("errors.tooYoung", { age: yearsPhrase(16, "ro") })).toBe(
       "Vârsta minimă de participare la acest eveniment este 16 ani împliniți în ziua cursei.",
     );
+    expect(t("ageRule.guardianOnly")).toBe("Sub 18 ani, înscrierea o face un părinte.");
   });
+
+  it("gives the volunteer the chosen event's number in the backoffice's sentence, in both languages", () => {
+    for (const [locale, messages] of [["ro", ro], ["en", en]] as const) {
+      const admin = createTranslator({ locale, messages, namespace: "Admin" });
+      const age = yearsPhrase(21, locale);
+      expect(admin("errors.UNDER_MINIMUM_AGE", { age }), locale).toContain(age);
+    }
+  });
+});
+
+describe("§NNN the platform's legal templates leave the number to the event", () => {
+  /*
+    The terms and the privacy notice used to say "14". The number is each event's now, so the
+    templates say that a minimum is set per event and shown on its page — and no number of their
+    own, which would be untrue of every event that set another. The texts in effect change only
+    when the club approves a new version (§29, §95).
+  */
+  for (const key of ["TERMS", "PRIVACY_NOTICE"] as const) {
+    for (const locale of ["ro", "en"] as const) {
+      it(`${key} ${locale}: a minimum per event, on the event's page, no number but the guardian's eighteen`, () => {
+        const paragraphs = LEGAL_TEMPLATES[key][locale].body.sections.flatMap((section) => section.paragraphs);
+        const sentence = paragraphs.find((paragraph) => /vârst[aă] minimă|minimum age/i.test(paragraph));
+        expect(sentence, "the template still states the rule").toBeDefined();
+        expect(sentence).toMatch(locale === "ro" ? /pagina/ : /page/);
+        expect(sentence!.replace(/\b18\b/g, "")).not.toMatch(/\d/);
+      });
+    }
+  }
 });
