@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.50-2026-09-23
+
+- **The programme reads as one thing in the event editor:** the timed rows in "Când și unde" are the programme, and the per-language rich text is now titled "Note sub program" / "Notes under the programme", with a hint under each saying where the other lives; nothing moved or was removed. §294.
+- **The programme follows the event's date.** In the event editor, moving "Începutul evenimentului" moves every programme row that has a date by the same number of days — a two-day programme stays two days — rows with no date stay as they are, and a new row opens on the event's day; the date arithmetic is a pure, unit-tested function and the form posts what the boxes hold. §295.
+- **Every fold in the backoffice is a box.** The collapsible sections on the backoffice screens — the event editor's long texts, SEO fields, type and repeat help, series scope and bib design; the email previews; the guide; the desk's how-to and bib picture; the steps under each task; the series dates on the events list; the number change, erase and batch-cancel panels on registrations; and every `Panel` — are drawn by one shared object: a hairline box with a shaded 44-pixel summary row that stays a box when open, the same in the dark scheme. The erase panel keeps its red and the batch cancel its amber. Public pages are unchanged. §296.
 ## BR-V1.49-2026-09-22
 
 - **A hidden copy (Bcc) of the contact form’s messages and of every participant email.** Both are set on `/admin/emails` by the Administrator and read by whoever reads the page: stamped in the outbox row at enqueue time so a later edit cannot redirect a queued message, never on a test registration's message, counted in the allowance forecast (five more per registration per address), with a warning above the box that the copy carries the participant's own links and QR. §293.
