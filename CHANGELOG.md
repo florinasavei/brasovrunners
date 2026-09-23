@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.57-2026-09-23
+
+- **The Neon plan is a setting, and `/devs` and the cost table read the database's month against it.** An Administrator states Free or Launch on `/admin/tasks` → Costuri (audited, one row per environment, Free when unset); on Launch the pages show no 100-CU-hour denominator, no 512 MB ceiling and no red — the hours as an estimated charge at $0.106/CU-hour, the storage at $0.35/GB-month, the period's end and the awake hours — and the Neon cost row becomes a usage estimate at this month's pace beside its daily rate, marked an estimate rather than an invoice; on Free everything reads exactly as before. Every rate lives in one dated catalogue, and `/devs` links to the panel for whoever may open it. The December review is now one select, not a deployment. §306.
 ## BR-V1.56-2026-09-23
 
 - **Two lists say what they mean.** Every card on the events listing now ends with a button, „Descrierea completă a evenimentului", to the event's page — the title was the only link, and a title does not say a page exists behind it. And on the backoffice list, a repeating event says under its cadence that it renews itself — „platforma creează datele mereu 8 săptămâni înainte, la nesfârșit" or „până pe …" — because the date span beside it was only the eight weeks made so far and read like an end. §305.
