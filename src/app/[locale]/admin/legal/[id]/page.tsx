@@ -171,6 +171,8 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
               en: translationValues(document.translations, "en"),
             }}
             submitLabel={t("legal.saveDraft")}
+            pendingLabel={t("editor.saving")}
+            incompleteHint={t("forms.incompleteFirst")}
           />
 
           <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderColor: "warning.light" }}>

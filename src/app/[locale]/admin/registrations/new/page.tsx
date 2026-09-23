@@ -1,12 +1,16 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import ActionForm from "@/shared/forms/ActionForm";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import RecallField from "@/shared/forms/recall";
+import { staffRegistrationConstraints } from "@/modules/registrations/constraints";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -80,12 +84,30 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
       {events.length === 0 ? (
         <Alert severity="warning">{t("registrations.noEventsAcceptingRegistrations")}</Alert>
       ) : (
-        <form action={createRegistrationAction}>
+        // A refusal — a duplicate, a missing relay tick — comes back with every box filled (§315).
+        <ActionForm
+          action={createRegistrationAction}
+          messages={await refusalMessages({
+            eventId: t("registrations.event"),
+            firstName: rt("firstName"),
+            lastName: rt("lastName"),
+            birthDate: rt("birthDate"),
+            city: rt("city"),
+            phone: rt("phone"),
+            emergencyContactName: rt("emergencyContactName"),
+            emergencyContactPhone: rt("emergencyContactPhone"),
+            clubName: rt("clubName"),
+            email: t("registrations.participantEmail"),
+            participantLocale: t("registrations.participantLocale"),
+            relayedByParticipantRequest: t("registrations.relayConfirmation"),
+          })}
+          data-testid="registration-new-form"
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           {fromDesk && <input type="hidden" name="back" value="desk" />}
 
           <Stack spacing={2}>
-            <TextField
+            <RecallField
               select
               name="eventId"
               label={t("registrations.event")}
@@ -103,40 +125,39 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                   })}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
 
-            <TextField name="firstName" label={rt("firstName")} required />
-          <TextField name="lastName" label={rt("lastName")} required />
+            <RecallField name="firstName" label={rt("firstName")} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
+          <RecallField name="lastName" label={rt("lastName")} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
 
           {/*
             BR-REQ-031-04 criterion 5. Everything below the name is optional here and
             required on the public form: an organizer is writing down a telephone call, and
             a registration recorded with gaps beats one refused for them.
           */}
-          {env.FEATURE_DISPLAY_NAME && <TextField name="displayName" label={rt("displayName")} />}
-          <TextField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
-          <TextField name="city" label={rt("city")} />
+          {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
+          <RecallField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
+          <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />
-          <TextField name="emergencyContactName" label={rt("emergencyContactName")} />
+          <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
             label={rt("emergencyContactPhone")}
             countryLabel={rt("phoneCountry")}
             locale={locale}
           />
-          <TextField name="clubName" label={rt("clubName")} />
+          <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. */}
           <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared")}</CheckboxField>
-            <TextField
+            <RecallField
               name="email"
-              type="email"
               label={t("registrations.participantEmail")}
               helperText={t("registrations.participantEmailHelp")}
-              required
+              {...textFieldConstraints(staffRegistrationConstraints("email"))}
             />
 
-            <TextField
+            <RecallField
               select
               name="participantLocale"
               label={t("registrations.participantLocale")}
@@ -149,7 +170,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                   {t(`registrations.locale.${value}`)}
                 </MenuItem>
               ))}
-            </TextField>
+            </RecallField>
 
             <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
 
@@ -175,12 +196,15 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             </Box>
 
             <Box>
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-                {t("registrations.create")}
-              </Button>
+              <SubmitButton
+                label={t("registrations.create")}
+                pendingLabel={t("editor.saving")}
+                incompleteHintNamed={t("forms.incompleteFirst")}
+                size="medium"
+              />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
       )}
     </Stack>
   );

@@ -5,9 +5,11 @@ import MuiLink from "@mui/material/Link";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { RecallDetails } from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -136,6 +138,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
+  // The three forms that carry a typed value answer a refusal with the value still in its box (§315).
+  const refusal = await refusalMessages({
+    registeredName: tr("registrations.participantName"),
+    reason: tr("registrations.cancelReason"),
+    confirm: tr("registrations.deleteConfirm"),
+  });
+  // The erase's own sentence: its "I understand" tick is asked again, never kept (§315).
+  const eraseRefusal = { ...refusal, kept: (await refusalMessages({}, { confirmation: true })).kept };
+  // The hand-set number's (§315): a CONFLICT here is a number somebody else wears, so the
+  // sentence is "correct it and send again", not a colleague's save to reload for.
+  const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });
+  bibRefusal.keptConflict = bibRefusal.kept;
 
   return (
     <Stack spacing={3}>
@@ -297,15 +311,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       ? tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })
                       : tr("registrations.bibNone")}
                   </Typography>
-                  {/* The box spans the section, whatever the Stack does with its other children. */}
-                  <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, alignSelf: "stretch" }}>
+                  {/* The box spans the section, whatever the Stack does with its other children.
+                      A refused number comes back in its box with the fold open (§315). */}
+                  <Box sx={{ alignSelf: "stretch" }}>
+                  <ActionForm action={setBibNumberAction} messages={bibRefusal} scope="bib" data-testid="set-bib-form">
+                  <RecallDetails sx={BOXED_DISCLOSURE_SX}>
                     <Typography component="summary" variant="body2" color="primary">
                       {tr("registrations.bibChange")}
                     </Typography>
-                    <form action={setBibNumberAction}>
+                    <Box>
                       {deskHidden}
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                        <TextField
+                        <RecallField
                           name="bibNumber"
                           type="number"
                           label={tr("registrations.bibNumber")}
@@ -321,7 +338,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                         {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
                       </Typography>
-                    </form>
+                    </Box>
+                  </RecallDetails>
+                  </ActionForm>
                   </Box>
                 </Stack>
               ) : (
@@ -415,23 +434,24 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
           {tr("registrations.correctName")}
         </Typography>
-        <form action={correctRegisteredNameAction}>
+        <ActionForm action={correctRegisteredNameAction} messages={refusal} scope="rename" data-testid="correct-name-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="registrationId" value={registration.id} />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-            <TextField
+            <RecallField
               name="registeredName"
               label={tr("registrations.participantName")}
               defaultValue={registration.registeredName}
               size="small"
               required
+              slotProps={{ htmlInput: { maxLength: 200 } }}
               sx={{ flex: 1 }}
             />
             <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
               {tr("registrations.saveName")}
             </Button>
           </Stack>
-        </form>
+        </ActionForm>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {tr("registrations.correctNameHelp")}
         </Typography>
@@ -449,15 +469,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.cancelTitle")}
           </Typography>
-          <form action={cancelRegistrationAction}>
+          <ActionForm action={cancelRegistrationAction} messages={refusal} scope="cancel" data-testid="cancel-registration-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
-              <TextField
+              <RecallField
                 name="reason"
                 label={tr("registrations.cancelReason")}
                 size="small"
                 required
+                slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ flex: 1 }}
               />
               <ConfirmSubmitButton
@@ -474,7 +495,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 color="error"
               />
             </Stack>
-          </form>
+          </ActionForm>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>
@@ -495,19 +516,21 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       */}
       {canManageRegistrations(actor.role) && (
         <Box component="section">
-          {/* The shared box, red: the one fold on the screen that destroys, and its border says so. */}
-          <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
+          {/* The shared box, red: the one fold on the screen that destroys, and its border says so.
+              A refusal keeps the reason and asks for the "I understand" tick again (§315); the
+              form holds the fold, so the fold opens with the refusal rather than hiding it. */}
+          <ActionForm action={deleteRegistrationAction} messages={eraseRefusal} scope="erase" data-testid="erase-registration-form">
+          <RecallDetails sx={{ ...BOXED_DISCLOSURE_SX, mt: 3, borderColor: "error.light" }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
             </Typography>
-            <form action={deleteRegistrationAction}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="registrationId" value={registration.id} />
               <Stack spacing={2} sx={{ pb: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>
-                <TextField name="reason" label={tr("registrations.deleteReason")} required />
+                <RecallField name="reason" label={tr("registrations.deleteReason")} required slotProps={{ htmlInput: { maxLength: 500 } }} />
                 <CheckboxField name="confirm" required>
                   {tr("registrations.deleteConfirm")}
                 </CheckboxField>
@@ -517,8 +540,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </Button>
                 </Box>
               </Stack>
-            </form>
-          </Box>
+          </RecallDetails>
+          </ActionForm>
         </Box>
       )}
 

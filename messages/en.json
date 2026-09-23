@@ -848,7 +848,15 @@
         "teal": "Teal",
         "black": "Black"
       },
-      "confirmationWindowTitle": "Participation confirmation"
+      "confirmationWindowTitle": "Participation confirmation",
+      "createAndPublish": "Create and publish",
+      "publishing": "Publishing…",
+      "notReadyToPublish": "Cannot publish yet — missing: {field}",
+      "createdPublished": "The event was created and published. It is on the site, in both languages.",
+      "createdPublishedWithSeries": "The event and {created} dates were created and published.",
+      "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
+      "createdNotPublishedRole": "The event was created as a draft. Publishing is the Administrator's — submit it for review.",
+      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -921,7 +929,8 @@
       "noAccountHelp": "“No sign-in account”: the person is on the list, but Zitadel has no account with their address, so they cannot sign in — usually they were added while the invitation key could not create accounts. The fix: ⋮ → “Revoke access”, then “Add” again with the same address — this time the account is created and Zitadel sends them the password link.",
       "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
-      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table."
+      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
+      "inviting": "Adding…"
     },
     "queue": {
       "title": "The registration queue",
@@ -2069,6 +2078,14 @@
       "summary": "Who has signed up",
       "outbox": "Email waiting to go out",
       "filters": "Search and filter"
+    },
+    "forms": {
+      "fieldsIntro": "The fields to check:",
+      "fieldError": "Check this field.",
+      "kept": "What you typed is still in the boxes; correct it and send again.",
+      "keptConflict": "What you typed is still in the boxes — copy what you need, then reload the page.",
+      "keptExceptConfirmation": "What you typed is still in the boxes, except the confirmation, which is asked again.",
+      "incompleteFirst": "Fill in first: {field}"
     }
   },
   "NotFound": {

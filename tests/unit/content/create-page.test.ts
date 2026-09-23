@@ -78,7 +78,8 @@ describe("the create page is built from the editor's own pieces", () => {
 
   it("posts no row id or version for a blank language, and the reader tolerates their absence", () => {
     expect(TRANSLATION_FORM).toContain('{row && <input type="hidden" name={name("translationId")}');
-    expect(TRANSLATION_FORM).toContain('{row && <input type="hidden" name={name("expectedVersion")}');
+    // The version is recalled after a refusal (`RecallHidden`, §315), and still only for a row.
+    expect(TRANSLATION_FORM).toContain('{row && <RecallHidden name={name("expectedVersion")}');
     expect(ACTIONS).toContain('if (translationId === "") return undefined;');
   });
 });

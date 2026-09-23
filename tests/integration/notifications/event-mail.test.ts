@@ -242,6 +242,8 @@ describe("§81 the reminder and §82 after the race", () => {
     expect(isDomainError(await sendEventThanks(db, admin, { eventId: future.id }, NOW).catch((e: unknown) => e))).toBe(true);
     const badUrl = await sendEventThanks(db, admin, { eventId: past.id, url: "http://x" }, NOW).catch((e: unknown) => e);
     expect(isDomainError(badUrl) && badUrl.code).toBe("VALIDATION_ERROR");
+    // Named, so the form's summary links to the link box and keeps what was typed in it (§315).
+    expect(isDomainError(badUrl) && badUrl.fields).toEqual(["url"]);
     const [vol] = await db.insert(staffUsers).values({ email: "vol@dev.test", displayName: "Vol", role: "CONTRIBUTOR" }).returning();
     const forbidden = await sendEventThanks(db, { id: vol.id, role: "CONTRIBUTOR" }, { eventId: past.id }, NOW).catch((e: unknown) => e);
     expect(isDomainError(forbidden) && forbidden.code).toBe("FORBIDDEN");

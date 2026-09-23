@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
@@ -20,6 +20,13 @@ type Props = {
    * answer a merely-disabled button could never give. See the notes below.
    */
   incompleteHint?: string;
+  /**
+   * The same sentence, naming the first thing missing (`DECISIONS.md` §315; the owner: "in
+   * general formularele trebuie sa fie mai smart"): `{field}` is replaced with the label of the
+   * first control the browser would refuse, read from its own `<label>`. Where a control has
+   * no label to read, `incompleteHint` is what is said. Either alone dims the button.
+   */
+  incompleteHintNamed?: string;
   /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
   slowHint?: string;
   color?: "primary" | "error" | "warning" | "inherit";
@@ -98,6 +105,7 @@ export default function SubmitButton({
   label,
   pendingLabel,
   incompleteHint,
+  incompleteHintNamed,
   awaitsBotCheck,
   botCheckHint,
   slowHint,
@@ -113,15 +121,32 @@ export default function SubmitButton({
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
   const [complete, setComplete] = useState(true);
+  // The label of the first control the browser would refuse, for the named sentence (§315).
+  const [firstMissing, setFirstMissing] = useState<string | null>(null);
+  const watches = Boolean(incompleteHint || incompleteHintNamed);
 
   useEffect(() => {
-    if (!incompleteHint) return;
+    if (!watches) return;
     const form = ref.current?.form;
     if (!form) return;
 
     const measure = () => {
-      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState }>;
-      setComplete(controls.every((control) => !control.validity || control.validity.valid));
+      const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState; labels?: NodeListOf<HTMLLabelElement> | null }>;
+      const invalid = controls.find((control) => control.validity && !control.validity.valid);
+      setComplete(invalid === undefined);
+      // A tick's label is a sentence, not the name of a box — "Fill in first: I understand that…"
+      // reads badly — so a tick is named only where the button has no sentence of its own for it
+      // (the live-edit acknowledgement's `incompleteHint`).
+      const tick = invalid instanceof HTMLInputElement && invalid.type === "checkbox";
+      if (tick && incompleteHint) {
+        setFirstMissing(null);
+        return;
+      }
+      // MUI marks a required label with " *"; the sentence names the box, not the asterisk. A box
+      // inside a language tab says which language, or "Titlu" would not say which of two titles.
+      const text = invalid?.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || invalid?.getAttribute("aria-label");
+      const language = invalid?.closest("[data-language]")?.getAttribute("data-language");
+      setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
     form.addEventListener("input", measure);
@@ -130,7 +155,12 @@ export default function SubmitButton({
       form.removeEventListener("input", measure);
       form.removeEventListener("change", measure);
     };
-  }, [incompleteHint]);
+  }, [watches, incompleteHint]);
+
+  // The named sentence when there is a box to name; the button's own sentence otherwise; and
+  // never the named one with its `{field}` unfilled.
+  const incompleteSentence =
+    incompleteHintNamed && firstMissing ? incompleteHintNamed.replace("{field}", firstMissing) : incompleteHint;
 
   /*
     Cloudflare writes its token into a hidden input inside the widget's own element, so the form
@@ -233,7 +263,10 @@ export default function SubmitButton({
     };
   }, [pending]);
 
-  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
+  const dimmed = (watches && !complete && !pending) || (waiting && pressedEarly);
+  const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence;
+  // One id per button: a page with two forms has two buttons that may both be waiting (§315).
+  const hintId = useId();
 
   return (
     <Box
@@ -259,7 +292,7 @@ export default function SubmitButton({
         // on press, is the explanation.
         aria-disabled={pending}
         aria-busy={pending}
-        aria-describedby={dimmed ? "submit-incomplete" : undefined}
+        aria-describedby={dimmed && hint ? hintId : undefined}
         sx={{
           ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
           ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
@@ -294,9 +327,9 @@ export default function SubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
-      {dimmed && (
-        <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
-          {waiting && pressedEarly ? (botCheckHint ?? incompleteHint) : incompleteHint}
+      {dimmed && hint && (
+        <Typography id={hintId} variant="body2" color="text.secondary" role="status">
+          {hint}
         </Typography>
       )}
       {pending && slow && slowHint && (

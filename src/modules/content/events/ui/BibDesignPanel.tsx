@@ -1,9 +1,8 @@
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
@@ -19,7 +18,6 @@ import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { env } from "@/shared/config/env";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
-import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import BibDesignPreview from "./BibDesignPreview";
 import BibFooterTextField from "./BibFooterTextField";
 
@@ -81,25 +79,15 @@ export default async function BibDesignPanel({
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
   const replyTo = env.EMAIL_REPLY_TO ?? null;
 
-  /*
-    The checkbox's 44 pixels, as a fresh object per box — never the shared constant itself. This
-    is a Server Component handing `<Checkbox>` elements to MUI's `FormControlLabel`, a client
-    component that reads `control.props`. React's payload writes an object met twice once and
-    points at it from then on, and an element whose props point at a row not yet read arrives
-    as a lazy placeholder with no `props` — which `FormControlLabel` dereferences and the editor
-    page fails with "reading 'disabled'". One object per box, and nothing is shared to point at.
-  */
-  const tapTarget = () => ({ ...CHECKBOX_TAP_TARGET });
-
   /** A footer switch, with what it prints beside its words when there is something to name. */
   const footerSwitch = (
     field: "showEventInFooter" | "showPartners" | "showWebsite" | "showEmail",
     label: string,
     prints?: string | null,
   ) => (
-    <FormControlLabel
-      control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} sx={tapTarget()} />}
-      label={
+    // A `CheckboxField` like every other tick of the design (§315): it comes back as it was after a
+    // refused save, and its label travels as children, never as an element prop (the defect it documents).
+    <CheckboxField name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
         <span>
           {label}
           {prints !== undefined ? (
@@ -108,8 +96,7 @@ export default async function BibDesignPanel({
             </Typography>
           ) : null}
         </span>
-      }
-    />
+    </CheckboxField>
   );
 
   const picker = (field: "headerImageSrc" | "sponsorImageSrc") => (
@@ -121,19 +108,20 @@ export default async function BibDesignPanel({
         {t(`editor.bibDesign.${field}Help`)}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <FormControlLabel
-          control={
-            <input
-              type="radio"
-              name={`event.bibDesign.${field}`}
-              value=""
-              defaultChecked={design[field] === null}
-              style={{ width: 20, height: 20 }}
-            />
-          }
-          label={t("editor.bibDesign.noPicture")}
-          sx={{ mr: 2 }}
-        />
+        {/* A plain label with children rather than `FormControlLabel`'s element prop: the
+            defect `CheckboxField` documents. The radio comes back as ticked after a refused
+            submit (§315). */}
+        <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
+          <RecallRadio
+            name={`event.bibDesign.${field}`}
+            value=""
+            defaultChecked={design[field] === null}
+            style={{ width: 20, height: 20 }}
+          />
+          <Typography component="span" variant="body2">
+            {t("editor.bibDesign.noPicture")}
+          </Typography>
+        </Box>
         {assets.map((asset) => (
           <Box
             key={asset.id}
@@ -153,8 +141,7 @@ export default async function BibDesignPanel({
             }}
           >
             <Box component="img" src={asset.thumbUrl} alt={asset.originalFilename} width={72} height={72} sx={{ display: "block", width: 72, height: 72, objectFit: "cover", borderRadius: 0.5 }} />
-            <input
-              type="radio"
+            <RecallRadio
               name={`event.bibDesign.${field}`}
               value={asset.webUrl}
               defaultChecked={design[field] === asset.webUrl}
@@ -190,16 +177,14 @@ export default async function BibDesignPanel({
 
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (
-            <FormControlLabel
-              key={field}
-              control={<Checkbox name={`event.bibDesign.${field}`} defaultChecked={design[field]} sx={tapTarget()} />}
-              label={t(`editor.bibDesign.${field}`)}
-            />
+            <CheckboxField key={field} name={`event.bibDesign.${field}`} defaultChecked={design[field]}>
+              {t(`editor.bibDesign.${field}`)}
+            </CheckboxField>
           ))}
         </Stack>
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          <TextField
+          <RecallField
             select
             name="event.bibDesign.numberScale"
             label={t("editor.bibDesign.numberScale")}
@@ -212,8 +197,8 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.scales.${scale}`)}
               </option>
             ))}
-          </TextField>
-          <TextField
+          </RecallField>
+          <RecallField
             select
             name="event.bibDesign.namePosition"
             label={t("editor.bibDesign.namePosition")}
@@ -226,7 +211,7 @@ export default async function BibDesignPanel({
                 {t(`editor.bibDesign.positions.${position}`)}
               </option>
             ))}
-          </TextField>
+          </RecallField>
         </Stack>
 
         {picker("headerImageSrc")}

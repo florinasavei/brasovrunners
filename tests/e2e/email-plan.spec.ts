@@ -134,12 +134,13 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("arhiva@example.org");
 
-    // An address that is not one is refused, and nothing of it is kept.
+    // An address that is not one is refused and nothing of it is saved — but what was typed stays
+    // in its box to be corrected, and the refusal is said inside the form it is about (§315).
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
-    await expect(page.locator("#admin-alert").getByRole("alert")).toBeVisible();
-    // A refusal is a fresh page: press again before it has hydrated and the press is lost
-    // (`docs/VIBECODING.md`); the clear below is the press that was being dropped.
+    await expect(main.getByTestId("contact-recipients-form").getByTestId("form-refusal")).toBeVisible();
+    await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("nope");
+    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
     await hydrated(page);
     await expect(main.getByText(/Acum ajung la: club@example\.com/)).toBeVisible();
 

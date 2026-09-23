@@ -1,10 +1,12 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { updateEmailCopyAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import type { Locale } from "@/i18n/routing";
@@ -50,10 +52,15 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
 
   return (
     <Box
-      component="form"
-      action={updateEmailCopyAction}
       sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }}
       data-testid={`email-copy-${messageType}`}
+    >
+    {/* A refused wording — a placeholder misspelt — comes back as typed (§315). */}
+    <ActionForm
+      action={updateEmailCopyAction}
+      messages={await refusalMessages({ subject: t("emails.copy.subject"), body: t("emails.copy.paragraphs") })}
+      // One form per message and language on the same page, each with a "subject" (`fieldId`).
+      scope={`${messageType}-${emailLocale}`}
     >
       <input type="hidden" name="uiLocale" value={locale} />
       <input type="hidden" name="messageType" value={messageType} />
@@ -64,7 +71,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
       </Typography>
 
       <Stack spacing={1.5}>
-        <TextField
+        <RecallField
           name="subject"
           label={t("emails.copy.subject")}
           defaultValue={current.subject}
@@ -105,6 +112,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
           )}
         </Stack>
       </Stack>
+    </ActionForm>
     </Box>
   );
 }

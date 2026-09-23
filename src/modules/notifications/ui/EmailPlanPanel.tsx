@@ -1,11 +1,13 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
@@ -94,10 +96,23 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
           {t("emails.plan.readOnly")}
         </Typography>
       ) : (
-      <Box component="form" action={updateEmailPlanAction} sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1.5 }}>
+      {/* A refused plan comes back with the boxes as typed (§315). */}
+      <ActionForm
+        action={updateEmailPlanAction}
+        messages={await refusalMessages({
+          plan: t("emails.plan.field"),
+          dailyAllowance: t("emails.plan.dailyAllowance"),
+          monthlyAllowance: t("emails.plan.monthlyAllowance"),
+          note: t("emails.plan.note"),
+        })}
+        // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        scope="plan"
+        data-testid="email-plan-form"
+      >
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
-          <TextField
+          <RecallField
             select
             name="plan"
             label={t("emails.plan.field")}
@@ -121,9 +136,9 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
                 </option>
               );
             })}
-          </TextField>
+          </RecallField>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-            <TextField
+            <RecallField
               name="dailyAllowance"
               type="number"
               label={t("emails.plan.dailyAllowance")}
@@ -132,7 +147,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
               slotProps={{ htmlInput: { min: 1, max: 1_000_000, inputMode: "numeric" } }}
               fullWidth
             />
-            <TextField
+            <RecallField
               name="monthlyAllowance"
               type="number"
               label={t("emails.plan.monthlyAllowance")}
@@ -145,11 +160,12 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
           <Typography variant="caption" color="text.secondary">
             {t("emails.plan.customHelp")}
           </Typography>
-          <TextField name="note" label={t("emails.plan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
+          <RecallField name="note" label={t("emails.plan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
           <Box>
             <SubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} />
           </Box>
         </Stack>
+      </ActionForm>
       </Box>
       )}
     </Panel>

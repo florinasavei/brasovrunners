@@ -119,6 +119,8 @@ export default function LocaleTabPanels({ panels }: { panels: readonly LocalePan
           aria-labelledby={`locale-tab-${panel.locale}`}
           hidden={index !== active}
           onInvalid={reveal(index)}
+          // Which language a box belongs to, for `SubmitButton`'s "fill in first: English: Titlu".
+          data-language={panel.label}
         >
           {panel.content}
         </Box>

@@ -848,7 +848,15 @@
         "teal": "Turcoaz",
         "black": "Negru"
       },
-      "confirmationWindowTitle": "Confirmarea participării"
+      "confirmationWindowTitle": "Confirmarea participării",
+      "createAndPublish": "Creează și publică",
+      "publishing": "Se publică…",
+      "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
+      "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
+      "createdPublishedWithSeries": "Evenimentul și {created} ediții au fost create și publicate.",
+      "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
+      "createdNotPublishedRole": "Evenimentul a fost creat ca ciornă. Publicarea este a Administratorului — trimite-l spre verificare.",
+      "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -921,7 +929,8 @@
       "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
       "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
-      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
+      "inviting": "Se adaugă…"
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -2069,6 +2078,14 @@
       "summary": "Cine s-a înscris",
       "outbox": "Emailuri de trimis",
       "filters": "Caută și filtrează"
+    },
+    "forms": {
+      "fieldsIntro": "Câmpurile de verificat:",
+      "fieldError": "Verifică acest câmp.",
+      "kept": "Ce ai scris a rămas în câmpuri; corectează și trimite din nou.",
+      "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
+      "keptExceptConfirmation": "Ce ai scris a rămas în câmpuri, în afară de confirmare, care se cere din nou.",
+      "incompleteFirst": "Completează mai întâi: {field}"
     }
   },
   "NotFound": {

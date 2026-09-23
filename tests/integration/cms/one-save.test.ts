@@ -226,6 +226,34 @@ describe("BR-REQ-051-01 one save writes the event row and every language", () =>
     expect((await reloadTranslation(ro.id)).title).toBe("Titlu ro");
     expect((await reloadTranslation(en.id)).title).toBe("Titlu en");
   });
+
+  it("names a refused language's box the way the editor posts it, language first (§315)", async () => {
+    const { event, ro, en } = await createDraft();
+
+    let fields: readonly string[] = [];
+    try {
+      await saveEventAndTranslations(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: EVENT_FIELDS,
+        translations: [
+          { translationId: ro.id, expectedVersion: ro.version, fields: translationFields("Alergare") },
+          // The English title emptied: the schema speaks of `title`, the editor posts
+          // `translations.en.title`, and the refusal summary links to the second.
+          { translationId: en.id, expectedVersion: en.version, fields: { ...translationFields("A run"), title: "" } },
+        ],
+        now: NOW,
+      });
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      expect(error.code).toBe("VALIDATION_ERROR");
+      fields = error.fields;
+    }
+
+    expect(fields).toEqual(["translations.en.title"]);
+    expect((await reloadTranslation(ro.id)).title).toBe("Titlu ro");
+  });
 });
 
 describe("BR-REQ-060-01 the one save respects the same role boundaries", () => {

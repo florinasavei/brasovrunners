@@ -255,6 +255,8 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     throw new DomainError(
       "VALIDATION_ERROR",
       "confirm that this person asked to be registered before entering it for them",
+      // The box, by the name the form posts, so the refusal can point at it (§315).
+      ["relayedByParticipantRequest"],
     );
   }
 
@@ -279,6 +281,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
       throw new DomainError(
         "VALIDATION_ERROR",
         "this person already has a registration for this event",
+        ["email"],
       );
     }
   }

@@ -106,8 +106,15 @@ describe("§269 the backoffice fold is a box", () => {
   });
 });
 
+/**
+ * A fold is a `<details>` a screen draws itself, or `RecallDetails` (`shared/forms/recall.tsx`,
+ * §315): the same element inside a kept form, which opens itself after a refusal and takes its
+ * look from the screen's `sx` — so the screen is where the shared object has to be spread.
+ */
+const FOLD = /component="details"|<RecallDetails\b/;
+
 describe("§269 every fold in the backoffice spreads the one object", () => {
-  const folds = BACKOFFICE.filter((file) => /component="details"/.test(read(file)));
+  const folds = BACKOFFICE.filter((file) => FOLD.test(read(file)));
 
   it("finds the folds it is about", () => {
     // The event editor's long texts, the bib design, the SEO fields, the series scope, the
@@ -127,7 +134,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
       // One spread per fold: the count of `component="details"` equals the count of the object
       // reaching an `sx` — spread into one, or handed over whole. Comments and the import do
       // not count, and a fold styled by hand shows up here as one use too few.
-      const details = count(source, /component="details"/g);
+      const details = count(source, new RegExp(FOLD.source, "g"));
       const uses = count(source, /(?:\.\.\.|sx=\{)BOXED_DISCLOSURE_SX\b/g);
       expect(uses, `${details} fold(s), ${uses} spread(s)`).toBe(details);
       // No fold writes its own summary rule any more: pointer, height and marker come from

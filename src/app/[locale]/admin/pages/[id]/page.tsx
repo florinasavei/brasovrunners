@@ -14,6 +14,11 @@ import { routing } from "@/i18n/routing";
 import { findPageForEditor } from "@/modules/content/pages/repository";
 import { describeIncompletePageLocales } from "@/modules/content/pages/service";
 import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
+import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import { RecallHidden } from "@/shared/forms/recall";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   allowedTransitions,
   canEditEventFields,
@@ -138,23 +143,23 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       <Divider />
 
       {maySave ? (
-        <form action={savePageAction}>
+        // A refusal — a stale version, an address in use — comes back with every box filled (§315).
+        <ActionForm action={savePageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="pageId" value={page.id} />
-            <input type="hidden" name="expectedVersion" value={page.version} />
+            {/* The posted version after a refusal, with the edits made against it (§315). */}
+            <RecallHidden name="expectedVersion" value={page.version} />
             <PageFieldsForm
               navOrder={page.navOrder}
               translations={translations}
               slugLocked={page.publishedAt !== null}
             />
             <Box>
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-                {t("editor.save")}
-              </Button>
+              <SubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
       ) : (
         <Alert severity="info">{t("pages.readOnly")}</Alert>
       )}

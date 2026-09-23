@@ -7,12 +7,36 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
+import { useRecall } from "@/shared/forms/recall";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
+
+/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§315). */
+function recalledRows(names: string[], value: (name: string) => string | undefined): ScheduleRowValue[] {
+  const rows: ScheduleRowValue[] = [];
+  for (const name of names) {
+    const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime|ro|en|place)$/.exec(name);
+    if (!match) continue;
+    const index = Number(match[1]);
+    rows[index] = { ...(rows[index] ?? EMPTY), [match[2]]: value(name) ?? "" };
+  }
+  return rows.filter((row) => row !== undefined);
+}
+
+/**
+ * The programme's rows, coming back as they were typed after a refused submit (§315): the
+ * island below holds the rows in state of its own, so it is keyed on the answer and handed the
+ * recalled rows as its starting point. With nothing recalled this is the island as it was.
+ */
+export default function ScheduleRowsEditor(props: ComponentProps<typeof ScheduleRowsEditorIsland>) {
+  const recall = useRecall();
+  const initial = recall.has ? recalledRows(recall.names(), recall.value) : props.initial;
+  return <ScheduleRowsEditorIsland key={recall.generation} {...props} initial={initial} />;
+}
 
 /**
  * The form's start-date box, by name. The rows and the start date share nothing but the form:
@@ -44,7 +68,7 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
  * box is the one controlled input for that reason; the rest stay uncontrolled. The form still
  * posts whatever is in the boxes — nothing below the form changed.
  */
-export default function ScheduleRowsEditor({
+function ScheduleRowsEditorIsland({
   initial,
   labels,
   startDateName,
@@ -55,6 +79,8 @@ export default function ScheduleRowsEditor({
   startDateName: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
+  const recall = useRecall();
   const [rows, setRows] = useState<Array<{ key: number; value: ScheduleRowValue }>>(() =>
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
@@ -115,6 +141,8 @@ export default function ScheduleRowsEditor({
             <Stack direction="row" spacing={1}>
               <TextField
                 name={name("date")}
+                id={recall.idOf(name("date"))}
+                error={recall.named(name("date"))}
                 type="date"
                 label={labels.date}
                 value={value.date}
@@ -127,6 +155,8 @@ export default function ScheduleRowsEditor({
                   clock, posting `HH:MM` whatever face it shows. */}
               <TextField
                 name={name("time")}
+                id={recall.idOf(name("time"))}
+                error={recall.named(name("time"))}
                 type="time"
                 label={labels.time}
                 defaultValue={value.time}
@@ -136,6 +166,8 @@ export default function ScheduleRowsEditor({
               />
               <TextField
                 name={name("endTime")}
+                id={recall.idOf(name("endTime"))}
+                error={recall.named(name("endTime"))}
                 type="time"
                 label={labels.endTime}
                 defaultValue={value.endTime}
@@ -144,9 +176,9 @@ export default function ScheduleRowsEditor({
                 sx={{ width: 120 }}
               />
             </Stack>
-            <TextField name={name("ro")} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("en")} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("place")} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("place")} id={recall.idOf(name("place"))} error={recall.named(name("place"))} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <IconButton aria-label={`${labels.remove} ${index + 1}`} onClick={() => remove(key)} sx={{ minHeight: 44, minWidth: 44, alignSelf: { xs: "flex-end", md: "center" } }}>
               <DeleteIcon fontSize="small" />
             </IconButton>
