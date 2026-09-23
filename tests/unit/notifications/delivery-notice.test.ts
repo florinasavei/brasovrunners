@@ -5,15 +5,20 @@ import { emailDeliveryNotice } from "@/modules/notifications/delivery-notice";
 import { EMAIL_DELIVERY_MODES } from "@/shared/config/env-enums";
 
 /**
- * BR-REQ-080-03 (`AGENTS.md` §16.4) — an environment that does not deliver email says so to the
- * person about to wait for one. Two testers registered on QA and waited for a message that was
- * never coming; the rule that only production sends `live` did not bend, the screen did.
+ * `AGENTS.md` §16.4 — the delivery modes, told to the person about to wait for an email. Two
+ * testers registered on QA and waited for a message that was never coming; the rule that only
+ * production sends `live` did not bend, the screen did.
+ *
+ * Titled by the rule it reads, not by BR-REQ-080-03: that requirement states the modes and the
+ * startup refusal (`notifications/modes.test.ts`) and none of its criteria names a notice to the
+ * participant, so a suite carrying its number would claim a coverage it does not ask for. The
+ * criterion belongs to the docs pass that records this screen.
  *
  * Pure: the helper is handed the environment, so all three modes are stated here without
  * booting one, and the two keys it can return are checked against both catalogues — the page
  * renders `t(key)` with a variable, which the static i18n check cannot see.
  */
-describe("BR-REQ-080-03 the email delivery notice", () => {
+describe("AGENTS.md §16.4 the email delivery notice", () => {
   it("says nothing on production, where the mode is live", () => {
     expect(emailDeliveryNotice({ EMAIL_DELIVERY_MODE: "live" })).toBeNull();
   });

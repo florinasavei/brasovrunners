@@ -33,8 +33,12 @@ type Props = {
   slug: string;
   /** The inbox to open and the name to greet; null once the ten-minute cookie is gone. */
   facts: SubmittedFacts | null;
-  /** The participation window (§104) when it is still ahead: the declaration step then says so. */
-  window: { opensDays: number; deadlineDays: number } | null;
+  /**
+   * The participation window (§104) when it is still ahead: the declaration step then says how
+   * many days before the start the confirmation is asked. Only that number is read here; the
+   * deadline is `RegistrationSteps`'s longer telling, so the caller may pass its object as is.
+   */
+  window: { opensDays: number } | null;
 };
 
 /**
@@ -62,7 +66,6 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const values = {
     hours: EMAIL_CONFIRMATION_HOLD_HOURS,
     opensDays: window?.opensDays ?? 0,
-    deadlineDays: window?.deadlineDays ?? 0,
   };
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
