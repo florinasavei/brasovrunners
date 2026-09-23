@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { COLOR } from "@/theme/brand";
+import { bibDesignValuesFromQuery } from "./bib-design-query";
 
 /**
  * What a race number looks like, decided once for both renderers (`DECISIONS.md` §173, §180).
@@ -172,4 +173,18 @@ export function bandTextColour(band: string): string {
 export function bibPictureUrl(src: string | null, baseUrl: string): string | null {
   if (!src) return null;
   return src.startsWith("/") ? `${baseUrl.replace(/\/$/, "")}${src}` : src;
+}
+
+/**
+ * The unsaved design the editor's live preview carries in the picture route's query string,
+ * read with the same schema the save uses (the owner: "la BID îmi trebuie un preview aici").
+ *
+ * `bib-design-query.ts` turns the string into the panel's values; this turns those into a
+ * design the renderer accepts — field by field, so a query with one nonsense value draws the
+ * platform's choice for that one field, and a query that says nothing draws the platform's
+ * design. A picture from somebody else's server is refused here exactly as a stored one is:
+ * the preview fetches from this site's store and nowhere else (§249).
+ */
+export function bibDesignFromQuery(params: URLSearchParams): BibDesign {
+  return readBibDesign(bibDesignValuesFromQuery(params));
 }

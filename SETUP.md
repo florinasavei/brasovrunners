@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.54-2026-09-23 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.54-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1289,7 +1289,8 @@ club names — which is why a colleague's Yahoo can be on the list.
 5. In the app — the part the club owns, and the part that changes without a developer:
    `/admin/emails` → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
    receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
-   be visible to the others (Amalia's Yahoo, say) → Salvează. The sentence above the boxes
+   be visible to the others (Amalia's Yahoo, say); **Copie ascunsă (Bcc)** = anybody who
+   should get a copy without the others seeing it — an archive mailbox, say (§293) → Salvează. The sentence above the boxes
    says which list is in force — the app's or `CONTACT_FORM_TO` — so there is no guessing.
 6. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
    plecat. Îți răspundem pe …", the email arrives in every mailbox from the club's address
@@ -1340,7 +1341,8 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
 | Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |
-| Română / English | Programul evenimentului | kit pickup, briefing, start, cut-offs — each row becomes a calendar entry |
+| Când și unde | Program | kit pickup, briefing, start, cut-offs — one timed row each; every row becomes a calendar entry and is repeated in the reminder. The rows are the programme (§117). Change the event's date and the rows move with it (§295) |
+| Română / English | Note sub program | optional free text that appears beneath the rows on the page — how the kit is collected, the cut-off rules — per language (§294) |
 
 Then **Salvează**, read the page through **Previzualizare**, and press **Publică**. Both
 languages go live together; that is the rule, not a setting.

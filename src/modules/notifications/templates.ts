@@ -299,6 +299,13 @@ export type TemplateData = {
   confirmLater?: boolean;
   manageUrl?: string;
   /**
+   * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
+   * §143): its own token, read at send time. `listed` is whether the name is on the list today,
+   * so the link reads the right way round — "take me off" or "show my name".
+   */
+  listConsentUrl?: string;
+  listed?: boolean;
+  /**
    * The listing and the contact page (§239; the owner: "I need more links in that email").
    *
    * Set on every participant message, so the footer list is the same wherever somebody
@@ -419,6 +426,10 @@ const T = {
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "Nu mai pot veni — anulez înscrierea", url: `${d.manageUrl}#cancel` }] : []),
+        // The list switch, worded by the row (§143): the answer given on the form, reversible here.
+        ...(d.listConsentUrl
+          ? [{ label: d.listed === false ? "Vreau să apar pe lista publică de participanți" : "Nu vreau să apar pe lista publică de participanți", url: d.listConsentUrl }]
+          : []),
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
@@ -720,6 +731,10 @@ const T = {
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "I can't make it any more — cancel my registration", url: `${d.manageUrl}#cancel` }] : []),
+        // The list switch, worded by the row (§143): the answer given on the form, reversible here.
+        ...(d.listConsentUrl
+          ? [{ label: d.listed === false ? "Show my name on the public participant list" : "Take me off the public participant list", url: d.listConsentUrl }]
+          : []),
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),

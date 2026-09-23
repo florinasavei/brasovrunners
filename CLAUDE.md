@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.54-2026-09-23 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.48-2026-09-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.54-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -262,8 +262,9 @@ it is the authority, this is the summary):
     the allowlist row, was refused by Zitadel, and said so in a banner that was gone at the next
     click — the first to find out was the colleague, meeting "User not found in the system" at
     sign-in. The membership is granted now (§288, `SETUP.md` §37, which carries the one-call
-    check). Still owed in code: Echipa should say permanently that a row has no account yet, and
-    `/admin/tasks` should test the key the way it tests the other providers.
+    check). The two code follow-ups §288 asked for are done (§297): Echipa marks a row whose
+    sign-in account does not exist, and `/admin/tasks` probes the key with the call the invitation
+    actually makes, so "authenticates but may not" is a red row rather than a colleague's surprise.
 11. ~~The contact form's Gmail~~ — done 2026-09-20: `CONTACT_SMTP_USER`,
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who

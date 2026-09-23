@@ -76,12 +76,24 @@ export const translationFieldsSchema = z
       message: "a slug is lowercase words joined by hyphens",
     }),
     title: z.string().trim().min(1).max(200),
-    excerpt: optionalText(500),
+    /**
+     * The plain short description. Optional in the input like `checklist` below — the create
+     * form posts the rich summary and nothing else for it, and an absent key means "leave it as
+     * it is" on a save and "the column's default" on an insert; the form always posts it.
+     */
+    excerpt: optionalText(500).optional(),
     /**
      * The short description as the editor posts it (`DECISIONS.md` §73): a small rich body,
      * pictures allowed. When present, the plain `excerpt` is derived from it on save.
      */
     excerptBody: richTextField,
+    /**
+     * The place's name in this language — "Tractorul Park" on the English page — or nothing,
+     * which means the event's own `locationName` (the meeting point is still one fact, asked
+     * once in "Când și unde"; only its *name* is a translation now, on the owner's word). Optional
+     * in the input for callers from before it existed: absent means "leave it as it is".
+     */
+    locationName: optionalText(200).optional(),
     /**
      * "What to bring", one line for the confirmation and the reminder (§81). Optional in the
      * input for callers from before it existed; absent means "leave it as it is".
@@ -98,8 +110,9 @@ export const translationFieldsSchema = z
     rules: richTextField,
     /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
     schedule: richTextField,
-    seoTitle: optionalText(200),
-    seoDescription: optionalText(320),
+    // Optional in the input like `excerpt`: the form posts them, an older caller may not.
+    seoTitle: optionalText(200).optional(),
+    seoDescription: optionalText(320).optional(),
   })
   .strict();
 
@@ -317,15 +330,22 @@ export const eventFieldsSchema = z
       })
       .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
       .optional(),
-    // Optional in the input as well as in the value — a caller from before the field existed
-    // (a script, a duplicate) sends nothing and means "no film".
+    /**
+     * A film of the event: a YouTube link, or nothing. The editor no longer has a box for it —
+     * a film goes into the description with the rich text's own YouTube button (§266), sized
+     * and placed like a picture — so no form posts this any more. The column stays for the
+     * events that carry one and the public page still embeds it; **absent means "not editing
+     * the film"**, the discipline `coHosts` and `bibDesign` follow, so a save from the editor
+     * leaves a stored link exactly as it was. Only `""` clears it, and only a link a video id
+     * can be read from is stored.
+     */
     videoUrl: z
       .string()
       .trim()
       .max(2000)
       .optional()
-      .transform((value) => (value ? value : null))
-      .refine((value) => value === null || isYoutubeLink(value), {
+      .transform((value) => (value === undefined ? undefined : value ? value : null))
+      .refine((value) => value === undefined || value === null || isYoutubeLink(value), {
         message: "a video link must be a YouTube link (watch, youtu.be, shorts or embed)",
       }),
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
@@ -392,21 +412,21 @@ export const eventFieldsSchema = z
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 
 /**
- * What a new event needs before it exists: its own fields, and the minimum of both languages.
+ * What a new event needs before it exists: its own fields, and both languages.
  *
  * Both locales from the start, rather than "Romanian now, English later". Publication requires
  * a complete translation in every locale (`service.ts#assertReadyToPublish`), and an event that
  * cannot be created without one row per locale is an event whose second language is a fill-in
  * rather than an afterthought that never happens.
+ *
+ * Each language is the **whole** `translationFieldsSchema`, not a title-slug-excerpt pick: the
+ * create form renders the editor's own language panel (the rich summary, the description, the
+ * rules, the folds), so what it posts is what a save posts, and the service writes it through
+ * the same function. A caller that still sends only the three (a script, an older test) parses
+ * all the same — every other field is optional in the input.
  */
-const newTranslationSchema = translationFieldsSchema.pick({
-  slug: true,
-  title: true,
-  excerpt: true,
-});
-
 export const newEventSchema = eventFieldsSchema.extend({
-  translations: z.object({ ro: newTranslationSchema, en: newTranslationSchema }),
+  translations: z.object({ ro: translationFieldsSchema, en: translationFieldsSchema }),
 });
 
 export type NewEventInput = z.infer<typeof newEventSchema>;

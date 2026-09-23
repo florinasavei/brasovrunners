@@ -12,7 +12,7 @@ import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
@@ -40,9 +40,12 @@ import type { EditableEvent } from "../repository";
  * **The panels** (`DECISIONS.md` §170; the owner asked for "a WordPress-like editor"): forty
  * fields in one column was a list nobody could hold in their head, and the order was the order
  * the columns were added to the table. They are grouped by the question they answer now —
- * when and where, registration, route and details, film — each an open box. Nothing was
- * removed and no field was renamed: the same names post the same values, and every end-to-end
- * locator still finds what it looked for.
+ * when and where, registration, route and details — each an open box. No field was renamed:
+ * the same names post the same values, and every end-to-end locator still finds what it
+ * looked for. One box is gone: the film. A YouTube link is a figure in the description now,
+ * placed and sized like a picture with the rich text's own button (§266), and a second way
+ * in — a box the action never even read — was a box that promised what nothing saved. The
+ * column stays, and the public page still embeds the links older events carry.
  *
  * It renders the inputs, not the `<form>`: `<Stack component="form" action={...}>` crashes in
  * MUI 9, so every caller wraps a plain `<form>` around this.
@@ -171,11 +174,11 @@ export default async function EventFieldsForm({
           {/* What the chosen type means, in one line; the comparison of all seven folded beside
               it (§170) — it used to be six lines under the select, whichever type was chosen. */}
           <TypeNote selectName="event.type" initialType={initialType} notes={typeNotes} />
-          <Box component="details" sx={DISCLOSURE_SX}>
+          <Box component="details" sx={BOXED_DISCLOSURE_SX}>
             <Typography component="summary" variant="body2">
               {t("editor.typeHelpSummary")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ pb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
               {t("editor.typeHelp")}
             </Typography>
           </Box>
@@ -267,7 +270,8 @@ export default async function EventFieldsForm({
           />
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
-              block. */}
+              block. The caption under the rows names the notes fold in the language panels, so
+              the two are read as one programme and its notes, not two programmes. */}
           <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={initialType}>
             <Stack spacing={1}>
               <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
@@ -276,8 +280,12 @@ export default async function EventFieldsForm({
               <Typography variant="body2" color="text.secondary">
                 {t("editor.programmeHelp")}
               </Typography>
+              {/* The rows follow the start date: `WallTimeField` posts `event.startsAt` as
+                  `event.startsAtDate` and `event.startsAtTime`, and the rows island listens to
+                  the date box by that name, the way `OnlyForType` reads the type select. */}
               <ScheduleRowsEditor
                 initial={scheduleRows}
+                startDateName="event.startsAtDate"
                 labels={{
                   date: t("editor.programmeRows.date"),
                   time: t("editor.programmeRows.time"),
@@ -290,6 +298,9 @@ export default async function EventFieldsForm({
                   empty: t("editor.programmeRows.empty"),
                 }}
               />
+              <Typography variant="caption" color="text.secondary">
+                {t("editor.programmeNotesHint", { panel: t("editor.contentSection"), fold: t("editor.fields.scheduleNotes") })}
+              </Typography>
             </Stack>
           </OnlyForType>
         </Stack>
@@ -431,7 +442,14 @@ export default async function EventFieldsForm({
             {/* The rest of the bib (§249): what is printed, the number's size, where the name
                 sits, a picture instead of the band, a sponsors' strip, cut marks. Only on an
                 event that exists — the create form asks for a date and a title, not a design. */}
-            {event && <BibDesignPanel design={readBibDesign(event.bibDesign)} />}
+            {event && (
+              <BibDesignPanel
+                eventId={event.id}
+                design={readBibDesign(event.bibDesign)}
+                bibStartNumber={event.bibStartNumber}
+                bibColour={event.bibColour}
+              />
+            )}
 
             {/*
               A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text
@@ -634,19 +652,6 @@ export default async function EventFieldsForm({
             </Typography>
           </Box>
         </Stack>
-      </EditorPanel>
-
-      {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
-      <EditorPanel title={t("editor.panels.video")} headingId="panel-video">
-        <TextField
-          name="event.videoUrl"
-          type="url"
-          label={t("editor.videoUrl")}
-          helperText={t("editor.videoUrlHelp")}
-          defaultValue={event?.videoUrl ?? ""}
-          inputMode="url"
-          fullWidth
-        />
       </EditorPanel>
     </Stack>
   );

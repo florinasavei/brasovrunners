@@ -52,8 +52,10 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await field("event.startsAtDate").fill("2027-05-01");
     await field("event.startsAtTime").fill("09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
     await field("translations.ro.slug").fill(slug);
+    await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Route race ${suffix}`);
     await field("translations.en.slug").fill(`route-race-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();

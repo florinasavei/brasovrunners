@@ -6,9 +6,10 @@ import Panel from "@/shared/ui/Panel";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
+import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
-import type { EmailVolumeToday } from "@/modules/notifications/volume";
+import { type EmailVolumeToday, PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/volume";
 import SubmitButton from "@/shared/ui/SubmitButton";
 
 type Props = {
@@ -33,6 +34,18 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
   const t = await getTranslations("Admin");
   const unlimited = t("emails.plan.unlimited");
   const ceiling = (value: number | null) => (value === null ? unlimited : value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB"));
+  /*
+    What one registration costs and how many more fit — the same arithmetic `/admin/tasks` prints
+    (`registrationsLeftToday`, `messagesPerCompletedRegistration`), read from the one figure
+    `volume.ts` computed, so the two pages cannot disagree. Since 2026-09-22 the figure counts the
+    hidden copies the club asked for on every participant message, which is why it is said here,
+    next to the list that sets them, and not only on the task board.
+  */
+  const registrationsLeft = registrationsLeftToday({
+    emailAllowance: volume.allowance,
+    emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+    messagesPerRegistration: volume.messagesPerRegistration,
+  });
 
   return (
     <Panel title={t("emails.plan.title")} intro={t("emails.plan.intro")}>
@@ -55,6 +68,17 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
       */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("emails.plan.shared")}
+      </Typography>
+      {/* The forecast: what a registration costs today, and how many more the allowance pays for. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-forecast">
+        {registrationsLeft === null
+          ? t("emails.plan.forecastUnlimited", { count: volume.messagesPerRegistration })
+          : t("emails.plan.forecast", { count: volume.messagesPerRegistration, left: registrationsLeft })}
+        {volume.participantBccCount > 0 &&
+          ` ${t("emails.plan.forecastBcc", {
+            bcc: volume.participantBccCount,
+            extra: volume.participantBccCount * PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
+          })}`}
       </Typography>
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>

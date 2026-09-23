@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.54-2026-09-23 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.54-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2811,7 +2811,7 @@ and open no socket, and QA marks its subject like the outbox marks every other. 
 else may take this route — every message to a participant is an outbox row.
 
 **Who receives it is the club's, not the deployment's** (`DECISIONS.md` §164). The "to" and
-"cc" lists live in `platform_settings.contactRecipients`, edited by an Administrator on
+"cc" and, since §293, "bcc" lists live in `platform_settings.contactRecipients`, edited by an Administrator on
 `/admin/emails`; `CONTACT_FORM_TO` is only the fallback, read when the setting names nobody,
 and there is no `CONTACT_FORM_CC`. The order is setting → environment → the form is off, and
 `CONTACT_FORM_MODE` therefore answers for the transport alone. The account it sends *from*

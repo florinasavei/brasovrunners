@@ -50,6 +50,12 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
 
+    // BR-REQ-080-03: the test run captures every email (AGENTS.md §16.4), and the form says so
+    // before anybody types an address they will then watch an inbox for. Two testers on QA
+    // waited for a message that was never coming; this is the sentence they did not have.
+    const captureNotice = /emailurile nu se trimit deloc de aici/;
+    await expect(page.getByText(captureNotice)).toBeVisible();
+
     // Unique per project and per run: a second registration for the same address on the same
     // event is a duplicate, and would be answered with the same generic success — which would
     // make this assertion pass while proving nothing.
@@ -90,7 +96,18 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
-    await expect(page.getByText("Verifică-ți emailul")).toBeVisible();
+    // The screen after the form greets by first name, from the form just posted (§224); the
+    // same sentence for a first and a repeat registration, because nothing on it is read from
+    // the registrations table (AGENTS.md §19.4).
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    // The address it went to, read back so a typo is caught before they walk away (§224).
+    await expect(page.getByText(address)).toBeVisible();
+    // And the same capture notice here, where somebody would otherwise stand with an inbox open.
+    await expect(page.getByText(captureNotice)).toBeVisible();
+    // BR-REQ-041-01 criterion 6: the way back is a real target on a phone.
+    const back = page.getByRole("link", { name: "Înapoi la eveniment" });
+    const backBox = await back.boundingBox();
+    expect(backBox?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 
   test("offers the same door on the event's own page", async ({ page }) => {

@@ -78,7 +78,7 @@ export async function updateContactRecipientsAction(form: FormData): Promise<voi
   let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
-    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc") }, new Date());
+    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
     outcome = "saved=contactRecipients";
   } catch (error) {
     if (!isDomainError(error)) throw error;
@@ -136,6 +136,9 @@ export async function updateClubNoticesAction(form: FormData): Promise<void> {
       {
         declarations: { to: text("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
         confirmations: { to: list("confirmationsTo") },
+        // A hidden copy of every message a real participant receives (2026-09-22). Copied into
+        // each outbox row's payload at enqueue time by `enqueueEmail`, as §244's copies are.
+        participants: { bcc: list("participantsBcc") },
       },
       new Date(),
     );

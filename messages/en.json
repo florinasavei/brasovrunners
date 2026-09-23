@@ -107,6 +107,7 @@
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
+      "instagramDownload": "Download the picture for Instagram",
       "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
       "ics": ".ics file"
@@ -355,6 +356,7 @@
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
+      "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
           "created_by_staff": "Registration entered by staff",
@@ -365,7 +367,8 @@
           "confirmed_by_staff": "Confirmed at the desk (address vouched for, declaration on paper)",
           "promoted_by_staff": "Given a place ahead of the waiting list",
           "checked_in": "Marked as here",
-          "checkin_undone": "Check-in undone"
+          "checkin_undone": "Check-in undone",
+          "list_consent_changed": "Public-list choice changed by the participant"
         }
       },
       "locale": {
@@ -505,7 +508,7 @@
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
-      "eventsRepeated": "{created} editions created.",
+      "eventsRepeated": "The series is running: {created} dates created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
@@ -558,14 +561,15 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
-      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The same in both languages, filled in once.",
+      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The shared name, filled in once; if the place goes by another name in English, write that one under “Content”, on the language's tab.",
+      "locationNameInLanguage": "The place's name (in this language)",
+      "locationNameInLanguageHelp": "Optional. What the meeting point is called on this language's page — “Tractorul Park” on the English one, for instance. Leave it empty and the page uses the name from “{panel}”.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
       "specialHelp": "An edition apart — an anniversary, a charity run, a race the club joins somebody else at. Shown with a badge on the card and on the page. Any number of events may be special, including one date of a series; the mark does not travel to the other dates.",
       "saveEvent": "Save the event details",
       "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
-      "translationSection": "Content ({locale})",
       "translationReadOnly": "The words are the Redactor’s or the Administrator’s — yours are the Settings: the date, the place, the route, the places, the registrations and race day. Ask the Administrator to change anything here.",
       "saveCoversSettingsOnly": "The save below covers the event’s settings. Nothing under “Content” is saved from here, because those words are not this role’s.",
       "version": "version {version}",
@@ -590,10 +594,11 @@
         "checklist": "What to bring (one line, in the emails and the calendar)",
         "body": "Content — shown on the event page, under the title",
         "rules": "Event rules",
-        "schedule": "Event programme"
+        "schedule": "Event programme",
+        "scheduleNotes": "Notes under the programme"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
-      "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
+      "contentHelp": "The same event, in two languages. The words change here — and the place's name, when English calls it something else; the time, the map, the difficulty and the cost are below, once, shared by both.",
       "tabIncomplete": "incomplete",
       "settingsSection": "Settings",
       "contentSection": "Content",
@@ -602,15 +607,16 @@
       "noTransitions": "Your role cannot move this event from its current state.",
       "incompleteForPublication": "Both languages must be complete before this event can be published. Missing: {detail}.",
       "newTitle": "New event",
-      "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
+      "newHelp": "Both languages are filled in here, because an event goes live in both at once. The event is created as a draft; everything can still be changed afterwards on its own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
+      "scheduleHelp": "The programme itself is the timed rows under “{panel}” → “{section}”, shared by both languages. Here you write, in this language, what does not fit a row — how the kit is collected, the cut-off rules. On the event page it appears beneath the rows; the reminder email repeats the rows and points here.",
       "programmeSection": "Programme",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
+      "programmeNotesHint": "What does not fit a row — how the kit is collected, the cut-off rules — is written under “{panel}”, in each language, at “{fold}”; it appears on the page beneath these rows.",
       "programmeRows": {
         "date": "Date",
         "time": "Time",
@@ -713,13 +719,11 @@
       "repeatCount": "How many editions",
       "repeatPublish": "Publish the editions as they are created (this event is published, so the copies are complete too).",
       "repeat": "Create the editions",
-      "videoUrl": "Video link (YouTube)",
-      "videoUrlHelp": "A YouTube link — last year's film, for instance. Shown on the event page in a player that loads only when the visitor presses it. Leave empty if there is none.",
-      "timeOfDay": "Time (24h)",
+      "timeOfDay": "Time",
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
-      "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
+      "repeatOnCreateHelp": "Optional. Tick it and choose the interval: the dates of the next eight weeks are created with the event, and the platform creates the ones that follow by itself, always eight weeks ahead, until the chosen date or for ever. Each date is its own event with its day's address; they are drafts unless you tick publish.",
       "weekdays": {
         "1": "Mo",
         "2": "Tu",
@@ -741,9 +745,9 @@
       },
       "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
-      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
+      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",
-      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
+      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
       "bodyHelp": "The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
@@ -751,8 +755,7 @@
       "panels": {
         "when": "When and where",
         "registration": "Registration",
-        "details": "Route and details",
-        "video": "Film"
+        "details": "Route and details"
       },
       "seoSection": "Page address and search engines",
       "typeHelpSummary": "What each type means",
@@ -796,7 +799,9 @@
         "sponsorImageSrc": "A sponsors' strip",
         "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
         "noPicture": "No picture",
-        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview and the PDF follow a save."
+        "previewCaption": "Preview — this is how it prints",
+        "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
+        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -878,6 +883,10 @@
       "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
       "accountUnconfigured": "This needs the Zitadel key (To do → “Invite the team”, SETUP.md §37). Until then, from the Zitadel console.",
       "accountFailed": "The identity provider refused ({reason}).",
+      "noAccount": "No sign-in account",
+      "noAccountHelp": "“No sign-in account”: the person is on the list, but Zitadel has no account with their address, so they cannot sign in — usually they were added while the invitation key could not create accounts. The fix: ⋮ → “Revoke access”, then “Add” again with the same address — this time the account is created and Zitadel sends them the password link.",
+      "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
+      "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table."
     },
     "queue": {
@@ -1099,6 +1108,7 @@
       },
       "state": {
         "blocking": "Blocking",
+        "broken": "Not working",
         "open": "To do",
         "done": "Done"
       },
@@ -1152,6 +1162,31 @@
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
             "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
+          ]
+        },
+        "inviteKey": {
+          "title": "The invitation key (Zitadel)",
+          "todo": "The key is missing (ZITADEL_MANAGEMENT_PAT). Without it, “Add” on Echipa puts the person on the list and sends our invitation, but creates no sign-in account — and the sign-in page has no “create an account”, so the person is stuck. The key is a Zitadel service user's token with the Org User Manager role, set on both Vercel projects (SETUP.md §37).",
+          "blind": "The key is set and authenticates, but can do nothing: asked which accounts it sees, Zitadel shows it not even yours — though you are signed in with it right now. The service user is not an “Org User Manager” of the organization. Every “Add” on Echipa writes the row and creates no account, and the colleague meets “User not found in the system” at sign-in (DECISIONS.md §288).",
+          "refused": "The key is set, but Zitadel refuses the account search every “Add” makes — usually the token was revoked, or the service user is not an “Org User Manager” of the organization. Zitadel's answer",
+          "unreachable": "The key could not be checked: Zitadel did not answer. Not necessarily a problem with the key — reload the page in a few minutes. The answer",
+          "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
+          "how": [
+            "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “Brașov Runners — invitații”, access token type Bearer. Create.",
+            "Organization → Managers → + New: the service account, role Org User Manager (it may create users and send their invitation codes; nothing else). The dialog is called “Add an Administrator” and names the service user at the top; if it asks for a Loginname, that is “brasovrunners-invites”. Careful: “Role Assignments” is NOT this — that page grants roles inside a project and has nothing to do with managing users; a service account can sit there Active, looking configured, and still be unable to create anybody (DECISIONS.md §288).",
+            "On the service account → Personal Access Tokens → New. The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted. Copy it (shown once) into the password manager and note there that it has no end date.",
+            "Vercel → the production project → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = the token (Production). The same on the QA project. Redeploy both.",
+            "Check: reload this page after the redeploy — the row turns green when the key finds your account, without inviting anybody. Then, on Echipa, “Add” creates the account and Zitadel sends the password link; whoever has not signed in yet has “Resend the invitation” on their row."
+          ],
+          "howBroken": [
+            "Zitadel console → Organization → Managers → + New: pick the key's service account (SETUP.md §37: “brasovrunners-invites”), role Org User Manager — it may create users and send their invitation codes, nothing else. The dialog is called “Add an Administrator”; if it asks for a Loginname, that is the service account's name.",
+            "Not “Role Assignments”: that page grants roles inside a project and has nothing to do with managing users. A service account can sit there Active, looking perfectly configured, and still be unable to create anybody — exactly what happened on the club's own instance (DECISIONS.md §288).",
+            "If Zitadel answered 401 or the token was revoked: on the service account → Personal Access Tokens → New, then the new token as ZITADEL_MANAGEMENT_PAT on both Vercel projects and redeploy (SETUP.md §37, steps 3–4).",
+            "Check: reload this page. The row turns green when the key finds your account — without inviting anybody. Then Echipa: every colleague marked “No sign-in account” was added while the key could not create accounts — ⋮ → “Revoke access”, then “Add” again with the same address; this time the account is created and Zitadel sends them the password link."
+          ],
+          "howUnreachable": [
+            "Reload the page in a few minutes: the check runs on every open, with a single request to Zitadel.",
+            "If it stays so, open the Zitadel console: if that does not open either, the provider has a problem and there is nothing to do here; if it does, check on the service account that the token exists and, on Vercel, that ZITADEL_MANAGEMENT_PAT and AUTH_ZITADEL_ISSUER are set on this project (SETUP.md §37)."
           ]
         },
         "mediaStorage": {
@@ -1226,7 +1261,7 @@
             "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To” and, if somebody should get a copy, under “Copy (Cc)” → Save. Changed here at any time, with no redeploy.",
+            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
@@ -1707,7 +1742,8 @@
       },
       "clubNotices": {
         "title": "The club's copies",
-        "intro": "Who at the club receives a copy of a signed declaration, and who is told when somebody confirms their registration. Club addresses, never a participant's.",
+        "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
+        "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
         "source": {
           "setting": "In force: declarations go to {to}; visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
           "environment": "In force: declarations go to {to}, the address in the server's configuration (DECLARATIONS_ARCHIVE_TO), because the box below is empty. Visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
@@ -1723,6 +1759,9 @@
         "bccWarning": "The declaration carries the participant's name and the identity document typed at signing. A hidden copy delivers that personal data to a mailbox nobody on the message can see. Use it only as a decision of the club.",
         "confirmationsTo": "Tell us when somebody confirms",
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
+        "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
+        "participantsBccHelp": "Addresses separated by commas. Each receives, without appearing in the message, a copy of every email sent to a real participant — the address check, the declaration, the confirmation with the QR code, the reminder, a number given by hand. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccWarning": "A hidden copy of these emails also receives the participant's personal links — confirming the address, signing the declaration, “I can't make it any more” — and the QR code for the start. Whoever reads that mailbox can take those steps in their place. A club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
@@ -1783,14 +1822,17 @@
         "saving": "Saving…",
         "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
         "unlimited": "no limit",
-        "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared."
+        "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared.",
+        "forecast": "A registration carried through to confirmation costs about {count} messages; what is left pays for about {left} more registrations.",
+        "forecastUnlimited": "A registration carried through to confirmation costs about {count} messages.",
+        "forecastBcc": "Of those, {extra} are the hidden copies — one for each address under “The club's copies” (currently {bcc}) on every email to a participant."
       },
       "contacts": {
         "title": "Who receives the contact messages",
-        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another. Saved here, with no redeploy.",
+        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another, “Hidden copy (Bcc)” get a copy without appearing in the message. Saved here, with no redeploy.",
         "source": {
-          "setting": "They currently reach: {to}. Copy: {cc}. Set here, in the app.",
-          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}.",
+          "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
+          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
           "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
         },
         "updatedAt": "Set on {when}.",
@@ -1798,6 +1840,8 @@
         "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
         "cc": "Copy – Cc (addresses separated by commas)",
         "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
+        "bcc": "Hidden copy – Bcc (addresses separated by commas)",
+        "bccHelp": "They get a copy of every message the form sends without appearing in it: neither the visitor nor the people under “To” and “Cc” see them. An address also written under “To” or “Cc” receives one message only. Empty means no hidden copies.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
@@ -1975,11 +2019,36 @@
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
-    "submitted": "Check your email to confirm your registration.",
     "submittedTo": "We sent it to:",
-    "submittedDelay": "It can take up to 5 minutes to arrive.",
-    "submittedSpam": "If you cannot see it, check your spam folder before registering again.",
     "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
+    "done": {
+      "heading": "Almost there!",
+      "headingNamed": "Almost there, {name}!",
+      "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
+      "nextTitle": "What happens next",
+      "next": {
+        "open": {
+          "title": "Open the email and press the link",
+          "body": "That is all. The link is valid for {hours} hours."
+        },
+        "declare": {
+          "title": "Sign the declaration",
+          "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
+          "bodyLater": "The place is yours. {opensDays} days before the start we ask you to confirm: sign the declaration online — or on paper, at the registration desk on race day. You can sign earlier, from the registration email."
+        },
+        "confirmed": {
+          "title": "You are in",
+          "body": "You get the confirmation, with your QR code and race number. See you at the start!"
+        }
+      },
+      "delay": "It usually arrives within a minute, five at the most.",
+      "notArrived": "Not there? Look in Spam too. The link is valid for {hours} hours, so there is time.",
+      "backToEvent": "Back to the event"
+    },
+    "deliveryNotice": {
+      "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
+      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault."
+    },
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
@@ -2217,6 +2286,21 @@
         "RESIDENCE_PERMIT": "Residence permit",
         "OTHER": "Other document"
       }
+    },
+    "list": {
+      "title": "The public participant list",
+      "event": "For the event: {event}",
+      "listed": "Your name appears on this event's public participant list.",
+      "notListed": "Your name does not appear on this event's public participant list.",
+      "help": "The list shows the name (or the display name you chose) and the club, and only on events where the club publishes one. The choice is yours and you can change it at any time: here, from the confirmation email or from \"My registrations\".",
+      "optOut": "Take me off the public list",
+      "optIn": "Show my name on the public list",
+      "changed": "Your choice has been saved.",
+      "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
+      "failed": "Could not save your choice. Try again or write to us.",
+      "shortListed": "You are on the public participant list.",
+      "shortNotListed": "You are not on the public participant list.",
+      "eventPage": "The event's page"
     },
     "mine": {
       "title": "My registrations",

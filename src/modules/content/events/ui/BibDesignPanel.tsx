@@ -15,7 +15,9 @@ import {
   type BibDesign,
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
-import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import BibDesignPreview from "./BibDesignPreview";
 
 /**
  * What a race number looks like, as the club decides it (`DECISIONS.md` §249; the owner: "I
@@ -27,18 +29,35 @@ import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
  * the pictures are radio buttons over the pictures already uploaded, so choosing one is a form
  * control rather than a widget.
  *
+ * The one client island is the preview at the top (`BibDesignPreview`; the owner: "la BID îmi
+ * trebuie un preview aici"): the bib as the picture route draws it for a sample runner, with
+ * the boxes' current, unsaved values in its address. This component gives it the first address,
+ * from the stored design, so the picture is there before any script runs; the island only
+ * rebuilds it as the boxes change.
+ *
  * **The marker input is not decoration.** A checkbox that is off posts nothing, so a form
  * without this panel — the create form — would otherwise read as "every switch off" and
  * silently redesign a bib. `present=1` is what tells the action that the design was on screen
  * (`app/[locale]/admin/actions.ts`).
  */
-export default async function BibDesignPanel({ design = DEFAULT_BIB_DESIGN }: {
+export default async function BibDesignPanel({
+  eventId,
+  design = DEFAULT_BIB_DESIGN,
+  bibStartNumber,
+  bibColour,
+}: {
+  /** The event being designed; the preview asks the picture route for its title and date. */
+  eventId: string;
   /** What is stored, or the platform's own on an event nobody has designed. */
   design?: BibDesign;
+  /** The stored start number and band colour (§173), for the preview's first address. */
+  bibStartNumber: number;
+  bibColour: string | null;
 }) {
   const t = await getTranslations("Admin");
   // The reader's own language, for the picture list's titles; the form has no locale prop.
   const locale = (await getLocale()) as Locale;
+  const initialSrc = bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design });
   /*
     The pictures already uploaded, read here rather than fetched by the browser: this form is a
     Server Component and the list is the same one the pictures page shows. Nothing is offered
@@ -103,17 +122,25 @@ export default async function BibDesignPanel({ design = DEFAULT_BIB_DESIGN }: {
   );
 
   return (
-    <Box component="details" sx={{ ...DISCLOSURE_SX, mt: 1 }} data-testid="bib-design">
-      <Typography component="summary" variant="body2" sx={{ ...DISCLOSURE_SUMMARY_SX, fontWeight: 600 }}>
+    <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }} data-testid="bib-design">
+      <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
         {t("editor.bibDesign.title")}
       </Typography>
       {/* What tells the action that this panel was on the form; see the note above. */}
       <input type="hidden" name="event.bibDesign.present" value="1" />
 
-      <Stack spacing={1.5} sx={{ mt: 1 }}>
+      <Stack spacing={1.5}>
         <Typography variant="caption" color="text.secondary">
           {t("editor.bibDesign.intro")}
         </Typography>
+
+        {/* The bib as it would print with the boxes as they are now, redrawn as they change. */}
+        <BibDesignPreview
+          eventId={eventId}
+          locale={locale}
+          initialSrc={initialSrc}
+          labels={{ alt: t("editor.bibDesign.previewAlt"), caption: t("editor.bibDesign.previewCaption") }}
+        />
 
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (

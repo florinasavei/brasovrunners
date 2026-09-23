@@ -43,6 +43,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     title: "Crosul aniversar",
     excerpt: "",
     checklist: "",
+    locationName: "",
     seoTitle: "",
     seoDescription: "",
   };
@@ -94,6 +95,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "excerpt",
       // The short description as the editor posts it (`DECISIONS.md` §73); `excerpt` is derived.
       "excerptBody",
+      // The place's *name* in this language (migration `0058`) — the one part of §36's move
+      // the owner took back. The meeting point itself is still the event's.
+      "locationName",
       // The rules, per language (`DECISIONS.md` §96).
       "rules",
       // The programme, per language (`DECISIONS.md` §96).
@@ -217,6 +221,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/preview/events/[id]",
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",
+      // The public list's own switch (BR-REQ-039-01, §143): written here by hand like the rest.
+      "/registrations/list/[token]",
       "/registrations/manage/[token]",
       "/registrations/mine",
       "/registrations/mine/[token]",

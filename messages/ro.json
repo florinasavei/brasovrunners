@@ -107,6 +107,7 @@
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
       "instagram": "Instagram",
+      "instagramDownload": "Descarcă poza pentru Instagram",
       "calendarTitle": "Adaugă în calendar:",
       "googleCalendar": "Google Calendar",
       "ics": "Fișier .ics"
@@ -355,6 +356,7 @@
       "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
+      "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
         "registration": {
           "created_by_staff": "Înscriere adăugată de echipă",
@@ -365,7 +367,8 @@
           "confirmed_by_staff": "Confirmat la masă (adresă garantată, declarație pe hârtie)",
           "promoted_by_staff": "Loc dat înaintea listei de așteptare",
           "checked_in": "Marcat prezent",
-          "checkin_undone": "Prezență anulată"
+          "checkin_undone": "Prezență anulată",
+          "list_consent_changed": "Alegerea pentru lista publică schimbată de participant"
         }
       },
       "locale": {
@@ -505,7 +508,7 @@
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
-      "eventsRepeated": "{created} ediții create.",
+      "eventsRepeated": "Seria e pornită: {created} date create acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "bulkSelectAll": "Toate",
       "bulkSelected": "Bifate: {count}",
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
@@ -558,14 +561,15 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
-      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. La fel în ambele limbi, completat o dată.",
+      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. Numele comun, completat o dată; dacă locul se numește altfel în engleză, scrii numele acela la „Conținut”, pe fila limbii.",
+      "locationNameInLanguage": "Denumirea locului (în această limbă)",
+      "locationNameInLanguageHelp": "Opțional. Cum se numește punctul de întâlnire pe pagina în această limbă — „Tractorul Park” pe cea în engleză, de exemplu. Lasă gol și pagina folosește numele de la „{panel}”.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte — aniversară, caritabilă, o cursă la care ne alăturăm altcuiva. Apare cu un marcaj pe card și pe pagină. Oricâte evenimente pot fi speciale, inclusiv o singură ediție dintr-o serie; marcajul rămâne pe data aceea și nu se copiază pe celelalte.",
       "saveEvent": "Salvează detaliile evenimentului",
       "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
-      "translationSection": "Conținut ({locale})",
       "translationReadOnly": "Textele le scrie Redactorul sau Administratorul — tu te ocupi de Setări: data, locul, traseul, locurile, înscrierile și ziua cursei. Ca să schimbi ceva aici, cere-i Administratorului.",
       "saveCoversSettingsOnly": "Salvarea de mai jos acoperă Setările evenimentului. Textele din „Conținut” nu se salvează de aici, pentru că nu sunt ale rolului tău.",
       "version": "versiunea {version}",
@@ -590,10 +594,11 @@
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
         "rules": "Regulamentul evenimentului",
-        "schedule": "Programul evenimentului"
+        "schedule": "Programul evenimentului",
+        "scheduleNotes": "Note sub program"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
-      "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
+      "contentHelp": "Același eveniment, în două limbi. Aici se schimbă textul — și denumirea locului, dacă în engleză se numește altfel; ora, harta, dificultatea și costul sunt mai jos, o singură dată, comune amândurora.",
       "tabIncomplete": "incomplet",
       "settingsSection": "Setări",
       "contentSection": "Conținut",
@@ -602,15 +607,16 @@
       "noTransitions": "Rolul tău nu poate muta acest eveniment din starea în care se află.",
       "incompleteForPublication": "Ambele limbi trebuie completate înainte ca evenimentul să poată fi publicat. Lipsesc: {detail}.",
       "newTitle": "Eveniment nou",
-      "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
+      "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Evenimentul se creează ca ciornă; totul se poate schimba și după, din pagina lui.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
+      "scheduleHelp": "Programul propriu-zis sunt rândurile cu ore de la „{panel}” → „{section}”, comune ambelor limbi. Aici scrii, în această limbă, ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Pe pagina evenimentului apare sub rânduri; emailul de reamintire repetă rândurile și trimite aici.",
       "programmeSection": "Program",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
+      "programmeNotesHint": "Ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp — se scrie la „{panel}”, în fiecare limbă, la „{fold}”; apare pe pagină sub aceste rânduri.",
       "programmeRows": {
         "date": "Data",
         "time": "Ora",
@@ -713,13 +719,11 @@
       "repeatCount": "Câte ediții",
       "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
       "repeat": "Creează edițiile",
-      "videoUrl": "Link video (YouTube)",
-      "videoUrlHelp": "Un link YouTube — filmul de anul trecut, de exemplu. Apare pe pagina evenimentului, într-un player care se încarcă doar când vizitatorul apasă. Lasă gol dacă nu există.",
-      "timeOfDay": "Ora (24h)",
+      "timeOfDay": "Ora",
       "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
       "repeatWeekdaysHelp": "Ziua acestui eveniment este mereu în serie; bifează și celelalte — de exemplu miercuri, pentru o tură de duminică. Se creează doar zilele de după acest eveniment. Nimic bifat: doar ziua evenimentului, la intervalul ales.",
-      "repeatOnCreateHelp": "Opțional. Se creează și edițiile următoare, ca ciorne, cu aceleași detalii și adrese cu data fiecăreia. Le publici pe toate deodată din lista de evenimente, cu „Publică cele bifate”.",
+      "repeatOnCreateHelp": "Opțional. Bifează și alege intervalul: datele din următoarele opt săptămâni se creează odată cu evenimentul, iar platforma le creează singură pe cele care urmează, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit. Fiecare dată e un eveniment al ei, cu adresa zilei; sunt ciorne dacă nu bifezi publicarea.",
       "weekdays": {
         "1": "Lu",
         "2": "Ma",
@@ -741,9 +745,9 @@
       },
       "coHostHelp": "Opțional. Organizațiile alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — una pe rând, cu pagina lor dacă au una. Apar ca „Împreună cu A, B și C” pe pagină și pe card, și sunt trecute ca organizatori după club pentru Google. Partenerii se copiază pe toate datele unei serii.",
       "stravaEventUrl": "Link către evenimentul Strava",
-      "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
+      "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "facebookEventUrl": "Link către evenimentul Facebook",
-      "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
+      "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Un eveniment Facebook cu mai multe date are o singură adresă, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
@@ -751,8 +755,7 @@
       "panels": {
         "when": "Când și unde",
         "registration": "Înscrieri",
-        "details": "Traseu și detalii",
-        "video": "Film"
+        "details": "Traseu și detalii"
       },
       "seoSection": "Adresa paginii și motoarele de căutare",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
@@ -796,7 +799,9 @@
         "sponsorImageSrc": "Bandă cu sponsori",
         "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
         "noPicture": "Fără imagine",
-        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea și PDF-ul se actualizează după salvare."
+        "previewCaption": "Previzualizare — așa se tipărește",
+        "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
+        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -878,6 +883,10 @@
       "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
       "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
       "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
+      "noAccount": "Fără cont de autentificare",
+      "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
+      "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
+      "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
     },
     "queue": {
@@ -1099,6 +1108,7 @@
       },
       "state": {
         "blocking": "Blochează",
+        "broken": "Nu funcționează",
         "open": "De făcut",
         "done": "Gata"
       },
@@ -1152,6 +1162,31 @@
             "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
             "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
+          ]
+        },
+        "inviteKey": {
+          "title": "Cheia de invitații (Zitadel)",
+          "todo": "Lipsește cheia (ZITADEL_MANAGEMENT_PAT). Fără ea, „Adaugă” pe Echipa pune persoana pe listă și îi trimite invitația noastră, dar nu îi creează contul de autentificare — iar pagina de autentificare nu are „fă-ți cont”, așa că persoana rămâne blocată. Cheia este tokenul unui service user Zitadel cu rolul Org User Manager, pus pe ambele proiecte Vercel (SETUP.md §37).",
+          "blind": "Cheia este pusă și se autentifică, dar nu poate face nimic: întrebată ce conturi vede, Zitadel nu îi arată nici contul tău — deși ești autentificat cu el chiar acum. Service user-ul nu este „Org User Manager” în organizație. Fiecare „Adaugă” pe Echipa scrie rândul și nu creează niciun cont, iar colegul întâlnește „User not found in the system” la autentificare (DECISIONS.md §288).",
+          "refused": "Cheia este pusă, dar Zitadel refuză căutarea de conturi pe care o face fiecare „Adaugă” — de obicei tokenul a fost revocat sau service user-ul nu este „Org User Manager” în organizație. Răspunsul Zitadel",
+          "unreachable": "Nu am putut verifica cheia: Zitadel nu a răspuns. Nu este neapărat o problemă a cheii — reîncarcă pagina peste câteva minute. Răspunsul",
+          "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
+          "how": [
+            "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „Brașov Runners — invitații”, access token type Bearer. Create.",
+            "Organization → Managers → + New: service account-ul, rolul Org User Manager (poate crea utilizatori și le poate trimite codurile de invitație; nimic altceva). Dialogul se numește „Add an Administrator” și cere service user-ul; dacă cere un Loginname, este „brasovrunners-invites”. Atenție: „Role Assignments” NU este asta — acea pagină dă roluri în interiorul unui proiect și nu are legătură cu gestionarea utilizatorilor; un service account poate sta acolo Activ, arătând configurat, și să nu poată crea pe nimeni (DECISIONS.md §288).",
+            "Pe service account → Personal Access Tokens → New. Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit. Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
+            "Vercel → proiectul de producție → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = tokenul (Production). La fel pe proiectul QA. Redeploy pe ambele.",
+            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni. Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
+          ],
+          "howBroken": [
+            "Consola Zitadel → Organization → Managers → + New: alege service account-ul cheii (SETUP.md §37: „brasovrunners-invites”), rolul Org User Manager — poate crea utilizatori și le poate trimite codurile de invitație, nimic altceva. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este numele service account-ului.",
+            "Nu „Role Assignments”: acea pagină dă roluri în interiorul unui proiect și nu are legătură cu gestionarea utilizatorilor. Un service account poate sta acolo Activ, arătând perfect configurat, și să nu poată crea pe nimeni — exact ce s-a întâmplat pe instanța clubului (DECISIONS.md §288).",
+            "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy (SETUP.md §37, pașii 3–4).",
+            "Verificare: reîncarcă această pagină. Rândul se face verde când cheia găsește contul tău — fără să inviți pe nimeni. Apoi Echipa: fiecare coleg marcat „Fără cont de autentificare” a fost adăugat cât cheia nu putea crea conturi — ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă; de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă."
+          ],
+          "howUnreachable": [
+            "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o singură cerere către Zitadel.",
+            "Dacă rămâne așa, deschide consola Zitadel: dacă nu se deschide nici ea, furnizorul are o problemă și nu este nimic de făcut aici; dacă se deschide, verifică pe service account că tokenul există și, pe Vercel, că ZITADEL_MANAGEMENT_PAT și AUTH_ZITADEL_ISSUER sunt setate pe acest proiect (SETUP.md §37)."
           ]
         },
         "mediaStorage": {
@@ -1226,7 +1261,7 @@
             "Tot în Security → App passwords → creează una cu numele „Brașov Runners site” → copiază cele 16 caractere (se arată o singură dată).",
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei o copie pentru cineva, la „Copie (Cc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
+            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         }
@@ -1707,7 +1742,8 @@
       },
       "clubNotices": {
         "title": "Copiile clubului",
-        "intro": "Cine primește, la club, copia unei declarații semnate și cine află când cineva își confirmă înscrierea. Adrese ale clubului, nu ale participanților.",
+        "intro": "Cine primește, la club, copia unei declarații semnate, cine află când cineva își confirmă înscrierea și cine primește o copie ascunsă a emailurilor către participanți. Adrese ale clubului, nu ale participanților.",
+        "participantsInForce": "Copie ascunsă la emailurile către participanți: {bcc}.",
         "source": {
           "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
           "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
@@ -1723,6 +1759,9 @@
         "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
         "confirmationsTo": "Anunță-ne când cineva confirmă",
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
+        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, fără să apară în mesaj, o copie a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea cu codul QR, reminderul, numărul dat de mână. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
+        "participantsBccWarning": "O copie ascunsă a acestor emailuri primește și linkurile personale ale participantului — confirmarea adresei, semnarea declarației, „nu mai pot veni” — și codul QR de la start. Cine citește acea cutie poștală poate face acești pași în locul lui. Doar o cutie poștală a clubului, ca decizie a clubului.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
@@ -1783,14 +1822,17 @@
         "saving": "Se salvează…",
         "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
         "unlimited": "fără limită",
-        "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită."
+        "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
+        "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
+        "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant."
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
-        "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul. Se salvează aici, fără redeploy.",
+        "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul, „Copie ascunsă (Bcc)” primesc o copie fără să apară în mesaj. Se salvează aici, fără redeploy.",
         "source": {
-          "setting": "Acum ajung la: {to}. Copie: {cc}. Scrise aici, în aplicație.",
-          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}.",
+          "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
         "updatedAt": "Setat la {when}.",
@@ -1798,6 +1840,8 @@
         "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
         "cc": "Copie – Cc (adrese despărțite prin virgulă)",
         "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
+        "bcc": "Copie ascunsă – Bcc (adrese despărțite prin virgulă)",
+        "bccHelp": "Primesc o copie la fiecare mesaj trimis din formular, fără să apară în el: nici vizitatorul, nici cei de la „Către” și „Cc” nu îi văd. O adresă scrisă și la „Către” sau „Cc” primește un singur mesaj. Gol înseamnă fără copii ascunse.",
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
@@ -1975,11 +2019,36 @@
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
-    "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "submittedTo": "L-am trimis la adresa:",
-    "submittedDelay": "Poate dura până la 5 minute să ajungă.",
-    "submittedSpam": "Dacă nu îl vezi, verifică și folderul de spam înainte să te înscrii din nou.",
     "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
+    "done": {
+      "heading": "Aproape gata!",
+      "headingNamed": "Aproape gata, {name}!",
+      "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "nextTitle": "Ce urmează",
+      "next": {
+        "open": {
+          "title": "Deschizi emailul și apeși linkul",
+          "body": "Atât. Linkul e valabil {hours} de ore."
+        },
+        "declare": {
+          "title": "Semnezi declarația",
+          "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
+          "bodyLater": "Locul e al tău. Cu {opensDays} zile înainte de start îți cerem confirmarea: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
+        },
+        "confirmed": {
+          "title": "Ești înscris",
+          "body": "Primești confirmarea, cu codul QR și numărul de concurs. Ne vedem la start!"
+        }
+      },
+      "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
+      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {hours} de ore, așa că ai timp.",
+      "backToEvent": "Înapoi la eveniment"
+    },
+    "deliveryNotice": {
+      "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
+      "allowlist": "Acesta este mediul de test: emailurile ajung doar la adresele autorizate de club. Dacă adresa ta nu e printre ele, nu vei primi nimic — și nu e vina ta."
+    },
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
@@ -2217,6 +2286,21 @@
         "RESIDENCE_PERMIT": "Permis de ședere",
         "OTHER": "Alt act"
       }
+    },
+    "list": {
+      "title": "Lista publică de participanți",
+      "event": "Pentru evenimentul: {event}",
+      "listed": "Numele tău apare pe lista publică de participanți a acestui eveniment.",
+      "notListed": "Numele tău nu apare pe lista publică de participanți a acestui eveniment.",
+      "help": "Lista arată numele (sau numele afișat pe care l-ai ales) și clubul, doar la evenimentele la care clubul publică una. Alegerea e a ta și o poți schimba oricând: de aici, din emailul de confirmare sau din „Înscrierile mele”.",
+      "optOut": "Nu vreau să apar pe lista publică",
+      "optIn": "Vreau să apar pe lista publică",
+      "changed": "Am reținut alegerea ta.",
+      "changedHelp": "Linkul din email s-a folosit. Pagina aceasta are unul nou — dacă te răzgândești, apasă butonul de mai sus.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou sau scrie-ne.",
+      "shortListed": "Apari pe lista publică de participanți.",
+      "shortNotListed": "Nu apari pe lista publică de participanți.",
+      "eventPage": "Pagina evenimentului"
     },
     "mine": {
       "title": "Înscrierile mele",

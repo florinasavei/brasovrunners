@@ -7,11 +7,24 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
+
+/**
+ * The form's start-date box, by name. The rows and the start date share nothing but the form:
+ * the start is a Server Component's field (`WallTimeField`), so the island reaches it the way
+ * `OnlyForType` reaches the type select — through the DOM, scoped to the form the rows are in,
+ * with the document as the fallback for a rows editor rendered outside one.
+ */
+function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputElement | null {
+  const named = root?.closest("form")?.elements.namedItem(name);
+  if (named instanceof HTMLInputElement) return named;
+  return document.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+}
 
 /**
  * The programme's rows in the editor (`DECISIONS.md` §117): when, what in both languages,
@@ -23,27 +36,68 @@ const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "
  *
  * Rows keep a key of their own across removals, so removing the second line does not hand
  * the third line's boxes the second line's values.
+ *
+ * The rows follow the event's date: the programme is usually on the day of the event, so
+ * when "Începutul evenimentului" — `startDateName`, a sibling input of the same form — moves
+ * from one day to another, every row that has a date moves by the same number of days
+ * (`shiftProgrammeDates`, the pure part), and a new row opens on the event's day. The date
+ * box is the one controlled input for that reason; the rest stay uncontrolled. The form still
+ * posts whatever is in the boxes — nothing below the form changed.
  */
 export default function ScheduleRowsEditor({
   initial,
   labels,
+  startDateName,
 }: {
   initial: ScheduleRowValue[];
   labels: { date: string; time: string; endTime: string; ro: string; en: string; place: string; add: string; remove: string; empty: string };
+  /** The `name` of the event's start-date box in the same form. */
+  startDateName: string;
 }) {
+  const root = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState<Array<{ key: number; value: ScheduleRowValue }>>(() =>
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
   const [nextKey, setNextKey] = useState(rows.length);
+  // The last complete start date the form held, so a change is measured from it. A date box
+  // reads "" while a segment is being retyped; that is waited out, never measured, so clearing
+  // the day and typing a new one is one move, not a loss of every row's date.
+  const lastStart = useRef("");
+
+  useEffect(() => {
+    const input = findStartDateInput(root.current, startDateName);
+    if (!input) return;
+    lastStart.current = input.value;
+    const onChange = () => {
+      const next = input.value;
+      if (!next || next === lastStart.current) return;
+      const previous = lastStart.current;
+      lastStart.current = next;
+      if (!previous) return;
+      setRows((current) => {
+        const shifted = shiftProgrammeDates(
+          current.map((row) => row.value),
+          previous,
+          next,
+        );
+        return current.map((row, index) => ({ key: row.key, value: shifted[index] }));
+      });
+    };
+    input.addEventListener("change", onChange);
+    return () => input.removeEventListener("change", onChange);
+  }, [startDateName]);
 
   const add = () => {
-    setRows((current) => [...current, { key: nextKey, value: EMPTY }]);
+    const date = findStartDateInput(root.current, startDateName)?.value || lastStart.current;
+    setRows((current) => [...current, { key: nextKey, value: { ...EMPTY, date } }]);
     setNextKey((key) => key + 1);
   };
   const remove = (key: number) => setRows((current) => current.filter((row) => row.key !== key));
+  const setDate = (key: number, date: string) =>
+    setRows((current) => current.map((row) => (row.key === key ? { key, value: { ...row.value, date } } : row)));
 
   return (
-    <Stack spacing={1.5}>
+    <Stack ref={root} spacing={1.5}>
       {rows.length === 0 && (
         <Typography variant="body2" color="text.secondary">
           {labels.empty}
@@ -63,28 +117,31 @@ export default function ScheduleRowsEditor({
                 name={name("date")}
                 type="date"
                 label={labels.date}
-                defaultValue={value.date}
+                value={value.date}
+                onChange={(event) => setDate(key, event.target.value)}
                 size="small"
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ width: 150 }}
               />
+              {/* Picked, not typed, like the start time (`WallTimeField`): the browser's own
+                  clock, posting `HH:MM` whatever face it shows. */}
               <TextField
                 name={name("time")}
+                type="time"
                 label={labels.time}
                 defaultValue={value.time}
-                placeholder="HH:MM"
                 size="small"
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { inputMode: "numeric", pattern: "([01][0-9]|2[0-3]):[0-5][0-9]", maxLength: 5 } }}
-                sx={{ width: 90 }}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 120 }}
               />
               <TextField
                 name={name("endTime")}
+                type="time"
                 label={labels.endTime}
                 defaultValue={value.endTime}
-                placeholder="HH:MM"
                 size="small"
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { inputMode: "numeric", pattern: "([01][0-9]|2[0-3]):[0-5][0-9]", maxLength: 5 } }}
-                sx={{ width: 90 }}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 120 }}
               />
             </Stack>
             <TextField name={name("ro")} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />

@@ -231,6 +231,8 @@ describe("BR-REQ-038-01 race numbers", () => {
     const ro = await findEventForBibs(db, eventId, "ro");
     expect(ro?.title).toBe("Crosul aniversar");
     expect(ro?.bibColour).toBe("#1b7f3b");
+    // The band's start (§173), which the editor's sample bib is numbered with when its box is blank.
+    expect(ro?.bibStartNumber).toBe(1);
     expect(ro?.coHosts.map((host) => host.name)).toEqual(["Primăria Brașov", "Salvamont"]);
     expect((await findEventForBibs(db, eventId, "en"))?.title).toBe("The anniversary cross");
 

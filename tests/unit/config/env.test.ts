@@ -35,6 +35,18 @@ describe("BR-REQ-101-02 environment validation", () => {
       expect(envSchema.parse({ APP_BASE_URL: url }).APP_BASE_URL).toBe(url);
     }
   });
+
+  it("drops a trailing slash once, so every `${APP_BASE_URL}${pathname}` join reads the same", () => {
+    // Typed by a person into a dashboard; `z.url()` accepts `https://host/`, and some forty
+    // call sites concatenate a pathname onto the value. Normalised here, once, not at each.
+    expect(envSchema.parse({ APP_BASE_URL: "https://example.test/" }).APP_BASE_URL).toBe("https://example.test");
+    expect(envSchema.parse({ APP_BASE_URL: "https://example.test//" }).APP_BASE_URL).toBe("https://example.test");
+    // A path prefix is kept; only the slash at the end goes.
+    expect(envSchema.parse({ APP_BASE_URL: "https://example.test/site/" }).APP_BASE_URL).toBe("https://example.test/site");
+    // The join the call sites make, on the value they are given.
+    const base = envSchema.parse({ APP_BASE_URL: "https://example.test/" }).APP_BASE_URL;
+    expect(`${base}/ro/evenimente`).toBe("https://example.test/ro/evenimente");
+  });
 });
 
 /**

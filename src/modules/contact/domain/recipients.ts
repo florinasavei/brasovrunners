@@ -16,6 +16,13 @@ import { z } from "zod";
  * environment answers when it does not, and with neither the form is off, as before. The Cc
  * list is app-only — there is no environment variable for it, and there will not be one: a
  * copy for a colleague is a club decision, not a deployment's.
+ *
+ * The Bcc list (2026-09-22) is the same kind of thing, one degree quieter: a hidden copy of
+ * every message the form sends, to a mailbox neither the visitor nor the other recipients see.
+ * §164 refused it once for the *Cc* — "a club is not a blind list" — and that reasoning still
+ * holds for the people who should see one another; this list is for the mailbox that should not
+ * be seen: an archive, a president who reads but does not answer. A row stored before the list
+ * existed reads it as empty.
  */
 
 /** One address, trimmed, validated by the same canonicalizer the whole platform uses (§10.4). */
@@ -55,17 +62,25 @@ export const contactRecipientsSchema = z
   .object({
     to: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
     cc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
+    // Absent on a row saved before the list existed, and read as empty then — a stored setting
+    // never needs a migration to grow a list (`platform_settings` is one JSON row per key).
+    bcc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
   })
   .strict()
-  // Stored the way it will be sent, so the boxes show the club what it actually did.
+  // Stored the way it will be sent, so the boxes show the club what it actually did. One `seen`
+  // set across the three lists: an address in "to" is not also copied, visibly or not.
   .transform((value) => {
     const seen = new Set<string>();
-    return { to: withoutRepeats(value.to, seen), cc: withoutRepeats(value.cc, seen) };
+    return {
+      to: withoutRepeats(value.to, seen),
+      cc: withoutRepeats(value.cc, seen),
+      bcc: withoutRepeats(value.bcc, seen),
+    };
   });
 
 export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
 
-export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [] };
+export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [] };
 
 /**
  * A typed line — "club@…, amalia@…" — as a list. Commas and semicolons both, because both are
@@ -90,6 +105,8 @@ export type ContactRecipientsSource = "setting" | "environment" | "none";
 export type ResolvedContactRecipients = {
   to: readonly string[];
   cc: readonly string[];
+  /** The hidden copies: envelope recipients, named in no header the others read. */
+  bcc: readonly string[];
   source: ContactRecipientsSource;
 };
 
@@ -97,20 +114,23 @@ export type ResolvedContactRecipients = {
  * The reading order, so a deployment always works: the setting when it holds at least one
  * "to", otherwise `CONTACT_FORM_TO`, otherwise nobody and the form is off.
  *
- * The Cc list is the setting's whichever way the "to" list resolved — a copy to a colleague
- * must not depend on whether the club has got round to moving the main list into the app.
- * It is resolved *against* the "to" list, and against the environment's too: a colleague who
- * is already a recipient is not copied as well, whichever half named her.
+ * The Cc and Bcc lists are the setting's whichever way the "to" list resolved — a copy to a
+ * colleague must not depend on whether the club has got round to moving the main list into the
+ * app. Both are resolved *against* the "to" list, and against the environment's too: a
+ * colleague who is already a recipient is not copied as well, whichever half named her, and an
+ * address in Cc is not also hidden-copied.
  */
 export function resolveContactRecipients(
   setting: ContactRecipients | null,
   environmentTo: readonly string[],
 ): ResolvedContactRecipients {
   const settingCc = setting?.cc ?? [];
+  const settingBcc = setting?.bcc ?? [];
   const resolve = (rawTo: readonly string[], source: ContactRecipientsSource): ResolvedContactRecipients => {
     const seen = new Set<string>();
     const to = withoutRepeats(rawTo, seen);
-    return { to, cc: withoutRepeats(settingCc, seen), source };
+    const cc = withoutRepeats(settingCc, seen);
+    return { to, cc, bcc: withoutRepeats(settingBcc, seen), source };
   };
   if (setting && setting.to.length > 0) return resolve(setting.to, "setting");
   if (environmentTo.length > 0) return resolve(environmentTo, "environment");

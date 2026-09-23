@@ -46,7 +46,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitIconButton from "@/shared/ui/SubmitIconButton";
 import type { ActionIconName } from "@/shared/ui/action-icons";
-import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -67,7 +67,7 @@ import {
   transitionEventAction,
 } from "../../actions";
 import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
-import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { HORIZON_DAYS, readRepeatRule } from "@/modules/events/domain/repeat";
 import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { ruleSentence } from "@/modules/events/ui/series-sentence";
 import { findEventTitle } from "@/modules/content/events/repository";
@@ -279,8 +279,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "created" && created && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
         )}
+        {/* "{created} ediții create." read as a job half done — the owner: "nu e clar cand
+            creeze si zice 'urmatoarele 7 serii'". The number is how many dates fit in the next
+            eight weeks from the day of the press (§122), so the banner now says the horizon it
+            reached and that the job makes the rest. The horizon is recomputed here from the
+            same constant the service used a moment ago; a minute's drift cannot move the day. */}
         {saved === "eventsRepeated" && (
-          <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
+          <Alert severity="success">
+            {t("events.eventsRepeated", {
+              created: created ?? "0",
+              until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
+            })}
+          </Alert>
         )}
         {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
         {saved === "interestRemoved" && <Alert severity="success">{t("queue.interestRemoved")}</Alert>}
@@ -568,11 +578,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               actually does is folded under it: six lines of explanation open on every event
               was six lines of explanation about something most events are not. */}
           <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
-            <Box component="details" sx={{ ...DISCLOSURE_SX, mb: 1 }}>
+            <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mb: 1 }}>
               <Typography component="summary" variant="body2">
                 {t("editor.repeatHelpSummary")}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ pb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
                 {t("editor.repeatHelp")}
               </Typography>
             </Box>

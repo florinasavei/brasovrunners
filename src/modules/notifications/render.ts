@@ -12,6 +12,7 @@ import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
+import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
 import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
@@ -55,6 +56,7 @@ const ROUTE_BY_PURPOSE: Record<
   | "/registrations/declare/[token]"
   | "/registrations/manage/[token]"
   | "/registrations/mine/[token]"
+  | "/registrations/list/[token]"
 > = {
   VERIFY_REGISTRATION_EMAIL: "/registrations/confirm/[token]",
   COMPLETE_DECLARATION: "/registrations/declare/[token]",
@@ -62,6 +64,9 @@ const ROUTE_BY_PURPOSE: Record<
   MANAGE_REGISTRATION: "/registrations/manage/[token]",
   // "My registrations" (BR-REQ-036-04, `DECISIONS.md` §77); the M4 profile will share the purpose.
   MANAGE_PROFILE: "/registrations/mine/[token]",
+  // The public list's own switch (BR-REQ-039-01): never a message's main action, always the
+  // confirmation's second token — see below.
+  LIST_CONSENT: "/registrations/list/[token]",
 };
 
 /** A sensible default when the triggering registration has no deadline of its own to borrow. */
@@ -248,6 +253,29 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
     // "I can't make it any more" is the manage page's cancel section, one tap from the mail (§96).
     if (purpose === "MANAGE_REGISTRATION") data.manageUrl = actionUrl;
+  }
+
+  /*
+    The confirmation's second token: the public participant list, the participant's own switch
+    (BR-REQ-039-01; `DECISIONS.md` §143). "Nu vreau să apar pe lista publică" when the name is
+    on it, "Vreau să apar" when it is not — the link reads the row as it stands at send time.
+
+    Its own purpose, `LIST_CONSENT`, rather than a second use of the manage token above:
+    spending one must not spend the other, and one active token per (registration, purpose) is
+    what the table enforces. The lifetime is the same fortnight the manage link gets; after it,
+    "Înscrierile mele" and the manage page carry the same button under their own links.
+  */
+  if (row.messageType === "REGISTRATION_CONFIRMED" && row.participantId && registration) {
+    const issued = await issueActionToken(db, {
+      participantId: row.participantId,
+      registrationId: registration.id,
+      purpose: "LIST_CONSENT",
+      expiresAt: new Date(now.getTime() + LIST_CONSENT_TOKEN_HOURS * 60 * 60_000),
+      now,
+    });
+    const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.LIST_CONSENT, params: { token: issued.secret } } });
+    data.listConsentUrl = `${env.APP_BASE_URL}${path}`;
+    data.listed = !registration.listOptOut;
   }
 
   // The signed declaration itself, rendered now from the rows and never stored as a file

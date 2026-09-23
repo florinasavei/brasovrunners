@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -10,7 +9,6 @@ import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
-import { PAGE_WIDTH } from "@/theme/brand";
 
 /**
  * The height of the footer's one visible line. Thin, by the owner's instruction: the bar sits at
@@ -20,46 +18,61 @@ import { PAGE_WIDTH } from "@/theme/brand";
  */
 const BAR_HEIGHT = 44;
 
-/** The scheme switch's own width, which the summary starts after. */
+/** The scheme switch's own width: the first item on the line, and what an open fold leaves room for. */
 const SWITCH_WIDTH = 44;
+
+/** Each social mark's link: a full tap target (BR-REQ-041-01 criterion 6), the 20px glyph inside it. */
+const MARK_TARGET = 44;
 
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it.
  *
- * Five things share the line. In the bottom-left corner, the light/dark switch (§115: "the
- * theme switcher should be in the bottom left corner" — it was in the header), and **on a phone
- * the language switcher in the bottom-right one** (§262: "eventual mutăm selectorul de limbi in
- * dreapta jos") — the header row of a phone is 328 pixels and the sections need them. From
- * `sm` up the language stays in the header, where a setting sits at the end of the row it is
- * on, and this one is `display: none`, so exactly one "Limbă" navigation exists at any width.
- * Then a
- * `<summary>` that opens the rest — the club, the contact, the legal pages — and names them, so
- * a visitor after the privacy notice knows to open it (`AGENTS.md` §9.2 asks the legal routes
- * be *linked from* the footer; they are, and the registration form links the notice directly
- * where it matters, BR-REQ-070-01). In the middle, the social marks — Facebook, Instagram and
- * the Strava club — **outside the disclosure and always visible**, by the owner's instruction
- * on 2026-09-17. On the right, the build badge keeps its fixed corner.
+ * Five things share the line, as one flex row that wraps. In the bottom-left corner, the
+ * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
+ * in the header). Then a `<summary>` that opens the rest — the club, the contact, the legal
+ * pages — and names them, so a visitor after the privacy notice knows to open it
+ * (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are, and the
+ * registration form links the notice directly where it matters, BR-REQ-070-01). Then the
+ * social marks — Facebook, Instagram and the Strava club — **outside the disclosure and always
+ * visible**, by the owner's instruction on 2026-09-17. And **on a phone the language switcher
+ * in the bottom-right corner** (§262: "eventual mutăm selectorul de limbi in dreapta jos") —
+ * the header row of a phone is 328 pixels and the sections need them. From `sm` up the
+ * language stays in the header, where a setting sits at the end of the row it is on, and this
+ * copy is `display: none`, so exactly one "Limbă" navigation exists at any width. The build
+ * badge is under the bar on a phone and a tablet and floats in the corner from `md`
+ * (`BuildBadge`).
  *
- * ## Why the marks are positioned rather than laid out
+ * ## Why a row that wraps, and not marks positioned on the line
  *
- * The middle of the line belongs to the `<details>`, whose summary must be its own first child
- * and whose panel must open full-width beneath. A flex row cannot put a third element between a
- * summary and its panel, and links inside a summary are links inside a button, which reads
- * wrongly to assistive technology. So the marks are absolutely positioned on the line, centred
- * from `sm` up and on the right below it, where the summary's text would otherwise run under
- * them on a 320px screen. The badge is static there, so nothing else claims that corner.
+ * Until 2026-09-23 the marks and the two switches were absolutely positioned over the bar,
+ * because the line "belonged" to the `<details>` and a flex row cannot put a sibling between
+ * a summary and its panel. Positioned, they had no width in the layout, so nothing stopped
+ * them landing on something else: at 600–750 pixels the marks, centred, sat on the summary's
+ * last word and on the fixed build badge (the owner's screenshot), and on an iPhone the Strava
+ * mark could not be tapped at all (Amalia). Every element in the bar is a flex item now, with
+ * a width the others make room for, so overlap is not a state the layout can reach — and the
+ * e2e suite measures it (`tests/e2e/footer.spec.ts`).
  *
- * ## Aligned with the page, sticky at the bottom
+ * The panel is the one thing a flex row does complicate, since it lives inside the
+ * `<details>` beside the marks. The answer is the `[open]` state: an open fold takes the rest
+ * of the line (`flex-basis: 100% - the switch`) and the marks — and on a phone the language —
+ * wrap to a line of their own under the panel, still visible, still 44 pixels. Closed, the
+ * summary gives up width first (`flex-shrink`, an ellipsis) so the marks and the language never
+ * do; on a phone its tail (", contact și termeni") is not rendered at all.
  *
- * The container is `lg`, the same as the header and every content page, so the summary's left
- * edge sits on the logo's column. Sticky like the header, below the badge's layer (1050) and the
- * header's (1100); `mt: "auto"` still pushes it to the bottom of a short page.
+ * ## Sticky at the bottom
+ *
+ * Sticky like the header, below the badge's layer (1050) and the header's (1100); `mt: "auto"`
+ * still pushes it to the bottom of a short page. Full-bleed rather than in the page's column:
+ * the switch belongs in the bar's own corner (BR-REQ-041-01 criterion 11), and `PAGE_WIDTH`
+ * is `xl`, so the column and the bar have the same edges on every screen there is.
  *
  * ## Why `<details>` and not a client island
  *
- * It is a collapsible section on the platform: works with JavaScript off, costs no client code,
- * needs no state (§1.5). The summary's height comes from its line-height — `display: flex` on a
- * `<summary>` removes the disclosure triangle in Chrome and Safari.
+ * It is a collapsible section on the platform: works with JavaScript off, costs no client
+ * code, needs no state (§1.5). `display: contents` on the `<details>` would have made the
+ * summary and the panel flex items in their own right; Safari does not render a `<details>`
+ * that way, and Safari is where this was reported from.
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
@@ -87,41 +100,39 @@ export default async function SiteFooter() {
         zIndex: 1000,
       }}
     >
-      {/* In the corner of the bar itself, not of the page's column (the owner: "all the way to
-          the left") — positioned like the marks, because the line is the summary's. */}
-      {/* Above the column (`zIndex`): the column is positioned too and comes later in the DOM, so
-          without it the fold's 44px summary painted over the switch on a phone and swallowed the
-          tap — the owner: "nothing happens when I click" (§157). */}
-      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center", zIndex: 1 }}>
-        <ThemeModeToggle />
-      </Box>
-      {/*
-        The language, in the opposite corner and on a phone only (§262).
+      {/* One row, wrapping: every control has its own width here, and nothing is drawn over a sibling. */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
+        {/* The switch, in the bar's own corner (BR-REQ-041-01 criterion 11): the first item, exactly its width. */}
+        <Box
+          sx={{
+            flex: `0 0 ${SWITCH_WIDTH}px`,
+            width: SWITCH_WIDTH,
+            height: BAR_HEIGHT,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ThemeModeToggle />
+        </Box>
 
-        Positioned on the bar rather than laid out in it, for the reason the marks below are: the
-        line belongs to the `<summary>`, and a flex row cannot put a sibling between a summary
-        and the panel it opens. `right: 8` is the switch's own inset on the left, mirrored; the
-        build badge is static on a phone (`BuildBadge`: `position: { xs: "static" }`), so
-        nothing else claims this corner at this width.
-
-        Above the column like the switch, or the fold's 44px summary paints over it and swallows
-        the tap — which is exactly what §157 found on the other side of the bar.
-      */}
-      <Box
-        sx={{
-          display: { xs: "flex", sm: "none" },
-          position: "absolute",
-          top: 0,
-          right: 8,
-          height: BAR_HEIGHT,
-          alignItems: "center",
-          zIndex: 1,
-        }}
-      >
-        <LocaleSwitcher />
-      </Box>
-      <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
-        <Box component="details">
+        <Box
+          component="details"
+          sx={{
+            // On a phone, whatever the switch, the marks and the language leave: a zero basis,
+            // grown. A wrapping row assigns items to lines by their *hypothetical* size before
+            // anything shrinks, so a fold sized by its summary would push the language onto a
+            // second line at 320px however much it was allowed to shrink — a basis of zero is
+            // the one size that never does. From `sm` up there is room, no language here, and
+            // the fold is only as wide as its summary, so the marks follow the words rather
+            // than sit at the far right, where the build badge floats from `md`.
+            flex: { xs: "1 1 0%", sm: "0 1 auto" },
+            minWidth: 0,
+            // Open, the fold takes the rest of the line: the panel gets the width its links
+            // need, and the marks (and on a phone the language) wrap to a line under it.
+            "&[open]": { flexBasis: `calc(100% - ${SWITCH_WIDTH}px)` },
+          }}
+        >
           <Box
             component="summary"
             sx={{
@@ -130,6 +141,8 @@ export default async function SiteFooter() {
               // summary *is* the bar — and the rest is the same fold everywhere else is.
               ...DISCLOSURE_SUMMARY_SX,
               py: 0,
+              // Four pixels a side at 320, where the label has 94 to itself; eight from `sm`.
+              px: { xs: 0.5, sm: 1 },
               minHeight: BAR_HEIGHT,
               color: "text.secondary",
               fontSize: "0.8125rem",
@@ -138,14 +151,9 @@ export default async function SiteFooter() {
               // centre — where a pointer test clicks — under the social marks, and made empty
               // space on the bar toggle the panel.
               width: "fit-content",
-              // Clear of the scheme switch in the bar's corner: on a wide screen the column's
-              // own margin already is (`xl`: 168px either side of the `lg` column).
-              ml: { xs: `${SWITCH_WIDTH}px`, xl: 0 },
-              // On a phone the marks sit on the right of this same line (three of them, ~130px
-              // with their gaps): the label stops before them, whatever its length, and its
-              // tail — ", contact and legal" — is dropped there so what is left reads whole.
-              // The owner saw "About the club, contact and lega" under the Facebook mark.
-              maxWidth: { xs: `calc(100% - 140px - ${SWITCH_WIDTH}px)`, sm: "none" },
+              // Never wider than the fold it is in: when the line is short the label is cut
+              // with an ellipsis rather than pushing a mark off the bar.
+              maxWidth: "100%",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -153,13 +161,14 @@ export default async function SiteFooter() {
             }}
           >
             {footer("about.summaryShort")}
+            {/* The tail — ", contact and legal" — from `sm` up; a phone's line has no room for it. */}
             <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
               {footer("about.summaryTail")}
             </Box>
           </Box>
 
-          {/* Indented to the summary's text, past the switch and its marker, so the panel reads as its body. */}
-          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: { xs: `${SWITCH_WIDTH + 20}px`, xl: 2.5 }, maxWidth: "40rem" }}>
+          {/* Indented to the summary's text, past its marker, so the panel reads as its body. */}
+          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: 3.5, pr: 2, maxWidth: "40rem" }}>
             {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
             <Stack
               direction="row"
@@ -192,14 +201,13 @@ export default async function SiteFooter() {
             component="nav"
             aria-label={footer("about.socialLabel")}
             sx={{
-              position: "absolute",
-              top: 0,
+              // Their own width, never shrunk: three 44px targets side by side.
+              flex: "0 0 auto",
+              // On a phone the free space of the line goes before the marks, so they sit at
+              // the right beside the language; from `sm` up they follow the summary.
+              ml: { xs: "auto", sm: 1 },
               height: BAR_HEIGHT,
               alignItems: "center",
-              right: { xs: 62, sm: "auto" },
-              left: { xs: "auto", sm: "50%" },
-              transform: { xs: "none", sm: "translateX(-50%)" },
-              gap: 0.5,
             }}
           >
             {social.map((entry) => (
@@ -217,8 +225,9 @@ export default async function SiteFooter() {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: BAR_HEIGHT,
-                  height: BAR_HEIGHT,
+                  width: MARK_TARGET,
+                  height: MARK_TARGET,
+                  flexShrink: 0,
                   borderRadius: 1,
                   "&:hover": { bgcolor: "action.hover" },
                 }}
@@ -228,7 +237,22 @@ export default async function SiteFooter() {
             ))}
           </Stack>
         )}
-      </Container>
+
+        {/* The language, in the opposite corner and on a phone only (§262): the last item on the
+            line, its own width, so nothing is drawn over the mark beside it. */}
+        <Box
+          sx={{
+            display: { xs: "flex", sm: "none" },
+            flex: "0 0 auto",
+            ml: "auto",
+            height: BAR_HEIGHT,
+            alignItems: "center",
+            pr: 0.5,
+          }}
+        >
+          <LocaleSwitcher />
+        </Box>
+      </Box>
     </Box>
   );
 }

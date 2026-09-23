@@ -1,9 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,12 +8,16 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import EditorPanel from "@/modules/content/events/ui/EditorPanel";
 import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
+import RepeatFields from "@/modules/content/events/ui/RepeatFields";
+import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
+import TranslationFieldsForm, { blankTranslation } from "@/modules/content/events/ui/TranslationFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import RepeatFields from "@/modules/content/events/ui/RepeatFields";
-import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { createEventAction } from "../../actions";
 
 type Props = {
@@ -27,20 +28,28 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * A new event (BR-REQ-050-01).
+ * A new event (BR-REQ-050-01), out of the editor's own pieces.
  *
  * Both languages are asked for here rather than "Romanian now, English later": publication
  * requires a complete translation in every locale (`DECISIONS.md` §28), and a form that lets
  * one language be skipped produces an event that cannot be published and nobody remembers why.
  *
- * Only what differs between the languages is asked twice: the title, the page address and the
- * short description. The meeting point, the address, the difficulty and the cost are asked once,
- * above, because they are one fact about the event rather than a translation of one
- * (`DECISIONS.md` §36).
+ * **The same panels as the editor, in the same order** — the owner, screenshot in hand: "this
+ * event create page is a bit inconsistent with the event edit: there is no rich text editor??
+ * per language content should be tabbed". It used to render its own two stacked "Conținut"
+ * sections with a title, a slug and a plain one-line excerpt, and the editor had long since
+ * moved on to tabs, a rich summary and folds. So the languages are `LocaleTabPanels` over
+ * `TranslationFieldsForm` now, each handed a blank translation, and the settings are
+ * `EventFieldsForm` as they always were; what the two pages post is read by the same two
+ * readers in `admin/actions.ts`, so they cannot drift again. Only the panels that need data
+ * an unsaved event does not have are absent: publication, the queue, the bibs.
  *
- * The rest of the fields are the same component the editor uses, so nothing is configurable
- * after creation that could not be set at creation — `src/db/seeds/pilot.ts` stopped being how
- * an event is configured the moment this existed.
+ * **Recurrence first.** The owner: "«Repetă evenimentul» ar trebui să apară sus de tot, la
+ * început" — whether this is one date or a series is the first thing decided, before the date
+ * itself, and it stood at the very bottom. A tick, then the frequency (§170), as on the editor.
+ *
+ * The type defaults to a group run, as `EventFieldsForm` does, so the programme notes and the
+ * registration panel follow the type select from the same starting point on both pages.
  */
 export default async function NewEventPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -54,6 +63,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
   const { error } = await searchParams;
   const declarations = await listApprovedVersions(getDb(), "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
+  // The language endonyms are shared with the public switcher and the editor's tabs.
+  const tSite = await getTranslations("Site");
 
   return (
     <Stack spacing={3}>
@@ -72,58 +83,47 @@ export default async function NewEventPage({ params, searchParams }: Props) {
         <input type="hidden" name="uiLocale" value={locale} />
 
         <Stack spacing={3}>
-          <EventFieldsForm event={null} declarations={declarations} />
-
-          {routing.locales.map((contentLocale) => (
-            <Box key={contentLocale}>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="h3" sx={{ fontSize: "1rem", mb: 2 }}>
-                {t("editor.translationSection", { locale: contentLocale.toUpperCase() })}
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  name={`translations.${contentLocale}.title`}
-                  label={t("editor.fields.title")}
-                  required
-                />
-                <TextField
-                  name={`translations.${contentLocale}.slug`}
-                  label={t("editor.fields.slug")}
-                  helperText={t("editor.slugHelp")}
-                  required
-                />
-                <TextField
-                  name={`translations.${contentLocale}.excerpt`}
-                  label={t("editor.fields.excerpt")}
-                  helperText={t("editor.excerptHelp")}
-                  multiline
-                  minRows={2}
-                />
-              </Stack>
-            </Box>
-          ))}
-
-          {/* Recurrence, where the owner looked for it first (BR-REQ-050-02 criterion 7). The
-              copies are drafts like the event itself; the list publishes them together.
-              A tick first, the frequency after it (§170) — the select's "does not repeat"
-              option existed only because the control was always shown. */}
-          <Box>
-            <Divider sx={{ mb: 2 }} />
-            <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-              {t("editor.repeatSection")}
-            </Typography>
+          {/* Recurrence, first (BR-REQ-050-02 criterion 7). The copies are drafts like the
+              event itself; the list publishes them together. A tick first, the frequency after
+              it (§170) — the select's "does not repeat" option existed only because the control
+              was always shown. */}
+          <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
             <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {t("editor.repeatOnCreateHelp")}
               </Typography>
               <RepeatFields prefix="repeat." />
             </RepeatToggle>
-          </Box>
+          </EditorPanel>
+
+          {/* The words, as the editor asks for them (§170, §260): one tab per language,
+              Romanian first, the rich summary and the folds. Blank rows: no id, no version, so
+              the panel posts neither and the action reads the fields directly. */}
+          <EditorPanel
+            title={t("editor.contentSection")}
+            help={t("editor.contentHelp")}
+            headingId="panel-content"
+          >
+            <LocaleTabPanels
+              panels={routing.locales.map((contentLocale) => ({
+                locale: contentLocale,
+                label: tSite(`languageName.${contentLocale}`),
+                content: (
+                  <TranslationFieldsForm
+                    translation={blankTranslation(contentLocale)}
+                    eventType="GROUP_RUN"
+                    slugLocked={false}
+                    mayEdit
+                  />
+                ),
+              }))}
+            />
+          </EditorPanel>
+
+          <EventFieldsForm event={null} declarations={declarations} />
 
           <Box>
-            <Button type="submit" variant="contained">
-              {t("editor.create")}
-            </Button>
+            <SubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} size="medium" />
           </Box>
         </Stack>
       </form>

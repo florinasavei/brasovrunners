@@ -74,6 +74,19 @@ export default defineConfig({
     url: `${baseURL}/ro`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    env: { PORT: String(PORT), APP_BASE_URL: baseURL },
+    env: {
+      PORT: String(PORT),
+      APP_BASE_URL: baseURL,
+      /**
+       * The footer's social marks render only when the club's addresses are configured, and
+       * CI configures none — so the specs that measure the marks (`footer.spec.ts`: three 44px
+       * targets, none over another, each taking its tap) had nothing to measure there. These
+       * are placeholders on the networks' own hosts, never the club's handles; a value already
+       * in the environment wins, since Next reads `.env.local` under what is set.
+       */
+      CLUB_FACEBOOK_URL: process.env.CLUB_FACEBOOK_URL || "https://www.facebook.com/e2e-club",
+      CLUB_INSTAGRAM_URL: process.env.CLUB_INSTAGRAM_URL || "https://www.instagram.com/e2e-club",
+      CLUB_STRAVA_URL: process.env.CLUB_STRAVA_URL || "https://www.strava.com/clubs/e2e-club",
+    },
   },
 });
