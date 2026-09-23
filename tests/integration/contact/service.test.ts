@@ -186,24 +186,30 @@ describe("BR-REQ-070-04 the contact form", () => {
       EMAIL_FROM_NAME: "Brașov Runners",
     };
 
-    const configured = contactDeliveryFor(base, { to: ["club@example.com"], cc: ["amalia@example.org"] });
+    const configured = contactDeliveryFor(base, { to: ["club@example.com"], cc: ["amalia@example.org"], bcc: ["arhiva@example.org"] });
     expect(configured?.to).toEqual(["club@example.com"]);
     expect(configured?.cc).toEqual(["amalia@example.org"]);
+    expect(configured?.bcc).toEqual(["arhiva@example.org"]);
 
     await submitContactMessage(db, configured, PERSON, NOW, PAGE);
     const [sent] = capturedContactMessages();
     expect(sent?.to).toEqual(["club@example.com"]);
     expect(sent?.cc).toEqual(["amalia@example.org"]);
+    // The hidden copies reach the transport as `bcc` (2026-09-22): an envelope recipient the
+    // SMTP adapter hands to Nodemailer under that name, so no header names them.
+    expect(sent?.bcc).toEqual(["arhiva@example.org"]);
     // The visitor still answers "Reply", whoever else was copied.
     expect(sent?.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
 
-    // No "to" in the setting: the environment answers, and the copy list still applies.
-    const fallback = contactDeliveryFor(base, { to: [], cc: ["amalia@example.org"] });
+    // No "to" in the setting: the environment answers, and both copy lists still apply — minus
+    // the environment's own address, which is a recipient already.
+    const fallback = contactDeliveryFor(base, { to: [], cc: ["amalia@example.org"], bcc: ["OLD@example.com", "arhiva@example.org"] });
     expect(fallback?.to).toEqual(["old@example.com"]);
     expect(fallback?.cc).toEqual(["amalia@example.org"]);
+    expect(fallback?.bcc).toEqual(["arhiva@example.org"]);
 
     // Neither, on a deployment: nobody to send to is the same answer as no way to send.
-    const nobody = contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "smtp", CONTACT_FORM_TO: [] }, { to: [], cc: [] });
+    const nobody = contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "smtp", CONTACT_FORM_TO: [] }, { to: [], cc: [], bcc: [] });
     expect(nobody).toBeNull();
     expect(await submitContactMessage(db, nobody, PERSON, NOW, PAGE)).toEqual({ outcome: "unavailable" });
   });

@@ -47,6 +47,9 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
         {t(`emails.contacts.source.${resolved.source}`, {
           to: formatAddressList(resolved.to) || "—",
           cc: formatAddressList(resolved.cc) || "—",
+          // Named, not counted: this is the backoffice, and the Administrator who set the hidden
+          // copies is the one reading them back. Hidden from the message, never from the club.
+          bcc: formatAddressList(resolved.bcc) || "—",
         })}
       </Typography>
       {recipients.updatedAt && (
@@ -84,6 +87,14 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             defaultValue={formatAddressList(recipients.cc)}
             size="small"
             helperText={t("emails.contacts.ccHelp")}
+            slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
+          />
+          <TextField
+            name="bcc"
+            label={t("emails.contacts.bcc")}
+            defaultValue={formatAddressList(recipients.bcc)}
+            size="small"
+            helperText={t("emails.contacts.bccHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>

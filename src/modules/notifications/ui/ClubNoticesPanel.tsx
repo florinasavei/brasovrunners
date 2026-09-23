@@ -52,6 +52,12 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
           bcc: formatAddressList(declarations.bcc) || "—",
         })}
       </Typography>
+      {/* The hidden copies of every participant message, named in force like the lists above (2026-09-22). */}
+      <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+        {t("emails.clubNotices.participantsInForce", {
+          bcc: formatAddressList(notices.participants.bcc) || "—",
+        })}
+      </Typography>
       {notices.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
           {t("emails.clubNotices.updatedAt", {
@@ -107,6 +113,28 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             defaultValue={formatAddressList(notices.confirmations.to)}
             size="small"
             helperText={t("emails.clubNotices.confirmationsToHelp")}
+            slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
+          />
+          {/*
+            A hidden copy of every message a real participant receives (2026-09-22). The helper
+            says what it does and what it costs in one sentence: each address is one more message
+            against the Mailgun allowance for every participant message — the figure the plan panel
+            above and `/admin/tasks` count through `messagesPerCompletedRegistration`.
+          */}
+          {/*
+            The warning sits above the box, as the declaration's does (§244) — and this copy is the
+            stronger one: every email to a participant carries their own action links and, on the
+            confirmation, the QR code, so a mailbox on the Bcc can act in their place (§12.8).
+          */}
+          <Alert severity="warning" sx={{ py: 0.5 }}>
+            {t("emails.clubNotices.participantsBccWarning")}
+          </Alert>
+          <TextField
+            name="participantsBcc"
+            label={t("emails.clubNotices.participantsBcc")}
+            defaultValue={formatAddressList(notices.participants.bcc)}
+            size="small"
+            helperText={t("emails.clubNotices.participantsBccHelp")}
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
