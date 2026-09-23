@@ -36,7 +36,8 @@ import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
 import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
 import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
-import { editionNote } from "@/modules/events/ui/series-sentence";
+import { editionNote, renewalOf } from "@/modules/events/ui/series-sentence";
+import { HORIZON_DAYS } from "@/modules/events/domain/repeat";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
@@ -217,6 +218,22 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 {sentence}
               </Typography>
             )}
+            {/* A standing series says so here (§305; the owner: "I need to know here that the
+                event is gonna be auto-renewed"). The date column shows the span the job has made
+                so far, which read as an end; this line is the rule itself — for ever, or until
+                the day the club chose — and the horizon the platform keeps ahead (§122). */}
+            {(() => {
+              const renewal = renewalOf(members.map((member) => member.event.repeatRule));
+              if (!renewal) return null;
+              const weeks = HORIZON_DAYS / 7;
+              return (
+                <Typography variant="body2" color="text.secondary">
+                  {renewal.until
+                    ? t("events.seriesRenewsUntil", { weeks, until: format.dateTime(new Date(`${renewal.until}T12:00:00`), { dateStyle: "long" }) })
+                    : t("events.seriesRenewsForever", { weeks })}
+                </Typography>
+              );
+            })()}
             {members.length > 1 ? (
               /* The dates, folded: each its own link into the editor, with its state (§113),
                  in the backoffice's box (§164, §269) — the height is padding, because

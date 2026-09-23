@@ -68,10 +68,10 @@ export function renderContent(
     ...(content.facts
       ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
       : []),
-    // The plain-text half drops the bold markers rather than printing them (§189); a block the
-    // club wrote carries its own lines, already stripped of formatting by the renderer.
+    // The plain-text half drops the bold and underline markers rather than printing them (§189,
+    // §309); a block the club wrote carries its own lines, already stripped of formatting.
     ...content.paragraphs.flatMap((part) =>
-      typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1")] : part.text,
+      typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1")] : part.text,
     ),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
@@ -88,7 +88,16 @@ export function renderContent(
    * trebuie facut bold, e super important!" — and it is: it is the one thing a runner reads on
    * a phone at the desk. The plain-text part strips the markers rather than printing them.
    */
-  const emphasise = (escaped: string) => escaped.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  /*
+    And `__like this__` is underlined (§309), the same way and for the same reason: the owner, of
+    the message re-sent to somebody who filled in the form again, "this needs to be underlined!"
+    — "Ești deja înscris" is the one sentence that person is hunting for. Inline style as well as
+    the element, because a few clients reset `<u>`.
+  */
+  const emphasise = (escaped: string) =>
+    escaped
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/__([^_]+)__/g, '<u style="text-decoration:underline">$1</u>');
   const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
   const htmlParts = [
     paragraph(escapeHtml(content.greeting)),
@@ -573,8 +582,8 @@ const T = {
      */
     alreadyRegistered: (bib?: number | null) =>
       bib
-        ? `Ne bucurăm că ești nerăbdător! Ești deja înscris la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
-        : "Ne bucurăm că ești nerăbdător! Ești deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
+        ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
+        : "Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
@@ -774,8 +783,8 @@ const T = {
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
     alreadyRegistered: (bib?: number | null) =>
       bib
-        ? `We are glad you are keen! You are already registered for this event, with number ${bib} — no second registration was created. Below is the one you have.`
-        : "We are glad you are keen! You are already registered for this event, so no second registration was created — below is the registration you already have.",
+        ? `We are glad you are keen! __You are already registered__ for this event, with number ${bib} — no second registration was created. Below is the one you have.`
+        : "We are glad you are keen! __You are already registered__ for this event, so no second registration was created — below is the registration you already have.",
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,

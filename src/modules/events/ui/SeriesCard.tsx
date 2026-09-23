@@ -1,12 +1,14 @@
 import Box from "@mui/material/Box";
 import { specialCard } from "@/theme/surfaces";
 import Card from "@mui/material/Card";
+import Button from "@mui/material/Button";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
+import { CARD_DOOR_SX } from "./card-door";
 import type { Locale } from "@/i18n/routing";
 import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { riseIn } from "@/theme/motion";
@@ -109,6 +111,17 @@ export default async function SeriesCard({
           <Box sx={{ pt: 0.5 }}>
             <SeriesDates dates={dates} />
           </Box>
+        </Box>
+
+        {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
+            pentru 'descrierea completa a evenimentului'"). The title was the only link, and a
+            title does not announce that a page exists behind it. A plain anchor styled as a
+            button — no client island, 44px — to the next date's page, which is where the full
+            description, the rules and the programme live. */}
+        <Box sx={{ mt: 1.5 }}>
+          <Button component="a" href={pageOf(next.slug)} variant="outlined" size="small" sx={CARD_DOOR_SX}>
+            {t("series.fullDescription")}
+          </Button>
         </Box>
       </CardContent>
     </Card>

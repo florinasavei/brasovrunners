@@ -8,6 +8,25 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.61-2026-09-23
+
+- **Spam through the contact form now arrives marked instead of looking like a real message.** A message that gets past every check but looks automated — sent with no anti-bot token while the check is on, or from an address whose domain imitates the club's — still reaches the club's mailbox, with „[posibil spam]" at the front of the subject and a short note under the message saying why, how fast it was sent and which links it holds. The sender sees „Mesajul a plecat" either way and „Reply" still answers them, because a real person whose browser never ran the check looks exactly the same. A Gmail filter on the mark files these away (SETUP.md §38). Ordinary messages are unchanged, to the byte. `DECISIONS.md` §310.
+## BR-V1.60-2026-09-23
+
+- **An invalid field wears an exclamation mark inside the box** — on every form, CSS only: a field the server refused, or one the browser refused once touched or on send (which now also turns its outline red). **"Ești deja înscris" is underlined** in the message re-sent to somebody who fills in the form again. `DECISIONS.md` §309.
+## BR-V1.59-2026-09-23
+
+- **The listing card says until when registration is open.** "Înscrieri deschise până pe 14 nov., 23:59" replaces "Înscrierile sunt deschise" while the window is open — the stated closing, or the event's start when none is stated — read through the same rule that closes registration, so the card's date is the moment the button goes away. `DECISIONS.md` §308.
+- **The listing card's "Descrierea completă" button is quieter** — sentence case, a smaller type, the same 44-pixel tap height. `DECISIONS.md` §308.
+## BR-V1.58-2026-09-23
+
+- **QA sends real mail through the club's domain, and says so.** QA's Mailgun settings moved from the US sandbox (five confirmed recipients) to `mail.<club domain>` with QA's own sending key; the notice on QA's registration form and "check your email" screen now says the mail is real, tagged `[QA]`, and the registration is not, whenever the allowlist carries the star. QA and production share the domain's daily allowance and its webhooks. `DECISIONS.md` §307.
+## BR-V1.57-2026-09-23
+
+- **The Neon plan is a setting, and `/devs` and the cost table read the database's month against it.** An Administrator states Free or Launch on `/admin/tasks` → Costuri (audited, one row per environment, Free when unset); on Launch the pages show no 100-CU-hour denominator, no 512 MB ceiling and no red — the hours as an estimated charge at $0.106/CU-hour, the storage at $0.35/GB-month, the period's end and the awake hours — and the Neon cost row becomes a usage estimate at this month's pace beside its daily rate, marked an estimate rather than an invoice; on Free everything reads exactly as before. Every rate lives in one dated catalogue, and `/devs` links to the panel for whoever may open it. The December review is now one select, not a deployment. §306.
+## BR-V1.56-2026-09-23
+
+- **Two lists say what they mean.** Every card on the events listing now ends with a button, „Descrierea completă a evenimentului", to the event's page — the title was the only link, and a title does not say a page exists behind it. And on the backoffice list, a repeating event says under its cadence that it renews itself — „platforma creează datele mereu 8 săptămâni înainte, la nesfârșit" or „până pe …" — because the date span beside it was only the eight weeks made so far and read like an end. §305.
 ## BR-V1.55-2026-09-23
 
 - **Fixed: pressing „Trimite înscrierea" a second too early lost the press.** While the anti-bot check was still answering, the button held your press and said so — and then did nothing when the check finished; you had to press again, and nothing told you. With autofill that was the normal case, and it looked like a registration that went through. The held press is now sent by itself the moment the check answers (or after eight seconds if it never does), the sentence says so, and a submit that takes longer than fifteen seconds tells you to wait rather than press again. §304.

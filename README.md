@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.55-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.61-2026-09-23 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.55-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.61-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -17,7 +17,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice that can enter, rename and cancel a registration — and nothing else — each with an audit row, and a CSV export and labelled test registrations for exercising the queue. Registration is reachable from the public pages, and a public participant list exists and is switched off everywhere until the club's approved privacy notice describes it. See [`DECISIONS.md`](./DECISIONS.md) §26–§34. |
 | Priority | Account creation and DevOps, not application code: DNS for the club's `.com` domain (bought 2026-09-16; a `.ro` follows in a year — [`DECISIONS.md`](./DECISIONS.md) §55), a Mailgun sending domain verified on it, a production Zitadel application, the first release PR, and the club's approved privacy notice and declaration text. The production Vercel and Neon projects exist and track `main` |
-| Now | QA and production use separate Neon projects in Frankfurt under the **Launch** usage-based plan (upgraded 2026-09-22). The first 1.8 CU-hours cost $0.19; at 1.8 CU-hours a day the compute projection is about $5.72 for 30 days, before storage and restore history. Launch has no 100-CU-hour shutdown, but the application still labels that former Free limit on `/devs` and `/admin/tasks`; BR-REQ-090-07 records the required follow-up. The owner will review invoices and usage in December 2026 and may return to Free; nothing changes automatically. See [`SETUP.md`](./SETUP.md) §25 and [`docs/PLATFORM.md`](./docs/PLATFORM.md). Production is live on the club domain; `WEEKEND.md` records the narrower pilot this replaced. |
+| Now | QA and production use separate Neon projects in Frankfurt under the **Launch** usage-based plan (upgraded 2026-09-22). The first 1.8 CU-hours cost $0.19; at 1.8 CU-hours a day the compute projection is about $5.72 for 30 days, before storage and restore history. Launch has no 100-CU-hour shutdown; which plan `/devs` and `/admin/tasks` read the month against is a setting on `/admin/tasks` → Costuri (`DECISIONS.md` §306). The owner will review invoices and usage in December 2026 and may return to Free; nothing changes automatically. See [`SETUP.md`](./SETUP.md) §25 and [`docs/PLATFORM.md`](./docs/PLATFORM.md). Production is live on the club domain; `WEEKEND.md` records the narrower pilot this replaced. |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 

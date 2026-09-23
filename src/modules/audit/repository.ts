@@ -75,6 +75,8 @@ export type AuditAction =
   | "event.hard_deleted"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
+  /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
+  | "neon_plan.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */

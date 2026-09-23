@@ -166,6 +166,7 @@
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
+      "openUntilShort": "Registration open until {date}",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -189,7 +190,6 @@
       "FREE": "Free",
       "PAID": "Paid"
     },
-    "seeDetails": "See details",
     "series": {
       "weekly": "Every {days}",
       "fortnightly": "Every other {days}",
@@ -204,7 +204,8 @@
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDatesCount": "Upcoming dates ({count})"
+      "allDatesCount": "Upcoming dates ({count})",
+      "fullDescription": "Full event description"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -503,6 +504,8 @@
       "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
+      "seriesRenewsUntil": "Renews itself: the platform creates the dates {weeks} weeks ahead, until {until}.",
+      "seriesRenewsForever": "Renews itself: the platform creates the dates {weeks} weeks ahead, for ever.",
       "seriesEdit": "Edit the next date",
       "seriesDeleteNote": "A series is deleted from the bar above the list: tick it, then “Delete the ticked ones”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
@@ -1097,6 +1100,30 @@
         "costs": "Costs",
         "system": "System"
       },
+      "neonPlan": {
+        "title": "The Neon plan (the database)",
+        "intro": "The platform cannot read from Neon which plan the account is on — the API gives the consumption, not the plan and not the invoice — so you tell it here. The figures on /devs and the Neon row below follow it: on Free, the hours ceiling and the storage, red from 80%; on Launch, the estimated cost at the plan's rates, with no ceiling.",
+        "inForce": {
+          "free": "Plan set: Free — {of} CU-hours a month per project, included; when they run out the database stops until the next month.",
+          "freeMeasured": "Plan set: Free — {cu} of {of} CU-hours used this period ({percent}%); when they run out the database stops until the next month.",
+          "launch": "Plan set: Launch — paid by usage, ${rate}/CU-hour, no ceiling and no stop. The hours appear once NEON_API_KEY is set.",
+          "launchMeasured": "Plan set: Launch — paid by usage. Compute hours this period: {cu}; estimated cost: ${usd} (${rate}/CU-hour)."
+        },
+        "estimate": "The figures are estimates from the consumption read from Neon; the invoice is Neon's, with storage and restore history on top.",
+        "updatedAt": "Set on {when}. Note: {note}",
+        "field": "The plan the Neon account is on",
+        "fieldHelp": "Rates and limits from the Neon console and neon.com/pricing, checked on {checkedOn}. The account holds both projects (QA and production); the setting is made on each environment separately.",
+        "option": {
+          "FREE": "{name} — {cuHours} CU-hours and {storageMb} MB a month per project, free; past that the database stops",
+          "LAUNCH": "{name} — by usage: ${rate}/CU-hour, ${storageRate}/GB-month, no subscription"
+        },
+        "note": "Note (why, until when)",
+        "december": "The December 2026 review: if the invoices say to return to Free, choose Free here — no deployment. Check Free's limits at that time first, on both projects.",
+        "save": "Save the Neon plan",
+        "saving": "Saving…",
+        "saved": "The Neon plan is saved; the figures on /devs and the Neon row below follow it from now on.",
+        "readOnly": "The Administrator changes the plan. The figures above are current for you too."
+      },
       "filter": {
         "who": "Who",
         "kind": "Kind",
@@ -1157,9 +1184,9 @@
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep and the 100 free CU-hours a month would run out mid-month, with the site down until the next month.",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep — on Free the included hours would run out mid-month with the site down until the next month; on Launch every awake hour is paid for.",
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
-            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's 100 CU-hours too.",
+            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's hours too — included on Free, paid on Launch.",
             "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header, every 30 minutes (Custom → every day, every hour, minutes 0 and 30). Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
           ]
         },
@@ -1277,6 +1304,7 @@
       },
       "freeVerdict": {
         "freeExceptDomain": "Yes, apart from the domain: every service is on a free plan and nothing is paid monthly.",
+        "paysForUsage": "Almost: the domain and the database are paid for — Neon Launch, by usage, no subscription, chosen by the club on 22 September 2026; every other service is on a free plan.",
         "freeButAtALimit": "Yes, but today's free emails are used up. Nothing is lost — they go out after midnight. If you open entries now, the confirmations arrive tomorrow morning.",
         "notFree": "Careful, though not necessarily a problem. A published event is marked as charging a fee. The provider's free plan does not care that we are a non-profit — that is not an exemption. What matters is how the money is asked for: a donation is explicitly allowed, a compulsory fee is not, even if it only covers costs. The site takes no money and has no way to — that helps, but it does not settle it on its own."
       },
@@ -1287,7 +1315,10 @@
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + VAT",
         "free": "free",
-        "notTaken": "nothing yet"
+        "notTaken": "nothing yet",
+        "usage": "about {amount} {currency}/month, by usage",
+        "usageUnknown": "by usage — the pace is not measured here",
+        "estimated": "Of which the database is an estimate at this month's pace (× 12), not an invoice."
       },
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}. Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
@@ -1350,14 +1381,24 @@
         },
         "neon": {
           "name": "Neon (the database)",
-          "freeGives": "Free: a small database (0.5 GB) and an amount of work included every month.",
+          "freeGives": "Free: a small database (half a gigabyte) and an amount of work included every month.",
           "ceiling": "The first limit: the space and the monthly amount of work included.",
           "whenCrossed": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. Past the limit the site gets slow and errors can appear. The next step up is paid by usage, not as a fixed subscription.",
           "closeMeasured": "Measured from the database: {used} MB of {of} MB used. Compute hours (CU) are on /devs.",
-          "monthly": "Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch ($0.106/CU-hour, $0.35/GB, no subscription).",
-          "monthlyUnknown": "Monthly cost on Launch: $0.106/CU-hour + $0.35/GB, no subscription — 100 CU-hours would be about $11/month. The exact pace appears once NEON_API_KEY is set.",
+          "monthly": "Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch (${rate}/CU-hour, ${storageRate}/GB, no subscription).",
+          "monthlyUnknown": "Monthly cost on Launch: ${rate}/CU-hour + ${storageRate}/GB, no subscription. The exact pace appears once NEON_API_KEY is set.",
           "closeUnknown": "Not measured: the site does not know how much has been used. It is visible in the Neon account and worth a look before a race.",
-          "bumpBack": "Taken for the days entries are open and dropped once they close."
+          "closeYes": "—",
+          "closeNo": "No ceiling on Launch: what is used is what is paid.",
+          "bumpBack": "Taken for the days entries are open and dropped once they close.",
+          "launch": {
+            "freeGives": "Launch: paid by usage, no subscription — compute hours and storage are billed at the plan's rates. The Free plan remains the way back, at the December review.",
+            "ceiling": "No ceiling: nothing stops when usage grows — the bill grows.",
+            "whenCrossed": "What keeps the bill small is what kept Free alive: the database sleeps after five minutes without a request, and the monitors wake it every 15 minutes by day and once an hour at night. A monitor every 5 minutes would keep it awake around the clock and turn sleeping hours into paid ones.",
+            "close": "No ceiling. This month, at the pace so far ({cu} CU-hours, about {perDay} CU-hours a day): about ${usd} a month (${rate}/CU-hour, ${storageRate}/GB-month) — an estimate; the invoice is Neon's.",
+            "closeUnknown": "No ceiling. The month's pace appears once NEON_API_KEY is set; until then the figure is in the Neon console → Billing (${rate}/CU-hour, ${storageRate}/GB-month).",
+            "bumpBack": "The way back is the December 2026 review: after real invoices, the club may choose Free again — one choice under “The Neon plan” on this page, no deployment; check Free's limits at that time on both projects first."
+          }
         },
         "zitadel": {
           "name": "Zitadel (how the team signs in)",
@@ -1949,7 +1990,8 @@
             "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
-            "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back."
+            "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
+            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment."
           ],
           "roles": [
             "ADMIN",
@@ -2060,7 +2102,8 @@
     },
     "deliveryNotice": {
       "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
-      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault."
+      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault.",
+      "everyone": "This is the test site: emails really are sent from here, marked “[QA]” in the subject — but a registration made here is not a real one and holds no place in the race."
     },
     "errors": {
       "title": "The registration could not be submitted",
@@ -2605,8 +2648,18 @@
       "title": "Database (Neon)",
       "size": "Storage used: {used} MB of {of} MB ({percent}%).",
       "sizeUnknown": "The storage used could not be read.",
-      "intro": "This project's consumption in the current period, read from Neon. The Free plan gives 100 CU-hours a month per project; when they run out the database stops until the next month begins.",
-      "used": "{used} of 100 CU-hours used ({percent}%)",
+      "intro": "This project's consumption in the current period, read from Neon. The Free plan gives {of} CU-hours a month per project; when they run out the database stops until the next month begins.",
+      "introLaunch": "This project's consumption in the current period, read from Neon. The Launch plan is paid by usage: no ceiling on hours and no stop. The figures below are estimates at the rates on neon.com/pricing, checked on {checkedOn}; the invoice is Neon's, at the end of the period.",
+      "plan": {
+        "FREE": "Plan set: Free.",
+        "LAUNCH": "Plan set: Launch."
+      },
+      "planLink": "Change the plan (Tasks → Costs).",
+      "planSetBy": "The Administrator sets it, on Tasks → Costs.",
+      "sizeLaunch": "Storage used: {used} MB — ${storageRate}/GB-month, about ${usd} a month.",
+      "used": "{used} of {of} CU-hours used ({percent}%)",
+      "usedLaunch": "Compute hours this period: {used} CU-hours; estimated cost ${usd} (${rate}/CU-hour).",
+      "estimate": "An estimate, not an invoice: Neon adds storage and restore history (${restoreRate}/GB-month) over the whole period and rounds at the end.",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
       "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id <id>`; (2) the project id is in the console address (console.neon.tech/app/projects/<id>) or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",

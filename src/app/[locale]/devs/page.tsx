@@ -20,17 +20,19 @@ import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
-import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
+import { describeNeonBlock, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
 import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
 import MuiLink from "@mui/material/Link";
 import { getPathname, Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
-import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import SubNav from "@/shared/ui/SubNav";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -162,6 +164,16 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const emailHealth = await checkEmailHealth(db, now);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
+  /**
+   * The Neon plan the club says it is on (§280's follow-up), and the month read against it:
+   * Free's ceilings and the red past eighty percent, or Launch's estimate at the catalogue's
+   * rates and no ceiling at all. Set on `/admin/tasks` → Costuri; this page reads it and, for
+   * a reader who may open that screen, links to it.
+   */
+  const neonPlan = await readNeonPlan(db);
+  const neonBlock = describeNeonBlock({ plan: neonPlan.plan, databaseBytes, consumption: neon.ok ? neon.consumption : null, now });
+  const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
   /** The value each configuration enum currently holds, for marking it in the list below. */
   const currentSetting: Record<string, string> = {
@@ -493,56 +505,79 @@ export default async function DevsPage({ params, searchParams }: Props) {
       {panel === "status" && (
         <>
         {/*
-          The database's month, from Neon itself (BR-REQ-090-07): the one figure whose exhaustion
-          takes the site down, and the pinger cadence is what drives it (`DECISIONS.md` §68).
+          The database's month, from Neon itself (BR-REQ-090-07), read against the plan the club
+          says it is on. On Free it is the one figure whose exhaustion takes the site down; on
+          Launch it is the bill — and the pinger cadence drives both (`DECISIONS.md` §68, §280).
         */}
-        <Box component="section">
+        <Box component="section" data-testid="neon-block">
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
             {t("neon.title")}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t("neon.intro")}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {neonBlock.plan === "LAUNCH" ? t("neon.introLaunch", { checkedOn: NEON_PLANS_CHECKED_ON }) : t("neon.intro", { of: NEON_PLANS.FREE.cuHoursPerMonth ?? 0 })}
           </Typography>
-          {/* Storage, from the database itself (§88): no key needed, and the other half of the plan. */}
-          <Typography
-            variant="body1"
-            sx={{ fontWeight: 600, mb: 1 }}
-            color={databaseBytes !== null && databaseBytes >= NEON_FREE_STORAGE_BYTES * 0.8 ? "error.main" : "text.primary"}
-          >
-            {databaseBytes === null
+          {/* Which plan the figures are read against, and where it is set: a link for a reader who may open that screen, a sentence for the rest. */}
+          <Typography variant="body2" sx={{ mb: 2 }} data-testid="neon-plan-sentence">
+            {t(`neon.plan.${neonBlock.plan}`)}{" "}
+            {canManageRegistrations(actor.role) ? (
+              <Link href={{ pathname: "/admin/tasks", query: { panel: "costs" } }}>{t("neon.planLink")}</Link>
+            ) : (
+              t("neon.planSetBy")
+            )}
+          </Typography>
+          {/* Storage, from the database itself (§88): no key needed. Against Free's half gigabyte, or at Launch's rate. */}
+          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }} color={neonBlock.storage.warn ? "error.main" : "text.primary"}>
+            {neonBlock.storage.usedMb === null
               ? t("neon.sizeUnknown")
-              : t("neon.size", {
-                  used: megabytes(databaseBytes),
-                  of: Math.round(NEON_FREE_STORAGE_BYTES / (1024 * 1024)),
-                  percent: Math.round((databaseBytes / NEON_FREE_STORAGE_BYTES) * 100),
-                })}
+              : neonBlock.plan === "LAUNCH"
+                ? t("neon.sizeLaunch", {
+                    used: neonBlock.storage.usedMb,
+                    storageRate: rate(neonBlock.rates?.usdPerGbMonth ?? 0),
+                    // A club database is megabytes: under a cent a month, said as "under" rather than as a zero.
+                    usd: (neonBlock.storage.estimatedUsdPerMonth ?? 0) === 0 ? `< ${usd(0.01)}` : usd(neonBlock.storage.estimatedUsdPerMonth ?? 0),
+                  })
+                : t("neon.size", {
+                    used: neonBlock.storage.usedMb,
+                    of: neonBlock.storage.ceilingMb ?? 0,
+                    percent: neonBlock.storage.percent ?? 0,
+                  })}
           </Typography>
-          {neon.ok ? (
-            <Stack spacing={0.5}>
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 600 }}
-                color={neon.consumption.cuHours >= NEON_FREE_CU_HOURS * 0.8 ? "error.main" : "text.primary"}
-              >
-                {t("neon.used", {
-                  used: neon.consumption.cuHours.toFixed(1),
-                  percent: Math.round((neon.consumption.cuHours / NEON_FREE_CU_HOURS) * 100),
-                })}
-              </Typography>
-              <Typography variant="body2">
-                {t("neon.awake", {
-                  hours: Math.round(neon.consumption.activeHours),
-                  elapsed: Math.round((now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000),
-                })}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t("neon.period", { date: format.dateTime(neon.consumption.periodEnd, { dateStyle: "long" }) })}
-              </Typography>
-            </Stack>
-          ) : (
+          {!neon.ok ? (
             <Alert severity={neon.reason === "unconfigured" ? "info" : "warning"}>
               {neon.reason === "unconfigured" ? t("neon.unavailable") : t("neon.failed", { reason: neon.reason })}
             </Alert>
+          ) : neonBlock.compute && (
+            <Stack spacing={0.5}>
+              {/* Red past eighty percent of a ceiling; on Launch there is none, so it never is. */}
+              <Typography variant="body1" sx={{ fontWeight: 600 }} color={neonBlock.compute.warn ? "error.main" : "text.primary"}>
+                {neonBlock.plan === "LAUNCH"
+                  ? t("neon.usedLaunch", {
+                      used: neonBlock.compute.cuHours.toFixed(1),
+                      usd: usd(neonBlock.compute.estimatedUsd ?? 0),
+                      rate: rate(neonBlock.rates?.usdPerCuHour ?? 0),
+                    })
+                  : t("neon.used", {
+                      used: neonBlock.compute.cuHours.toFixed(1),
+                      of: neonBlock.compute.ceilingCuHours ?? 0,
+                      percent: neonBlock.compute.percent ?? 0,
+                    })}
+              </Typography>
+              {/* On both plans: what keeps the compute awake is what explains the hours, and the bill. */}
+              <Typography variant="body2">
+                {t("neon.awake", {
+                  hours: Math.round(neonBlock.compute.activeHours),
+                  elapsed: Math.round(neonBlock.compute.elapsedHours),
+                })}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t("neon.period", { date: format.dateTime(neonBlock.compute.periodEnd, { dateStyle: "long" }) })}
+              </Typography>
+              {neonBlock.plan === "LAUNCH" && (
+                <Typography variant="body2" color="text.secondary">
+                  {t("neon.estimate", { restoreRate: rate(neonBlock.rates?.restoreUsdPerGbMonth ?? 0) })}
+                </Typography>
+              )}
+            </Stack>
           )}
           {/*
             Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
