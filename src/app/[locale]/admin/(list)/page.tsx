@@ -557,6 +557,22 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                       label: t("events.registrationsLink", { count: entries }),
                       href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
                     },
+                    /*
+                      The emergency sheet (§NNN), for an event with its own queue and one date:
+                      the phones, the contacts and the health notes of everyone confirmed, on one
+                      printable page. A series' ⋮ belongs to a folded group of dates and could
+                      not say which one's sheet it meant, as with the hard delete below.
+                    */
+                    ...(canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && !isSeries
+                      ? [
+                          {
+                            kind: "link" as const,
+                            icon: "emergency" as const,
+                            label: t("events.emergencySheet"),
+                            href: getPathname({ locale, href: { pathname: "/admin/events/[id]/urgente", params: { id: event.id } } }),
+                          },
+                        ]
+                      : []),
                     {
                       kind: "submit",
                       icon: "duplicate",

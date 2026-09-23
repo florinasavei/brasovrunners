@@ -53,6 +53,12 @@ function key(secret: string): Buffer {
 const PROCESS_SECRET = randomBytes(32).toString("base64url");
 const deploymentSecret = () => env.AUTH_SECRET ?? env.JOB_SECRET ?? PROCESS_SECRET;
 
+/**
+ * The same deployment secret, bound to another purpose — so a value sealed for one use cannot be
+ * opened as another's (the person lookup's address, §NNN, is never a form draft).
+ */
+export const purposeSecret = (purpose: string): string => `${deploymentSecret()}:${purpose}`;
+
 /** The values the cookie keeps: every posted string but the bot fields, the address and the consent to re-read. */
 export function draftValuesOf(form: FormData): FormDraft {
   const values: Record<string, string> = {};

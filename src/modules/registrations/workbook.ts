@@ -37,6 +37,17 @@ export type RegistrationSheetRow = Omit<
   confirmedAt: Date | null;
   checkedInAt: Date | null;
   fitnessDeclaredAt: Date | null;
+  /**
+   * The spreadsheet's own columns, not the CSV's (§NNN): what a category ranking, the club's
+   * "where do our runners come from" and the kit order read. Optional because a row built
+   * without them — a test, a future caller — prints blanks rather than failing.
+   */
+  sex?: string | null;
+  /** Whole years on the event's day (`domain/age.ts#ageOn`): the club has no age bands yet. */
+  ageOnRaceDay?: number | null;
+  nationality?: string | null;
+  city?: string | null;
+  tshirtSize?: string | null;
 };
 
 const bold = (value: string) => ({ value, fontWeight: "bold" as const });
@@ -63,6 +74,18 @@ const COLUMNS: Array<{
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },
   { header: "Club", width: 22, cell: (row) => ({ value: row.clubName, type: String }) },
+  /*
+    The four the form asks for and the start list does not use (§NNN), on the sheet the club
+    works in and deliberately not in the CSV. Never the phone, the emergency contact or the
+    health note: those are read on the registration's page and the emergency sheet, audited,
+    and a file that leaves the application is exactly where they must not go (`AGENTS.md`
+    §15.10; `workbook.test.ts` asserts the absence).
+  */
+  { header: "Sex", width: 12, cell: (row) => ({ value: row.sex ?? "", type: String }) },
+  { header: "Age on race day", width: 14, cell: (row) => ({ value: row.ageOnRaceDay ?? null, type: Number }) },
+  { header: "Nationality", width: 12, cell: (row) => ({ value: row.nationality ?? "", type: String }) },
+  { header: "City", width: 18, cell: (row) => ({ value: row.city ?? "", type: String }) },
+  { header: "T-shirt size", width: 12, cell: (row) => ({ value: row.tshirtSize && row.tshirtSize !== "NONE" ? row.tshirtSize : "", type: String }) },
   { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   { header: "Email", width: 30, cell: (row) => ({ value: row.email, type: String }) },
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },

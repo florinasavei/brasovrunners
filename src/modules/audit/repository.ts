@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { type AuditLog, auditLogs } from "@/db/schema/audit-logs";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -72,6 +72,29 @@ export type AuditAction =
    * never the address or the name that was typed.
    */
   | "registration.resubmitted"
+  /**
+   * Somebody at the club read a registration's emergency details — the phone, the emergency
+   * contact and the health note (§NNN). Written each time the section is opened, with the
+   * reader as the actor and no value in the metadata: Article 9 data is read by name, and the
+   * trail is how the club answers "who has seen my health note".
+   */
+  | "registration.health_viewed"
+  /**
+   * Optional data withdrawn (§NNN): the health note and its consent, the socials, or the
+   * results consent. By the participant from their own link (no staff actor, the door in the
+   * metadata) or by an Administrator (the actor, and the reason typed). The metadata names the
+   * fields — `["health"]`, `["socials"]` — and never what they held.
+   */
+  | "registration.consent_withdrawn"
+  /** The registrations exported to a file (§NNN): the event, the format and the row count — never a row. */
+  | "registration.exported"
+  /** One event's emergency sheet rendered (§NNN): the event and the row count, never a value. */
+  | "event.emergency_sheet_viewed"
+  /**
+   * Everything the platform holds about one person, downloaded as a file by an Administrator
+   * (§NNN) — the answer to an access request (art. 15 GDPR). Counts only in the metadata.
+   */
+  | "participant.data_exported"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
@@ -129,9 +152,11 @@ export type RecordAuditInput = {
   action: AuditAction;
   // `event` for the one action that is about a whole event's registrations at once;
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
-  // that is about a version of the club's own text.
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document";
-  entityId: string;
+  // that is about a version of the club's own text; `participant` for the one about a person
+  // across all their registrations (§NNN).
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant";
+  /** Null only for an act about no single row — an export of every event's registrations (§NNN). */
+  entityId: string | null;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw
    * token, no declaration text, no participant export. A name before and after, a status, a
@@ -154,6 +179,33 @@ export async function recordAuditEvent<T extends Record<string, unknown>>(
     metadataJson: input.metadata ?? {},
     createdAt: input.now,
   });
+}
+
+/**
+ * Erasure reaches the trail too (§NNN): the one update this table ever takes.
+ *
+ * The trail is insert-only because it is evidence — and a record of *what was done* stays
+ * evidence without saying *to whom*. Before this, erasing a person left their participant id on
+ * every row about the registration until the participant row itself went (and never, when they
+ * had another registration), and a name correction kept the old and the new name in its
+ * metadata for three years: the one copy of the name the erasure was asked to remove.
+ *
+ * So, for one registration: every row loses its `participant_id`, and a name correction loses
+ * its `from` and `to`. What stays is who acted, what they did and when — the deletion's own row
+ * keeps its status, its reason and its bib number (§311), which name nobody. Called by
+ * `eraseRegistration` inside the transaction that deletes the row, so the scrub and the delete
+ * land together or not at all.
+ */
+export async function scrubRegistrationFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<void> {
+  const aboutThisRegistration = and(eq(auditLogs.entityType, "registration"), eq(auditLogs.entityId, registrationId));
+  await db
+    .update(auditLogs)
+    .set({ participantId: null, metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.name_corrected")));
+  await db.update(auditLogs).set({ participantId: null }).where(aboutThisRegistration);
 }
 
 export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt" | "actorStaffUserId"> & {

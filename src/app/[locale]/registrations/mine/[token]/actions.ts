@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { isSelfServiceField, withdrawFromMyRegistrations } from "@/modules/registrations/consent-withdrawal";
 import { setListConsentFromMyRegistrations } from "@/modules/registrations/list-consent";
 import {
   checkInSelfFromMyRegistrations,
@@ -62,6 +63,31 @@ export async function setListConsentFromMyRegistrationsAction(form: FormData): P
     redirect(result.ok ? `${path}?list=${encodeURIComponent(registrationId)}` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?listFailed=${encodeURIComponent(registrationId)}`);
+    throw error;
+  }
+}
+
+/**
+ * Withdraw the health note, or the socials, of one registration (§NNN). The link stays valid;
+ * the registration must be the link holder's own, checked in the module.
+ */
+export async function withdrawFromMyRegistrationsAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const registrationId = String(form.get("registrationId") ?? "");
+  const field = form.get("field");
+  const path = pagePath(locale, token);
+  if (!isSelfServiceField(field)) redirect(`${path}?withdrawFailed=${encodeURIComponent(registrationId)}`);
+
+  try {
+    const result = await withdrawFromMyRegistrations(getDb(), token, registrationId, field, new Date());
+    redirect(
+      result.ok
+        ? `${path}?withdrawn=${encodeURIComponent(registrationId)}&field=${field}`
+        : `${path}?invalid=1`,
+    );
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?withdrawFailed=${encodeURIComponent(registrationId)}`);
     throw error;
   }
 }

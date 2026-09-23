@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrations/consent-withdrawal";
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -60,6 +61,27 @@ export async function setListConsentFromManageAction(form: FormData): Promise<vo
     redirect(result.ok ? `${path}?list=1#list` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?list=0#list`);
+    throw error;
+  }
+}
+
+/**
+ * "Delete my health note" / "Delete my Strava and Instagram" from the participant's own link
+ * (§NNN). Read, not spent, as the public-list switch above: the page must still be able to
+ * cancel. The field group is the only thing taken from the form, and only one of two words.
+ */
+export async function withdrawFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const field = form.get("field");
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  if (!isSelfServiceField(field)) redirect(`${path}?withdrawn=0#consent`);
+
+  try {
+    const result = await withdrawFromManageLink(getDb(), token, field, new Date());
+    redirect(result.ok ? `${path}?withdrawn=${field}#consent` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?withdrawn=0#consent`);
     throw error;
   }
 }

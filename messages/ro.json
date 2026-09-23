@@ -316,6 +316,8 @@
       "summaryTotal": "Înscrieri: {count}",
       "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
+      "personLink": "Toate datele unei persoane",
+      "personThis": "Toate datele acestei persoane",
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",
       "resendSent": "Emailul a fost pus în coadă din nou.",
@@ -355,6 +357,16 @@
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
       "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "withdraw": {
+        "title": "Retrage consimțământul",
+        "help": "Pentru cine a cerut, în scris, să i se șteargă datele date cu acord. Șterge doar ce bifezi; starea înscrierii, locul și numărul rămân neschimbate, iar persoana nu primește niciun mesaj.",
+        "health": "Nota medicală și acordul pentru ea",
+        "socials": "Linkul de Strava și numele de Instagram",
+        "results": "Acordul pentru rezultatele publice",
+        "reason": "Motivul",
+        "action": "Retrage",
+        "nothing": "Nu mai este nimic de retras: nota medicală, rețelele și acordul pentru rezultate sunt deja goale."
+      },
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
       "auditActorParticipant": "participantul, din linkul propriu",
@@ -372,7 +384,9 @@
           "bibs_printed": "BID marcat ca printat",
           "bibs_unprinted": "BID marcat ca neprintat",
           "list_consent_changed": "Alegerea pentru lista publică schimbată de participant",
-          "resubmitted": "S-a înscris din nou cu aceeași adresă"
+          "resubmitted": "S-a înscris din nou cu aceeași adresă",
+          "health_viewed": "Urgențele și nota medicală deschise",
+          "consent_withdrawn": "Consimțământ retras"
         }
       },
       "locale": {
@@ -382,9 +396,11 @@
       "deleteTitle": "Șterge definitiv",
       "deleteHelp": "Șterge înscrierea și declarația semnată, definitiv. Locul este eliberat către lista de așteptare, iar în jurnal rămâne cine a șters și de ce — nu și datele persoanei. Folosește-o pentru o cerere de ștergere a datelor; pentru o retragere obișnuită, anulează.",
       "deleteReason": "Motivul ștergerii",
+      "reasonNoIdentity": "Nu scrie numele, adresa sau alt lucru care identifică persoana.",
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
+      "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare.",
       "rowActions": "Acțiuni pentru {name}",
       "clubMemberLabel": "Membri Brașov Runners",
       "bouncedLabel": "Email",
@@ -421,6 +437,19 @@
       "sendReminder": "Trimite reminderul",
       "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
+      "emergency": {
+        "title": "Urgențe și sănătate",
+        "show": "Arată telefonul, persoana de contact și nota medicală",
+        "showHelp": "Se înregistrează în jurnal cine a deschis secțiunea și când.",
+        "phone": "Telefon",
+        "contact": "Persoană de contact",
+        "none": "—",
+        "health": "Notă medicală",
+        "healthNone": "Nicio notă",
+        "healthConsented": "acord dat la {date}",
+        "hide": "Ascunde",
+        "viewed": "Deschiderea a fost înregistrată în jurnal."
+      },
       "bibNumber": "Număr de concurs (BIB)",
       "checkinCode": "Cod de ridicare",
       "checkinCodeHelp": "Codul din emailul de confirmare; QR-ul de mai jos îl conține. Se folosește la masa de ridicare a numerelor.",
@@ -507,6 +536,7 @@
       "editNamed": "Editează {title}",
       "moreActions": "Alte acțiuni",
       "registrationsLink": "Înscrieri ({count})",
+      "emergencySheet": "Fișă de urgență",
       "new": "Eveniment nou",
       "registrations": "Înscrieri",
       "columnTitle": "Evenimentul",
@@ -1688,6 +1718,40 @@
       "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
       "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
     },
+    "emergency": {
+      "title": "Fișă de urgență — confidențial. Se distruge după eveniment.",
+      "event": "{event} · {date}",
+      "backToEvent": "Înapoi la eveniment",
+      "print": "Tipărește",
+      "help": "Toți participanții confirmați, prezenți sau nu. Nota medicală se șterge singură la șapte zile după eveniment; după aceea coloana e goală. Deschiderea acestei pagini se înregistrează în jurnal.",
+      "columnBib": "Nr.",
+      "columnName": "Nume",
+      "columnPhone": "Telefon",
+      "columnContact": "Persoană de contact",
+      "columnHealth": "Notă medicală",
+      "present": "prezent",
+      "empty": "Niciun participant confirmat încă.",
+      "count": "{count} participanți confirmați"
+    },
+    "person": {
+      "title": "Toate datele unei persoane",
+      "intro": "Pentru o cerere de acces sau înainte de o ștergere: tot ce ține platforma despre o adresă de email — fiecare înscriere în orice stare, cu toate câmpurile, declarațiile, acordurile și versiunile lor, mesajele trimise, cererile „Anunță-mă” și rândurile din jurnal. Adresa se caută după forma canonică, deci „Ana.Pop+club@gmail.com” și „ana.pop@gmail.com” sunt aceeași persoană.",
+      "email": "Adresa de email",
+      "lookUp": "Caută",
+      "expired": "Căutarea a expirat (după {minutes} de minute). Scrie adresa din nou.",
+      "audited": "Deschiderea acestei pagini se înregistrează în jurnal, pentru fiecare înscriere afișată.",
+      "canonical": "Forma canonică: {email}",
+      "notFound": "Nicio înscriere, niciun mesaj și nicio cerere „Anunță-mă” pentru această adresă.",
+      "downloadJson": "Descarcă JSON",
+      "participant": "Participant",
+      "registrations": "Înscrieri ({count})",
+      "acceptances": "Declarații acceptate ({count})",
+      "messages": "Mesaje ({count})",
+      "interests": "Cereri „Anunță-mă” ({count})",
+      "audit": "Jurnal ({count})",
+      "none": "Niciuna.",
+      "newSearch": "Altă căutare"
+    },
     "desk": {
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
@@ -2080,7 +2144,6 @@
     "email": "Adresă de email",
     "privacyPrefix": "Am citit și sunt de acord cu",
     "privacyLinkLabel": "nota de confidențialitate",
-    "resultsNameConsent": "Numele meu poate apărea în rezultatele publice",
     "listOptIn": "Vreau să apar pe lista de participanți",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
@@ -2149,8 +2212,11 @@
       "MALE": "Masculin",
       "UNSPECIFIED": "Prefer să nu spun"
     },
+    "sexHelp": "Pentru clasamentele pe categorii; poți alege „Prefer să nu spun”.",
     "nationality": "Cetățenie",
     "city": "Oraș",
+    "originHelp": "Opțional. Ne arată de unde vin participanții evenimentelor clubului.",
+    "nationalityNone": "Nu spun",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
@@ -2162,6 +2228,7 @@
     "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
+    "emergencyContactHelp": "Spune-i persoanei că ne-ai dat numele și numărul ei: o sunăm doar dacă ți se întâmplă ceva la cursă. Le păstrăm cât înscrierea.",
     "tshirtSize": "Mărime tricou",
     "tshirtSizes": {
       "NONE": "Fără tricou"
@@ -2170,7 +2237,7 @@
     "optional": "Opțional",
     "healthNotes": "Afecțiuni, alergii sau medicație",
     "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
-    "healthConsent": "Informațiile medicale pot fi păstrate, doar pentru siguranța mea în ziua cursei",
+    "healthConsent": "Sunt de acord ca organizatorii cursei să păstreze aceste informații medicale, doar pentru siguranța mea în ziua cursei. Le pot retrage oricând din „Înscrierile mele”.",
     "displayNameToggle": "Vrei să apari public sub alt nume?",
     "displayNamePlaceholder": "Ana P.",
     "fieldNames": {
@@ -2255,6 +2322,7 @@
     },
     "disclosure": {
       "race": "Membru Brașov Runners, club și tricou — opțional",
+      "origin": "De unde ești — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
@@ -2279,7 +2347,7 @@
     "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii.",
     "confidentialNote": "Confidențial. Nu se publică.",
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
-    "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
+    "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe organizatorii cursei dacă ai nevoie de ajutor — alergii, un tratament, o afecțiune. O văd doar organizatorii; se șterge la șapte zile după eveniment.",
     "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
     "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
     "rules": {
@@ -2380,6 +2448,15 @@
       "shortListed": "Apari pe lista publică de participanți.",
       "shortNotListed": "Nu apari pe lista publică de participanți.",
       "eventPage": "Pagina evenimentului"
+    },
+    "withdraw": {
+      "title": "Datele date cu acordul tău",
+      "help": "Nota medicală și conturile de Strava și Instagram le-ai dat doar pentru că ai vrut. Le poți șterge oricând de aici; înscrierea și locul tău rămân neschimbate.",
+      "health": "Șterge nota medicală",
+      "socials": "Șterge Strava și Instagram",
+      "healthDone": "Am șters nota medicală și acordul pentru ea.",
+      "socialsDone": "Am șters linkul de Strava și numele de Instagram.",
+      "failed": "Nu am putut șterge. Încearcă din nou sau scrie-ne."
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -2491,7 +2568,8 @@
     "jobStatus": {
       "ok": "rulează",
       "stale": "întârziat",
-      "never_run": "nu a rulat niciodată"
+      "never_run": "nu a rulat niciodată",
+      "failing": "eșuează"
     },
     "checks": {
       "emailCaptureLocal": {

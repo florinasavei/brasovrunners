@@ -20,6 +20,7 @@ import {
   cancelFromMyRegistrationsAction,
   selfCheckInFromMyRegistrationsAction,
   setListConsentFromMyRegistrationsAction,
+  withdrawFromMyRegistrationsAction,
 } from "./actions";
 
 type Props = {
@@ -32,6 +33,9 @@ type Props = {
     hereFailed?: string;
     list?: string;
     listFailed?: string;
+    withdrawn?: string;
+    field?: string;
+    withdrawFailed?: string;
   }>;
 };
 
@@ -50,7 +54,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed, list, listFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
   const t = await getTranslations("Registrations");
   const format = await getFormatter();
 
@@ -224,6 +228,50 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   </form>
                 </Stack>
               </Stack>
+
+              {/*
+                What was given on consent, withdrawn from here (§NNN; art. 7(3) GDPR). A button
+                only for what this registration still holds — the page knows *whether*, never
+                *what* — and the link is read, not spent, so cancel above still works.
+              */}
+              {(item.holdsHealthNote || item.holdsSocials || withdrawn === item.id || withdrawFailed === item.id) && (
+                <Stack spacing={1} sx={{ mt: 1.5 }}>
+                  {withdrawn === item.id && (
+                    <Alert severity="success" sx={{ py: 0 }}>
+                      {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+                    </Alert>
+                  )}
+                  {withdrawFailed === item.id && (
+                    <Alert severity="warning" sx={{ py: 0 }}>
+                      {t("withdraw.failed")}
+                    </Alert>
+                  )}
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                    {item.holdsHealthNote && (
+                      <form action={withdrawFromMyRegistrationsAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={item.id} />
+                        <input type="hidden" name="field" value="health" />
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                          {t("withdraw.health")}
+                        </Button>
+                      </form>
+                    )}
+                    {item.holdsSocials && (
+                      <form action={withdrawFromMyRegistrationsAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={item.id} />
+                        <input type="hidden" name="field" value="socials" />
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                          {t("withdraw.socials")}
+                        </Button>
+                      </form>
+                    )}
+                  </Stack>
+                </Stack>
+              )}
             </Box>
           ))}
         </Stack>

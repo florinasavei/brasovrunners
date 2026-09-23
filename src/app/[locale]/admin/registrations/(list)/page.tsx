@@ -446,6 +446,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.registrationsErased", { erased: erased ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
+        {/* What the erase could not reach (§NNN): the copies outside the database, by hand. */}
+        {((saved === "registrationsErased" && Number(erased) > 0) || saved === "registrationDeleted") && (
+          <Alert severity="info" data-testid="erase-leftovers" sx={{ mt: 1 }}>
+            {t("registrations.eraseLeftovers")}
+          </Alert>
+        )}
         {saved === "registrationsCancelled" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
             {t("registrations.registrationsCancelled", {
@@ -526,6 +532,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <TextField
                 name="reason"
                 label={t("registrations.deleteReason")}
+                // The one line that outlives the erasure (§NNN): why, never who.
+                helperText={t("registrations.reasonNoIdentity")}
                 required
                 size="small"
                 sx={{ maxWidth: 480 }}
@@ -617,6 +625,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </Button>
+          {/* An access request arrives as an address, and this list searches by name (§NNN):
+              the Administrator's own page for "everything held about this person". */}
+          {mayManage && (
+            <Button
+              component="a"
+              href={getPathname({ locale, href: "/admin/registrations/person" })}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+            >
+              {t("registrations.personLink")}
+            </Button>
+          )}
         </Stack>
       </Stack>
 
@@ -1229,7 +1250,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   {t("registrations.bulkCancelPrinted", { numbers: printedOnPage.join(", ") })}
                 </Alert>
               )}
-              <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
+              {/* One reason for the batch, cancel or erase alike — kept in the trail (§NNN). */}
+              <TextField
+                name="reason"
+                label={t("registrations.cancelReason")}
+                helperText={t("registrations.reasonNoIdentity")}
+                size="small"
+                required
+              />
               <Box>
                 <SubmitButton
                   label={t("registrations.bulkCancelAction")}

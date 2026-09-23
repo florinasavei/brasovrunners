@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
@@ -547,5 +547,85 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
     await expect(
       deleteRegistrationByStaff(db, admin, "00000000-0000-0000-0000-000000000000", "x", NOW),
     ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "NOT_FOUND");
+  });
+
+  /**
+   * §NNN — erasing a person scrubs the trail of *whom*. A name correction kept the name before
+   * and after in its metadata for three years, and every row kept the participant id while the
+   * person had another registration — the one copy of the name the erasure was asked to remove.
+   * The participant here keeps a second registration, so nothing but the scrub can null the id.
+   */
+  it("leaves no name and no participant id on any audit row of the erased registration", async () => {
+    const first = await createInternalEvent(10);
+    const second = await createInternalEvent(10);
+    const erased = await registerPublicly(first, "renamed@example.ro");
+    await registerPublicly(second, "renamed@example.ro");
+    const oldName = erased.registeredName;
+
+    await correctRegisteredName(db, admin, erased.id, "Numele Corectat", NOW);
+    await cancelRegistrationByStaff(db, admin, erased.id, "a asked by phone", NOW);
+    await deleteRegistrationByStaff(db, admin, erased.id, "erasure request", NOW);
+
+    const rows = await db.select().from(auditLogs).where(eq(auditLogs.entityId, erased.id));
+    expect(rows.map((row) => row.action).sort()).toEqual([
+      "registration.cancelled_by_staff",
+      "registration.deleted_by_staff",
+      "registration.name_corrected",
+    ]);
+    for (const row of rows) {
+      expect(row.participantId, `${row.action} still names the participant`).toBeNull();
+      const metadata = JSON.stringify(row.metadataJson);
+      expect(metadata, `${row.action} keeps the old name`).not.toContain(oldName);
+      expect(metadata, `${row.action} keeps the new name`).not.toContain("Numele Corectat");
+    }
+    // The deletion's own row keeps what it is for: the status it was in and the reason (§311).
+    const deletion = rows.find((row) => row.action === "registration.deleted_by_staff");
+    expect(deletion?.metadataJson).toMatchObject({ from: "CANCELLED", reason: "erasure request" });
+    // The person's other registration is untouched, and so are its rows.
+    expect(await db.select().from(participants).where(eq(participants.id, erased.participantId))).toHaveLength(1);
+  });
+
+  /**
+   * §NNN — no "your registration is cancelled" to somebody who asked to be erased. The outbox row
+   * would cascade away with the registration anyway, so the proof is a log of every insert,
+   * kept by the database itself for the length of the test.
+   */
+  it("never queues a cancellation message, not even for a moment", async () => {
+    const event = await createInternalEvent(10);
+    const registration = await registerPublicly(event, "quiet@example.ro");
+    const control = await registerPublicly(event, "control@example.ro");
+    expect(registration.status).toBe("PENDING_DECLARATION");
+
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS outbox_insert_log (message_type text NOT NULL)`);
+    await db.execute(sql`DELETE FROM outbox_insert_log`);
+    await db.execute(
+      sql`CREATE OR REPLACE FUNCTION log_outbox_insert() RETURNS trigger AS $$ BEGIN INSERT INTO outbox_insert_log VALUES (NEW.message_type::text); RETURN NEW; END $$ LANGUAGE plpgsql`,
+    );
+    await db.execute(sql`CREATE TRIGGER log_outbox_insert AFTER INSERT ON email_outbox FOR EACH ROW EXECUTE FUNCTION log_outbox_insert()`);
+    try {
+      await deleteRegistrationByStaff(db, admin, registration.id, "erasure request", NOW);
+      // The control proves the log works: a plain cancellation does queue its message.
+      await cancelRegistrationByStaff(db, admin, control.id, "no longer running", NOW);
+      const logged = await db.execute<{ message_type: string }>(sql`SELECT message_type FROM outbox_insert_log`);
+      expect(logged.rows.filter((row) => row.message_type === "REGISTRATION_CANCELLED")).toHaveLength(1);
+      const [controlMessage] = await db
+        .select()
+        .from(emailOutbox)
+        .where(eq(emailOutbox.registrationId, control.id));
+      expect(controlMessage).toBeDefined();
+    } finally {
+      await db.execute(sql`DROP TRIGGER IF EXISTS log_outbox_insert ON email_outbox`);
+      await db.execute(sql`DROP FUNCTION IF EXISTS log_outbox_insert()`);
+      await db.execute(sql`DROP TABLE IF EXISTS outbox_insert_log`);
+    }
+  });
+
+  it("still sends the cancellation when the club cancels without erasing", async () => {
+    // The other side of the line above: `notify` is off for the erase only.
+    const event = await createInternalEvent(10);
+    const registration = await registerPublicly(event, "told@example.ro");
+    await cancelRegistrationByStaff(db, admin, registration.id, "no longer running", NOW);
+    const messages = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registration.id));
+    expect(messages.map((message) => message.messageType)).toContain("REGISTRATION_CANCELLED");
   });
 });

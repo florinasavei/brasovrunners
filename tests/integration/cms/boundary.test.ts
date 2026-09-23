@@ -183,6 +183,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like
       // every other one, which is the property this test exists to keep.
       "/admin/events/[id]/erase",
+      // The emergency sheet (§NNN), printed and carried on race day: by hand, like the rest.
+      "/admin/events/[id]/urgente",
       "/admin/events/new",
       "/admin/gallery",
       "/admin/gallery/[id]",
@@ -202,6 +204,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/registrations/new",
+      // Everything held about one person (§NNN), for an access request: by hand, like the rest.
+      "/admin/registrations/person",
       "/admin/staff",
       "/admin/tasks",
       // The club's month, its own page since §251.

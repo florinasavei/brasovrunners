@@ -14,7 +14,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
 import {
@@ -22,6 +22,8 @@ import {
   listDeclarationAcceptances,
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
+import { readEmergencyDetails } from "@/modules/registrations/admin-service";
+import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -42,12 +44,13 @@ import {
   deleteRegistrationAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  withdrawConsentAction,
 } from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -80,10 +83,33 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     suggestFreeBibNumbers(db, registration.eventId),
   ]);
 
-  const { resent, saved, error } = await searchParams;
+  const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
   const format = await getFormatter();
   const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+
+  /*
+    The emergency details (§NNN): the phone, the emergency contact and the health note — what
+    the form collected "for race day" and nothing here could show. Read only when asked for
+    (`?health=1`, a plain link, so no prefetch opens it on somebody's behalf), and each read is
+    recorded before the values come back (`readEmergencyDetails`), because the trail is how the
+    club answers "who has seen my health note". The gate is the page's own — whoever may read
+    the registrations — asserted again in the service. Never on the desk (§15.11).
+  */
+  const emergency = health === "1" ? await readEmergencyDetails(db, actor, registration.id, new Date()) : null;
+  const detailPath = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registration.id } } });
+  // Everything held about this person, one link away for the Administrator (§NNN) — the address
+  // sealed, never written into the URL (`person-data.ts`).
+  const personLookup = mayManage ? sealPersonLookup(registration.participantCanonicalEmail, new Date()) : null;
+  const personHref = personLookup
+    ? `${getPathname({ locale, href: "/admin/registrations/person" })}?q=${encodeURIComponent(personLookup)}`
+    : null;
+  // What the withdrawal panel can clear (§NNN): the groups this row still holds, as booleans.
+  const withdrawable = {
+    health: registration.holdsHealthNote,
+    socials: registration.stravaUrl !== null || registration.instagramHandle !== null,
+    results: registration.resultsNameConsent,
+  };
 
   /*
     The form filled again with the same address (§312), out of the trail and into the timeline,
@@ -232,7 +258,70 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Button>
           </form>
         )}
+        {personHref && (
+          <Button component="a" href={personHref} variant="text" sx={{ minHeight: 44 }}>
+            {tr("registrations.personThis")}
+          </Button>
+        )}
       </Stack>
+
+      {/*
+        Emergency and health (§NNN): for the people they are for, and only when asked. Folded
+        behind a plain link rather than rendered with the page, so opening a registration to fix
+        a name does not read — and record reading — somebody's health note.
+      */}
+      <Box component="section" id="emergency" sx={{ scrollMarginTop: 16 }}>
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.emergency.title")}
+        </Typography>
+        {emergency ? (
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              {tr("registrations.emergency.phone")}: {emergency.phone ?? tr("registrations.emergency.none")}
+            </Typography>
+            <Typography variant="body2">
+              {tr("registrations.emergency.contact")}:{" "}
+              {emergency.emergencyContactName || emergency.emergencyContactPhone
+                ? [emergency.emergencyContactName, emergency.emergencyContactPhone].filter(Boolean).join(" · ")
+                : tr("registrations.emergency.none")}
+            </Typography>
+            <Typography variant="body2" component="div">
+              {tr("registrations.emergency.health")}:{" "}
+              {emergency.healthNotes ? (
+                <>
+                  <Box component="span" sx={{ whiteSpace: "pre-wrap" }}>
+                    {emergency.healthNotes}
+                  </Box>
+                  {emergency.healthConsentAt && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {tr("registrations.emergency.healthConsented", { date: dt(emergency.healthConsentAt) ?? "" })}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                tr("registrations.emergency.healthNone")
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.emergency.viewed")}
+            </Typography>
+            <Box>
+              <Button component="a" href={`${detailPath}#emergency`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                {tr("registrations.emergency.hide")}
+              </Button>
+            </Box>
+          </Stack>
+        ) : (
+          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <Button component="a" href={`${detailPath}?health=1#emergency`} variant="outlined" sx={{ minHeight: 44 }}>
+              {tr("registrations.emergency.show")}
+            </Button>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.emergency.showHelp")}
+            </Typography>
+          </Stack>
+        )}
+      </Box>
 
       <Divider />
 
@@ -456,6 +545,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               <TextField
                 name="reason"
                 label={tr("registrations.cancelReason")}
+                // The reason is kept in the trail for three years (§NNN): it says why, never who.
+                helperText={tr("registrations.reasonNoIdentity")}
                 size="small"
                 required
                 sx={{ flex: 1 }}
@@ -478,6 +569,54 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>
+        </Box>
+      )}
+
+      {/*
+        Withdraw consent (§NNN; `AGENTS.md` §15.11): the staff verb for the person who wrote to
+        the club instead of pressing the button on their own link. The Administrator's, like
+        every verb that changes a registration (§289) — an Organizer reads the health note above
+        and has no control here — and asserted again in the service. Only the groups the row
+        still holds are offered; the status, the place and the number do not move.
+      */}
+      {mayManage && (
+        <Box component="section">
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+            {tr("registrations.withdraw.title")}
+          </Typography>
+          {withdrawable.health || withdrawable.socials || withdrawable.results ? (
+            <form action={withdrawConsentAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Stack spacing={1.5}>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.withdraw.help")}
+                </Typography>
+                <Box>
+                  {withdrawable.health && <CheckboxField name="health">{tr("registrations.withdraw.health")}</CheckboxField>}
+                  {withdrawable.socials && <CheckboxField name="socials">{tr("registrations.withdraw.socials")}</CheckboxField>}
+                  {withdrawable.results && <CheckboxField name="results">{tr("registrations.withdraw.results")}</CheckboxField>}
+                </Box>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
+                  <TextField
+                    name="reason"
+                    label={tr("registrations.withdraw.reason")}
+                    helperText={tr("registrations.reasonNoIdentity")}
+                    size="small"
+                    required
+                    sx={{ flex: 1 }}
+                  />
+                  <Button type="submit" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+                    {tr("registrations.withdraw.action")}
+                  </Button>
+                </Stack>
+              </Stack>
+            </form>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {tr("registrations.withdraw.nothing")}
+            </Typography>
+          )}
         </Box>
       )}
 
@@ -507,7 +646,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>
-                <TextField name="reason" label={tr("registrations.deleteReason")} required />
+                {/* The one line that outlives the erasure (§NNN): why, never who. */}
+                <TextField
+                  name="reason"
+                  label={tr("registrations.deleteReason")}
+                  helperText={tr("registrations.reasonNoIdentity")}
+                  required
+                />
                 <CheckboxField name="confirm" required>
                   {tr("registrations.deleteConfirm")}
                 </CheckboxField>

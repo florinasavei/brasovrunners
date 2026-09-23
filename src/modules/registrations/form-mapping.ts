@@ -76,8 +76,9 @@ export function readRegistrationForm(
 
     birthDate: text(form, "birthDate"),
     sex: text(form, "sex"),
-    nationality: text(form, "nationality"),
-    city: text(form, "city"),
+    // Optional since §NNN: blank is absent, so the schema's own "optional" is what answers.
+    nationality: optional(form, "nationality"),
+    city: optional(form, "city"),
 
     phone: phoneField(form, "phone"),
     emergencyContactName: text(form, "emergencyContactName"),
@@ -102,7 +103,8 @@ export function readRegistrationForm(
     // language until chosen — a runner on the Romanian site may still want English.
     locale: form.get("preferredLocale") === "en" ? "en" : form.get("preferredLocale") === "ro" ? "ro" : locale,
     privacyAcknowledged: checked(form, "privacyAcknowledged"),
-    resultsNameConsent: checked(form, "resultsNameConsent"),
+    // Never asked any more (§NNN): there are no results to consent to. A posted box is ignored.
+    resultsNameConsent: false,
     // Opted into, not out of (§143): the row keeps the column's name, the box asks the other way.
     listOptOut: !checked(form, "listOptIn"),
 

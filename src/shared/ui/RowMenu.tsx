@@ -9,6 +9,7 @@ import PublicOffIcon from "@mui/icons-material/PublicOff";
 import StarIcon from "@mui/icons-material/Star";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
@@ -35,7 +36,9 @@ export type RowMenuIcon =
   | "unpublish"
   | "cover"
   | "invite"
-  | "revoke";
+  | "revoke"
+  /** The emergency sheet (§NNN). */
+  | "emergency";
 
 const ICONS: Record<RowMenuIcon, typeof MoreVertIcon> = {
   preview: VisibilityIcon,
@@ -48,6 +51,7 @@ const ICONS: Record<RowMenuIcon, typeof MoreVertIcon> = {
   cover: StarIcon,
   invite: MailIcon,
   revoke: PersonOffIcon,
+  emergency: MedicalServicesIcon,
 };
 
 export type RowMenuItem =

@@ -5,15 +5,17 @@ import { check, integer, pgTable, primaryKey, text, timestamp } from "drizzle-or
  * A small database-backed throttle (AGENTS.md §19.4: "no Redis for V1").
  *
  * Fixed-window counting: `scope` names the guarded action (e.g. `registration-submit`), `key`
- * is what is being limited (a canonical email — §19.4 forbids IP/device as participant
- * identity), and `window_starts_at` is the current window's start, truncated by
+ * is what is being limited — for an email identity, a SHA-256 of the scope and the canonical
+ * address (`rate-limit/domain/key.ts`, §NNN), never the address itself; otherwise a registration
+ * id, a token hash or a job name, and never an IP (§19.4 forbids IP/device as participant
+ * identity) — and `window_starts_at` is the current window's start, truncated by
  * `modules/rate-limit/domain/window.ts`. One row per (scope, key, window); a check is one
  * `INSERT ... ON CONFLICT (scope, key, window_starts_at) DO UPDATE SET count = count + 1
  * RETURNING count`, so concurrent requests in the same window still count correctly.
  *
- * Old windows are never swept by a job — they are cheap, bounded by the number of distinct
- * keys times a handful of windows, and a bounded query (`window_starts_at = ?`) never touches
- * them. If retention ever matters, delete rows older than the widest window in use.
+ * Old windows are deleted a day after they start by the retention sweep (`jobs/retention.ts`,
+ * `RETENTION.rateLimitBucketsDays`) — the "one day" the privacy notice gives anti-abuse
+ * counters. A bounded query (`window_starts_at = ?`) never reads them in the meantime.
  */
 export const rateLimitBuckets = pgTable(
   "rate_limit_buckets",
