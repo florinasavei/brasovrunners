@@ -23,6 +23,7 @@ import {
   findParticipantByCanonicalEmail,
   markEmailVerified,
 } from "@/modules/participants/repository";
+import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
@@ -629,7 +630,8 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
 
   // Counted before anything is looked up, so a script cannot use the lookup itself as the
   // signal, and counted even when refused (`consumeRateLimit`).
-  const verdict = await consumeRateLimit(db, "link-request", identity.canonicalEmail, now);
+  // Hashed (§322): the bucket needs equality, not the address.
+  const verdict = await consumeRateLimit(db, "link-request", emailBucketKey("link-request", identity.canonicalEmail), now);
   if (!verdict.allowed) return;
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -808,7 +810,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * and authorized.
    */
   if (origin.source === "PUBLIC") {
-    const verdict = await consumeRateLimit(db, "registration-submit", identity.canonicalEmail, now);
+    // Hashed (§322): the bucket needs equality, not the address.
+    const verdict = await consumeRateLimit(db, "registration-submit", emailBucketKey("registration-submit", identity.canonicalEmail), now);
     if (!verdict.allowed) {
       // The event and the verdict, never the address (§14.5) — as the anti-bot refusals log.
       console.warn(`[registration] refused as throttled, event ${event.id}`);
@@ -830,6 +833,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    */
   const legalName = composeLegalName(input.firstName, input.lastName);
   const healthNotes = input.healthConsent && input.healthNotes ? input.healthNotes : null;
+  const minor = Boolean(input.birthDate && isMinorOn(input.birthDate, now));
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -857,9 +861,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
      */
     clubName: input.clubMemberDeclared ? CLUB_NAME : (input.clubName ?? null),
     // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
-    guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
-    stravaUrl: input.stravaUrl ?? null,
-    instagramHandle: input.instagramHandle ?? null,
+    guardianName: minor && input.guardianName ? input.guardianName : null,
+    /*
+      Never for a minor (§323): the privacy notice says the club keeps no Strava or Instagram
+      of a child, and the form hides the two boxes once the birth date says under eighteen —
+      this is the same rule for a form posted without JavaScript, or typed in before the date.
+      Minor on the day of registering, as the guardian rule above: that is when the consent
+      would be given, and a runner under eighteen at the race is under eighteen today too.
+    */
+    stravaUrl: minor ? null : (input.stravaUrl ?? null),
+    instagramHandle: minor ? null : (input.instagramHandle ?? null),
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,
@@ -1612,6 +1623,13 @@ export async function unregister<T extends Record<string, unknown>>(
   registrationId: string,
   source: "PARTICIPANT" | "ADMIN",
   now: Date,
+  /**
+   * `notify: false` when the cancellation is the first half of an erasure (§322): the place is
+   * released exactly as for any cancellation, and no "your registration is cancelled" is queued
+   * to a person who asked to be forgotten — a message the erasure would delete a moment later,
+   * or that a drain between the two would already have sent.
+   */
+  options: { notify?: boolean } = {},
 ): Promise<Registration> {
   return db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1638,16 +1656,18 @@ export async function unregister<T extends Record<string, unknown>>(
       throw new DomainError("CONFLICT", "this registration changed state concurrently");
     }
 
-    await enqueueEmail(tx, {
-      participantId: cancelled.participantId,
-      registrationId: cancelled.id,
-      messageType: "REGISTRATION_CANCELLED",
-      locale: cancelled.locale,
-      recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
-      payload: {},
-      idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
-      now,
-    });
+    if (options.notify !== false) {
+      await enqueueEmail(tx, {
+        participantId: cancelled.participantId,
+        registrationId: cancelled.id,
+        messageType: "REGISTRATION_CANCELLED",
+        locale: cancelled.locale,
+        recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
+        payload: {},
+        idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
+        now,
+      });
+    }
 
     await fillAvailableSpots(tx, withLockedRow(event, lockedEvent), now);
 

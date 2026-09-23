@@ -6,13 +6,20 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import { recordAuditEvent } from "@/modules/audit/repository";
+import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
-import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import {
+  type EmergencyDetails,
+  type EmergencySheetRow,
+  findEmergencyDetails,
+  listEmergencySheet,
+} from "./admin-repository";
+import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { erasedBibNumbers } from "./bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -209,6 +216,12 @@ export type CreateRegistrationByStaffInput = {
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     clubName?: string;
+    /**
+     * A minor's parent or guardian (§108): required by the staff schema when a birth date is
+     * given and says under eighteen, as on the public form, so the desk can enter a fourteen-to-
+     * seventeen-year-old with the date (§324). Kept only for a minor.
+     */
+    guardianName?: string;
     /** BR-REQ-031-06. What the person told the organizer; a claim like every other one. */
     clubMemberDeclared?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";
@@ -863,7 +876,8 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   // a lapsed or already-cancelled registration holds nothing to give back.
   if (canTransition(current.status, "CANCELLED")) {
     const event = await eventForRegistration(db, current.eventId);
-    await unregister(db, event, current.id, "ADMIN", now);
+    // No "your registration is cancelled" to somebody who asked to be erased (§322).
+    await unregister(db, event, current.id, "ADMIN", now, { notify: false });
   }
 
   /*
@@ -885,7 +899,10 @@ async function eraseRegistration<T extends Record<string, unknown>>(
 
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
-    participantId: current.participantId,
+    // Nobody, from the start (§322): the row records that a deletion happened and who
+    // authorised it, and a participant id pointing at the person erased is the one thing it
+    // must not keep.
+    participantId: null,
     action: "registration.deleted_by_staff",
     entityType: "registration",
     entityId: current.id,
@@ -896,6 +913,13 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   });
 
   await db.transaction(async (tx) => {
+    /*
+      The trail forgets whom, in the same transaction as the delete (§322): every earlier row
+      about this registration loses its participant id and its typed reason, and a name
+      correction its before and after. The deletion's own row above keeps its reason — its
+      `from` is a status and its reason and number name nobody (§311).
+    */
+    await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));
     // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
@@ -907,8 +931,122 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       .from(registrations)
       .where(eq(registrations.participantId, current.participantId));
     if ((remaining?.n ?? 0) === 0) {
+      // A row about the person, not the registration — an access copy made for them — keeps
+      // their uuid in `entity_id`, which the foreign key never reaches (§322).
+      await scrubParticipantFromAudit(tx, current.participantId);
       await tx.delete(participants).where(eq(participants.id, current.participantId));
     }
+  });
+}
+
+// --- The emergency details, and withdrawing consent (§322) --------------------------------------
+
+/** Whoever may read the registrations (§289): the Organizer, the Administrator, the Superadministrator. */
+function assertMayRead(actor: Pick<StaffUser, "role">): void {
+  if (!canReadRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not read a registration's emergency details`);
+  }
+}
+
+/**
+ * The phone, the emergency contact and the health note of one registration, for the people they
+ * are for (§322).
+ *
+ * The form collected all four "for race day" and nothing in the backoffice could show them — so
+ * the club held a health note it could not read, and a telephone nobody could ring. They are
+ * read here, by whoever may read the registrations (`canReadRegistrations`: the Organizer
+ * organizes the race, §289), and **never at the desk**, which every staff role works and which
+ * shows a name, a state and a number (`AGENTS.md` §15.11).
+ *
+ * Every read is audited before the values are returned — `registration.health_viewed`, the
+ * reader as the actor, no value in the metadata — because this is Article 9 data and "who has
+ * seen my health note" has to have an answer. A refused reader writes nothing and learns nothing,
+ * not even whether the registration exists.
+ */
+export async function readEmergencyDetails<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+): Promise<EmergencyDetails> {
+  assertMayRead(actor);
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: "registration.health_viewed",
+    entityType: "registration",
+    entityId: current.id,
+    metadata: {},
+    now,
+  });
+  const details = await findEmergencyDetails(db, current.id);
+  if (!details) throw new DomainError("NOT_FOUND", "no such registration");
+  return details;
+}
+
+/**
+ * One event's emergency sheet (§322), under the same gate and with the same audit, once per
+ * render — `event.emergency_sheet_viewed`, the event and the row count, never a value or a name.
+ */
+export async function readEmergencySheet<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  now: Date,
+): Promise<EmergencySheetRow[]> {
+  assertMayRead(actor);
+  const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) throw new DomainError("NOT_FOUND", "no such event");
+
+  const rows = await listEmergencySheet(db, event.id);
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    action: "event.emergency_sheet_viewed",
+    entityType: "event",
+    entityId: event.id,
+    metadata: { rowCount: rows.length },
+    now,
+  });
+  return rows;
+}
+
+/**
+ * Withdraw a participant's optional data on their behalf (§322; `AGENTS.md` §15.11) — the staff
+ * verb for the person who wrote to the club rather than pressing the button on their own link.
+ *
+ * Administrator and Superadministrator only, like every verb that changes a registration
+ * (`canManageRegistrations`, §289): the Organizer reads the health note and cannot delete it.
+ * The same write as the participant's own press (`consent-withdrawal.ts#clearOptionalData`):
+ * the named groups nulled — the health note with its consent, the Strava link and the Instagram
+ * username, the results consent set to false — and nothing else. No status moves, no place is
+ * released, no message goes out. Audited with the actor, the field names and the reason typed;
+ * never what the fields held.
+ */
+export async function withdrawOptionalData<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  fields: { health?: true; socials?: true; results?: true },
+  reason: string,
+  now: Date,
+): Promise<{ cleared: OptionalDataField[] }> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw a participant's consent; AGENTS.md §15.11 reserves it to ADMIN`);
+  }
+  const named = OPTIONAL_DATA_FIELDS.filter((field) => fields[field] === true);
+  if (named.length === 0) {
+    throw new DomainError("VALIDATION_ERROR", "choose what to withdraw", ["fields"]);
+  }
+  return clearOptionalData(db, {
+    registrationId,
+    fields: named,
+    via: "STAFF",
+    actorStaffUserId: actor.id,
+    reason,
+    now,
   });
 }
 

@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
-import { buildRegistrationsWorkbook } from "@/modules/registrations/workbook";
-import { listEventsWithRegistrations, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import {
+  listEventsWithRegistrations,
+  listRegistrationsForAdmin,
+  listWorkbookDetails,
+  type WorkbookDetails,
+} from "@/modules/registrations/admin-repository";
+import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -12,6 +19,18 @@ import { isDomainError } from "@/shared/errors/domain-error";
 
 function isRegistrationStatus(value: string | null): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
+}
+
+/** The spreadsheet's own columns for one row (§322), blank when the row has none. */
+function workbookExtras(details: WorkbookDetails | undefined): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "city" | "tshirtSize"> {
+  if (!details) return {};
+  return {
+    sex: details.sex,
+    ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
+    nationality: details.nationality,
+    city: details.city,
+    tshirtSize: details.tshirtSize,
+  };
 }
 
 /**
@@ -101,12 +120,32 @@ export async function GET(request: Request): Promise<Response> {
    * `registrations.csv` whichever race it was about, which is how three of them end up in a
    * downloads folder telling you nothing.
    */
-  if (url.searchParams.get("format") === "xlsx") {
+  const format = url.searchParams.get("format") === "xlsx" ? "xlsx" : "csv";
+
+  /*
+    The export is recorded (§322): who took a file of the club's participants, of which event, in
+    which format and how many rows — never a row. A file that leaves the application is the one
+    copy the erase cannot reach, so the trail has to be able to say that it was made and when;
+    the erase checklist then tells the Administrator to delete it by hand.
+  */
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    action: "registration.exported",
+    entityType: "event",
+    entityId: scope.eventId ?? null,
+    metadata: { eventId: scope.eventId ?? null, format, rowCount: rows.length },
+    now: new Date(),
+  });
+
+  if (format === "xlsx") {
     // Named after the event only when the file is about one: a search across every event is
     // not the start list of whichever race its first row happens to belong to.
     const eventTitle = scope.eventId ? (rows.find((row) => row.eventTitle)?.eventTitle ?? null) : null;
+    // Sex, age, origin and t-shirt, for the sheet only (§322) — one query for the exported rows.
+    const details = await listWorkbookDetails(db, rows.map((row) => row.id));
     const workbook = await buildRegistrationsWorkbook(
       rows.map((row) => ({
+        ...workbookExtras(details.get(row.id)),
         id: row.id,
         eventTitle: row.eventTitle ?? row.eventId,
         registeredName: row.registeredName,

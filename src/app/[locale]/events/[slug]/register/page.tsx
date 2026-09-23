@@ -24,6 +24,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
+import { phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -42,6 +43,7 @@ import {
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -211,8 +213,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const t = await getTranslations("Registration");
   // The event page's own words for a place still to be announced (§NNN), one key for every surface.
   const tEvent = await getTranslations("Event");
+  const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
+  // The phone prefixes' order, sorted here and only drawn in the browser (§324): the two
+  // runtimes' ICU data name countries differently, and a second sort there broke hydration.
+  const phoneOrder = phoneCountryOrder(locale);
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -485,9 +491,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               rather than a glyph by name: the verbs' registry is the backoffice's and must not
               reach a public page. The row is a flex container so the button keeps its own width.
             */}
+            {/*
+              And the same hold for Cloudflare's token (§285, §304; §324): this press sends the
+              same form, and the widget below has been redrawn for the new render, so a press
+              before it answers would buy the refusal it is meant to get past. Held, then sent
+              when the token lands — never dropped.
+            */}
             {tooFast && (
               <Box sx={{ display: "flex", mb: 2 }}>
-                <SubmitButton label={t("errors.tooFastResend")} pendingLabel={t("submitting")} runner size="medium" />
+                <SubmitButton
+                  label={t("errors.tooFastResend")}
+                  pendingLabel={t("submitting")}
+                  runner
+                  awaitsBotCheck={Boolean(siteKey)}
+                  botCheckHint={t("botCheckWait")}
+                  slowHint={t("submitSlow")}
+                  size="medium"
+                />
               </Box>
             )}
             <Stack spacing={2}>
@@ -582,9 +602,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 }}
               />
 
+              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
+                  not to say" is an answer. */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
-                  {...field("sex")}
+                  {...field("sex", t("sexHelp"))}
                   label={t("sex")}
                   select
                   required
@@ -625,48 +647,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Box>
                   </MenuItem>
                 </TextField>
-
-                <TextField
-                  {...field("nationality")}
-                  label={t("nationality")}
-                  select
-                  required
-                  fullWidth
-                  defaultValue={prefill("nationality", "RO")}
-                  sx={SELECT_WITH_GLYPHS_SX}
-                >
-                  {/*
-                    The flag before the name (§171), from the set `scripts/sync-flags.mjs`
-                    already copies into `public/flags/` — which that script's own comment
-                    anticipated for exactly this ("will show many when a participant can state
-                    their country"). Normalised to 4:3, so a column of two hundred names does
-                    not wobble between Romania's 2:3 and the United Kingdom's 1:2.
-
-                    Not the regional-indicator emoji, which Windows draws as two boxed capitals
-                    — and Windows is what the club's own laptop runs.
-                  */}
-                  {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                      {/* The flag is `display: block` and 20×15; the fixed box is what stops it
-                          taking a line of its own in the closed field and what keeps every
-                          country name starting at the same x. */}
-                      <Box component="span" sx={OPTION_GLYPH_SX}>
-                        <Flag code={country.code} width={20} />
-                      </Box>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {country.label}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </TextField>
               </Stack>
-
-              <TextField
-                {...field("city")}
-                label={t("city")}
-                required
-                autoComplete="address-level2"
-              />
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
@@ -709,7 +690,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 id={fieldId("phone")}
                 label={t("phone")}
                 countryLabel={t("phoneCountry")}
-                locale={locale}
+                countryOrder={phoneOrder}
                 required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
@@ -722,8 +703,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 number, and a phone offering the runner's own would be accepted by reflex.
               */}
               <Stack spacing={2}>
+                {/* A third person's name and number (§322): the runner is the one who can tell
+                    them, so the form says to, and says when they would be rung. */}
                 <TextField
-                  {...field("emergencyContactName")}
+                  {...field("emergencyContactName", t("emergencyContactHelp"))}
                   label={t("emergencyContactName")}
                   required
                   fullWidth
@@ -738,7 +721,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
                   countryLabel={t("phoneCountry")}
-                  locale={locale}
+                  countryOrder={phoneOrder}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused
@@ -850,6 +833,63 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
+                Where the runner is from (§322): optional, and on this side of the form for that
+                reason. It was required on the left, and the privacy notice could not say why —
+                nothing the club does with a registration reads either answer. What it is for is
+                said above the two fields, and the country starts unanswered rather than on
+                Romania: a pre-chosen answer is an answer nobody gave.
+              */}
+              <Box component="details" open sx={disclosureSx}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.origin")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("originHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("nationality")}
+                    label={t("nationality")}
+                    select
+                    fullWidth
+                    defaultValue={prefill("nationality", "")}
+                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    sx={SELECT_WITH_GLYPHS_SX}
+                  >
+                    <MenuItem value="" sx={OPTION_ROW_SX}>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {t("nationalityNone")}
+                      </Box>
+                    </MenuItem>
+                    {/*
+                      The flag before the name (§171), from the set `scripts/sync-flags.mjs`
+                      already copies into `public/flags/` — which that script's own comment
+                      anticipated for exactly this ("will show many when a participant can state
+                      their country"). Normalised to 4:3, so a column of two hundred names does
+                      not wobble between Romania's 2:3 and the United Kingdom's 1:2.
+
+                      Not the regional-indicator emoji, which Windows draws as two boxed capitals
+                      — and Windows is what the club's own laptop runs.
+                    */}
+                    {countries.map((country) => (
+                      <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                        {/* The flag is `display: block` and 20×15; the fixed box is what stops it
+                            taking a line of its own in the closed field and what keeps every
+                            country name starting at the same x. */}
+                        <Box component="span" sx={OPTION_GLYPH_SX}>
+                          <Flag code={country.code} width={20} />
+                        </Box>
+                        <Box component="span" sx={OPTION_LABEL_SX}>
+                          {country.label}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
+                </Stack>
+              </Box>
+
+              {/*
                 A minor's parent or guardian (§108, §185, §188): shown when the birth date says so.
 
                 It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
@@ -880,7 +920,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
-                  person can skip without the form being any less complete. */}
+                  person can skip without the form being any less complete. Adults only
+                  (§323): gone once the birth date says under eighteen — disabled as well as
+                  hidden, so neither box is validated or posted — and never stored for a minor
+                  whatever is posted. A rejection naming either box shows it whatever the date. */}
+              <HiddenForMinor
+                birthDateId={fieldId("birthDate")}
+                forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
+              >
               <Box component="details" sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.socials")}
@@ -907,6 +954,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+              </HiddenForMinor>
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -957,8 +1005,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 The asterisk comes from `FormControlLabel`, which reads `required` off the
                 control it wraps. It used to be added by hand here, from a reading of MUI that
                 was true once and is not true of the installed version — the two together
-                rendered "nota de confidențialitate * *" on the form. The two consents below
-                say "optional" in words, so the difference is legible without pressing anything.
+                rendered "nota de confidențialitate * *" on the form. The optional consent below
+                says "optional" in words, so the difference is legible without pressing anything.
+                The public-results consent that stood beside it is gone (§322): there are no
+                results to consent to, and a consent to nothing informs nobody.
               */}
               {/*
                 "Declar că sunt apt" (§171), required, and first among the consents because it
@@ -1005,9 +1055,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
                 </LegalLink>
-              </CheckboxField>
-              <CheckboxField name="resultsNameConsent" defaultChecked={prefill("resultsNameConsent") === "on"}>
-                {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
                 BR-REQ-039-01, `DECISIONS.md` §85, §143. Asked only when this event publishes a
@@ -1059,6 +1106,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       {t("errors.captcha")}
                     </Typography>
                   )}
+                  {/* Who sees what for the check, where the check is (§323): a third party
+                      receives the address and the browser's signals, and the form says so. */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {legal("botCheckNotice")}
+                  </Typography>
                 </Box>
               )}
               {/*

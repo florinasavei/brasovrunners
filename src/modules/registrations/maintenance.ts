@@ -1,5 +1,5 @@
 import type { Database } from "@/db/types";
-import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
+import { failureKind, pruneExpiredRows, retentionErrorSummary, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { materializeStandingRepeats } from "@/modules/content/events/service";
 import { sweepOrphanAssets } from "@/modules/media/references";
@@ -183,17 +183,33 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   /**
    * The retention sweep, last and in its own try/catch.
    *
-   * It rides on this job because it needs no scheduler of its own: four tables whose oldest
-   * rows are meaningless, swept by something that already runs every five minutes. Last,
-   * because expiring a hold is the job's actual duty and deleting month-old rows must never
-   * delay it. Caught separately, because a failure here is untidiness — nothing a participant
-   * or an organizer would notice — and it must not mark the whole run as failed.
+   * It rides on this job because it needs no scheduler of its own. Last, because expiring a
+   * hold is the job's actual duty and deleting month-old rows must never delay it.
+   *
+   * **It fails loudly (§322).** It used to be caught and forgotten, on the reasoning that a
+   * failure here was untidiness — and it is not: the sweep is what makes the privacy notice's
+   * windows true, and an identity document still in the table on day eight is a promise broken
+   * without anybody hearing about it. So each failed step is counted, logged by its name — never
+   * the error's text, which can carry the SQL and the values in it — and written to the run's
+   * `last_error` as `retention:<steps>`, which is what `jobs/health.ts` reads: two runs in a row
+   * with it, and `/api/health` says `failing` and answers 503, which is what the monitor emails
+   * on.
    */
   let prunedRows = 0;
+  let lastError: string | null = null;
   try {
-    prunedRows = totalPruned(await pruneExpiredRows(db, now));
-  } catch {
+    const pruned = await pruneExpiredRows(db, now);
+    prunedRows = totalPruned(pruned);
+    for (const failure of pruned.failures) {
+      console.error("[retention] sweep step failed", failure.step, failureKind(failure.error));
+    }
+    errorCount += pruned.failures.length;
+    lastError = retentionErrorSummary(pruned.failures);
+  } catch (error) {
+    // Nothing inside throws past its own step; this is the sweep failing to start at all.
+    console.error("[retention] sweep step failed", "sweep", failureKind(error));
     errorCount += 1;
+    lastError = retentionErrorSummary([{ step: "identity-and-health", error }]);
   }
 
   /**
@@ -229,6 +245,9 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
       itemsProcessed:
         eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + interestsNotified + occurrencesCreated,
       errorCount,
+      // The retention steps that failed, by name (§322) — the one error this run writes down,
+      // because it is the one `/api/health` is asked to turn into an alarm.
+      lastError,
     },
     new Date(),
   );

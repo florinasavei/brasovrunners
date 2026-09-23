@@ -120,6 +120,16 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
       </Typography>
 
       {/*
+        What the erase cannot reach (§322, §324), read before the press as on the other three
+        erase panels — and here most of all, since this one takes every registration at once.
+      */}
+      {plan.real > 0 && (
+        <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+          {t("registrations.eraseLeftovers")}
+        </Typography>
+      )}
+
+      {/*
         No dialog, no checkbox: the confirmation *is* the typed title, and it is checked on the
         server. A tick the server does not read would be decoration (BR-REQ-060-01), and a
         dialog would put the numbers above out of sight at the moment of deciding. A refusal

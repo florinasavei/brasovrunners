@@ -1,5 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { draftValuesOf, firstNameOf, openFormDraft, sealFormDraft } from "@/modules/registrations/form-draft";
+import { describe, expect, it, vi } from "vitest";
+
+/** What `cookies().set` was asked to do, recorded by the jar below. */
+const cookieWrites: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    set: (name: string, value: string, options: Record<string, unknown>) => cookieWrites.push({ name, value, options }),
+    delete: () => undefined,
+    get: () => undefined,
+  }),
+}));
+
+const { draftValuesOf, firstNameOf, openFormDraft, sealFormDraft, stashFormDraft } = await import("@/modules/registrations/form-draft");
 
 /**
  * BR-REQ-041-01 criterion 10 (`DECISIONS.md` §142) — what a participant typed survives a rejected
@@ -57,6 +68,26 @@ describe("BR-REQ-041-01 criterion 10 the form draft", () => {
 
   it("drops a draft the cookie could not hold", () => {
     expect(sealFormDraft({ healthNotes: "x".repeat(5_000) }, "secret-one")).toBeNull();
+  });
+
+  /**
+   * §322 — the cookie the privacy notice now describes: ten minutes, out of the page's scripts'
+   * reach, and never sent by another site's request. What the notice says is what this sets.
+   */
+  it("is set for ten minutes, httpOnly and sameSite, on the form's own path", async () => {
+    cookieWrites.length = 0;
+    await stashFormDraft(form, "/ro/evenimente/tura-pe-tampa/inscriere");
+
+    expect(cookieWrites).toHaveLength(1);
+    const [write] = cookieWrites;
+    expect(write.name).toBe("br_form_draft");
+    expect(write.options).toMatchObject({
+      maxAge: 600,
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/ro/evenimente/tura-pe-tampa/inscriere",
+    });
+    expect(write.value).not.toContain("Astm");
   });
 });
 

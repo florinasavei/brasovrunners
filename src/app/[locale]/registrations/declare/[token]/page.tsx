@@ -22,6 +22,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
+import LegalLink from "@/shared/ui/LegalLink";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
@@ -138,6 +139,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   const { done, invalid, changed } = await searchParams;
   const t = await getTranslations("Registrations");
+  // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
+  const formCopy = await getTranslations("Registration");
 
   if (done) {
     return (
@@ -583,6 +586,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <Button type="submit" variant="contained" sx={TAP_TARGET}>
                 {t("declare.action")}
               </Button>
+              {/*
+                The notice, under the button that hands over the identity document (§323): what
+                happens to the number is a sentence in the box above and the whole of it here.
+                A tab of its own, like the form's links (§197): the page is a half-done signature.
+              */}
+              <Box>
+                <LegalLink href="/legal/privacy" newTabLabel={formCopy("opensInNewTab")} style={{ minHeight: TAP_TARGET.minHeight }}>
+                  {t("declare.privacyLink")}
+                </LegalLink>
+              </Box>
             </Stack>
           </form>
         </>

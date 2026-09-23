@@ -690,6 +690,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             >
               {t("registrations.viewForEvent")}
             </GlyphButton>
+            {/* The emergency sheet (§322) — here as well as in the list's ⋮, which only the
+                Administrator is offered: the Organizer is the one on the course with it. */}
+            <GlyphButton
+              icon="emergency"
+              href={getPathname({ locale, href: { pathname: "/admin/events/[id]/urgente", params: { id: event.id } } })}
+              variant="text"
+              size="small"
+              sx={{ minHeight: 44 }}
+            >
+              {t("events.emergencySheet")}
+            </GlyphButton>
             {/* The declarations (§95): every signed one as the club's archive; the blank one to print. */}
             <GlyphButton icon="pdf" href={`/api/admin/events/${event.id}/declarations?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationsPdf")}

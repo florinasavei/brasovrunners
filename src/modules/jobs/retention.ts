@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, lt, notExists, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, lt, notExists, or, sql } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -9,26 +9,38 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
+import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
 
 /**
- * Deleting the rows nobody will ever read again.
+ * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
  *
- * Four tables grow on their own — not with the club's races, but with the clock. `job_runs`
- * gains a row every five minutes whether or not anybody registers: 288 a day, 105,000 a year,
- * to answer a question ("did the scheduler run recently?") that only ever looks at the newest
- * one. The others grow with traffic and then never shrink.
+ * Every window this sweep enforces, in the order it runs them (§322):
  *
- * This is a retention sweep, not a feature. It removes only rows whose *purpose is spent*, and
- * two of the four windows are privacy improvements rather than housekeeping: a sent message
- * keeps a participant's address, and an action token keeps the link between a participant and a
- * registration. Holding either for years because nothing deleted them is not a decision anybody
- * made.
+ *     identity document, health note   7 days after the event's start (cleared, the rows stay)
+ *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
+ *     job runs                         30 days
+ *     throttle buckets                 1 day
+ *     action tokens                    30 days after use, invalidation or expiry
+ *     sent messages                    90 days after sending
+ *     messages about nobody            90 days after queueing, any status
+ *     unconfirmed registrations        30 days after the address lapsed unconfirmed
+ *     registrations and declarations   3 years after the event's start, then the participant
+ *     audit log                        3 years
  *
- * What it deliberately does **not** touch: `registrations`, `participants`,
- * `declaration_acceptances`, `audit_logs`, `events`. How long the club keeps a runner's entry
- * after a race is a policy question with legal weight, and it belongs to the club rather than
- * to a sweep that runs every five minutes (`BUSINESS.md` §9). Erasing one person is
- * BR-REQ-037-06 and is deliberate, per-row, and audited.
+ * **`privacy-notice.ts` §7 states these; change both together.** The notice is what the club
+ * promised a runner, and this file is what makes the promise true — a window changed here and
+ * not there is a notice that says something false.
+ *
+ * What it deliberately does **not** do is decide policy: every window is the club's, written in
+ * its notice, and erasing one person sooner is BR-REQ-037-06 — deliberate, per row, audited.
+ *
+ * ## Each step on its own (§322)
+ *
+ * A step is a transaction of its own and a `try` of its own. One that throws — a lock timeout,
+ * a constraint nobody expected — is recorded in `failures` by its name and the sweep goes on to
+ * the next, because a failure in the three-year delete must never be the reason an identity
+ * document outlives its seven days. And the seven-day clearing runs **first**, for the same
+ * reason: it is the window whose breach is a breach of special-category data.
  */
 
 /**
@@ -52,16 +64,35 @@ export const RETENTION = {
   rateLimitBucketsDays: 1,
   /**
    * A token that is spent or expired can never be accepted again (§13.2), so the row only holds
-   * a hash and a link. Thirty days leaves the trail intact long enough to answer "did this link
-   * work?" about a recent race.
+   * a hash and a link. Thirty days — from the use, the invalidation or the expiry, whichever
+   * came first — leaves the trail intact long enough to answer "did this link work?" about a
+   * recent race, and no longer: a link used in March with a December expiry used to wait until
+   * December (§322).
    */
   spentTokensDays: 30,
   /**
    * A delivered message's row holds the recipient's address. Ninety days covers a season's
    * worth of "did they ever get it?", after which keeping the address is storage rather than
-   * evidence. Rows that failed permanently are kept: those are the ones somebody investigates.
+   * evidence. Rows that failed permanently are kept with their registration: those are the ones
+   * somebody investigates.
    */
   sentOutboxDays: 90,
+  /**
+   * A message about nobody — no registration and no participant behind it: the "registration
+   * is open" note to an address left on an event's page, a staff invitation — has no row that
+   * will ever take it away with it, so it goes ninety days after it was queued, whatever its
+   * status (§322). The same ninety days as a sent message, because it is the same question.
+   */
+  orphanOutboxDays: 90,
+  /**
+   * An address never confirmed, a place never held: nothing to prove (§322).
+   *
+   * A registration whose email link lapsed (`EMAIL_CONFIRMATION_LAPSED`) was never the
+   * participant's: nobody proved the address was theirs, no declaration was signed and no place
+   * was ever occupied. Thirty days is long enough to answer "I registered and never got the
+   * email", and keeping it three years would be keeping a stranger's typing.
+   */
+  unconfirmedRegistrationDays: 30,
   /**
    * A registration and the declaration signed for it are kept three years from the event's
    * start — the general limitation period of Codul civil art. 2517, within which a claim
@@ -86,135 +117,308 @@ export type PruneCounts = {
   rateLimitBuckets: number;
   actionTokens: number;
   outboxMessages: number;
+  /** Messages about nobody, gone after `orphanOutboxDays` (§322). */
+  orphanOutboxMessages: number;
+  /** Registrations whose address lapsed unconfirmed, gone after `unconfirmedRegistrationDays` (§322). */
+  unconfirmedRegistrations: number;
   registrations: number;
   participants: number;
   identityDocuments: number;
   healthNotes: number;
+  /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
+  minorSocials: number;
   auditLogs: number;
 };
 
+/**
+ * The steps, by name — what a failure is reported as, and the only thing about it that leaves
+ * this module: never the error's text, which can carry the SQL and the values in it.
+ */
+export const PRUNE_STEPS = [
+  "identity-and-health",
+  "minor-socials",
+  "job-runs",
+  "rate-limit-buckets",
+  "action-tokens",
+  "sent-outbox",
+  "orphan-outbox",
+  "unconfirmed-registrations",
+  "registrations-after-event",
+  "audit-log",
+] as const;
+export type PruneStep = (typeof PRUNE_STEPS)[number];
+
+export type PruneFailure = { step: PruneStep; error: unknown };
+
+/** The counts, and the steps that threw (§322): an empty list is a sweep that did all of it. */
+export type PruneResult = PruneCounts & { failures: PruneFailure[] };
+
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
 
+function yearsBefore(now: Date, years: number): Date {
+  const cutoff = new Date(now.getTime());
+  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - years);
+  return cutoff;
+}
+
 /**
- * One statement per table, each with its own cutoff, and all of them safe to run again: a sweep
- * that deletes nothing is the ordinary case, since it runs every five minutes and these windows
- * are measured in days.
+ * Every participant left with no registration at all goes too (`DECISIONS.md` §88): the address
+ * and the name are kept "with the last registration" and not a day longer.
+ */
+async function deleteOrphanParticipants<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
+  const deleted = await db
+    .delete(participants)
+    .where(notExists(db.select({ id: registrations.id }).from(registrations).where(eq(registrations.participantId, participants.id))))
+    .returning({ id: participants.id });
+  return deleted.length;
+}
+
+/**
+ * One statement group per window, each with its own cutoff, its own transaction and its own
+ * `try`, and all of them safe to run again: a sweep that deletes nothing is the ordinary case,
+ * since it runs every few minutes and these windows are measured in days.
  */
 export async function pruneExpiredRows<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<PruneCounts> {
-  const deletedJobRuns = await db
-    .delete(jobRuns)
-    .where(lt(jobRuns.startedAt, daysBefore(now, RETENTION.jobRunsDays)))
-    .returning({ id: jobRuns.id });
+): Promise<PruneResult> {
+  const counts: PruneCounts = {
+    jobRuns: 0,
+    rateLimitBuckets: 0,
+    actionTokens: 0,
+    outboxMessages: 0,
+    orphanOutboxMessages: 0,
+    unconfirmedRegistrations: 0,
+    registrations: 0,
+    participants: 0,
+    identityDocuments: 0,
+    healthNotes: 0,
+    minorSocials: 0,
+    auditLogs: 0,
+  };
+  const failures: PruneFailure[] = [];
 
-  const deletedBuckets = await db
-    .delete(rateLimitBuckets)
-    .where(lt(rateLimitBuckets.windowStartsAt, daysBefore(now, RETENTION.rateLimitBucketsDays)))
-    .returning({ key: rateLimitBuckets.key });
+  /** A step in its own transaction — a savepoint when `db` already is one — and its own `try`. */
+  const step = async (name: PruneStep, work: (tx: Database<T>) => Promise<void>): Promise<void> => {
+    try {
+      await db.transaction(async (tx) => work(tx as unknown as Database<T>));
+    } catch (error) {
+      failures.push({ step: name, error });
+    }
+  };
+
+  // First (§322): seven days after the event, the identity documents out of the declaration and
+  // the health note out of the registration. The rows stay; the fields go. A minor's declaration
+  // carries two documents, the parent's and the child's (§NNN), and both go together — the typed
+  // names stay, as the signatures, for the three years the declaration is kept. The window whose
+  // breach is special-category data runs before anything that could throw ahead of it.
+  await step("identity-and-health", async (tx) => {
+    const shortCutoff = daysBefore(now, RETENTION.identityAndHealthDaysAfterEvent);
+    const recent = tx
+      .select({ id: registrations.id })
+      .from(registrations)
+      .innerJoin(events, eq(events.id, registrations.eventId))
+      .where(lt(events.startsAt, shortCutoff));
+    const clearedDocuments = await tx
+      .update(declarationAcceptances)
+      .set({ idDocument: null, minorIdDocument: null })
+      .where(
+        and(
+          or(isNotNull(declarationAcceptances.idDocument), isNotNull(declarationAcceptances.minorIdDocument)),
+          inArray(declarationAcceptances.registrationId, recent),
+        ),
+      )
+      .returning({ id: declarationAcceptances.id });
+    const clearedHealth = await tx
+      .update(registrations)
+      .set({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null, updatedAt: now })
+      .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
+      .returning({ id: registrations.id });
+    counts.identityDocuments = clearedDocuments.length;
+    counts.healthNotes = clearedHealth.length;
+  });
+
+  /*
+    No Strava or Instagram for a minor (§323): new submissions store none, decided on the day of
+    registering — somebody under eighteen on the day the row was written. Rows written before
+    that rule kept what they were given, and the privacy notice says the club keeps none, so the
+    sweep makes it true for them (§324) and keeps it true for any row written some other way.
+    The same calendar rule as `isMinorOn`: the eighteenth birthday at midnight UTC.
+  */
+  await step("minor-socials", async (tx) => {
+    const cleared = await tx
+      .update(registrations)
+      .set({ stravaUrl: null, instagramHandle: null, updatedAt: now })
+      .where(
+        and(
+          or(isNotNull(registrations.stravaUrl), isNotNull(registrations.instagramHandle)),
+          isNotNull(registrations.birthDate),
+          sql`${registrations.createdAt} < ((${registrations.birthDate} + interval '18 years') AT TIME ZONE 'UTC')`,
+        ),
+      )
+      .returning({ id: registrations.id });
+    counts.minorSocials = cleared.length;
+  });
+
+  await step("job-runs", async (tx) => {
+    const deleted = await tx
+      .delete(jobRuns)
+      .where(lt(jobRuns.startedAt, daysBefore(now, RETENTION.jobRunsDays)))
+      .returning({ id: jobRuns.id });
+    counts.jobRuns = deleted.length;
+  });
+
+  await step("rate-limit-buckets", async (tx) => {
+    const deleted = await tx
+      .delete(rateLimitBuckets)
+      .where(lt(rateLimitBuckets.windowStartsAt, daysBefore(now, RETENTION.rateLimitBucketsDays)))
+      .returning({ key: rateLimitBuckets.key });
+    counts.rateLimitBuckets = deleted.length;
+  });
 
   /**
-   * Spent or long expired, never merely old: a token issued yesterday with a fourteen-day life
-   * is still the link in somebody's inbox, and deleting it would break a message already sent.
+   * Thirty days after it stopped working, whichever way it stopped (§322): used, invalidated or
+   * expired. Never merely old — a token issued yesterday with a fourteen-day life, never used,
+   * is still the link in somebody's inbox, and none of the three conditions is true of it.
    */
-  const tokenCutoff = daysBefore(now, RETENTION.spentTokensDays);
-  const deletedTokens = await db
-    .delete(emailActionTokens)
-    .where(
-      and(
-        lt(emailActionTokens.expiresAt, now),
+  await step("action-tokens", async (tx) => {
+    const tokenCutoff = daysBefore(now, RETENTION.spentTokensDays);
+    const deleted = await tx
+      .delete(emailActionTokens)
+      .where(
         or(
-          // Used or invalidated — either way it can never be accepted again (§13.2).
-          isNotNull(emailActionTokens.usedAt),
-          isNotNull(emailActionTokens.invalidatedAt),
+          and(isNotNull(emailActionTokens.usedAt), lt(emailActionTokens.usedAt, tokenCutoff)),
+          and(isNotNull(emailActionTokens.invalidatedAt), lt(emailActionTokens.invalidatedAt, tokenCutoff)),
           lt(emailActionTokens.expiresAt, tokenCutoff),
         ),
-      ),
-    )
-    .returning({ id: emailActionTokens.id });
+      )
+      .returning({ id: emailActionTokens.id });
+    counts.actionTokens = deleted.length;
+  });
 
   // SENT only. A BOUNCED or COMPLAINED row is the one an organizer goes looking for.
-  const deletedOutbox = await db
-    .delete(emailOutbox)
-    .where(
-      and(
-        eq(emailOutbox.status, "SENT"),
-        isNotNull(emailOutbox.sentAt),
-        lt(emailOutbox.sentAt, daysBefore(now, RETENTION.sentOutboxDays)),
-      ),
-    )
-    .returning({ id: emailOutbox.id });
+  await step("sent-outbox", async (tx) => {
+    const deleted = await tx
+      .delete(emailOutbox)
+      .where(
+        and(
+          eq(emailOutbox.status, "SENT"),
+          isNotNull(emailOutbox.sentAt),
+          lt(emailOutbox.sentAt, daysBefore(now, RETENTION.sentOutboxDays)),
+        ),
+      )
+      .returning({ id: emailOutbox.id });
+    counts.outboxMessages = deleted.length;
+  });
+
+  // About nobody (§322): no registration and no participant will ever take these rows with it.
+  await step("orphan-outbox", async (tx) => {
+    const deleted = await tx
+      .delete(emailOutbox)
+      .where(
+        and(
+          isNull(emailOutbox.registrationId),
+          isNull(emailOutbox.participantId),
+          lt(emailOutbox.createdAt, daysBefore(now, RETENTION.orphanOutboxDays)),
+        ),
+      )
+      .returning({ id: emailOutbox.id });
+    counts.orphanOutboxMessages = deleted.length;
+  });
+
+  /**
+   * An address never confirmed, a place never held (§322). `status = EXPIRED` beside the reason,
+   * because a lapsed row can be restarted on the same row (§145) and a restart does not clear the
+   * reason it once expired for: the status is what says it is still over.
+   */
+  await step("unconfirmed-registrations", async (tx) => {
+    const lapsed = tx
+      .select({ id: registrations.id })
+      .from(registrations)
+      .where(
+        and(
+          eq(registrations.status, "EXPIRED"),
+          eq(registrations.expiryReason, "EMAIL_CONFIRMATION_LAPSED"),
+          lt(registrations.expiredAt, daysBefore(now, RETENTION.unconfirmedRegistrationDays)),
+        ),
+      );
+    // The trail loses what the manual erase takes from it (§324) — a rename's two names, a typed
+    // reason, the participant id — before the rows it describes go, in the same transaction.
+    await scrubRegistrationsFromAudit(tx, lapsed);
+    await tx.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, lapsed));
+    const deleted = await tx.delete(registrations).where(inArray(registrations.id, lapsed)).returning({ id: registrations.id });
+    counts.unconfirmedRegistrations = deleted.length;
+    if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
+  });
 
   /**
    * Registrations of events that started more than the retention period ago, with their
    * declarations; then every participant left with no registration at all. Test rows go the
    * same way. Erase by hand (`admin-service.ts`) does the same for one person, sooner.
    */
-  const eventCutoff = new Date(now.getTime());
-  eventCutoff.setUTCFullYear(eventCutoff.getUTCFullYear() - RETENTION.registrationsYearsAfterEvent);
-  const stale = db
-    .select({ id: registrations.id })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .where(lt(events.startsAt, eventCutoff));
-  await db.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, stale));
-  const deletedRegistrations = await db
-    .delete(registrations)
-    .where(inArray(registrations.id, stale))
-    .returning({ id: registrations.id });
-  const deletedParticipants =
-    deletedRegistrations.length > 0
-      ? await db
-          .delete(participants)
-          .where(notExists(db.select({ id: registrations.id }).from(registrations).where(eq(registrations.participantId, participants.id))))
-          .returning({ id: participants.id })
-      : [];
+  await step("registrations-after-event", async (tx) => {
+    const eventCutoff = yearsBefore(now, RETENTION.registrationsYearsAfterEvent);
+    const stale = tx
+      .select({ id: registrations.id })
+      .from(registrations)
+      .innerJoin(events, eq(events.id, registrations.eventId))
+      .where(lt(events.startsAt, eventCutoff));
+    // An audit row written after the event (a check-in, a rename on race day) is younger than
+    // the registration's window and would outlive it with the name in it: scrubbed as an erase
+    // scrubs (§324), before the delete.
+    await scrubRegistrationsFromAudit(tx, stale);
+    await tx.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, stale));
+    const deleted = await tx.delete(registrations).where(inArray(registrations.id, stale)).returning({ id: registrations.id });
+    counts.registrations = deleted.length;
+    if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
+  });
 
-  // Seven days after the event: the identity documents out of the declaration, the health note
-  // out of the registration. The rows stay; the fields go. A minor's declaration carries two
-  // documents, the parent's and the child's (§NNN), and both go together — the typed names stay,
-  // as the signatures, for the three years the declaration is kept. Counted per declaration.
-  const shortCutoff = daysBefore(now, RETENTION.identityAndHealthDaysAfterEvent);
-  const recent = db
-    .select({ id: registrations.id })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .where(lt(events.startsAt, shortCutoff));
-  const clearedDocuments = await db
-    .update(declarationAcceptances)
-    .set({ idDocument: null, minorIdDocument: null })
-    .where(
-      and(
-        or(isNotNull(declarationAcceptances.idDocument), isNotNull(declarationAcceptances.minorIdDocument)),
-        inArray(declarationAcceptances.registrationId, recent),
-      ),
-    )
-    .returning({ id: declarationAcceptances.id });
-  const clearedHealth = await db
-    .update(registrations)
-    .set({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null, updatedAt: now })
-    .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
-    .returning({ id: registrations.id });
+  await step("audit-log", async (tx) => {
+    const deleted = await tx
+      .delete(auditLogs)
+      .where(lt(auditLogs.createdAt, yearsBefore(now, RETENTION.auditLogYears)))
+      .returning({ id: auditLogs.id });
+    counts.auditLogs = deleted.length;
+  });
 
-  const auditCutoff = new Date(now.getTime());
-  auditCutoff.setUTCFullYear(auditCutoff.getUTCFullYear() - RETENTION.auditLogYears);
-  const deletedAudit = await db.delete(auditLogs).where(lt(auditLogs.createdAt, auditCutoff)).returning({ id: auditLogs.id });
-
-  return {
-    jobRuns: deletedJobRuns.length,
-    rateLimitBuckets: deletedBuckets.length,
-    actionTokens: deletedTokens.length,
-    outboxMessages: deletedOutbox.length,
-    registrations: deletedRegistrations.length,
-    participants: deletedParticipants.length,
-    identityDocuments: clearedDocuments.length,
-    healthNotes: clearedHealth.length,
-    auditLogs: deletedAudit.length,
-  };
+  return { ...counts, failures };
 }
 
-/** Total rows removed, for the one line the job logs. */
+/** Total rows removed, for the one line the job logs. The counts only — never the failures. */
 export function totalPruned(counts: PruneCounts): number {
-  return Object.values(counts).reduce((sum, count) => sum + count, 0);
+  return (
+    counts.jobRuns +
+    counts.rateLimitBuckets +
+    counts.actionTokens +
+    counts.outboxMessages +
+    counts.orphanOutboxMessages +
+    counts.unconfirmedRegistrations +
+    counts.registrations +
+    counts.participants +
+    counts.identityDocuments +
+    counts.healthNotes +
+    counts.minorSocials +
+    counts.auditLogs
+  );
+}
+
+/**
+ * What `job_runs.last_error` says about a sweep that failed (§322): the step names and nothing
+ * else — `retention:registrations-after-event,audit-log`. `jobs/health.ts` reads the prefix.
+ */
+export const RETENTION_ERROR_PREFIX = "retention:";
+
+/**
+ * What a log line may say about a failed step's error: the SQLSTATE when the driver gave one
+ * (`57014`, a statement timeout), the error's class otherwise. Never the message, which is where
+ * PostgreSQL puts the values of the row it refused.
+ */
+export function failureKind(error: unknown): string {
+  const code = (error as { code?: unknown; cause?: { code?: unknown } } | null)?.code ?? (error as { cause?: { code?: unknown } } | null)?.cause?.code;
+  if (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) return code;
+  return error instanceof Error ? error.name : "error";
+}
+
+export function retentionErrorSummary(failures: readonly PruneFailure[]): string | null {
+  return failures.length === 0 ? null : `${RETENTION_ERROR_PREFIX}${failures.map((failure) => failure.step).join(",")}`;
 }

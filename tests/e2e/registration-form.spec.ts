@@ -72,7 +72,6 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "firstName",
       "lastName",
       "birthDate",
-      "city",
       "email",
       "emailConfirm",
       "phone",
@@ -85,9 +84,11 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
     }
 
-    // BR-REQ-072-01 criterion 1 and BR-REQ-039-01: these two are optional and still *presented*
-    // — a consent behind a summary somebody never opens has not been put to them.
-    await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
+    // The public-results consent is not asked (§322): there are no results to consent to.
+    await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
+    // Where the runner is from is optional and on the optional side, open (§322).
+    await expect(page.locator('[name="city"]')).toBeVisible();
+    await expect(page.locator('[name="city"]')).not.toHaveAttribute("required", "");
     // "I want to appear on the participant list" is asked only on an event whose list is switched
     // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
@@ -371,7 +372,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
       sentence is the point of the icon beside them, so the test matches the beginning of the
       name rather than insisting the name never grew.
     */
-    for (const name of ["Detaliile evenimentului", "Termeni de concurs", "GDPR"]) {
+    for (const name of ["Detaliile evenimentului", "Termeni de concurs", "Confidențialitate"]) {
       const link = page.locator("#main").getByRole("link", { name }).first();
       await expect(link).toBeVisible();
       expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
@@ -521,6 +522,45 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await expect(page.locator('[name="guardianName"]')).toHaveValue("Ion Popescu");
     await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
     expect(page.url()).not.toContain(thirteen);
+  });
+
+  test("takes the socials out of a minor's form, even with a bad Strava value typed first", async ({ page }) => {
+    /*
+      BR-REQ-031-04 criterion 8 and §323: the club keeps no Strava or Instagram of a minor, so the
+      socials go away once the birth date says under eighteen. Hidden alone was not enough (review
+      finding): the Strava box is `type="url"`, and a hidden invalid control stops the browser
+      submitting with nothing on screen to say why. The block is disabled while hidden, so a value
+      typed before the date was neither blocks the form nor reaches the server.
+    */
+    test.skip(test.info().project.name !== "mobile", "the 320px form is the one that matters; one registration per run");
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    // An adult first: the socials are offered, and something that is not a link goes in.
+    await page.getByText("Rețele sociale — opțional").click();
+    const strava = page.locator('[name="stravaUrl"]');
+    await expect(strava).toBeVisible();
+    await strava.fill("not a link");
+    expect(await strava.evaluate((node) => (node as HTMLInputElement).validity.valid)).toBe(false);
+
+    // Then a birth date of somebody sixteen today: a minor, and old enough for the race (§321).
+    const sixteen = new Date();
+    sixteen.setUTCFullYear(sixteen.getUTCFullYear() - 16);
+    await page.locator('[name="birthDate"]').fill(sixteen.toISOString().slice(0, 10));
+    await page.locator('[name="guardianName"]').fill("Ion Popescu");
+
+    // Gone from sight and out of the form: not validated, not posted.
+    await expect(strava).toBeHidden();
+    await expect(page.getByText("Rețele sociale — opțional")).toBeHidden();
+    await expect(strava).toBeDisabled();
+    await expect(page.locator('[name="instagramHandle"]')).toBeDisabled();
+
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
   });
 
   test("does not render a field name it does not recognize", async ({ page }) => {

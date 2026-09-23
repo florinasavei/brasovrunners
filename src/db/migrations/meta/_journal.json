@@ -442,6 +442,13 @@
       "when": 1790197748364,
       "tag": "0062_minor_signs_with_a_parent",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790198571074,
+      "tag": "0063_list_opt_out_default",
+      "breakpoints": true
     }
   ]
 }
