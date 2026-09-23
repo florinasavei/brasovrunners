@@ -47,9 +47,10 @@ import {
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
-import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
@@ -303,7 +304,12 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   });
 
   const databaseBytes = await readDatabaseSizeBytes(db);
-  const neon = await readNeonConsumption(env);
+  // The database's brakes (§NNN) are read only where they are shown — the costs panel — and
+  // beside the consumption rather than after it, so the two bounded requests overlap.
+  const [neon, neonLimits] = await Promise.all([
+    readNeonConsumption(env),
+    panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
+  ]);
   // The Neon plan (§280's follow-up, §NNN): what Neon reports for the account when it answered,
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
@@ -413,6 +419,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
+        {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
+        {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
@@ -588,6 +596,20 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           same reason the Mailgun panel carries it (§291).
         */}
         <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+
+        {/*
+          The database's brakes (§NNN), beside the plan they are priced against: the compute's size
+          ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
+          door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
+        */}
+        {neonLimits && (
+          <NeonLimitsPanel
+            locale={locale}
+            reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
+            appEnv={env.APP_ENV}
+            mayEdit={canManageRegistrations(actor.role)}
+          />
+        )}
 
         {/*
           The money, and the answer before the table that justifies it: what the club pays today,

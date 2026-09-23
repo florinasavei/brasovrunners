@@ -89,6 +89,12 @@ export type AuditAction =
   | "email_plan.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
+  /**
+   * The database's brakes changed from `/admin/tasks` (§NNN): the compute's size ceiling and the
+   * period's CU-hour limit, from and to as Neon stated them before and after — never the request —
+   * with what was asked, the environment, and whether all of it was applied.
+   */
+  | "neon_limits.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */

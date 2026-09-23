@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { NeonLimitsRefusal, updateNeonLimits } from "@/modules/diagnostics/neon-limits";
 import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
@@ -75,4 +77,45 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
   }
   revalidatePath(path);
   redirect(`${path}?panel=costs&saved=neonPlan#admin-alert`);
+}
+
+/**
+ * The database's brakes (§NNN), from the card beside the Neon plan: the compute's size ceiling
+ * and the period's CU-hour limit, written to Neon itself. Administrator at the door, the service
+ * asserting the role again, reading Neon fresh, checking the rules against that reading, writing,
+ * reading back and auditing what Neon then says.
+ *
+ * A refusal keeps the chosen values in their boxes (§315) and names the reason — the rule the
+ * form broke, or what Neon answered (a key that may read and not write, a project busy with
+ * another change). The ticked confirmation is the one box that comes back empty: on production it
+ * is the guard, and a guard that refills itself is none (`NEVER_KEPT`'s reasoning). The page is
+ * revalidated on a refusal too, because a write refused halfway has still changed something, and
+ * the readout above the form must say what Neon holds now.
+ */
+export async function updateNeonLimitsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  let changed: boolean;
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const outcome = await updateNeonLimits(
+      getDb(),
+      actor,
+      {
+        maxCu: typeof form.get("maxCu") === "string" ? form.get("maxCu") : "",
+        quotaMode: form.get("quotaMode") === "limit" ? "limit" : "none",
+        quotaCuHours: typeof form.get("quotaCuHours") === "string" ? form.get("quotaCuHours") : null,
+        confirmSuspension: form.get("confirmSuspension") === "on",
+      },
+      { env, now: new Date() },
+    );
+    changed = outcome.changed;
+  } catch (error) {
+    const failure = refused(error, form, { never: ["confirmSuspension"] });
+    revalidatePath(path);
+    return error instanceof NeonLimitsRefusal ? { ...failure, error: error.reason } : failure;
+  }
+  revalidatePath(path);
+  redirect(`${path}?panel=costs&saved=${changed ? "neonLimits" : "neonLimitsSame"}#admin-alert`);
 }
