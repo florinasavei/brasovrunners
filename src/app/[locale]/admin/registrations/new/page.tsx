@@ -8,7 +8,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import { staffRegistrationConstraints } from "@/modules/registrations/constraints";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
@@ -196,9 +196,10 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             </Box>
 
             <Box>
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("registrations.create")}
                 pendingLabel={t("editor.saving")}
+                icon="addPerson"
                 incompleteHintNamed={t("forms.incompleteFirst")}
                 size="medium"
               />

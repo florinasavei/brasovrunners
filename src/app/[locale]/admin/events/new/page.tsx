@@ -20,7 +20,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { createEventAction } from "../../actions";
 
 type Props = {
@@ -141,9 +141,10 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           <EventFieldsForm event={null} declarations={declarations} />
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-            <SubmitButton
+            <GlyphSubmitButton
               label={t("editor.create")}
               pendingLabel={t("editor.saving")}
+              icon="add"
               incompleteHintNamed={t("forms.incompleteFirst")}
               size="medium"
             />

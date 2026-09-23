@@ -11,7 +11,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { env } from "@/shared/config/env";
 import { approvePlatformTemplatesAction } from "../actions";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -32,7 +32,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
 
@@ -339,7 +339,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               <Stack spacing={1}>
                 <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
                 <Box>
-                  <SubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} variant="contained" size="medium" />
+                  <GlyphSubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} icon="approve" variant="contained" size="medium" />
                 </Box>
               </Stack>
             </form>
@@ -372,9 +372,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
       {mayCreate && (
         <Box>
-          <ButtonLink href="/admin/legal/new" variant="contained" sx={{ minHeight: 44 }}>
+          <GlyphButtonLink href="/admin/legal/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
-          </ButtonLink>
+          </GlyphButtonLink>
           {/* The platform's own texts, complete but for the club's four facts (§95). */}
           <Typography variant="body2" sx={{ mt: 1.5 }}>
             {t("legal.templatesIntro")}{" "}
@@ -492,6 +492,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                       */}
                       <ConfirmSubmitButton
                         label={t("legal.withdraw")}
+                        icon="unpublish"
                         title={t("legal.withdrawTitle")}
                         body={t("legal.withdrawBody")}
                         confirmLabel={t("legal.withdraw")}
@@ -537,6 +538,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 <input type="hidden" name="versionId" value={version.id} />
                 <ConfirmSubmitButton
                   label={t("legal.delete")}
+                  icon="delete"
                   title={t("legal.deleteTitle")}
                   body={t("legal.deleteBody")}
                   confirmLabel={t("legal.delete")}

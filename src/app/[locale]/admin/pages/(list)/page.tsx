@@ -16,7 +16,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { deletePageAction, movePageAction, transitionPageAction } from "../actions";
 
@@ -124,9 +124,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
             (§207, §208). The action refuses either way — this keeps the button off a screen
             where pressing it could only fail. */}
         {canEditTexts(actor.role) && (
-        <ButtonLink href="/admin/pages/new" variant="contained" sx={{ minHeight: 44 }}>
+        <GlyphButtonLink href="/admin/pages/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
           {t("pages.create")}
-        </ButtonLink>
+        </GlyphButtonLink>
         )}
       </Stack>
 

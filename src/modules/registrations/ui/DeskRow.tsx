@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -14,6 +13,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -253,17 +253,17 @@ export default async function DeskRow({
           {!readOnly && canConfirm && (
             <form action={confirmRegistrationNowAction}>
               {hidden}
-              <Button type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="confirm" type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
                 {t("desk.confirmHere")}
-              </Button>
+              </GlyphButton>
             </form>
           )}
           {!readOnly && row.status === "WAITLISTED" && (
             <form action={promoteRegistrationAction}>
               {hidden}
-              <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="place" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                 {t("desk.givePlace")}
-              </Button>
+              </GlyphButton>
             </form>
           )}
           {!readOnly && row.status === "CONFIRMED" && (
@@ -295,16 +295,17 @@ export default async function DeskRow({
                       slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
                       sx={{ width: 120 }}
                     />
-                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                    <GlyphButton icon="number" type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
                       {t("desk.saveBib")}
-                    </Button>
+                    </GlyphButton>
                   </Stack>
                 </ActionForm>
               )}
               <form action={checkInAction}>
                 {hidden}
                 <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
-                <Button
+                <GlyphButton
+                  icon={row.checkedInAt ? "undo" : "checkIn"}
                   type="submit"
                   variant={row.checkedInAt ? "text" : "contained"}
                   color={row.checkedInAt ? "inherit" : "success"}
@@ -312,7 +313,7 @@ export default async function DeskRow({
                   sx={{ minHeight: 44 }}
                 >
                   {row.checkedInAt ? t("desk.undoCheckIn") : t("desk.checkIn")}
-                </Button>
+                </GlyphButton>
               </form>
             </>
           )}

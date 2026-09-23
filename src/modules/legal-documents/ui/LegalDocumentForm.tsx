@@ -9,7 +9,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { bodyToText } from "../domain/body-text";
 import LegalBodyEditor from "./LegalBodyEditor";
 import TokenLegend from "./TokenLegend";
@@ -145,7 +145,13 @@ export default async function LegalDocumentForm({
         ))}
 
         <Box>
-          <SubmitButton label={submitLabel} pendingLabel={pendingLabel} incompleteHintNamed={incompleteHint} size="medium" />
+          <GlyphSubmitButton
+            label={submitLabel}
+            pendingLabel={pendingLabel}
+            icon="save"
+            incompleteHintNamed={incompleteHint}
+            size="medium"
+          />
         </Box>
       </Stack>
     </ActionForm>

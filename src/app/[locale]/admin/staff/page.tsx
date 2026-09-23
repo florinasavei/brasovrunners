@@ -24,7 +24,7 @@ import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu from "@/shared/ui/RowMenu";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   changeStaffRoleAction,
   inviteStaffAction,
@@ -230,9 +230,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
               ))}
             </RecallField>
             <Box>
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("staff.invite")}
                 pendingLabel={t("staff.inviting")}
+                icon="addPerson"
                 incompleteHintNamed={t("forms.incompleteFirst")}
                 size="medium"
               />
@@ -323,9 +324,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
                       </MenuItem>
                     ))}
                   </TextField>
-                  <SubmitButton
+                  <GlyphSubmitButton
                     label={t("staff.changeRole")}
                     pendingLabel={t("staff.changeRolePending")}
+                    icon="role"
                     variant="outlined"
                   />
                 </Stack>
@@ -373,7 +375,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     ? {
                         kind: "submit" as const,
                         label: t("staff.passwordReset"),
-                        icon: "invite" as const,
+                        icon: "resend" as const,
                         formId: `password-${member.id}`,
                         confirm: {
                           title: t("staff.passwordResetTitle"),
@@ -384,7 +386,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     : {
                         kind: "submit" as const,
                         label: t("staff.resendInvite"),
-                        icon: "invite" as const,
+                        icon: "resend" as const,
                         formId: `invite-${member.id}`,
                         confirm: {
                           title: t("staff.resendInviteTitle"),

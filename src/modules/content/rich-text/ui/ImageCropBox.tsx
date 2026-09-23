@@ -5,6 +5,9 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
 import { WHOLE_IMAGE, meaningfulCrop, type ImageCrop } from "../domain/schema";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+
+const ResetGlyph = ACTION_ICONS.reset;
 
 /**
  * The crop box: drag a rectangle over the photograph and that is what the site shows
@@ -206,7 +209,7 @@ export default function ImageCropBox({
       <Typography variant="caption" color="text.secondary" component="p">
         {labels.help}
       </Typography>
-      <Button size="small" onClick={() => commit(null)} disabled={crop === null}>
+      <Button size="small" onClick={() => commit(null)} disabled={crop === null} startIcon={<ResetGlyph fontSize="small" />}>
         {labels.reset}
       </Button>
     </Box>

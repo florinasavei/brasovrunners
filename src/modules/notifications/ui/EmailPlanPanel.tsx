@@ -12,7 +12,7 @@ import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
 import { type EmailVolumeToday, PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/volume";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -162,7 +162,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
           </Typography>
           <RecallField name="note" label={t("emails.plan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
           <Box>
-            <SubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} />
+            <GlyphSubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} icon="save" />
           </Box>
         </Stack>
       </ActionForm>

@@ -12,7 +12,7 @@ import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { createPageAction } from "../actions";
 
 type Props = {
@@ -51,7 +51,13 @@ export default async function NewPagePage({ params, searchParams }: Props) {
           <input type="hidden" name="uiLocale" value={locale} />
           <PageFieldsForm navOrder={0} translations={[]} slugLocked={false} />
           <Box>
-            <SubmitButton label={t("pages.create")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
+            <GlyphSubmitButton
+              label={t("pages.create")}
+              pendingLabel={t("editor.saving")}
+              icon="add"
+              incompleteHintNamed={t("forms.incompleteFirst")}
+              size="medium"
+            />
           </Box>
         </Stack>
       </ActionForm>

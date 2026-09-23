@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { NeverKeptField } from "@/shared/forms/recall";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { hardDeleteEventAction } from "../../../actions";
 
 /**
@@ -46,7 +46,8 @@ export default async function EraseEventForm({ locale, eventId, expected }: { lo
           slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
         />
         <Box>
-          <SubmitButton
+          <GlyphSubmitButton
+            icon="erase"
             label={t("erase.action")}
             pendingLabel={t("erase.action")}
             incompleteHintNamed={t("forms.incompleteFirst")}

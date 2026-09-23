@@ -1,5 +1,5 @@
 import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -135,15 +135,15 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} sx={{ flexWrap: "wrap", gap: 1 }}>
             {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((documentKey) => (
-              <Button
+              <GlyphButton
                 key={documentKey}
-                component="a"
+                icon="template"
                 href={`${getPathname({ locale, href: "/admin/legal/new" })}?template=${documentKey}`}
                 variant="outlined"
                 sx={{ minHeight: 44 }}
               >
                 {t(`legal.keys.${documentKey}`)}
-              </Button>
+              </GlyphButton>
             ))}
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>

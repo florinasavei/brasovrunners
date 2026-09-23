@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -14,6 +13,7 @@ import { type AdminSection, canReadRegistrations, visibleAdminSections } from ".
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 /**
  * The backoffice's chrome — the title, who is signed in, sign out, and the tabs — around every
@@ -114,9 +114,9 @@ export default async function BackofficeShell({
 
         <form action={signOut}>
           <input type="hidden" name="uiLocale" value={locale} />
-          <Button type="submit" size="small" variant="outlined">
+          <GlyphButton icon="signOut" type="submit" size="small" variant="outlined">
             {t("signOut")}
-          </Button>
+          </GlyphButton>
         </form>
       </Stack>
 

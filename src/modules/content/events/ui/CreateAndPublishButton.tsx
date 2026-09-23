@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { VALIDITY_PROXY_ATTRIBUTE } from "@/shared/forms/ValidityProxy";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import RunnerLoader from "@/shared/ui/RunnerLoader";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { THEN_FIELD, THEN_PUBLISH } from "../form-names";
@@ -105,6 +106,9 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
   // Only this button's own press: the plain create beside it shares the form's status.
   const pending = status.pending && status.data?.get(THEN_FIELD) === THEN_PUBLISH;
   const dimmed = missing !== null && !status.pending;
+  // The publication verb's own glyph at rest, as on the editor's "Publică" (§318), and the
+  // runner in its place while this press is in flight, at the size of the glyph it replaces.
+  const PublishGlyph = ACTION_ICONS.publish;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
@@ -118,7 +122,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
         aria-disabled={status.pending}
         aria-busy={pending}
         aria-describedby={dimmed ? "publish-not-ready" : undefined}
-        startIcon={pending ? <RunnerLoader size={18} color="inherit" /> : undefined}
+        startIcon={pending ? <RunnerLoader size={20} color="inherit" /> : <PublishGlyph fontSize="small" />}
         sx={{ ...TAP_TARGET, ...(dimmed ? { opacity: 0.38, cursor: "not-allowed" } : {}) }}
         onClick={(event) => {
           if (status.pending) {

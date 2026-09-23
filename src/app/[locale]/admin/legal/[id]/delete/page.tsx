@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { NeverKeptField } from "@/shared/forms/recall";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -229,7 +229,8 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
               />
               <Box>
-                <SubmitButton
+                <GlyphSubmitButton
+                  icon="erase"
                   label={t("legal.erase.action")}
                   pendingLabel={t("legal.erase.action")}
                   incompleteHintNamed={t("forms.incompleteFirst")}

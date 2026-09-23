@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -18,7 +17,7 @@ import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import { RecallHidden } from "@/shared/forms/recall";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   allowedTransitions,
   canEditEventFields,
@@ -27,10 +26,12 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
+  EDITORIAL_TRANSITION_ICON,
   EDITORIAL_TRANSITION_LABEL,
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { deletePageAction, savePageAction, transitionPageAction } from "../actions";
 
 type Props = {
@@ -132,9 +133,9 @@ export default async function EditPagePage({ params, searchParams }: Props) {
               <input type="hidden" name="pageId" value={page.id} />
               <input type="hidden" name="expectedVersion" value={page.version} />
               <input type="hidden" name="to" value={to} />
-              <Button type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
                 {EDITORIAL_TRANSITION_LABEL[to]}
-              </Button>
+              </GlyphButton>
             </form>
           ))}
         </Stack>
@@ -156,7 +157,13 @@ export default async function EditPagePage({ params, searchParams }: Props) {
               slugLocked={page.publishedAt !== null}
             />
             <Box>
-              <SubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
+              <GlyphSubmitButton
+                label={t("editor.save")}
+                pendingLabel={t("editor.saving")}
+                icon="save"
+                incompleteHintNamed={t("forms.incompleteFirst")}
+                size="medium"
+              />
             </Box>
           </Stack>
         </ActionForm>
@@ -178,6 +185,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
             <input type="hidden" name="pageId" value={page.id} />
             <ConfirmSubmitButton
               label={t("pages.delete")}
+              icon="delete"
               title={t("pages.deleteTitle")}
               body={t("pages.deleteBody")}
               confirmLabel={t("pages.delete")}

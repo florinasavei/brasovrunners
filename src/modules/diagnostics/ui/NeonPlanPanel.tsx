@@ -10,7 +10,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import Panel from "@/shared/ui/Panel";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -131,7 +131,7 @@ export default async function NeonPlanPanel({ locale, plan, block, mayEdit }: Pr
               {t("tasks.neonPlan.december")}
             </Typography>
             <Box>
-              <SubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} />
+              <GlyphSubmitButton label={t("tasks.neonPlan.save")} pendingLabel={t("tasks.neonPlan.saving")} icon="save" />
             </Box>
           </Stack>
         </ActionForm>

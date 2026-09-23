@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { updateBotCheckAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
 import type { BotCheckState } from "@/modules/registrations/bot-check";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 /**
  * The anti-bot challenge, on or off, from the backoffice (`DECISIONS.md` §254; the owner: "I
@@ -72,9 +72,10 @@ export default async function BotCheckPanel({
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="which" value="honeypot" />
           <input type="hidden" name="enabled" value={state.honeypot ? "0" : "1"} />
-          <SubmitButton
+          <GlyphSubmitButton
             label={t(state.honeypot ? "botCheck.honeypot.turnOff" : "botCheck.honeypot.turnOn")}
             pendingLabel={t("botCheck.saving")}
+            icon={state.honeypot ? "turnOff" : "turnOn"}
             color={state.honeypot ? "warning" : "primary"}
             variant={state.honeypot ? "outlined" : "contained"}
           />
@@ -87,9 +88,10 @@ export default async function BotCheckPanel({
           <Box component="form" action={updateBotCheckAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="enabled" value={state.enabled ? "0" : "1"} />
-            <SubmitButton
+            <GlyphSubmitButton
               label={t(state.enabled ? "botCheck.turnOff" : "botCheck.turnOn")}
               pendingLabel={t("botCheck.saving")}
+              icon={state.enabled ? "turnOff" : "turnOn"}
               color={state.enabled ? "warning" : "primary"}
               variant={state.enabled ? "outlined" : "contained"}
             />

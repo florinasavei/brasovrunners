@@ -1,18 +1,48 @@
 "use client";
 
+import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ComponentType, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
 
-type Props = {
+/**
+ * The glyph's size in CSS pixels, per button size: what MUI's own start-icon slot gives an icon
+ * (18 / 20 / 22), so the running figure that replaces the verb's glyph while the request is in
+ * flight is exactly as big as the glyph it replaced and the label does not move.
+ */
+const GLYPH_PX = { small: 18, medium: 20, large: 22 } as const;
+
+export type SubmitButtonProps = {
   label: string;
   /** What the button says while the server is working. It is the whole reason this exists. */
   pendingLabel: string;
+  /**
+   * The public send buttons — the registration and the contact form: the club's runner before
+   * the label, standing at rest, the figure `RunnerLoader` animates while the same button is
+   * pending (§318; the owner: "butoanele de trimitere înscriere și contact trebuie să aibă și
+   * iconița cu un alergător").
+   *
+   * A flag and not a name, because this button is on the public pages and the verbs' registry
+   * (`action-icons.ts`) is the backoffice's: a lookup by a runtime key cannot be tree-shaken, so
+   * importing it here would put every backoffice glyph on the register page, the contact page
+   * and the event page. `DirectionsRunIcon` is the one glyph this file imports, and
+   * `RunnerLoader` already carries it.
+   */
+  runner?: boolean;
+  /**
+   * A glyph already resolved on the client, for `GlyphSubmitButton` — the backoffice's wrapper,
+   * which looks a verb's name up in the registry and hands the component here. A Server
+   * Component cannot pass this (a function does not cross the boundary); it passes the name to
+   * `GlyphSubmitButton` instead. While the request is in flight the glyph gives way to the
+   * running figure, which is the one thing this button already did.
+   */
+  glyph?: ComponentType<SvgIconProps>;
   /**
    * When given, the button watches its form and, while any required field is still empty or
    * invalid, dims itself and shows this sentence beneath. It stays pressable: a press then runs
@@ -104,6 +134,8 @@ type Props = {
 export default function SubmitButton({
   label,
   pendingLabel,
+  runner,
+  glyph,
   incompleteHint,
   incompleteHintNamed,
   awaitsBotCheck,
@@ -115,7 +147,7 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
-}: Props) {
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
@@ -267,6 +299,7 @@ export default function SubmitButton({
   const hint = waiting && pressedEarly ? (botCheckHint ?? incompleteSentence) : incompleteSentence;
   // One id per button: a page with two forms has two buttons that may both be waiting (§315).
   const hintId = useId();
+  const Glyph = glyph ?? (runner ? DirectionsRunIcon : null);
 
   return (
     <Box
@@ -311,7 +344,15 @@ export default function SubmitButton({
         // name of its own: the label beside it has already changed to `pendingLabel` and
         // `aria-busy` is set, so the figure is the third way of saying it rather than the
         // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
-        startIcon={pending ? <RunnerLoader size={18} color="inherit" /> : undefined}
+        // At rest the verb's own glyph, if it has one (§318) — on the public send buttons that
+        // is the same runner, standing, so a press is the figure setting off.
+        startIcon={
+          pending ? (
+            <RunnerLoader size={GLYPH_PX[size]} color="inherit" />
+          ) : Glyph ? (
+            <Glyph fontSize="small" />
+          ) : undefined
+        }
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.

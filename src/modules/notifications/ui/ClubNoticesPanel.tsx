@@ -12,7 +12,7 @@ import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
 import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import type { Locale } from "@/i18n/routing";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -154,7 +154,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
-            <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} />
+            <GlyphSubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} icon="save" />
           </Box>
         </Stack>
       </ActionForm>

@@ -14,7 +14,7 @@ import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { createAlbumAction } from "../actions";
 
 type Props = {
@@ -57,7 +57,13 @@ export default async function NewAlbumPage({ params, searchParams }: Props) {
           <input type="hidden" name="uiLocale" value={locale} />
           <AlbumFieldsForm takenOn="" eventId={null} events={events} translations={[]} slugLocked={false} />
           <Box>
-            <SubmitButton label={t("gallery.create")} pendingLabel={t("editor.saving")} incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
+            <GlyphSubmitButton
+              label={t("gallery.create")}
+              pendingLabel={t("editor.saving")}
+              icon="add"
+              incompleteHintNamed={t("forms.incompleteFirst")}
+              size="medium"
+            />
           </Box>
         </Stack>
       </ActionForm>
