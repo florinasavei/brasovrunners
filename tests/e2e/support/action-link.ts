@@ -60,6 +60,17 @@ export async function registrationStatus(id: string): Promise<string> {
   });
 }
 
+/** The two telephone numbers as stored — E.164, whatever the boxes showed (§84). */
+export async function registrationPhones(id: string): Promise<{ phone: string | null; emergencyContactPhone: string | null }> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<{ phone: string | null; emergencyContactPhone: string | null }>(
+      `SELECT phone, emergency_contact_phone AS "emergencyContactPhone" FROM registrations WHERE id = $1`,
+      [id],
+    );
+    return rows[0] ?? { phone: null, emergencyContactPhone: null };
+  });
+}
+
 /**
  * A live link of `purpose` for the registration, returned as its secret.
  *

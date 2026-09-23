@@ -62,9 +62,10 @@ const E164 = E164_PHONE;
 /**
  * Countries whose national numbers keep their leading zero in international form. Italy is
  * the one a Romanian club will meet; everywhere else a leading zero is the trunk prefix that
- * must go.
+ * must go. Exported for the mask (`phone-format.ts`), which has to read a typed zero the way
+ * this module will.
  */
-const KEEPS_LEADING_ZERO = new Set(["IT", "VA", "SM"]);
+export const KEEPS_LEADING_ZERO: ReadonlySet<string> = new Set(["IT", "VA", "SM"]);
 
 /**
  * Compose an international number from the country chosen and the digits typed, or return
