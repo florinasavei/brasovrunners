@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.48-2026-09-22
+
+- **The `BRASOV RUNNERS` wordmark now heads the calendar and the contact page**, as it heads the listing — the same kit face, the same size, a Server Component, no extra download. The header is unchanged. `BR-V1.32` said "the homepage and nowhere else"; that sentence guarded the header, and the calendar and the contact page are the club's own pages in the same sense the listing is. A test pins the three so a fourth is a decision rather than a habit. §292.
 ## BR-V1.47-2026-09-22
 
 - **The email page shows the Organizer what is happening and the Administrator what to change.** How many messages went out today and against which plan, what is waiting in the queue and why, and who receives the club's copies are now readable for the Organizer — the status page the club works from on race week. Changing any of it — the plan, "Trimite acum", the club's copies, who receives the contact messages — stays the Administrator's, and the buttons are simply not drawn for anybody else, with a sentence saying whose the setting is. Until now every form was shown to everyone and refused on the press. §291.
