@@ -115,9 +115,13 @@ export default async function EventFacts({
   }
 
   /* Where: the meeting point — itself the map link when the organizer pasted one and a link
-     may sit here; the same destination is never offered twice on one line. */
+     may sit here; the same destination is never offered twice on one line. While the place is
+     to be announced (§NNN) the sentence that says so, on the page, the cards and the hero alike;
+     the query has already withheld the name, the address and the map. */
   const where: ReactNode[] = [];
-  if (event.locationName) {
+  if (event.locationToBeAnnounced) {
+    where.push(t("locationToBeAnnounced"));
+  } else if (event.locationName) {
     where.push(links && event.mapUrl ? outLink(event.mapUrl, event.locationName) : event.locationName);
   } else if (links && event.mapUrl) {
     where.push(outLink(event.mapUrl, t("openMap")));

@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
@@ -265,7 +266,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               eventDate: eventDetails
                 ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
                 : undefined,
-              eventLocation: eventDetails?.locationName,
+              // The city while the place is to be announced (§NNN), as in the PDF — never the typed place.
+              eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
             }}
           />
 

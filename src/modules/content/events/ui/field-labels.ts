@@ -28,6 +28,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.raceStartsAtTime": t("editor.raceStartsAt"),
     "event.durationMinutes": t("editor.durationMinutes"),
     "event.locationName": t("editor.fields.locationName"),
+    "event.locationToBeAnnounced": t("editor.placeToBeAnnounced"),
     "event.mapUrl": t("editor.mapUrl"),
     "event.registrationMode": t("editor.registrationMode"),
     "event.capacity": t("editor.capacity"),

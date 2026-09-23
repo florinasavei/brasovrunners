@@ -27,15 +27,34 @@ export type ShareShape = keyof typeof SHARE_SHAPES;
 
 export type ShareImageEvent = Pick<
   PublicEvent,
-  "title" | "type" | "startsAt" | "raceStartsAt" | "timezone" | "locationName" | "distanceMeters" | "elevationGainMeters" | "eventStatus"
+  | "title"
+  | "type"
+  | "startsAt"
+  | "raceStartsAt"
+  | "timezone"
+  | "locationName"
+  | "locationToBeAnnounced"
+  | "distanceMeters"
+  | "elevationGainMeters"
+  | "eventStatus"
 >;
 
 export async function eventShareImage(
   event: ShareImageEvent,
   locale: "ro" | "en",
   shape: ShareShape,
-  labels: { type: string; cancelled: string; distanceKm: (km: string) => string; elevationM: (m: string) => string },
+  labels: {
+    type: string;
+    cancelled: string;
+    /** "Locația se anunță în curând" (§NNN), where the meeting point would be. */
+    locationToBeAnnounced: string;
+    distanceKm: (km: string) => string;
+    elevationM: (m: string) => string;
+  },
 ): Promise<ImageResponse> {
+  // A picture outlives the page it was made from — it is saved, posted, forwarded — so a place
+  // not yet announced is said as such, and the query has withheld the typed one (§NNN).
+  const place = event.locationToBeAnnounced ? labels.locationToBeAnnounced : event.locationName;
   const { width, height } = SHARE_SHAPES[shape];
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
@@ -105,7 +124,7 @@ export async function eventShareImage(
             <div style={{ display: "flex" }}>
               {date} · {time}
             </div>
-            {event.locationName && <div style={{ display: "flex" }}>{event.locationName}</div>}
+            {place && <div style={{ display: "flex" }}>{place}</div>}
           </div>
         </div>
 

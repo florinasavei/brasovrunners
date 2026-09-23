@@ -18,6 +18,7 @@ import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
 import OnlyForType from "./OnlyForType";
+import PlaceToBeAnnounced from "./PlaceToBeAnnounced";
 import ScheduleRowsEditor from "./ScheduleRowsEditor";
 import TypeNote from "./TypeNote";
 import WallTimeField from "./WallTimeField";
@@ -261,25 +262,37 @@ export default async function EventFieldsForm({
             redundant"): a name, a street, or both, as one would tell a friend. The column the
             second box wrote, `location_address`, stays for the rows that have one and is shown
             where it exists; nothing writes it any more.
-          */}
-          <RecallField
-            name="event.locationName"
-            label={t("editor.fields.locationName")}
-            helperText={t("editor.locationHelp")}
-            defaultValue={[event?.locationName, event?.locationAddress].filter(Boolean).join(", ")}
-            {...box("locationName")}
-          />
 
-          {/* Where to meet, as one pasted link. Coordinates were asked for here until
-              `DECISIONS.md` §61: two decimal numbers to produce a link the organizer could
-              paste in one move. */}
-          <RecallField
-            name="event.mapUrl"
-            label={t("editor.mapUrl")}
-            helperText={t("editor.mapUrlHelp")}
-            defaultValue={event?.mapUrl ?? ""}
-            {...box("mapUrl", { inputMode: "url" })}
-          />
+            Above it, whether the place is announced at all (§NNN; the owner: "I want to be able
+            to set the location as TBD, and to not announce it yet"). The switch is the island;
+            the box's constraints are still read here, off the schema, and handed to it as data
+            — the island only takes `required` away while the switch is on.
+          */}
+          <PlaceToBeAnnounced
+            defaultChecked={event?.locationToBeAnnounced ?? false}
+            labels={{
+              toggle: t("editor.placeToBeAnnounced"),
+              toggleHelp: t("editor.placeToBeAnnouncedHelp"),
+              locationName: t("editor.fields.locationName"),
+              locationHelp: t("editor.locationHelp"),
+              unpublished: t("editor.placeUnpublished"),
+            }}
+            locationName={{
+              defaultValue: [event?.locationName, event?.locationAddress].filter(Boolean).join(", "),
+              box: box("locationName"),
+            }}
+          >
+            {/* Where to meet, as one pasted link. Coordinates were asked for here until
+                `DECISIONS.md` §61: two decimal numbers to produce a link the organizer could
+                paste in one move. Kept, and not shown, while the place is to be announced. */}
+            <RecallField
+              name="event.mapUrl"
+              label={t("editor.mapUrl")}
+              helperText={t("editor.mapUrlHelp")}
+              defaultValue={event?.mapUrl ?? ""}
+              {...box("mapUrl", { inputMode: "url" })}
+            />
+          </PlaceToBeAnnounced>
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
               block. The caption under the rows names the notes fold in the language panels, so

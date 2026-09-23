@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
+import { type AnyColumn, and, asc, desc, eq, gte, isNull, lt, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -6,6 +6,44 @@ import type { EventType } from "@/modules/events/domain/event-type";
 import type { Database as GenericDatabase } from "@/db/types";
 
 type Locale = (typeof eventTranslations.locale.enumValues)[number];
+
+/**
+ * A fact about the place, or null while the place is to be announced (`DECISIONS.md` §NNN).
+ *
+ * In SQL, on every public read, rather than a flag each surface is trusted to check: a page, a
+ * card, the calendar feed, the structured data, the share picture or an email that forgets the
+ * flag then shows no place at all — never the one the organizer typed and has not announced.
+ * The surfaces read `locationToBeAnnounced` only to say "Locația se anunță în curând" where the
+ * place would be.
+ */
+const unlessToBeAnnounced = <T>(fact: SQL<T> | AnyColumn) =>
+  sql<T | null>`CASE WHEN ${events.locationToBeAnnounced} THEN NULL ELSE ${fact} END`;
+
+/**
+ * The place's name as a page reads it: the language's own when the club gave one (migration
+ * `0059`), else the event's — never the other language's (BR-REQ-040-02) — and nothing at all
+ * while the place is to be announced.
+ */
+const publicLocationName = unlessToBeAnnounced<string | null>(
+  sql<string | null>`COALESCE(NULLIF(btrim(${eventTranslations.locationName}), ''), ${events.locationName})`,
+);
+
+/**
+ * The programme's rows (§117) as the public reads them: whole, except that each row's own place
+ * is emptied while the place is to be announced (§NNN) — "Ridicarea kitului — Sala Sporturilor"
+ * names the venue as surely as the meeting point does. The time and the label stay. The place
+ * becomes `null`, the value a row without one already carries, never a missing key, which
+ * `readScheduleItems` would refuse along with the whole programme. Only a well-formed list is
+ * rewritten, and only its objects: anything else passes through untouched for
+ * `readScheduleItems` to drop, as it always has, rather than failing the page's query.
+ */
+const publicScheduleItems = sql<unknown>`CASE
+  WHEN ${events.locationToBeAnnounced} AND jsonb_typeof(${events.scheduleItems}) = 'array' THEN (
+    SELECT jsonb_agg(CASE WHEN jsonb_typeof(r.item) = 'object' THEN jsonb_set(r.item, '{place}', 'null'::jsonb) ELSE r.item END ORDER BY r.n)
+    FROM jsonb_array_elements(${events.scheduleItems}) WITH ORDINALITY AS r(item, n)
+  )
+  ELSE ${events.scheduleItems}
+END`.mapWith(events.scheduleItems);
 
 /**
  * Any Drizzle database over this schema: the application's node-postgres pool in production,
@@ -33,8 +71,9 @@ const PUBLIC_COLUMNS = {
   raceStartsAt: events.raceStartsAt,
   timezone: events.timezone,
   // The meeting point on a map, as the organizer pasted it: stored, never assembled, because
-  // AGENTS.md §8 forbids a provider hostname under src/.
-  mapUrl: events.mapUrl,
+  // AGENTS.md §8 forbids a provider hostname under src/. Null while the place is to be
+  // announced (§NNN), like the name and the address below.
+  mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
   // A YouTube link, embedded from its id (BR-REQ-011-01 criterion 9).
@@ -65,9 +104,11 @@ const PUBLIC_COLUMNS = {
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other
-  // row (BR-REQ-040-02).
-  locationName: sql<string | null>`COALESCE(NULLIF(btrim(${eventTranslations.locationName}), ''), ${events.locationName})`,
-  locationAddress: events.locationAddress,
+  // row (BR-REQ-040-02). While the place is to be announced (§NNN) all three are null and the
+  // flag says why, so a surface says "se anunță în curând" instead of saying nothing.
+  locationName: publicLocationName,
+  locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
+  locationToBeAnnounced: events.locationToBeAnnounced,
   difficulty: events.difficulty,
   costType: events.costType,
   slug: eventTranslations.slug,
@@ -81,8 +122,9 @@ const PUBLIC_COLUMNS = {
   scheduleJson: eventTranslations.scheduleJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
-  // The programme's rows (§117), the event's own; read through `readScheduleItems`.
-  scheduleItems: events.scheduleItems,
+  // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
+  // their places while the place is to be announced (§NNN).
+  scheduleItems: publicScheduleItems,
   /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
   updatedAt: events.updatedAt,
   seoTitle: eventTranslations.seoTitle,
@@ -341,14 +383,18 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       // Whether the page has rules to link to (§96).
       hasRules: sql<boolean>`${eventTranslations.rulesJson} IS NOT NULL`,
       hasSchedule: sql<boolean>`${eventTranslations.scheduleJson} IS NOT NULL OR ${events.scheduleItems} IS NOT NULL`,
-      // The rows themselves, for the reminder (§117).
-      scheduleItems: events.scheduleItems,
+      // The rows themselves, for the reminder (§117) — without their places while the place is
+      // to be announced (§NNN), as on the page.
+      scheduleItems: publicScheduleItems,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own. The place's name in the runner's language when the club gave it one
-      // (migration `0058`), else the event's — the same rule as `PUBLIC_COLUMNS`.
+      // (migration `0059`), else the event's — the same rule as `PUBLIC_COLUMNS`, and like it,
+      // no place and no map while the place is to be announced (§NNN): an email is as public as
+      // the page, and a reminder is the likeliest thing to be forwarded.
       checklist: eventTranslations.checklist,
-      locationName: sql<string | null>`COALESCE(NULLIF(btrim(${eventTranslations.locationName}), ''), ${events.locationName})`,
-      mapUrl: events.mapUrl,
+      locationName: publicLocationName,
+      mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
+      locationToBeAnnounced: events.locationToBeAnnounced,
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,

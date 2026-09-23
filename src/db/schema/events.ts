@@ -295,10 +295,27 @@ export const events = pgTable(
      *
      * Nullable at the database, required by `content/events/fields.ts` on every save: the column
      * has to accept the rows that existed before the migration that added it, and
-     * `transitionEvent` refuses to publish an event whose meeting point is still blank.
+     * `transitionEvent` refuses to publish an event whose meeting point is still blank — unless
+     * the place is to be announced (below), which is the one state in which blank is an answer.
      */
     locationName: text("location_name"),
     locationAddress: text("location_address"),
+
+    /**
+     * The place is not announced yet (`DECISIONS.md` §NNN; the owner, 2026-09-23: "I want to be
+     * able to set the location as TBD, and to not announce it yet").
+     *
+     * A state of the event, not an empty field. While it is true, every public reader is handed
+     * no place at all — `events/repository.ts` returns null for the name (in either language),
+     * the address and the map link, in SQL, so a surface that forgets the flag shows nothing
+     * rather than the hidden place — and each surface says "Locația se anunță în curând" where
+     * the place would be. What the organizer typed meanwhile stays in the three columns above,
+     * visible to staff and published the moment this goes back to false.
+     *
+     * Not null with a default, so every row written before it reads as "announced", which is
+     * what they were.
+     */
+    locationToBeAnnounced: boolean("location_to_be_announced").notNull().default(false),
 
     /**
      * The two facts that stopped being free text in migration `0018`.

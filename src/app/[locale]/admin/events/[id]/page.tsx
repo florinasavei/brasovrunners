@@ -78,7 +78,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -120,7 +120,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced } = await searchParams;
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
   const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
@@ -337,6 +337,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
         {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
+        )}
+        {/* The save that announced the place (§NNN): public from now on, and nobody was told —
+            a save writes to no participant, so the sentence says what reaches them anyway: the
+            reminder before the event carries the place. The live wording only while the event
+            is live: a draft's place is announced to nobody. */}
+        {announced === "1" && (saved === "event" || saved === "eventSeries") && (
+          <Alert severity="info" data-testid="place-announced">
+            {live ? t("editor.placeAnnouncedLive") : t("editor.placeAnnouncedDraft")}
+          </Alert>
         )}
       </Box>
 
