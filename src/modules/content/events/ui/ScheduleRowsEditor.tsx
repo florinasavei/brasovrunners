@@ -123,23 +123,25 @@ export default function ScheduleRowsEditor({
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ width: 150 }}
               />
+              {/* Picked, not typed, like the start time (`WallTimeField`): the browser's own
+                  clock, posting `HH:MM` whatever face it shows. */}
               <TextField
                 name={name("time")}
+                type="time"
                 label={labels.time}
                 defaultValue={value.time}
-                placeholder="HH:MM"
                 size="small"
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { inputMode: "numeric", pattern: "([01][0-9]|2[0-3]):[0-5][0-9]", maxLength: 5 } }}
-                sx={{ width: 90 }}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 120 }}
               />
               <TextField
                 name={name("endTime")}
+                type="time"
                 label={labels.endTime}
                 defaultValue={value.endTime}
-                placeholder="HH:MM"
                 size="small"
-                slotProps={{ inputLabel: { shrink: true }, htmlInput: { inputMode: "numeric", pattern: "([01][0-9]|2[0-3]):[0-5][0-9]", maxLength: 5 } }}
-                sx={{ width: 90 }}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 120 }}
               />
             </Stack>
             <TextField name={name("ro")} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />

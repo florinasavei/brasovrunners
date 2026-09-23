@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.54-2026-09-23
+
+- **The create page is the editor** — one tab per language with the rich summary and the folds, "Repetă evenimentul" first, no "Link video" box on either page (a film goes in the description with the editor's YouTube button; stored links stay), every time box picked from the browser's own clock, and the place's name typed per language ("Tractorul Park" on the English page) with the meeting point still asked once — migration `0058`. §303.
 ## BR-V1.53-2026-09-23
 
 - **A repeated event inherits its Strava and Facebook event links.** Type them once on the event that carries the rule and every date the series makes carries them — a recurring Strava club event and a Facebook event with several dates keep one address for all their dates, which is what the old "this edition only; never copied" rule got wrong. A change on one date reaches the following dates when you choose so, as the place does; a single date can still have its own. Duplicating an event for next year still copies neither, because next year's race has its own pages. And after you repeat an event, the banner says how many dates were made, up to which day, and that the platform makes the rest by itself — eight weeks ahead, always — instead of "7 ediții create" and silence. §300.

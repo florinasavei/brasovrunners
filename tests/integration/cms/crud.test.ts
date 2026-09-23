@@ -119,6 +119,52 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       expect(translations.every((t) => t.authorStaffUserId === admin.id)).toBe(true);
     });
 
+    it("stores the rich summary and the description for both languages, the excerpt being the summary's words", async () => {
+      // The create form renders the editor's own language panel now, so what it posts is what a
+      // save posts — the rich summary, the description, the place's name in that language — and
+      // the service writes it through the same function the save uses (`translationColumnsFrom`):
+      // the plain `excerpt` the card and the publish check read is derived from the summary from
+      // the first insert, not from the first save.
+      const paragraph = (text: string) =>
+        JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+      const created = await createEvent(db, {
+        actor: admin,
+        fields: {
+          ...EVENT_FIELDS,
+          translations: {
+            ro: {
+              slug: "crosul-aniversar",
+              title: "Crosul aniversar",
+              excerpt: "",
+              excerptBody: paragraph("Cursa clubului,  în parc."),
+              body: paragraph("Descrierea întreagă."),
+              locationName: "",
+            },
+            en: {
+              slug: "anniversary-cross",
+              title: "Anniversary cross",
+              excerpt: "",
+              excerptBody: paragraph("The club's own race."),
+              body: paragraph("The whole description."),
+              locationName: "Tractorul Park",
+            },
+          },
+        },
+      });
+
+      const [ro, en] = await listTranslationsForEvent(db, created.id);
+      // The summary's words, whitespace collapsed, as the save derives them (`DECISIONS.md` §73).
+      expect(ro.excerpt).toBe("Cursa clubului, în parc.");
+      expect(en.excerpt).toBe("The club's own race.");
+      expect(ro.excerptJson).not.toBeNull();
+      expect(JSON.stringify(ro.bodyJson)).toContain("Descrierea întreagă.");
+      expect(JSON.stringify(en.bodyJson)).toContain("The whole description.");
+      // The place's name in this language (migration `0058`): typed for English, blank for
+      // Romanian — which means the event's own name, never the other language's.
+      expect(en.locationName).toBe("Tractorul Park");
+      expect(ro.locationName).toBeNull();
+    });
+
     it("is publishable straight away, because both languages were required", async () => {
       const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 

@@ -31,11 +31,16 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await signIn(page, "Dev Superadministrator");
 
     await page.goto("/ro/admin/events/new");
+    // The tabs switch with React state: a click before hydration is discarded when React
+    // takes over, the English panel stays hidden, and a hidden box cannot be filled.
+    await hydrated(page);
     await field("event.startsAtDate").fill(ymd(first));
     await field("event.startsAtTime").fill("08:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
+    // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(`tura-de-duminica-${suffix}`);
+    await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Sunday hill ${suffix}`);
     await field("translations.en.slug").fill(`sunday-hill-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();

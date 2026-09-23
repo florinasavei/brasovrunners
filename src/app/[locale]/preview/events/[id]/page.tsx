@@ -110,8 +110,9 @@ export default async function PreviewEventPage({ params }: Props) {
     externalProvider: event.externalProvider,
     participantListVisibility: event.participantListVisibility,
     // One value for the whole event (`DECISIONS.md` §36), so the preview reads them from the
-    // event row exactly as the public page does.
-    locationName: event.locationName,
+    // event row exactly as the public page does — the place's *name* in this language first,
+    // when the club gave it one (migration `0058`), as `PUBLIC_COLUMNS` reads it.
+    locationName: translation.locationName?.trim() || event.locationName,
     locationAddress: event.locationAddress,
     difficulty: event.difficulty,
     costType: event.costType,

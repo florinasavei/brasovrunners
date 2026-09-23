@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import { type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useRef, useState } from "react";
 
 export type LocalePanel = {
   locale: string;
@@ -34,6 +34,37 @@ export type LocalePanel = {
  */
 export default function LocaleTabPanels({ panels }: { panels: readonly LocalePanel[] }) {
   const [active, setActive] = useState(0);
+  // Whether this validation pass has already brought a panel forward; see `reveal`.
+  const revealed = useRef(false);
+
+  /**
+   * A required box on a hidden tab, when the browser refuses the submit.
+   *
+   * The browser checks every control, fires `invalid` on each empty required one, then focuses
+   * the first and names it in a bubble — unless that control is not focusable, in which case it
+   * logs "an invalid form control is not focusable" and nothing visible happens at all. A
+   * `hidden` panel is exactly that: on the create form, an English title left empty behind the
+   * Romanian tab is a "Creează" button that does nothing. So the panel that holds the control
+   * comes forward **during** the event — the DOM attribute set by hand, because React's own
+   * re-render lands after the browser has already looked for something to focus — and every
+   * closed `<details>` on the way up is opened, since a fold hides a box the same way. The
+   * first invalid control is the one the browser will point at, so the first event of a pass
+   * decides which tab wins; the rest only open their folds.
+   */
+  const reveal = (index: number) => (event: FormEvent<HTMLDivElement>) => {
+    let node = (event.target as HTMLElement | null)?.parentElement ?? null;
+    while (node && node !== event.currentTarget) {
+      if (node instanceof HTMLDetailsElement) node.open = true;
+      node = node.parentElement;
+    }
+    if (revealed.current) return;
+    revealed.current = true;
+    setTimeout(() => {
+      revealed.current = false;
+    }, 0);
+    event.currentTarget.hidden = false;
+    setActive(index);
+  };
 
   return (
     <Box>
@@ -87,6 +118,7 @@ export default function LocaleTabPanels({ panels }: { panels: readonly LocalePan
           id={`locale-panel-${panel.locale}`}
           aria-labelledby={`locale-tab-${panel.locale}`}
           hidden={index !== active}
+          onInvalid={reveal(index)}
         >
           {panel.content}
         </Box>
