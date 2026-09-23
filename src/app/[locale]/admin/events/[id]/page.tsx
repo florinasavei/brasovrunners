@@ -44,7 +44,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
@@ -52,7 +52,7 @@ import { listBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   addTestRegistrationsAction,
   deleteEventAction,
@@ -417,7 +417,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   borderColor: "divider",
                 }}
               >
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("editor.save")}
                   pendingLabel={t("editor.saving")}
                   icon="save"
@@ -720,10 +720,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
           {/* Every bib as it will print, on its own page (§94): drawn on request, not on every
               visit here. Still a link — it goes to a page — but on a line of its own it was a
-              button in all but looks, and now it wears the picture it leads to (§NNN). */}
+              button in all but looks, and now it wears the picture it leads to (§318). */}
           {bibs.length > 0 && (
             <Box sx={{ mt: 2 }}>
-              <ButtonLink
+              <GlyphButtonLink
                 icon="picture"
                 href={{ pathname: "/admin/events/[id]/bibs", params: { id: event.id } }}
                 variant="text"
@@ -731,7 +731,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 sx={{ minHeight: 44 }}
               >
                 {t("bibs.preview", { count: bibs.length })}
-              </ButtonLink>
+              </GlyphButtonLink>
             </Box>
           )}
         </Box>

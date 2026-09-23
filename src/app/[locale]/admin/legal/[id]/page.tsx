@@ -22,7 +22,7 @@ import LegalDocumentForm from "@/modules/legal-documents/ui/LegalDocumentForm";
 import { approveLegalVersionAction, updateLegalVersionAction } from "../actions";
 import { canManageStaff, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
@@ -213,9 +213,9 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
           <Alert severity="info">{t("legal.readOnlyNotice")}</Alert>
           {mayWrite && (
             <Box>
-              <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} icon="add" variant="contained">
+              <GlyphButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} icon="add" variant="contained">
                 {t("legal.nextVersion")}
-              </ButtonLink>
+              </GlyphButtonLink>
             </Box>
           )}
 

@@ -17,7 +17,7 @@ import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 /**
  * The glyph before a verb (the owner: "these should also have icons"), by name — the menu is a
- * client island and makes the element. The names are the one registry's (§NNN), so a verb in
+ * client island and makes the element. The names are the one registry's (§318), so a verb in
  * this menu wears the glyph the same verb wears on a button anywhere else.
  */
 export type RowMenuIcon = ActionIconName;

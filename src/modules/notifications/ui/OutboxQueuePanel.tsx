@@ -8,7 +8,7 @@ import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/emails/actio
 import type { Locale } from "@/i18n/routing";
 import type { OutboxQueue } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -62,7 +62,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit 
         {!mayEdit ? null : queue.total > 0 && (volume.remaining === null || volume.remaining > 0) ? (
           <Box component="form" action={sendOutboxNowFromEmailsAction}>
             <input type="hidden" name="uiLocale" value={locale} />
-            <SubmitButton
+            <GlyphSubmitButton
               label={t("outbox.sendNow")}
               pendingLabel={t("outbox.sending")}
               ariaLabel={t("outbox.sendNowLong")}

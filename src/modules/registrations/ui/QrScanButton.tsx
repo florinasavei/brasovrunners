@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
-// A client island already, so the element is made here; the glyph is still the registry's (§NNN).
+// A client island already, so the element is made here; the glyph is still the registry's (§318).
 const ScanGlyph = ACTION_ICONS.scan;
 
 type Detector = { detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>> };

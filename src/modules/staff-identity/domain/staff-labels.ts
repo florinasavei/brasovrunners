@@ -40,7 +40,7 @@ export const EDITORIAL_TRANSITION_LABEL: Record<EditorialStatus, string> = {
 /**
  * The glyph beside each of those words (§170), by name (`shared/ui/action-icons.ts`) — here,
  * beside the words, because the event, the album and the standing page all offer the same four
- * transitions, and until now only the event's wore a glyph (§NNN).
+ * transitions, and until now only the event's wore a glyph (§318).
  */
 export const EDITORIAL_TRANSITION_ICON: Record<EditorialStatus, ActionIconName> = {
   DRAFT: "draft",

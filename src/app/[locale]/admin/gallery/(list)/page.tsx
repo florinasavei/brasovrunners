@@ -18,7 +18,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import { deleteAlbumAction, transitionAlbumAction } from "../actions";
 
 type Props = {
@@ -92,9 +92,9 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("gallery.title")}
         </Typography>
-        <ButtonLink href="/admin/gallery/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
+        <GlyphButtonLink href="/admin/gallery/new" icon="add" variant="contained" sx={{ minHeight: 44 }}>
           {t("gallery.create")}
-        </ButtonLink>
+        </GlyphButtonLink>
       </Stack>
 
       {/* The other half of this tab: every stored picture, and where each one is used. */}

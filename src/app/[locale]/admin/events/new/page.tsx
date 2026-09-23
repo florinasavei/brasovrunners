@@ -17,7 +17,7 @@ import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { createEventAction } from "../../actions";
 
 type Props = {
@@ -123,7 +123,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           <EventFieldsForm event={null} declarations={declarations} />
 
           <Box>
-            <SubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
+            <GlyphSubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
           </Box>
         </Stack>
       </form>

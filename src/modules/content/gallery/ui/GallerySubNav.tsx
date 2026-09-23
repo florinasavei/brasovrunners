@@ -1,6 +1,6 @@
 import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
-import ButtonLink from "@/shared/ui/ButtonLink";
+import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 
 /**
  * The two halves of the Galerie tab, side by side at the top of both: the albums that go on
@@ -13,7 +13,7 @@ import ButtonLink from "@/shared/ui/ButtonLink";
  *
  * A Server Component with no pathname lookup: `AdminTabs` is a client island because a layout
  * cannot know which page it wraps, but there are exactly two pages here and each one knows
- * which it is, so it says so. Each wears its glyph by name (§NNN, amending §183's "no icons",
+ * which it is, so it says so. Each wears its glyph by name (§318, amending §183's "no icons",
  * which was written when the only way to give one was the element-valued prop
  * `shared/ui/action-icons.ts` forbids): the albums the Galerie tab's own picture, the bucket's
  * pictures a single image.
@@ -23,7 +23,7 @@ export default async function GallerySubNav({ active }: { active: "albums" | "pi
 
   return (
     <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-      <ButtonLink
+      <GlyphButtonLink
         href="/admin/gallery"
         icon="album"
         variant={active === "albums" ? "contained" : "outlined"}
@@ -31,8 +31,8 @@ export default async function GallerySubNav({ active }: { active: "albums" | "pi
         sx={{ minHeight: 44 }}
       >
         {t("gallery.tabAlbums")}
-      </ButtonLink>
-      <ButtonLink
+      </GlyphButtonLink>
+      <GlyphButtonLink
         href="/admin/gallery/pictures"
         icon="picture"
         variant={active === "pictures" ? "contained" : "outlined"}
@@ -40,7 +40,7 @@ export default async function GallerySubNav({ active }: { active: "albums" | "pi
         sx={{ minHeight: 44 }}
       >
         {t("gallery.tabPictures")}
-      </ButtonLink>
+      </GlyphButtonLink>
     </Stack>
   );
 }

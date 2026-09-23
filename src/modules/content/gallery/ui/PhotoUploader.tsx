@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
-// A client island already, so it makes the element itself; the glyph is the registry's (§NNN).
+// A client island already, so it makes the element itself; the glyph is the registry's (§318).
 const UploadGlyph = ACTION_ICONS.upload;
 
 /**

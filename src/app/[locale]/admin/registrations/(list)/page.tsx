@@ -41,6 +41,7 @@ import Panel from "@/shared/ui/Panel";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -540,7 +541,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 sx={{ maxWidth: 480 }}
               />
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("registrations.eraseAction")}
                   pendingLabel={t("registrations.erasePending")}
                   icon="erase"
@@ -680,7 +681,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Alert>
         )}
         {/*
-          Each of the four wears its verb (§NNN; the owner: "I also need more icons, including on
+          Each of the four wears its verb (§318; the owner: "I also need more icons, including on
           the Printing BID stuff"): the printer on the batch that goes to it, the PDF on the whole
           sheet, the double tick on "they are printed" and the struck-through tick on taking that
           back — the same two glyphs the row's "⋮" uses for one bib.
@@ -719,7 +720,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="only" value="unprinted" />
               <input type="hidden" name="listQuery" value={listQueryString} />
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("registrations.bibsMarkPrinted", { count: bibs.unprinted })}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
                 icon="markPrinted"
@@ -734,7 +735,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <input type="hidden" name="eventId" value={filters.eventId} />
               <input type="hidden" name="printed" value="0" />
               <input type="hidden" name="listQuery" value={listQueryString} />
-              <SubmitButton
+              <GlyphSubmitButton
                 label={t("registrations.bibsMarkAllUnprinted")}
                 pendingLabel={t("registrations.bibsMarkPrintedPending")}
                 icon="markUnprinted"
@@ -841,7 +842,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Box component="form" action={sendOutboxNowAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="listQuery" value={listQueryString} />
-            <SubmitButton
+            <GlyphSubmitButton
               label={t("outbox.sendNow")}
               pendingLabel={t("outbox.sending")}
               ariaLabel={t("outbox.sendNowLong")}
@@ -1029,11 +1030,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Box component="form" action={resendRegistrationEmailAction}>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
+                {/*
+                  No glyph here, unlike the registration's own full-size "Retrimite" (§318): on
+                  a desktop the envelope made this button 24 pixels wider (84 → 108) and the
+                  actions column with it (244 → 268), in a table already wider than a 1280-pixel
+                  screen. The column was narrowed so eighty rows stay scannable, and a picture
+                  of a verb the label already says is not worth undoing that.
+                */}
                 <SubmitButton
                   label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
-                  icon="resend"
                   variant="outlined"
                   // One per row, in a narrow column: the 44-pixel floor and a wrapping label
                   // together made every row seventy pixels tall in a list whose whole purpose
@@ -1242,7 +1249,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               )}
               <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
               <Box>
-                <SubmitButton
+                <GlyphSubmitButton
                   label={t("registrations.bulkCancelAction")}
                   pendingLabel={t("registrations.bulkCancelPending")}
                   icon="cancel"

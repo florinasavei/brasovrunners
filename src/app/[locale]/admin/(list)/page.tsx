@@ -610,7 +610,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                           {
                             kind: "link" as const,
                             // The bin with the cross, as on the screen it opens and on the
-                            // registration's own erase (§NNN): not the plain bin of "Șterge".
+                            // registration's own erase (§318): not the plain bin of "Șterge".
                             icon: "erase" as const,
                             color: "error" as const,
                             label: t("events.hardDelete"),

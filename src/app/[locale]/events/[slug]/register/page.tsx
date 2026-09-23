@@ -46,7 +46,6 @@ import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
-import GlyphButton from "@/shared/ui/GlyphButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
@@ -446,10 +445,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               handler, and a submitter outside the element never reaches it. The e2e case caught
               it — one refusal in the server log and no second request at all.
             */}
+            {/*
+              The same runner as the send button below (§318), through `SubmitButton`'s flag
+              rather than a glyph by name: the verbs' registry is the backoffice's and must not
+              reach a public page. The row is a flex container so the button keeps its own width.
+            */}
             {tooFast && (
-              <GlyphButton icon="runner" type="submit" variant="contained" sx={{ ...TAP_TARGET, mb: 2 }}>
-                {t("errors.tooFastResend")}
-              </GlyphButton>
+              <Box sx={{ display: "flex", mb: 2 }}>
+                <SubmitButton label={t("errors.tooFastResend")} pendingLabel={t("submitting")} runner size="medium" />
+              </Box>
             )}
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
@@ -1021,10 +1025,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
-                // The club's runner (§NNN; the owner: "butoanele de trimitere înscriere și contact
+                // The club's runner (§318; the owner: "butoanele de trimitere înscriere și contact
                 // trebuie să aibă și iconița cu un alergător") — standing at rest, running while
                 // the form is in flight. Decoration: the label is the button's name.
-                icon="runner"
+                runner
                 incompleteHint={t("incompleteHint")}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the

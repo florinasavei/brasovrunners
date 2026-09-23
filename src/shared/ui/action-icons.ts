@@ -6,7 +6,6 @@ import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DownloadIcon from "@mui/icons-material/Download";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
@@ -22,8 +21,8 @@ import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
-import MailIcon from "@mui/icons-material/Mail";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
@@ -60,15 +59,24 @@ import type { ComponentType } from "react";
  * an icon passed as an element-valued prop across the server/client boundary is the defect
  * `CheckboxField` documents at length — React outlines the subtree and the client receives a
  * lazy reference with no `props`. The name is a string, which crosses safely; the client
- * component makes the element (`GlyphButton`, `SubmitButton`, `ConfirmSubmitButton`,
- * `ButtonLink`, `RowMenu`, `RegistrationRowMenu`).
+ * component makes the element (`GlyphButton`, `GlyphButtonLink`, `GlyphSubmitButton`,
+ * `ConfirmSubmitButton`, `RowMenu`, `RegistrationRowMenu`).
  *
- * **One table, so one verb has one glyph everywhere (§NNN).** The two row menus kept their own
+ * **One table, so one verb has one glyph everywhere (§318).** The two row menus kept their own
  * tables until now, and a verb could wear one picture in the "⋮" and another on the page's
  * button beside it. They read this one. A navigation button wears its tab's glyph
- * (`AdminTabs`): the desk is the trophy, the registrations are the person with the tick.
+ * (`AdminTabs`): the desk is the trophy, the registrations are the list.
  * `tests/unit/shared/action-icons.test.ts` holds the rule: every name used in `src/` is here,
  * every name here is used, and a label names the same glyph wherever it is written.
+ *
+ * **The backoffice's, and never a public page's (§318).** A lookup by a runtime key cannot be
+ * tree-shaken, so whatever imports this table ships every glyph in it — some thirty kilobytes
+ * of path data, four or five gzipped. That is nothing in the backoffice and a tax on every
+ * visitor anywhere else ("the header and the landing page are what every visitor pays for"), so
+ * the components a public page renders — `ButtonLink`, `SubmitButton`, `RunnerLoader` — never
+ * import it: the send buttons' runner is `SubmitButton`'s own `runner` flag, one glyph imported
+ * directly. The test walks the imports from every route and fails if a public one reaches this
+ * file through anything.
  *
  * One file per glyph from `@mui/icons-material`, never the barrel (§90). Every glyph is
  * decoration beside a label that already says the verb: `SvgIcon` renders `aria-hidden` unless
@@ -127,21 +135,20 @@ export type ActionIconName =
   | "print"
   | "markPrinted"
   | "markUnprinted"
-  // Files and mail.
+  // Files and mail. Sending an email again — a registration's, a staff invitation, a password
+  // reset — is one verb and one glyph, the envelope going back out (§318).
   | "spreadsheet"
   | "download"
   | "send"
   | "resend"
-  | "invite"
   // People and settings.
   | "revoke"
   | "role"
   | "turnOn"
   | "turnOff"
-  | "signOut"
-  // The public "send it to the club" buttons — the registration and the contact form: the
-  // club's runner, the figure `RunnerLoader` animates while the same button is pending (§166).
-  | "runner";
+  | "signOut";
+// No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
+// because this table must never reach a public page (above).
 
 export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> = {
   draft: EditNoteIcon,
@@ -177,7 +184,9 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   clearFilter: FilterAltOffIcon,
   search: SearchIcon,
 
-  registrations: HowToRegIcon,
+  // The list, as the "Înscrieri" tab wears it (`AdminTabs`): the person with the tick is
+  // checking in, and a verb and a view must not share a glyph.
+  registrations: ListAltIcon,
   desk: EmojiEventsIcon,
   scan: QrCodeScannerIcon,
   confirm: CheckCircleIcon,
@@ -197,13 +206,10 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   download: DownloadIcon,
   send: SendIcon,
   resend: ForwardToInboxIcon,
-  invite: MailIcon,
 
   revoke: PersonOffIcon,
   role: ManageAccountsIcon,
   turnOn: ToggleOnIcon,
   turnOff: ToggleOffIcon,
   signOut: LogoutIcon,
-
-  runner: DirectionsRunIcon,
 };

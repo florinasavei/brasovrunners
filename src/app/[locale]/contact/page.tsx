@@ -243,11 +243,11 @@ export default async function ContactPage({ params, searchParams }: Props) {
                 .
               </Typography>
 
-              {/* The club's runner at the start of the label, and running while it sends (§NNN). */}
+              {/* The club's runner at the start of the label, and running while it sends (§318). */}
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
-                icon="runner"
+                runner
                 incompleteHint={t("incompleteHint")}
                 size="large"
                 fullWidth

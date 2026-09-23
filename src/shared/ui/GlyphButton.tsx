@@ -15,7 +15,7 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
 };
 
 /**
- * An MUI Button that wears a verb's glyph, for a Server Component to render (§170, §NNN).
+ * An MUI Button that wears a verb's glyph, for a Server Component to render (§170, §318).
  *
  * A client component for one reason: the icon. A Server Component may not hand an element across
  * the boundary as a prop — `GlyphChip` and `CheckboxField` record what that costs — so it hands
@@ -25,6 +25,10 @@ type Props = Omit<ButtonProps, "startIcon" | "endIcon" | "component" | "href" | 
  *
  * It replaced `SubmitIconButton`, which was this for submits only: the backoffice's download
  * links needed the same thing, and two components for one idea is one too many.
+ *
+ * **Backoffice only**, as `action-icons.ts` explains: the lookup by name ships the whole table
+ * to whatever renders this. A public page's button that wants the runner is `SubmitButton`
+ * with `runner`, never this.
  */
 export default function GlyphButton({ icon, href, children, ...props }: Props) {
   const Icon = ACTION_ICONS[icon];

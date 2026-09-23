@@ -8,7 +8,7 @@ import { updateContactRecipientsAction } from "@/app/[locale]/admin/emails/actio
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
 import type { ContactRecipientsState } from "@/modules/contact/recipients";
 import type { Locale } from "@/i18n/routing";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -98,7 +98,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
             slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
           />
           <Box>
-            <SubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} icon="save" />
+            <GlyphSubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} icon="save" />
           </Box>
         </Stack>
       </Box>

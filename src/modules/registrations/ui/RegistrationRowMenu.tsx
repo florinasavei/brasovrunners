@@ -34,7 +34,7 @@ import { ACTION_ICONS, type ActionIconName } from "@/shared/ui/action-icons";
  * lives here is which form to post and whether to ask first.
  */
 /*
-  The glyphs are the one registry's (§NNN): the desk's "Dă-i un loc" and this menu's wear the
+  The glyphs are the one registry's (§318): the desk's "Dă-i un loc" and this menu's wear the
   same seat, the bib's printed mark the same double tick as the batch button on the bibs panel.
   Cancel and erase stay different shapes there, and deliberately so: a menu where "anulează" and
   "șterge" wear the same icon in the same colour is a menu somebody picks the wrong line out of.

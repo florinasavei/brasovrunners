@@ -12,7 +12,7 @@ import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import GlyphButton from "@/shared/ui/GlyphButton";
-import SubmitButton from "@/shared/ui/SubmitButton";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
   locale: Locale;
@@ -95,7 +95,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
           {t("emails.copy.machinery")}
         </Typography>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-          <SubmitButton label={t("emails.copy.save")} pendingLabel={t("emails.copy.saving")} icon="save" />
+          <GlyphSubmitButton label={t("emails.copy.save")} pendingLabel={t("emails.copy.saving")} icon="save" />
           {/* A second submit on the same form, named: the browser sends the one that was
               pressed, so no JavaScript decides which verb this form runs. */}
           {written && (
