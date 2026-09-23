@@ -12,6 +12,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
+import { termsHasBeenInForce } from "@/modules/legal-documents/domain/deletability";
 import {
   findCurrentApprovedVersionId,
   listVersionsForBackoffice,
@@ -87,6 +88,17 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
     The obstacles in the service's own order — a draft first, then the three counts, then the
     version the site is serving — so the sentence this screen gives and the refusal the server
     would give name the same thing.
+
+    **They did not (§290.)** §203 added a fourth obstacle to `assertDeletable` and not here: a
+    TERMS version that has ever been in force is refused, because a registration records no terms
+    version and so the three counts above are vacuous for that one key. This screen therefore told
+    the reader "nothing depends on it, it can be deleted", took a typed phrase and a reason, and
+    handed back `CONFLICT` — rendered in the backoffice as "Altcineva a salvat între timp", a
+    sentence about a concurrent save that never happened. The owner: "inca nu pot sterge unele
+    documente".
+
+    It is last because it is the narrowest: a reader whose version is also in force should be told
+    that first, since withdrawing it is the step that actually moves.
   */
   const blocked = !version.isApproved
     ? t("legal.erase.blockedDraft")
@@ -94,7 +106,9 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
       ? t("legal.erase.blockedReferenced", reliance)
       : inForce
         ? t("legal.erase.blockedCurrent")
-        : null;
+        : termsHasBeenInForce(version, now)
+          ? t("legal.erase.blockedTermsInForce")
+          : null;
 
   const document = t(`legal.keys.${version.key}`);
   const phrase = confirmationPhrase(version.key, version.version);

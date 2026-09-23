@@ -4,7 +4,7 @@ import { type RegistrationStatus, registrationStatus } from "@/db/schema/registr
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { buildRegistrationsWorkbook } from "@/modules/registrations/workbook";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -31,7 +31,8 @@ function fileNameFor(eventTitle: string | null): string {
 }
 
 /**
- * CSV export (AGENTS.md §15.10, BR-REQ-060-01: Administrator only).
+ * CSV export (AGENTS.md §15.10, BR-REQ-060-01: whoever may read the registrations — the
+ * Organizer since §289, who reads the list and changes nothing on it).
  *
  * No file is written on the server — the response body is the file — and nothing about the
  * export is logged beyond the fact that it happened (`§15.10`: "no public storage/log body").
@@ -44,7 +45,7 @@ export async function GET(request: Request): Promise<Response> {
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageRegistrations(actor.role)) {
+  if (!canReadRegistrations(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { AdminSection } from "@/modules/staff-identity/domain/roles";
 import {
   allowedTransitions,
   canCreatePage,
@@ -9,6 +10,7 @@ import {
   canHardDeleteEvent,
   canManageRegistrations,
   canManageStaff,
+  canReadRegistrations,
   canTransition,
   EDITORIAL_STATUSES,
   isLiveContent,
@@ -217,6 +219,45 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canEditEventFields("MODERATOR")).toBe(true);
     expect(canEditEventFields("CONTRIBUTOR")).toBe(false);
   });
+
+  /*
+    `DECISIONS.md` §289 — the Organizer reads who signed up and changes nothing.
+
+    The owner: "ca si organizator ar trebui sa vad cine s-a inscris!", and then "organizer should
+    also be able to see BIDs and export them". Asked how far, he chose the whole list — addresses,
+    telephone numbers, the identity document, the signed declarations and the spreadsheet — with
+    no verb on it.
+
+    Two properties matter and both are asserted, because the change moved a boundary this file
+    had defended since §10.2: reading is no longer what ADMIN is for, and DEV must not have
+    followed MODERATOR through the door.
+  */
+  it("gives the Organizer the whole list to read, and no verb on it (§289)", () => {
+    expect(canReadRegistrations("MODERATOR")).toBe(true);
+    expect(canManageRegistrations("MODERATOR")).toBe(false);
+
+    // Unchanged on either side of the new line.
+    expect(canReadRegistrations("ADMIN")).toBe(true);
+    expect(canManageRegistrations("ADMIN")).toBe(true);
+    expect(canReadRegistrations("COPYWRITER")).toBe(false);
+    expect(canReadRegistrations("CONTRIBUTOR")).toBe(false);
+  });
+
+  it("keeps DEV away from the participant list although it outranks the Organizer (§289)", () => {
+    // The assertion the whole DEV role exists for (§38): somebody helping with the platform
+    // reads `/devs`, reproduces a problem and fixes an event, and never receives the club's
+    // participants. A threshold at MODERATOR would have handed them over silently.
+    expect(canReadRegistrations("DEV")).toBe(false);
+    expect(canManageRegistrations("DEV")).toBe(false);
+  });
+
+  it("never lets a role change a registration it may not read", () => {
+    // The direction that would be a real hole: managing without reading. The reverse — reading
+    // without managing — is exactly what §289 introduced.
+    for (const role of STAFF_ROLES) {
+      if (canManageRegistrations(role)) expect(canReadRegistrations(role), role).toBe(true);
+    }
+  });
 });
 
 /**
@@ -255,12 +296,17 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "legal",
       "emails",
     ]);
+    // The Organizer gained the registrations in §289 — the owner: "ca si organizator ar trebui
+    // sa vad cine s-a inscris!" — and gained no verb on them. What that section offers this role
+    // is the list, the export and the race numbers; `rowVerbsFor` and the panels on the page are
+    // where the absence of cancel, erase and resend is asserted.
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
       "checkin",
       "guide",
       "pages",
       "gallery",
+      "registrations",
       "legal",
       "emails",
     ]);
@@ -300,7 +346,21 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     ]);
   });
 
-  it("never offers a higher role less than a lower one", () => {
+  /*
+    **The one cell where the table is deliberately not monotone (§289).**
+
+    DEV outranks MODERATOR, and since the Organizer was given the registrations it is offered one
+    section DEV is not. That is the point of DEV rather than an oversight — it is the role the
+    club hands somebody helping with the platform, and §38 and the test above both promise such a
+    person never receives the participant list.
+
+    Written as an exception the property test skips, and then asserted on its own below, so that
+    it stays exactly one cell. A weakened invariant with nothing guarding the weakening is how
+    the defect this whole block exists for got in.
+  */
+  const NOT_INHERITED_BY_DEV = new Set<AdminSection>(["registrations"]);
+
+  it("never offers a higher role less than a lower one, apart from DEV and the participant list", () => {
     // The property, across every pair in the hierarchy. An equality test against a role name
     // fails this immediately, which is the whole point of asserting it rather than the lists.
     for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
@@ -309,11 +369,28 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
         const higherSections = visibleAdminSections(STAFF_ROLES[higher]);
 
         for (const section of lowerSections) {
+          if (STAFF_ROLES[higher] === "DEV" && NOT_INHERITED_BY_DEV.has(section)) continue;
           expect(
             higherSections,
             `${STAFF_ROLES[higher]} must be offered everything ${STAFF_ROLES[lower]} is`,
           ).toContain(section);
         }
+      }
+    }
+  });
+
+  it("keeps the exception to exactly one section, and only for DEV", () => {
+    // What the skip above is allowed to hide. Any second hole in the ladder fails here rather
+    // than passing quietly inside the loop.
+    for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
+      for (let higher = lower; higher < STAFF_ROLES.length; higher += 1) {
+        const missing = visibleAdminSections(STAFF_ROLES[lower]).filter(
+          (section) => !visibleAdminSections(STAFF_ROLES[higher]).includes(section),
+        );
+        const allowed =
+          STAFF_ROLES[higher] === "DEV" ? [...NOT_INHERITED_BY_DEV].filter((section) => missing.includes(section)) : [];
+
+        expect(missing, `${STAFF_ROLES[higher]} against ${STAFF_ROLES[lower]}`).toEqual(allowed);
       }
     }
   });

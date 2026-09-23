@@ -434,6 +434,7 @@
         "legend": "The six steps of a registration:\n– 1 form submitted\n– 2 email confirmed\n– 3 place held\n– 4 declaration signed\n– 5 place confirmed\n– 6 number collected at the desk\nThe figure says which one they have reached."
       },
       "exportExcel": "Export to Excel",
+      "readOnlyNotice": "You can read the list, the export and the race numbers, but nothing here changes a registration: cancelling, erasing, resending an email and the “bib printed” mark are the Administrator’s. On race day you can still confirm on a paper declaration, give a place, set a number and check somebody in — from “Race day”.",
       "columnBib": "Race number (BIB)",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
@@ -546,7 +547,8 @@
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
-      "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion."
+      "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
+      "LEGAL_TERMS_IN_FORCE": "This version of the terms has been in force, so it cannot be deleted: whoever registered in that window accepted it, and a registration does not record which version of the terms it was. You can withdraw it instead — it stays on the record and is offered to nobody."
     },
     "editor": {
       "eventSection": "Event details",
@@ -564,7 +566,8 @@
       "saveEvent": "Save the event details",
       "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
       "translationSection": "Content ({locale})",
-      "translationReadOnly": "You cannot edit this text: the event is published, or the text was written by another author.",
+      "translationReadOnly": "The words are the Redactor’s or the Administrator’s — yours are the Settings: the date, the place, the route, the places, the registrations and race day. Ask the Administrator to change anything here.",
+      "saveCoversSettingsOnly": "The save below covers the event’s settings. Nothing under “Content” is saved from here, because those words are not this role’s.",
       "version": "version {version}",
       "liveWarning": "This event is published. Your changes become public the moment you save.",
       "acknowledgeLive": "I understand that I am editing published content.",
@@ -1040,7 +1043,8 @@
         "action": "Delete this version permanently",
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
         "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
-        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
+        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
+        "blockedTermsInForce": "This version of the terms has been in force, so it cannot be deleted. Whoever registered in that window accepted it, and a registration does not record which version of the terms it was — so nobody can be shown not to have relied on it, and deletion destroys the words themselves. Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody."
       },
       "editor": {
         "heading": "Section heading",
@@ -1720,6 +1724,7 @@
         "confirmationsTo": "Tell us when somebody confirms",
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
         "save": "Save",
+        "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies."
       },
@@ -1774,6 +1779,7 @@
         "customHelp": "Only for “Something else”: type what Mailgun shows under Account → Plan; leave empty what does not exist (both empty means no limit). The other plans take their numbers from the catalogue.",
         "note": "Note (why, until when)",
         "save": "Save the plan",
+        "readOnly": "The plan is the Administrator’s to change. The figures above are current for you too.",
         "saving": "Saving…",
         "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
         "unlimited": "no limit",
@@ -1793,6 +1799,7 @@
         "cc": "Copy – Cc (addresses separated by commas)",
         "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
         "save": "Save the recipients",
+        "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
@@ -1851,7 +1858,7 @@
             "“Events” → pick the event → the Romanian tab and the English tab: the title, the short description, the description, the rules, the programme and the SEO fields. One save writes both languages.",
             "A published event: what you save is on the site at once — tick “I know I am changing a published page”. The page's address does not change after publication.",
             "A YouTube film: in the editor, the “YouTube” button → paste the film's address → “Add the film”. Click the film to give it a caption. On the page it appears closed, “Watch the film”; it loads only when the reader presses.",
-            "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; an Organizer publishes it.",
+            "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; the Administrator publishes it.",
             "Not yours, and not needed: the event's settings (date, places, registration), publishing, the gallery, the registrations. If a text depends on a wrong setting, tell the Organizer.",
             "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too."
           ]
@@ -1860,13 +1867,15 @@
           "title": "Organizer — events and numbers",
           "who": "Role: Organizer or above.",
           "steps": [
-            "“Events” → “New event” (or “Duplicate” last year's / “Repeat” for weekly series). Fill in the settings — type, date, place, distance, route, video link — and the texts in Romanian and English.",
-            "Registrations: in Settings choose “Local registration”, set the capacity and the window, pick the approved declaration.",
-            "Publishing: “Submit for review” → “Publish”. Both languages go live together; an incomplete language blocks publishing.",
-            "Race numbers (Administrator): on the event page, “Assign numbers” gives numbers in confirmation order; “Download the sheet (PDF)” — two per A4, with the logo. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
+            "The Administrator creates the event (“New event”, “Duplicate”, “Repeat”). You open it from “Events” and look after the Settings: the type, the date, the gun time, the duration, the meeting point, the address, the map link, the distance, the route, the difficulty, the cost.",
+            "Registrations: in Settings choose “Local registration”, set the capacity and the window, the participation window (how many days before a confirmation is asked, and when it expires), the bib band and the approved declaration.",
+            "The words — the title, the summary, the description, the rules, the programme — are the Redactor's or the Administrator's. You can read them and cannot save them; if a text is wrong, tell the Administrator.",
+            "Publishing: you press “Submit for review”. “Publish” is the Administrator's, as are taking a live event down and archiving one. Both languages go live together; an incomplete language blocks publishing.",
+            "Registrations (Organizer, not Tehnic): you see the whole list, each registration with its history, the export (Excel or CSV), the race numbers and the signed declarations. You cannot cancel, erase, rename or resend an email — those are the Administrator's.",
+            "Race numbers: “Assign numbers”, on the event page, is the Administrator's. The sheet is yours to download: “Download the sheet (PDF)” — two per A4, with the logo — from the event page or from “Registrations”. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
             "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
             "Race numbers: at confirmation everyone gets one at random. A preferential number: the registration's page → “Race number” — the free numbers are listed beside the field, type one, save; the participant gets the number by email, with the QR code. A number somebody else already wears is refused.",
-            "Afterwards: “Archive” the event. Photos go in “Gallery” (new album, upload from the phone, publish)."
+            "Afterwards: archiving a published event is the Administrator's. The photos are yours: “Gallery” — new album, upload from the phone, publish."
           ],
           "roles": [
             "MODERATOR",
@@ -1879,8 +1888,8 @@
           "steps": [
             "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
             "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
-            "“Staff” (Superadministrator): add people by email and role. The person must also exist in Zitadel (the sign-in console) to be able to log in.",
-            "Volunteer accounts: create the user in Zitadel (email + password), then add them in “Staff” with the Volunteer role. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
+            "“Staff” (Superadministrator): add people by email and role. “Add” also creates their sign-in account and sends them the invitation to choose a password — you no longer go into Zitadel. If somebody does not get it, “Resend the invitation” on their row.",
+            "Volunteer accounts: in “Staff”, “Add” with the Volunteer role — the account and the invitation go out from there. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back."

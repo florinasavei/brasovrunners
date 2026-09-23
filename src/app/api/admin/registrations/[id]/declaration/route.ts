@@ -3,11 +3,11 @@ import { getDb } from "@/db/client";
 import { declarationWords, pdfResponse } from "@/modules/registrations/declaration-labels";
 import { findRegistrationById } from "@/modules/registrations/repository";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
-/** One registration's signed declaration, for the organizer (`DECISIONS.md` §95). Administrator only. */
+/** One registration's signed declaration, for the organizer (`DECISIONS.md` §95, §289). */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;
   try {
@@ -16,7 +16,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  if (!canReadRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
   const db = getDb();

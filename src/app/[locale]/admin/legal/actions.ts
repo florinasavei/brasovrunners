@@ -229,12 +229,21 @@ export async function deleteApprovedLegalVersionAction(form: FormData): Promise<
     const failure = outcomeOf(error);
     const mistyped = isDomainError(error) && error.fields.includes("typedConfirmation");
     const noReason = isDomainError(error) && error.fields.includes("reason");
+    /*
+      The §203 refusal, told apart from a genuine race (§290). Both are `CONFLICT`, and the
+      backoffice renders a bare CONFLICT as "somebody else saved meanwhile" — true of a race and
+      a lie about this, which is a rule the screen should already have named before the press.
+      It does now; this is what is left if the version takes effect between the two.
+    */
+    const termsInForce = isDomainError(error) && error.fields.includes("termsInForce");
     backTo(deletePath, {
       error: mistyped
         ? "LEGAL_CONFIRMATION_MISMATCH"
         : noReason
           ? "LEGAL_DELETE_NEEDS_REASON"
-          : failure.error,
+          : termsInForce
+            ? "LEGAL_TERMS_IN_FORCE"
+            : failure.error,
     });
   }
 

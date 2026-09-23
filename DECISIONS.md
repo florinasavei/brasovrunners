@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12343,3 +12343,141 @@ both code rather than documentation:
   who cannot sign in.
 
 Baseline `BR-V1.45-2026-09-22`.
+## 289. Decided — the Organizer reads who signed up, and changes nothing (2026-09-22)
+
+**Context.** The owner, watching his Organizer use the backoffice: "ca si organizator ar trebui sa
+vad cine s-a inscris!", and a minute later "organizer should also be able to see BIDs and export
+them". Asked how far it should go — a list with no contact details, the whole list read-only, or
+everything but erasure — he chose **the whole list read-only, with the export**.
+
+**What §10.2 decided, and why it is being changed.** The hierarchy's line was personal data, with
+ADMIN on the far side of it: "registrations, participants, waitlist... exports" were the
+Administrator's, and §208 restated it when the Organizer was given read access to the club's
+*content* — "vede cam tot" is not an instruction to hand somebody four hundred addresses.
+
+That was the right line for the question it answered, and it is the wrong line for the job. An
+Organizer sets the date, the capacity, the participation window and the bib band, runs the queue
+and works the desk on race morning. A person who cannot see the start list cannot do any of it,
+and the club's answer had become "ask the Administrator to send you a screenshot", which is a
+worse outcome for the same data.
+
+**Decision.** *The boundary is reading against changing.* `canReadRegistrations` is the new
+capability: the list, one registration's timeline, the CSV and Excel exports, the race numbers,
+the bib sheet and the signed declarations. `canManageRegistrations` keeps every verb that
+changes a registration — cancel, erase, resend, correct a name, assign the numbers, mark a bib
+printed, send the thank-you, fill a queue with test rows — and each of those already asserts
+itself in its own service, which is what makes the split safe rather than cosmetic
+(BR-REQ-060-01).
+
+*A set, not a threshold, and `DEV` is the reason.* Every rule in `roles.ts` but one is
+`atLeast(role, …)`, deliberately, so that adding a role cannot silently drop a permission. A
+threshold at MODERATOR would have handed the participant list to `DEV` as well, and `DEV`
+exists precisely so that somebody helping with the platform can read `/devs`, reproduce a
+problem and fix an event **without** the club's participants coming with them (§38). It outranks
+MODERATOR only so `canSeeDiagnostics` can be a threshold. So this is the second earned gap in
+the ladder, after `MAY_EDIT_TEXTS` (§207), and `roles.test.ts` asserts that it is exactly one
+cell wide — the monotonicity property that caught the original §38 defect is kept, with the one
+exception named rather than deleted.
+
+*The volunteer stays where they are.* `CONTRIBUTOR` gets the desk, which shows one runner at a
+time with a name, a state and a number and never an address (`AGENTS.md` §15.11). Nothing here
+touches that.
+
+*`/admin/tasks` stays the Administrator's.* It is not participant data; it is the club's own
+worklist, and the role that answers for it is the one that owes it.
+
+**The hole this opened, and closing it is half the change.** `rowVerbsFor` pushed `resend`
+with no role check at all, on a comment that read: the list is Administrator-only, "so anybody
+reading this row already passed that gate". That is an authorization rule leaning on a screen, and
+the day the screen changed it stopped being true with nothing failing — an Organizer would have
+been offered a button whose service answers FORBIDDEN. Which is exactly the complaint that started
+this session from the other end: "e un pic confusing faptul ca pot edita dar nu mi se salveaza
+modificarile ca si Organizator". Every verb on the list and on the registration's own page now
+asks `canManageRegistrations` for itself, and the screen says once, in a sentence, what this
+role may and may not do here — rather than letting somebody find out by pressing something.
+
+**What was rejected.** *A list without contact details.* Offered as the recommended option and
+declined: the owner wanted the whole list. *Everything but erasure.* Also offered and declined —
+he did not ask for verbs, he asked to see.
+
+Baseline `BR-V1.46-2026-09-22`.
+
+## 290. Fixed — a delete screen that promised what the server refused (2026-09-22)
+
+**Context.** The owner, on `/admin/legal/<id>/delete` for *Termeni de concurs, versiunea 2*:
+"inca nu pot sterge unele ducmnete...". The screen said, in the club's own words, "Se poate șterge
+pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este
+textul în vigoare acum", took the typed phrase and the reason, and answered **"Altcineva a salvat
+între timp. Reîncarcă pagina"** — a sentence about a concurrent save by somebody who does not
+exist.
+
+**What was actually happening.** Nothing was broken in the delete path. §203 had added a fourth
+obstacle to `assertDeletable` and to nothing else: a TERMS version that has ever been in force is
+refused, because the three dependant counts are vacuous for that key — a registration records
+`privacy_notice_version`, `results_consent_version` and `health_consent_version` and **never a
+terms version** — so every TERMS row reads as unused, including one a hundred people accepted.
+The version in front of him had been in force since 20 September. The rule was right; the screen
+had never been told about it, and `CONFLICT` is rendered in the backoffice as a concurrent save.
+
+**Decision.** *The rule becomes a pure function, `termsHasBeenInForce`, and both callers ask it.*
+The service keeps its refusal and the delete screen gains a fourth `blocked` branch, last because
+it is the narrowest — a version that is also in force should be told that first, since withdrawing
+it is the step that moves. §1.5's "one rule implemented in exactly one place" is what this restores:
+the screen had a *copy* of the obstacle list, three of four items long, and a copy is a thing that
+drifts silently.
+
+*The refusal names itself in `fields`.* `CONFLICT` stays the code — nothing about the request is
+malformed, and a real race is possible if the version takes effect between the screen and the press
+— but the action now tells this case apart, exactly as it already told a mistyped confirmation from
+a missing reason, and says what the rule is rather than inventing a colleague who saved.
+
+*The sentence says what can be done instead.* Withdrawal: the version stays on the record with its
+number and is offered to nobody. A refusal that names no alternative is where this started.
+
+**The wider lesson, and it is the second time today.** Both of this session's user-visible defects
+were a screen and a server disagreeing about a rule, with the screen inviting the press: this one,
+and the event editor's "pot edita dar nu mi se salveaza" (§289). Neither was a missing check. The
+pattern worth naming: when a rule is added to a service, the screen that offers the verb is part of
+the change, and a guard duplicated in prose on a page is a guard that will drift.
+
+**What was rejected.** *A new `DomainErrorCode`.* The union is deliberately five values wide and
+an unused one would be a value the code claims to produce; `fields` is the mechanism this action
+already used for the same purpose. *Deleting the §203 rule.* It is correct, and the proper repair
+is still a `terms_version` on the registration — a migration and a change to what the form
+records — which is not this fix.
+
+Baseline `BR-V1.46-2026-09-22`.
+
+## 291. Decided — the emails page reads for the Organizer and writes for the Administrator (2026-09-22)
+
+**Context.** Two messages from the owner, minutes apart, on the same screen. First: "organizatorul ar trebui sa vada (readonly) chiar si pagina de status unde vede cate mailuri s-au trimis si asa mai departe". Then, with a screenshot of `/admin/emails` as an Organizer showing **Salvează planul** and **Salvează destinatarii** in full colour: "Dar organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
+
+**What was there.** The page is open to every role that may read the club's content (§253), and it drew every form for every reader. Each form's service refused anybody below Administrator — `updateEmailPlan`, `updateContactRecipients`, `updateClubNotices`, the outbox's "send now" — so nothing was exposed, and the e2e even asserted the shape: a Moderator presses Save and *is refused by a sentence*. That assertion was the defect written down as a feature. It is the same shape as §289's sibling and §290, for the third time in one evening: a screen offering a verb the server will refuse, and the reader learning the rule from the refusal.
+
+The queue and the club's copies were the other half of the wrong answer. Both name people — a recipient's address, the addresses a signed declaration goes to — so both were read only for `canManageRegistrations`, which meant the Organizer who since §289 reads every registration could not read the queue of messages *to* those registrations, nor see whether Ana's confirmation was stuck. That is the status page the owner meant.
+
+**Decision.** *Two gates on one page.* Reading follows `canReadRegistrations` (§289): the plan's figures for everyone who may open the page, the outbox queue and the club's copies for whoever may read the registrations — the Organizer included, the Redactor and Tehnic excluded, exactly as the list itself. Writing follows `canManageRegistrations`: the plan's form, "Trimite acum", the club's copies and the contact recipients are the Administrator's, and each panel takes `mayEdit` so that a role that may not press is not shown the button — it is shown one sentence saying whose the setting is and that the figures above are current for them too.
+
+*The e2e turns around.* "A Moderator does not get the page's form to act on" asserted a press and a refusal; it now asserts that the Organizer sees the figures, the queue and the copies with no form, and a new case asserts the Redactor sees the figures and neither the queue nor the copies. The test that pinned the wrong behaviour is the test most worth rewriting.
+
+**What was rejected.** *Leaving the forms and relying on the server.* Correct, and what BR-REQ-060-01 requires — but a rule the reader meets only as an error is a rule they cannot plan around, and the owner's screenshot is what that looks like. *Opening the plan's form to the Organizer.* The plan decides what the club pays and what "send now" may spend; it stays with the role that answers for the money.
+
+Baseline `BR-V1.47-2026-09-22`.
+
+## 292. Decided — the kit-face wordmark heads the calendar and the contact page too (2026-09-22)
+
+**Context.** The owner, looking at the listing with `BRASOV RUNNERS` in the kit face above it: "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea de calendar".
+
+**What `BR-V1.32` decided, and why it is being changed.** The wordmark had a day of arrangements in the header — beside the lockup, at mark height, side by side — and each was wrong for a reason `SiteHeader.tsx` still records: the name twice on one row in two typefaces, one of them baked into an image, unalignable. The answer was to take it out of the header altogether and give it the room a display face wants, above the listing, **on the homepage and nowhere else** — `CLAUDE.md` carried that sentence, `shared/ui/Wordmark` and `theme/brand.ts` repeated it. "Nowhere else" was a guard against the header, not a judgement about other pages; it stood because nobody had asked for another page.
+
+The calendar and the contact page are the club's own pages in the same sense the listing is — what the club does and how to reach it — and the owner wants the club's signature on them. An event page or a legal text is the event's or the text's, not the club's, and keeps the heading it has.
+
+**Decision.** *Three pages, as a page heading.* `shared/ui/Wordmark` heads the listing, the calendar and the contact page — the same component, the same 2rem cap ("way too big" at 4rem, 2026-09-17), the same Server Component, so the two new pages pay no client island and no second request for Facón, which the locale layout already loads for every page. It is a paragraph that is an image to assistive technology named from the catalogue ("Brașov Runners", spelled properly), never an `<h1>`, so each page keeps exactly one heading of the first level: "Calendar", "Scrie-ne".
+
+*Never back into the header.* §58's lockup stays alone on the row; that is the half of `BR-V1.32` that was a judgement, and it stands.
+
+*A fourth page is a decision, not a copy-paste.* `tests/unit/theme/wordmark.test.ts` pins the three files that render `<Wordmark />`, that each puts it before its one `<h1>`, and that the component stays a Server Component — source-level, like `events/card-excerpt.test.ts`, because the rule is about which files carry one line.
+
+**What was rejected.** *Putting it in the layout for every public page.* An event page's heading is the event's title and a legal text's is the text's; the club's signature above "Termeni și condiții" would read as a letterhead, and the owner named two pages, not the site.
+
+Baseline `BR-V1.48-2026-09-22`.

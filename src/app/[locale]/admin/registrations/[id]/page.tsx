@@ -26,7 +26,7 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -49,14 +49,21 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
-/** One registration's full timeline (AGENTS.md §15.8). Administrator only, same gate as the list. */
+/**
+ * One registration's full timeline (AGENTS.md §15.8). The same gate as the list: whoever may
+ * read the registrations, which since §289 includes the Organizer. The verbs on it — resend,
+ * correct the name, cancel, erase — ask `canManageRegistrations` one at a time below, and each
+ * one is refused again in its service (BR-REQ-060-01). The desk's verbs are every staff role's
+ * and stay where they are.
+ */
 export default async function RegistrationDetailPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
+  if (!canReadRegistrations(actor.role)) notFound();
+  const mayManage = canManageRegistrations(actor.role);
 
   const db = getDb();
   const registration = await findRegistrationDetailForAdmin(db, id);
@@ -160,16 +167,19 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Typography>
       )}
 
+      {/* Sending a participant a message is the Administrator's (§15.8, §289). */}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
-        <form action={resendRegistrationEmailAction}>
-          <input type="hidden" name="uiLocale" value={locale} />
-          <input type="hidden" name="registrationId" value={registration.id} />
-          <Button type="submit" variant="outlined" disabled={!canResend}>
-            {tr("registrations.resend")}
-          </Button>
-        </form>
+        {mayManage && (
+          <form action={resendRegistrationEmailAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={registration.id} />
+            <Button type="submit" variant="outlined" disabled={!canResend}>
+              {tr("registrations.resend")}
+            </Button>
+          </form>
+        )}
         {/* The reminder by hand (§81): confirmed, and the event still ahead. */}
-        {canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
+        {mayManage && canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
           <form action={resendRegistrationEmailAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
@@ -359,6 +369,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         the participant's identity (AGENTS.md 10.3), and a typo is fixed by cancelling and
         registering again with the right one — criterion 2 asks for exactly that absence.
       */}
+      {mayManage && (
       <Box component="section">
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
           {tr("registrations.correctName")}
@@ -384,6 +395,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.correctNameHelp")}
         </Typography>
       </Box>
+      )}
 
       {/*
         Cancelling is what "remove this registration" means: the row is the record of what
@@ -391,7 +403,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         transaction a participant's own cancellation uses, and goes to the front of the waiting
         list rather than to whoever registers next (AGENTS.md 15.5, 15.6).
       */}
-      {canCancel && (
+      {mayManage && canCancel && (
         <Box component="section">
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.cancelTitle")}

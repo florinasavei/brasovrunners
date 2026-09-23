@@ -26,7 +26,7 @@ import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canEditTexts, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -65,10 +65,18 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const now = new Date();
   /*
     The queue names recipients, which is participant data (§15.11), so it is read only for the
-    roles that already hold the participant list — and "send now" is an Administrator's verb
-    anyway (§80). A Redactor opening this page sees the templates, the plan and the words.
+    roles that hold the participant list — the Organizer too, since §289 (the owner: "organizatorul
+    ar trebui sa vada (readonly) chiar si pagina de status unde vede cate mailuri s-au trimis").
+    A Redactor opening this page sees the templates, the plan's figures and the words.
+
+    Reading and changing are two gates (§291). Every form on this page — the plan, "send now",
+    the club's copies, the contact recipients — is the Administrator's, and each service refuses
+    anybody else; the panels take `mayEdit` so that refusal is never the first thing a reader
+    learns about it. The owner met exactly that: "Salvează planul" and "Salvează destinatarii"
+    drawn for an Organizer who could only be told FORBIDDEN.
   */
-  const maySeeQueue = canManageRegistrations(staff.role);
+  const maySeeQueue = canReadRegistrations(staff.role);
+  const mayEditEmail = canManageRegistrations(staff.role);
   const [plan, volume, recipients, queue, notices, written] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
@@ -131,10 +139,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
       </Box>
 
-      <EmailPlanPanel locale={locale} plan={plan} volume={volume} />
+      <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} />
 
       {/* What is actually queued, and the button that sends it (§243). */}
-      {queue && <OutboxQueuePanel locale={locale} queue={queue} volume={volume} />}
+      {queue && <OutboxQueuePanel locale={locale} queue={queue} volume={volume} mayEdit={mayEditEmail} />}
 
       {/* The club's own copies (§244, §245), beside the contact recipients they mirror. */}
       {notices && (
@@ -142,10 +150,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           locale={locale}
           notices={notices}
           declarations={resolveDeclarationCopies(notices, env.DECLARATIONS_ARCHIVE_TO)}
+          mayEdit={mayEditEmail}
         />
       )}
 
-      <ContactRecipientsPanel locale={locale} recipients={recipients} resolved={resolvedRecipients} />
+      <ContactRecipientsPanel locale={locale} recipients={recipients} resolved={resolvedRecipients} mayEdit={mayEditEmail} />
 
       <Box>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>

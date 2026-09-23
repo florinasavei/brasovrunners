@@ -28,7 +28,7 @@ import { journeyOf } from "@/modules/registrations/domain/journey";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import {
@@ -100,7 +100,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
+  if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
   const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked } = current;
@@ -203,7 +203,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     is drawn.
   */
   const eraseTarget = erase ? (rows.find((row) => row.id === erase) ?? null) : null;
-  const mayErase = canManageRegistrations(actor.role);
+  /*
+    Everything on this screen that *changes* a registration (§289).
+
+    The page itself is open to whoever may read the list — the Organizer since the owner asked
+    for it — so every verb that was implicitly Administrator's because the screen was has to say
+    so for itself now: erasure, the bulk cancel, the resend, the printing marks and "send now".
+    Each of them is refused again in its service (BR-REQ-060-01); this is what keeps a button off
+    the screen instead of letting the refusal arrive afterwards as an error code, which is the
+    complaint that started §289's sibling fix.
+  */
+  const mayManage = canManageRegistrations(actor.role);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -417,7 +427,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         the row is only there because the *menu* needs JavaScript to open; the panel it leads to
         never did.
       */}
-      {mayErase && eraseTarget && (
+      {mayManage && eraseTarget && (
         <Box
           component="section"
           id="erase-panel"
@@ -475,6 +485,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Box>
         </Box>
       )}
+
+      {/*
+        Why this screen has fewer buttons than the guide describes (§289).
+
+        Said once, on the page, and not as a refusal after a press. The owner's complaint about
+        the event editor was exactly this shape — "pot edita dar nu mi se salvează" — and the
+        answer there and here is the same: name the rule where the reader is, rather than letting
+        them find it by pressing something.
+      */}
+      {!mayManage && <Alert severity="info">{t("registrations.readOnlyNotice")}</Alert>}
 
       <Stack
         direction="row"
@@ -570,7 +590,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.bibsDownloadAll", { count: bibs.total })}
           </Button>
-          {bibs.unprinted > 0 && (
+          {/* The downloads above are reads and belong to the Organizer too (§289); saying a
+              sheet came out of the printer is a write, so it stays the Administrator's. */}
+          {mayManage && bibs.unprinted > 0 && (
             <Box component="form" action={markBibsPrintedAction}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={filters.eventId} />
@@ -584,7 +606,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             </Box>
           )}
-          {bibs.unprinted < bibs.total && (
+          {mayManage && bibs.unprinted < bibs.total && (
             <Box component="form" action={markBibsPrintedAction}>
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={filters.eventId} />
@@ -687,7 +709,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Typography>
         {/* The button only when there is something to send and room to send it: a disabled
             button cannot say why (`SubmitButton`'s own rule), a sentence can. */}
-        {volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
+        {/* Only for the role that could press it (§289). Without this the else-branch below would
+            tell an Organizer the allowance was spent, which is an answer to a question they were
+            never offered — the count and the plan above are the read, and that is the whole
+            panel for them. */}
+        {!mayManage ? null : volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
           <Box component="form" action={sendOutboxNowAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="listQuery" value={listQueryString} />
@@ -837,16 +863,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               only way to have both a bulk action and per-row forms without nesting one inside
               the other, which HTML forbids.
             */}
-            <Checkbox
-              name="registrationId"
-              value={row.id}
-              form={BULK_FORM}
-              slotProps={{
-                input: { "aria-label": t("registrations.selectRow", { name: row.registeredName }) },
-              }}
-              sx={CHECKBOX_TAP_TARGET}
-            />
-            {deriveAllowedResendMessageType(row.status) && (
+            {/* The form it belongs to is only rendered for the Administrator (§289), and a
+                checkbox naming a form that is not on the page is a tick that does nothing. */}
+            {mayManage && (
+              <Checkbox
+                name="registrationId"
+                value={row.id}
+                form={BULK_FORM}
+                slotProps={{
+                  input: { "aria-label": t("registrations.selectRow", { name: row.registeredName }) },
+                }}
+                sx={CHECKBOX_TAP_TARGET}
+              />
+            )}
+            {mayManage && deriveAllowedResendMessageType(row.status) && (
               <Box component="form" action={resendRegistrationEmailAction}>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
@@ -1026,7 +1056,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       />
 
-      {rows.length > 0 && (
+      {/* Cancel and erase in a batch: the Administrator's, like the single-row verbs above (§289). */}
+      {mayManage && rows.length > 0 && (
         <Box
           component="details"
           sx={{
