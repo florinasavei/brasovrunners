@@ -1088,6 +1088,30 @@
         "costs": "Costuri",
         "system": "Sistem"
       },
+      "neonPlan": {
+        "title": "Planul Neon (baza de date)",
+        "intro": "Platforma nu poate citi de la Neon pe ce plan e contul — API-ul dă consumul, nu planul și nu factura — așa că îi spui tu aici. De aici se iau cifrele de pe /devs și rândul Neon de mai jos: pe Free, plafonul de ore și spațiul, cu roșu de la 80%; pe Launch, costul estimat la tarifele planului, fără plafon.",
+        "inForce": {
+          "free": "Planul setat: Free — {of} ore-CU pe lună pe proiect, incluse; când se termină, baza de date se oprește până luna următoare.",
+          "freeMeasured": "Planul setat: Free — {cu} din {of} ore-CU folosite în perioada aceasta ({percent}%); când se termină, baza de date se oprește până luna următoare.",
+          "launch": "Planul setat: Launch — plătit pe consum, {rate} $/oră-CU, fără plafon și fără oprire. Orele apar când NEON_API_KEY e setat.",
+          "launchMeasured": "Planul setat: Launch — plătit pe consum. Ore de calcul în perioada aceasta: {cu}; cost estimat: {usd} $ ({rate} $/oră-CU)."
+        },
+        "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
+        "updatedAt": "Setat la {when}. Notă: {note}",
+        "field": "Planul pe care e contul Neon",
+        "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate pe {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
+        "option": {
+          "FREE": "{name} — {cuHours} ore-CU și {storageMb} MB pe lună pe proiect, gratuit; peste, baza de date se oprește",
+          "LAUNCH": "{name} — pe consum: {rate} $/oră-CU, {storageRate} $/GB-lună, fără abonament"
+        },
+        "note": "Notă (de ce, până când)",
+        "december": "Revizuirea din decembrie 2026: dacă facturile spun să reveniți la Free, alegi Free aici — fără deploy. Verifică înainte limitele Free din acel moment, pe amândouă proiectele.",
+        "save": "Salvează planul Neon",
+        "saving": "Se salvează…",
+        "saved": "Planul Neon a fost salvat; cifrele de pe /devs și rândul Neon de mai jos îl folosesc de acum.",
+        "readOnly": "Planul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine."
+      },
       "filter": {
         "who": "Cine",
         "kind": "Tip",
@@ -1148,9 +1172,9 @@
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
-            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată și cele 100 de ore-CU gratuite pe lună s-ar termina la jumătatea lunii, iar site-ul ar cădea până luna următoare.",
+            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată — pe Free, orele incluse s-ar termina la jumătatea lunii și site-ul ar cădea până luna următoare; pe Launch, fiecare oră trează se plătește.",
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
-            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui.",
+            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă orele proiectului lui — incluse pe Free, plătite pe Launch.",
             "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header, la 30 de minute (Custom → toate zilele, toate orele, minutele 0 și 30). La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
           ]
         },
@@ -1268,6 +1292,7 @@
       },
       "freeVerdict": {
         "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
+        "paysForUsage": "Aproape: se plătesc domeniul și baza de date — Neon Launch, la consum, fără abonament, ales de club pe 22 septembrie 2026; restul serviciilor sunt pe planuri gratuite.",
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
         "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
       },
@@ -1278,7 +1303,10 @@
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + TVA",
         "free": "gratuit",
-        "notTaken": "nimic încă"
+        "notTaken": "nimic încă",
+        "usage": "circa {amount} {currency}/lună, la consum",
+        "usageUnknown": "la consum — ritmul nu e măsurat aici",
+        "estimated": "Din care baza de date e o estimare la ritmul lunii (× 12), nu o factură."
       },
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
@@ -1341,14 +1369,24 @@
         },
         "neon": {
           "name": "Neon (baza de date)",
-          "freeGives": "Gratuit: o bază de date mică (0,5 GB) și o cantitate de lucru inclusă în fiecare lună.",
+          "freeGives": "Gratuit: o bază de date mică (o jumătate de gigabyte) și o cantitate de lucru inclusă în fiecare lună.",
           "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
           "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
           "closeMeasured": "Măsurat din baza de date: {used} MB din {of} MB ocupați. Orele de calcul (CU) se văd pe /devs.",
-          "monthly": "Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch (0,106 $/oră-CU, 0,35 $/GB, fără abonament).",
-          "monthlyUnknown": "Cost lunar pe Launch: 0,106 $/oră-CU + 0,35 $/GB, fără abonament — la 100 de ore-CU ar fi circa 11 $/lună. Ritmul exact apare când NEON_API_KEY e setat.",
+          "monthly": "Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch ({rate} $/oră-CU, {storageRate} $/GB, fără abonament).",
+          "monthlyUnknown": "Cost lunar pe Launch: {rate} $/oră-CU + {storageRate} $/GB, fără abonament. Ritmul exact apare când NEON_API_KEY e setat.",
           "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
-          "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid."
+          "closeYes": "—",
+          "closeNo": "Fără plafon pe Launch: se plătește ce se consumă.",
+          "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid.",
+          "launch": {
+            "freeGives": "Launch: plătit pe consum, fără abonament — orele de calcul și spațiul se facturează la tarifele planului. Planul Free rămâne opțiunea de întoarcere, la revizuirea din decembrie.",
+            "ceiling": "Nu are plafon: nimic nu se oprește când crește consumul — crește factura.",
+            "whenCrossed": "Ce ține factura mică e același lucru care ținea Free-ul în viață: baza de date adoarme după cinci minute fără cereri, iar monitoarele o trezesc la 15 minute ziua și o dată pe oră noaptea. Un monitor la 5 minute ar ține-o trează non-stop și ar transforma orele adormite în ore plătite.",
+            "close": "Fără plafon. Luna aceasta, la ritmul de până acum ({cu} ore-CU, circa {perDay} ore-CU pe zi): circa {usd} $ pe lună ({rate} $/oră-CU, {storageRate} $/GB-lună) — estimare, factura o face Neon.",
+            "closeUnknown": "Fără plafon. Ritmul lunii apare când NEON_API_KEY e setat; până atunci, cifra e în consola Neon → Billing ({rate} $/oră-CU, {storageRate} $/GB-lună).",
+            "bumpBack": "Drumul înapoi e revizuirea din decembrie 2026: după facturile reale, clubul poate alege Free din nou — o singură alegere în „Planul Neon” de pe această pagină, fără deploy; înainte, verifică limitele Free de atunci pe amândouă proiectele."
+          }
         },
         "zitadel": {
           "name": "Zitadel (contul cu care intră echipa)",
@@ -1936,7 +1974,8 @@
             "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
-            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc."
+            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
+            "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy."
           ],
           "roles": [
             "ADMIN",
@@ -2592,8 +2631,18 @@
       "title": "Baza de date (Neon)",
       "size": "Spațiu ocupat: {used} MB din {of} MB ({percent}%).",
       "sizeUnknown": "Spațiul ocupat nu a putut fi citit.",
-      "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă 100 ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
-      "used": "{used} din 100 ore-CU folosite ({percent}%)",
+      "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă {of} ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
+      "introLaunch": "Consumul proiectului în perioada curentă, citit din Neon. Planul Launch e plătit pe consum: fără plafon de ore și fără oprire. Cifrele de mai jos sunt estimări la tarifele de pe neon.com/pricing, verificate pe {checkedOn}; factura o face Neon, la sfârșitul perioadei.",
+      "plan": {
+        "FREE": "Planul setat: Free.",
+        "LAUNCH": "Planul setat: Launch."
+      },
+      "planLink": "Schimbă planul (Sarcini → Costuri).",
+      "planSetBy": "Îl setează Administratorul, pe Sarcini → Costuri.",
+      "sizeLaunch": "Spațiu ocupat: {used} MB — {storageRate} $/GB-lună, adică circa {usd} $ pe lună.",
+      "used": "{used} din {of} ore-CU folosite ({percent}%)",
+      "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
+      "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie la {date}",
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
