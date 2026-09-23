@@ -408,6 +408,17 @@ export const events = pgTable(
     confirmationOpensDaysBefore: integer("confirmation_opens_days_before").notNull().default(7),
     confirmationDeadlineDaysBefore: integer("confirmation_deadline_days_before").notNull().default(2),
 
+    /**
+     * The youngest a participant may be **on the day of the event**, in whole years (§NNN,
+     * amending §321; the owner: "actually this min age must be set at event level!").
+     *
+     * The club's fourteen is the default — `MIN_PARTICIPANT_AGE` in `registrations/domain/age.ts`
+     * says the same number, and every event that existed before this column was given it, so no
+     * event's rule changed the day it was added. Zero means no minimum. `submitRegistration`
+     * counts it at every door; the guardian rule (eighteen, §108) is not this column's.
+     */
+    minAge: integer("min_age").notNull().default(14),
+
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
@@ -535,6 +546,12 @@ export const events = pgTable(
      * which is what `registration_mode = NONE` already says honestly.
      */
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    /**
+     * A minimum age a person can have (§NNN): zero (no minimum) to ninety-nine. The form says
+     * the same bounds; this is for the seed, the script and the hand-written `UPDATE`.
+     */
+    check("events_min_age_in_range", sql`${t.minAge} >= 0 AND ${t.minAge} <= 99`),
 
     /**
      * A start list can only be published for an event this platform actually registers.

@@ -32,6 +32,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.mapUrl": t("editor.mapUrl"),
     "event.registrationMode": t("editor.registrationMode"),
     "event.capacity": t("editor.capacity"),
+    "event.minAge": t("editor.minAge"),
     "event.registrationOpensAtDate": t("editor.registrationOpensAt"),
     "event.registrationOpensAtTime": t("editor.registrationOpensAt"),
     "event.registrationClosesAtDate": t("editor.registrationClosesAt"),

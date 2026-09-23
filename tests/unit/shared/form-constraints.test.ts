@@ -69,8 +69,12 @@ describe("the event form's constraints are the schema's (§315)", () => {
     expect(eventInputConstraints("durationMinutes")).toMatchObject({ type: "number", min: 1, max: 7 * 24 * 60, step: 1 });
     expect(eventInputConstraints("confirmationOpensDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
     expect(eventInputConstraints("confirmationDeadlineDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
-    // Optional: an empty capacity is "no limit", never a refusal.
+    // The event's minimum age (§NNN): the database's CHECK, zero (no minimum) to ninety-nine.
+    expect(eventInputConstraints("minAge")).toMatchObject({ type: "number", min: 0, max: 99, step: 1 });
+    // Optional: an empty capacity is "no limit", never a refusal; an empty minimum is fourteen.
     expect(eventInputConstraints("capacity").required).toBeUndefined();
+    expect(eventInputConstraints("minAge").required).toBeUndefined();
+    expect(EVENT_FORM.includes('box("minAge"'), "EventFieldsForm reads the constraints of the minimum age").toBe(true);
   });
 
   it("carries every ceiling and the address's shape, as a pattern the browser compiles", () => {

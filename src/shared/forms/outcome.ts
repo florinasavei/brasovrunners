@@ -25,6 +25,13 @@ export type FormOutcome = {
   /** The domain error code, translated by the page as `Admin.errors.<code>`. */
   error: string;
   /**
+   * What the sentence for `error` needs filled in, by placeholder name — `{ age: "16 ani" }` for
+   * `Admin.errors.UNDER_MINIMUM_AGE` (§NNN), whose number is the event's. Words the action
+   * computed, never anything typed: the summary substitutes them into the catalogue's `{age}`.
+   * Absent for every code whose sentence has no placeholder.
+   */
+  errorValues?: Readonly<Record<string, string>>;
+  /**
    * The form field names the refusal is about — the `name` attributes, so the summary can link
    * to the boxes — or empty when it is about the whole form. Names only, never values.
    */

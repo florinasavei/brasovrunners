@@ -209,6 +209,7 @@
       "fullDescription": "Full event description"
     },
     "route": "Route",
+    "age": "Age",
     "openRoute": "View the route",
     "video": {
       "open": "Watch the event film",
@@ -344,7 +345,7 @@
       "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
-      "birthDateMinimumAge": "Optional here. The minimum age is 14 on the day of the race: a date that gives less is refused.",
+      "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age (the number with a “+” beside its name) on the day of the race; otherwise the registration is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
       "listOptIn": "The person wants to appear on the public participant list",
@@ -578,7 +579,7 @@
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
-      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet 14 on the day of the race, and 14 is the minimum age to take part. Check the date with them."
+      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them."
     },
     "editor": {
       "eventSection": "Event details",
@@ -807,6 +808,8 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "minAge": "Minimum age (years)",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers them. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -2063,7 +2066,8 @@
             "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
             "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
             "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document.",
-            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”."
+            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”.",
+            "Minimum age: each event has its own, in the event's “Registration” panel — “Minimum age (years)”, 14 unless you change it, 0 for none. It is counted on the day of the event, at every door (the form, the desk, a registration you enter, test data); the form, the event page and the date picker say the event's number, and the staff form shows it beside each event's name (“16+”)."
           ],
           "roles": [
             "ADMIN",
@@ -2171,7 +2175,7 @@
       "fieldsIntro": "Check these fields:",
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "emergencySame": "The emergency contact needs a different number from yours — nobody can ring your own phone if something happens to you.",
-      "tooYoung": "The minimum age to take part is 14 on the day of the race.",
+      "tooYoung": "The minimum age for this event is {age} on the day of the race.",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again.",
@@ -2193,8 +2197,13 @@
     "displayName": "Public display name",
     "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
     "birthDate": "Date of birth",
-    "birthDateHelp": "The minimum age is 14 on the day of the race. Age categories are worked out against that day too.",
-    "ageRule": "Participants from age 14; under 18, a parent registers them.",
+    "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
+    "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
+    "ageRule": {
+      "minimumAndGuardian": "Open to anyone {age} or older on the day of the event; under 18, a parent registers them.",
+      "minimumOnly": "Open to anyone {age} or older on the day of the event.",
+      "guardianOnly": "Under 18, a parent registers them."
+    },
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Female",

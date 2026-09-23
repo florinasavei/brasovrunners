@@ -512,7 +512,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
     const summary = page.locator("#registration-errors");
     await expect(summary.getByRole("link", { name: "Data nașterii" })).toBeVisible();
-    await expect(summary).toContainText("Vârsta minimă de participare este 14 ani împliniți în ziua cursei");
+    await expect(summary).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
     await expect(birthDate).toHaveAttribute("aria-invalid", "true");
 
     // Nothing typed is lost — and nothing typed is in the address.
@@ -535,5 +535,105 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await expect(summary).toBeVisible();
     await expect(summary).not.toContainText("notAField");
     await expect(summary).toContainText("Verifică datele completate");
+  });
+});
+
+test.describe("BR-REQ-031-04 the minimum age is the event's own (§NNN)", () => {
+  test("the form's picker and its sentences follow the number set in the editor: sixteen, then none", async ({ page }) => {
+    /*
+      The owner, 2026-09-23: "actually this min age must be set at event level!". An event of its
+      own, per project and per run, rather than the featured one: every other spec here counts on
+      the featured race's fourteen, and the two projects run at once against one database.
+    */
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `cros-pe-varste-${suffix}`;
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = page.locator(`#locale-panel-${locale}`);
+      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+    /** What the event page tells a search engine about who may enter, or null. */
+    const typicalAgeRange = async () =>
+      page.locator('script[type="application/ld+json"]').evaluateAll((nodes) => {
+        for (const node of nodes) {
+          const data = JSON.parse(node.textContent ?? "{}");
+          if (data["@type"] === "SportsEvent") return data.typicalAgeRange ?? null;
+        }
+        return "no SportsEvent block";
+      });
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+
+    // A race on 3 May 2027 that takes its registrations here, for sixteen and over.
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await field("event.startsAtDate").fill("2027-05-03");
+    await field("event.startsAtTime").fill("09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+    await field("event.capacity").fill("50");
+    // The box offers the club's fourteen until the organizer says otherwise.
+    await expect(field("event.minAge")).toHaveValue("14");
+    await field("event.minAge").fill("16");
+    await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
+    await page.getByRole("option").nth(1).click();
+    await field("translations.ro.title").fill(`Cros pe vârste ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "Un concurs de la șaisprezece ani.");
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`Age-banded cross ${suffix}`);
+    await field("translations.en.slug").fill(`age-banded-cross-${suffix}`);
+    await summary("en", "A race from sixteen.");
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    const editorUrl = page.url().split("?")[0];
+
+    try {
+      // The form: the line before the first field, the birth date's help, and the picker's
+      // bound — the last birth date that is sixteen on 3 May 2027.
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
+      await expect(page.getByTestId("age-rule")).toHaveText("Participanți de la 16 ani; sub 18 ani, înscrierea o face un părinte.");
+      await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
+      await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
+
+      // The event's page says the same sentence among its facts, and its structured data "16-".
+      await page.goto(`/ro/evenimente/${slug}`);
+      await expect(page.locator("#main")).toContainText("Participanți de la 16 ani; sub 18 ani, înscrierea o face un părinte.");
+      expect(await typicalAgeRange()).toBe("16-");
+
+      // No minimum, set in the editor.
+      await page.goto(editorUrl);
+      await hydrated(page);
+      await expect(field("event.minAge")).toHaveValue("16");
+      await field("event.minAge").fill("0");
+      const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
+      if (await acknowledge.count()) await acknowledge.check();
+      await page.getByRole("button", { name: "Salvează", exact: true }).click();
+      await page.waitForURL(/[?&](saved|error)=/);
+      expect(page.url()).toContain("saved=");
+
+      // Only who registers a minor, no "from 0 years"; the help says the categories alone; and
+      // the picker's bound is today, the one the page always had.
+      await page.goto(`/ro/evenimente/${slug}/inscriere`);
+      await expect(page.getByTestId("age-rule")).toHaveText("Sub 18 ani, înscrierea o face un părinte.");
+      await expect(page.locator("#main")).toContainText("Categoriile de vârstă se calculează la data cursei.");
+      await expect(page.locator("#main")).not.toContainText("Vârsta minimă este");
+      await expect(page.locator("#main")).not.toContainText("Participanți de la");
+      await expect(field("birthDate")).toHaveAttribute("max", new Date().toISOString().slice(0, 10));
+      await page.goto(`/ro/evenimente/${slug}`);
+      expect(await typicalAgeRange()).toBeNull();
+    } finally {
+      // Off the site again — pass or fail — so no run leaves one more card on the listing that
+      // other specs count.
+      await page.goto(editorUrl);
+      await hydrated(page);
+      await page.getByRole("button", { name: "Mută în ciornă" }).click();
+      await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+    }
   });
 });

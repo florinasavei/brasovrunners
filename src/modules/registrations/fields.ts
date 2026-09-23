@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { ageOn, isMinorOn, MIN_PARTICIPANT_AGE } from "./domain/age";
+import { ageOn, isMinorOn } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -230,13 +230,15 @@ const guardianRule = (
 export const UNDER_MINIMUM_AGE = "tooYoung";
 
 /**
- * Fourteen on the day of the event (§321, `MIN_PARTICIPANT_AGE`).
+ * The event's minimum age on the day of the event (§321; per event since §NNN, `events.min_age`).
  *
- * A factory, because the rule needs the one thing this schema does not have: the event. The
- * service knows it (`submitRegistration`) and adds this to whichever schema the caller gets, so
- * the public form, a staff entry, the desk's walk-in, a restart and a TEST row all meet it
- * through the one door every registration already passes (`AGENTS.md` §12.6: `kind` decides
- * nothing here either).
+ * A factory, because the rule needs the one thing this schema does not have: the event — its day
+ * and its number. The service knows both (`submitRegistration`) and adds this to whichever schema
+ * the caller gets, so the public form, a staff entry, the desk's walk-in, a restart and a TEST row
+ * all meet it through the one door every registration already passes (`AGENTS.md` §12.6: `kind`
+ * decides nothing here either). The number is a parameter with no default on purpose: the club's
+ * fourteen (`MIN_PARTICIPANT_AGE`) is what an event starts with, never what this rule falls back
+ * to behind an event that says otherwise. Zero is no minimum, and then there is nothing to count.
  *
  * *Only when a birth date is given.* The public schema always has one; the staff schema may not
  * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
@@ -245,17 +247,17 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * (`ageOn` answers null), so the summary never gives a second, untrue reason.
  *
  * Counted against the day of the event, where the guardian rule above counts against today:
- * fourteen is about the day somebody runs; eighteen is about who fills the form in.
+ * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
-export function minimumAgeRule(eventDay: string) {
+export function minimumAgeRule(eventDay: string, minAge: number) {
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
-    if (!value.birthDate) return;
+    if (minAge <= 0 || !value.birthDate) return;
     const age = ageOn(value.birthDate, eventDay);
-    if (age === null || age >= MIN_PARTICIPANT_AGE) return;
+    if (age === null || age >= minAge) return;
     ctx.addIssue({
       code: "custom",
       path: ["birthDate"],
-      message: `a participant must be at least ${MIN_PARTICIPANT_AGE} on the day of the event (${eventDay})`,
+      message: `a participant must be at least ${minAge} on the day of the event (${eventDay})`,
     });
     ctx.addIssue({ code: "custom", path: [UNDER_MINIMUM_AGE], message: "under the minimum age" });
   };

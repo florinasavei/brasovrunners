@@ -96,6 +96,9 @@ const PUBLIC_COLUMNS = {
   registrationClosesAt: events.registrationClosesAt,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+  // Who may enter (§NNN): the page says it, the form's picker is bounded by it, and the
+  // structured data states it as `typicalAgeRange`. A condition of the race, like its date.
+  minAge: events.minAge,
   externalRegistrationUrl: events.externalRegistrationUrl,
   externalProvider: events.externalProvider,
   // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are

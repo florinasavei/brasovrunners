@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import { readBibDesign } from "@/modules/registrations/bib-design";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import BibDesignPanel from "./BibDesignPanel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -359,6 +360,19 @@ export default async function EventFieldsForm({
               helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
               defaultValue={event?.capacity ?? ""}
               {...box("capacity", { inputMode: "numeric" })}
+            />
+
+            {/* Who may enter (§NNN, amending §321: "actually this min age must be set at event
+                level!"): years reached by the event's day, fourteen unless the organizer says
+                otherwise, zero for none. In this panel, so a group run — which takes nobody's
+                registration (§111) — never shows it. The bounds are the schema's (§315). */}
+            <RecallField
+              name="event.minAge"
+              label={t("editor.minAge")}
+              helperText={t("editor.minAgeHelp")}
+              defaultValue={event?.minAge ?? MIN_PARTICIPANT_AGE}
+              {...box("minAge", { inputMode: "numeric" })}
+              sx={{ width: { sm: 220 } }}
             />
 
             {/*

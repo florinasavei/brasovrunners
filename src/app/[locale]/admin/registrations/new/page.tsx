@@ -123,6 +123,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                     month: "short",
                     year: "numeric",
                   })}
+                  {/* The event's minimum age (§NNN), in the form every age rating uses and in no
+                      language's words; nothing when it has none. The birth date's help names it. */}
+                  {event.minAge > 0 && ` · ${event.minAge}+`}
                 </MenuItem>
               ))}
             </RecallField>
@@ -136,8 +139,10 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             a registration recorded with gaps beats one refused for them.
           */}
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
-          {/* Optional here too, and when it is given the server counts it (§321): under fourteen on
-              the race day is refused, so the field says so before the volunteer presses. */}
+          {/* Optional here too, and when it is given the server counts it (§321): under the chosen
+              event's own minimum on the race day (§NNN — the "N+" beside its name) is refused, so
+              the field says so before the volunteer presses. No `max` here, unlike the public
+              form: the event is a choice on this form, and the bound would be the first one's. */}
           <RecallField
             name="birthDate"
             type="date"

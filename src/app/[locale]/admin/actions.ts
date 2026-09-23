@@ -212,6 +212,8 @@ function eventFieldsFrom(form: FormData) {
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
+    // The event's own minimum age (§NNN); an empty box is the club's fourteen (`fields.ts`).
+    minAge: value("minAge"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
     registrationClosesAtWallTime: wallTime("registrationClosesAt"),
     declarationDocumentId: value("declarationDocumentId"),
