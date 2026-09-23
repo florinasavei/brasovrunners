@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.68-2026-09-23
+
+- **The registrations list fits a phone again.** The screen-reader word "provizoriu" behind a provisional race number (§313) was absolutely positioned inside a cell with no positioned parent, so it escaped the table's scroll area and stretched the page to about 600 px on a 320 px phone; the browser zoomed out and taps landed on the wrong element. The cell is its containing block now, and the race-day e2e asserts the list is never wider than the screen. `DECISIONS.md` §313.
 ## BR-V1.67-2026-09-23
 
 - **The club's copies of participants' emails no longer carry anything that lets someone act for the runner.** Each address on "copie ascunsă la emailurile către participanți" now gets a separate "[Copie club]" message with no personal link, no QR code and no attachment, and the participant's own email carries no club address. The club's archive copy of a signed declaration shows the identity document masked ("BV ••••56"), and Mailgun open and click tracking are switched off on every message. `DECISIONS.md` §320.
