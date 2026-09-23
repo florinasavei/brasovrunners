@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.63-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.64-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.63-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.64-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12956,3 +12956,15 @@ Baseline `BR-V1.62-2026-09-23`.
 Tests: `tests/integration/registrations/resubmission-marker.test.ts` (12), `tests/unit/registrations/default-event-filter.test.ts` (11), e2e `registration-autofill.spec.ts` (the second submission end to end on both viewports: the identical screen, the list searched across events, the chip, the export, the timeline line).
 
 Baseline `BR-V1.63-2026-09-23`.
+
+## 313. Changed — the list says what "2*" means, and feature branches create no Vercel deployment (2026-09-23)
+
+**Context.** Two small things from the same afternoon. The owner, of the registrations list: "I still have that bids with the asterisk... not sure what that is!" And the release of BR-V1.62 (#130), merged at 16:12, did not reach production: Vercel answered "Deployment rate limited — retry in 24 hours".
+
+**The asterisk.** `2*` is a provisional race number (§214): the runner holds it while registration is open, it can still change, and it is settled, emailed and printed only when registration closes; a bold number is settled, and the tick beside it means printed (§264). All of that was said only in the cell's `title`, which a phone never shows, although the column's own comment already claimed it was "explained by the column's own hint" — the hint had never been written. The race-number column now carries it, through the table's tap-friendly ⓘ (`Hint`, §189): the asterisk, the bold number and the tick, in one sentence each. The asterisk itself is `aria-hidden` and followed by a visually hidden "provizoriu", so a screen reader says the word instead of "star".
+
+**The deployments.** Vercel's Hobby plan allows a hundred deployments in twenty-four hours for the account. On 2026-09-23 there were 103, and 81 of them had been **cancelled**: every push to a feature branch created a preview on both projects, and the Ignored Build Step of each project cancelled it — but a cancelled build still counts, so fourteen pull requests in a day spent the allowance on builds nobody saw and the production release was refused. Vercel does not retry a refused push; the release was deployed by hand through the API once the window reopened (a deployment of `main` at the release's commit, the same build a push would have made).
+
+`vercel.json` (new, root, read by both projects) sets `git.deploymentEnabled` to `false` for `feat/*`, `fix/*`, `docs/*`, `test/*`, `chore/*`, `batch/*`, `wip/*` and `worktree-*`. Vercel reads it from the commit being deployed, so a branch that carries it already creates nothing, and once it is on `qa` every branch cut from `qa` inherits it. `main` and `qa` deploy exactly as before. Nothing was lost: no preview of a feature branch was ever looked at — both projects cancelled them — and the checks a pull request needs are GitHub's `docs-check` and `e2e`, not Vercel's. A branch named outside those prefixes would still build a preview; the prefixes are the ones this repository has used.
+
+Baseline `BR-V1.64-2026-09-23`.

@@ -347,7 +347,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */
       key: "bib",
       label: t("registrations.columnBib"),
-      // What "2*", a bold "1" and the tick mean (§NNN; the owner: "not sure what that is!") — a
+      // What "2*", a bold "1" and the tick mean (§313; the owner: "not sure what that is!") — a
       // tap-friendly hint, because the cell's own `title` never shows on a phone.
       hint: t("registrations.bibColumnHint"),
       sortable: true,
