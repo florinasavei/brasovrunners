@@ -319,7 +319,17 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
 ): Promise<number> {
+  /*
+    A cancelled event's queue stands still (§NNN). Nobody is offered a place in a race that will
+    not run — the offer's email would be a link that answers "cancelled" — and no hold is
+    released either: the registrations keep their status as the record of who had entered, and
+    a race that is put back on finds its queue where it left it. Every caller passes the row it
+    read under the event lock, so the status here is the one a concurrent cancellation left.
+  */
+  if (event.eventStatus === "CANCELLED") return 0;
   await repo.expireStaleHolds(db, event, now);
+  // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
+  if (event.eventStatus !== "SCHEDULED") return 0;
 
   // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
   // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
@@ -632,6 +642,10 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
     ? await repo.findRegistrationByEventAndParticipant(db, input.eventId, participant.id)
     : await repo.findLatestActiveRegistrationForParticipant(db, participant.id);
   if (!registration || !isActiveStatus(registration.status)) return;
+  // A cancelled event hands out no link (§NNN): each would open onto "this event is cancelled",
+  // and its participants were told so in a message of its own. The same silent answer as above.
+  const event = await repo.findEventForAllocation(db, registration.eventId);
+  if (!event || event.eventStatus === "CANCELLED") return;
 
   const messageType = deriveAllowedResendMessageType(registration.status);
   if (!messageType) return;
@@ -1097,6 +1111,16 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       return current;
     }
 
+    /*
+      The event is not being run any more (§NNN): cancelled, or over. Confirming the address
+      would allocate a place, draw a provisional number and send "sign the declaration" for a
+      race that will not happen — so nothing is written and nothing is sent. The registration is
+      returned still unconfirmed, which is how the page knows to say why (`token-actions.ts`),
+      and it lapses with the other unconfirmed ones after 48 hours. Read under the event lock,
+      so a cancellation that lands between the click and this line is the one that counts.
+    */
+    if (lockedEvent.eventStatus !== "SCHEDULED") return current;
+
     await markEmailVerified(tx, current.participantId, now);
     const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
     await enqueueAllocationEmail(
@@ -1443,6 +1467,11 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
     if (current.status === "CONFIRMED") return current;
+    // No desk for a race that will not run (§NNN): a paper confirmation here would allocate and
+    // send "you are in" for a cancelled event, exactly what `signDeclaration` refuses online.
+    if (lockedEvent.eventStatus === "CANCELLED") {
+      throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
+    }
 
     if (current.status === "PENDING_EMAIL_CONFIRMATION") {
       await tx
@@ -1481,6 +1510,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
     const locked = withLockedRow(event, lockedEvent);
+    // As at the desk's confirmation (§NNN): nobody is given a place in a cancelled race.
+    if (locked.eventStatus === "CANCELLED") {
+      throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
+    }
     await repo.expireStaleHolds(tx, locked, now);
 
     const current = await repo.findRegistrationById(tx, registrationId);

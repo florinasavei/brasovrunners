@@ -352,6 +352,8 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,
+      // A race's gun time, for the update notice that says the time changed (§NNN).
+      raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
     })
     .from(eventTranslations)

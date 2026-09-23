@@ -77,6 +77,14 @@ export type AuditAction =
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
   /**
+   * The event cancelled in the editor (§NNN): the reason the organizer typed, whether the
+   * participants were told and how many were — never who they are. One row per date the save
+   * cancelled.
+   */
+  | "event.cancelled"
+  /** "Detalii actualizate" queued (§NNN): which facts changed, the organizer's note and the count. */
+  | "event.update_notice_sent"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with
