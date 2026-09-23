@@ -5,7 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
-import { clearFormDraft, stashFormDraft, stashSubmittedAddress } from "@/modules/registrations/form-draft";
+import { clearFormDraft, stashFormDraft, stashSubmittedFacts } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
@@ -132,8 +132,9 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   }
 
   await clearFormDraft(path);
-  // The screen that follows says to go and read an inbox, so it names which one (§224).
-  // Its own short-lived sealed cookie, never the URL: nothing typed goes into one (§14.5).
-  await stashSubmittedAddress(text(form, "email").trim(), path);
+  // The screen that follows says to go and read an inbox, so it names which one (§224) — and
+  // greets the person by first name while it does. Its own short-lived sealed cookie, never
+  // the URL: nothing typed goes into one (§14.5).
+  await stashSubmittedFacts({ email: text(form, "email").trim(), firstName: text(form, "firstName") }, path);
   redirect(`${path}?submitted=1`);
 }

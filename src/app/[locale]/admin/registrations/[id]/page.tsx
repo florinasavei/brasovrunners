@@ -530,7 +530,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {auditTrail.map((entry, index) => (
             <Typography key={index} variant="body2">
               {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`)} ·{" "}
-              {entry.actorName ?? tr("registrations.auditActorRemoved")}
+              {entry.actorName ??
+                (entry.actorStaffUserId === null
+                  ? tr("registrations.auditActorParticipant")
+                  : tr("registrations.auditActorRemoved"))}
               {/* Metadata is the shape of the change — a name before and after, a typed reason —
                   never a copy of what the change was about (AGENTS.md 12.12). */}
               {Object.keys(entry.metadataJson as object).length > 0 &&

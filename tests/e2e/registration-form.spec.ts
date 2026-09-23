@@ -167,7 +167,8 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
-    await expect(page.getByText("Verifică-ți emailul")).toBeVisible();
+    // The check-your-email screen greets by the first name `fillRequired` typed (§224).
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
   });
 
   test("refuses a paste into the second address box, and offers a way through", async ({ page }) => {
@@ -234,8 +235,9 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
-    // Still on the form: nothing was posted, so there is no success panel and no error summary.
-    await expect(page.getByText("Verifică-ți emailul")).toHaveCount(0);
+    // Still on the form: nothing was posted, so there is no check-your-email screen and no
+    // error summary. The heading is what that screen always carries, named or not.
+    await expect(page.getByRole("heading", { name: /Aproape gata/ })).toHaveCount(0);
 
     // Correct it and the refusal lifts, rather than sticking for ever.
     await page.locator('[name="emergencyContactPhone"]').fill("722222222");

@@ -442,7 +442,14 @@ export default async function EventFieldsForm({
             {/* The rest of the bib (§249): what is printed, the number's size, where the name
                 sits, a picture instead of the band, a sponsors' strip, cut marks. Only on an
                 event that exists — the create form asks for a date and a title, not a design. */}
-            {event && <BibDesignPanel design={readBibDesign(event.bibDesign)} />}
+            {event && (
+              <BibDesignPanel
+                eventId={event.id}
+                design={readBibDesign(event.bibDesign)}
+                bibStartNumber={event.bibStartNumber}
+                bibColour={event.bibColour}
+              />
+            )}
 
             {/*
               A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.49-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.53-2026-09-23 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.49-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.53-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12501,3 +12501,216 @@ Baseline `BR-V1.48-2026-09-22`.
 **Tests.** Unit: `notifications/volume.test.ts`, `notifications/club-notices.test.ts`, `contact/recipients.test.ts`, `contact/message.test.ts`. Integration: `notifications/club-notices.test.ts` (queued after the list is set carries it, queued before does not, a TEST registration never), `contact/recipients.test.ts`, `contact/service.test.ts`. E2e (`email-plan.spec.ts`, desktop only, one shared row): the Administrator sets and clears both boxes and watches the forecast move by five per address; the Organizer reads the sentence in force — whichever state the shared row is in — and is offered no form.
 
 Baseline `BR-V1.49-2026-09-22`.
+
+## 294. Fixed — the programme reads as one thing in the editor: the rows are the programme, the text is the notes under it (2026-09-22)
+
+**Status:** Fixed. `TranslationFieldsForm.tsx`, `EventFieldsForm.tsx`, `Admin.editor.fields.scheduleNotes`, `Admin.editor.scheduleHelp`, `Admin.editor.programmeNotesHint` in both catalogues; `tests/unit/content/programme-notes.test.ts`. Not a rule change.
+
+**The report.** The owner, in the event editor: "programul evenimentului e duplicat!". His screenshot showed, in each language's Content panel, a fold "Programul evenimentului (niciunul încă — apasă ca să scrii)" and, further down in "Când și unde", a table "Program" with timed rows (Data / Ora / Până la / Ce (română) / Ce (engleză) / Unde / Adaugă un rând).
+
+**What they are.** Two features that both render under `#schedule` on the event page: the timed rows (§117 — on the event row, one list for both languages, one calendar entry each, repeated in the reminder) and a rich text per language (§96, §71 — what does not fit a row). Not a duplicate in function, but the same word in two panels far apart, with nothing in either saying what the other was for, and a reader could not tell which to fill in.
+
+**The fix.** The rows are the programme; the text is the notes beneath it, and each panel now says so about the other. The fold is titled *Note sub program* / *Notes under the programme* (a new key, `fields.scheduleNotes`; `fields.schedule` stays as the preview's heading, so the preview and the public page still both read *Programul evenimentului*), its hint says the rows in "Când și unde" → "Program" are the programme itself, shared by both languages, that this text appears beneath them on the page, and that the reminder repeats the rows and points here; its empty hint is the neutral "(nimic încă)" rather than the rules' "(niciunul încă)", which does not agree with *Note*. Under the rows table stands one caption saying what does not fit a row is written on the Content panel, per language, in that fold, and appears on the page beneath these rows. Both hints take the panel, section and fold names from the catalogue by interpolation, so a renamed panel cannot leave them pointing at a name that no longer exists.
+
+**Checked, not changed.** `EventProgramme` (shared by the page and the preview) already draws the rows first and the rich text after; the reminder repeats the rows as one sentence per language and links `#schedule` — the notes are one tap away, not a second copy in the mail. No input is renamed, nothing moves between `events.schedule_items` and `event_translations.schedule_json`, neither feature is removed. *Rejected:* merging the two into one editor (the rows are data with a time and a place, the text is prose — §117 already refused a rich-text table for the same reason); renaming `fields.schedule` in place (it is the preview's public heading and would have made the preview say "notes" over the programme).
+
+**Follow-ups outside this branch** (files carrying the baseline marker): `SETUP.md` §39's click list has a row "Română / English | Programul evenimentului | kit pickup, briefing, start, cut-offs — each row becomes a calendar entry" that names the fold but describes the rows; it should become two rows — "Când și unde | Program | kit pickup, briefing, start, cut-offs — each row becomes a calendar entry" and "Română / English | Note sub program | optional free text beneath the rows". `SPECS.md` BR-REQ-050-02 criterion 13 could add: "the section carries a caption naming where the per-language notes under the programme are written, and each language panel's rich text is titled as notes under the programme, never as the programme".
+
+Baseline `BR-V1.50-2026-09-23`.
+
+## 295. Fixed — the programme's rows follow the event's date (2026-09-22)
+
+**Context.** The owner, in the event editor, moving the race: "data e de obicei în aceeași zi, deci dacă schimb o dată ar trebui să se schimbe toate datele evenimentului". Since §117 the programme is timed rows, each with its own `Data` box; moving the event by a week meant retyping the date on every row, and a row left on the old day is a wrong calendar entry and a wrong line in the reminder.
+
+**Decision.** In the editor, the programme's rows follow "Începutul evenimentului". `ScheduleRowsEditor` — already the settings' one island (§117) — listens to the form's own start-date box (`event.startsAtDate`, the box `WallTimeField` posts, found by name through the `form` element the way `OnlyForType` reads the type select) and, when it moves from one complete date to another, shifts every row that has a date by the same number of calendar days: a row on the old start lands on the new one, kit pickup the day before stays the day before. A row with no date is left alone; an incomplete date (a date box reads "" while a segment is retyped) is waited out, not measured, so retyping the day is one move and never wipes the rows' dates; a new row opens on the event's day. The arithmetic is `shiftProgrammeDates` in `events/domain/schedule.ts`, pure — it takes the two dates and never reads the clock — on the form's `YYYY-MM-DD` strings, in calendar days rather than instants because the clock change is the service's business when the boxes are read at save time (§117), and reading a year as written (`setUTCFullYear`, not `Date.UTC`, which makes "0002" 1902) so a chain of moves through a half-typed year telescopes to the last one. The date box is the island's one controlled input; the rest stay uncontrolled, the form posts whatever is in the boxes, and nothing changed server-side. The programme help in both languages says so.
+
+*Rejected:* a shared store or context between the start date and the rows (the start is a Server Component's field; the form is the only thing the two share, and a name-based lookup is what `OnlyForType` already does); shifting on the server at save time (the organizer would not see the rows move before saving, and a row meant to stay on another day could not be told from one forgotten); shifting rows that carry no date; moving the rows on the first date entered on a new event (there is no day to measure from, and a row dated before the event was is the organizer's own).
+
+**Consequences.** `events/domain/schedule.ts` (`shiftProgrammeDates`), `content/events/ui/ScheduleRowsEditor.tsx` (`startDateName`, the `change` listener, a controlled date box, a new row's default), `EventFieldsForm` (`startDateName="event.startsAtDate"`), `editor.programmeHelp` in both catalogues; `tests/unit/events/schedule.test.ts` — same-day and two-day programmes, empty and malformed boxes, month, year and leap-day boundaries, a delta of zero, an anchor that is not a date, the telescoping chain. BR-REQ-050-02 criterion 13.
+
+Baseline `BR-V1.50-2026-09-23`.
+
+## 296. Changed — every fold in the backoffice is a box, drawn by one object (2026-09-22)
+
+**Context.** The owner, looking at the bib-design panel ("Cum arată numărul de concurs") and the event editor: "toate aceste acordeoane din zona de backoffice trebuie sa fie mai 'boxed'". §164 had made a `<summary>` read as a control — marker, pointer, underline, 44 pixels — and §269 had put the registrations screen into boxes with `Panel`; but the folds themselves were styled in fourteen places by hand. Some had a border and some had none, `SeriesScope` had a different radius, the tasks' steps and the series dates stood at 36 pixels, the desk's bib picture had lost its marker, and the erase panel and the batch cancel each drew their own. The same gesture looked different on every screen, and most of the time it looked like a line of grey text with a triangle in front of it.
+
+**Decision.** *One object, `BOXED_DISCLOSURE_SX` in `shared/ui/disclosure.ts`, and every fold in the backoffice spreads it.* A 1-pixel border in `divider`, `borderRadius: 1`, horizontal padding, the surface (`background.paper`) behind the body, and the summary as a bar: the §164 summary — marker, pointer, underline, `minHeight: 44` — with a wash of `action.hover` behind it. Open, the box stays: the summary squares its bottom corners, gets a rule under it and a margin below; the body gets bottom padding on `[open]` only, so a closed fold is exactly its summary. Theme tokens throughout, so the dark scheme follows without a second rule and `brand.ts` stays the only file with a colour.
+
+*The box pads; the summary un-pads itself.* The children of a fold are whatever the screen puts there — a form, an ordered list, a `Stack` — so the horizontal padding is on the `<details>` and the summary reaches the border with a negative margin of the same size, padding itself back so its text lines up with the body's. A padding rule on `> :not(summary)` would have beaten every `pl` an ordered list sets; a wrapper element would have meant twenty edits. `listStylePosition: inside` is written out so the marker sits in the summary's own padding rather than outside the border the margin just reached.
+
+*A fold that is deliberately a different colour keeps the colour on the same box.* The erase panel on a registration spreads the object and overrides `borderColor` to `error.light`; the batch cancel on the list, to `warning.light`. They say what is different about them and nothing else.
+
+*`Panel` is the same box.* Its collapsible frame is now `BOXED_DISCLOSURE_SX` plus `scrollMarginTop`, so Înscrieri's panels, the four on `/admin/emails` and Echipa's "add a colleague" changed with everything else; its open, non-collapsible frame gained the same `background.paper` surface so a screen of both reads as one system. The summary carries no `sx` of its own any more — its look is addressed from the `<details>`, and it is still never `display: flex` (Chrome and Safari drop the marker when it is).
+
+*Public pages did not change.* A fold on the registration form or in the footer is a line in a column of prose, and a box there would be a card in the middle of a sentence; `DISCLOSURE_SX` and `DISCLOSURE_SUMMARY_SX` are as they were, and the test refuses the boxed object in any public file.
+
+**Consequences.** `shared/ui/disclosure.ts` (the object), `shared/ui/Panel.tsx`; the event editor's `LazyRichTextEditor`, `BibDesignPanel`, `EventFieldsForm` (type help), `TranslationFieldsForm` (SEO), `SeriesScope` and the repeat help on `/admin/events/[id]`; the previews on `/admin/emails`; the sections of `/admin/guide`; the how-to on the desk and the bib picture in `DeskRow`; the steps under each task on `/admin/tasks`; the series dates on the events list; the number change and the erase panel on a registration; the batch cancel on the list. Redundant per-site spacing (`pb`, `mt`, `my`) went with the one-off rules. `EditorPanel` is an open section, not a fold, and was left alone. Not a rule change; no baseline bump (§20).
+
+Tests: `tests/unit/shared/boxed-disclosure.test.ts` — the object's shape (tokens, 44 pixels, marker inside, no `display`, no hex, the open state), and a scan of the admin tree and the backoffice modules asserting that every `component="details"` is drawn by the object, that no `"& > summary": { cursor` rule returns, that the two coloured panels override only the border, and that no public file imports it.
+
+Baseline `BR-V1.50-2026-09-23`.
+
+## 297. Added — Echipa says who has no sign-in account, and the board tests the invitation key (2026-09-23)
+
+**Context.** §288 recorded two days during which every "Add" on Echipa wrote the `staff_users` row and created no Zitadel account, because the invitation key authenticated and could do nothing — the service account had a role on the project, not the Org User Manager membership. The page said so once, in a banner gone at the next click; `/admin/tasks` asked "is `ZITADEL_MANAGEMENT_PAT` set" and said done. §288 left two follow-ups owed in code. Both are built here.
+
+**What was built.**
+
+*One probe, the call §37 recommends.* `listZitadelHumanAccounts` (`staff-identity/zitadel-users.ts`) asks the key for the organization's human users — `POST /v2/users`, `TYPE_HUMAN`, one page of 200, bounded by `AbortSignal.timeout` at 4 s, `cache: "no-store"` — and answers a value, never a throw: `listed` with every name each account answers to (address, username, each login name, lowercased), `refused` with Zitadel's own words and status, `unreachable` for a timeout or no network, `unconfigured` without a key. It is the same endpoint `findZitadelUserId` uses before every resend, reset and deactivation (§171), so it exercises the permission the invitation needs rather than merely proving the token is valid.
+
+*The reader is the control.* The trap in §288 is that a key without the membership is not refused — Zitadel narrows the search to what the caller may read and answers **200 with nobody**. So a listing cannot be read at face value: an empty one may be the key's blindness rather than an empty club. `checkInviteKey` (`diagnostics/invite-key.ts`) has one fact Zitadel does not: the person reading the page is signed in through Zitadel, so their account exists. A listing that does not contain the reader's own address is `blind`, whatever the status code; only a listing that finds the reader is `ok`, and only then does `hasNoAccount(check, email)` say anything about a row. `staff_users.email` is trim + lowercase and the listing is lowercased, so the comparison is exact.
+
+*Echipa, permanently.* Each row whose address the key cannot find carries a warning Chip — "Fără cont de autentificare" / "No sign-in account" — in the name cell (the status column hides below `lg`, and this is the fact the row exists to carry), with the remedy once under the list: ⋮ → Revoke access, then Add again with the same address. When the check was blind, refused or unreachable, one Alert above the table says the accounts could not be checked and why, in Zitadel's words (the blind case says how many accounts the key saw and that yours was not among them); no row is marked and none is presumed to have an account. A missing key is not repeated — the existing `inviteKeyMissing` warning already says it (§176).
+
+*The board tests the key.* `/admin/tasks` gains the row "The invitation key (Zitadel)", derived from the same probe on every open: no key → `open` with the whole of `SETUP.md` §37 as steps; `blind` or `refused` → **`broken`**, red, with §37 step 2 as its steps — Organization → Managers, role Org User Manager, the dialog called "Add an Administrator", and the trap spelled out: "Role Assignments" is not it; found the reader → `done` ("checked just now with a real search, it found your account"); no answer → `open` with the provider's words and no verdict, because a timeout says nothing about the key. Where the development switcher is the provider there is no row: a laptop has no key to owe. `OwnerTask` gains optional `text` and `steps` so a row can name the catalogue sentence and step list for a state that neither `todo` nor `done` describes; the page falls back to the old keys when they are unset.
+
+**Decision — a fourth `TaskState`.** `blocking` is reserved for what stops a real person registering today (§150), and the line above the list — "nothing blocks a registration" — must go on being true. A key that authenticates and can create nobody stops no registration, yet "open" with an amber chip is how it went unnoticed for two days. So `broken`: red like blocking, sorted after it and before open, counted as pending. Telling a missing key (open) from a set key that does not work (broken) is the whole reason the row exists.
+
+**Decision — no cache across requests.** No other probe in `diagnostics/` caches across requests, and a check the club is asked to act on must be the check of *this* page load; the pages that call it are dynamic. One request per page render, bounded inside; Echipa and the board each make their own.
+
+**Refused.** A lookup per row (one request for the list is enough at the club's size and gives the same answer); trusting a 200 with an empty result as "nobody has an account" (it is the §288 failure itself); a `blocking` state for the key (it stops no registration); a banner that names who is missing an account (the row is where the fact lives, for as long as it is true); `SETUP.md` §37 step 2 paraphrased rather than copied into the row's steps.
+
+**Tests.** `tests/unit/diagnostics/invite-key.test.ts` (BR-REQ-060-01 criterion 10, §288): the exact request and its signal; 200 with the reader and the per-row verdicts by address, case and login name; 200 without the reader as `blind`, never an empty club, with nothing claimed about anybody; 401 and 403 carried in Zitadel's words, a non-JSON body still naming the status; a network error, a `TimeoutError` and a garbled 200 as `unreachable`; a fetch that really hangs given up within the timeout; nothing called without a key or on the dev switcher. `tests/unit/diagnostics/owner-tasks.test.ts`: the row's states, text and steps for every answer; it never blocks; no row on the switcher; both catalogues carry every dynamic key (`blind`, `refused`, `unreachable`, `howBroken`, `howUnreachable`, `state.broken`), since the static scan cannot see keys built from the row. `tests/unit/staff/zitadel-users.test.ts`: the listing's shape.
+
+`CLAUDE.md` item 10 no longer owes these two in code.
+
+Baseline `BR-V1.51-2026-09-23`.
+
+## 298. Decided — the check-your-email screen greets by name and says when no email is coming (2026-09-23)
+
+**Context.** The owner, on the screen a runner lands on after pressing "Trimite înscrierea": it "should be more fun". It read like a receipt — a heading, the address, two sentences about the wait and the spam folder — and it said the same thing on every environment. Two testers registered on QA and waited for a message that was never coming: QA transmits through the allowlist and a laptop captures everything (`AGENTS.md` §16.4), and the form said "check your email" to both as if it were production. The rule that only production sends `live` did not bend; the screen did.
+
+**Decision.** *A screen, not a receipt.* `src/modules/registrations/ui/CheckYourEmail.tsx`, a Server Component like the rest of the flow (`AGENTS.md` §1.5), replaces the success panel on the register page. "Aproape gata, Ana!" / "Almost there, Ana!" — the first token of the first-name box, sealed in the same ten-minute cookie as the address (`stashSubmittedFacts`, `readSubmittedFacts`, `firstNameOf` in `form-draft.ts`; the plain heading when there is none); the event's title and its date; the address read back (§224), because "check your email" is useless to somebody who typed `@gmail.con`; what happens next in three steps with the glyphs `RegistrationSteps` gives the email, the declaration and the confirmation (§91), rendered here as children and never handed to a client component as a prop; the wait in bold and once (§224); the spam folder and how long the link lives, taken from `EMAIL_CONFIRMATION_HOLD_HOURS` so the screen cannot promise what the allocator does not keep; the sentence that keeps it true for a repeat registration (§229); the resend and the contact form, each carrying the event (§205); and a 44px `Button component="a"` back to the event.
+
+*It reads the same for a first and a repeat registration.* Everything on it comes from the form just posted and the event it was posted to; nothing is read from the registrations table, so the screen cannot answer whether an address was already on it — the oracle `AGENTS.md` §19.4 forbids. The warmer answer for a second registration stays in the email (§286).
+
+*An environment that does not deliver says so, before anybody waits.* `emailDeliveryNotice(env)` in `src/modules/notifications/delivery-notice.ts` returns null on `live`, `deliveryNotice.capture` or `deliveryNotice.allowlist` otherwise; `EmailDeliveryNotice.tsx` renders the key as a warning Alert above the journey strip on the form and on the check-your-email screen, reading `env` from `@/shared/config/env`. Production shows nothing. The owner's Romanian wording is in both catalogues under `Registration.deliveryNotice.*`, and the three keys the receipt used (`submitted`, `submittedDelay`, `submittedSpam`) are gone from both.
+
+*What the tests are named by.* The helper's suite is titled by the rule it reads, `AGENTS.md` §16.4, and not by BR-REQ-080-03: that requirement's three criteria state the modes and the startup refusal (`notifications/modes.test.ts`) and none names a notice to the participant, so a suite carrying its number would claim a coverage the requirement does not ask for. A fourth criterion — "given a mode other than live, the registration form and the check-your-email screen say so" — belongs to the next docs pass. Unit: the helper across the three modes, every non-live key resolving in both catalogues, `firstNameOf`, the sealed-cookie round-trip. E2E: `registration-entry.spec.ts` asserts the capture notice on the form and on the screen, the named greeting, the address and a ≥44px way back, under both the 320px and the desktop project; `registration-form.spec.ts` asserts the new heading where it used to assert the removed text, and asserts its absence where it proves a form was not posted.
+
+**What was rejected.** *"You are already registered" on the screen.* It would answer a question about somebody else's address to anybody who types it (§19.4); the §229 sentence reads the same for everybody and only the inbox's owner learns which case they are in. *The confirmation deadline in the third step.* `done.next.declare.bodyLater` names how many days before the start the confirmation is asked and nothing more; the deadline is `RegistrationSteps`'s longer telling, so the screen reads only `opensDays` from the window and the caller passes the steps' object as is. *A client island for the greeting.* The name is in the same cookie as the address and is read on the server; nothing on the screen needs JavaScript.
+
+Baseline `BR-V1.51-2026-09-23`.
+
+## 299. Fixed — the footer wraps and Instagram shares the card; two of the four reports were not the site (2026-09-23)
+
+Four reports from one evening, all on a phone or a tablet: the footer's Strava mark could not be tapped on an iPhone; between 600 and 750 pixels the social marks sat on the summary's last word and on the build badge; a Facebook share opened a "Create post" whose card was the bare domain, no title and no picture; "on iPhone the share buttons do not work"; and the owner wanted Instagram to be "an actual share, not just create a picture". Two were the site's; two were not, and the review is what told them apart.
+
+**The footer is one wrapping flex row** (`shared/ui/SiteFooter.tsx`). The marks, the scheme switch and the language were absolutely positioned over the bar, so they had no width in the layout and were drawn over whatever sibling reached them — which is both the overlap and why Amalia's tap on Strava landed on something else. Now every control is an item of its own: the scheme switch (44 px), the `<details>` fold, the three 44×44 marks and, on a phone, the language. The fold gets `flex: 1 1 0%` on `xs` — a wrapping row assigns lines by hypothetical size, and a summary-sized basis pushed the language to a second line at 320 px — and `0 1 auto` from `sm`; `&[open]` takes the rest of the line so the marks step under the panel. `BuildBadge` floats from `md` rather than `sm`, since 600–900 px is where it sat on the Instagram mark. `tests/e2e/footer.spec.ts` measures the bar at five widths: 44 px targets, every control on the bar's first 44 px while closed, no two controls intersecting (the badge included), a trial click on every mark, the open-fold state, the badge on its own line at 640.
+
+**Instagram is a share where the phone can take a file** (`events/instagram-share.ts`, `ui/InstagramShareButton.tsx`). Instagram has no share URL; what it takes is a picture from the phone's own sharing sheet. The island renders on the server as the download anchor, "Descarcă poza pentru Instagram", and becomes a button once the browser says it can share a file (`canShareFiles`, probed with a real `File`) **and the pointer is coarse** — a deliberate narrowing of the ask, recorded here: a desktop Safari can share files too, but its sheet has no Instagram in it, so a mouse keeps the download and the label says so. The click fetches the square card and calls `navigator.share({ files })` in the fetch's `.then`, inside the user activation iOS demands; `AbortError` (the sheet was closed) does nothing, anything else falls back to `location.assign(imageHref)` — the route answers `Content-Disposition: attachment`. `NativeShareButton` is unchanged in behaviour and shares the pill style through `share-pill.ts`. New key `Event.share.instagramDownload` in both catalogues. Playwright's `webServer` sets three placeholder `CLUB_*_URL`s so the footer's marks exist under test — CI configured none, and a footer with no marks has nothing to measure.
+
+**The empty Facebook card was not the site, and the first fix for it was withdrawn.** The implementer's diagnosis was a trailing slash in `APP_BASE_URL` making `u=` read `https://host//ro/…`. The reviewer checked the live QA it was reported from: the button already sent `sharer.php?u=https%3A%2F%2Fqa.<host>%2Fro%2Fevenimente%2F…` — absolute, one slash, encoded once — with a matching canonical, `og:url`, `og:title` and an `og:image` answering 200 to `facebookexternalhit`. What QA answers every crawler is `robots.txt` → `Disallow: /` (`src/app/robots.ts`), on purpose for every environment but production, so Facebook's scraper is refused and draws the bare domain. **Production's robots allows, and production's event page serves the same correct card.** Nothing in this change alters that, and nothing should: a QA that search engines and scrapers index would be worse than a QA whose share preview is blank. What stays from the withdrawn fix is hygiene: `APP_BASE_URL` drops a trailing slash once, where it is validated (`shared/config/env.ts`, `z.url()` then a transform; a path prefix is kept), because forty `${env.APP_BASE_URL}${pathname}` joins would each mint a second spelling of every address if somebody ever typed one — normalised rather than refused, since a slash is a spelling and not an unsafe combination like the startup guards. `tests/unit/config/env.test.ts` covers the strip, the kept prefix and the join.
+
+**"On iPhone the share buttons do not work" was not reproduced.** On `origin/qa` the Facebook and WhatsApp buttons were already plain `<a href target="_blank" rel="noopener noreferrer">`, and `NativeShareButton` already called `navigator.share` synchronously in its click handler; there was no `window.open` after an `await` to remove. The share builders were still consolidated (`events/share-links.ts`: `absoluteUrl`, `eventPageUrl`, `facebookShareUrl`, `whatsappShareUrl`, also feeding the canonical, `og:url` and the JSON-LD image), and the event page's share row is asserted by `share-links.spec.ts` (`u=` equals `page.url()` encoded once, the WhatsApp text, the Instagram control, 44 px on a phone). **Open, and only a real iPhone answers it:** the event page's share row — Facebook, WhatsApp, "Distribuie", Instagram share-then-fallback — tapped on Amalia's phone. If the report stands after this lands, the cause is something the emulator does not have (a content blocker, an in-app browser), and that is where to look.
+
+**Tests.** 18 unit tests (the URL builders against a fixed base; the `File` construction and the fallback decision) plus the env strip; `footer.spec.ts` and `share-links.spec.ts`; 79 e2e runs green on both projects against a production build. BR-REQ-052-02 criterion 8 now reads: shares the square card through the phone's sheet where a file can be shared from a coarse pointer, otherwise offers it as a download labelled as such.
+
+**What this section is also for.** Two of four reports were symptoms of something that was already right, and the first draft of this text claimed both as fixed. The reviewer's job was to refute, and it did; the honest record is worth more to the club than a fourth "fixed" — the next person who sees a blank card on QA now knows to look at `robots.txt` and not at the share button.
+
+Baseline `BR-V1.52-2026-09-23`.
+
+## 300. Decided — a series inherits its source’s Strava and Facebook event links, a duplicate still does not; and the series says what it did (2026-09-23)
+
+**Context.** The owner, of the weekly run: "if I put the root links (https://www.strava.com/clubs/…/group_events/…, https://www.facebook.com/events/…) somehow strava and facebook should be smart enough to inherit this (I hope)" — after asking that the series be "super efficient from a DB perspective" and that what differs between dates (the place, the time, and these two links) be editable per date.
+
+**What §71 and §130 decided, and why the half about the links is being changed.** §71 added the Strava event link as "one occurrence's — never carried onto a duplicate or a repeat, because next week's occurrence has its own address"; §130 listed "a film and a Strava event" among what never travels when a save on one date reaches the following ones; the Facebook link (§106-era) followed the same rule. The premise was wrong for a *series*. A **recurring Strava club event** keeps one `group_events/<id>` address for every occurrence, and a **Facebook event with several dates** keeps one `events/<id>` — the platforms themselves treat the series as one thing with one page. So the address typed on the source event *is* the address of every date, and a rule that refuses to copy it makes the Organizer paste the same link into eight rows and again every week the job makes a new one.
+
+**Decision.** *A repeat inherits both links; a duplicate inherits neither.* `repeatEvent` and the standing job (`materializeStandingRepeats`, §122) put the source's `stravaEventUrl` and `facebookEventUrl` on every date they make; `duplicateEvent` — next year's edition — still leaves both empty, because next year's race has its own Strava and Facebook pages, exactly as §71 said. The distinction is the one the platforms make: the same event on another date, against another event.
+
+*The links travel with a scoped save.* Both columns join `SERIES_COLUMNS` (§130): change the link on one date and "this and the following" or "all" carry the change like a changed place; save with "this date" and only that date has the new address — which is how a single date that really does have its own page (a special edition run under somebody else's event) keeps it. Nothing new is stored: each date is still its own row (§122), and the copy is made once, when the row is.
+
+*The hints say so.* "Doar pentru această ediție; nu se copiază" becomes "Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei" — and the same for Facebook — in both languages.
+
+**What was rejected.** *Inheritance by reference* — members store no link and readers resolve through the source — offered when the owner asked for DB efficiency. It would make every reader of the link (the event page, the calendar's entries, the reminder) look up the source, for a saving of two short strings per row on a series the job keeps eight rows deep. The row-per-date model is the efficient one at this scale; what was inefficient was the Organizer's evening, and that is what this fixes. *Carrying the film too.* Left as it was: a film is of one edition, and last year's on this year's date is wrong (§71).
+
+**And the banner says what the series did.** The same hour: "ce se intampla cu seriile? se creaza automat? nu e clar cand creeze si zice ‘urmatoarele 7 serii’". "{created} ediții create." was a number that depends on the day of the press — how many dates fit in the next eight weeks (§122) — with nothing about the weeks after it, so it read as a job half done. It now names the horizon it reached ("până pe 18 noiembrie") and says the platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever. The create page’s repeat hint still described §64’s world — "the following editions are created as drafts, publish them all from the list" — and now describes §122’s: eight weeks made with the event, the job keeps it ahead, drafts unless publish is ticked. Copy only; the mechanism was always right and never explained itself.
+
+Baseline `BR-V1.53-2026-09-23`.
+
+## 301. Added — the bib is previewed in the design panel as the boxes change (2026-09-23)
+
+**Context.** The owner, on the event editor's "Cum arată numărul de concurs" panel (§249): "la BID
+îmi trebuie un preview aici". The panel had five switches, two selects and two picture pickers,
+and §249 had deliberately given it no JavaScript — the preview was the bibs page's picture,
+after a save. Designing a bib by saving, opening another page, coming back and saving again is
+not designing it.
+
+**Decision.** *One picture, the renderer's own, with the unsaved design in its address.* The
+panel opens with an `<img>` whose `src` is the existing picture route,
+`/api/admin/events/<id>/bibs/preview`, in a new `?sample=1` mode: the card `bib-image.tsx` draws
+for every participant, drawn for a placeholder runner — "Nume Prenume", numbered with the
+event's start number (or the box's current value), the event's real title and date from the
+row — with the design read from the query string rather than from the row. It is the same
+`renderBibImage`, never a second drawing of the bib: the property §180 bought, that the preview
+is a preview of the paper, is exactly what would have been spent by a client-side sketch.
+
+*The unsaved design is validated by the schema the save uses.* `bibDesignFromQuery` turns the
+query into a design through `readBibDesign` and `bibDesignSchema`, field by field: a query that
+says nothing draws the platform's design, a query with one nonsense value draws the platform's
+choice for that one field, and a picture from somebody else's server is refused where every
+stored one is (§249). The sample carries no participant — a placeholder name and a number the
+club chose — so the gate is the one every staff role already passes for a real bib; it is a GET
+that mutates nothing (`AGENTS.md` §12.8) and is never cached, because the title and the date in
+it belong to the row and a preview that lags a save is a preview of the wrong thing. With a
+`registration=` named, the design parameters are ignored and the stored design is drawn — that
+is what will print.
+
+*One reader for the form, shared by the save and the preview.* `bib-design-query.ts` holds the
+wire shape and imports nothing: `readBibDesignForm`, which `admin/actions.ts` had inline since
+§249 and now shares, so the picture on the screen is drawn from exactly what the save would
+post; the encoder and the decoder, whose keys are the schema's own field names so the round trip
+is exact; the number bound; the address builder. It is a file of its own rather than part of
+`bib-design.ts` because that module carries Zod and this one is imported by a client island —
+no client module in this application carries Zod, and a preview is not the reason to start.
+
+*The island is the panel's only JavaScript.* `BibDesignPreview` renders the `<img>` and a
+caption, "Previzualizare — așa se tipărește", and keeps one debounced listener (300 ms) on the
+`<form>` it sits in, for `input` and `change` from the panel's boxes, the band's colour and the
+start number — the two live a little above the panel in the same form, and a colour the preview
+ignored would be a surprise. It reads the form with `new FormData(form)`, the way the action
+does; a keystroke in the title asks for no picture. The Server Component computes the first
+address from the stored design, so the picture is on the page before any script runs and the
+island only rebuilds it. 320 px wide at most, the card's 900×600 proportion declared so the
+panel does not jump while a fresh picture loads, lazy so a closed fold costs nothing.
+
+**Rejected.** *Drawing the bib in the browser* (CSS, canvas): a second renderer that would drift
+from the paper — the thing §180 exists to prevent. *A separate route for the sample*: the same
+handler, the same authorization, the same renderer; a mode is one branch, a route is a second
+place to keep in step. *Posting the design and reading a response*: a GET whose address is the
+design is cacheable, linkable and honest, and the URL is the round trip's own test. *Shipping
+Zod to the client so `bib-design.ts` could be imported whole*: the island only reads boxes and
+writes a query; validation is the server's, once.
+
+**Consequences.** `bib-design-query.ts` (new); `bibDesignFromQuery` in `bib-design.ts`;
+`findEventForBibs` returns `bibStartNumber`; the preview route's sample mode;
+`BibDesignPreview.tsx` (new island) mounted by `BibDesignPanel`, which now takes the event's id,
+start number and colour from `EventFieldsForm`; `readBibDesignForm` in `admin/actions.ts`;
+`editor.bibDesign.previewCaption`, `previewAlt` and a reworded `previewNote` in both catalogues.
+Tests: `tests/unit/registrations/bib-design-query.test.ts` — the round trip exact for the
+platform's design and for one with every choice away from its default, through a real address;
+garbage to defaults field by field, a third party's picture refused; the form reader; which
+inputs the preview follows; the number bound. `bibs.test.ts` asserts the start number
+`findEventForBibs` returns.
+
+Baseline `BR-V1.53-2026-09-23`.
+
+## 302. Decided — a participant leaves or rejoins the public list from their own link (2026-09-23)
+
+**Context.** The owner: "people should be able to choose to not be shown on the public list if they don't want to, even after the registration, basically they can do that via email."
+
+§32 built the public participant list and shipped it `HIDDEN`, with `registrations.list_opt_out` as the participant's own refusal, asked on every event; §143 turned the box round — "Vreau să apar pe lista de participanți", unticked, a tick puts the name on — and recorded that the answer is withdrawn "by writing to the club"; §186 made the opted-out runner a counted "Participant anonim" rather than a silently missing row. What none of them gave the participant was a way to change the answer themselves after pressing Submit. This completes that: the consent already exists, and this is the door for changing it. Not a rule change — the column, the published set (`list_opt_out = false`), the privacy test and the wording of the box are all exactly as §143 left them.
+
+**Decision.** *One column, one write, three doors.*
+
+- `registrations/list-consent.ts#setListConsent` is the only writer: it **sets** `list_opt_out` (never "toggles" — the form carries the answer it is making, so a double submission or two tabs land on the state the button said), bumps `updated_at`, and writes one audit row `registration.list_consent_changed` with **no staff actor** and metadata `{from: LISTED|NOT_LISTED, to, via}` — the shape of the change and the door, never the name (AGENTS.md §12.12). The same answer twice is one change and one row. The audit row is written inside the same transaction as the change: nothing here goes through the allocator or takes the event-row lock, so §12.12's reason for writing it afterwards does not apply.
+- **The confirmation email carries a second link**, under a sixth token purpose, `LIST_CONSENT` (migration `0058`, expand only). Its own purpose rather than a second use of the manage token beside it, because spending one must not spend the other, and one active token per (registration, purpose) is what the table enforces. The link is worded by the row at send time: "Nu vreau să apar pe lista publică de participanți" when the name is on, "Vreau să apar…" when it is not. Same fortnight lifetime as the manage link; a resent confirmation supersedes it.
+- **`/registrations/list/[token]`** (`/inregistrari/lista/[token]`): the GET says how the answer stands for this registration and event and shows one button; the token read and the page's own reads run in READ ONLY transactions, so a mail scanner opening the link changes nothing (BR-REQ-036-02 criterion 4). The POST spends the token in one statement, sets the answer, mints a fresh `LIST_CONSENT` token in the same transaction and lands on the same page under it — "I changed my mind" is the same button a second time. A used, expired or wrong-purpose link gets the one generic notice every token page gives, with the resend path; `mayReportState` was deliberately not widened to it.
+- **The manage page and "Înscrierile mele"** carry the same button, under their own `MANAGE_REGISTRATION` / `MANAGE_PROFILE` links, **read and never spent** — the §77 precedent for "I am here": the choice is reversible and low-stakes, and spending a link on it would cost the person the cancel button on the same page. The registration must be the holder's own, checked against the token's participant, never trusted from the form; a stranger's id gets NOT_FOUND.
+- The public list and the §186 count already read the column, so a name leaves the list the moment the row changes and returns the same way; no second query and no cache stand between the choice and the page (§281). The backoffice timeline labels the action and reads a null actor on it as "participantul, din linkul propriu" rather than "cont șters".
+
+**Rejected.** *A preferences centre* (one page, many switches): one link, one flip is what was asked, and the manage page is where a second switch would go if one ever exists. *A new column*: `list_opt_out` is the answer; a second column would let the two disagree. *Spending the manage or profile link on the change*: it would take the cancel button away for a flip the person can undo a minute later. *Minting a `LIST_CONSENT` token on the GET of the manage or "mine" page so they could link to the list page*: a token insert on a GET is a mutation on a GET (§12.8).
+
+**Consequences.** `registrations/list-consent.ts` (new), `app/[locale]/registrations/list/[token]/{page,actions}.tsx`, the manage and "mine" pages and actions, `my-registrations.ts` (`listed` on each row), `notifications/render.ts` and `templates.ts`, the `/admin/emails` preview data, `audit/repository.ts` (the action; `actorStaffUserId` on `AuditEntry`), `events/locale-switch.ts`, `i18n/routing.ts`, `schema/email-action-tokens.ts` + migration `0058_list_consent_purpose`, the `Registrations.list.*` and two `Admin` keys in both catalogues; `tests/integration/registrations/list-consent.test.ts`. BR-REQ-039-01 gains, in effect, a criterion — "after registration, the participant changes the answer from the link in the confirmation, from the manage page or from 'Înscrierile mele'; the list follows the row at once" — which `SPECS.md` should carry.
+
+Baseline `BR-V1.53-2026-09-23`.

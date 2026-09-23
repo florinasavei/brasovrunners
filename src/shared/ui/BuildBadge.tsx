@@ -56,18 +56,23 @@ export default async function BuildBadge() {
    * Fixed, it is a permanent 250px label over the bottom-right of a 390px screen — on the
    * event page it covered the difficulty row outright, and covering a fact to announce a build
    * number is the wrong trade on the viewport the whole site is designed for first
-   * (BR-REQ-041-01). From `sm` up there is room to spare and the corner is empty, so it floats
+   * (BR-REQ-041-01). From `md` up there is room to spare and the corner is empty, so it floats
    * there as before.
    *
    * Below the footer rather than above it when static: it is the least important thing on the
    * page, and this is the one place where saying so costs nothing.
+   *
+   * `md`, not `sm` (2026-09-23): between 600 and 900 pixels the fixed label — up to three
+   * quarters of the width, by the bound below — reached the footer's social marks and sat on
+   * the Instagram one (the owner's screenshot). A tablet held upright, or a narrowed window, is
+   * a phone's footer with more room, and the badge takes its own line under the bar there too.
    */
   const sx = {
-    position: { xs: "static", sm: "fixed" },
+    position: { xs: "static", md: "fixed" },
     alignSelf: "flex-end",
     right: 8,
     bottom: 8,
-    m: { xs: 1, sm: 0 },
+    m: { xs: 1, md: 0 },
     px: 0.75,
     py: 0.25,
     borderRadius: 1,

@@ -608,7 +608,16 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
   eventId: string,
   locale: string,
 ): Promise<
-  | { title: string; startsAt: Date; timezone: string; bibColour: string | null; coHosts: CoHost[]; design: BibDesign }
+  | {
+      title: string;
+      startsAt: Date;
+      timezone: string;
+      bibColour: string | null;
+      /** Where the event's numbers start (§173): the number a sample bib is drawn with. */
+      bibStartNumber: number;
+      coHosts: CoHost[];
+      design: BibDesign;
+    }
   | undefined
 > {
   const [row] = await db
@@ -617,6 +626,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
       startsAt: events.startsAt,
       timezone: events.timezone,
       bibColour: events.bibColour,
+      bibStartNumber: events.bibStartNumber,
       bibDesign: events.bibDesign,
       coHosts: events.coHosts,
       coHostName: events.coHostName,
@@ -634,6 +644,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
     startsAt: row.startsAt,
     timezone: row.timezone,
     bibColour: row.bibColour,
+    bibStartNumber: row.bibStartNumber,
     coHosts: readCoHosts(row),
     // What the club decided this bib shows (§249); anything unreadable is the platform's own.
     design: readBibDesign(row.bibDesign),

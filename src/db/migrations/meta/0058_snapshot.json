@@ -1,5 +1,5 @@
 {
-  "id": "4c527d73-d66b-498d-9013-c5aa536701ce",
+  "id": "199444ee-511c-479e-b43d-aadb4efb405e",
   "prevId": "37cffe9f-11f4-46d1-9507-1336cc14090f",
   "version": "7",
   "dialect": "postgresql",
@@ -835,12 +835,6 @@
         },
         "cover_alt_text": {
           "name": "cover_alt_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "location_name": {
-          "name": "location_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3676,7 +3670,8 @@
         "COMPLETE_DECLARATION",
         "MANAGE_REGISTRATION",
         "WAITLIST_OFFER",
-        "MANAGE_PROFILE"
+        "MANAGE_PROFILE",
+        "LIST_CONSENT"
       ]
     },
     "public.email_message_type": {

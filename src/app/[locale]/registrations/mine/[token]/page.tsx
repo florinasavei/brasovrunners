@@ -16,11 +16,23 @@ import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { cancelFromMyRegistrationsAction, selfCheckInFromMyRegistrationsAction } from "./actions";
+import {
+  cancelFromMyRegistrationsAction,
+  selfCheckInFromMyRegistrationsAction,
+  setListConsentFromMyRegistrationsAction,
+} from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; started?: string; here?: string; hereFailed?: string }>;
+  searchParams: Promise<{
+    done?: string;
+    invalid?: string;
+    started?: string;
+    here?: string;
+    hereFailed?: string;
+    list?: string;
+    listFailed?: string;
+  }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -38,7 +50,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed } = await searchParams;
   const t = await getTranslations("Registrations");
   const format = await getFormatter();
 
@@ -179,6 +191,38 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     {t("mine.cancel")}
                   </Button>
                 </form>
+              </Stack>
+
+              {/*
+                The public participant list, the participant's own switch (BR-REQ-039-01;
+                `DECISIONS.md` §143): the answer as it stands, and the button that sets the other
+                one. The link is read, never spent — as "I am here" above — so cancel stays.
+              */}
+              <Stack spacing={1} sx={{ mt: 1.5 }}>
+                {list === item.id && (
+                  <Alert severity="success" sx={{ py: 0 }}>
+                    {t("list.changed")}
+                  </Alert>
+                )}
+                {listFailed === item.id && (
+                  <Alert severity="warning" sx={{ py: 0 }}>
+                    {t("list.failed")}
+                  </Alert>
+                )}
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.listed ? t("list.shortListed") : t("list.shortNotListed")}
+                  </Typography>
+                  <form action={setListConsentFromMyRegistrationsAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="token" value={token} />
+                    <input type="hidden" name="registrationId" value={item.id} />
+                    <input type="hidden" name="listed" value={item.listed ? "0" : "1"} />
+                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                      {item.listed ? t("list.optOut") : t("list.optIn")}
+                    </Button>
+                  </form>
+                </Stack>
               </Stack>
             </Box>
           ))}
