@@ -375,6 +375,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             component="span"
             title={number.settled ? undefined : t("registrations.bibProvisional")}
             sx={{
+              // The containing block of the visually hidden "provizoriu" (§313). Without it that
+              // absolutely positioned span escaped the table's horizontal scroll area — a scroller
+              // is not a containing block unless positioned — and stretched the whole page to about
+              // 600 px on a 320 px phone, so the browser zoomed out and every tap on the page landed
+              // somewhere else (the race-day e2e on mobile, red on every qa push since #132).
+              position: "relative",
               fontVariantNumeric: "tabular-nums",
               fontWeight: number.settled ? 700 : 500,
               color: number.settled ? "text.primary" : "text.secondary",

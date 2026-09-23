@@ -203,6 +203,11 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // The list's bibs panel names the number, whose it was and what happened, as one visible
     // link to the row — readable on a phone, not hidden in a tooltip.
     await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
+    // The page is never wider than the screen (§313): an absolutely positioned descendant that
+    // escaped the table's scroll area once stretched this list to ~600 px on a 320 px phone, the
+    // browser zoomed out, and every tap below landed on something else.
+    const widths = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, view: window.innerWidth }));
+    expect(widths.doc, "the registrations list overflows the viewport horizontally").toBeLessThanOrEqual(widths.view);
     const voidLine = page.locator("#main").getByTestId("registrations-void-bibs");
     await expect(voidLine).toContainText("de scos din teanc");
     await voidLine.getByRole("link", { name: `Numărul ${bib}: ${name}, înscriere anulată pe` }).click();
