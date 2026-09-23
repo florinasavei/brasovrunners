@@ -9,6 +9,7 @@ import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
 function localeOf(form: FormData): Locale {
@@ -53,14 +54,14 @@ export async function updateBotCheckAction(form: FormData): Promise<void> {
 /**
  * "The Neon plan we are on" (`DECISIONS.md` §280's follow-up), from the costs panel. The same
  * gate and the same shape as the Mailgun plan on `/admin/emails` (§100): Administrator at the
- * door, the service asserting the role again and writing the audit row, the outcome in the
- * query. Lands back on the costs panel, where the figures that follow the plan are.
+ * door, the service asserting the role again and writing the audit row. Lands back on the
+ * costs panel, where the figures that follow the plan are. A refusal is the form's returned
+ * state, with the plan and the note as chosen (`DECISIONS.md` §315), as the Mailgun plan's is.
  */
-export async function updateNeonPlanAction(form: FormData): Promise<void> {
+export async function updateNeonPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/tasks" });
 
-  let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
     await updateNeonPlan(
@@ -69,11 +70,9 @@ export async function updateNeonPlanAction(form: FormData): Promise<void> {
       { plan: form.get("plan"), note: typeof form.get("note") === "string" ? form.get("note") : "" },
       new Date(),
     );
-    outcome = "saved=neonPlan";
   } catch (error) {
-    if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    return refused(error, form);
   }
   revalidatePath(path);
-  redirect(`${path}?panel=costs&${outcome}#admin-alert`);
+  redirect(`${path}?panel=costs&saved=neonPlan#admin-alert`);
 }

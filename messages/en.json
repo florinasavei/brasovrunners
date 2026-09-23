@@ -573,7 +573,7 @@
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
-      "LEGAL_TERMS_IN_FORCE": "This version of the terms has been in force, so it cannot be deleted: whoever registered in that window accepted it, and a registration does not record which version of the terms it was. You can withdraw it instead — it stays on the record and is offered to nobody."
+      "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody."
     },
     "editor": {
       "eventSection": "Event details",
@@ -821,6 +821,18 @@
         "sponsorImageSrc": "A sponsors' strip",
         "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
         "noPicture": "No picture",
+        "footer": {
+          "title": "Footer",
+          "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
+          "showEventInFooter": "The event's name and date, when the header does not show them",
+          "showPartners": "The partners",
+          "footerText": "The club's own line",
+          "footerTextPlaceholder": "e.g. Timing: … · Organiser emergencies: 07xx xxx xxx",
+          "footerTextHelp": "It is printed on every number and worn in public — do not write participants' personal data.",
+          "showWebsite": "The club's website",
+          "showEmail": "The club's email address",
+          "notConfigured": "not set on this environment"
+        },
         "previewCaption": "Preview — this is how it prints",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
         "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
@@ -836,7 +848,15 @@
         "teal": "Teal",
         "black": "Black"
       },
-      "confirmationWindowTitle": "Participation confirmation"
+      "confirmationWindowTitle": "Participation confirmation",
+      "createAndPublish": "Create and publish",
+      "publishing": "Publishing…",
+      "notReadyToPublish": "Cannot publish yet — missing: {field}",
+      "createdPublished": "The event was created and published. It is on the site, in both languages.",
+      "createdPublishedWithSeries": "The event and {created} dates were created and published.",
+      "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
+      "createdNotPublishedRole": "The event was created as a draft. Publishing is the Administrator's — submit it for review.",
+      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -909,7 +929,8 @@
       "noAccountHelp": "“No sign-in account”: the person is on the list, but Zitadel has no account with their address, so they cannot sign in — usually they were added while the invitation key could not create accounts. The fix: ⋮ → “Revoke access”, then “Add” again with the same address — this time the account is created and Zitadel sends them the password link.",
       "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
-      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table."
+      "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
+      "inviting": "Adding…"
     },
     "queue": {
       "title": "The registration queue",
@@ -999,6 +1020,8 @@
       "legalDraftSaved": "The draft was saved.",
       "legalVersionApproved": "The version is approved and now public.",
       "referencedFull": "{signatures} signatures · {events} events · {acknowledgements} registrations",
+      "termsRegistrations": "Registrations while it was in force: {count}",
+      "termsRegistrationsSoFar": "Registrations since it took effect: {count}",
       "tableCaption": "Legal document versions, with their state and what depends on each",
       "delete": "Delete the draft",
       "deletePending": "Deleting…",
@@ -1006,6 +1029,7 @@
       "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
       "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
       "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted or declarations signed while it was in force, {window} ({count}), and neither records which version of the terms was accepted.",
       "legalVersionDeleted": "The draft has been deleted.",
       "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
       "platformApproved": "Done: {count} texts approved, with the club's facts. Registrations are open; the declaration is chosen on each event, under Registration (if not already).",
@@ -1065,6 +1089,8 @@
         "numberRetired": "Version number {version} stays retired for good. The next version of this document takes the next number, never {version} again, so a number people already ticked at registration can never end up on different words.",
         "auditOnly": "One trace is left: an audit line with the document, the number, the date it took effect, who approved it, the SHA-256 of each language's text and the reason you type. The text itself is kept nowhere.",
         "nothingDepends": "It can be deleted because nothing depends on it: no signature, no event, no registration — and it is not the text in force right now.",
+        "termsNobodyAccepted": "It can be deleted because nobody accepted it: it was in force {window}, and in that time no registration was submitted and no declaration was signed — and it is no longer the text in force.",
+        "termsNeverInForce": "It can be deleted because nobody accepted it: it was never the text in force.",
         "alreadyWithdrawn": "You already withdrew this version, on {date}. Deleting is the second and final step: now it leaves the record as well.",
         "notWithdrawn": "This version has not been withdrawn. If you only want it to stop being offered anywhere, withdraw it from the list instead: it stays on the record, with its text and its number. Deleting cannot be undone.",
         "phraseLabel": "Confirmation",
@@ -1075,7 +1101,9 @@
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
         "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
         "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
-        "blockedTermsInForce": "This version of the terms has been in force, so it cannot be deleted. Whoever registered in that window accepted it, and a registration does not record which version of the terms it was — so nobody can be shown not to have relied on it, and deletion destroys the words themselves. Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody."
+        "blockedTermsAccepted": "Cannot be deleted: while this version of the terms was in force, {window}, registrations were submitted or declarations signed ({count}). Any of them may have accepted it — the declaration says “I agree with the event's terms, conditions and rules” — and neither records which version of the terms it was, so nobody can be shown not to have relied on it, and deletion destroys the words themselves.",
+        "termsWithdrawInstead": "Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody.",
+        "termsAlreadyWithdrawn": "You have already withdrawn it, so it is offered to nobody; it stays on the record, with its number, for whoever accepted it."
       },
       "editor": {
         "heading": "Section heading",
@@ -2050,6 +2078,14 @@
       "summary": "Who has signed up",
       "outbox": "Email waiting to go out",
       "filters": "Search and filter"
+    },
+    "forms": {
+      "fieldsIntro": "The fields to check:",
+      "fieldError": "Check this field.",
+      "kept": "What you typed is still in the boxes; correct it and send again.",
+      "keptConflict": "What you typed is still in the boxes — copy what you need, then reload the page.",
+      "keptExceptConfirmation": "What you typed is still in the boxes, except the confirmation, which is asked again.",
+      "incompleteFirst": "Fill in first: {field}"
     }
   },
   "NotFound": {

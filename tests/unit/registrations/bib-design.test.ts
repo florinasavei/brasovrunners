@@ -4,12 +4,12 @@ import {
   BIB_BAND_FALLBACK,
   bibBandColour,
   bibDesignSchema,
-  bibFooterLine,
   bibPictureUrl,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
   readBibDesign,
 } from "@/modules/registrations/bib-design";
+import { BIB_FOOTER_SEPARATOR, bibFooterParts } from "@/modules/registrations/bib-footer";
 import { COLOR } from "@/theme/brand";
 
 /**
@@ -41,17 +41,22 @@ describe("§180 what a bib looks like", () => {
     }
   });
 
+  // Since §317 the footer is the club's to compose (`bib-footer.test.ts`); the platform's own
+  // design still prints exactly this.
+  const footer = (partners: readonly string[], replyTo?: string | null) =>
+    bibFooterParts(DEFAULT_BIB_DESIGN, { partners, replyTo, headerPicture: false }).join(BIB_FOOTER_SEPARATOR);
+
   it("names the partners and then the club's mailbox", () => {
-    expect(bibFooterLine(["Primăria Brașov", "Salvamont"], "contact@example.test")).toBe(
+    expect(footer(["Primăria Brașov", "Salvamont"], "contact@example.test")).toBe(
       "Primăria Brașov  ·  Salvamont  ·  contact@example.test",
     );
   });
 
   it("is empty rather than a row of separators when the club has filled in nothing", () => {
-    expect(bibFooterLine([], null)).toBe("");
-    expect(bibFooterLine([" ", ""], undefined)).toBe("");
-    expect(bibFooterLine([], "contact@example.test")).toBe("contact@example.test");
-    expect(bibFooterLine(["Salvamont"], null)).toBe("Salvamont");
+    expect(footer([], null)).toBe("");
+    expect(footer([" ", ""], undefined)).toBe("");
+    expect(footer([], "contact@example.test")).toBe("contact@example.test");
+    expect(footer(["Salvamont"], null)).toBe("Salvamont");
   });
 });
 
@@ -128,6 +133,78 @@ describe("DECISIONS.md §249 the bib's design", () => {
 
   it("still prints no telephone number in the footer", () => {
     // §180's rule, unchanged by anything above: a bib is worn in public.
-    expect(bibFooterLine(["Primăria Brașov"], "contact@example.test")).toBe("Primăria Brașov  ·  contact@example.test");
+    expect(bibFooterParts(DEFAULT_BIB_DESIGN, { partners: ["Primăria Brașov"], replyTo: "contact@example.test", headerPicture: false })).toEqual([
+      "Primăria Brașov",
+      "contact@example.test",
+    ]);
+  });
+});
+
+/**
+ * §317 — the footer's keys joined a column that already holds designs. Every design stored
+ * before them must print its footer exactly as it did, and a key written wrong must fall back on
+ * its own rather than take the rest of the design with it.
+ */
+describe("§317 the footer's settings, read from whatever is stored", () => {
+  const STORED_BEFORE = {
+    showName: false,
+    showEventTitle: true,
+    showDate: true,
+    showLogo: true,
+    numberScale: "large",
+    namePosition: "below",
+    headerImageSrc: null,
+    sponsorImageSrc: null,
+    cutMarks: true,
+  };
+
+  it("reads a design stored before the footer keys existed as today's footer", () => {
+    const design = readBibDesign(STORED_BEFORE);
+    expect(design).toEqual({ ...DEFAULT_BIB_DESIGN, showName: false, numberScale: "large", cutMarks: true });
+    expect(design.showEmail).toBe(true);
+    expect(design.showPartners).toBe(true);
+    expect(design.showWebsite).toBe(false);
+    expect(design.showEventInFooter).toBe(false);
+    expect(design.footerText).toBe("");
+  });
+
+  it("reads each footer key that is junk as its own default, and keeps the rest", () => {
+    expect(
+      readBibDesign({ ...STORED_BEFORE, showEmail: "no", showPartners: 0, showWebsite: "yes", showEventInFooter: null, footerText: 42 }),
+    ).toEqual(readBibDesign(STORED_BEFORE));
+    expect(readBibDesign({ showEmail: false, footerText: 42 })).toEqual({ ...DEFAULT_BIB_DESIGN, showEmail: false });
+  });
+
+  it("reads junk and nothing at all as the platform's design, footer included", () => {
+    for (const junk of [null, undefined, "nonsense", 17, [], { footer: "x" }]) {
+      expect(readBibDesign(junk), JSON.stringify(junk)).toEqual(DEFAULT_BIB_DESIGN);
+    }
+  });
+
+  it("keeps the club's own line to one line of plain text the font can draw", () => {
+    expect(readBibDesign({ footerText: "  Cronometraj:\n StartTime \t " }).footerText).toBe("Cronometraj: StartTime");
+    expect(readBibDesign({ footerText: "x".repeat(300) }).footerText).toHaveLength(120);
+    // Markup is text, drawn as the characters typed — never parsed, never a template.
+    expect(readBibDesign({ footerText: "<b>{{participant}}</b>" }).footerText).toBe("<b>{{participant}}</b>");
+    // An emoji is a box on the paper and a fetch in the preview, so it is left out.
+    expect(readBibDesign({ footerText: "Urgențe \u{1F691} 0722 000 000" }).footerText).toBe("Urgențe 0722 000 000");
+    // An "ș" typed as an "s" and a combining comma is the one letter the font has.
+    expect(readBibDesign({ footerText: "Brașov" }).footerText).toBe("Brașov");
+  });
+
+  it("refuses a footer key nobody defined when the editor posts it, like every other key", () => {
+    expect(bibDesignSchema.safeParse({ ...DEFAULT_BIB_DESIGN, footerLogo: true }).success).toBe(false);
+  });
+
+  it("reads past a stored key a later release added, and keeps the club's choices", () => {
+    // A rollback after the club saved a newer design: the unknown key is ignored, not a reason to
+    // print the platform's design instead of the club's.
+    expect(readBibDesign({ ...STORED_BEFORE, showEmail: false, footerQr: true })).toEqual({
+      ...DEFAULT_BIB_DESIGN,
+      showName: false,
+      numberScale: "large",
+      cutMarks: true,
+      showEmail: false,
+    });
   });
 });

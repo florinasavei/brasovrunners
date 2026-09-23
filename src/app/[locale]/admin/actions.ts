@@ -7,7 +7,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import {
-  createEvent,
+  createEventAndPublish,
   deleteEvent,
   duplicateEvent,
   hardDeleteEvent,
@@ -18,6 +18,8 @@ import {
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
+import { eventFormFieldName, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
@@ -63,6 +65,14 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
  * Failures come back as an error code in the query string rather than as an exception page.
  * The code is language-neutral (AGENTS.md §14.3) and the backoffice translates it, so no SQL,
  * no stack and no internal message reaches the browser.
+ *
+ * **A form that carries what somebody typed answers a refusal differently** (`DECISIONS.md`
+ * §315): the actions behind `ActionForm` — the event's create and save, its repeat rule, adding a
+ * colleague, erasing an event, the thank-you's link, "Anunță-mă" withdrawal, the test rows'
+ * count — take `useActionState`'s two arguments and *return* the refusal
+ * (`shared/forms/outcome.ts#refused`) instead of redirecting, so every box comes back filled.
+ * A success still redirects exactly where it always did. The forms here still answered with a
+ * redirect are the ones with nothing typed in them: a button and hidden fields.
  */
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -96,6 +106,9 @@ function outcomeOf(error: unknown): { error: string } {
 function editorPath(locale: Locale, eventId: string): string {
   return getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } });
 }
+
+/** The boxes a refusal of the event form names, as the form posts them (`form-names.ts`). */
+const eventFormFieldNames = (error: DomainError) => error.fields.map(eventFormFieldName);
 
 /**
  * The whole event row as the form sends it — one reader, so the create form and the edit form
@@ -433,8 +446,12 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
  *
  * `event.expectedVersion` is absent for an Author, who sees no settings panel; the service then
  * writes no event row rather than assuming a version.
+ *
+ * A refusal — a field the browser could not check, a stale version — comes back as the form's
+ * state with every box still filled, the acknowledgement tick included (§315); a save that
+ * went through redirects to the editor with its banner, as it always has.
  */
-export async function saveEventAndTranslationsAction(form: FormData): Promise<void> {
+export async function saveEventAndTranslationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -465,24 +482,48 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
       offered: offered > 0 ? String(offered) : undefined,
     };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
   backTo(path, outcome);
 }
 
-export async function createEventAction(form: FormData): Promise<void> {
+/**
+ * A new event — and, on the second button, published in the same breath (§315; the owner:
+ * "ar trebui sa pot crea si publica dintr-un foc!").
+ *
+ * A refusal returns the form's state so every box comes back as typed (§315): the settings,
+ * both languages with their rich texts, the repeat rule, the programme's rows. Nothing about
+ * the event is in the URL. A create that went through opens the new event's page, as it
+ * always did — with the banner saying whether it was also published, and if not, why not
+ * (`createEventAndPublish` commits the draft and hands back the guard's refusal).
+ *
+ * The series is made inside the create's transaction, so a refused rule — an end on or before
+ * the event's start — writes nothing and comes back like any other refusal, the repeat
+ * settings included, rather than leaving an event behind and a redirect to it.
+ */
+export async function createEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
 
-  let createdId: string | undefined;
-  let repeated = 0;
-  let outcome: { error?: string; saved?: string; created?: string } | undefined;
+  let outcome: { saved: string; created?: string; notPublished?: string };
+  let createdId: string;
   try {
     const actor = await requireStaff();
+
+    // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
+    // event page offers, made with the event. The tick decides whether this event repeats at
+    // all (§170); the cadence only says how. Without it the recurrence fields are hidden, and a
+    // hidden field's value means nothing. The rest of the rule is `repeatEvent`'s to judge.
+    const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
+    if (cadence && cadence !== "NONE" && !REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
+      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences", ["repeat.cadence"]);
+    }
+    const repeats = cadence !== "" && cadence !== "NONE";
+
     // The create form renders the editor's own language panels, so each language is read
     // with the save's reader — the rich summary, the description, the folds — and not a
     // title-slug-excerpt triple of its own that would drift from the editor by the next field.
-    const created = await createEvent(getDb(), {
+    const result = await createEventAndPublish(getDb(), {
       actor,
       fields: {
         ...eventFieldsFrom(form),
@@ -491,39 +532,27 @@ export async function createEventAction(form: FormData): Promise<void> {
           en: translationInputFrom(form, "en"),
         },
       },
+      // The second button's marker: "create and publish". The service asks the role itself.
+      publish: text(form, THEN_FIELD) === THEN_PUBLISH,
+      repeat: repeats
+        ? { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null }
+        : null,
     });
-    createdId = created.id;
-
-    // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
-    // event page offers, made right away, as drafts — a new event is a draft, and copies of a
-    // draft are drafts. The list's "publish the ticked ones" takes the whole series live.
-    // The tick decides whether this event repeats at all (§170); the cadence only says how.
-    // Without it the recurrence fields are hidden, and a hidden field's value means nothing.
-    const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
-    if (cadence && cadence !== "NONE") {
-      if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
-        throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
-      }
-      const result = await repeatEvent(getDb(), {
-        actor,
-        eventId: created.id,
-        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: false },
-      });
-      repeated = result.created;
-    }
+    createdId = result.event.id;
+    outcome = {
+      saved: result.published ? "createdPublished" : "created",
+      created: result.repeated > 0 ? String(result.repeated) : undefined,
+      // Why the second button did not publish: the code, never a word of what was typed. The
+      // editor names what is missing in its own alert (§170).
+      notPublished: result.refusal?.code,
+    };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // Nothing was written — the create, the publication and the series are one transaction —
+    // so the form comes back with everything typed.
+    return refused(error, form, { fieldNames: eventFormFieldNames });
   }
 
-  // A failed create goes back to the form it came from; a successful one opens the new event,
-  // which is where every field the short form did not ask for is filled in. A create that
-  // succeeded but whose series did not opens the event too, with the series' own error.
-  if (outcome && !createdId) backTo(getPathname({ locale, href: "/admin/events/new" }), outcome);
-  if (outcome) backTo(editorPath(locale, createdId as string), outcome);
-  backTo(editorPath(locale, createdId as string), {
-    saved: "created",
-    created: repeated > 0 ? String(repeated) : undefined,
-  });
+  backTo(editorPath(locale, createdId), outcome);
 }
 
 export async function duplicateEventAction(form: FormData): Promise<void> {
@@ -551,7 +580,12 @@ function weekdaysFrom(form: FormData): Weekday[] {
     .filter((value): value is Weekday => (WEEKDAYS as readonly number[]).includes(value));
 }
 
-export async function repeatEventAction(form: FormData): Promise<void> {
+/**
+ * A standing series from an existing event (§122), from the editor's repeat panel. A refusal — an
+ * end before the event, say — comes back as the form's state with the tick, the cadence, the end
+ * and the weekdays as they were chosen (§315); a series made lands on the editor as before.
+ */
+export async function repeatEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -561,11 +595,11 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     // The tick is the answer to "does this repeat" (§170). The button that posts this form is
     // hidden until it is ticked, and this is the same rule asserted where it decides.
     if (form.get("repeatOn") !== "on") {
-      throw new DomainError("VALIDATION_ERROR", "tick 'repeat this event' before creating a series");
+      throw new DomainError("VALIDATION_ERROR", "tick 'repeat this event' before creating a series", ["repeatOn"]);
     }
     const cadence = text(form, "cadence");
     if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
-      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
+      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences", ["cadence"]);
     }
     const result = await repeatEvent(getDb(), {
       actor,
@@ -574,7 +608,7 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   // Back to the source: it now says how it repeats, and the list has the dates.
@@ -625,8 +659,10 @@ export async function assignBibNumbersAction(form: FormData): Promise<void> {
 /**
  * The thank-you after the race (`DECISIONS.md` §82): once per event, to everyone who was
  * checked in, with an optional link. Behind a confirmation on the page; audited by the service.
+ * A refused link comes back in its box (§315): a results address is long, and pasting it again
+ * from another tab is exactly what the owner asked forms to stop making people do.
  */
-export async function sendEventThanksAction(form: FormData): Promise<void> {
+export async function sendEventThanksAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
@@ -636,7 +672,7 @@ export async function sendEventThanksAction(form: FormData): Promise<void> {
     const result = await sendEventThanks(getDb(), actor, { eventId, url: text(form, "url") }, new Date());
     outcome = { saved: "thanksSent", recipients: String(result.recipients) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
   backTo(editorPath(locale, eventId), outcome);
 }
@@ -670,17 +706,14 @@ export async function deleteEventAction(form: FormData): Promise<void> {
  * the reason, the audit rows, the single transaction — and nothing here repeats it, because a
  * check written in an action is a check a replayed POST walks past.
  *
- * On a refusal the browser goes back to the erase page with the code, so the screen that
- * explains what would be destroyed is what the organizer reads the refusal on. On success
- * there is no event to go back to, so the list is where it lands.
+ * A refusal is the form's returned state (§315): the browser never leaves the erase page, so
+ * the screen that explains what would be destroyed is what the organizer reads the refusal on,
+ * with the reason still in its box and the typed title asked again. On success there is no
+ * event to go back to, so the list is where it lands.
  */
-export async function hardDeleteEventAction(form: FormData): Promise<void> {
+export async function hardDeleteEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
-  const erasePath = getPathname({
-    locale,
-    href: { pathname: "/admin/events/[id]/erase", params: { id: eventId } },
-  });
 
   let erased = 0;
   try {
@@ -694,7 +727,9 @@ export async function hardDeleteEventAction(form: FormData): Promise<void> {
     });
     erased = result.registrationsErased;
   } catch (error) {
-    backTo(erasePath, outcomeOf(error));
+    // The reason comes back; the typed title never does (§315) — it is the guard, and it is
+    // meant to be typed again (`NEVER_KEPT`).
+    return refused(error, form);
   }
 
   redirect(
@@ -702,12 +737,12 @@ export async function hardDeleteEventAction(form: FormData): Promise<void> {
   );
 }
 
-export async function addTestRegistrationsAction(form: FormData): Promise<void> {
+/** Test rows through the real queue (§30). A refused count comes back as typed (§315). */
+export async function addTestRegistrationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaffRole("ADMIN");
     await addTestRegistrations(getDb(), actor, {
@@ -715,12 +750,11 @@ export async function addTestRegistrationsAction(form: FormData): Promise<void> 
       count: Number(text(form, "count")),
       locale,
     });
-    outcome = { saved: "testRegistrationsAdded" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
-  backTo(path, outcome);
+  backTo(path, { saved: "testRegistrationsAdded" });
 }
 
 export async function removeTestRegistrationsAction(form: FormData): Promise<void> {
@@ -743,9 +777,11 @@ export async function removeTestRegistrationsAction(form: FormData): Promise<voi
 /**
  * Withdrawal from "Anunță-mă" (§146), as the notice promises: an Administrator types the
  * address the person wrote from, and the row goes by its canonical identity. The address is
- * posted, never put in the URL; the outcome is a flag.
+ * posted, never put in the URL; the outcome is a flag. An address the canonicalizer refuses — one
+ * the browser's `type="email"` lets through, such as `a@b` — comes back in its box with the
+ * summary pointing at it (§315), rather than on a page that has forgotten what was typed.
  */
-export async function withdrawInterestAction(form: FormData): Promise<void> {
+export async function withdrawInterestAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -756,13 +792,14 @@ export async function withdrawInterestAction(form: FormData): Promise<void> {
     const removed = await withdrawInterest(getDb(), eventId, text(form, "email"));
     outcome = { saved: removed ? "interestRemoved" : "interestNotFound" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   backTo(path, outcome);
 }
 
-export async function inviteStaffAction(form: FormData): Promise<void> {
+/** Adding a colleague (§123). A refused address or name comes back in its box (§315). */
+export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
@@ -785,7 +822,7 @@ export async function inviteStaffAction(form: FormData): Promise<void> {
         : ({ kind: "unconfigured" } as const);
     outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    return refused(error, form);
   }
 
   backTo(path, outcome);

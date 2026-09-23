@@ -24,8 +24,9 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { type ComponentProps, useCallback, useRef, useState, type ReactNode } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { recalledJson, useRecall } from "@/shared/forms/recall";
 import {
   BLOCK_ALIGNMENTS,
   EMPTY_DOC,
@@ -93,7 +94,7 @@ const ALIGN_ICON = {
  * need it (§1.5: prefer nothing). "B", "I", "H2" and "Listă" are also what a volunteer reads
  * without hovering, and every control carries its own accessible name.
  */
-export default function RichTextEditor({
+function RichTextEditorIsland({
   name,
   initialBody,
   label,
@@ -1629,5 +1630,22 @@ function Control({
     >
       {icon ?? text}
     </ToggleButton>
+  );
+}
+
+/**
+ * After a refused submit the body comes back as it was typed (`DECISIONS.md` §315): the
+ * recalled JSON is the document, keyed on the answer so Tiptap re-mounts from it rather than
+ * keep what it held before the press. With nothing recalled this is the island as it was.
+ */
+export default function RichTextEditor(props: ComponentProps<typeof RichTextEditorIsland>) {
+  const recall = useRecall();
+  const recalled = recall.value(props.name);
+  return (
+    <RichTextEditorIsland
+      key={recall.generation}
+      {...props}
+      initialBody={recalled === undefined ? props.initialBody : recalledJson(recalled, props.initialBody)}
+    />
   );
 }

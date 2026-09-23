@@ -1,9 +1,11 @@
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
+import { albumInputConstraints, albumTranslationConstraints } from "../constraints";
 
 export type EditableAlbumTranslation = {
   locale: string;
@@ -17,6 +19,9 @@ export type EditableAlbumTranslation = {
  * address and short description per language. Photos are not here — they come in through the
  * uploader on the album page. One component for the create and the edit form, so the two post
  * exactly the same names (`actions.ts#readFields`).
+ *
+ * Every box carries what `fields.ts` requires of it and comes back filled after a refused
+ * submit (§315).
  */
 export default async function AlbumFieldsForm({
   takenOn,
@@ -34,21 +39,23 @@ export default async function AlbumFieldsForm({
 }) {
   const t = await getTranslations("Admin.gallery");
   const format = await getFormatter();
+  const box = (field: Parameters<typeof albumTranslationConstraints>[0]) => textFieldConstraints(albumTranslationConstraints(field));
 
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
+        {/* A date box knows its own shape; the schema's pattern would only repeat it. */}
+        <RecallField
           name="takenOn"
           type="date"
           label={t("fields.takenOn")}
           helperText={t("takenOnHelp")}
           defaultValue={takenOn}
           slotProps={{ inputLabel: { shrink: true } }}
-          required
+          required={albumInputConstraints("takenOn").required}
           sx={{ maxWidth: 240 }}
         />
-        <TextField
+        <RecallField
           select
           name="eventId"
           label={t("fields.event")}
@@ -62,7 +69,7 @@ export default async function AlbumFieldsForm({
               {format.dateTime(event.startsAt, { dateStyle: "medium" })} · {event.title}
             </MenuItem>
           ))}
-        </TextField>
+        </RecallField>
       </Stack>
 
       {/* One tab per language, as every other editor has (§259). */}
@@ -75,21 +82,22 @@ export default async function AlbumFieldsForm({
             label: t(`language.${locale}`),
             content: (
               <Stack spacing={2} sx={{ pt: 2 }}>
-              <TextField name={name("title")} label={t("fields.title")} defaultValue={translation?.title ?? ""} required />
-              <TextField
+              <RecallField name={name("title")} label={t("fields.title")} defaultValue={translation?.title ?? ""} {...box("title")} />
+              <RecallField
                 name={name("slug")}
                 label={t("fields.slug")}
                 helperText={slugLocked ? t("slugLocked") : t("slugHelp")}
                 defaultValue={translation?.slug ?? ""}
-                required
-                slotProps={{ input: { readOnly: slugLocked } }}
+                {...box("slug")}
+                slotProps={{ input: { readOnly: slugLocked }, htmlInput: albumTranslationConstraints("slug") }}
               />
-              <TextField
+              <RecallField
                 name={name("description")}
                 label={t("fields.description")}
                 defaultValue={translation?.description ?? ""}
                 multiline
                 minRows={2}
+                {...box("description")}
               />
               </Stack>
             ),

@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V1.65-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
 
-**Baseline `BR-V1.65-2026-09-23`**
+**Baseline `BR-V1.66-2026-09-23`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -57,7 +57,7 @@ literal, or a hex colour outside `src/theme/brand.ts`.
 ## The rules that bite
 
 - **Both languages or none.** Every message key exists in both files; the test `i18n/messages.test.ts` checks every `t("…")` in `src/` — use one-word namespaces (`getTranslations("Admin")` + `t("queue.title")`), never `"Admin.queue"`.
-- **Server → client.** A Server Component may not pass a function or a component reference to a client component (MUI `Chip`, `IconButton`, `Link`): use `component="a"` with a string `href` from `getPathname(...)`.
+- **Server → client.** A Server Component may not pass a function or a component reference to a client component (MUI `Chip`, `IconButton`, `Link`): use `component="a"` with a string `href` from `getPathname(...)`. An icon too: pass its name (`icon="save"`) to the backoffice-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never an element — and a public page never imports `action-icons.ts` (a test enforces it, §318).
 - **No hostname of the club's in `src/`** — everything derives from `APP_BASE_URL`; a third party's fixed host (Cloudflare, Vercel, Facebook) goes in `PROVIDER_HOSTS` in `scripts/docs-check.mjs` with one line saying why.
 - **Migrations expand only.** Add a column or an enum value; never drop or rename in the same release (`yarn migrations:check`).
 - **Tap targets are 44 px** — every link and button on a public page; the e2e suite measures them.

@@ -368,6 +368,69 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
 }
 
 /**
+ * How many registrations of this environment agreed to "the terms" while a version was in force —
+ * the evidence a terms version has instead of a count (`DECISIONS.md` §316).
+ *
+ * A registration records `privacy_notice_version` and never a terms version, so nothing points at
+ * a TERMS row. But agreeing leaves an instant behind, and whatever was in force at that instant is
+ * what was agreed to; so "did anybody accept version 2" is "did any registration agree inside
+ * version 2's window", and that needs no new column. There are two such instants, and a
+ * registration counts once if either falls inside:
+ *
+ * - **The form, submitted.** The terms box is ticked when the form is posted.
+ * - **The declaration, signed.** Its text says "Sunt de acord cu termenii, condițiile și
+ *   regulamentul evenimentului" — "I agree with the event's terms, conditions and rules" — and
+ *   each signing is a `declaration_acceptances` row with its own `accepted_at`, usually days after
+ *   the form (the participation window, §104). A registration submitted under version 1 whose
+ *   declaration was signed under version 2 agreed to "the terms" under version 2 as well. Whether
+ *   that sentence means the platform's terms or only the event's own rules is not something the
+ *   code can settle, so it is read the wide way: counting it can refuse a version nobody meant,
+ *   and not counting it could pass one somebody signed under. Paper signatures recorded at the
+ *   desk count the same way; they carry the same sentence.
+ *
+ * **Every submission this table can still see, and a little more.** A registration's first
+ * submission is `created_at` (and `submitted_at`, set with it); each re-submission of a cancelled
+ * or expired row rewrites `privacy_acknowledged_at` to its own instant. A restart in between two
+ * others is overwritten and leaves no trace — so a row whose earliest and latest submissions
+ * *straddle* the window counts too, because one of its lost restarts may have fallen inside it.
+ * That can refuse a version nobody in fact accepted; it cannot pass one somebody did. Signatures
+ * need no such allowance: every one keeps its row.
+ *
+ * **Every kind and every source.** A `TEST` registration on QA ticked the same box as a real one,
+ * and a staff-entered registration was entered under the terms in force; neither is a count the
+ * club is given as a figure about its participants (§30), so counting them costs nothing and
+ * leaving them out would be the one way to be wrong. An erased registration is gone, its
+ * declaration acceptance with it (§44), and is not counted, exactly as it is not counted for the
+ * privacy notice.
+ */
+export async function countRegistrationsAgreeingWithin<T extends Record<string, unknown>>(
+  db: Database<T>,
+  window: { from: Date; until: Date | null },
+): Promise<number> {
+  const from = sql`${window.from.toISOString()}::timestamptz`;
+  const until = window.until ? sql`${window.until.toISOString()}::timestamptz` : null;
+
+  const earliest = sql`least(${registrations.createdAt}, ${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`;
+  const latest = sql`greatest(${registrations.createdAt}, ${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`;
+  const submittedWithin = sql`(${latest} >= ${from}${until ? sql` and ${earliest} < ${until}` : sql``})`;
+
+  // Correlated on the registration, so a row with several signatures — a re-signed declaration —
+  // is still one registration. `declaration_acceptances_registration_accepted_at_idx` answers it.
+  const signedWithin = sql`exists (
+    select 1 from ${declarationAcceptances}
+    where ${declarationAcceptances.registrationId} = ${registrations.id}
+      and ${declarationAcceptances.acceptedAt} >= ${from}${until ? sql` and ${declarationAcceptances.acceptedAt} < ${until}` : sql``}
+  )`;
+
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(sql`${submittedWithin} or ${signedWithin}`);
+
+  return row?.count ?? 0;
+}
+
+/**
  * One version's text in every locale it has, for reading in the backoffice.
  *
  * Approved or not: an unapproved draft is exactly what somebody needs to look at before

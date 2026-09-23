@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { GLYPHS, type GlyphName } from "@/modules/events/ui/glyphs";
+import { useRecall } from "@/shared/forms/recall";
 
 export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
 
@@ -13,6 +14,9 @@ export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
  * pages show (§112). A client component for the same reason as `GlyphChip`: the icon is made
  * here from a name, never handed across the boundary as an element MUI would inspect. The
  * hidden input keeps `name`, so `OnlyForType`'s observer and the Server Action read it as before.
+ *
+ * After a refused submit it shows the choice that was posted (§315), keyed on the answer so
+ * the select — which holds its choice in state of its own — re-mounts from it.
  */
 export default function GlyphSelect({
   name,
@@ -32,6 +36,9 @@ export default function GlyphSelect({
   required?: boolean;
   sx?: Record<string, unknown>;
 }) {
+  const recall = useRecall();
+  const named = recall.named(name);
+
   const withGlyph = (option: GlyphOption) => {
     const Icon = option.glyph ? GLYPHS[option.glyph] : null;
     return (
@@ -44,11 +51,14 @@ export default function GlyphSelect({
 
   return (
     <TextField
+      key={recall.generation}
       select
+      id={recall.idOf(name)}
       name={name}
       label={label}
-      helperText={helperText}
-      defaultValue={defaultValue}
+      helperText={named && recall.fieldError ? recall.fieldError : helperText}
+      error={named}
+      defaultValue={recall.value(name) ?? defaultValue}
       required={required}
       sx={sx}
       slotProps={{

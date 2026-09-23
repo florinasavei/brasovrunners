@@ -13,7 +13,7 @@ import EventIcon from "@mui/icons-material/Event";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
-import HowToRegIcon from "@mui/icons-material/HowToReg";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -43,7 +43,9 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
   guide: MenuBookIcon,
   pages: ArticleIcon,
   gallery: PhotoLibraryIcon,
-  registrations: HowToRegIcon,
+  // The list, not the person with the tick: that is checking a runner in, a verb the desk and
+  // the registration's "⋮" wear, and a tab must not look like one of its own verbs (§318).
+  registrations: ListAltIcon,
   tasks: ChecklistIcon,
   legal: GavelIcon,
   emails: ForwardToInboxIcon,

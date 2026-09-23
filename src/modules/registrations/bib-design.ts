@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { COLOR } from "@/theme/brand";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
+import { bibFooterText } from "./bib-footer";
 
 /**
  * What a race number looks like, decided once for both renderers (`DECISIONS.md` §173, §180).
@@ -9,9 +10,11 @@ import { bibDesignValuesFromQuery } from "./bib-design-query";
  * the 900×600 picture with `next/og` — and they must agree, because the picture is the club's
  * preview of the paper. Anything that is a *decision* rather than a drawing instruction lives
  * here so the two cannot drift: which colour the header band is when the event names none, and
- * what the footer line says.
+ * what the club chose to print. What the footer says and how it breaks into lines is
+ * `bib-footer.ts`, the same kind of decision with a font table of its own (§317).
  *
- * Pure, and importing nothing but the palette: no `node:` builtin, no pdfkit, no React. That
+ * Pure, and importing nothing but the palette and the two pure modules beside it
+ * (`bib-design-query.ts`, `bib-footer.ts`): no `node:` builtin, no pdfkit, no React. That
  * is deliberate — `src/modules/media/limits.ts` exists for the same reason after a native
  * module reached the client bundle through a shared constant.
  */
@@ -31,25 +34,6 @@ export const BIB_BAND_FALLBACK = COLOR.blueInk;
 
 export function bibBandColour(colour: string | null | undefined): string {
   return typeof colour === "string" && /^#[0-9a-f]{6}$/i.test(colour) ? colour : BIB_BAND_FALLBACK;
-}
-
-/**
- * The thin line along the bottom: who is putting the race on, and where to write.
- *
- * The partners' names as the club listed them (§168), then the mailbox every email already
- * says to reply to. Names only — a bib is worn in public, and a URL is unreadable at that
- * size anyway.
- *
- * Deliberately **no telephone number**: not the participant's, and above all not their
- * emergency contact. That number is called in an emergency and the privacy notice says so
- * (`AGENTS.md` §19.2); printing it on a garment worn through a town centre publishes it to
- * everyone who passes. There is no organizer hotline field on an event either, so nothing is
- * being left out here that the club has ever entered.
- */
-export function bibFooterLine(partners: readonly string[], replyTo?: string | null): string {
-  return [...partners.map((name) => name.trim()).filter(Boolean), replyTo?.trim()]
-    .filter((part): part is string => Boolean(part))
-    .join("  ·  ");
 }
 
 /**
@@ -117,6 +101,24 @@ export const bibDesignSchema = z
     sponsorImageSrc: storedPicture,
     /** Corner marks on the sheet, for a club that takes it to a printer. */
     cutMarks: z.boolean().catch(false),
+    /*
+      The footer, the club's to compose (§317; `bib-footer.ts` lays it out). Every default is
+      the footer every bib printed before this — the partners, then the club's mailbox — so a
+      design stored before these keys existed prints exactly as it did.
+    */
+    /** The club's mailbox (`EMAIL_REPLY_TO`) at the end of the small print. */
+    showEmail: z.boolean().catch(true),
+    /** The partners' names (§168). */
+    showPartners: z.boolean().catch(true),
+    /** The event's title and date in the footer — only the ones the header does not show. */
+    showEventInFooter: z.boolean().catch(false),
+    /** The bare host of `APP_BASE_URL`, never a hostname literal. */
+    showWebsite: z.boolean().catch(false),
+    /**
+     * A line of the club's own: plain text, one line, what the bib's font can draw, at most
+     * `BIB_FOOTER_TEXT_MAX` characters — normalised rather than refused, like every field here.
+     */
+    footerText: z.string().transform(bibFooterText).catch(""),
   })
   .strict();
 
@@ -132,6 +134,11 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   headerImageSrc: null,
   sponsorImageSrc: null,
   cutMarks: false,
+  showEmail: true,
+  showPartners: true,
+  showEventInFooter: false,
+  showWebsite: false,
+  footerText: "",
 };
 
 /**
@@ -141,9 +148,16 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
  * version, by a migration, or by hand falls back setting by setting rather than failing: every
  * field `catch`es its own default, and an object that is not one at all reads as the platform's
  * whole design.
+ *
+ * Only the keys this release knows are read (§317). The schema is strict because the *form*
+ * must not post a setting nobody defined, but a stored design is read, not posted: a key a later
+ * release added is ignored here rather than taking every other choice down with it, so rolling
+ * back after the club saved a newer design still prints the club's design.
  */
 export function readBibDesign(value: unknown): BibDesign {
-  const parsed = bibDesignSchema.safeParse({ ...DEFAULT_BIB_DESIGN, ...(typeof value === "object" && value !== null ? value : {}) });
+  const stored: Record<string, unknown> = typeof value === "object" && value !== null && !Array.isArray(value) ? { ...value } : {};
+  const known = Object.fromEntries(Object.keys(DEFAULT_BIB_DESIGN).filter((key) => key in stored).map((key) => [key, stored[key]]));
+  const parsed = bibDesignSchema.safeParse({ ...DEFAULT_BIB_DESIGN, ...known });
   return parsed.success ? parsed.data : DEFAULT_BIB_DESIGN;
 }
 

@@ -9,6 +9,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
+
+// A client island already, so the element is made here; the glyph is still the registry's (§318).
+const ScanGlyph = ACTION_ICONS.scan;
 
 type Detector = { detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>> };
 type DetectorCtor = new (options: { formats: string[] }) => Detector;
@@ -97,7 +101,7 @@ export default function QrScanButton({
 
   return (
     <>
-      <Button variant="contained" onClick={() => setOpen(true)} sx={{ minHeight: 44 }}>
+      <Button variant="contained" onClick={() => setOpen(true)} startIcon={<ScanGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
         {label}
       </Button>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">

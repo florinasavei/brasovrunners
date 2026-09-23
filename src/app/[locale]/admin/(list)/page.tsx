@@ -44,6 +44,7 @@ import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import {
   bulkArchiveEventsAction,
   bulkDeleteEventsAction,
@@ -409,8 +410,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           // `component="a"` with a resolved path, not `component={Link}`: MUI's Button is a
           // Client Component, and passing a component reference from a Server Component to one
           // is refused by React outright.
-          <Button
-            component="a"
+          <GlyphButton
+            icon="add"
             href={getPathname({ locale, href: "/admin/events/new" })}
             variant="contained"
             size="small"
@@ -420,7 +421,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             sx={{ textTransform: "none", minHeight: 36 }}
           >
             {t("events.new")}
-          </Button>
+          </GlyphButton>
         )}
       </Stack>
 
@@ -608,7 +609,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                       ? [
                           {
                             kind: "link" as const,
-                            icon: "delete" as const,
+                            // The bin with the cross, as on the screen it opens and on the
+                            // registration's own erase (§318): not the plain bin of "Șterge".
+                            icon: "erase" as const,
                             color: "error" as const,
                             label: t("events.hardDelete"),
                             href: getPathname({

@@ -1,9 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField, { NeverKeptField } from "@/shared/forms/recall";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -12,12 +14,12 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
-import { termsHasBeenInForce } from "@/modules/legal-documents/domain/deletability";
 import {
-  findCurrentApprovedVersionId,
-  listVersionsForBackoffice,
-} from "@/modules/legal-documents/repository";
-import { isReliedOn } from "@/modules/legal-documents/service";
+  deletionObstacle,
+  type InForceWindow,
+} from "@/modules/legal-documents/domain/deletability";
+import { listVersionsForBackoffice } from "@/modules/legal-documents/repository";
+import { readDeletionFacts } from "@/modules/legal-documents/service";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { deleteApprovedLegalVersionAction } from "../../actions";
@@ -64,7 +66,8 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   if (!canManageStaff(staffUser.role)) notFound();
 
   const db = getDb();
-  const version = (await listVersionsForBackoffice(db)).find((row) => row.id === id);
+  const versions = await listVersionsForBackoffice(db);
+  const version = versions.find((row) => row.id === id);
   if (!version) notFound();
 
   const { error } = await searchParams;
@@ -72,43 +75,61 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   const format = await getFormatter();
 
   const now = new Date();
-  const reliance = {
-    signatures: version.acceptanceCount,
-    events: version.eventCount,
-    acknowledgements: version.privacyAcknowledgementCount,
-  };
-  const relied = isReliedOn({
-    acceptances: reliance.signatures,
-    events: reliance.events,
-    privacyAcknowledgements: reliance.acknowledgements,
-  });
-  const inForce = (await findCurrentApprovedVersionId(db, version.key, now)) === version.id;
 
   /*
-    The obstacles in the service's own order — a draft first, then the three counts, then the
-    version the site is serving — so the sentence this screen gives and the refusal the server
-    would give name the same thing.
+    The service's own question, asked through the service's own functions — `readDeletionFacts`
+    and `deletionObstacle` are exactly what `assertDeletable` asks before it destroys anything —
+    so the sentence this screen gives and the refusal the server would give cannot name different
+    things.
 
-    **They did not (§290.)** §203 added a fourth obstacle to `assertDeletable` and not here: a
-    TERMS version that has ever been in force is refused, because a registration records no terms
-    version and so the three counts above are vacuous for that one key. This screen therefore told
-    the reader "nothing depends on it, it can be deleted", took a typed phrase and a reason, and
-    handed back `CONFLICT` — rendered in the backoffice as "Altcineva a salvat între timp", a
-    sentence about a concurrent save that never happened. The owner: "inca nu pot sterge unele
-    documente".
-
-    It is last because it is the narrowest: a reader whose version is also in force should be told
-    that first, since withdrawing it is the step that actually moves.
+    **They did, twice (§290, §316).** First the screen carried a copy of the obstacle list that was
+    one item short and promised "nimic nu depinde de ea" about a terms version the service refused.
+    Then both refused every terms version that had ever been in force, while the list beside them
+    offered the delete link: the owner pressed it three times. A copy is a thing that drifts; there
+    is no copy here any more.
   */
-  const blocked = !version.isApproved
-    ? t("legal.erase.blockedDraft")
-    : relied
-      ? t("legal.erase.blockedReferenced", reliance)
-      : inForce
-        ? t("legal.erase.blockedCurrent")
-        : termsHasBeenInForce(version, now)
-          ? t("legal.erase.blockedTermsInForce")
-          : null;
+  const [facts] = await readDeletionFacts(db, [version], versions, now);
+  const obstacle = deletionObstacle(facts);
+  // "4–20 sept. 2026": the stretch the version was the text in force, up to now if it still is.
+  const span = (window: InForceWindow) =>
+    format.dateTimeRange(window.from, window.until ?? now, { dateStyle: "medium" });
+
+  const blocked = (() => {
+    switch (obstacle?.kind) {
+      case undefined:
+        return null;
+      case "draft":
+        return t("legal.erase.blockedDraft");
+      case "referenced":
+        return t("legal.erase.blockedReferenced", {
+          signatures: obstacle.signatures,
+          events: obstacle.events,
+          acknowledgements: obstacle.acknowledgements,
+        });
+      case "inForce":
+        return t("legal.erase.blockedCurrent");
+      case "termsAccepted":
+        // What stands on it, then what can still be done — which, for a version already
+        // withdrawn, is nothing more, and the sentence says so rather than offering it again.
+        return `${t("legal.erase.blockedTermsAccepted", {
+          count: obstacle.registrations,
+          window: span(obstacle.window),
+        })} ${version.withdrawnAt ? t("legal.erase.termsAlreadyWithdrawn") : t("legal.erase.termsWithdrawInstead")}`;
+    }
+  })();
+
+  /*
+    Why it may go, in the terms that apply to this key. The three counts say nothing about a terms
+    version, so "no signature, no event, no registration" would be a vacuous reassurance there;
+    what is true is when it was in force and that nobody submitted a registration or signed a
+    declaration in that time — or that it was never the text in force at all, which says no more
+    than it knows: superseded before its date and withdrawn before it are both that.
+  */
+  const whyItMayGo = facts.terms
+    ? t("legal.erase.termsNobodyAccepted", { window: span(facts.terms.window) })
+    : version.key === "TERMS"
+      ? t("legal.erase.termsNeverInForce")
+      : t("legal.erase.nothingDepends");
 
   const document = t(`legal.keys.${version.key}`);
   const phrase = confirmationPhrase(version.key, version.version);
@@ -155,7 +176,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
           </Alert>
 
           <Typography variant="body2" color="text.secondary">
-            {t("legal.erase.nothingDepends")}
+            {whyItMayGo}
           </Typography>
 
           {/*
@@ -176,12 +197,23 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
             No dialog and no tick: the confirmation *is* the typed phrase, checked on the server.
             A tick the server does not read would be decoration (BR-REQ-060-01), and the phrase
             carries the version number because every version of this document has the same title.
+
+            A refusal keeps the reason and asks for the phrase again (§315): the phrase is the
+            guard, and a `NeverKeptField` here is what says so — it is never recalled, and it
+            still carries the id the summary's link points at.
           */}
-          <Box component="form" action={deleteApprovedLegalVersionAction}>
+          <ActionForm
+            action={deleteApprovedLegalVersionAction}
+            messages={await refusalMessages(
+              { typedConfirmation: t("legal.erase.phraseLabel"), reason: t("legal.erase.reasonLabel") },
+              { confirmation: true },
+            )}
+            data-testid="legal-erase-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="versionId" value={version.id} />
             <Stack spacing={2}>
-              <TextField
+              <NeverKeptField
                 name="typedConfirmation"
                 label={t("legal.erase.phraseLabel")}
                 helperText={t("legal.erase.phraseHelp", { phrase })}
@@ -189,7 +221,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 autoComplete="off"
                 slotProps={{ htmlInput: { maxLength: 100 } }}
               />
-              <TextField
+              <RecallField
                 name="reason"
                 label={t("legal.erase.reasonLabel")}
                 helperText={t("legal.erase.reasonHelp")}
@@ -197,12 +229,17 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 slotProps={{ htmlInput: { minLength: 3, maxLength: 500 } }}
               />
               <Box>
-                <Button type="submit" color="error" variant="contained" sx={{ minHeight: 44 }}>
-                  {t("legal.erase.action")}
-                </Button>
+                <GlyphSubmitButton
+                  icon="erase"
+                  label={t("legal.erase.action")}
+                  pendingLabel={t("legal.erase.action")}
+                  incompleteHintNamed={t("forms.incompleteFirst")}
+                  color="error"
+                  size="medium"
+                />
               </Box>
             </Stack>
-          </Box>
+          </ActionForm>
         </>
       )}
     </Stack>

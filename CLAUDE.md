@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.65-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.66-2026-09-23 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.65-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.66-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -122,7 +122,7 @@ sections and in `CHANGELOG.md`.
   (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66).
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
-  dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph.
+  dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph; every backoffice button's glyph by name from `shared/ui/action-icons.ts` through the admin-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never on a public page, and the club's runner on the public send buttons (§318).
 
 **Registration**
 
@@ -156,7 +156,7 @@ sections and in `CHANGELOG.md`.
   The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99).
 - Race numbers in registration order from the event's own first number (§173, reversing §94),
   never reused; a picture of every bib, a bib
-  sheet; a preferential number typed by hand among the free ones, emailed to the runner
+  sheet, and the small print the club composes per event — one or two lines, the same on the paper and the preview (§317); a preferential number typed by hand among the free ones, emailed to the runner
   (§87, §94, §105). Check-in codes and hosted QR; "Înscrierile mele" on one link (§77).
 - Anti-bot: honeypot + timing check; Cloudflare Turnstile behind two keys (§97).
 
@@ -187,7 +187,7 @@ sections and in `CHANGELOG.md`.
 - The whole of an event in one form and one save, both languages together, versions on the
   row and the translations (§28, §36, §64, §70, §71); recurring events published as a series;
   the ⋮ menu; the queue panel with the waiting list in order (§92); the participation window's
-  two numbers (§104). Legal documents written, approved and never rewritten (§46, §53, §57);
+  two numbers (§104). Legal documents written, approved and never rewritten (§46, §53, §57), and a terms version deletable once nobody agreed to it while it was in force (§316);
   "start from the platform's text" prefills the club's three texts (§95). Standing pages in
   the editor, pictures in the text (§72–§73).
 - Registrations: list, filters (bounced too), timeline, resend, CSV with names, identity

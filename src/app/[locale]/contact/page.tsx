@@ -243,7 +243,15 @@ export default async function ContactPage({ params, searchParams }: Props) {
                 .
               </Typography>
 
-              <SubmitButton label={t("submit")} pendingLabel={t("submitting")} incompleteHint={t("incompleteHint")} size="large" fullWidth />
+              {/* The club's runner at the start of the label, and running while it sends (§318). */}
+              <SubmitButton
+                label={t("submit")}
+                pendingLabel={t("submitting")}
+                runner
+                incompleteHint={t("incompleteHint")}
+                size="large"
+                fullWidth
+              />
             </Stack>
           </form>
         </>

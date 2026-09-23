@@ -249,6 +249,9 @@ describe("registrations.kind — a test registration is a real one to the queue"
           String(count),
         ).toBe("VALIDATION_ERROR");
       }
+      // Named, so the editor's form points at the count box and keeps what was typed (§315).
+      const refused = await addTestRegistrations(db, admin, { eventId: event.id, count: 0 }).catch((error: unknown) => error);
+      expect(isDomainError(refused) && refused.fields).toEqual(["count"]);
     });
   });
 

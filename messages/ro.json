@@ -573,7 +573,7 @@
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
-      "LEGAL_TERMS_IN_FORCE": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge: cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
+      "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -821,6 +821,18 @@
         "sponsorImageSrc": "Bandă cu sponsori",
         "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
         "noPicture": "Fără imagine",
+        "footer": {
+          "title": "Subsol",
+          "intro": "Rândul mic de jos, în ordinea de mai jos. Ce nu încape pe un rând trece pe al doilea; ce nu încape nici acolo se taie cu „…” — previzualizarea arată exact unde.",
+          "showEventInFooter": "Numele și data evenimentului, dacă nu apar sus",
+          "showPartners": "Partenerii",
+          "footerText": "Rândul clubului",
+          "footerTextPlaceholder": "ex. Cronometraj: … · Urgențe organizator: 07xx xxx xxx",
+          "footerTextHelp": "Apare pe fiecare număr, purtat în public — nu scrie date personale ale participanților.",
+          "showWebsite": "Site-ul clubului",
+          "showEmail": "Adresa de email a clubului",
+          "notConfigured": "nesetată pe acest mediu"
+        },
         "previewCaption": "Previzualizare — așa se tipărește",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
         "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
@@ -836,7 +848,15 @@
         "teal": "Turcoaz",
         "black": "Negru"
       },
-      "confirmationWindowTitle": "Confirmarea participării"
+      "confirmationWindowTitle": "Confirmarea participării",
+      "createAndPublish": "Creează și publică",
+      "publishing": "Se publică…",
+      "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
+      "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
+      "createdPublishedWithSeries": "Evenimentul și {created} ediții au fost create și publicate.",
+      "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
+      "createdNotPublishedRole": "Evenimentul a fost creat ca ciornă. Publicarea este a Administratorului — trimite-l spre verificare.",
+      "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -909,7 +929,8 @@
       "noAccountHelp": "„Fără cont de autentificare”: persoana este pe listă, dar Zitadel nu are niciun cont cu adresa ei, deci nu se poate autentifica — de regulă a fost adăugată cât cheia de invitații nu putea crea conturi. Rezolvarea: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă — de data aceasta contul se creează și Zitadel îi trimite linkul pentru parolă.",
       "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
-      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
+      "inviting": "Se adaugă…"
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -999,6 +1020,8 @@
       "legalDraftSaved": "Ciorna a fost salvată.",
       "legalVersionApproved": "Versiunea a fost aprobată și este acum publică.",
       "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
+      "termsRegistrations": "Înscrieri cât a fost în vigoare: {count}",
+      "termsRegistrationsSoFar": "Înscrieri de când e în vigoare: {count}",
       "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
       "delete": "Șterge ciorna",
       "deletePending": "Se șterge…",
@@ -1006,6 +1029,7 @@
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
       "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), iar niciuna nu reține ce versiune a termenilor a fost acceptată.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
@@ -1065,6 +1089,8 @@
         "numberRetired": "Numărul {version} rămâne retras pentru totdeauna. Următoarea versiune a acestui document va primi numărul următor, niciodată {version}, ca să nu ajungă pe alt text un număr pe care oamenii l-au bifat deja la înscriere.",
         "auditOnly": "Rămâne o singură urmă: o linie în jurnal cu documentul, numărul, data intrării în vigoare, cine a aprobat-o, amprenta SHA-256 a fiecărei limbi și motivul scris de tine. Textul nu se păstrează nicăieri.",
         "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
+        "termsNobodyAccepted": "Se poate șterge pentru că nimeni nu a acceptat-o: a fost în vigoare {window} și în acest timp nu s-a trimis nicio înscriere și nu s-a semnat nicio declarație — iar acum nu mai este textul în vigoare.",
+        "termsNeverInForce": "Se poate șterge pentru că nimeni nu a acceptat-o: nu a fost niciodată textul în vigoare.",
         "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
         "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
         "phraseLabel": "Confirmarea",
@@ -1075,7 +1101,9 @@
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
-        "blockedTermsInForce": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge. Cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul. Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui."
+        "blockedTermsAccepted": "Nu se poate șterge: cât a fost în vigoare această versiune a termenilor ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}). Oricare dintre ele poate s-o fi acceptat — declarația spune „Sunt de acord cu termenii, condițiile și regulamentul evenimentului” — și niciuna nu reține care versiune a termenilor a fost, deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul.",
+        "termsWithdrawInstead": "Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui.",
+        "termsAlreadyWithdrawn": "Ai retras-o deja, așa că nu se mai oferă nimănui; rămâne în evidență, cu numărul ei, pentru cine a acceptat-o."
       },
       "editor": {
         "heading": "Titlu de secțiune",
@@ -2050,6 +2078,14 @@
       "summary": "Cine s-a înscris",
       "outbox": "Emailuri de trimis",
       "filters": "Caută și filtrează"
+    },
+    "forms": {
+      "fieldsIntro": "Câmpurile de verificat:",
+      "fieldError": "Verifică acest câmp.",
+      "kept": "Ce ai scris a rămas în câmpuri; corectează și trimite din nou.",
+      "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
+      "keptExceptConfirmation": "Ce ai scris a rămas în câmpuri, în afară de confirmare, care se cere din nou.",
+      "incompleteFirst": "Completează mai întâi: {field}"
     }
   },
   "NotFound": {

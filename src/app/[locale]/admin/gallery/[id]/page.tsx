@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -13,12 +12,22 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findAlbumForEditor, listEventsForAlbumSelect } from "@/modules/content/gallery/repository";
 import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
+import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
 import PhotoUploader from "@/modules/content/gallery/ui/PhotoUploader";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
+import ActionForm from "@/shared/forms/ActionForm";
+import { RecallHidden } from "@/shared/forms/recall";
+import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { allowedTransitions, canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
-import { EDITORIAL_STATUS_LABEL, EDITORIAL_TRANSITION_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import {
+  EDITORIAL_STATUS_LABEL,
+  EDITORIAL_TRANSITION_ICON,
+  EDITORIAL_TRANSITION_LABEL,
+} from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import GlyphButton from "@/shared/ui/GlyphButton";
 import { deleteAlbumAction, deletePhotoAction, saveAlbumAction, setCoverAction, transitionAlbumAction } from "../actions";
 
 type Props = {
@@ -84,9 +93,9 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               <input type="hidden" name="albumId" value={album.id} />
               <input type="hidden" name="expectedVersion" value={album.version} />
               <input type="hidden" name="to" value={to} />
-              <Button type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
                 {EDITORIAL_TRANSITION_LABEL[to]}
-              </Button>
+              </GlyphButton>
             </form>
           ))}
         </Stack>
@@ -151,9 +160,9 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                         <input type="hidden" name="uiLocale" value={locale} />
                         <input type="hidden" name="albumId" value={album.id} />
                         <input type="hidden" name="itemId" value={photo.id} />
-                        <Button type="submit" size="small" variant="text" sx={{ minHeight: 44 }}>
+                        <GlyphButton icon="cover" type="submit" size="small" variant="text" sx={{ minHeight: 44 }}>
                           {t("gallery.setCover")}
-                        </Button>
+                        </GlyphButton>
                       </form>
                       <form action={deletePhotoAction}>
                         <input type="hidden" name="uiLocale" value={locale} />
@@ -161,6 +170,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                         <input type="hidden" name="itemId" value={photo.id} />
                         <ConfirmSubmitButton
                           label={t("gallery.removePhoto")}
+                          icon="delete"
                           title={t("gallery.removePhotoTitle")}
                           body={t("gallery.removePhotoBody")}
                           confirmLabel={t("gallery.removePhoto")}
@@ -180,11 +190,13 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
       <Divider />
 
       {mayEdit ? (
-        <form action={saveAlbumAction}>
+        // A refusal comes back with every box still filled (§315).
+        <ActionForm action={saveAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="albumId" value={album.id} />
-            <input type="hidden" name="expectedVersion" value={album.version} />
+            {/* The posted version after a refusal, with the edits made against it (§315). */}
+            <RecallHidden name="expectedVersion" value={album.version} />
             <AlbumFieldsForm
               takenOn={album.takenOn.toISOString().slice(0, 10)}
               eventId={album.eventId}
@@ -193,12 +205,16 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
               slugLocked={album.publishedAt !== null}
             />
             <Box>
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-                {t("editor.save")}
-              </Button>
+              <GlyphSubmitButton
+                label={t("editor.save")}
+                pendingLabel={t("editor.saving")}
+                icon="save"
+                incompleteHintNamed={t("forms.incompleteFirst")}
+                size="medium"
+              />
             </Box>
           </Stack>
-        </form>
+        </ActionForm>
       ) : (
         <Alert severity="info">{t("gallery.readOnly")}</Alert>
       )}
@@ -212,6 +228,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
             <input type="hidden" name="albumId" value={album.id} />
             <ConfirmSubmitButton
               label={t("gallery.delete")}
+              icon="delete"
               title={t("gallery.deleteTitle")}
               body={t("gallery.deleteBody")}
               confirmLabel={t("gallery.delete")}

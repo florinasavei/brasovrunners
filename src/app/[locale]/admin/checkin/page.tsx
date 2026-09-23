@@ -1,6 +1,5 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -25,6 +24,7 @@ import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -141,9 +141,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
                 autoComplete="off"
                 sx={{ flex: 1 }}
               />
-              <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+              <GlyphButton icon="search" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
                 {t("desk.find")}
-              </Button>
+              </GlyphButton>
               <QrScanButton
                 hrefTemplate={codeHrefTemplate}
                 label={t("desk.scan")}
@@ -174,9 +174,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
             <Chip color="warning" variant="outlined" label={t("desk.counts.pending", { n: counts.pending })} />
           )}
           {walkInHref && (
-            <Button component="a" href={walkInHref} variant="text" size="small" sx={{ minHeight: 44 }}>
+            <GlyphButton icon="addPerson" href={walkInHref} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("desk.walkIn")}
-            </Button>
+            </GlyphButton>
           )}
         </Stack>
       )}

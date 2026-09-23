@@ -129,6 +129,56 @@ describe("§249 the bib's design, saved and read back", () => {
     expect(after?.design).toEqual(design);
   });
 
+  /**
+   * §317 — the footer's switches and the club's own line ride in the same column, saved by the
+   * same form. What only the database can answer: that they survive the save and are what the
+   * renderers read, that the line is stored the way it prints, and that a design stored before
+   * these keys existed still reads as the footer it always printed.
+   */
+  it("stores the footer the club composed, and both renderers read it", async () => {
+    const event = await existingEvent();
+    const design = {
+      ...DEFAULT_BIB_DESIGN,
+      showEmail: false,
+      showPartners: false,
+      showEventInFooter: true,
+      showWebsite: true,
+      footerText: "Cronometraj: StartTime · Urgențe organizator 0722 000 000",
+    };
+    await saveEventFields(db, {
+      actor: admin,
+      eventId: event.id,
+      expectedVersion: event.version,
+      fields: { ...EVENT_FIELDS, bibDesign: design },
+    });
+    expect((await findEventForBibs(db, event.id, "ro"))?.design).toEqual(design);
+  });
+
+  it("stores the club's line as one trimmed line, never longer than the limit", async () => {
+    const event = await existingEvent();
+    await saveEventFields(db, {
+      actor: admin,
+      eventId: event.id,
+      expectedVersion: event.version,
+      fields: { ...EVENT_FIELDS, bibDesign: { ...DEFAULT_BIB_DESIGN, footerText: `  Urgențe:\n${"0".repeat(200)}  ` } },
+    });
+    const stored = (await findEventForBibs(db, event.id, "ro"))?.design.footerText ?? "";
+    expect(stored.startsWith("Urgențe: 000")).toBe(true);
+    expect(stored).toHaveLength(120);
+  });
+
+  it("reads a design stored before the footer existed as the footer it always printed", async () => {
+    const event = await existingEvent();
+    // What a save from the previous release wrote: every key but the footer's.
+    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText"];
+    const before = Object.fromEntries(
+      Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
+    );
+    expect(Object.keys(before)).toHaveLength(9);
+    await db.update(events).set({ bibDesign: before }).where(eq(events.id, event.id));
+    expect((await findEventForBibs(db, event.id, "ro"))?.design).toEqual({ ...DEFAULT_BIB_DESIGN, numberScale: "large" });
+  });
+
   it("refuses a picture this site did not store", async () => {
     const event = await existingEvent();
     let code = "no error";
