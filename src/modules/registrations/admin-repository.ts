@@ -63,7 +63,10 @@ export type RegistrationListRow = {
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
+  /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
+  /** The minor's own document, beside the parent's (§NNN); `identityDocumentsOf` says whose is whose. */
+  minorIdDocument: string | null;
   /**
    * The rest of what the journey column reads (`domain/journey.ts`, §145): the participant's
    * own click, a staff attestation, the hold or the offer, the latest declaration acceptance,
@@ -169,6 +172,19 @@ function escapeLike(term: string): string {
  */
 const latestIdDocument = sql<string | null>`(
   SELECT ${declarationAcceptances.idDocument}
+  FROM ${declarationAcceptances}
+  WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
+  ORDER BY ${declarationAcceptances.acceptedAt} DESC
+  LIMIT 1
+)`;
+
+/**
+ * The minor's own document on the same latest declaration (§NNN): a minor's declaration carries
+ * two, the parent's in `id_document` and the child's here. The same probe on the same index, so a
+ * desk page of two hundred rows is still two hundred index lookups per column, never a query each.
+ */
+const latestMinorIdDocument = sql<string | null>`(
+  SELECT ${declarationAcceptances.minorIdDocument}
   FROM ${declarationAcceptances}
   WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
   ORDER BY ${declarationAcceptances.acceptedAt} DESC
@@ -301,6 +317,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
       idDocument: latestIdDocument,
+      minorIdDocument: latestMinorIdDocument,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
       emailVerifiedAt: participants.emailVerifiedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
@@ -614,7 +631,9 @@ export type DeskRegistration = {
   checkedInByName: string | null;
   /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
   emailRejectedReason: string | null;
+  /** The declarant's document, and a minor's own beside it (§95, §NNN; `identityDocumentsOf`). */
   idDocument: string | null;
+  minorIdDocument: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -633,6 +652,7 @@ const DESK_COLUMNS = {
   expiredAt: registrations.expiredAt,
   checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
+  minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
   emailRejectedReason,
@@ -734,8 +754,12 @@ export type DeclarationAcceptanceRow = {
   method: "EMAIL_LINK" | "PAPER";
   attestedByName: string | null;
   acceptedAt: Date;
+  /** The declarant's signature and document: the adult's, or the parent's for a minor. */
   typedName: string;
   idDocument: string | null;
+  /** The minor's own, beside the parent's (§NNN); null for an adult and for older acceptances. */
+  minorTypedName: string | null;
+  minorIdDocument: string | null;
   declarationVersion: number;
 };
 
@@ -748,6 +772,8 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
+      minorTypedName: declarationAcceptances.minorTypedName,
+      minorIdDocument: declarationAcceptances.minorIdDocument,
       declarationVersion: declarationAcceptances.declarationVersion,
       method: declarationAcceptances.method,
       attestedByName: staffUsers.displayName,

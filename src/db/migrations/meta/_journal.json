@@ -435,6 +435,13 @@
       "when": 1790196609979,
       "tag": "0061_event_min_age",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790197748364,
+      "tag": "0062_minor_signs_with_a_parent",
+      "breakpoints": true
     }
   ]
 }

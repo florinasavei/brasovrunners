@@ -153,7 +153,14 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
     expect(acceptance.typedName).toBe("florin  munca");
   });
 
-  it("wants the parent's name for a minor, and refuses the child's", async () => {
+  /**
+   * §NNN — a minor's declaration is signed by two at one press: the minor, with the name they
+   * were registered under and their own document, and the parent or guardian, with theirs (the
+   * owner: "I wanna have the ID document of the minor and the parent, and also 2 signatures!").
+   * Each wrong or missing piece is refused on its own field, before anything moves, with nothing
+   * recorded and the link as live as it was.
+   */
+  it("wants both signatures and both documents for a minor, and refuses each wrong one on its own field", async () => {
     await approve();
     const event = await createEvent();
     const { row, secret } = await awaitingDeclaration(event, {
@@ -165,18 +172,50 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
       guardianName: "Ion Popescu",
     });
     expect(row.guardianName).toBe("Ion Popescu");
-
-    // The child's own name is not the declarant's: the parent signs (§108).
-    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Maria Popescu"), NOW))).toEqual({
-      code: "VALIDATION_ERROR",
-      fields: ["typedName"],
+    const both = async (overrides: Partial<{ typedName: string; idDocument: string; minorTypedName: string; minorIdDocument: string }>) => ({
+      ...(await signing("Ion Popescu")),
+      idDocument: "BV 654321",
+      minorTypedName: "Maria Popescu",
+      minorIdDocument: "MP 123456",
+      ...overrides,
     });
-    expect(await state(row.id)).toEqual({ status: "PENDING_DECLARATION", acceptances: 0, spent: 0, live: 1 });
+    const untouched = { status: "PENDING_DECLARATION", acceptances: 0, spent: 0, live: 1 };
 
-    const signed = await consumeAndSignDeclaration(secret, await signing("ION POPESCU"), NOW);
+    // The parent's signature alone, as a minor's declaration was signed before: the minor's box is missing.
+    expect(await refusal(consumeAndSignDeclaration(secret, await signing("Ion Popescu"), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["minorTypedName"] });
+    // The child's own name in the parent's box: the parent signs as the declarant (§108).
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ typedName: "Maria Popescu" }), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["typedName"] });
+    // The parent's name in the minor's box.
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ minorTypedName: "Ion Popescu" }), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["minorTypedName"] });
+    // Both wrong: both named at once, the minor's first, as the page shows them.
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ typedName: "Ion Popescu2", minorTypedName: "   " }), NOW))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["minorTypedName", "typedName"],
+    });
+    // The documents: each missing one named, each malformed one refused on its own box.
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ minorIdDocument: undefined }), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["minorIdDocument"] });
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ idDocument: undefined }), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["idDocument"] });
+    expect(await refusal(consumeAndSignDeclaration(secret, await both({ minorIdDocument: "!!" }), NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["minorIdDocument"] });
+    expect(await state(row.id)).toEqual(untouched);
+
+    // Both names as a phone types them, both documents: signed, from the same link.
+    const signed = await consumeAndSignDeclaration(secret, await both({ typedName: "ION POPESCU", minorTypedName: "maria popescu" }), NOW);
+    expect(signed.ok).toBe(true);
+    expect(await state(row.id)).toEqual({ status: "CONFIRMED", acceptances: 1, spent: 1, live: 0 });
+    const [acceptance] = await db.select().from(declarationAcceptances);
+    // What was typed, each in its own column: the declarant's (the parent's) where it always was.
+    expect(acceptance).toMatchObject({ typedName: "ION POPESCU", idDocument: "BV 654321", minorTypedName: "maria popescu", minorIdDocument: "MP 123456" });
+  });
+
+  it("asks an adult for one signature and one document, exactly as before, and ignores a minor's boxes", async () => {
+    await approve();
+    const event = await createEvent();
+    const { secret } = await awaitingDeclaration(event);
+    // A post that carries the minor's boxes too (a hand-made one): an adult has no second signer.
+    const signed = await consumeAndSignDeclaration(secret, { ...(await signing("Florin Munca")), minorTypedName: "Somebody", minorIdDocument: "XX 999999" }, NOW);
     expect(signed.ok).toBe(true);
     const [acceptance] = await db.select().from(declarationAcceptances);
-    expect(acceptance.typedName).toBe("ION POPESCU");
+    expect(acceptance).toMatchObject({ typedName: "Florin Munca", idDocument: "BV 123456", minorTypedName: null, minorIdDocument: null });
   });
 
   /*

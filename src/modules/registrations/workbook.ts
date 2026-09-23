@@ -69,6 +69,8 @@ const COLUMNS: Array<{
   { header: "Club member (declared)", width: 12, cell: (row) => ({ value: row.clubMemberDeclared, type: Boolean }) },
   { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: row.fitnessDeclaredAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },
   { header: "Guardian", width: 24, cell: (row) => ({ value: row.guardianName, type: String }) },
+  // Beside the guardian's name (§NNN): a minor's declaration carries both documents.
+  { header: "Guardian identity document", width: 18, cell: (row) => ({ value: row.guardianIdDocument, type: String }) },
   { header: "Strava", width: 30, cell: (row) => ({ value: row.stravaUrl, type: String }) },
   { header: "Instagram", width: 18, cell: (row) => ({ value: row.instagramHandle, type: String }) },
   { header: "Submitted", width: 18, cell: (row) => ({ value: row.submittedAt, type: Date, format: "dd.mm.yyyy hh:mm" }) },

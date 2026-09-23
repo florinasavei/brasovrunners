@@ -400,8 +400,19 @@ export const ID_DOCUMENT = /^[A-Za-z0-9][A-Za-z0-9 .\-\/]{2,28}[A-Za-z0-9]$/;
 export const declarationSigningSchema = z.object({
   accepted: z.literal(true),
   typedName: z.string().trim().min(1).max(200),
-  /** Required when the declaration's text names it (`mergeFieldsIn`); the service decides. */
+  /**
+   * The declarant's document — the adult's, or the parent's for a minor. Required when the
+   * declaration's text names an identity document (`asksForIdDocument`); the service decides.
+   */
   idDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
+  /**
+   * A minor's own signature and document, beside the parent's (§NNN). Optional here because an
+   * adult posts neither; for a minor the service requires the name always, and the document
+   * whenever it requires the parent's. A blank name is left to the service, which refuses it as
+   * the signature that does not match — the same refusal, on the same box, as a wrong one.
+   */
+  minorTypedName: z.string().trim().max(200).optional(),
+  minorIdDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
   /**
    * The version the page rendered, by id and content hash (BR-REQ-033-02 criterion 6). The
    * service compares both with the version that is current at signing time and refuses a

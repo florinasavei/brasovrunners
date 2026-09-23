@@ -697,6 +697,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationForm")}
             </GlyphButton>
+            {/* A minor's paper form (§NNN): the minor and the parent each sign and write a document. */}
+            <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}&for=minor`} variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("registrations.declarationFormMinor")}
+            </GlyphButton>
             {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
             <GlyphButton
               icon="desk"

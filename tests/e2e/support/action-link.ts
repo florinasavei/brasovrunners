@@ -61,6 +61,28 @@ export async function registrationStatus(id: string): Promise<string> {
 }
 
 /**
+ * The latest declaration acceptance of a registration, as the signing recorded it: both typed
+ * names and both documents (§NNN — a minor's declaration is signed by the minor and a parent).
+ */
+export async function latestAcceptance(registrationId: string): Promise<{
+  typedName: string;
+  idDocument: string | null;
+  minorTypedName: string | null;
+  minorIdDocument: string | null;
+} | null> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<{ typedName: string; idDocument: string | null; minorTypedName: string | null; minorIdDocument: string | null }>(
+      `SELECT typed_name AS "typedName", id_document AS "idDocument",
+              minor_typed_name AS "minorTypedName", minor_id_document AS "minorIdDocument"
+         FROM declaration_acceptances WHERE registration_id = $1
+        ORDER BY accepted_at DESC LIMIT 1`,
+      [registrationId],
+    );
+    return rows[0] ?? null;
+  });
+}
+
+/**
  * A live link of `purpose` for the registration, returned as its secret.
  *
  * Waits first for the message that would have carried the real one to leave the outbox — the

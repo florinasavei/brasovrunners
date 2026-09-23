@@ -32,7 +32,10 @@ const NOW = new Date("2026-09-04T10:00:00.000Z");
 const LABELS = {
   organization: "Brașov Runners",
   whereupon: "DREPT PENTRU CARE SEMNEZ,",
+  whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
   signature: "Semnătura",
+  minorSignature: "Semnătura minorului",
+  guardianSignature: "Semnătura părintelui sau tutorelui",
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
@@ -197,6 +200,47 @@ describe("the club's declaration (§95)", () => {
     // It still renders.
     const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "club");
     expect(pdf!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+  });
+
+  /**
+   * §320 and §NNN: a minor's declaration carries two documents, and the club's copy masks both —
+   * in every blank of the text that prints one and on both signature lines — while the
+   * participant's copy keeps both whole.
+   */
+  it("masks both of a minor's documents in the club's copy, and keeps both whole in the participant's", async () => {
+    await approve(db, CLUB_DECLARATION);
+    const event = await createEvent(db);
+    // Fifteen on the race day, registered by a parent (§108, §321).
+    await submitRegistration(db, event, { ...submission, firstName: "Maria", birthDate: "2011-03-02", email: "maria@example.ro", guardianName: "Ion Popescu" }, NOW);
+    const [minor] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await confirmEmail(db, event, minor.id, NOW);
+    await signDeclaration(
+      db,
+      event,
+      minor.id,
+      { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 123456", minorTypedName: "Maria Popescu", minorIdDocument: "MP 654321" },
+      NOW,
+    );
+    const signed = await findSignedDeclaration(db, minor.id);
+    expect(signed).toMatchObject({ typedName: "Ion Popescu", idDocument: "BV 123456", minorTypedName: "Maria Popescu", minorIdDocument: "MP 654321" });
+
+    const club = await signedDeclarationEntry(db, signed!, event.id, LABELS, "club");
+    expect(club!.signature).toMatchObject({ idDocument: "BV ••••56", minor: { typedName: "Maria Popescu", idDocument: "MP ••••21" } });
+    expect(club!.values).toMatchObject({ idDocument: "BV ••••56", participantIdDocument: "MP ••••21", guardianIdDocument: "BV ••••56" });
+    expect(JSON.stringify(club)).not.toContain("123456");
+    expect(JSON.stringify(club)).not.toContain("654321");
+    const text = mergeLegalBody(club!.body, club!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
+    expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al actului de identitate MP ••••21");
+    expect(text).toContain("Ion Popescu, posesor/posesoare al actului de identitate BV ••••56");
+
+    const whole = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
+    expect(whole!.signature).toMatchObject({ idDocument: "BV 123456", minor: { typedName: "Maria Popescu", idDocument: "MP 654321" } });
+    expect(whole!.values).toMatchObject({ participantIdDocument: "MP 654321", guardianIdDocument: "BV 123456" });
+    // Both render: two signature lines at the foot.
+    for (const audience of ["club", "participant"] as const) {
+      const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, audience);
+      expect(pdf!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+    }
   });
 
   it("does not ask for a document the text never names, and prints the blank form for the desk", async () => {

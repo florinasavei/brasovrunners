@@ -37,12 +37,24 @@ export type DeclarationEntry = {
   contentSha256: string;
   /** Absent for the blank form. */
   signature?: {
+    /** The declarant's signature: the adult's own, or the parent's or guardian's for a minor. */
     typedName: string;
     idDocument: string | null;
+    /**
+     * The minor's own signature and document, signed beside the parent's (§NNN). Null for an
+     * adult, and for a minor's acceptance recorded before two signatures were asked — which then
+     * prints the one signature it has, as it always did.
+     */
+    minor: { typedName: string; idDocument: string | null } | null;
     signedAt: string;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
   };
+  /**
+   * The blank form a minor signs with a parent or guardian (§NNN): two signature lines, two
+   * identity-document lines. Only for the blank form — a signed entry says who signed by itself.
+   */
+  forMinor?: boolean;
 };
 
 export type DeclarationPdfInput = {
@@ -53,7 +65,12 @@ export type DeclarationPdfInput = {
   labels: {
     organization: string;
     whereupon: string;
+    /** "DREPT PENTRU CARE SEMNĂM" — a minor's declaration, signed by two (§NNN). */
+    whereuponTogether: string;
     signature: string;
+    /** The two signature lines of a minor's declaration (§NNN): the child's, then the parent's. */
+    minorSignature: string;
+    guardianSignature: string;
     date: string;
     idDocument: string;
     version: string;
@@ -82,6 +99,17 @@ export function maskIdDocument(value: string): string {
   const characters = [...value.replace(/\s+/g, "")];
   if (characters.length < 8) return ID_DOCUMENT_MASK;
   return `${characters.slice(0, 2).join("")} ${ID_DOCUMENT_MASK}${characters.slice(-2).join("")}`;
+}
+
+/**
+ * One run of a paragraph as the PDF draws it: the marks stripped (`plainInline`), and a space at
+ * either end kept, because the run beside it is drawn straight after it and `plainInline` trims.
+ * Exported for its test; the drawing is the only caller.
+ */
+export function runText(raw: string): string {
+  const plain = plainInline(raw);
+  if (plain === "") return /\s/.test(raw) ? " " : "";
+  return `${/^\s/.test(raw) ? " " : ""}${plain}${/\s$/.test(raw) ? " " : ""}`;
 }
 
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
@@ -194,19 +222,27 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
 
         The marks are stripped per run rather than over the whole string, which is the same
         order the screen uses (`LegalDocumentBody`): a value is plain text and never markup.
+
+        Found while checking the two-signature page (§NNN): the runs after the first were
+        passed as `text(run, undefined, undefined, options)`, and pdfkit reads a third argument
+        only when an `x` is given — an undefined `x` defaults to `{}` and is taken as the options.
+        So every run after the first lost `continued`, the width and the alignment, and the PDF
+        broke the line after every fill-in ("Subsemnatul/a Ana Pop" / ", posesor…" / "BV 123456"
+        / ", declar…"), on every signed declaration since §225. The runs after the first now pass
+        their options as the second argument. And a paragraph of several runs is set flush left:
+        pdfkit justifies each run's own piece of a line, which spread a bold "Carte de identitate"
+        into four words across the width; a paragraph with no fill-in stays justified. And the
+        space either side of a fill-in is kept (`runText`): `plainInline` trims, which the line
+        breaks used to hide, and "Subsemnatul/aAna Pop" is what it printed once they were gone.
       */
       const runs = mergeTextSegments(paragraph, entry.values ?? {});
       doc.fontSize(10.5).fillColor(COLOR.ink);
+      const align = runs.length > 1 ? "left" : "justify";
       runs.forEach((run, index) => {
-        const last = index === runs.length - 1;
-        doc
-          .font(run.filled ? "bold" : "body")
-          .text(plainInline(run.text), index === 0 ? left : undefined, index === 0 ? doc.y : undefined, {
-            width,
-            lineGap: 2,
-            align: "justify",
-            continued: !last,
-          });
+        const options = { width, lineGap: 2, align, continued: index < runs.length - 1 } as const;
+        doc.font(run.filled ? "bold" : "body");
+        if (index === 0) doc.text(runText(run.text), left, doc.y, options);
+        else doc.text(runText(run.text), options);
       });
       doc.x = MARGIN.left;
       doc.moveDown(bullet ? 0.3 : 0.6);
@@ -214,11 +250,17 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     doc.moveDown(0.3);
   }
 
-  // The signature block, kept together at the foot.
-  const blockHeight = 170;
+  /*
+    The signature block, kept together at the foot. A minor's declaration is signed by two
+    (§NNN): the minor's signature and document, then the parent's or guardian's, under one date —
+    one press online, one sitting at the desk — so the block is taller and says "we sign".
+  */
+  const signature = entry.signature;
+  const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
+  const blockHeight = twoSigners ? 260 : 170;
   if (doc.y + blockHeight > PAGE.height - MARGIN.bottom) doc.addPage();
   doc.moveDown(1);
-  doc.font("bold").fontSize(11).fillColor(COLOR.ink).text(labels.whereupon, MARGIN.left, doc.y, { width: TEXT_WIDTH });
+  doc.font("bold").fontSize(11).fillColor(COLOR.ink).text(twoSigners ? labels.whereuponTogether : labels.whereupon, MARGIN.left, doc.y, { width: TEXT_WIDTH });
   doc.moveDown(0.8);
 
   const row = (label: string, value: string | null, hand = false) => {
@@ -229,9 +271,19 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
       doc.font("body").fontSize(10.5).fillColor(COLOR.inkMuted).text(BLANK_LINE, x, y, { lineBreak: false });
       doc.y = y + 22;
     } else if (hand) {
-      // The typed name in the hand the page showed it in, sitting on the same baseline as its label.
-      doc.font("hand").fontSize(26).fillColor(COLOR.blueInk).text(value, x, y - 10, { lineBreak: false });
-      doc.y = y + 30;
+      /*
+        The typed name in the hand the page showed it in, sitting on the same baseline as its
+        label — or on the line under it when a long label ("Semnătura părintelui sau tutorelui")
+        and a long name would not fit beside each other and the name would run off the page.
+      */
+      const fits = x + doc.font("hand").fontSize(26).widthOfString(value) <= MARGIN.left + TEXT_WIDTH;
+      if (fits) {
+        doc.font("hand").fontSize(26).fillColor(COLOR.blueInk).text(value, x, y - 10, { lineBreak: false });
+        doc.y = y + 30;
+      } else {
+        doc.font("hand").fontSize(26).fillColor(COLOR.blueInk).text(value, MARGIN.left + 14, y + 8, { width: TEXT_WIDTH - 14, lineBreak: false });
+        doc.y = y + 46;
+      }
     } else {
       doc.font("body").fontSize(10.5).fillColor(COLOR.ink).text(value, x, y, { lineBreak: false });
       doc.y = y + 22;
@@ -239,9 +291,19 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     doc.x = MARGIN.left;
   };
 
-  const signature = entry.signature;
-  row(labels.signature, signature ? signature.typedName : null, Boolean(signature));
-  if (signature ? signature.idDocument !== null : true) row(labels.idDocument, signature ? signature.idDocument : null);
+  if (twoSigners) {
+    // The minor first, as the text names them first; then the parent or guardian who declares
+    // with them. A document line only where a document was asked (or on the blank form).
+    const minor = signature?.minor ?? null;
+    row(labels.minorSignature, minor ? minor.typedName : null, Boolean(minor));
+    if (signature ? minor !== null && minor.idDocument !== null : true) row(labels.idDocument, minor ? minor.idDocument : null);
+    doc.moveDown(0.4);
+    row(labels.guardianSignature, signature ? signature.typedName : null, Boolean(signature));
+    if (signature ? signature.idDocument !== null : true) row(labels.idDocument, signature ? signature.idDocument : null);
+  } else {
+    row(labels.signature, signature ? signature.typedName : null, Boolean(signature));
+    if (signature ? signature.idDocument !== null : true) row(labels.idDocument, signature ? signature.idDocument : null);
+  }
   row(labels.date, signature ? signature.signedAt : null);
   doc.moveDown(0.4);
   // How it was signed, and against which text: the version and the hash a printed copy is

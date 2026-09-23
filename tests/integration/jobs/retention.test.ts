@@ -244,23 +244,29 @@ describe("retention sweep", () => {
       locale: "ro",
       typedName: "Ana Pop",
       idDocument: "BV 123456",
+      // A minor's declaration carries the child's signature and document beside the parent's (§NNN).
+      minorTypedName: "Maria Pop",
+      minorIdDocument: "MP 654321",
       acceptedAt: NOW,
     });
-    await db.update(registrations).set({ healthNotes: "astm", healthConsentVersion: 1, healthConsentAt: NOW }).where(eq(registrations.id, registrationId));
+    await db.update(registrations).set({ guardianName: "Ana Pop", healthNotes: "astm", healthConsentVersion: 1, healthConsentAt: NOW }).where(eq(registrations.id, registrationId));
     await db.insert(auditLogs).values({ actorStaffUserId: null, action: "registration.cancelled_by_staff", entityType: "registration", entityId: registrationId, metadataJson: {}, createdAt: NOW });
 
     // Six days after the event (2026-10-01): everything still there.
     const soon = await pruneExpiredRows(db, new Date("2026-10-07T09:00:00.000Z"));
     expect(soon.identityDocuments).toBe(0);
-    expect((await db.select().from(declarationAcceptances))[0].idDocument).toBe("BV 123456");
+    expect((await db.select().from(declarationAcceptances))[0]).toMatchObject({ idDocument: "BV 123456", minorIdDocument: "MP 654321" });
 
-    // Eight days after: the two fields go; the rows stay.
+    // Eight days after: the fields go — both identity documents of a minor's declaration, the
+    // parent's and the child's (§NNN) — and the rows stay, with both signatures.
     const later = await pruneExpiredRows(db, new Date("2026-10-09T10:00:00.000Z"));
     expect(later.identityDocuments).toBe(1);
     expect(later.healthNotes).toBe(1);
     const [acceptance] = await db.select().from(declarationAcceptances);
     expect(acceptance.idDocument).toBeNull();
+    expect(acceptance.minorIdDocument).toBeNull();
     expect(acceptance.typedName).toBe("Ana Pop");
+    expect(acceptance.minorTypedName).toBe("Maria Pop");
     const [registration] = await db.select().from(registrations).where(eq(registrations.id, registrationId));
     expect(registration.healthNotes).toBeNull();
     expect(registration.healthConsentAt).toBeNull();

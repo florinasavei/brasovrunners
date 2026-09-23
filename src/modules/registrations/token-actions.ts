@@ -192,7 +192,16 @@ export async function consumeAndConfirmEmail(secret: string, now: Date) {
 
 export async function consumeAndSignDeclaration(
   secret: string,
-  input: { accepted: boolean; typedName: string; idDocument?: string; documentId: string; contentSha256: string },
+  input: {
+    accepted: boolean;
+    typedName: string;
+    idDocument?: string;
+    /** A minor's own signature and document, beside the parent's (§NNN); absent for an adult. */
+    minorTypedName?: string;
+    minorIdDocument?: string;
+    documentId: string;
+    contentSha256: string;
+  },
   now: Date,
 ) {
   const db = getDb();
