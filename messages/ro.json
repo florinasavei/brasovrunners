@@ -798,7 +798,9 @@
         "sponsorImageSrc": "Bandă cu sponsori",
         "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
         "noPicture": "Fără imagine",
-        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea și PDF-ul se actualizează după salvare."
+        "previewCaption": "Previzualizare — așa se tipărește",
+        "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
+        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",

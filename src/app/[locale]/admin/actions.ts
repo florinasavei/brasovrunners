@@ -46,6 +46,7 @@ import {
   revokeStaffUser,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
+import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -189,17 +190,9 @@ function eventFieldsFrom(form: FormData) {
     */
     bibDesign:
       form.get("event.bibDesign.present") === "1"
-        ? {
-            showName: form.get("event.bibDesign.showName") === "on",
-            showEventTitle: form.get("event.bibDesign.showEventTitle") === "on",
-            showDate: form.get("event.bibDesign.showDate") === "on",
-            showLogo: form.get("event.bibDesign.showLogo") === "on",
-            numberScale: text(form, "event.bibDesign.numberScale") || "medium",
-            namePosition: text(form, "event.bibDesign.namePosition") || "below",
-            headerImageSrc: text(form, "event.bibDesign.headerImageSrc") || null,
-            sponsorImageSrc: text(form, "event.bibDesign.sponsorImageSrc") || null,
-            cutMarks: form.get("event.bibDesign.cutMarks") === "on",
-          }
+        ? // The one reader the panel's live preview also uses, so the picture on the screen is
+          // drawn from exactly what this save posts (`bib-design-query.ts`).
+          readBibDesignForm((name) => text(form, name))
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
