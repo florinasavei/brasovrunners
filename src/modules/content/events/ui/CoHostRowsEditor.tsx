@@ -13,7 +13,7 @@ export type CoHostRowValue = { name: string; url: string };
 
 const EMPTY: CoHostRowValue = { name: "", url: "" };
 
-/** The partners as a refused submit posted them, gathered by index from `event.coHosts[i].<box>` (§305). */
+/** The partners as a refused submit posted them, gathered by index from `event.coHosts[i].<box>` (§306). */
 function recalledRows(names: string[], value: (name: string) => string | undefined): CoHostRowValue[] {
   const rows: CoHostRowValue[] = [];
   for (const name of names) {
@@ -26,7 +26,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
 }
 
 /**
- * The partners' rows, coming back as they were typed after a refused submit (§305): keyed on
+ * The partners' rows, coming back as they were typed after a refused submit (§306): keyed on
  * the answer and handed the recalled rows, exactly as `ScheduleRowsEditor` is.
  */
 export default function CoHostRowsEditor(props: ComponentProps<typeof CoHostRowsEditorIsland>) {
@@ -53,6 +53,8 @@ function CoHostRowsEditorIsland({
   initial: CoHostRowValue[];
   labels: { name: string; url: string; add: string; remove: string };
 }) {
+  // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
+  const recall = useRecall();
   const [rows, setRows] = useState<Array<{ key: number; value: CoHostRowValue }>>(() =>
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
@@ -70,6 +72,8 @@ function CoHostRowsEditorIsland({
         <Stack key={key} direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" } }}>
           <TextField
             name={`event.coHosts[${index}].name`}
+            id={recall.idOf(`event.coHosts[${index}].name`)}
+            error={recall.named(`event.coHosts[${index}].name`)}
             label={labels.name}
             defaultValue={value.name}
             slotProps={{ htmlInput: { maxLength: 200 } }}
@@ -77,6 +81,8 @@ function CoHostRowsEditorIsland({
           />
           <TextField
             name={`event.coHosts[${index}].url`}
+            id={recall.idOf(`event.coHosts[${index}].url`)}
+            error={recall.named(`event.coHosts[${index}].url`)}
             type="url"
             label={labels.url}
             defaultValue={value.url}

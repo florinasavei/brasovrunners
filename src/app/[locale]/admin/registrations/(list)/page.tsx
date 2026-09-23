@@ -46,8 +46,11 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import ActionForm from "@/shared/forms/ActionForm";
+import RecallField from "@/shared/forms/recall";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import {
-  cancelRegistrationAction,
+  cancelRegistrationFromRowAction,
   checkInAction,
   confirmRegistrationNowAction,
   eraseRegistrationFromListAction,
@@ -438,7 +441,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1, color: "error.main" }}>
             {t("registrations.eraseTitle", { name: eraseTarget.registeredName })}
           </Typography>
-          <Box component="form" action={eraseRegistrationFromListAction}>
+          {/* A refusal — the name mistyped — keeps the panel open with the reason still in its
+              box; the typed name is asked again, because it is the guard (§180, §306). */}
+          <ActionForm
+            action={eraseRegistrationFromListAction}
+            messages={await refusalMessages({ reason: t("registrations.deleteReason"), confirmName: t("registrations.eraseTypeName") })}
+            data-testid="erase-from-list-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={eraseTarget.id} />
             {/* Only the query, never a path: `actions.ts` rebuilds the path from `getPathname`,
@@ -448,13 +457,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.deleteHelp")}
               </Typography>
-              <TextField
+              <RecallField
                 name="reason"
                 label={t("registrations.deleteReason")}
                 required
                 size="small"
+                slotProps={{ htmlInput: { maxLength: 500 } }}
                 sx={{ maxWidth: 480 }}
               />
+              {/* A plain `TextField`, never a `RecallField`: the typed name is not kept. */}
               <TextField
                 name="confirmName"
                 label={t("registrations.eraseTypeName")}
@@ -468,6 +479,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <SubmitButton
                   label={t("registrations.eraseAction")}
                   pendingLabel={t("registrations.erasePending")}
+                  incompleteHintNamed={t("forms.incompleteFirst")}
                   color="error"
                   variant="contained"
                 />
@@ -483,7 +495,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 </Button>
               </Stack>
             </Stack>
-          </Box>
+          </ActionForm>
         </Box>
       )}
 
@@ -1009,7 +1021,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     </Box>
                   )}
                   {verbs.includes("cancel") && (
-                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationAction} sx={{ display: "none" }}>
+                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationFromRowAction} sx={{ display: "none" }}>
                       {hidden}
                     </Box>
                   )}

@@ -2,6 +2,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { albumInputConstraints, albumTranslationConstraints } from "../constraints";
@@ -20,7 +21,7 @@ export type EditableAlbumTranslation = {
  * exactly the same names (`actions.ts#readFields`).
  *
  * Every box carries what `fields.ts` requires of it and comes back filled after a refused
- * submit (§305).
+ * submit (§306).
  */
 export default async function AlbumFieldsForm({
   takenOn,
@@ -38,10 +39,7 @@ export default async function AlbumFieldsForm({
 }) {
   const t = await getTranslations("Admin.gallery");
   const format = await getFormatter();
-  const box = (field: Parameters<typeof albumTranslationConstraints>[0]) => {
-    const constraints = albumTranslationConstraints(field);
-    return { required: constraints.required, type: constraints.type, slotProps: { htmlInput: constraints } };
-  };
+  const box = (field: Parameters<typeof albumTranslationConstraints>[0]) => textFieldConstraints(albumTranslationConstraints(field));
 
   return (
     <Stack spacing={3}>

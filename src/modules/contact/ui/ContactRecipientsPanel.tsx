@@ -6,7 +6,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import { updateContactRecipientsAction } from "@/app/[locale]/admin/emails/actions";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
 import type { ContactRecipientsState } from "@/modules/contact/recipients";
 import type { Locale } from "@/i18n/routing";
@@ -73,7 +73,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§305). */}
+      {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§306). */}
       <ActionForm
         action={updateContactRecipientsAction}
         messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}

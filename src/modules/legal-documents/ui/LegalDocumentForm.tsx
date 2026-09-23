@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -35,7 +35,7 @@ export type LegalDocumentFormValues = {
  * already-approved texts on production safe to open in it.
  *
  * A refusal — a language left empty — comes back with both texts still in their boxes and the
- * summary naming the language (§305). A legal text is tens of kilobytes, so it is the action's
+ * summary naming the language (§306). A legal text is tens of kilobytes, so it is the action's
  * returned state that carries it, never a cookie.
  */
 export default async function LegalDocumentForm({
@@ -45,6 +45,8 @@ export default async function LegalDocumentForm({
   values,
   keyLocked,
   submitLabel,
+  pendingLabel,
+  incompleteHint,
 }: {
   action: ActionFormAction;
   /** The interface language, so a failed save comes back on the page it left. */
@@ -55,9 +57,12 @@ export default async function LegalDocumentForm({
   /** Editing an existing version cannot change which document it is. */
   keyLocked?: boolean;
   submitLabel: string;
+  /** The button while the save is in flight. */
+  pendingLabel: string;
+  /** "Fill in first: {field}" — the button's sentence while a box is missing (§306). */
+  incompleteHint: string;
 }) {
   const t = await getTranslations("Admin.legal");
-  const tAdmin = await getTranslations("Admin");
   const messages = await refusalMessages({
     key: t("document"),
     roTitle: `RO: ${t("titleField")}`,
@@ -109,7 +114,6 @@ export default async function LegalDocumentForm({
                 label={t("titleField")}
                 required
                 defaultValue={values?.[locale].title ?? ""}
-                slotProps={{ htmlInput: { maxLength: 300 } }}
               />
               {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
               <LegalBodyEditor
@@ -141,7 +145,7 @@ export default async function LegalDocumentForm({
         ))}
 
         <Box>
-          <SubmitButton label={submitLabel} pendingLabel={tAdmin("editor.saving")} incompleteHintNamed={tAdmin("forms.incompleteFirst")} size="medium" />
+          <SubmitButton label={submitLabel} pendingLabel={pendingLabel} incompleteHintNamed={incompleteHint} size="medium" />
         </Box>
       </Stack>
     </ActionForm>

@@ -370,7 +370,7 @@ function PhoneFieldIsland({
 
 /**
  * The two boxes come back as they were typed after a refused submit, whichever form they are on
- * (`DECISIONS.md` §305): the public form hands the cookie's draft in through `draft`; a
+ * (`DECISIONS.md` §306): the public form hands the cookie's draft in through `draft`; a
  * backoffice form provides the returned values through `RecallProvider`, and this reads them
  * under the same two names the boxes post. Keyed on the answer so the island re-mounts from them.
  */

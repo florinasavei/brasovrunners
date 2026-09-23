@@ -158,6 +158,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         values={values}
         keyLocked={Boolean(source || fromTemplate)}
         submitLabel={t("legal.saveDraft")}
+        pendingLabel={t("editor.saving")}
+        incompleteHint={t("forms.incompleteFirst")}
       />
     </Stack>
   );

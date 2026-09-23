@@ -10,7 +10,7 @@ import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
 import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { createPageAction } from "../actions";
@@ -45,7 +45,7 @@ export default async function NewPagePage({ params, searchParams }: Props) {
       </Typography>
 
       {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
-          refusal comes back with every box still filled (§305). */}
+          refusal comes back with every box still filled (§306). */}
       <ActionForm action={createPageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />

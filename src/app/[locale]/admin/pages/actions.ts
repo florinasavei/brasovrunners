@@ -23,7 +23,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
  * language-neutral code, never a thrown error rendered raw, so `AGENTS.md` §14.3 holds — the
  * code becomes a sentence in the page that receives it. The two that carry what somebody
  * typed — create and save — return a refusal instead of redirecting, so every box comes back
- * filled (`DECISIONS.md` §305).
+ * filled (`DECISIONS.md` §306).
  */
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -72,7 +72,7 @@ export async function createPageAction(_previous: FormOutcome | null, form: Form
     const page = await createPage(getDb(), { actor, fields: readFields(form) });
     pageId = page.id;
   } catch (error) {
-    // The form comes back with everything typed, the rich text included (§305).
+    // The form comes back with everything typed, the rich text included (§306).
     return refused(error, form);
   }
 

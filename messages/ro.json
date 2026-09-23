@@ -2000,6 +2000,7 @@
       "fieldsIntro": "Câmpurile de verificat:",
       "fieldError": "Verifică acest câmp.",
       "kept": "Ce ai scris a rămas în câmpuri; corectează și trimite din nou.",
+      "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
       "incompleteFirst": "Completează mai întâi: {field}"
     }
   },

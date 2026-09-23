@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { type TranslationFieldName, translationInputConstraints } from "../constraints";
@@ -58,6 +59,11 @@ export function blankTranslation(locale: Locale): TranslationDraft {
   };
 }
 
+/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§306). */
+function box(field: TranslationFieldName) {
+  return textFieldConstraints(translationInputConstraints(field));
+}
+
 /**
  * One language's text, as inputs inside the editor's single form — and inside the create
  * form, which renders this same panel so the two cannot drift.
@@ -102,14 +108,8 @@ export function blankTranslation(locale: Locale): TranslationDraft {
  *
  * Every box carries the constraints its schema rule implies — `required` on the title and the
  * address, the address's shape as a `pattern`, every `maxLength` — read off `fields.ts` through
- * `translationInputConstraints` (§305), and comes back filled after a refused submit.
+ * `translationInputConstraints` (§306), and comes back filled after a refused submit.
  */
-
-/** The box's own constraints, as `TextField` takes them (see `EventFieldsForm#box`). */
-function box(field: TranslationFieldName) {
-  const constraints = translationInputConstraints(field);
-  return { required: constraints.required, type: constraints.type, slotProps: { htmlInput: constraints } };
-}
 export default async function TranslationFieldsForm({
   translation,
   eventId,

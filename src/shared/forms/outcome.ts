@@ -1,7 +1,7 @@
 import { type DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §305).
+ * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §306).
  *
  * The owner: "if I submit an invalid form (eg: event creation) the entire page gets cleared".
  * Every backoffice action used to answer a refusal with a redirect — `?error=CODE#admin-alert`
@@ -84,7 +84,12 @@ export function refused(
   };
 }
 
-/** The `id` a field carries so the refusal summary can link to it: `#field-<name>`. */
-export function fieldId(name: string): string {
-  return `field-${name}`;
+/**
+ * The `id` a field carries so the refusal summary can link to it: `#field-<name>`, or
+ * `#field-<scope>-<name>` for a form that shares its page with another posting the same name
+ * (the registration page's cancel and erase both ask for a `reason`; the email copy editor is one
+ * form per message and language) — two boxes with one id would be two labels for one box.
+ */
+export function fieldId(name: string, scope?: string): string {
+  return scope ? `field-${scope}-${name}` : `field-${name}`;
 }

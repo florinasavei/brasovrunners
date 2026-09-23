@@ -168,6 +168,108 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // The content panels are tabs now, one per language, Romanian first.
     await expect(page.getByRole("tab", { name: /English/ })).toBeVisible();
   });
+
+  /*
+    §306. The owner: "if I submit an invalid form (eg: event creation) the entire page gets
+    cleared" — and an hour later: "nu ar trebui sa pot crea evenimentul daca am campuri invalide!"
+    Two refusals, and neither may cost a single box: the browser's own, before anything leaves
+    (the title is `required` because the schema requires it), and the server's, for whatever the
+    browser cannot know — simulated here by switching the browser's check off, which is exactly
+    what a browser that does not validate would post.
+  */
+  test("refuses a missing title in the browser, and a refusal from the server keeps every box", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await field("event.startsAtDate").fill("2027-05-02");
+    await field("event.startsAtTime").fill("09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
+    const romanian = page.locator("#locale-panel-ro");
+    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
+    await page.keyboard.type("Zece kilometri prin parc.");
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`Untitled ${suffix}`);
+    await field("translations.en.slug").fill(`untitled-${suffix}`);
+
+    // The button says why it waits, naming the language as well as the box.
+    await expect(page.getByText("Completează mai întâi: Română: Titlu")).toBeVisible();
+
+    // The browser's own refusal: nothing leaves, the Romanian tab comes forward on its title.
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(field("translations.ro.title")).toBeVisible();
+    expect(await field("translations.ro.title").evaluate((input) => (input as HTMLInputElement).validity.valueMissing)).toBe(true);
+
+    // The server's refusal, with the browser's check off: the summary names the title, and every
+    // box is as it was typed — the rich summary too — with nothing of it in the address bar.
+    await page.locator('form[data-testid="event-create-form"]').evaluate((form) => {
+      (form as HTMLFormElement).noValidate = true;
+    });
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Română: Titlu" })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(field("event.locationName")).toHaveValue("Parcul Tractorul");
+    await expect(field("event.startsAtDate")).toHaveValue("2027-05-02");
+    await expect(field("translations.ro.slug")).toHaveValue(`fara-titlu-${suffix}`);
+    await expect(field("translations.ro.excerptBody")).toHaveValue(/Zece kilometri prin parc\./);
+    await expect(field("translations.en.title")).toHaveValue(`Untitled ${suffix}`);
+
+    // And the kept form is a form: the title typed, the same press creates the event.
+    await field("translations.ro.title").fill(`Fără titlu ${suffix}`);
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+  });
+
+  // §306. The owner: "ar trebui sa pot crea si publica dintr-un foc!"
+  test("creates and publishes in one press, both languages live at once", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `dintr-un-foc-${suffix}`;
+    const englishSlug = `in-one-go-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = page.locator(`#locale-panel-${locale}`);
+      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+
+    await field("event.startsAtDate").fill("2027-05-03");
+    await field("event.startsAtTime").fill("09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Dintr-un foc ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await summary("ro", "Creat și publicat într-o singură apăsare.");
+
+    // The publish button says what publication still needs; the English tab is empty.
+    await expect(page.getByText(/Nu se poate publica încă — lipsește: English: Titlu/)).toBeVisible();
+
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`In one go ${suffix}`);
+    await field("translations.en.slug").fill(englishSlug);
+    await summary("en", "Created and published in a single press.");
+    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+    await expect(page.getByText(/Evenimentul a fost creat și publicat/)).toBeVisible();
+
+    expect((await page.goto(`/ro/evenimente/${slug}`))?.status()).toBe(200);
+    expect((await page.goto(`/en/events/${englishSlug}`))?.status()).toBe(200);
+  });
 });
 
 test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event (§201)", () => {

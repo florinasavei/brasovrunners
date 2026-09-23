@@ -76,7 +76,7 @@ export default async function BibDesignPanel({
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
         {/* A plain label with children rather than `FormControlLabel`'s element prop: the
             defect `CheckboxField` documents. The radio comes back as ticked after a refused
-            submit (§305). */}
+            submit (§306). */}
         <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
           <RecallRadio
             name={`event.bibDesign.${field}`}

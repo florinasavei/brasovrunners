@@ -21,7 +21,7 @@ type Props = {
    */
   incompleteHint?: string;
   /**
-   * The same sentence, naming the first thing missing (`DECISIONS.md` §305; the owner: "in
+   * The same sentence, naming the first thing missing (`DECISIONS.md` §306; the owner: "in
    * general formularele trebuie sa fie mai smart"): `{field}` is replaced with the label of the
    * first control the browser would refuse, read from its own `<label>`. Where a control has
    * no label to read, `incompleteHint` is what is said. Either alone dims the button.
@@ -29,9 +29,6 @@ type Props = {
   incompleteHintNamed?: string;
   /** Under the button once a submit has been in flight for SLOW_AFTER_MS (§304): patience, not a second press. */
   slowHint?: string;
-  /** For a form with two submit buttons: the name and value the browser posts for this one. */
-  name?: string;
-  value?: string;
   color?: "primary" | "error" | "warning" | "inherit";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium" | "large";
@@ -118,15 +115,13 @@ export default function SubmitButton({
   fullWidth,
   ariaLabel,
   compact,
-  name,
-  value,
 }: Props) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
   const [complete, setComplete] = useState(true);
-  // The label of the first control the browser would refuse, for the named sentence (§305).
+  // The label of the first control the browser would refuse, for the named sentence (§306).
   const [firstMissing, setFirstMissing] = useState<string | null>(null);
   const watches = Boolean(incompleteHint || incompleteHintNamed);
 
@@ -139,9 +134,11 @@ export default function SubmitButton({
       const controls = Array.from(form.elements) as Array<Element & { validity?: ValidityState; labels?: NodeListOf<HTMLLabelElement> | null }>;
       const invalid = controls.find((control) => control.validity && !control.validity.valid);
       setComplete(invalid === undefined);
-      // MUI marks a required label with " *"; the sentence names the box, not the asterisk.
+      // MUI marks a required label with " *"; the sentence names the box, not the asterisk. A box
+      // inside a language tab says which language, or "Titlu" would not say which of two titles.
       const text = invalid?.labels?.[0]?.textContent?.replace(/\s*\*\s*$/, "").trim() || invalid?.getAttribute("aria-label");
-      setFirstMissing(text || null);
+      const language = invalid?.closest("[data-language]")?.getAttribute("data-language");
+      setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
     form.addEventListener("input", measure);
@@ -270,8 +267,6 @@ export default function SubmitButton({
       <Button
         ref={ref}
         type="submit"
-        name={name}
-        value={value}
         color={color}
         variant={variant}
         size={size}

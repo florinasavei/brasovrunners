@@ -7,7 +7,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
 import type { ClubNoticesState } from "@/modules/notifications/club-notices";
 import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -79,7 +79,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused list comes back as typed (§305). */}
+      {/* A refused list comes back as typed (§306). */}
       <ActionForm
         action={updateClubNoticesAction}
         messages={await refusalMessages({

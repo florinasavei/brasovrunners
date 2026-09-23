@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
-/** The label of every box on the page editor, by the `name` it posts, for the refusal summary (§305). */
+/** The label of every box on the page editor, by the `name` it posts, for the refusal summary (§306). */
 export async function pageFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin.pages");
   const labels: Record<string, string> = { navOrder: t("navOrder") };

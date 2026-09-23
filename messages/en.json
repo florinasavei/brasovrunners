@@ -2000,6 +2000,7 @@
       "fieldsIntro": "The fields to check:",
       "fieldError": "Check this field.",
       "kept": "What you typed is still in the boxes; correct it and send again.",
+      "keptConflict": "What you typed is still in the boxes — copy what you need, then reload the page.",
       "incompleteFirst": "Fill in first: {field}"
     }
   },

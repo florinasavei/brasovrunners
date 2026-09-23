@@ -4,7 +4,7 @@ import type { RefusalMessages } from "@/shared/forms/ActionForm";
 /**
  * The words a backoffice form's refusal summary needs, translated once on the server and
  * handed to the `ActionForm` island as strings (`AGENTS.md` §14.5: the catalogue stays on the
- * server; `DECISIONS.md` §305).
+ * server; `DECISIONS.md` §306).
  *
  * `fields` is the page's own map from a box's `name` to its label — the summary links each
  * named field to its box under that label (§47). The error messages are the whole of
@@ -18,5 +18,6 @@ export async function refusalMessages(fields: Readonly<Record<string, string>> =
     fieldsIntro: t("forms.fieldsIntro"),
     fieldError: t("forms.fieldError"),
     kept: t("forms.kept"),
+    keptConflict: t("forms.keptConflict"),
   };
 }

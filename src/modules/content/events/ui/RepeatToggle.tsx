@@ -21,7 +21,7 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * it. What decides is the checkbox itself — the actions read `<name>` and do nothing at all
  * without it, so a hidden cadence posts nothing anybody acts on.
  *
- * After a refused submit the tick is what was posted (§305), and the fields under it come back
+ * After a refused submit the tick is what was posted (§306), and the fields under it come back
  * with it, keyed on the answer so the island re-mounts from the recalled values.
  */
 export default function RepeatToggle(props: { name: string; label: string; children: ReactNode }) {

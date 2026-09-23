@@ -65,7 +65,7 @@ function assertTranslationsUsable(translations: readonly LegalDocumentTranslatio
    * the alternative to both is not "one for now" — it is a public page that cannot render.
    */
   // Each refusal names the box the form posts (`<locale>Title`, `<locale>Body`), so the form can
-  // link to it (§305).
+  // link to it (§306).
   for (const locale of ["ro", "en"] as const) {
     const translation = translations.find((entry) => entry.locale === locale);
     if (!translation) {

@@ -15,7 +15,7 @@ import { findAlbumForEditor, listEventsForAlbumSelect } from "@/modules/content/
 import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
 import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
 import PhotoUploader from "@/modules/content/gallery/ui/PhotoUploader";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -184,7 +184,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
       <Divider />
 
       {mayEdit ? (
-        // A refusal comes back with every box still filled (§305).
+        // A refusal comes back with every box still filled (§306).
         <ActionForm action={saveAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />

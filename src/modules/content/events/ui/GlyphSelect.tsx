@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { GLYPHS, type GlyphName } from "@/modules/events/ui/glyphs";
-import { fieldId } from "@/shared/forms/outcome";
 import { useRecall } from "@/shared/forms/recall";
 
 export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
@@ -16,7 +15,7 @@ export type GlyphOption = { value: string; label: string; glyph?: GlyphName };
  * here from a name, never handed across the boundary as an element MUI would inspect. The
  * hidden input keeps `name`, so `OnlyForType`'s observer and the Server Action read it as before.
  *
- * After a refused submit it shows the choice that was posted (§305), keyed on the answer so
+ * After a refused submit it shows the choice that was posted (§306), keyed on the answer so
  * the select — which holds its choice in state of its own — re-mounts from it.
  */
 export default function GlyphSelect({
@@ -54,7 +53,7 @@ export default function GlyphSelect({
     <TextField
       key={recall.generation}
       select
-      id={fieldId(name)}
+      id={recall.idOf(name)}
       name={name}
       label={label}
       helperText={named && recall.fieldError ? recall.fieldError : helperText}

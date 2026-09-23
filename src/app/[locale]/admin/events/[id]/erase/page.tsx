@@ -123,7 +123,7 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
         No dialog, no checkbox: the confirmation *is* the typed title, and it is checked on the
         server. A tick the server does not read would be decoration (BR-REQ-060-01), and a
         dialog would put the numbers above out of sight at the moment of deciding. A refusal
-        keeps the reason and asks for the title again (§305).
+        keeps the reason and asks for the title again (§306).
       */}
       <EraseEventForm locale={locale} eventId={plan.eventId} expected={expected} />
     </Stack>

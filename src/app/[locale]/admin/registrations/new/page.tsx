@@ -4,11 +4,13 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import ActionForm from "@/shared/forms/ActionForm";
+import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
+import { staffRegistrationConstraints } from "@/modules/registrations/constraints";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -82,7 +84,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
       {events.length === 0 ? (
         <Alert severity="warning">{t("registrations.noEventsAcceptingRegistrations")}</Alert>
       ) : (
-        // A refusal — a duplicate, a missing relay tick — comes back with every box filled (§305).
+        // A refusal — a duplicate, a missing relay tick — comes back with every box filled (§306).
         <ActionForm
           action={createRegistrationAction}
           messages={await refusalMessages({
@@ -125,36 +127,34 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </RecallField>
 
-            <RecallField name="firstName" label={rt("firstName")} required slotProps={{ htmlInput: { maxLength: 100 } }} />
-          <RecallField name="lastName" label={rt("lastName")} required slotProps={{ htmlInput: { maxLength: 100 } }} />
+            <RecallField name="firstName" label={rt("firstName")} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
+          <RecallField name="lastName" label={rt("lastName")} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
 
           {/*
             BR-REQ-031-04 criterion 5. Everything below the name is optional here and
             required on the public form: an organizer is writing down a telephone call, and
             a registration recorded with gaps beats one refused for them.
           */}
-          {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} slotProps={{ htmlInput: { maxLength: 120 } }} />}
+          {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
           <RecallField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
-          <RecallField name="city" label={rt("city")} slotProps={{ htmlInput: { maxLength: 120 } }} />
+          <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />
-          <RecallField name="emergencyContactName" label={rt("emergencyContactName")} slotProps={{ htmlInput: { maxLength: 200 } }} />
+          <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
             label={rt("emergencyContactPhone")}
             countryLabel={rt("phoneCountry")}
             locale={locale}
           />
-          <RecallField name="clubName" label={rt("clubName")} slotProps={{ htmlInput: { maxLength: 200 } }} />
+          <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. */}
           <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared")}</CheckboxField>
             <RecallField
               name="email"
-              type="email"
               label={t("registrations.participantEmail")}
               helperText={t("registrations.participantEmailHelp")}
-              required
-              slotProps={{ htmlInput: { maxLength: 320 } }}
+              {...textFieldConstraints(staffRegistrationConstraints("email"))}
             />
 
             <RecallField

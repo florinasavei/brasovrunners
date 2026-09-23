@@ -71,7 +71,7 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((i) => i.message).join("; "),
-      // The boxes, so the form names them (§305) — the same names the form posts.
+      // The boxes, so the form names them (§306) — the same names the form posts.
       [...new Set(parsed.error.issues.map((i) => i.path.join(".")).filter((path) => path !== ""))],
     );
   }

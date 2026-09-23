@@ -7,7 +7,7 @@ import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
@@ -97,7 +97,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit }: 
         </Typography>
       ) : (
       <Box sx={{ mt: 1.5 }}>
-      {/* A refused plan comes back with the boxes as typed (§305). */}
+      {/* A refused plan comes back with the boxes as typed (§306). */}
       <ActionForm
         action={updateEmailPlanAction}
         messages={await refusalMessages({

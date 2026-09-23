@@ -9,6 +9,7 @@ import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
@@ -47,7 +48,7 @@ import type { EditableEvent } from "../repository";
  * in — a box the action never even read — was a box that promised what nothing saved. The
  * column stays, and the public page still embeds the links older events carry.
  *
- * **Every box refuses first what the server would refuse** (§305; the owner: "nu ar trebui sa
+ * **Every box refuses first what the server would refuse** (§306; the owner: "nu ar trebui sa
  * pot crea evenimentul daca am campuri invalide"): `required`, `maxLength`, `type="url"` with
  * its pattern, `min`/`max` on a number — read off `fields.ts` through `eventInputConstraints`,
  * never typed here a second time. What the browser cannot know — one field against another,
@@ -94,18 +95,9 @@ function timezoneOptions(current: string): readonly string[] {
   return ordered.includes(current) ? ordered : [current, ...ordered];
 }
 
-/**
- * The box's own constraints, as `TextField` takes them: `required` on the field (MUI marks the
- * label), the type on the input, and the whole set as HTML attributes on the input itself.
- * `extra` is what the box adds of its own — an `inputMode`, say.
- */
+/** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§306). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
-  const constraints = eventInputConstraints(field);
-  return {
-    required: constraints.required,
-    type: constraints.type,
-    slotProps: { htmlInput: { ...constraints, ...extra } },
-  };
+  return textFieldConstraints(eventInputConstraints(field), extra);
 }
 
 export type DeclarationOption = { id: string; version: number; title: string };

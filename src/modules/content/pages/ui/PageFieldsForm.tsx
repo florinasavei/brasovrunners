@@ -2,6 +2,7 @@ import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
@@ -38,7 +39,7 @@ export type EditablePageTranslation = {
  *
  * ## After a refused submit
  *
- * Every box comes back as typed, the rich text included (§305): the fields are `RecallField`s
+ * Every box comes back as typed, the rich text included (§306): the fields are `RecallField`s
  * and the editor re-mounts from the posted document. Each box carries what `fields.ts`
  * requires of it, so the browser refuses a missing title or a malformed address first.
  */
@@ -56,11 +57,7 @@ export default async function PageFieldsForm({
   // The editor is a client island and cannot read the catalogue itself, so its control names are
   // resolved here and passed down (AGENTS.md §9.3: no user-facing string in code).
   const rt = await getTranslations("Admin.richText");
-  const box = (field: Parameters<typeof pageTranslationConstraints>[0]) => {
-    const constraints = pageTranslationConstraints(field);
-    return { required: constraints.required, type: constraints.type, slotProps: { htmlInput: constraints } };
-  };
-  const navOrderConstraints = pageInputConstraints("navOrder");
+  const box = (field: Parameters<typeof pageTranslationConstraints>[0]) => textFieldConstraints(pageTranslationConstraints(field));
 
   return (
     <Stack spacing={3}>
@@ -69,8 +66,7 @@ export default async function PageFieldsForm({
         label={t("navOrder")}
         helperText={t("navOrderHelp")}
         defaultValue={String(navOrder)}
-        type={navOrderConstraints.type}
-        slotProps={{ htmlInput: { ...navOrderConstraints, inputMode: "numeric" } }}
+        {...textFieldConstraints(pageInputConstraints("navOrder"), { inputMode: "numeric" })}
         sx={{ maxWidth: 220 }}
       />
 

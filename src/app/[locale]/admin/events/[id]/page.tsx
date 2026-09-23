@@ -43,7 +43,7 @@ import {
   EDITORIAL_TRANSITION_LABEL,
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
 import ActionForm from "@/shared/forms/ActionForm";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -259,7 +259,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   /**
    * What "not ready to publish" names, in the words on the screen (§170) — read once, because
    * the same sentence is the publication panel's alert and, after "create and publish" was
-   * refused, the banner that says what the draft still needs (§305).
+   * refused, the banner that says what the draft still needs (§306).
    */
   const missingDetail = [
     ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
@@ -297,7 +297,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "created" && created && !notPublished && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
         )}
-        {/* Created and published in one press (§305), the series with it when there is one. */}
+        {/* Created and published in one press (§306), the series with it when there is one. */}
         {saved === "createdPublished" && (
           <Alert severity="success">
             {created ? t("editor.createdPublishedWithSeries", { created }) : t("editor.createdPublished")}
@@ -362,7 +362,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }}
       >
       <Box sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
-      {/* Settings and content: one form, one save — and a refusal that keeps every box (§305). */}
+      {/* Settings and content: one form, one save — and a refusal that keeps every box (§306). */}
       <ActionForm action={saveEventAndTranslationsAction} messages={refusal} data-testid="event-save-form">
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={event.id} />

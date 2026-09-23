@@ -15,7 +15,7 @@ export type ScheduleRowValue = { date: string; time: string; endTime: string; ro
 
 const EMPTY: ScheduleRowValue = { date: "", time: "", endTime: "", ro: "", en: "", place: "" };
 
-/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§305). */
+/** The rows as a refused submit posted them, gathered by index from `event.schedule[i].<box>` (§306). */
 function recalledRows(names: string[], value: (name: string) => string | undefined): ScheduleRowValue[] {
   const rows: ScheduleRowValue[] = [];
   for (const name of names) {
@@ -28,7 +28,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
 }
 
 /**
- * The programme's rows, coming back as they were typed after a refused submit (§305): the
+ * The programme's rows, coming back as they were typed after a refused submit (§306): the
  * island below holds the rows in state of its own, so it is keyed on the answer and handed the
  * recalled rows as its starting point. With nothing recalled this is the island as it was.
  */
@@ -79,6 +79,8 @@ function ScheduleRowsEditorIsland({
   startDateName: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
+  const recall = useRecall();
   const [rows, setRows] = useState<Array<{ key: number; value: ScheduleRowValue }>>(() =>
     (initial.length > 0 ? initial : [EMPTY]).map((value, index) => ({ key: index, value })),
   );
@@ -139,6 +141,8 @@ function ScheduleRowsEditorIsland({
             <Stack direction="row" spacing={1}>
               <TextField
                 name={name("date")}
+                id={recall.idOf(name("date"))}
+                error={recall.named(name("date"))}
                 type="date"
                 label={labels.date}
                 value={value.date}
@@ -151,6 +155,8 @@ function ScheduleRowsEditorIsland({
                   clock, posting `HH:MM` whatever face it shows. */}
               <TextField
                 name={name("time")}
+                id={recall.idOf(name("time"))}
+                error={recall.named(name("time"))}
                 type="time"
                 label={labels.time}
                 defaultValue={value.time}
@@ -160,6 +166,8 @@ function ScheduleRowsEditorIsland({
               />
               <TextField
                 name={name("endTime")}
+                id={recall.idOf(name("endTime"))}
+                error={recall.named(name("endTime"))}
                 type="time"
                 label={labels.endTime}
                 defaultValue={value.endTime}
@@ -168,9 +176,9 @@ function ScheduleRowsEditorIsland({
                 sx={{ width: 120 }}
               />
             </Stack>
-            <TextField name={name("ro")} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("en")} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
-            <TextField name={name("place")} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
+            <TextField name={name("place")} id={recall.idOf(name("place"))} error={recall.named(name("place"))} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <IconButton aria-label={`${labels.remove} ${index + 1}`} onClick={() => remove(key)} sx={{ minHeight: 44, minWidth: 44, alignSelf: { xs: "flex-end", md: "center" } }}>
               <DeleteIcon fontSize="small" />
             </IconButton>

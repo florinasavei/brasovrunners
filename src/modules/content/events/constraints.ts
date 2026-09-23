@@ -3,7 +3,7 @@ import { eventFieldsSchema, translationFieldsSchema } from "./fields";
 
 /**
  * The HTML constraints of every box on the event form, read off `fields.ts` (`DECISIONS.md`
- * §305): one place per module, so the browser's rule and the server's rule are the same rule.
+ * §306): one place per module, so the browser's rule and the server's rule are the same rule.
  *
  * `EventFieldsForm` spreads `eventInputConstraints("capacity")` into the box's `htmlInput`;
  * `TranslationFieldsForm` does the same with `translationInputConstraints("title")`. A field

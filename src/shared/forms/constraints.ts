@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §305).
+ * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §306).
  *
  * The owner: "nu ar trebui sa pot crea evenimentul daca am campuri invalide!" A rule the server
  * refuses is a rule the browser can refuse first — `required`, `maxLength`, `pattern`,
@@ -138,23 +138,44 @@ function walk(schema: unknown, into: HtmlConstraints, depth = 0): void {
 /**
  * The attributes for the box behind one schema, or `{}` when the schema has nothing to say.
  *
- * `required` is asked of the schema directly — does it refuse `""`? — rather than inferred from
- * the presence of `optional()`, because "" is what an empty box posts and a schema may accept
- * `undefined` while refusing "" or the other way round.
+ * `required` is asked of the schema directly rather than inferred from the presence of
+ * `optional()`: does it refuse what an empty box arrives as? That is `""` for an action that
+ * hands the posted string on as it is (the event form), and `undefined` for one that turns a
+ * blank box into "not given" before the schema sees it (`blankIsAbsent` — the staff
+ * registration form's optional details, `admin/registrations/actions.ts#optional`). A schema may
+ * accept one and refuse the other, which is exactly why the question names which one.
  */
-export function htmlConstraints(schema: z.ZodType): HtmlConstraints {
+export function htmlConstraints(schema: z.ZodType, options: ConstraintOptions = {}): HtmlConstraints {
   const into: HtmlConstraints = {};
-  if (!schema.safeParse("").success) into.required = true;
+  if (!schema.safeParse(options.blankIsAbsent ? undefined : "").success) into.required = true;
   walk(schema, into);
   return into;
 }
+
+export type ConstraintOptions = {
+  /** The action posts a blank box to the schema as `undefined`, not as `""`. */
+  blankIsAbsent?: boolean;
+};
 
 /**
  * The same, for one field of an object schema — the shape most `fields.ts` modules export.
  * An unknown field is `{}`: the box renders, the server refuses whatever it posts.
  */
-export function constraintsOf<S extends z.ZodObject>(schema: S, field: string): HtmlConstraints {
+export function constraintsOf<S extends z.ZodObject>(schema: S, field: string, options: ConstraintOptions = {}): HtmlConstraints {
   const shape = schema.shape as Record<string, z.ZodType | undefined>;
   const member = shape[field];
-  return member ? htmlConstraints(member) : {};
+  return member ? htmlConstraints(member, options) : {};
+}
+
+/**
+ * The props a MUI `TextField` takes them as: `required` on the field, so MUI marks the label and
+ * the browser refuses the box; the type on the field; and the whole set on the `<input>` itself
+ * through `slotProps.htmlInput`, with whatever the box adds of its own (`inputMode`, say).
+ */
+export function textFieldConstraints(constraints: HtmlConstraints, extra: Record<string, unknown> = {}) {
+  return {
+    required: constraints.required,
+    type: constraints.type,
+    slotProps: { htmlInput: { ...constraints, ...extra } },
+  };
 }

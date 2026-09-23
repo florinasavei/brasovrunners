@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
-/** The label of every box on the album form, by the `name` it posts, for the refusal summary (§305). */
+/** The label of every box on the album form, by the `name` it posts, for the refusal summary (§306). */
 export async function albumFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin.gallery");
   const labels: Record<string, string> = { takenOn: t("fields.takenOn"), eventId: t("fields.event") };

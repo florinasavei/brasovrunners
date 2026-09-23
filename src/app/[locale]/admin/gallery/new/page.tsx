@@ -12,7 +12,7 @@ import AlbumFieldsForm from "@/modules/content/gallery/ui/AlbumFieldsForm";
 import { albumFormFieldLabels } from "@/modules/content/gallery/ui/field-labels";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { createAlbumAction } from "../actions";
@@ -51,7 +51,7 @@ export default async function NewAlbumPage({ params, searchParams }: Props) {
       </Typography>
 
       {/* A plain <form> around a <Stack>: `<Stack component="form">` crashes in MUI 9. A
-          refusal comes back with every box still filled (§305). */}
+          refusal comes back with every box still filled (§306). */}
       <ActionForm action={createAlbumAction} messages={await refusalMessages(await albumFormFieldLabels())} data-testid="album-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />

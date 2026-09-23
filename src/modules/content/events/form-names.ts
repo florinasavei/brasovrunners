@@ -1,5 +1,14 @@
 /**
- * From the field path a refusal names to the `name` the form posts (`DECISIONS.md` §305).
+ * The marker the create form's second button posts: this press asks for publication too
+ * (`DECISIONS.md` §306). Here, in a plain module, and not beside the button: a constant
+ * exported from a `"use client"` file is a client reference on the server, so the action would
+ * compare the posted string with a proxy object and never publish.
+ */
+export const THEN_FIELD = "then";
+export const THEN_PUBLISH = "publish";
+
+/**
+ * From the field path a refusal names to the `name` the form posts (`DECISIONS.md` §306).
  *
  * The service speaks in the paths of `fields.ts` — `capacity`, `translations.ro.title`,
  * `scheduleRows.2.time`, `startsAtWallTime` — and the form posts `event.capacity`,

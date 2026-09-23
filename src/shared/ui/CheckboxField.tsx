@@ -30,7 +30,7 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
  *
  * ## After a refused submit
  *
- * The box comes back as it was ticked (`DECISIONS.md` §305): when the form it sits in has been
+ * The box comes back as it was ticked (`DECISIONS.md` §306): when the form it sits in has been
  * answered with a refusal, the tick is whether this box's value was posted — an unticked box
  * posts nothing, so "not posted" is "unticked", never the page's default. A disabled box posts
  * nothing either and keeps the page's word; the caller carries its value in a hidden field.

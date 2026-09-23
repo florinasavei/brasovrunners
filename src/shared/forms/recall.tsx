@@ -5,7 +5,7 @@ import { createContext, type InputHTMLAttributes, type ReactNode, useContext } f
 import { fieldId } from "./outcome";
 
 /**
- * What a refused submit typed, handed back to every box (`DECISIONS.md` §305).
+ * What a refused submit typed, handed back to every box (`DECISIONS.md` §306).
  *
  * `ActionForm` provides it from the outcome the Server Action returned; a field asks for its own
  * name and puts the value back as its `defaultValue`. Islands that hold state of their own — a
@@ -23,6 +23,8 @@ type Recall = {
   generation: number;
   /** "Check this field", already translated, for the box that was named. */
   fieldError: string;
+  /** The form's own prefix for the ids its boxes carry, when it shares a page with a namesake. */
+  scope?: string;
 };
 
 const RecallContext = createContext<Recall>({ values: null, fields: [], generation: 0, fieldError: "" });
@@ -45,6 +47,8 @@ export function useRecall() {
     names: (): string[] => Object.keys(recall.values ?? {}),
     /** Whether the refusal named this box. */
     named: (name: string): boolean => recall.fields.includes(name),
+    /** The id this box carries, which the refusal summary links to (`fieldId`, with the form's scope). */
+    idOf: (name: string): string => fieldId(name, recall.scope),
     fieldError: recall.fieldError,
   };
 }
@@ -80,7 +84,7 @@ export default function RecallField({ name, ...props }: TextFieldProps & { name:
   return (
     <TextField
       key={recall.generation}
-      id={props.id ?? fieldId(name)}
+      id={props.id ?? recall.idOf(name)}
       name={name}
       {...props}
       defaultValue={recalled ?? props.defaultValue}

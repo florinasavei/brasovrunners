@@ -187,7 +187,7 @@ type ResolvedTimes = {
 function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   const zone = fields.timezone;
 
-  // Every refusal here names its field (§47, §305): the form links the sentence to the box.
+  // Every refusal here names its field (§47, §306): the form links the sentence to the box.
   const required = (value: string, name: string): Date => {
     const parsed = fromWallTimeInput(value, zone);
     if (!parsed) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`, [name]);
@@ -283,7 +283,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * "approved" lives in another table.
  */
 function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
-  // Every refusal names the boxes it is about (§47, §305), so the form can link to them.
+  // Every refusal names the boxes it is about (§47, §306), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
       throw new DomainError(
@@ -420,7 +420,7 @@ function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
-      // The paths, so the form can name the boxes (§47, §305) — names, never values.
+      // The paths, so the form can name the boxes (§47, §306) — names, never values.
       [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))],
     );
   }
@@ -1207,7 +1207,7 @@ export type CreateAndPublishResult = {
 };
 
 /**
- * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §305; the
+ * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §306; the
  * owner: "ar trebui sa pot crea si publica dintr-un foc!").
  *
  * A new event is a draft (`createEvent`), and taking it live used to be two more presses in

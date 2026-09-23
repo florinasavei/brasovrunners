@@ -20,6 +20,12 @@ export type RefusalMessages = {
   fieldError: string;
   /** "What you typed is still in the boxes." — the one sentence the owner asked for. */
   kept: string;
+  /**
+   * The same, after a CONFLICT: the boxes still hold what was typed, but "send again" would meet
+   * the same stale version — the colleague's save has to be loaded first, so the sentence says
+   * to copy what is needed before reloading.
+   */
+  keptConflict: string;
 };
 
 export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
@@ -27,7 +33,7 @@ export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Pr
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 
 /**
- * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §305).
+ * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §306).
  *
  * The one client island a form needs for this, and it holds one thing: the outcome the Server
  * Action returned. `useActionState` is what makes it work with JavaScript off — on a plain POST
@@ -46,11 +52,17 @@ export default function ActionForm({
   action,
   messages,
   children,
+  scope,
   ...formProps
 }: {
   action: ActionFormAction;
   messages: RefusalMessages;
   children: ReactNode;
+  /**
+   * A prefix for the ids of this form's boxes and of its summary, for a form that shares its
+   * page with another posting the same names (`fieldId`). Absent on a page with one form.
+   */
+  scope?: string;
   id?: string;
   className?: string;
   "data-testid"?: string;
@@ -91,12 +103,13 @@ export default function ActionForm({
           fields: state?.fields ?? [],
           generation: tracked.generation,
           fieldError: messages.fieldError,
+          scope,
         }}
       >
         {state?.error && (
           <Alert
             ref={summary}
-            id={REFUSAL_SUMMARY_ID}
+            id={scope ? `${REFUSAL_SUMMARY_ID}-${scope}` : REFUSAL_SUMMARY_ID}
             severity="error"
             tabIndex={-1}
             sx={{ mb: 3, scrollMarginTop: 16 }}
@@ -112,7 +125,7 @@ export default function ActionForm({
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                 {state.fields.map((name) => (
                   <li key={name}>
-                    <Link href={`#${fieldId(name)}`} color="inherit">
+                    <Link href={`#${fieldId(name, scope)}`} color="inherit">
                       {labelOf(name)}
                     </Link>
                   </li>
@@ -120,7 +133,7 @@ export default function ActionForm({
               </Box>
             )}
             <Box component="p" sx={{ m: 0, mt: state.fields.length > 0 ? 1 : 0 }}>
-              {messages.kept}
+              {state.error === "CONFLICT" ? messages.keptConflict : messages.kept}
             </Box>
           </Alert>
         )}

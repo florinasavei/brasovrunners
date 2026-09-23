@@ -2,14 +2,14 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { getTranslations } from "next-intl/server";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { hardDeleteEventAction } from "../../../actions";
 
 /**
- * The erase form (`DECISIONS.md` §114, §305): the event's title typed by hand, and a reason.
+ * The erase form (`DECISIONS.md` §114, §306): the event's title typed by hand, and a reason.
  *
  * A refusal — a mistyped title, most often — comes back with the reason still in its box and
  * the summary naming what was wrong. **The typed title never comes back**: it is the guard,

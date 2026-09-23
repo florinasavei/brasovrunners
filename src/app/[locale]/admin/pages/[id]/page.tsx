@@ -15,7 +15,7 @@ import { findPageForEditor } from "@/modules/content/pages/repository";
 import { describeIncompletePageLocales } from "@/modules/content/pages/service";
 import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
 import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
@@ -142,7 +142,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       <Divider />
 
       {maySave ? (
-        // A refusal — a stale version, an address in use — comes back with every box filled (§305).
+        // A refusal — a stale version, an address in use — comes back with every box filled (§306).
         <ActionForm action={savePageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-save-form">
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />

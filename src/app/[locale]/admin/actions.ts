@@ -18,8 +18,7 @@ import {
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
-import { eventFormFieldName } from "@/modules/content/events/form-names";
-import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/ui/CreateAndPublishButton";
+import { eventFormFieldName, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
@@ -68,7 +67,7 @@ import { DomainError, isDomainError } from "@/shared/errors/domain-error";
  * no stack and no internal message reaches the browser.
  *
  * **A form that carries what somebody typed answers a refusal differently** (`DECISIONS.md`
- * §305): the actions behind `ActionForm` — the event's create and save, adding a colleague,
+ * §306): the actions behind `ActionForm` — the event's create and save, adding a colleague,
  * erasing an event — take `useActionState`'s two arguments and *return* the refusal
  * (`shared/forms/outcome.ts#refused`) instead of redirecting, so every box comes back filled.
  * A success still redirects exactly where it always did.
@@ -447,7 +446,7 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
  * writes no event row rather than assuming a version.
  *
  * A refusal — a field the browser could not check, a stale version — comes back as the form's
- * state with every box still filled, the acknowledgement tick included (§305); a save that
+ * state with every box still filled, the acknowledgement tick included (§306); a save that
  * went through redirects to the editor with its banner, as it always has.
  */
 export async function saveEventAndTranslationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -488,10 +487,10 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
 }
 
 /**
- * A new event — and, on the second button, published in the same breath (§305; the owner:
+ * A new event — and, on the second button, published in the same breath (§306; the owner:
  * "ar trebui sa pot crea si publica dintr-un foc!").
  *
- * A refusal returns the form's state so every box comes back as typed (§305): the settings,
+ * A refusal returns the form's state so every box comes back as typed (§306): the settings,
  * both languages with their rich texts, the repeat rule, the programme's rows. Nothing about
  * the event is in the URL. A create that went through opens the new event's page, as it
  * always did — with the banner saying whether it was also published, and if not, why not
@@ -729,7 +728,7 @@ export async function hardDeleteEventAction(_previous: FormOutcome | null, form:
     });
     erased = result.registrationsErased;
   } catch (error) {
-    // The reason comes back; the typed title never does (§305) — it is the guard, and it is
+    // The reason comes back; the typed title never does (§306) — it is the guard, and it is
     // meant to be typed again (`NEVER_KEPT`).
     return refused(error, form);
   }
@@ -799,7 +798,7 @@ export async function withdrawInterestAction(form: FormData): Promise<void> {
   backTo(path, outcome);
 }
 
-/** Adding a colleague (§123). A refused address or name comes back in its box (§305). */
+/** Adding a colleague (§123). A refused address or name comes back in its box (§306). */
 export async function inviteStaffAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });

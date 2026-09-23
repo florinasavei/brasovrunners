@@ -18,7 +18,7 @@ import {
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
-import { isDomainError } from "@/shared/errors/domain-error";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
@@ -178,7 +178,7 @@ function optional(form: FormData, key: string): string | undefined {
 /**
  * A registration entered by staff (BR-REQ-037-05). A refusal — a duplicate, a missing relay
  * tick, an address the service will not take — comes back with every box still filled
- * (`DECISIONS.md` §305); the event stays selected because it is one of the boxes.
+ * (`DECISIONS.md` §306); the event stays selected because it is one of the boxes.
  */
 export async function createRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -230,7 +230,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     );
     outcome = { saved: "registrationCreated" };
   } catch (error) {
-    // The form comes back as typed, the event still selected (§305).
+    // The form comes back as typed, the event still selected (§306).
     return refused(error, form);
   }
 
@@ -243,7 +243,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
 
-/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§305). */
+/** The one editable field (BR-REQ-037-03). A refused name stays in its box (§306). */
 export async function correctRegisteredNameAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
@@ -258,7 +258,7 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
-/** Cancel, with a reason. A refusal keeps the reason typed (§305). */
+/** Cancel, with a reason. A refusal keeps the reason typed (§306). */
 export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
@@ -271,6 +271,16 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
   }
 
   backTo(detailPath(locale, registrationId), { saved: "registrationCancelled" });
+}
+
+/**
+ * Cancel from the list's "⋮" menu (§289). The row's hidden form has no box in it — nothing typed
+ * to keep — so a refusal lands where it always did: the registration's own page, with the code.
+ * The same action underneath as the page's form, which redirects by itself on success.
+ */
+export async function cancelRegistrationFromRowAction(form: FormData): Promise<void> {
+  const refusal = await cancelRegistrationAction(null, form);
+  if (refusal) backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
 }
 
 /**
@@ -433,7 +443,7 @@ export async function bulkDeleteRegistrationsAction(form: FormData): Promise<voi
 
 /**
  * Erase, from the registration's own page (BR-REQ-037-06). A refusal keeps the reason and asks
- * for the "I understand" tick again (§305): the tick is the guard here and is never recalled.
+ * for the "I understand" tick again (§306): the tick is the guard here and is never recalled.
  */
 export async function deleteRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -479,11 +489,41 @@ export async function deleteRegistrationAction(_previous: FormOutcome | null, fo
  * One row at a time, on purpose. See the note on `bulkCancelRegistrationsAction`: cancelling in
  * bulk is recoverable — the person registers again — and erasing is not.
  */
-export async function eraseRegistrationFromListAction(form: FormData): Promise<void> {
+export async function eraseRegistrationFromListAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
   const confirmName = text(form, "confirmName");
   const listPath = getPathname({ locale, href: "/admin/registrations" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    /*
+      Refused before the database is touched. Not a duplicate of the service's own check: that
+      one compares against the registration, this one is what stops an empty field spending a
+      round trip. Both have to exist, because the `required` attribute on the field is a courtesy
+      the browser may not be running.
+    */
+    if (confirmName.trim() === "") {
+      throw new DomainError("VALIDATION_ERROR", "type the registered name to erase", ["confirmName"]);
+    }
+    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
+      confirmName,
+    });
+  } catch (error) {
+    /*
+      The panel stays open on the same row — the page was never left — with the summary above
+      the two boxes (§306). **The reason comes back; the typed name never does.** The reason used
+      to be dropped because the only way back was a redirect and a free line of somebody's prose
+      has no business in a query string; a returned state never leaves the POST, so that reason
+      is gone. The name is the guard (§180) and is meant to be typed again (`NEVER_KEPT`).
+
+      A mistyped name is the one failure that is about what was typed rather than about the
+      registration, so it says so; every other code stays what the service called it.
+    */
+    const failure = refused(error, form);
+    const mistyped = isDomainError(error) && error.fields.includes("confirmName");
+    return { ...failure, error: mistyped ? "ERASE_NAME_MISMATCH" : failure.error, fields: mistyped ? ["confirmName"] : failure.fields };
+  }
 
   /*
     Merged into the list's own query rather than appended to it. `backTo` builds a query string
@@ -492,50 +532,9 @@ export async function eraseRegistrationFromListAction(form: FormData): Promise<v
     where it would produce `?eventId=…?error=…` and lose both.
   */
   const params = new URLSearchParams(text(form, "listQuery"));
-  const land = (outcome: Record<string, string | undefined>): never => {
-    for (const [key, value] of Object.entries(outcome)) {
-      if (value === undefined) params.delete(key);
-      else params.set(key, value);
-    }
-    const query = params.toString();
-    redirect(query ? `${listPath}?${query}#admin-alert` : `${listPath}#admin-alert`);
-  };
-
-  /*
-    Refused before the database is touched, and the panel reopens on the same row.
-
-    Not a duplicate of the service's own check: that one compares against the registration, this
-    one is what stops an empty field spending a round trip. Both have to exist, because the
-    `required` attribute on the field is a courtesy the browser may not be running.
-
-    What does *not* come back is the reason that was typed. Carrying it would mean putting a free
-    line of somebody's prose into a query string, and from there into the server log, the browser
-    history and any referrer — for an action whose entire purpose is to remove a person's data.
-    Re-typing a few words is the cheaper of the two.
-  */
-  if (confirmName.trim() === "") {
-    land({ error: "ERASE_NAME_MISMATCH", erase: registrationId || undefined, saved: undefined });
-  }
-
-  try {
-    const actor = await requireStaffRole("ADMIN");
-    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
-      confirmName,
-    });
-  } catch (error) {
-    const failure = outcomeOf(error);
-    // A mistyped name is the one failure that is about what was typed rather than about the
-    // registration, so it says so and leaves the panel open on the same row — with the reason
-    // to type again, for the reason above. Every other code stays what the service called it.
-    const mistyped = isDomainError(error) && error.fields.includes("confirmName");
-    land({
-      error: mistyped ? "ERASE_NAME_MISMATCH" : failure.error,
-      erase: mistyped ? registrationId : undefined,
-      saved: undefined,
-    });
-  }
-
-  land({ saved: "registrationDeleted", error: undefined, erase: undefined });
+  for (const key of ["erase", "error"]) params.delete(key);
+  params.set("saved", "registrationDeleted");
+  redirect(`${listPath}?${params.toString()}#admin-alert`);
 }
 
 /**

@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -180,7 +180,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
             A tick the server does not read would be decoration (BR-REQ-060-01), and the phrase
             carries the version number because every version of this document has the same title.
 
-            A refusal keeps the reason and asks for the phrase again (§305): the phrase is the
+            A refusal keeps the reason and asks for the phrase again (§306): the phrase is the
             guard, and a plain `TextField` here is what says so — it is never recalled.
           */}
           <ActionForm

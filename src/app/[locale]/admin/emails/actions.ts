@@ -27,7 +27,7 @@ function localeOf(form: FormData): Locale {
  * "The plan we are on" (`DECISIONS.md` §100). Administrator only — the same gate as "send
  * now", because both spend the club's allowance — and the service asserts the role again.
  * Lands back on `/admin/emails` with the outcome in the query, like every backoffice action;
- * a refusal comes back as the form's state with every box still filled (§305).
+ * a refusal comes back as the form's state with every box still filled (§306).
  */
 export async function updateEmailPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
@@ -212,7 +212,7 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
     );
     outcome = form.get("reset") === "1" ? "saved=emailCopyReset" : "saved=emailCopy";
   } catch (error) {
-    // The subject and the words come back as typed (§305); the `reset` press is not a value.
+    // The subject and the words come back as typed (§306); the `reset` press is not a value.
     return refused(error, form, { never: ["reset"] });
   }
   revalidatePath(path);

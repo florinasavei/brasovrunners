@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -101,7 +101,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <input type="hidden" name="registrationId" value={registration.id} />
     </>
   );
-  // The three forms that carry a typed value answer a refusal with the value still in its box (§305).
+  // The three forms that carry a typed value answer a refusal with the value still in its box (§306).
   const refusal = await refusalMessages({
     registeredName: tr("registrations.participantName"),
     reason: tr("registrations.cancelReason"),
@@ -382,7 +382,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
           {tr("registrations.correctName")}
         </Typography>
-        <ActionForm action={correctRegisteredNameAction} messages={refusal} data-testid="correct-name-form">
+        <ActionForm action={correctRegisteredNameAction} messages={refusal} scope="rename" data-testid="correct-name-form">
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="registrationId" value={registration.id} />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
@@ -417,7 +417,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.cancelTitle")}
           </Typography>
-          <ActionForm action={cancelRegistrationAction} messages={refusal} data-testid="cancel-registration-form">
+          <ActionForm action={cancelRegistrationAction} messages={refusal} scope="cancel" data-testid="cancel-registration-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="registrationId" value={registration.id} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
@@ -464,8 +464,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
             </Typography>
-            {/* A refusal keeps the reason; the "I understand" tick is asked again (§305). */}
-            <ActionForm action={deleteRegistrationAction} messages={refusal} data-testid="erase-registration-form">
+            {/* A refusal keeps the reason; the "I understand" tick is asked again (§306). */}
+            <ActionForm action={deleteRegistrationAction} messages={refusal} scope="erase" data-testid="erase-registration-form">
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="registrationId" value={registration.id} />
               <Stack spacing={2} sx={{ pb: 0.5 }}>

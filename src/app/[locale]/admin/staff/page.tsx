@@ -9,7 +9,8 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
 import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
-import { refusalMessages } from "@/modules/staff-identity/ui/refusal-messages";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -183,7 +184,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         is a form a screen reader cannot find.
       */}
       <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
-        {/* A refused address or name comes back in its box, named in the summary (§305); the
+        {/* A refused address or name comes back in its box, named in the summary (§306); the
             browser refuses first what the schema would (`staffInviteConstraints`). */}
         <ActionForm
           action={inviteStaffAction}
@@ -199,16 +200,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <Stack spacing={2}>
             <RecallField
               name="email"
-              type="email"
               label={t("staff.email")}
-              required={staffInviteConstraints("email").required}
-              slotProps={{ htmlInput: staffInviteConstraints("email") }}
+              {...textFieldConstraints(staffInviteConstraints("email"))}
             />
             <RecallField
               name="displayName"
               label={t("staff.name")}
-              required={staffInviteConstraints("displayName").required}
-              slotProps={{ htmlInput: staffInviteConstraints("displayName") }}
+              {...textFieldConstraints(staffInviteConstraints("displayName"))}
             />
             <RecallField
               name="role"
