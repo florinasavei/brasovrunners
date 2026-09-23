@@ -70,7 +70,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const format = await getFormatter({ locale });
   const eventDate = format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" });
-  // The same three the sheet prints (§180), so either picture is a picture of the paper.
+  // The same facts the sheet's footer is made of (§180, §NNN), so either picture is a picture of
+  // the paper; which of them print is the design's to say.
   const partners = event.coHosts.map((host) => host.name);
 
   if (sample) {
@@ -83,6 +84,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       bandColour: url.searchParams.get("colour") || null,
       partners,
       replyTo: env.EMAIL_REPLY_TO,
+      siteUrl: env.APP_BASE_URL,
       design: bibDesignFromQuery(url.searchParams),
     });
     // The design is in the address, so a browser cache would be correct — but the event's
@@ -108,6 +110,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     bandColour: event.bibColour,
     partners,
     replyTo: env.EMAIL_REPLY_TO,
+    siteUrl: env.APP_BASE_URL,
     // The club's own design (§249), or the preview stops being a preview of the paper.
     design: event.design,
   });

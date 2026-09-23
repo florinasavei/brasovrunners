@@ -38,11 +38,30 @@ export type BibDesignFormValues = {
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
   cutMarks: boolean;
+  /** The footer's switches and the club's own line (§NNN; `bib-footer.ts`). */
+  showEmail: boolean;
+  showPartners: boolean;
+  showEventInFooter: boolean;
+  showWebsite: boolean;
+  /** As typed: the schema trims it, keeps it to one line and to `BIB_FOOTER_TEXT_MAX`. */
+  footerText: string;
 };
 
-const SWITCHES = ["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const;
+const SWITCHES = [
+  "showName",
+  "showEventTitle",
+  "showDate",
+  "showLogo",
+  "cutMarks",
+  "showEmail",
+  "showPartners",
+  "showEventInFooter",
+  "showWebsite",
+] as const;
 const CHOICES = ["numberScale", "namePosition"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
+/** Free text: absent from the address when empty, so the platform's design has no such key. */
+const TEXTS = ["footerText"] as const;
 
 /**
  * The panel's boxes as the browser would post them, read through one `get`.
@@ -64,6 +83,12 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,
     cutMarks: field("cutMarks") === "on",
+    showEmail: field("showEmail") === "on",
+    showPartners: field("showPartners") === "on",
+    showEventInFooter: field("showEventInFooter") === "on",
+    showWebsite: field("showWebsite") === "on",
+    // A text box always posts, empty or not; what it may say is the schema's to decide.
+    footerText: field("footerText") ?? "",
   };
 }
 
@@ -74,8 +99,9 @@ export function isBibDesignInput(name: string): boolean {
 
 /**
  * The design as query parameters: switches as `1`/`0`, choices as their word, pictures as
- * their address and absent when there is none. The keys are the schema's own field names, so
- * `bibDesignValuesFromQuery` is the mirror image and the round trip is exact.
+ * their address and absent when there is none, the club's own line as typed and absent when
+ * empty. The keys are the schema's own field names, so `bibDesignValuesFromQuery` is the
+ * mirror image and the round trip is exact.
  */
 export function bibDesignSearchParams(values: BibDesignFormValues, into = new URLSearchParams()): URLSearchParams {
   for (const key of SWITCHES) into.set(key, values[key] ? "1" : "0");
@@ -83,6 +109,9 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
   for (const key of PICTURES) {
     const picture = values[key];
     if (picture) into.set(key, picture);
+  }
+  for (const key of TEXTS) {
+    if (values[key].trim()) into.set(key, values[key]);
   }
   return into;
 }
@@ -110,6 +139,10 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
   for (const key of PICTURES) {
     const raw = params.get(key);
     values[key] = raw ? raw : null;
+  }
+  for (const key of TEXTS) {
+    const raw = params.get(key);
+    if (raw) values[key] = raw;
   }
   return values;
 }

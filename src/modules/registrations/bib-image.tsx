@@ -8,11 +8,11 @@ import {
   bandTextColour,
   type BibDesign,
   bibBandColour,
-  bibFooterLine,
   bibPictureUrl,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
+import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
 
 /**
  * One race number as a picture (`DECISIONS.md` §94, §180; the owner: "I should be able to
@@ -21,11 +21,12 @@ import {
  *
  * **The same card `bibs-pdf.ts` prints**, and that is the whole point of it: the club looks at
  * this before sending anything to a printer, so a preview that arranged the same facts
- * differently would be a preview of nothing. Both read `bib-design.ts` for the two decisions
- * that could drift — which colour the band is when the event names none, and what the footer
- * line says — and both lay out a coloured band with the white lockup and the race on it, the
- * number under it in the body ink, the registered name beneath, and the small print at the
- * foot. 900×600, near enough the proportion of an A5 bib lying on its side.
+ * differently would be a preview of nothing. Both read `bib-design.ts` and `bib-footer.ts` for
+ * the decisions that could drift — which colour the band is when the event names none, what
+ * the footer says and where it breaks (§NNN) — and both lay out a coloured band with the white
+ * lockup and the race on it, the number under it in the body ink, the registered name beneath,
+ * and the small print at the foot. 900×600, near enough the proportion of an A5 bib lying on its
+ * side.
  *
  * The lockup is `src/theme/pdf/logo-white.png`, white on transparent (the raster
  * `scripts/brand-assets.mjs` writes), because the band is the event's colour and the email's
@@ -38,6 +39,54 @@ export const BIB_IMAGE = { width: 900, height: 600 } as const;
 /** The band, and the lockup that sits in it, at this card's scale. */
 const BAND_HEIGHT = 96;
 const LOGO_WIDTH = 204;
+/** The card's edge, the cut guide the sheet strokes round each bib. */
+const CARD_BORDER = 2;
+
+/**
+ * The small print's geometry (§NNN): across the card inside its border, less 30 pixels each side
+ * — the sheet's 18 points at this scale — at the size that makes that line `BIB_FOOTER_EMS` wide,
+ * the sheet's own measure. Satori sizes boxes border-box, so the footer's line is 900 less both
+ * borders less both paddings: 836. Not a round size, and deliberately: it is what makes a line
+ * that fits on the paper fit here, break in the same place and be cut at the same character.
+ */
+const FOOTER_LINE = BIB_IMAGE.width - 2 * CARD_BORDER - 60;
+export const BIB_IMAGE_FOOTER = { width: FOOTER_LINE, size: FOOTER_LINE / BIB_FOOTER_EMS } as const;
+
+type BibImageInput = {
+  bibNumber: number;
+  registeredName: string;
+  eventTitle: string;
+  eventDate: string;
+  bandColour?: string | null;
+  partners?: readonly string[];
+  replyTo?: string | null;
+  /** `APP_BASE_URL`, for the website in the footer when the club asks for it (§NNN). */
+  siteUrl?: string | null;
+  /** What the club decided this bib shows (§249); absent is the platform's own design. */
+  design?: BibDesign;
+};
+
+/**
+ * The footer lines this picture draws, decided by `bib-footer.ts` from the club's design — the
+ * sheet's `bibSheetFooterLines` over the same facts, and the test holds the two side by side.
+ * `headerPicture` is whether this picture really draws the club's picture at the top rather
+ * than the band.
+ */
+export function bibImageFooterLines(
+  input: Pick<BibImageInput, "design" | "partners" | "replyTo" | "siteUrl" | "eventTitle" | "eventDate">,
+  headerPicture: boolean,
+): string[] {
+  return bibFooterLines(
+    bibFooterParts(input.design ?? DEFAULT_BIB_DESIGN, {
+      partners: input.partners ?? [],
+      replyTo: input.replyTo,
+      siteUrl: input.siteUrl,
+      eventTitle: input.eventTitle,
+      eventDate: input.eventDate,
+      headerPicture,
+    }),
+  );
+}
 
 let logoDataUrl: Promise<string> | undefined;
 function logo(): Promise<string> {
@@ -47,17 +96,7 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
-export async function renderBibImage(input: {
-  bibNumber: number;
-  registeredName: string;
-  eventTitle: string;
-  eventDate: string;
-  bandColour?: string | null;
-  partners?: readonly string[];
-  replyTo?: string | null;
-  /** What the club decided this bib shows (§249); absent is the platform's own design. */
-  design?: BibDesign;
-}): Promise<ImageResponse> {
+export async function renderBibImage(input: BibImageInput): Promise<ImageResponse> {
   const { width, height } = BIB_IMAGE;
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const digits = String(input.bibNumber);
@@ -65,11 +104,12 @@ export async function renderBibImage(input: {
   const nameSize = input.registeredName.length > 26 ? 30 : 37;
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
-  const footer = bibFooterLine(input.partners ?? [], input.replyTo);
   // A picture the club uploaded, made absolute for the renderer (§249); the band when there is
   // none. Satori fetches it itself, from this site's own store — nowhere else is accepted.
   const header = bibPictureUrl(design.headerImageSrc, env.APP_BASE_URL);
   const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
+  // Told which header this picture draws, as the sheet is (§NNN).
+  const footerLines = bibImageFooterLines(input, header !== null);
   /** The name, above the number or below it — and nowhere when the club switched it off. */
   const name = design.showName ? (
     <div
@@ -97,7 +137,7 @@ export async function renderBibImage(input: {
           background: COLOR.surface,
           color: COLOR.ink,
           fontFamily: "Roboto, sans-serif",
-          border: `2px solid ${COLOR.line}`,
+          border: `${CARD_BORDER}px solid ${COLOR.line}`,
         }}
       >
         {/* The club's own header picture across the top (§249), or the coloured band with the
@@ -152,18 +192,26 @@ export async function renderBibImage(input: {
           // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
           <img src={sponsors} alt="" width={width - 60} height={64} style={{ margin: "0 30px", objectFit: "contain" }} />
         ) : null}
+        {/* The small print as the club composed it (§NNN), in the lines `bib-footer.ts` laid out
+            for the sheet too: each its own row with wrapping off, so the picture breaks where
+            the paper breaks. `pre`, because the separator's two spaces are two on the paper and
+            Satori would otherwise collapse them into one. The overflow rule is a safety net,
+            never the rule. */}
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
+            flexDirection: "column",
+            alignItems: "center",
             padding: "14px 30px 16px 30px",
-            fontSize: 13,
+            fontSize: BIB_IMAGE_FOOTER.size,
             color: COLOR.inkMuted,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
           }}
         >
-          {footer}
+          {footerLines.map((line, index) => (
+            <div key={index} style={{ display: "flex", maxWidth: BIB_IMAGE_FOOTER.width, whiteSpace: "pre", overflow: "hidden" }}>
+              {line}
+            </div>
+          ))}
         </div>
       </div>
     ),

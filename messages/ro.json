@@ -821,6 +821,18 @@
         "sponsorImageSrc": "Bandă cu sponsori",
         "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
         "noPicture": "Fără imagine",
+        "footer": {
+          "title": "Subsol",
+          "intro": "Rândul mic de jos, în ordinea de mai jos. Ce nu încape pe un rând trece pe al doilea; ce nu încape nici acolo se taie cu „…” — previzualizarea arată exact unde.",
+          "showEventInFooter": "Numele și data evenimentului, dacă nu apar sus",
+          "showPartners": "Partenerii",
+          "footerText": "Rândul clubului",
+          "footerTextPlaceholder": "ex. Cronometraj: … · Urgențe organizator: 07xx xxx xxx",
+          "footerTextHelp": "Apare pe fiecare număr, purtat în public — nu scrie date personale ale participanților.",
+          "showWebsite": "Site-ul clubului",
+          "showEmail": "Adresa de email a clubului",
+          "notConfigured": "nesetată pe acest mediu"
+        },
         "previewCaption": "Previzualizare — așa se tipărește",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
         "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
