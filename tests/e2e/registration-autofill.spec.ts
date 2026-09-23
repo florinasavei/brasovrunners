@@ -15,10 +15,10 @@ import { ensureRegistrationIsOpen, FEATURED, hydrated, signIn } from "./support/
  */
 const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
 
-async function fillRequired(page: Page, email: string) {
+async function fillRequired(page: Page, email: string, lastName = "Popescu") {
   const values: Record<string, string> = {
     firstName: "Ana",
-    lastName: "Popescu",
+    lastName,
     email,
     birthDate: "1990-05-17",
     city: "Brașov",
@@ -28,6 +28,13 @@ async function fillRequired(page: Page, email: string) {
   };
   for (const [name, value] of Object.entries(values)) {
     await page.locator(`[name="${name}"]`).fill(value);
+  }
+  // A fill that lands just before the form finishes hydrating can be wiped by it — seen on the
+  // first box, under load, as "Prenume" empty and the press refused by the browser. One more
+  // pass puts back whatever went missing, and changes nothing that did not.
+  for (const [name, value] of Object.entries(values)) {
+    const box = page.locator(`[name="${name}"]`);
+    if ((await box.inputValue()) !== value) await box.fill(value);
   }
   await page.locator('[name="emailConfirm"]').fill(email);
   await page.locator('[name="privacyAcknowledged"]').check();
@@ -103,6 +110,64 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await autofillTheTrap(page, "https://cheap-seo.example");
     await again.click();
     await expect(page).toHaveURL(/submitted=/);
+  });
+
+  /**
+   * §312 — Amalia's report, end to end: the same person, autofilled, sends the form twice.
+   *
+   * The visitor sees the same screen both times (§19.4: nothing public says whether an address
+   * was already registered). The club, which saw nothing before, finds her by name from the
+   * list without having chosen an event, sees the row marked, and reads on her timeline that
+   * she came back while still waiting for the email link — and what was re-sent.
+   */
+  test("a second submission is the same screen for the visitor, and the club can see it", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+
+    const email = address();
+    const lastName = `Reinscris${test.info().project.name}${Date.now().toString(36)}`;
+    const screens: string[] = [];
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await page.goto(registerPath);
+      await hydrated(page);
+      await fillRequired(page, email, lastName);
+      // Exactly what autofill does, both times.
+      await autofillTheTrap(page, email);
+      await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+      await expect(page).toHaveURL(/submitted=/);
+      screens.push(await page.locator("#main").innerText());
+    }
+    // Word for word the same: the screen is not where "already registered" may be said.
+    expect(screens[1]).toBe(screens[0]);
+
+    // The list, searched by name with no event chosen: every event, and it says so.
+    await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(lastName)}`);
+    await hydrated(page);
+    await expect(page.locator("#main").getByTestId("registrations-search-everywhere")).toContainText(
+      "Caut în toate evenimentele",
+    );
+    await expect(page.getByRole("combobox", { name: "Evenimente" })).toHaveText("Toate evenimentele, pentru căutarea după nume");
+    // The row is marked, in words a phone shows (the table on a laptop, the card on a phone).
+    await expect(page.locator('#main [data-testid="resubmitted-chip"]:visible')).toContainText("Reînscriere ×1");
+
+    // The export is the set on screen (§15.10): it names the scope the screen used — every
+    // event — and the file holds her. `all` used to reach the query as an event id and fail.
+    const csvHref = (await page.getByRole("link", { name: "Exportă CSV" }).getAttribute("href")) as string;
+    expect(csvHref).toContain("eventId=all");
+    const csv = await page.request.get(csvHref);
+    expect(csv.status()).toBe(200);
+    expect(await csv.text()).toContain(lastName);
+
+    await page.getByRole("link", { name: `Deschide înscrierea lui Ana ${lastName}` }).click();
+    await expect(page).toHaveURL(/\/admin\/registrations\/[0-9a-f-]{36}/);
+    const line = page.getByTestId("timeline-resubmitted");
+    await expect(line).toHaveCount(1);
+    await expect(line).toContainText("S-a înscris din nou cu aceeași adresă");
+    await expect(line).toContainText("(Așteaptă confirmarea emailului)");
+    await expect(line).toContainText("i-am retrimis „Confirmă adresa de email”");
+    // It is what the person did, so it is not in the team's own trail.
+    await expect(page.getByRole("heading", { name: "Ce a făcut echipa" })).toHaveCount(0);
   });
 
   test("the way out is a real target on a phone", async ({ page }) => {
