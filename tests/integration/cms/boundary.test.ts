@@ -306,9 +306,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       The list is exhaustive on purpose: it is what catches a fifth writer being added to the
       club's legal text without anybody arguing for it. `deleteDraftVersion` joined it under
       `DECISIONS.md` §53 and is guarded the same way as the rest — it refuses an approved
-      version outright, and refuses a draft anything references. `isReliedOn` is a pure
-      predicate over three counts and writes nothing; it is exported so the backoffice list and
-      the service cannot disagree about what "referenced" means. `approvePlatformTemplates`
+      version outright, and refuses a draft anything references. `readDeletionFacts` writes
+      nothing: it reads what `deletionObstacle` (a pure function in `domain/deletability.ts`,
+      beside `isReliedOn`, which moved there with it) decides on, and it is exported so the
+      service, the delete screen and the backoffice list ask one question and cannot disagree
+      about whether a version may go (§290, §NNN). `approvePlatformTemplates`
       (`DECISIONS.md` §132) is not a sixth writer but the first two in one act — it calls
       `createDraftVersion` and `approveVersion` for each document that has no approved
       version and touches nothing that has one.
@@ -338,7 +340,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "createDraftVersion",
       "deleteApprovedVersion",
       "deleteDraftVersion",
-      "isReliedOn",
+      "readDeletionFacts",
       "updateDraftVersion",
       "withdrawApprovedVersion",
     ]);

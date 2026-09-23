@@ -14,8 +14,17 @@ import {
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
 import { matchesConfirmation } from "./domain/confirmation";
-import { termsHasBeenInForce } from "./domain/deletability";
 import {
+  type DeletionFacts,
+  type DeletionObstacle,
+  deletionObstacle,
+  dependantObstacle,
+  inForceWindow,
+  isReliedOn,
+  type TermsReliance,
+} from "./domain/deletability";
+import {
+  countRegistrationsAgreeingWithin,
   findCurrentApprovedDocument,
   findCurrentApprovedVersionId,
   findVersionWithTranslations,
@@ -84,7 +93,8 @@ function assertTranslationsUsable(translations: readonly LegalDocumentTranslatio
  * Every guard below starts here, and they all read the same row from the same query — the one
  * that carries the three dependant counts. A guard that counted for itself would be a second
  * definition of "relied upon", and the first time the two disagreed the disagreement would be
- * silent.
+ * silent. (`assertDeletable` runs the same query and keeps every row, because a terms version's
+ * window is computed from its siblings.)
  */
 async function findVersionRow<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -115,27 +125,94 @@ async function assertNothingDependsOn<T extends Record<string, unknown>>(
   row: LegalDocumentVersionRow,
   now: Date,
 ): Promise<void> {
-  if (
-    isReliedOn({
-      acceptances: row.acceptanceCount,
-      events: row.eventCount,
-      privacyAcknowledgements: row.privacyAcknowledgementCount,
-    })
-  ) {
-    throw new DomainError(
-      "CONFLICT",
-      "somebody has relied on this version; it stays exactly where it is",
-    );
-  }
+  const inForce = (await findCurrentApprovedVersionId(db, row.key, now)) === row.id;
+  const obstacle = dependantObstacle({ ...row, inForce });
+  if (obstacle) throw refusalFor(obstacle);
+}
 
-  const inForce = await findCurrentApprovedVersionId(db, row.key, now);
-  if (inForce === row.id) {
-    throw new DomainError(
-      "CONFLICT",
-      "this version is the one currently in force; approve its successor before removing it",
-    );
+/**
+ * The refusal that goes with each obstacle — one sentence per reason, whichever verb met it.
+ *
+ * `CONFLICT` for all four: nothing about the request is malformed, the data says no. The terms
+ * refusal also names itself in `fields` (§290), because the backoffice renders a bare `CONFLICT`
+ * as "somebody else saved meanwhile" — true of a race and a lie about a rule.
+ */
+function refusalFor(obstacle: DeletionObstacle): DomainError {
+  switch (obstacle.kind) {
+    case "draft":
+      return new DomainError(
+        "CONFLICT",
+        "this version was never approved; a draft is deleted by deleteDraftVersion, which needs no confirmation and retires no number",
+      );
+    case "referenced":
+      return new DomainError(
+        "CONFLICT",
+        "somebody has relied on this version; it stays exactly where it is",
+      );
+    case "inForce":
+      return new DomainError(
+        "CONFLICT",
+        "this version is the one currently in force; approve its successor before removing it",
+      );
+    case "termsAccepted":
+      return new DomainError(
+        "CONFLICT",
+        `${obstacle.registrations} registration(s) were submitted, or had their declaration signed, while this terms version was in force (${obstacle.window.from.toISOString()} – ${obstacle.window.until?.toISOString() ?? "now"}); neither records a terms version, so any of them may have accepted it`,
+        ["termsAccepted"],
+      );
   }
+}
 
+/**
+ * Everything the deletion rule reads about each of `rows`, for `deletionObstacle` (§290, §NNN) —
+ * one `DeletionFacts` per row, in the order given.
+ *
+ * Exported because three callers must get the same answer — the service before it destroys, the
+ * delete screen before it offers the form, the list before it offers the link — and the one that
+ * did not ask is how the owner came to press "Șterge definitiv" three times on a version the
+ * service would always refuse. `versions` is every row of `listVersionsForBackoffice`, which each
+ * caller has already read; a terms version's window is computed from its siblings. `rows` is the
+ * ones to judge: the service and the delete screen pass the one they are about, the list passes
+ * all of them.
+ *
+ * **Plural so the list costs what it should.** Reads only: one in-force lookup per *key* among
+ * `rows` — three at most, however many versions there are — and one count per terms version that
+ * was ever in force. Asked a row at a time, the list made an in-force lookup for every privacy
+ * notice and declaration it drew, the same three answers over and over.
+ */
+export async function readDeletionFacts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  rows: readonly LegalDocumentVersionRow[],
+  versions: readonly LegalDocumentVersionRow[],
+  now: Date,
+): Promise<DeletionFacts[]> {
+  const keys = [...new Set(rows.map((row) => row.key))];
+  const [inForceIds, terms] = await Promise.all([
+    Promise.all(keys.map((key) => findCurrentApprovedVersionId(db, key, now))),
+    Promise.all(rows.map((row) => termsRelianceOf(db, row, versions, now))),
+  ]);
+  const inForce = new Set(inForceIds.filter((id): id is string => id !== undefined));
+
+  return rows.map((row, index) => ({
+    isApproved: row.isApproved,
+    acceptanceCount: row.acceptanceCount,
+    eventCount: row.eventCount,
+    privacyAcknowledgementCount: row.privacyAcknowledgementCount,
+    inForce: inForce.has(row.id),
+    terms: terms[index],
+  }));
+}
+
+async function termsRelianceOf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  row: LegalDocumentVersionRow,
+  versions: readonly LegalDocumentVersionRow[],
+  now: Date,
+): Promise<TermsReliance | null> {
+  if (row.key !== "TERMS") return null;
+  const window = inForceWindow(row, versions, now);
+  if (!window) return null;
+  return { window, registrations: await countRegistrationsAgreeingWithin(db, window) };
 }
 
 /**
@@ -309,27 +386,6 @@ export async function approveVersion<T extends Record<string, unknown>>(
   if (!approved) {
     throw new DomainError("CONFLICT", "this version changed while it was being approved");
   }
-}
-
-/**
- * Everything in the database that depends on this version's words (`DECISIONS.md` §53).
- *
- * Deliberately wider than the two foreign keys. A privacy notice is referenced by *number* from
- * `registrations` — `privacy_notice_version`, `results_consent_version` and
- * `health_consent_version` are all plain integers with no key for PostgreSQL to enforce — so a
- * notice hundreds of people acknowledged is invisible to `acceptanceCount` and `eventCount`
- * alike, and the database would raise nothing at all if it were removed. Only
- * `EVENT_DECLARATION` versions ever get a `declaration_acceptances` row; this is what stands in
- * for it on the other key.
- */
-export type VersionReliance = {
-  acceptances: number;
-  events: number;
-  privacyAcknowledgements: number;
-};
-
-export function isReliedOn(reliance: VersionReliance): boolean {
-  return reliance.acceptances > 0 || reliance.events > 0 || reliance.privacyAcknowledgements > 0;
 }
 
 /**
@@ -576,13 +632,16 @@ export type DeleteApprovedVersionInput = {
  *
  * ## What still refuses, and it is most of it
  *
- * `assertNothingDependsOn`, the same guard withdrawal uses: no signature, no event, no
+ * `dependantObstacle`, the same question withdrawal asks: no signature, no event, no
  * registration that recorded this number, and not the version the site is serving right now. A
  * version anybody has relied on is not deletable and never becomes deletable — this verb has no
  * force flag, no "delete anyway", and no environment in which those checks are skipped. A draft
  * is refused too, and told which verb applies: `deleteDraftVersion` needs no confirmation and
  * retires no number, and quietly doing one verb's work under the other's name is how a draft
- * would start costing a version number.
+ * would start costing a version number. And a terms version is refused while any registration
+ * was submitted, or had its declaration signed, during its time in force (§NNN), because neither
+ * records a terms version and those two instants are the only evidence of which text was agreed
+ * to.
  *
  * **In production as well.** §30 keeps *test registrations* out of production because a
  * synthetic row corrupts the club's real counts; nothing follows from it about the club tidying
@@ -682,53 +741,37 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
 /**
  * Everything deletion requires, asked as one question — and asked twice, like withdrawal's.
  *
- * The draft check comes first so that aiming this at a draft is answered by naming the verb
- * that applies, rather than by the counts; the rest is `assertNothingDependsOn`, shared with
- * withdrawal so the two can never disagree. A withdrawn version passes: it has no dependants by
- * construction — withdrawal refused it otherwise — and it is by definition not in force, so it
- * is the one row for which every condition here was already checked once. That is the natural
- * second step, and the reason the fold on the list is not a place rows go to stay for ever.
+ * The question is `deletionObstacle`, the pure rule the delete screen and the list ask too, fed
+ * by `readDeletionFacts`: a draft first, so aiming this at a draft is answered by naming the verb
+ * that applies; then the question shared with withdrawal (`dependantObstacle`), so the two verbs
+ * can never disagree about what "unused" means; then, for TERMS, whether any registration was
+ * submitted, or had its declaration signed, while the version was in force.
+ *
+ * A withdrawn version passes the shared part: it has no dependants by construction — withdrawal
+ * refused it otherwise — and it is by definition not in force. That is the natural second step,
+ * and the reason the fold on the list is not a place rows go to stay for ever.
+ *
+ * **Why the terms question is deletion's alone (§203).** Withdrawal keeps the row, its number and
+ * its words and stops only the offering, so nothing is lost if the counts are blind. Deletion
+ * destroys the words, and after it the audit row's hash is the only evidence of what the club
+ * published — so for the one key whose counts are vacuous it needs the window to be empty.
+ *
+ * Inside the transaction the window is in the past, so no new submission or signature can land
+ * in it; a restart can only stretch a registration *across* it, which is counted (see
+ * `countRegistrationsAgreeingWithin`), so the second asking can only be stricter than the first.
  */
 async function assertDeletable<T extends Record<string, unknown>>(
   db: Database<T>,
   versionId: string,
   now: Date,
 ): Promise<LegalDocumentVersionRow> {
-  const row = await findVersionRow(db, versionId);
+  const versions = await listVersionsForBackoffice(db);
+  const row = versions.find((candidate) => candidate.id === versionId);
+  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
 
-  if (!row.isApproved) {
-    throw new DomainError(
-      "CONFLICT",
-      "this version was never approved; a draft is deleted by deleteDraftVersion, which needs no confirmation and retires no number",
-    );
-  }
-
-  await assertNothingDependsOn(db, row, now);
-
-  /*
-    **TERMS cannot be shown to be unused, and deletion is the verb that needs it shown (§203).**
-
-    This is here and not in the shared guard because the two verbs ask different questions.
-    **Withdrawal** keeps the row, its number and its words and stops only the offering, so nothing
-    is lost if the counts are blind. **Deletion** destroys the words, and after it the audit row's
-    hash is the only evidence of what the club published.
-
-    The rule itself is `termsHasBeenInForce`, a pure function, because the delete screen has to
-    give the same answer before the press (§290): it did not, and the reader was told the version
-    could be deleted and then refused with "somebody else saved meanwhile".
-
-    The field carries the reason to that screen: the action tells this refusal apart from a
-    mistyped confirmation and from a genuine race, exactly as it already does for the confirmation
-    and the reason. `CONFLICT` is the right code — nothing about the request is malformed — and it
-    is the *rendering* of a bare CONFLICT that was the lie.
-  */
-  if (termsHasBeenInForce(row, now)) {
-    throw new DomainError(
-      "CONFLICT",
-      "a terms version that has been in force cannot be shown to be unused: a registration records no terms version",
-      ["termsInForce"],
-    );
-  }
+  const [facts] = await readDeletionFacts(db, [row], versions, now);
+  const obstacle = deletionObstacle(facts);
+  if (obstacle) throw refusalFor(obstacle);
 
   return row;
 }

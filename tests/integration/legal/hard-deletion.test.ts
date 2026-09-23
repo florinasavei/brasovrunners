@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
@@ -12,16 +14,20 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
+import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
+import { deletionObstacle } from "@/modules/legal-documents/domain/deletability";
 import {
   findCurrentApprovedDocument,
   insertLegalDocumentVersion,
+  listVersionsForBackoffice,
 } from "@/modules/legal-documents/repository";
 import {
   approveVersion,
   createDraftVersion,
   deleteApprovedVersion,
   deleteDraftVersion,
+  readDeletionFacts,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -81,8 +87,8 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
   /** Two approved versions of one key: the first is superseded, the second is in force. */
   /*
     The default key is the privacy notice since §203: TERMS is the one key a registration
-    records nothing about, so a terms version that has been in force is refused outright and
-    cannot be used to exercise the mechanics. Its own refusal is asserted at the bottom.
+    records nothing about, and whether one of its versions may go depends on the registrations
+    submitted while it was in force (§NNN) — its own cases are at the bottom, with dates.
   */
   async function twoApproved(key: "TERMS" | "PRIVACY_NOTICE" | "EVENT_DECLARATION" = "PRIVACY_NOTICE") {
     const first = await createDraftVersion(db, superadmin, { key, translations: translations("v1") }, NOW);
@@ -262,8 +268,8 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
 
   it("does not retire a number across documents", async () => {
     // The floor is per key. Deleting DECLARATION 1 must not make the next GDPR draft skip a
-    // number. (The declaration rather than the terms since §203: a terms version that has been
-    // in force is refused outright, because nothing records which one anybody accepted.)
+    // number. (The declaration rather than the terms since §203: a terms version's deletion
+    // turns on registrations submitted in its window, which this test is not about.)
     const { first } = await twoApproved("EVENT_DECLARATION");
     await erase(first, "DECLARATION 1");
 
@@ -452,40 +458,317 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     );
   });
 
-  it("refuses a terms version that has been in force, because nothing records who accepted it", async () => {
-    /*
-      §203, found in review. The three dependant counts are real for two keys and vacuous for the
-      third: acceptances and events only ever see the declaration, and the acknowledgement count
-      is restricted to the privacy notice — because a registration records
-      `privacy_notice_version`, `results_consent_version` and `health_consent_version`, and never
-      a terms version. So every TERMS row reads as unused, including one a hundred people
-      accepted at registration. The guard says so instead of pretending the counts are evidence.
-    */
-    const { first } = await twoApproved("TERMS");
+  /*
+    §NNN — a terms version is deletable when nobody submitted a registration, or signed a
+    declaration, while it was in force.
 
-    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(
-      (error: unknown) => isDomainError(error) && error.code === "CONFLICT",
+    §203 found the three dependant counts vacuous for TERMS — a registration records
+    `privacy_notice_version`, `results_consent_version` and `health_consent_version`, never a terms
+    version — and refused every terms version that had ever been in force. The owner met that
+    three times on two versions nobody had registered under ("Still can't delete these docs...").
+    The evidence was there: the terms are accepted at the instant the form is submitted, and again
+    when the declaration ("sunt de acord cu termenii...") is signed, so a version with neither
+    inside its window was accepted by nobody.
+
+    The history below is the owner's, compressed: version 1 in force from the 4th, version 2 from
+    the 6th at ten, the deletion attempted on the 7th while version 2 is in force.
+  */
+  const TERMS_V1_AT = new Date("2026-09-04T08:00:00.000Z");
+  const TERMS_V2_AT = new Date("2026-09-06T10:00:00.000Z");
+  const IN_V1_WINDOW = new Date("2026-09-05T15:00:00.000Z");
+  const BEFORE_V1 = new Date("2026-09-03T15:00:00.000Z");
+  const UNDER_V2 = new Date("2026-09-06T11:00:00.000Z");
+
+  async function termsHistory() {
+    const first = await createDraftVersion(db, superadmin, { key: "TERMS", translations: translations("v1") }, TERMS_V1_AT);
+    await approveVersion(db, superadmin, first, TERMS_V1_AT);
+    const second = await createDraftVersion(db, superadmin, { key: "TERMS", translations: translations("v2") }, TERMS_V2_AT);
+    await approveVersion(db, superadmin, second, TERMS_V2_AT);
+    return { first, second };
+  }
+
+  let submitted = 0;
+  /** A registration first submitted at `createdAt` and last (re)submitted at `acknowledgedAt`. */
+  async function registrationSubmitted(input: {
+    createdAt: Date;
+    acknowledgedAt?: Date;
+    kind?: "REAL" | "TEST";
+    source?: "PUBLIC" | "STAFF";
+    privacyNoticeVersion?: number;
+  }) {
+    submitted += 1;
+    const email = `runner${submitted}@example.test`;
+    const [event] = await db
+      .insert(events)
+      .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
+      .returning();
+    const [participant] = await db
+      .insert(participants)
+      .values({
+        deliveryEmail: email,
+        normalizedEmail: email,
+        canonicalEmail: email,
+        canonicalizationVersion: 1,
+        defaultName: "Ana",
+      })
+      .returning();
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        eventId: event.id,
+        participantId: participant.id,
+        status: "CONFIRMED",
+        locale: "ro",
+        registeredName: "Ana",
+        displayName: "Ana",
+        kind: input.kind ?? "REAL",
+        source: input.source ?? "PUBLIC",
+        // A notice number no version here carries, unless a case asks for one: the acknowledgement
+        // count stays at zero, and for the terms only the window can refuse.
+        privacyNoticeVersion: input.privacyNoticeVersion ?? 99,
+        privacyAcknowledgedAt: input.acknowledgedAt ?? input.createdAt,
+        resultsNameConsent: false,
+        resultsConsentVersion: input.privacyNoticeVersion ?? 99,
+        submittedAt: input.createdAt,
+        createdAt: input.createdAt,
+      })
+      .returning({ id: registrations.id });
+    return registration.id;
+  }
+
+  /**
+   * The registration's declaration, signed at `acceptedAt` — "Sunt de acord cu termenii,
+   * condițiile și regulamentul evenimentului", the second instant the terms are agreed to.
+   */
+  async function declarationSigned(registrationId: string, acceptedAt: Date) {
+    const declaration = await createDraftVersion(
+      db,
+      superadmin,
+      { key: "EVENT_DECLARATION", translations: translations("d1") },
+      BEFORE_V1,
     );
+    await approveVersion(db, superadmin, declaration, BEFORE_V1);
+    await db.insert(declarationAcceptances).values({
+      registrationId,
+      legalDocumentId: declaration,
+      declarationVersion: 1,
+      contentSha256: "a".repeat(64),
+      locale: "ro",
+      typedName: "Ana",
+      acceptedAt,
+    });
+  }
 
+  const refusedAsTermsAccepted = (count: number) => (error: unknown) =>
+    isDomainError(error) &&
+    error.code === "CONFLICT" &&
+    error.fields.includes("termsAccepted") &&
+    error.message.startsWith(
+      `${count} registration(s) were submitted, or had their declaration signed, while this terms version was in force`,
+    ) &&
+    error.message.includes(TERMS_V1_AT.toISOString()) &&
+    error.message.includes(TERMS_V2_AT.toISOString());
+
+  it("deletes a withdrawn terms version nobody submitted a registration under — the owner's row", async () => {
+    const { first } = await termsHistory();
+    // Registrations exist, just not in version 1's window: one before any terms were in force,
+    // and one under version 2.
+    await registrationSubmitted({ createdAt: BEFORE_V1 });
+    await registrationSubmitted({ createdAt: UNDER_V2 });
+    await withdrawApprovedVersion(db, superadmin, first, LATER);
+
+    await expect(erase(first, "TERMS 1")).resolves.toEqual({ key: "TERMS", version: 1 });
+    expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(0);
+    // The rest of deletion is unchanged: the number is retired and the audit row keeps the hash.
+    expect((await db.select().from(legalDocumentNumbering))[0]).toMatchObject({ key: "TERMS", highestRetiredVersion: 1 });
+    const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "legal_document.deleted"));
+    expect((entry.metadataJson as { contentSha256: string }).contentSha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("refuses a terms version with a registration submitted in its window, naming the count and the window", async () => {
+    const { first } = await termsHistory();
+    await registrationSubmitted({ createdAt: IN_V1_WINDOW });
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
     expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(1);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
+    expect(await db.select().from(legalDocumentNumbering)).toHaveLength(0);
+  });
+
+  it("refuses one whose window a restart fell in, though the row was first submitted before it", async () => {
+    // A cancelled registration re-submitted on the 5th re-accepted the texts in force on the 5th:
+    // `privacy_acknowledged_at` is rewritten on every submission.
+    const { first } = await termsHistory();
+    await registrationSubmitted({ createdAt: BEFORE_V1, acknowledgedAt: IN_V1_WINDOW });
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+  });
+
+  it("refuses one a registration straddles, because a restart in between would have been overwritten", async () => {
+    // First submitted before version 1, last re-submitted under version 2. Whether it was also
+    // re-submitted on the 5th cannot be known — the column holds only the latest — so it counts.
+    const { first } = await termsHistory();
+    await registrationSubmitted({ createdAt: BEFORE_V1, acknowledgedAt: UNDER_V2 });
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+  });
+
+  it("refuses one under which a declaration was signed, though the form was submitted before it", async () => {
+    /*
+      Registered on the 3rd, before any terms were in force; the declaration — "sunt de acord cu
+      termenii, condițiile și regulamentul evenimentului" — signed on the 5th, under version 1.
+      That is the usual shape since the participation window (§104): the declaration is asked
+      days after the form. Whoever signed on the 5th agreed to "the terms" as they then stood.
+    */
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: BEFORE_V1 });
+    await declarationSigned(registration, IN_V1_WINDOW);
+    await withdrawApprovedVersion(db, superadmin, first, LATER);
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+    expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, first))).toHaveLength(1);
+    expect(await db.select().from(legalDocumentNumbering)).toHaveLength(0);
+  });
+
+  it("counts a registration once when both its form and its declaration fall in the window", async () => {
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: IN_V1_WINDOW });
+    await declarationSigned(registration, IN_V1_WINDOW);
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(1));
+  });
+
+  it("deletes one whose only signature fell under a later version", async () => {
+    // Registered before version 1, signed under version 2: neither instant is version 1's.
+    const { first } = await termsHistory();
+    const registration = await registrationSubmitted({ createdAt: BEFORE_V1 });
+    await declarationSigned(registration, UNDER_V2);
+
+    await expect(erase(first, "TERMS 1")).resolves.toEqual({ key: "TERMS", version: 1 });
+  });
+
+  it("counts a test registration and a staff-entered one too", async () => {
+    // On QA a test registration ticked the same box, and a staff-entered one was entered under
+    // the terms in force. Leaving either out would be the one way to be wrong.
+    const { first } = await termsHistory();
+    await registrationSubmitted({ createdAt: IN_V1_WINDOW, kind: "TEST" });
+    await registrationSubmitted({ createdAt: IN_V1_WINDOW, source: "STAFF" });
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(refusedAsTermsAccepted(2));
+  });
+
+  it("refuses the terms version in force, before counting anything", async () => {
+    const { second } = await termsHistory();
+
+    await expect(erase(second, "TERMS 2")).rejects.toSatisfy(
+      (error: unknown) =>
+        isDomainError(error) && error.code === "CONFLICT" && !error.fields.includes("termsAccepted"),
+    );
+    expect(await db.select().from(legalDocuments).where(eq(legalDocuments.id, second))).toHaveLength(1);
+  });
+
+  it("deletes a terms version approved ahead of its date and superseded before it took effect", async () => {
+    /*
+      Next season's terms dated for October, then a correction approved on the 7th. On 1 October
+      the higher number wins, so version 2 was never the text in force — and the registration
+      submitted on 2 October accepted version 3. §203's rule looked at the date alone and refused
+      this row; the window does not.
+    */
+    await termsHistory();
+    const ahead = await insertLegalDocumentVersion(db, {
+      key: "TERMS",
+      version: 3,
+      effectiveAt: new Date("2026-10-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations("v3")),
+      translations: translations("v3"),
+      approvedByStaffUserId: superadmin.id,
+      now: NOW,
+    });
+    const correction = await createDraftVersion(db, superadmin, { key: "TERMS", translations: translations("v4") }, LATER);
+    await approveVersion(db, superadmin, correction, LATER);
+    await registrationSubmitted({ createdAt: new Date("2026-10-02T09:00:00.000Z") });
+
+    await expect(
+      deleteApprovedVersion(db, superadmin, {
+        versionId: ahead,
+        typedConfirmation: "TERMS 3",
+        reason: "înlocuită înainte să intre în vigoare",
+        now: new Date("2026-10-05T00:00:00.000Z"),
+      }),
+    ).resolves.toEqual({ key: "TERMS", version: 3 });
   });
 
   /*
-    §290 — the refusal has to be tellable from a race.
+    §290 and §NNN — one rule, every caller.
 
-    `CONFLICT` is right for both, and the backoffice renders a bare one as "somebody else saved
-    meanwhile". That is true of a race and a lie about this rule, and it is what the owner met:
-    "inca nu pot sterge unele documente", on a screen that had just told him the version could go.
-    The screen now asks `termsHasBeenInForce` for itself; this is the marker the action reads if
-    the version takes effect between the screen and the press.
+    The list offered "Șterge definitiv" on rows the service refused, because it carried its own
+    copy of the obstacles. It now renders `deletionObstacle` over `readDeletionFacts`, the same two
+    calls `assertDeletable` makes; this asserts that what those two say is what the service then
+    does, row by row, across both keys and every kind of obstacle. The list asks for every row in
+    one call and the service for its one row, so the two askings are compared as well.
   */
-  it("names the terms refusal in its fields, so it is not rendered as a concurrent save", async () => {
-    const { first } = await twoApproved("TERMS");
+  it("gives the list the service's own verdict: a row offers deletion exactly when deletion succeeds", async () => {
+    const NOON = new Date("2026-09-06T12:00:00.000Z");
+    const { first, second } = await termsHistory();
+    // A third terms version at noon, so version 2 is superseded with nobody in its two hours.
+    const third = await createDraftVersion(db, superadmin, { key: "TERMS", translations: translations("v3") }, NOON);
+    await approveVersion(db, superadmin, third, NOON);
+    // Three notices on the same days: the first acknowledged, the second superseded unused.
+    const notices: string[] = [];
+    for (const [suffix, at] of [["n1", TERMS_V1_AT], ["n2", TERMS_V2_AT], ["n3", NOON]] as const) {
+      const id = await createDraftVersion(db, superadmin, { key: "PRIVACY_NOTICE", translations: translations(suffix) }, at);
+      await approveVersion(db, superadmin, id, at);
+      notices.push(id);
+    }
+    // One registration under terms 1, and one under terms 3 that recorded notice 1.
+    await registrationSubmitted({ createdAt: IN_V1_WINDOW });
+    await registrationSubmitted({ createdAt: new Date("2026-09-07T08:00:00.000Z"), privacyNoticeVersion: 1 });
 
-    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(
-      (error: unknown) => isDomainError(error) && error.fields.includes("termsInForce"),
-    );
+    const verdicts: Record<string, string | null> = {};
+    for (const id of [first, second, third, ...notices]) {
+      // Read fresh each time, as the list does when it renders after the previous deletion.
+      const versions = await listVersionsForBackoffice(db);
+      const index = versions.findIndex((candidate) => candidate.id === id);
+      const row = versions[index];
+      if (!row) throw new Error("the version under test is missing");
+      const [facts] = await readDeletionFacts(db, [row], versions, LATER);
+      // The list's asking — every row at once — says the same about this one.
+      expect((await readDeletionFacts(db, versions, versions, LATER))[index]).toEqual(facts);
+      const obstacle = deletionObstacle(facts);
+      verdicts[`${row.key} ${row.version}`] = obstacle?.kind ?? null;
+
+      const outcome = await erase(id, confirmationPhrase(row.key, row.version)).then(
+        () => "deleted",
+        (error: unknown) => (isDomainError(error) ? error.code : "thrown"),
+      );
+      expect(outcome, `${row.key} ${row.version}`).toBe(obstacle ? "CONFLICT" : "deleted");
+    }
+
+    // And the verdicts are the ones the owner should see: the accepted terms version refused, the
+    // unaccepted one offered, the acknowledged notice refused, the unused notice offered, and the
+    // two in force refused.
+    expect(verdicts).toEqual({
+      "TERMS 1": "termsAccepted",
+      "TERMS 2": null,
+      "TERMS 3": "inForce",
+      "PRIVACY_NOTICE 1": "referenced",
+      "PRIVACY_NOTICE 2": null,
+      "PRIVACY_NOTICE 3": "inForce",
+    });
+  });
+
+  it("both screens ask the shared rule, and neither keeps a copy of it", () => {
+    // Source-level, like `theme/wordmark.test.ts`: the pages need a request and a database to
+    // render, and the rule is about which functions they call.
+    const read = (relative: string) => readFileSync(path.join(process.cwd(), "src", relative), "utf8");
+    for (const page of ["app/[locale]/admin/legal/(list)/page.tsx", "app/[locale]/admin/legal/[id]/delete/page.tsx"]) {
+      const source = read(page);
+      expect(source, page).toContain("readDeletionFacts(");
+      expect(source, page).toContain("deletionObstacle(");
+      expect(source, page).not.toContain("findCurrentApprovedVersionId");
+      expect(source, page).not.toContain("termsHasBeenInForce");
+    }
   });
 
   it("never moves which version is in force", async () => {
