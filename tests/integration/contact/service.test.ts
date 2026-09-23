@@ -3,7 +3,8 @@ import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
 import { createCaptureSmtpTransport, type SmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { capturedContactMessages, contactDeliveryFor } from "@/modules/contact/delivery";
-import { type ContactDelivery, submitContactMessage } from "@/modules/contact/service";
+import { renderContactMessage } from "@/modules/contact/message";
+import { type ContactDelivery, type ContactScreening, submitContactMessage } from "@/modules/contact/service";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -102,6 +103,108 @@ describe("BR-REQ-070-04 the contact form", () => {
 
     // Somebody else is not affected by Ana's hour.
     expect(await submitContactMessage(db, delivery(capture), { ...PERSON, email: "ion@example.com" }, NOW, PAGE)).toEqual({ outcome: "sent" });
+  });
+
+  /**
+   * The owner, 2026-09-23: "primesc spam cu SEO stuff", with a sample from
+   * `domains@search-<the club's domain>` that came through the production form. A script that
+   * posts no token, leaves the trap empty and waits out the timer passes every gate by design —
+   * a person with JavaScript off does the same (§205, §216) — so it is delivered, marked, and
+   * answered exactly like anybody else. `club.example` stands for the club's domain.
+   */
+  describe("what the gates let through and still looks like a program's", () => {
+    const SCRIPT_POST = {
+      ...PERSON,
+      name: "Jaqueline Denehy",
+      email: "domains@search-club.example",
+      message: "Feature club.example in Google's Search Index … https://searchregister.net/submit",
+    };
+    const NO_TOKEN: ContactScreening = { botCheckOn: true, tokenPresent: false, turnstileVerdict: "unavailable", clubHost: "club.example" };
+    const PASSED: ContactScreening = { botCheckOn: true, tokenPresent: true, turnstileVerdict: "passed", clubHost: "club.example" };
+    const IPV4 = /\b\d{1,3}(?:\.\d{1,3}){3}\b/;
+
+    it("delivers it marked, answers 'sent' as for anyone, keeps Reply-To the sender's, and stores no IP", async () => {
+      const capture = createCaptureSmtpTransport();
+      const log = vi.spyOn(console, "info").mockImplementation(() => {});
+      try {
+        // The same answer, to the byte, as a person's: a script learns nothing from it (AGENTS.md §19.4).
+        expect(await submitContactMessage(db, delivery(capture), SCRIPT_POST, NOW, PAGE, NO_TOKEN)).toEqual({ outcome: "sent" });
+
+        expect(capture.messages).toHaveLength(1);
+        const [message] = capture.messages;
+        expect(message.subject).toBe("[posibil spam] Mesaj de pe site: Jaqueline Denehy");
+        expect(message.to).toEqual(["club@example.com", "amalia@example.org"]);
+        expect(message.replyTo).toEqual({ name: "Jaqueline Denehy", address: "domains@search-club.example" });
+        expect(message.text).toContain(SCRIPT_POST.message);
+        expect(message.text).toContain("• Verificarea anti-bot nu a rulat: formularul a fost trimis fără token — de obicei un program, nu un om.");
+        expect(message.text).toContain("• Adresa expeditorului imită domeniul clubului: search-club.example.");
+        // Ten seconds between the render and the post, the one link's host, the trap empty.
+        expect(message.text).toContain("Semnale: trimis la 10 s după deschiderea paginii · 1 link: searchregister.net · câmpul ascuns gol");
+
+        // The log line names the reasons and nothing about the sender.
+        expect(log).toHaveBeenCalledWith("[contact] delivered marked as possible spam:", "no-token,imitates-club");
+        expect(JSON.stringify(log.mock.calls)).not.toContain("search-club");
+      } finally {
+        log.mockRestore();
+      }
+
+      // No IP in what the club receives or in what the platform keeps: the one row is the
+      // throttle's, a hash of the identity (the address itself is never stored either).
+      const [message] = capture.messages;
+      for (const part of [message.subject, message.text, message.html, JSON.stringify(message.replyTo)]) {
+        expect(part).not.toMatch(IPV4);
+      }
+      const rows = await db.select().from(rateLimitBuckets);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.key).toMatch(/^[0-9a-f]{64}$/);
+      expect(JSON.stringify(rows)).not.toMatch(IPV4);
+      expect(JSON.stringify(rows)).not.toContain("search-club");
+    });
+
+    it("marks a person's message whose browser never ran the widget, and still sends it (§205)", async () => {
+      const capture = createCaptureSmtpTransport();
+      const log = vi.spyOn(console, "info").mockImplementation(() => {});
+      try {
+        expect(await submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, NO_TOKEN)).toEqual({ outcome: "sent" });
+      } finally {
+        log.mockRestore();
+      }
+      expect(capture.messages[0]?.subject).toBe("[posibil spam] Mesaj de pe site: Ana Popescu");
+      // Reply still reaches her.
+      expect(capture.messages[0]?.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
+    });
+
+    it("leaves an ordinary message exactly as it was: passed, off, or a Cloudflare that did not answer", async () => {
+      const expected = renderContactMessage(
+        { name: PERSON.name, email: PERSON.email, message: PERSON.message, locale: PERSON.locale, pageUrl: PAGE },
+        delivery(createCaptureSmtpTransport()),
+      );
+      for (const screening of [
+        PASSED,
+        { ...PASSED, turnstileVerdict: "unavailable" as const },
+        { botCheckOn: false, tokenPresent: false, turnstileVerdict: "not_configured" as const, clubHost: "club.example" },
+        // The rule off on a laptop's host, whatever the sender looks like.
+        { ...NO_TOKEN, botCheckOn: false, turnstileVerdict: "not_configured" as const, clubHost: "localhost" },
+      ]) {
+        await resetTables(db);
+        const capture = createCaptureSmtpTransport();
+        expect(await submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, screening)).toEqual({ outcome: "sent" });
+        const [sent] = capture.messages;
+        expect({ ...sent, providerMessageId: undefined, capturedAt: undefined }).toEqual({
+          ...expected,
+          providerMessageId: undefined,
+          capturedAt: undefined,
+        });
+      }
+    });
+
+    it("leaves the trap where it was: a filled trap is still answered 'sent' and sent nowhere, before any mark", async () => {
+      const capture = createCaptureSmtpTransport();
+      expect(
+        await submitContactMessage(db, delivery(capture), { ...SCRIPT_POST, honeypot: "http://spam.example" }, NOW, PAGE, NO_TOKEN),
+      ).toEqual({ outcome: "ignored" });
+      expect(capture.messages).toHaveLength(0);
+    });
   });
 
   it("says the form has no way out when the deployment has none, before anything is counted", async () => {
