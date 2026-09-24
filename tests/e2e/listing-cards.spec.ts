@@ -72,6 +72,8 @@ async function publishSeries(page: Page): Promise<string> {
   await fillDateField(page, "Începutul evenimentului", ymd(first));
   await fillTimeField(page, "Ora", "09:00");
   await field("event.locationName").fill("Parcul Tractorul");
+  // The place in both languages since §362.
+  await field("event.locationNameEn").fill("Tractorul Park");
   await field("event.mapUrl").fill("https://maps.example.test/parcul-tractorul");
   await field("translations.ro.title").fill(title);
   await field("translations.ro.slug").fill(`tura-de-proba-${suffix}`);
