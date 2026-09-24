@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -33,7 +34,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const today = new Date();
     const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 8, 9));
     const ymd = (date: Date) => date.toISOString().slice(0, 10);
-    const short = (date: Date) => new Intl.DateTimeFormat("ro-RO", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(date);
+    // A draft's chip as the list writes it (§NNN weekday on every date): the short form, starting
+    // the link, so capitalised — "Vin., 9 oct. 2026". The same calendar day in UTC as in Brașov at 09:00.
+    const short = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short" });
 
     await signIn(page, "Dev Administrator");
 
