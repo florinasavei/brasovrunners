@@ -6,13 +6,14 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-041-01 (§NNN) — the footer as the server sends it: the build stamp is a line of the
- * "Despre club" fold and nowhere else, and a phone's bar floats one line tall.
+ * "Despre club" fold and nowhere else, RO and EN sit side by side, and a phone's bar keeps both
+ * of its lines — the privacy notice and the language — on screen at every scroll position.
  *
  * The owner, 2026-09-24, from a 360-pixel phone: "it now takes way too much space, and version
  * shows by default". The e2e suite measures the bar in a browser (`footer.spec.ts`,
  * `build-badge.spec.ts`); pull requests run it on the desktop project only (§209), and the
  * phone is where both complaints were. This runs in `yarn check`, on every commit, and pins the
- * two facts the phone depends on to the markup and the styles the server renders.
+ * facts the phone depends on to the markup and the styles the server renders.
  *
  * The catalogue is the real Romanian one, through next-intl's own translator. Next's navigation
  * is stubbed: the footer's links need a path, not a router.
@@ -82,7 +83,7 @@ function rulesOf(css: string, className: string): string {
   return [...css.matchAll(new RegExp(`(@media[^{]*\\{)?[^{}]*\\.${escaped}(?![\\w-])[^{]*\\{[^}]*\\}\\}?`, "g"))].map((match) => match[0]).join("\n");
 }
 
-describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's floating line", () => {
+describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's two lines", () => {
   it("renders the build stamp once, as a line of the fold's panel, never on the bar", async () => {
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';
@@ -111,18 +112,31 @@ describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's floating 
     expect(layout).not.toMatch(/<BuildBadge/);
   });
 
-  it("floats one line on a phone and raises the whole bar for the keyboard or an open fold", async () => {
+  it("keeps the whole bar on screen at every width, the privacy notice and the language with it", async () => {
+    // BR-REQ-041-01 criterion 21 and §323: the privacy notice is on the always-visible bar, and
+    // on a phone it and the only language switch share the bar's second line. A negative sticky
+    // offset would float one line and leave both under the screen's edge while the page scrolls
+    // (the review of §NNN), so the bar sits on the edge at every width, with nothing to raise it.
     const html = await renderFooter();
-    const bar = rulesOf(cssOnly(html), emotionClassOf(markupOnly(html), "<footer"));
+    const markup = markupOnly(html);
+    const bar = rulesOf(cssOnly(html), emotionClassOf(markup, "<footer"));
     expect(bar).toMatch(/position:sticky;/);
-    // Below `sm` the second line waits 44 pixels under the screen's edge; from `sm` the bar is
-    // one line and sits on it.
-    expect(bar).toMatch(/@media \(min-width:0px\)\{\.css-[a-z0-9]+\{bottom:-44px;\}\}/);
-    expect(bar).toMatch(/@media \(min-width:600px\)\{\.css-[a-z0-9]+\{bottom:0;\}\}/);
-    // A focused control in the footer, or the open fold, brings the whole bar on screen
-    // (WCAG 2.4.11) — a keyboard's focus only, never a tap on the switch (`:focus-within`).
-    expect(bar).toMatch(/:has\(:focus-visible\),\.css-[a-z0-9]+:has\(details\[open\]\)\{bottom:0;\}/);
-    expect(bar).not.toMatch(/focus-within/);
+    expect(bar).toMatch(/bottom:0;/);
+    expect(bar).not.toMatch(/bottom:-/);
+    expect(bar).not.toMatch(/:has\(/);
+
+    // Both on the bar, outside the fold: after `</details>`, not inside it.
+    const detailsEnd = markup.indexOf("</details>");
+    expect(markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"')).toBeGreaterThan(detailsEnd);
+    expect(markup.indexOf('aria-label="Limbă"')).toBeGreaterThan(detailsEnd);
+  });
+
+  it("reserves both of a phone's footer lines for what the browser scrolls into view", () => {
+    // BR-REQ-041-01 criterion 22: 96 pixels on a phone, where the footer floats two lines, and
+    // 52 from 600 pixels up.
+    const theme = read("src/theme/theme.ts");
+    expect(theme).toMatch(/scrollPaddingBottom: 96,/);
+    expect(theme).toMatch(/"@media \(min-width:600px\)": \{ scrollPaddingTop: 76, scrollPaddingBottom: 52 \}/);
   });
 
   it("puts RO and EN side by side, each a 44-pixel target", async () => {

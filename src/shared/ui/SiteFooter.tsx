@@ -28,7 +28,7 @@ const MARK_TARGET = 44;
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it
  * — two lines on a phone since §324, where the privacy notice, named as the notice, and the
- * language share the second (below), and **only the first of them floats** (§NNN).
+ * language share the second (below). Both lines float, and nothing is under them (§NNN).
  *
  * Six things share the line, as one flex row that wraps. In the bottom-left corner, the
  * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
@@ -44,25 +44,25 @@ const MARK_TARGET = 44;
  * header, where a setting sits at the end of the row it is on, and this copy is
  * `display: none`, so exactly one "Limbă" navigation exists at every width.
  *
- * ## A phone's bar floats one line tall, and rests two lines tall (§NNN)
+ * ## A phone's bar is two short lines, and nothing else (§NNN)
  *
  * The owner, 2026-09-24, on a phone: "it now takes way too much space, and version shows by
- * default". §324 gave the phone's bar a second line and named the cost — a sticky bar 88
- * pixels tall on every screen of every page instead of 44 — and asked him to confirm it; this
- * is his answer. Two things changed:
+ * default". What took the space was a third line and a tall second one, not the two §324 asked
+ * for, so those are what went:
  *
- * - **The bar is `sticky` with `bottom: -44px` on a phone.** A negative sticky offset lets the
- *   element stop 44 pixels *below* the screen's edge, so while the page scrolls the first line
- *   floats — the switch, the fold and the marks, one tap target tall, as the bar was designed —
- *   and the second, the privacy notice and the language, waits under the edge. At the end of
- *   every page the bar reaches its own place in the flow and both lines are on screen, which is
- *   where a footer is looked for. Nothing jumps: the second line scrolls in with the page. When
- *   keyboard focus is anywhere in the footer, or the fold is open, the offset is `0` and the
- *   whole bar is on screen (`:has()`), so Tab never lands on a link under the edge (WCAG
- *   2.4.11). From `sm` up the bar is one line and the offset is `0` at every scroll position.
  * - **The build stamp is the fold's last line** (`BuildBadge`), not a label under the bar (a
  *   third line on a phone, 37 pixels) or over the corner (from `md`). It is for the club's own
  *   people, and a visitor has no use for it.
+ * - **RO and EN side by side** on the second line (`LocaleSwitcher`), not stacked: one 44-pixel
+ *   row beside the privacy notice rather than two 22-pixel lines that read as more footer.
+ *
+ * The bar itself still floats two lines tall — 89 pixels with its border — at every scroll
+ * position. A review asked for it: letting the second line wait under the screen's edge (a
+ * negative sticky offset) would have floated 45 pixels, but it takes the privacy notice off the
+ * always-visible bar that BR-REQ-041-01 criterion 21 and §323 put it on (GDPR art. 12, "from any
+ * page without opening anything"), and a phone's only language switch with it, since the
+ * header's copy is hidden below `sm`. That is the owner's call and a change to a documented
+ * rule, not a styling one.
  *
  * ## Why a row that wraps, and not marks positioned on the line
  *
@@ -85,17 +85,16 @@ const MARK_TARGET = 44;
  * ## Sticky at the bottom
  *
  * Sticky like the header, below the header's layer (1100); `mt: "auto"` still pushes it to the
- * bottom of a short page, where both lines are in view. Full-bleed rather than in the page's
- * column: the switch belongs in the bar's own corner (BR-REQ-041-01 criterion 11), and
- * `PAGE_WIDTH` is `xl`, so the column and the bar have the same edges on every screen there is.
+ * bottom of a short page. Full-bleed rather than in the page's column: the switch belongs in the
+ * bar's own corner (BR-REQ-041-01 criterion 11), and `PAGE_WIDTH` is `xl`, so the column and the
+ * bar have the same edges on every screen there is.
  *
  * ## Why `<details>` and not a client island
  *
  * It is a collapsible section on the platform: works with JavaScript off, costs no client
  * code, needs no state (§1.5). `display: contents` on the `<details>` would have made the
  * summary and the panel flex items in their own right; Safari does not render a `<details>`
- * that way, and Safari is where this was reported from. The floating line is CSS alone for the
- * same reason — no scroll listener, nothing to hydrate.
+ * that way, and Safari is where this was reported from.
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
@@ -119,13 +118,9 @@ export default async function SiteFooter() {
         bgcolor: "background.paper",
         mt: "auto",
         position: "sticky",
-        // A phone's second line waits under the screen's edge while the page scrolls (§NNN):
-        // the bar floats one line tall and rests, at the page's end, two lines tall.
-        bottom: { xs: -BAR_HEIGHT, sm: 0 },
-        // The whole bar on screen while the keyboard is in it or the fold is open, so a focused
-        // link is never under the edge. `:focus-visible`, not `:focus-within`: a tap on the
-        // scheme switch focuses it too, and the bar must not rise under the thumb for that.
-        "&:has(:focus-visible), &:has(details[open])": { bottom: 0 },
+        // The whole bar at every scroll position, both lines on a phone: the privacy notice and
+        // the language are on the always-visible bar (BR-REQ-041-01 criterion 21, §323, §NNN).
+        bottom: 0,
         zIndex: 1000,
       }}
     >
@@ -250,9 +245,8 @@ export default async function SiteFooter() {
           line already holds the switch, the summary and three marks in 320 pixels, and
           "Confidențialitate" is a third of that — so there the bar takes a second line: the
           notice at its start and the language in the bottom-right corner (§262), after a
-          zero-height break that fills the first line. It is the line that waits under the
-          screen's edge while the page scrolls and comes into view at its end (§NNN). From `sm`
-          up it is one line again, the link beside the fold, the break hidden.
+          zero-height break that fills the first line. From `sm` up it is one line again, the
+          link beside the fold, the break hidden.
 
           The link's name is the notice's own at every width (review finding: a screen reader
           said "GDPR, link"), and it keeps the visible word inside it, so somebody who says

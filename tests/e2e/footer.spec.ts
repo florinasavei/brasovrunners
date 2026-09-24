@@ -16,9 +16,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * the badge, and 1280 a desktop, where the badge used to float in the corner.
  *
  * Since §NNN (the owner, 2026-09-24: "it now takes way too much space, and version shows by
- * default") a phone's bar floats one line tall and rests two lines tall at the page's end, the
- * language sits side by side on the second line, and the build stamp is the fold's last line —
- * on screen at no width until the fold is opened.
+ * default") a phone's bar is two short lines and nothing under them: the language sits side by
+ * side on the second line, beside the privacy notice, both on screen at every scroll position,
+ * and the build stamp is the fold's last line — on screen at no width until the fold is opened.
  */
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -53,9 +53,8 @@ function controls(page: Page) {
  *
  * Since the page reserves room above the sticky footer for whatever the browser scrolls into view
  * (`scroll-padding-bottom`, theme.ts), a trial click on a control *in* the bar scrolls the page
- * to its end — the only place a sticky bar can move out of that room — and on a phone the bar's
- * second line is under the screen's edge until then (§NNN). Measured from the end, every box is
- * taken with the bar where it stays, and no click moves it.
+ * to its end — the only place a sticky bar can move out of that room. Measured from the end,
+ * every box is taken with the bar where it stays, and no click moves it.
  */
 async function restAtTheEnd(page: Page) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -195,40 +194,42 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
  * §NNN — the owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile…
  * it now takes way too much space, and version shows by default."
  *
- * Measured at 320, 360 and 390 pixels wide on production builds of the two versions, on a page
- * three screens long: before, the sticky bar was **89px on every screen** (two 44px lines and
- * the border, §324), and at the page's end **127px** from the bar's top to the document's end —
- * the bar plus the build badge's own line (21px and its margins). After: the bar floats **45px**
- * (one line and the border) and rests at **89px** with nothing under it; the badge is on screen
- * nowhere until the fold is opened. From 600px up the bar was and is 45px, and the badge no
- * longer floats in the corner.
+ * Measured at 320, 360 and 390 pixels wide on production builds, on a page three screens long:
+ * before, the sticky bar was **89px on every screen** (two 44px lines and the border, §324), and
+ * at the page's end **127px** from the bar's top to the document's end — the bar plus the build
+ * badge's own line (21px and its margins) — with RO stacked over EN. After: the bar is **89px**
+ * with nothing under it, RO and EN side by side, and the badge on screen nowhere until the fold
+ * is opened. From 600px up the bar was and is 45px, and the badge no longer floats in the corner.
+ *
+ * Both lines stay on screen while the page scrolls. Letting the second wait under the edge would
+ * float 45 pixels, but it would take the privacy notice off the always-visible bar
+ * (BR-REQ-041-01 criterion 21, §323) and a phone's only language switch with it — a documented
+ * rule, which this change does not move.
  */
-test.describe("§NNN the phone's footer is one floating line", () => {
-  test("at 320px it floats one line tall, rests two lines tall, and nothing is under it", async ({ page }) => {
+test.describe("§NNN the phone's footer is two short lines and nothing else", () => {
+  test("at 320px both lines float at every scroll position, and nothing is under them", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     const { footer, privacy, language, badge } = controls(page);
 
-    // At the top of a long page: only the first line is on screen. Before: 89.
-    const floating = await boxOf(footer, "the footer");
-    const onScreen = 720 - floating.y;
-    expect(onScreen, "the floating bar's height at 320px").toBeLessThanOrEqual(46);
-    expect(onScreen).toBeGreaterThanOrEqual(44);
-    await expect(badge).toBeHidden();
+    // At the top of the page and halfway down: the whole bar on screen, its second line with it,
+    // so the privacy notice and the language are reachable without scrolling to the end
+    // (criterion 21, §323). No trial click here: that scrolls a control in the bar into view,
+    // which is exactly what must not be needed.
+    for (const where of ["the top", "halfway down"] as const) {
+      if (where === "halfway down") await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 2));
+      const bar = await boxOf(footer, "the footer");
+      expect(bar.y + bar.height, `the bar's bottom edge at ${where}`).toBeLessThanOrEqual(721);
+      expect(bar.height, `the bar's height at ${where}`).toBeLessThanOrEqual(90);
+      for (const [name, locator] of [["the privacy notice", privacy], ["the language", language]] as const) {
+        const box = await boxOf(locator, name);
+        expect(box.y + box.height, `${name} is on screen at ${where}`).toBeLessThanOrEqual(720);
+      }
+      await expect(badge).toBeHidden();
+    }
 
-    // The keyboard in the footer raises the whole bar: a focused link is never under the edge
-    // (WCAG 2.4.11). A scripted focus counts as keyboard focus (`:focus-visible`) here.
-    await privacy.focus();
-    await expect
-      .poll(async () => {
-        const link = await privacy.boundingBox();
-        return link ? link.y + link.height : Infinity;
-      })
-      .toBeLessThanOrEqual(720);
-    await privacy.blur();
-
-    // At the end of the page the bar rests in its place: two lines, and nothing below it — the
-    // badge's line is gone. Before: 126 from the bar's top to the document's end.
+    // At the end of the page: the same two lines, and nothing below them — the badge's line is
+    // gone. Before: 126 from the bar's top to the document's end.
     await restAtTheEnd(page);
     const resting = await boxOf(footer, "the footer");
     expect(resting.height, "the resting bar's height at 320px").toBeLessThanOrEqual(90);

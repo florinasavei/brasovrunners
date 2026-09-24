@@ -179,8 +179,8 @@ test.describe("the build badge", () => {
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
     // it; it is in the fold now (§NNN), and on a phone the link is on the bar's second line,
-    // under the screen's edge until the page's end. The privacy notice is on the bar since
-    // §323, so nothing has to be opened to reach it.
+    // on screen at every scroll position. The privacy notice is on the bar since §323, so
+    // nothing has to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
   });
