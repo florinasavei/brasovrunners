@@ -11,6 +11,7 @@ import {
   descriptionSummary,
   incompleteLocales,
   BLANK,
+  kindSummary,
   linksSummary,
   placeSummary,
   programmeSummary,
@@ -219,6 +220,29 @@ describe("§350 each box's summary, empty and filled", () => {
     );
     expect(promotionSummary(words, null)).toBe("Nimic în evidență");
     expect(promotionSummary(words, { featured: true, isSpecial: true })).toBe("Eveniment principal · Ediție specială");
+  });
+
+  it("Ce fel de eveniment, with its three cards inside it (§NNN): the type, the status, the course in brief, every link counted", () => {
+    const labels = { type: "Alergare de grup", status: "Programat", surface: null, difficulty: null };
+    // The create page: nothing stored yet, so the type and "Programat" only — no empty words.
+    expect(kindSummary(words, null, labels, "ro")).toBe("Alergare de grup · Programat");
+    const event = {
+      distanceMeters: 10_000,
+      elevationGainMeters: 450,
+      routeUrl: "https://r.test",
+      stravaEventUrl: null,
+      facebookEventUrl: "https://f.test",
+      links: [{ kind: "GPX", url: "https://g.test" }],
+    };
+    // The climb and the route stay on the course card's own line; Facebook counts with the rows.
+    expect(kindSummary(words, event, { ...labels, surface: "Asfalt", difficulty: "Ușor" }, "ro")).toBe(
+      "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri",
+    );
+    expect(kindSummary(words, { ...event, distanceMeters: 21_100, facebookEventUrl: null, links: [] }, { ...labels, type: "Concurs", status: "Anulat" }, "ro")).toBe(
+      "Concurs · Anulat · 21,1 km",
+    );
+    expect(kindSummary(wordsEn, { ...event, stravaEventUrl: "https://s.test" }, { ...labels, type: "Race" }, "en")).toBe("Race · Programat · 10 km · 3 links");
+    expect(kindSummary(words, { ...event, links: [] }, labels, "ro")).toBe("Alergare de grup · Programat · 10 km · 1 link");
   });
 
   it("Adresa paginii: each language's path, and the lock", () => {

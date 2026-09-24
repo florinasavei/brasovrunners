@@ -352,17 +352,22 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl">;
 
-/** Box 10: `Trail · Mediu · 12 km · +450 m · traseu`, or `Nimic completat`. */
+/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
+function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {
+  const km = distanceMeters ? Math.round(distanceMeters / 100) / 10 : null;
+  return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
+}
+
+/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · traseu`, or `Nimic completat`. */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
   labels: { surface: string | null; difficulty: string | null },
 ): string {
-  const km = event?.distanceMeters ? Math.round(event.distanceMeters / 100) / 10 : null;
   const line = join(words, [
     labels.surface,
     labels.difficulty,
-    km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null,
+    distanceWords(words, event?.distanceMeters),
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
     event?.routeUrl ? words.course.route : null,
   ]);
@@ -371,7 +376,32 @@ export function courseSummary(
 
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
 
-/** Box 11: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link`. */
+/**
+ * Box 1, "Ce fel de eveniment", with its three cards inside it (§350, §NNN): `Alergare de grup ·
+ * Programat · Asfalt · Ușor · 10 km · 2 linkuri`. The type, then a word or two from each card — the
+ * status, the course's surface, difficulty and distance, and how many links the event carries
+ * (Strava and Facebook counted with the rows) — so the closed box still reads as the top of the
+ * fact sheet. Each card's own line says the rest: the climb, the route, which kinds of links.
+ */
+export function kindSummary(
+  words: SummaryWords,
+  event: (CourseEvent & LinksEvent) | null,
+  labels: { type: string; status: string; surface: string | null; difficulty: string | null },
+  locale: string,
+): string {
+  const links =
+    readEventLinks(event?.links ?? null).length + (event?.stravaEventUrl ? 1 : 0) + (event?.facebookEventUrl ? 1 : 0);
+  return join(words, [
+    labels.type,
+    labels.status,
+    labels.surface,
+    labels.difficulty,
+    distanceWords(words, event?.distanceMeters),
+    links > 0 ? counted(words.links.files, links, locale) : null,
+  ]);
+}
+
+/** Sub-card 1.3: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link`. */
 export function linksSummary(
   words: SummaryWords,
   event: LinksEvent | null,

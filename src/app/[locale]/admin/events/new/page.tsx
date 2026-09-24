@@ -16,6 +16,7 @@ import PlaceBox from "@/modules/content/events/ui/boxes/PlaceBox";
 import ProgrammeBox from "@/modules/content/events/ui/boxes/ProgrammeBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
+import StatusBox from "@/modules/content/events/ui/boxes/StatusBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
@@ -50,10 +51,12 @@ export const dynamic = "force-dynamic";
  * page is a bit inconsistent with the event edit"). So it is the editor's layout
  * (`EventEditorLayout`): the side column with Publicare and Recurență, first on a phone, and the
  * main column's boxes in the same three groups, under the same titles, with the same field names
- * and the same Română | English tabs. What it leaves out cannot exist before the event does: the
- * status box (a hidden `SCHEDULED` is posted instead, so "Anulat" is never offered for an event
- * that does not exist), allocation and printing, the series' details, the registrations, copy and
- * delete. Nothing stands in for what is left out.
+ * and the same Română | English tabs — "Ce fel de eveniment" holding the same three cards, the
+ * status, the course and the links (§NNN). The status card is the one that is read-only here: it
+ * says "Programat" and that the status can be changed once the event exists, and a hidden
+ * `SCHEDULED` is what posts, so "Anulat" is never offered for an event that does not exist. What
+ * the page leaves out cannot exist before the event does: allocation and printing, the series'
+ * details, the registrations, copy and delete. Nothing stands in for what is left out.
  *
  * Both languages are asked for here rather than "Romanian now, English later": publication
  * requires a complete translation in every locale (`DECISIONS.md` §28).
@@ -127,7 +130,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
       <ActionForm action={createEventAction} messages={messages} id="event-create-form" data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
-        {/* No status box on create: an event that does not exist yet is scheduled (§350). */}
+        {/* An event that does not exist yet is scheduled (§350): the status card shows it, read-only,
+            and this is what posts (§NNN). */}
         <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
         <EventEditorLayout
@@ -177,7 +181,13 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           main={
             <Stack spacing={2}>
               <EditorGroup label={t("editor.groups.event")} />
-              <KindBox {...box} />
+              {/* 1 — the type, and the editor's same three cards inside it (§NNN); the status one
+                  read-only, "Programat". */}
+              <KindBox {...box} locale={locale}>
+                <StatusBox {...box} />
+                <CourseBox {...box} />
+                <LinksBox {...box} locale={locale} />
+              </KindBox>
               <TitleSummaryBox languages={languages} creating />
               <DescriptionBox languages={languages} />
 
@@ -189,8 +199,6 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <RegistrationBox {...box} declarations={declarations} locale={locale} />
 
               <EditorGroup label={t("editor.groups.details")} />
-              <CourseBox {...box} />
-              <LinksBox {...box} locale={locale} />
               <CoHostsBox {...box} locale={locale} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />

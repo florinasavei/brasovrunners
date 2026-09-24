@@ -1116,7 +1116,7 @@
       "groups": {
         "event": "The event",
         "day": "The day and who takes part",
-        "details": "Course, links and presentation"
+        "details": "Partners and presentation"
       },
       "publication": {
         "missingTitle": "Missing before publishing",
@@ -1196,7 +1196,8 @@
           "title": "Public participant list"
         },
         "status": {
-          "title": "Event status"
+          "title": "Event status",
+          "createNote": "A new event starts as scheduled (Programat); its status can be changed once the event exists."
         },
         "course": {
           "title": "The course"

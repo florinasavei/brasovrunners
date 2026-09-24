@@ -12,11 +12,12 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 11, "Linkuri și fișiere" (§332, §350), directly after the course because that is what most
- * of them are — the GPX on Google Drive, the map on a platform — then the rest: a PDF, the album,
- * the results, and the Strava and Facebook events. Links, never an upload (`AGENTS.md` §17). The
- * rows keep their Romanian and English labels side by side in the row, never in tabs: a label
- * belongs to its one row.
+ * Card 1.3, "Linkuri și fișiere" (§332, §350, §NNN), inside "Ce fel de eveniment", directly after
+ * the course because that is what most of them are — the GPX on Google Drive, the map on a
+ * platform — then the rest: a PDF, the album, the results, and the Strava and Facebook events.
+ * Links, never an upload (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
+ * side in the row, never in tabs: a label belongs to its one row, so nesting the card changes
+ * nothing about how a language is written here.
  */
 export default async function LinksBox({ event, mayEditSettings, locale }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");
@@ -31,7 +32,7 @@ export default async function LinksBox({ event, mayEditSettings, locale }: BoxPr
   }));
 
   return (
-    <Panel collapsible id="box-links" title={t("editor.boxes.links.title")} aside={linksSummary(words, event, kindLabels, locale)}>
+    <Panel collapsible level={3} id="box-links" title={t("editor.boxes.links.title")} aside={linksSummary(words, event, kindLabels, locale)}>
       {mayEditSettings ? (
         <Stack spacing={2}>
           {/* The club's Strava group event for this occurrence (criterion 10). */}

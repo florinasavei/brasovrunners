@@ -110,7 +110,10 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
 
     // A copywriter owns no settings, and each settings box says so rather than being missing.
     const kind = await openEditorBox(page, "Ce fel de eveniment");
-    await expect(kind.getByText("Setările le schimbă un Organizator sau un Administrator.")).toBeVisible();
+    const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
+    await expect(readOnly.first()).toBeVisible();
+    // Once for the type, and once in each of its three cards — the status, the course, the links (§NNN).
+    await expect(readOnly).toHaveCount(4);
     await expect(kind.getByRole("combobox", { name: /Tip eveniment/ })).toHaveCount(0);
   });
 

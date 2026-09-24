@@ -10,10 +10,10 @@ import GlyphSelect from "../GlyphSelect";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 10, "Traseul" (§350): what they run on, how hard, how long and how steep, and where the
- * route can be seen — a separate question from the meeting point (§49). All optional, so folded
- * on both pages. "Nespecificat" is a real answer on the two selects: the page omits the row rather
- * than guessing (migration `0018`).
+ * Card 1.2, "Traseul" (§350, §NNN), inside "Ce fel de eveniment": what they run on, how hard, how
+ * long and how steep, and where the route can be seen — a separate question from the meeting point
+ * (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
+ * the page omits the row rather than guessing (migration `0018`).
  */
 export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
   const t = await getTranslations("Admin");
@@ -22,6 +22,7 @@ export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
   return (
     <Panel
       collapsible
+      level={3}
       id="box-course"
       title={t("editor.boxes.course.title")}
       aside={courseSummary(words, event, {

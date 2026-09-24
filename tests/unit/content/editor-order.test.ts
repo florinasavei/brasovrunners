@@ -10,10 +10,11 @@ import { describe, expect, it } from "vitest";
  * question and says its answer while shut. The order is pinned here because it is what drifts —
  * the next field added lands in whichever box is nearest unless something says where boxes go:
  *
- *   Evenimentul — what kind, title and summary, description;
- *   Ziua evenimentului și participanții — date and time, place, programme, rules, registration,
- *   and on the editor the status;
- *   Traseu, legături și prezentare — course, links and files, partners, promotion, page address;
+ *   Evenimentul — what kind, with its three cards inside it (§NNN; the owner: "these 3 cards
+ *   should be in the first one, both on edit and create mode") — the status, the course, the
+ *   links and files — then title and summary, description;
+ *   Ziua evenimentului și participanții — date and time, place, programme, rules, registration;
+ *   Parteneri și prezentare — partners, promotion, page address;
  *   then Salvare, always open.
  *
  * Source assertions, like the rest of this folder: these are Server Components rendering what
@@ -33,6 +34,10 @@ const at = (source: string, needle: string) => {
 const EDITOR_ORDER = [
   't("editor.groups.event")',
   "<KindBox",
+  "<StatusBox",
+  "<CourseBox",
+  "<LinksBox",
+  "</KindBox>",
   "<TitleSummaryBox",
   "<DescriptionBox",
   't("editor.groups.day")',
@@ -41,21 +46,48 @@ const EDITOR_ORDER = [
   "<ProgrammeBox",
   "<RulesBox",
   "<RegistrationBox",
-  "<StatusBox",
   't("editor.groups.details")',
-  "<CourseBox",
-  "<LinksBox",
   "<CoHostsBox",
   "<PromotionBox",
   "<AddressBox",
   'id="box-save"',
 ];
 
+/** The page's source between `<KindBox` and `</KindBox>`: what the first box is handed. */
+const firstBoxOf = (source: string) => source.slice(at(source, "<KindBox"), at(source, "</KindBox>"));
+
 describe("§350 the editor's boxes, in order", () => {
   it("renders the three groups and their boxes in the order of the design, then Salvare", () => {
     const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
     for (let index = 1; index < positions.length; index += 1) {
       expect(positions[index], `${EDITOR_ORDER[index]} after ${EDITOR_ORDER[index - 1]}`).toBeGreaterThan(positions[index - 1]);
+    }
+  });
+
+  it("nests the status, the course and the links inside the first box, on both pages, each once (§NNN)", () => {
+    const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
+    for (const [page, source] of [
+      ["edit", EDIT],
+      ["create", CREATE],
+    ] as const) {
+      const first = firstBoxOf(source);
+      for (const card of ["<StatusBox", "<CourseBox", "<LinksBox"]) {
+        expect(first, `${page}: ${card} inside <KindBox>`).toContain(card);
+        expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
+      }
+      expect(first.indexOf("<StatusBox")).toBeLessThan(first.indexOf("<CourseBox"));
+      expect(first.indexOf("<CourseBox")).toBeLessThan(first.indexOf("<LinksBox"));
+      // Nothing else went in with them.
+      expect(first.match(/<[A-Z]\w*Box\b/g), page).toEqual(["<KindBox", "<StatusBox", "<CourseBox", "<LinksBox"]);
+    }
+    // Named level-3 cards with their own ids, so a deep link or a refusal still lands on them.
+    for (const [file, id] of [
+      ["StatusBox", "box-status"],
+      ["CourseBox", "box-course"],
+      ["LinksBox", "box-links"],
+    ] as const) {
+      const source = read(`src/modules/content/events/ui/boxes/${file}.tsx`);
+      expect(source, file).toMatch(new RegExp(`<Panel\\s+collapsible\\s+level=\\{3\\}\\s+id="${id}"`));
     }
   });
 
@@ -100,9 +132,10 @@ describe("§350 the editor's boxes, in order", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
+    // The opening tag only: the first box holds the status card, which is marked on its own (§NNN).
     for (const box of ["<KindBox", "<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
       const start = at(EDIT, box);
-      expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).not.toContain("risk=");
+      expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }
     // Real registrations only: a test row is counted nowhere the club looks (§12.6).
     expect(EDIT).toContain("const realCount = registered.total - registered.test;");
