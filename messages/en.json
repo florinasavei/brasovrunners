@@ -96,7 +96,6 @@
     "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
-    "startAt": "starts at {time}",
     "when": "When",
     "where": "Where",
     "raceStartTime": "Race start",
@@ -144,6 +143,7 @@
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
+    "elevationShort": "{m} m climb",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -242,6 +242,7 @@
     "costPaidAmount": "Fee: {amount}",
     "costPaidWhere": "payment on {host}",
     "costDonation": "Donation: on {host}",
+    "costDonateOn": "Donate on {host}",
     "costDonationSuggested": "suggested {amount}",
     "series": {
       "weekly": "Every {days}",

@@ -179,6 +179,41 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     }
   });
 
+  /**
+   * `DECISIONS.md` §NNN — the owner, of the bulleted facts §168 had made: "better grouped …
+   * distance, difficulty, elevation should be on the same line", and "these need to be pills".
+   * Read on both projects: 320 pixels, where the question sits over its answer, and a desktop.
+   */
+  test("draws the route as one row of pills, the cost as its own, «când» on one line", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+    const facts = page.getByTestId("event-facts");
+    const value = (label: string) => facts.locator("dt", { hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
+
+    // No bullets and no list: pills and lines.
+    await expect(facts.locator("li")).toHaveCount(0);
+    await expect(facts).not.toContainText("•");
+
+    // The seeded Tâmpa run — 14 km, 600 m of climb, moderate, on trail — as four pills, in order.
+    await expect(value("Traseu").locator(".MuiChip-root")).toHaveText(["14 km", "600 m D+", "Mediu", "Trail"]);
+    // Free, in a row of its own rather than among the route's pills.
+    await expect(value("Cost").locator(".MuiChip-root")).toHaveText(["Gratuit"]);
+    await expect(value("Traseu")).not.toContainText("Gratuit");
+
+    // «Când»: the weekday's date and the time, no «începe la», on one line at 320 px too.
+    const when = value("Când");
+    await expect(when).toHaveText(/^(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}·\d{2}:\d{2}$/);
+    const lineHeight = await when.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
+    expect((await when.boundingBox())?.height ?? Infinity).toBeLessThan(lineHeight * 1.5);
+
+    // Every row's glyph the same size, whichever question it answers.
+    const glyphs = await facts.locator("dt svg").evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)));
+    expect(glyphs.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(glyphs)).toEqual(new Set([20]));
+
+    // Still nothing wider than the phone.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
   test("carries a parseable SportsEvent block naming the club as organizer", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
 

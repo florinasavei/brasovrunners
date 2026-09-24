@@ -66,10 +66,13 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-describe("the cost facts, full page (§343)", () => {
+/** A chip's words, in order, wherever they are in the markup (§NNN: the page's cost is a pill). */
+const pillLabels = (html: string) => [...html.matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+
+describe("the cost facts, full page (§343; its own row and pill since §NNN)", () => {
   it("says «Gratuit» for a free event, with no amount and no link", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "FREE" }), now: NOW, stacked: true }));
-    expect(html).toContain("Gratuit");
+    expect(pillLabels(html)).toContain("Gratuit");
     expect(html).not.toContain("Taxă");
     expect(html).not.toContain("Donație");
   });
@@ -82,7 +85,9 @@ describe("the cost facts, full page (§343)", () => {
         stacked: true,
       }),
     );
-    expect(html).toContain("Taxă: 50 lei");
+    // The row is labelled «Cost», so the pill is the club's amount alone, not «Taxă: 50 lei».
+    expect(pillLabels(html)).toContain("50 lei");
+    expect(html).not.toContain("Taxă:");
     expect(html).toContain("plata pe revolut.me");
     expect(html).toContain('href="https://revolut.me/brasovrunners"');
     expect(html).toContain('target="_blank"');
@@ -93,7 +98,7 @@ describe("the cost facts, full page (§343)", () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: null }), now: NOW, stacked: true }),
     );
-    expect(html).toContain("Taxă: 50 lei");
+    expect(pillLabels(html)).toContain("50 lei");
     expect(html).not.toContain("plata pe");
     expect(html).not.toContain("<a ");
   });
@@ -102,11 +107,11 @@ describe("the cost facts, full page (§343)", () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: null, costUrl: null }), now: NOW, stacked: true }),
     );
-    expect(html).toContain("Cu taxă");
+    expect(pillLabels(html)).toContain("Cu taxă");
     expect(html).not.toContain("Taxă:");
   });
 
-  it("links the whole «Donație: pe {host}» phrase, with the suggested amount after it", async () => {
+  it("puts «Donație» on the pill and links «Donează pe {host}», with the suggested amount after it", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({
         event: event({
@@ -118,7 +123,8 @@ describe("the cost facts, full page (§343)", () => {
         stacked: true,
       }),
     );
-    expect(html).toContain("Donație: pe wingsforlifeworldrun.com");
+    expect(pillLabels(html)).toContain("Donație");
+    expect(html).toContain("Donează pe wingsforlifeworldrun.com");
     expect(html).toContain('href="https://www.wingsforlifeworldrun.com/en/donate"');
     expect(html).toContain("sugerat 50 lei");
   });
@@ -131,9 +137,28 @@ describe("the cost facts, full page (§343)", () => {
     // The real address is the href — a runner must land on the right page.
     expect(html).toContain(`href="${url}"`);
     // But the text a reader sees is the host alone, never the query string or the full address.
-    const linkText = /<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1];
-    expect(linkText).toBe("Donație: pe wingsforlifeworldrun.com");
+    const linkText = /<a [^>]*href="https:\/\/www\.wingsforlife[^"]*"[^>]*>([^<]*)<\/a>/.exec(html)?.[1];
+    expect(linkText).toBe("Donează pe wingsforlifeworldrun.com");
     expect(linkText).not.toContain("utm_source");
+  });
+});
+
+describe("the cost facts, featured hero (§343, unchanged by §NNN)", () => {
+  it("keeps «Taxă: 50 lei» and «plata pe {host}» among the route's pieces", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),
+    );
+    expect(html).toContain("Taxă: 50 lei");
+    expect(html).toContain("plata pe revolut.me");
+    expect(pillLabels(html)).toEqual([]);
+  });
+
+  it("keeps the whole «Donație: pe {host}» phrase as the link", async () => {
+    const html = renderToStaticMarkup(
+      await EventFacts({ event: event({ costType: "DONATION", costAmount: "50 lei", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" }), now: NOW }),
+    );
+    expect(/<a [^>]*>([^<]*)<\/a>/.exec(html)?.[1]).toBe("Donație: pe wingsforlifeworldrun.com");
+    expect(html).toContain("sugerat 50 lei");
   });
 });
 
@@ -170,6 +195,9 @@ describe("the cost phrases exist in both catalogues, with the club's tokens (§3
     expect(t("en", "costPaidWhere", { host: "revolut.me" })).toBe("payment on revolut.me");
     expect(t("ro", "costDonation", { host: "wingsforlifeworldrun.com" })).toBe("Donație: pe wingsforlifeworldrun.com");
     expect(t("en", "costDonation", { host: "wingsforlifeworldrun.com" })).toBe("Donation: on wingsforlifeworldrun.com");
+    // The page's link after the «Donație» pill (§NNN).
+    expect(t("ro", "costDonateOn", { host: "wingsforlifeworldrun.com" })).toBe("Donează pe wingsforlifeworldrun.com");
+    expect(t("en", "costDonateOn", { host: "wingsforlifeworldrun.com" })).toBe("Donate on wingsforlifeworldrun.com");
   });
 
   it("names the suggested amount in both languages", () => {

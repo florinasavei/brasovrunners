@@ -50,7 +50,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   return {
     id: "11111111-1111-1111-1111-111111111111",
     type: "RACE",
-    surface: "ROAD",
+    surface: "ASPHALT",
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-11-21T07:00:00Z"),
     endsAt: null,
