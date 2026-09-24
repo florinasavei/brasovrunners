@@ -230,6 +230,26 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
   it("a race's two times, each named, on the same line", async () => {
     const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·întâlnire la 09:00·start la 10:00");
+    // One clock, in front of the first time: the two read as one group (§NNN).
+    expect(when.match(/data-testid="ScheduleIcon"/g)).toHaveLength(1);
+    expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("întâlnire"));
+  });
+
+  it("puts a clock in front of the time, as the listing card does (§NNN): «[calendar] Sâmbătă, 26 sept. 2026 · [clock] 08:00»", async () => {
+    const html = await page();
+    const when = row(html, "Când").dd;
+    const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when)?.[0] ?? "";
+    expect(clock).toContain('aria-hidden="true"');
+    expect(when.indexOf("2026")).toBeLessThan(when.indexOf(clock));
+    expect(when.indexOf(clock)).toBeLessThan(when.indexOf("08:00"));
+    // The row glyph's family: twenty pixels, the secondary colour, centred on the line.
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(clock)?.[1];
+    const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+    expect(rule).toContain("font-size:20px");
+    expect(rule).toContain("vertical-align:middle");
+    expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
+    // The row's own glyph is still the calendar, in the label.
+    expect(row(html, "Când").dt).toContain('data-testid="CalendarMonthIcon"');
   });
 });
 
@@ -304,12 +324,13 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
  * BR-REQ-041-01 (§NNN) — the listing card draws the event page's shapes, smaller. The owner,
  * 2026-09-24, with a screenshot of the listing: "There is too much whitespace on these cards, it
  * needs to be better spaced" — and in it, the pin alone on a line with the place under it, and the
- * route as "8 km · 250 m diferență de nivel · ı Mediu" with a tiny glyph and middle dots, while
- * the event page had just made the same facts pills (§356).
+ * route as "8 km · 250 m diferență de nivel · ı Mediu" with a tiny glyph and middle dots, the
+ * partner's "Împreună cu …" among them, while the event page had just made the same facts pills
+ * (§356): "I like these pills on the full page details! this is currently pretty ugly!".
  */
 describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's pills (§NNN)", () => {
   const card = async (overrides: Partial<PublicEvent> = {}, extra: { links?: boolean; whenLead?: string } = {}) =>
-    renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", links: extra.links ?? false, whenLead: extra.whenLead }));
+    renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", links: extra.links, whenLead: extra.whenLead }));
 
   /**
    * The card's lines, in order: each `data-fact` element's name and its markup up to the next
@@ -333,47 +354,82 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     return found;
   }
 
-  it("has no labels and no list: a line for when, a line for where, then the pills", async () => {
+  /** The CSS rule Emotion emitted for the last `css-` class on a tag. */
+  function ruleOf(html: string, tag: string) {
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1];
+    return new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+  }
+
+  it("has no labels and no list: a line for when, a line for where, the pills, then the state of registration", async () => {
     const html = await card();
     expect(html).not.toContain("<dl");
     expect(withoutStyles(html)).not.toMatch(/<ul\b|<li\b/);
-    expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "registration", "pills"]);
+    expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "pills", "registration"]);
     expect(html).not.toContain("Când");
     expect(html).not.toContain("Unde");
   });
 
-  it("puts the pin and the place in one line element, the pin first — never the pin alone on a line", async () => {
+  it("puts the pin and the place in one line element, the pin first, the place the map link — never the pin alone on a line", async () => {
     const where = line(await card(), "where").inner;
     // The glyph and the words are the two children of one flex row: the glyph stays on the first
     // line of the words, and a long place wraps under itself.
-    expect(where).toMatch(/^<svg\b[^>]*data-testid="PlaceIcon"[^>]*>[\s\S]*?<\/svg><div\b[^>]*>Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic<\/div>$/);
-    const html = withoutStyles(await card());
-    const row = /<div\b[^>]*data-fact="where"[^>]*>/.exec(html)?.[0] ?? "";
-    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(row)?.[1];
-    const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(await card())?.[1] ?? "";
+    expect(where).toMatch(
+      /^<svg\b[^>]*data-testid="PlaceIcon"[^>]*>[\s\S]*?<\/svg><div\b[^>]*><a\b[^>]*href="https:\/\/maps\.example\.test\/tractorul"[^>]*>Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic<\/a><\/div>$/,
+    );
+    const html = await card();
+    const rule = ruleOf(html, /<div\b[^>]*data-fact="where"[^>]*>/.exec(withoutStyles(html))?.[0] ?? "");
     expect(rule).toContain("display:flex");
     expect(rule).toContain("align-items:flex-start");
   });
 
+  it("says the map once, as the place — 44 pixels to a thumb, padding given back as margin, so the line is as tall as its words even when the place wraps", async () => {
+    const html = await card();
+    const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]).toContain('target="_blank"');
+    const rule = ruleOf(html, anchors[0] ?? "");
+    expect(rule).toContain("min-height:44px");
+    expect(rule).toContain("padding-top:10px");
+    expect(rule).toContain("padding-bottom:10px");
+    expect(rule).toContain("margin-top:-10px");
+    expect(rule).toContain("margin-bottom:-10px");
+  });
+
+  it("writes the place as words where the facts may carry no link", async () => {
+    const where = line(await card({}, { links: false }), "where").inner;
+    expect(where).not.toContain("<a ");
+    expect(text(where)).toBe("Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic");
+  });
+
   it("leads every line with the event page's own row glyph — one class, twenty pixels, the secondary colour", async () => {
-    const html = await card({ coHosts: [{ name: "Salvamont", links: [] }] });
+    const html = await card();
     const glyphClass = (fragment: string) => /<svg\b[^>]*class="([^"]*)"/.exec(fragment)?.[1];
     const classes = lines(html)
       .filter((l) => l.key !== "pills")
       .map((l) => glyphClass(l.inner));
-    expect(classes).toHaveLength(4);
+    expect(classes).toHaveLength(3);
     expect(new Set(classes).size).toBe(1);
     // The same class the page's rows wear (§356): one style object, `ROW_ICON_SX`.
     const pageGlyph = glyphClass(rows(await page()).at(0)?.dt ?? "");
     expect(classes[0]).toBe(pageGlyph);
   });
 
-  it("writes when as one line: the date with its weekday and its time, one piece that does not break", async () => {
-    const when = line(await card(), "when").inner;
+  it("writes when as one line: the date with its weekday, a clock, and the time — each piece whole", async () => {
+    const html = await card();
+    const when = line(html, "when").inner;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·08:00");
     expect(when).toContain('style="white-space:nowrap"');
     // The separator is hidden from a screen reader.
     expect(when).toMatch(/<span\b[^>]*aria-hidden="true"[^>]*>·<\/span>/);
+    // The clock sits between the date and the time, as big and as grey as the row's glyph.
+    const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when)?.[0] ?? "";
+    expect(clock).toContain('aria-hidden="true"');
+    expect(when.indexOf("2026")).toBeLessThan(when.indexOf(clock));
+    expect(when.indexOf(clock)).toBeLessThan(when.indexOf("08:00"));
+    const rule = ruleOf(html, clock);
+    expect(rule).toContain("font-size:20px");
+    expect(rule).toContain("vertical-align:middle");
+    expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
   });
 
   it("puts a series card's «Următoarea:» on the date's own line, before it (§113)", async () => {
@@ -412,26 +468,17 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   });
 
   it("keeps the cost to the closed set's word on a card — no amount, no link (§343)", async () => {
-    const html = await card({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, { links: true });
+    const html = await card({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" });
     expect(chips(line(html, "pills").inner).at(-1)?.label).toBe("Cu taxă");
     expect(html).not.toContain("50 lei");
     expect(html).not.toContain("revolut.me");
   });
 
-  it("says the place's map once, as the place, on a series card — tight, so the line is as tall as its words", async () => {
-    const html = await card({}, { links: true });
-    const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
-    expect(anchors).toHaveLength(1);
-    expect(anchors[0]).toContain('href="https://maps.example.test/tractorul"');
-    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(anchors[0] ?? "")?.[1];
-    const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
-    expect(rule).toContain("min-height:44px");
-    expect(rule).toContain("margin-top:-10px");
-  });
-
-  it("writes the place and the partners and the state as words when the card itself is the link", async () => {
+  it("says nothing of the partners among the facts — the partner's mark on a card is its chips'", async () => {
     const html = await card({ coHosts: [{ name: "Salvamont", links: [{ kind: "SITE", url: "https://salvamont.example.test" }] }] });
-    expect(withoutStyles(html)).not.toContain("<a ");
-    expect(text(line(html, "coHost").inner)).toBe("Împreună cu Salvamont");
+    expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "pills", "registration"]);
+    expect(html).not.toContain("Împreună cu");
+    expect(html).not.toContain("Salvamont");
+    expect(html).not.toContain("salvamont.example.test");
   });
 });

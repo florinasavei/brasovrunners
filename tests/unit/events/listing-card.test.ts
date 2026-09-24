@@ -1,3 +1,4 @@
+import { createTheme } from "@mui/material/styles";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -7,12 +8,15 @@ import type { PublicEvent } from "@/modules/events/repository";
  * BR-REQ-041-01 (§NNN) — the listing's two cards, rendered on the server as the page renders them.
  *
  * The owner, 2026-09-24, with a screenshot of the listing's two-column grid: "There is too much
- * whitespace on these cards, it needs to be better spaced". What it showed: the door pushed to the
- * foot of a stretched card with a hole above it; a series card's title a bare, visited-purple,
- * underlined link beside a single card's black one; the surface on a chip at the top and the facts
- * as a line of middle dots; a ninety-character registration address wrapped over two lines of a
- * summary. Each is asserted here on the markup, and `listing-cards.spec.ts` measures the same cards
- * in a browser at 320 pixels and on a desktop.
+ * whitespace on these cards, it needs to be better spaced"; then, of the one-off "Trail to Road cu
+ * Brașov Running Festival" beside two series cards: "I do not see the google maps link for this
+ * event, although I've put the maps URL", "for the time I would like a clock icon as well", "I am
+ * missing the blue link for this event, why?", and of the card's facts line beside the event page's
+ * pills: "this is currently pretty ugly!". What the screenshot showed: the one-off card one `<a>`
+ * wrapping everything, its title a black heading, its place no link, a pin alone on a line, the
+ * route as a line of middle dots with the partner's sentence among the numbers, the door pinned to
+ * the foot of a stretched card with a hole above it. Each is asserted here on the markup, and
+ * `listing-cards.spec.ts` measures the same cards in a browser at 320 pixels and on a desktop.
  */
 let currentLocale: "ro" | "en" = "ro";
 
@@ -41,7 +45,7 @@ const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: SeriesCard } = await import("@/modules/events/ui/SeriesCard");
 const { default: RichText } = await import("@/modules/content/rich-text/ui/RichText");
 const { shortenUrls } = await import("@/modules/content/rich-text/domain/short-url");
-const { CARD_STRETCHED_TITLE_SX, CARD_TITLE_SX } = await import("@/modules/events/ui/card-layout");
+const { CARD_TITLE_SX } = await import("@/modules/events/ui/card-layout");
 
 afterEach(() => {
   currentLocale = "ro";
@@ -49,9 +53,12 @@ afterEach(() => {
 
 const NOW = new Date("2026-09-24T09:00:00.000Z");
 const HAKU = "https://register.hakuapp.com/?event=c9a8e7f6d5c4b3a2a1b0c9d8e7f6a5b4-happy-monday-2026";
+const MAP = "https://maps.app.goo.gl/TrailToRoadPiata";
+/** The primary colour a test render resolves to: MUI's default theme, since no provider wraps it. */
+const PRIMARY = createTheme().palette.primary.main;
 
-/** The owner's screenshot, as rows: a Monday run at 18:30 in Brașov, 8 km, 250 m, moderate, free. */
-function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
+/** A group run's row, the fields the cards read. */
+function row(overrides: Partial<PublicEvent> = {}): PublicEvent {
   return {
     id: "22222222-2222-2222-2222-222222222222",
     type: "GROUP_RUN",
@@ -108,17 +115,69 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-/** Eight Mondays at 18:30 in Brașov, the first on 28 September — "Happy Monday", one card (§113). */
-function series(): PublicEvent[] {
-  const mondays = ["2026-09-28T15:30:00Z", "2026-10-05T15:30:00Z", "2026-10-12T15:30:00Z"];
-  return mondays.map((startsAt, index) => event({ id: `3333333${index}-3333-3333-3333-333333333333`, slug: `happy-monday-${index}`, startsAt: new Date(startsAt) }));
+/**
+ * The owner's one-off card: "Trail to Road cu Brașov Running Festival", Sunday 27 September at
+ * 10:00 on Piața Sfatului, with the Google Maps link the club pasted, held with the festival, 8 km,
+ * 250 m of climb, moderate, on mixed ground, free.
+ */
+function trailToRoad(overrides: Partial<PublicEvent> = {}): PublicEvent {
+  return row({
+    id: "44444444-4444-4444-4444-444444444444",
+    slug: "trail-to-road",
+    title: "Trail to Road cu Brașov Running Festival",
+    startsAt: new Date("2026-09-27T07:00:00Z"),
+    locationName: "Piața Sfatului, Brașov",
+    mapUrl: MAP,
+    surface: "MIXED",
+    coHosts: [{ name: "Brașov Running Festival", links: [{ kind: "SITE", url: "https://festival.example.test" }] }],
+    ...overrides,
+  });
 }
 
+/** Mondays at 18:30 in Brașov, the first on 28 September — "Happy Monday", one card (§113). */
+function series(): PublicEvent[] {
+  const mondays = ["2026-09-28T15:30:00Z", "2026-10-05T15:30:00Z", "2026-10-12T15:30:00Z"];
+  return mondays.map((startsAt, index) =>
+    row({ id: `3333333${index}-3333-3333-3333-333333333333`, slug: `happy-monday-${index}`, startsAt: new Date(startsAt), mapUrl: "https://maps.example.test/titulescu" }),
+  );
+}
+
+// `[\s\S]` rather than the `s` flag: `next build` type-checks the tests against an older target.
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 const text = (fragment: string) => fragment.replace(/<[^>]+>/g, "");
-const anchors = (html: string) => [...withoutStyles(html).matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)].map(([tag, inner]) => ({ tag, text: text(inner) }));
+const anchors = (html: string) =>
+  [...withoutStyles(html).matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(([, attributes, inner]) => ({
+    href: /href="([^"]*)"/.exec(attributes)?.[1],
+    attributes,
+    text: text(inner),
+  }));
 /** The words of every chip, in order. */
 const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
+/** Where the facts end: the series card's fold, or the door to the page. */
+const AFTER_FACTS = /<details\b|<a\b[^>]*>(?:<svg\b[\s\S]*?<\/svg>)?(?:Descrierea completă|Full event description)/;
+/** One fact line of the card (`data-fact`), from its opening tag up to the next line or the end of the facts. */
+function fact(html: string, key: string): string {
+  const markup = withoutStyles(html);
+  const open = new RegExp(`<[^<>]*\\bdata-fact="${key}"[^>]*>`).exec(markup);
+  if (!open) throw new Error(`no fact ${key}`);
+  const rest = markup.slice(open.index + open[0].length);
+  const stop = rest.search(new RegExp(`<[^<>]*\\bdata-fact="|${AFTER_FACTS.source}`));
+  return open[0] + (stop < 0 ? rest : rest.slice(0, stop));
+}
+/** The facts block: from its start to the first thing after it (the fold or the door). */
+function facts(html: string): string {
+  const markup = withoutStyles(html);
+  const start = markup.indexOf('data-testid="card-facts"');
+  expect(start).toBeGreaterThan(0);
+  const rest = markup.slice(start);
+  return rest.slice(0, rest.search(AFTER_FACTS));
+}
+/** The CSS rules Emotion emitted for a class, joined — `.css-x a{…}`, `.css-x a:hover{…}` and so on. */
+function rulesFor(html: string, cls: string): string {
+  return [...html.matchAll(new RegExp(`\\.${cls}([^{]*)\\{([^}]*)\\}`, "g"))].map(([, selector, body]) => `${selector}{${body}}`).join("\n");
+}
+/** The Emotion class of the `<h2>` that holds a card's title. */
+const titleClass = (html: string) => /<h2\b[^>]*class="[^"]*\b(css-[\w-]+)"/.exec(withoutStyles(html))?.[1] ?? "";
 
 /**
  * A card's markup. The cards are async Server Components holding other async ones (the chips, the
@@ -131,7 +190,7 @@ async function markup(node: ReactNode): Promise<string> {
   return new Response(stream).text();
 }
 
-const single = async (overrides: Partial<PublicEvent> = {}) => markup(createElement(EventCard, { event: event(overrides), index: 0, now: NOW }));
+const single = async (overrides: Partial<PublicEvent> = {}) => markup(createElement(EventCard, { event: trailToRoad(overrides), index: 0, now: NOW }));
 const repeated = async () => markup(createElement(SeriesCard, { members: series(), index: 0, now: NOW }));
 
 describe("BR-REQ-041-01 a web address on a card is its host (§NNN)", () => {
@@ -150,7 +209,7 @@ describe("BR-REQ-041-01 a web address on a card is its host (§NNN)", () => {
   });
 
   it("renders a summary without links on a card, and with them everywhere else", () => {
-    const doc = event().excerptJson;
+    const doc = row().excerptJson;
     const card = withoutStyles(renderToStaticMarkup(createElement(RichText, { body: doc, links: false })));
     expect(card).not.toContain("<a ");
     expect(text(card)).toBe("O oră de alergare ușoară. Tricoul se comandă aici: register.hakuapp.com/…. Detalii pe pagina clubului.");
@@ -160,28 +219,89 @@ describe("BR-REQ-041-01 a web address on a card is its host (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-041-01 the single-date card (§NNN)", () => {
-  it("is two links — the title and the door — to the same page, and nothing is a link inside a link", async () => {
-    const html = await single();
+describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)", () => {
+  it("is no whole-card link: the title, the place and the door are three links side by side, none inside another", async () => {
+    const html = withoutStyles(await single());
     const links = anchors(html);
-    expect(links.map((link) => link.text)).toEqual(["Happy Monday", "Descrierea completă a evenimentului"]);
-    for (const link of links) expect(link.tag).toContain('href="/ro/evenimente/happy-monday-0"');
-    // No anchor opens before the one before it has closed.
-    expect(withoutStyles(html)).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
+    expect(links.map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Descrierea completă a evenimentului"]);
+    expect(links.map((link) => link.href)).toEqual(["/ro/evenimente/trail-to-road", MAP, "/ro/evenimente/trail-to-road"]);
+    // No anchor opens before the one before it has closed, and none holds the heading.
+    expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
+    expect(html).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<h2\b/);
+    // The card itself is the list item, not a link, and nothing is stretched over it.
+    expect(html).toMatch(/^<li\b/);
+    expect(await single()).not.toMatch(/::after\{[^}]*position:absolute/);
   });
 
-  it("makes the title the card's one press: its box is stretched over the card, and the door stands above it", async () => {
-    expect(CARD_STRETCHED_TITLE_SX["& a"]["&::after"]).toEqual({ content: '""', position: "absolute", inset: 0 });
+  it("makes the title the link, in the heading, in the theme's blue visited or not, underlined only under a pointer or the keyboard", async () => {
     const html = await single();
-    // The card is the box the title's `::after` fills.
-    expect(html).toMatch(/position:relative/);
-    expect(html).toMatch(/z-index:1/);
+    expect(withoutStyles(html)).toMatch(/<h2\b[^>]*><a href="\/ro\/evenimente\/trail-to-road">Trail to Road cu Brașov Running Festival<\/a><\/h2>/);
+    const rules = rulesFor(html, titleClass(html));
+    expect(rules).toMatch(new RegExp(` a\\{[^}]*color:${PRIMARY}`));
+    expect(rules).toMatch(/ a\{[^}]*text-decoration:none/);
+    expect(rules).toMatch(new RegExp(` a:visited\\{color:${PRIMARY}`));
+    expect(rules).toMatch(/ a:hover\{[^}]*;text-decoration:underline/);
+    expect(rules).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline/);
+    // 44 pixels to a thumb, given back as margin so the line is as tall as its words.
+    expect(rules).toMatch(/ a\{[^}]*min-height:44px/);
+    expect(rules).toMatch(/ a\{[^}]*padding-top:10px/);
+    expect(rules).toMatch(/ a\{[^}]*margin-top:-10px/);
+    expect(CARD_TITLE_SX["& a"]).toMatchObject({ color: "primary.main", textDecoration: "none", minHeight: 44 });
   });
 
-  it("says the surface once, as a pill with the facts, and keeps the type's chip at the top", async () => {
+  it("titles itself exactly as the series card does — one class, one size, one weight, one blue", async () => {
+    const one = await single();
+    const many = await repeated();
+    expect(titleClass(one)).not.toBe("");
+    expect(titleClass(one)).toBe(titleClass(many));
+    expect(withoutStyles(many)).toMatch(/<h2\b[^>]*><a href="\/ro\/evenimente\/happy-monday-0">Happy Monday<\/a><\/h2>/);
+  });
+
+  it("puts the pin and the place in one line element, the place a link to the map the club pasted", async () => {
+    const where = fact(await single(), "where");
+    // The glyph and the words are the two children of one flex row: the pin stays on the words'
+    // first line, never alone on a line of its own.
+    expect(where).toMatch(/^<div\b[^>]*data-fact="where"[^>]*><svg\b[^>]*data-testid="PlaceIcon"[^>]*>[\s\S]*?<\/svg><div\b[^>]*><a\b/);
+    const [place] = anchors(where);
+    expect(place?.href).toBe(MAP);
+    expect(place?.text).toBe("Piața Sfatului, Brașov");
+    expect(place?.attributes).toContain('target="_blank"');
+    expect(place?.attributes).toContain('rel="noopener noreferrer"');
+  });
+
+  it("says the place in words, with its pin, when the club pasted no map — and only the sentence while it is to be announced", async () => {
+    const plain = fact(await single({ mapUrl: null }), "where");
+    expect(plain).not.toContain("<a ");
+    expect(text(plain)).toBe("Piața Sfatului, Brașov");
+    const later = fact(await single({ locationToBeAnnounced: true, locationName: null, mapUrl: null }), "where");
+    expect(text(later)).toBe("Locația se anunță în curând");
+  });
+
+  it("puts a clock beside the time, on the date's line: «Duminică, 27 sept. 2026 · [clock] 10:00»", async () => {
+    const when = fact(await single(), "when");
+    expect(when).toContain('data-testid="CalendarMonthIcon"');
+    expect(when).toContain('data-testid="ScheduleIcon"');
+    // The clock comes after the date and before the time.
+    expect(when.indexOf("2026")).toBeLessThan(when.indexOf('data-testid="ScheduleIcon"'));
+    expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("10:00"));
+    expect(text(when)).toBe("Duminică, 27 sept. 2026·10:00");
+  });
+
+  it("draws the route and the cost as the page's pills, and says the surface once — as a pill, not also a chip at the top", async () => {
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "8 km", "250 m D+", "Mediu", "Asfalt", "Gratuit"]);
-    expect(chipLabels(html).filter((label) => label === "Asfalt")).toHaveLength(1);
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
+    expect(chipLabels(fact(html, "pills"))).toEqual(["8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
+    // No middle dot between them and none of the old line's long words.
+    expect(text(fact(html, "pills"))).not.toContain("·");
+    expect(html).not.toContain("diferență de nivel");
+  });
+
+  it("keeps the partner out of the facts: no «Împreună cu» between the place and the kilometres", async () => {
+    const block = facts(await single());
+    expect(block).not.toContain("Împreună cu");
+    expect(block).not.toContain("Brașov Running Festival");
+    expect(block).not.toContain("festival.example.test");
+    expect(block).not.toContain('data-testid="HandshakeIcon"');
   });
 
   it("carries its marks at the top: special, cancelled", async () => {
@@ -190,31 +310,36 @@ describe("BR-REQ-041-01 the single-date card (§NNN)", () => {
   });
 
   it("prints the summary with no link and the address as its host", async () => {
-    const html = withoutStyles(await single());
+    const html = withoutStyles(await single({ excerptJson: row().excerptJson }));
     const summary = /<div\b[^>]*data-testid="card-excerpt"[^>]*>([\s\S]*?)<\/div>/.exec(html)?.[1] ?? "";
     expect(summary).not.toContain("<a ");
     expect(text(summary)).toContain("register.hakuapp.com/…");
     expect(html).not.toContain("https://register.hakuapp.com");
   });
 
-  it("puts the pin and the place in one line", async () => {
-    const html = withoutStyles(await single());
-    const where = /<div\b[^>]*data-fact="where"[^>]*>([\s\S]*?)<\/div><\/div>/.exec(html)?.[1] ?? "";
-    expect(where).toContain('data-testid="PlaceIcon"');
-    expect(text(where)).toBe("Parcul Titulescu, la fântâna arteziană");
+  it("ends its facts with the state of registration, after the pills, on an event that takes registrations (BR-REQ-011-01 criterion 18)", async () => {
+    const html = await single({ type: "RACE", registrationMode: "INTERNAL", registrationOpensAt: new Date("2026-10-01T15:00:00Z") });
+    const block = facts(html);
+    const keys = [...block.matchAll(/data-fact="(\w+)"/g)].map((match) => match[1]);
+    expect(keys).toEqual(["when", "where", "pills", "registration"]);
+    expect(text(fact(html, "registration"))).toBe("Înscrierile se deschid pe joi, 1 oct. 2026, 18:00");
   });
 
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "8 km", "250 m climb", "Moderate", "Asphalt", "Free"]);
-    expect(anchors(html).at(-1)?.text).toBe("Full event description");
+    expect(chipLabels(html)).toEqual(["Group run", "8 km", "250 m climb", "Moderate", "Mixed", "Free"]);
+    expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
+    // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
+    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026·10:00$/);
+    expect(fact(html, "when")).toContain('data-testid="ScheduleIcon"');
   });
 });
 
 describe("BR-REQ-041-01 the series card (§NNN)", () => {
-  it("reads, in order: the chips, the title, the rhythm, the summary, «Următoarea:» with the date on one line, the place, the pills, the dates, the door", async () => {
-    const words = text(withoutStyles(await repeated()));
+  it("reads, in order: the chips, the title, the rhythm, the summary, «Următoarea:» with the date and the time on one line, the place, the pills, the dates, the door", async () => {
+    const html = await repeated();
+    const words = text(withoutStyles(html));
     const order = [
       "Alergare de grup",
       "Săptămânal",
@@ -231,9 +356,16 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     const positions = order.map((piece) => words.indexOf(piece));
     for (const [index, piece] of order.entries()) expect(positions[index], piece).toBeGreaterThanOrEqual(0);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
-    // «Următoarea» is not a line of its own any more.
-    const when = /<div\b[^>]*data-fact="when"[^>]*>([\s\S]*?)<\/div><\/div>/.exec(withoutStyles(await repeated()))?.[1] ?? "";
+    // «Următoarea» is not a line of its own any more: it leads the date's line, and the clock the time.
+    const when = fact(html, "when");
     expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026·18:30");
+    expect(when).toContain('data-testid="ScheduleIcon"');
+  });
+
+  it("links its place to the map, with the pin on the same line", async () => {
+    const where = fact(await repeated(), "where");
+    expect(where).toContain('data-testid="PlaceIcon"');
+    expect(anchors(where).map((link) => link.href)).toEqual(["https://maps.example.test/titulescu"]);
   });
 
   it("says the surface once, as a pill, and the rhythm on its chip", async () => {
@@ -242,27 +374,11 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     expect(labels.filter((label) => label === "Asfalt")).toHaveLength(1);
   });
 
-  it("titles itself exactly as the single card does — one size, one weight, the text's colour, underlined only under a pointer or the keyboard", async () => {
-    // The stretched title is the plain one plus its `::after`, and nothing else.
-    const { "&::after": after, ...link } = CARD_STRETCHED_TITLE_SX["& a"];
-    expect(after).toBeDefined();
-    expect(link).toEqual(CARD_TITLE_SX["& a"]);
-    const heading = (sx: object) => Object.fromEntries(Object.entries(sx).filter(([key]) => key !== "& a"));
-    expect(heading(CARD_STRETCHED_TITLE_SX)).toEqual(heading(CARD_TITLE_SX));
-    expect(CARD_TITLE_SX["& a"]).toMatchObject({ color: "text.primary", textDecoration: "none", minHeight: 44 });
-    expect(CARD_TITLE_SX["& a"]["&:hover"]).toEqual({ textDecoration: "underline" });
-    expect(CARD_TITLE_SX["& a"]["&:focus-visible"]).toMatchObject({ textDecoration: "underline" });
-    // …and both cards wear it: the series card the plain one, in an h2 around its one title link.
-    const html = await repeated();
-    expect(withoutStyles(html)).toMatch(/<h2\b[^>]*><a href="\/ro\/evenimente\/happy-monday-0">Happy Monday<\/a><\/h2>/);
-    expect(html).toMatch(/color:rgba\(0, 0, 0, 0\.87\)/);
-    expect(html).toMatch(/text-decoration:none/);
-  });
-
   it("offers every date as its own link inside the fold, and no link inside a link", async () => {
     const html = await repeated();
     const links = anchors(html).map((link) => link.text);
     expect(links[0]).toBe("Happy Monday");
+    expect(links[1]).toBe("Parcul Titulescu, la fântâna arteziană");
     expect(links.at(-1)).toBe("Descrierea completă a evenimentului");
     expect(links).toContain("Lun., 5 oct. 2026");
     expect(withoutStyles(html)).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);

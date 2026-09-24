@@ -1,25 +1,29 @@
 /**
- * The listing card's shape, shared by the single-date card (`events/page.tsx`) and the series card
- * (`SeriesCard`), so the two read alike and cannot drift apart (§NNN).
+ * The listing card's shape, shared by the single-date card (`EventCard`) and the series card
+ * (`SeriesCard`), so the two are one structure and cannot drift apart (§NNN).
  *
  * The owner, 2026-09-24, with a screenshot of the listing's two-column grid: "There is too much
- * whitespace on these cards, it needs to be better spaced". What the screenshot showed was four
- * separate things, and each has its answer here or next to it:
+ * whitespace on these cards, it needs to be better spaced" — then, of the one-off "Trail to Road cu
+ * Brașov Running Festival" beside two series cards: "I am missing the blue link for this event,
+ * why?", "I do not see the google maps link for this event, although I've put the maps URL". What
+ * the screenshot showed, and where each answer is:
  *
- * 1. **Holes inside the cards.** A row of cards is as tall as its tallest (§275), and the door to
+ * 1. **Two card structures.** The single-date card was one `<a>` wrapping the whole card, its title
+ *    a black heading; the series card's title was a blue link. A link cannot hold another link, so
+ *    the single card's place could not be its map link. Now neither card is a link: on both the
+ *    title is the link, in one blue style (`CARD_TITLE_SX`), and the place is free to be the map.
+ * 2. **Holes inside the cards.** A row of cards is as tall as its tallest (§275), and the door to
  *    the page was pushed to the foot of every card, so a short card beside a series card had a
  *    hundred and fifty pixels of nothing between its facts and its own link. Now the door follows
  *    the content and what a row leaves over is below it — see `CARD_BODY_SX`.
- * 2. **An uneven rhythm.** Each piece of a card carried its own margin: a label on a line of its
+ * 3. **An uneven rhythm.** Each piece of a card carried its own margin: a label on a line of its
  *    own, a line of facts, 12 pixels here and 20 there. Now there are two gaps and nothing else:
  *    `LINE_GAP` between the lines of one group (the date and the place; the pills among
  *    themselves), `GROUP_GAP` between groups (the chips, the title, the summary, the facts, the
- *    pills, the doors). The facts' own lines use `LINE_GAP` in `EventFacts`.
- * 3. **Two title styles.** The series card's title was a bare link — underlined, the browser's
- *    blue and, once visited, its purple — and the single card's was plain black text a size too
- *    big. One style now: `CARD_TITLE_SX`.
- * 4. **The facts' shapes** — the pin alone on a line, the tiny glyphs, the middle dots — are
- *    `EventFacts`'s compact form, which now draws the event page's row glyphs and pills (§356).
+ *    pills, the doors). The facts' own lines use them in `EventFacts`.
+ * 4. **The facts' shapes** — the pin alone on a line, the tiny glyphs, the middle dots, the
+ *    partner's sentence among the numbers — are `EventFacts`'s compact form, which now draws the
+ *    event page's row glyphs, its clock and its pills (§356).
  *
  * Plain objects, never functions: they are handed as `sx` from Server Components to MUI's client
  * components, and a function cannot cross that boundary (`theme/surfaces.ts` has the story).
@@ -37,12 +41,13 @@ export const GROUP_GAP = 1.5;
  * into another (a flex item never shares its margin with its neighbour or its parent).
  *
  * **The leftover is below the door, not above it.** Cards in a row keep one height (§275: a hole
- * *between* cards made the listing look broken), and the body keeps its natural height inside the
- * card, so a short card's door sits right under its facts, where it belongs to them, and the room
- * the taller neighbour needs is at the card's foot — the one place empty space reads as a margin
- * rather than as a gap in the content. Choosing `align-items: start` instead was measured and not
- * taken (§NNN): it gives every card its own height and moves the same hole outside the border,
- * where the row's ragged bottom edge is what the eye reads first.
+ * *between* cards made the listing look broken, and the owner decided rows of equal cards), and
+ * the body keeps its natural height inside the card, so a short card's door sits right under its
+ * facts, where it belongs to them, and the room the taller neighbour needs is at the card's foot —
+ * the one place empty space reads as a margin rather than as a gap in the content. Choosing
+ * `align-items: start` instead was weighed and not taken (§NNN): it gives every card its own
+ * height and moves the same room outside the border, where the row's ragged bottom edge is what
+ * the eye reads first — the very thing §275 was decided against.
  *
  * The padding is `CardContent`'s sixteen pixels on three sides. At the foot it is four, because
  * the last thing in every card is the door — a 44-pixel box (BR-REQ-041-01 criterion 6) around an
@@ -62,49 +67,41 @@ export const CARD_BODY_SX = {
 export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" } as const;
 
 /**
- * The title, on every card: the link to the event, in the text's colour whether visited or not,
- * no underline until a pointer or the keyboard is on it, one size and weight on both cards.
+ * The title, on every card: the link to the event (the owner: "I am missing the blue link for this
+ * event, why?"), in the club's blue — the theme's primary, the same blue visited or not, never the
+ * browser's purple — with no underline until a pointer or the keyboard is on it, one size and
+ * weight on both cards. The size and weight are the ones both cards' titles already had (1.25rem,
+ * the `h2` variant's 500, a weight the site's Roboto is loaded in): the colour and the structure
+ * were what differed, and they are what changed.
  *
- * The link is 44 pixels tall (BR-REQ-041-01 criterion 6) and gives back the twenty its words do
- * not need as a negative margin, above and below — the event page's `tight` link (§356): the box
- * a thumb hits is the full height, the line it sits on is as tall as its words, so the chips and
- * the summary keep their gaps. Neither neighbour is a link, so the two boxes never overlap a
- * control. A flex item's margin does not collapse, so the heading's own `mt` stays what it says.
+ * The link is a block at least 44 pixels tall (BR-REQ-041-01 criterion 6), and the room it adds
+ * around its words is padding given back as an equal negative margin: the box a thumb hits reaches
+ * ten pixels above and below the words, and the line the title takes in the card is as tall as its
+ * words, so the chips and the summary keep their gaps. Padding rather than the page's `minHeight`
+ * alone, because a title that wraps onto two lines is already taller than 44 — a fixed negative
+ * margin on it would pull the summary up into its second line; the padding grows with the words
+ * and the margin only ever cancels the padding. Neither neighbour is a link, so the hit box never
+ * covers another control. A flex item's margin does not collapse, so the heading's `mt` stays what
+ * it says.
  */
 export const CARD_TITLE_SX = {
   mt: GROUP_GAP,
   mb: 0,
-  fontSize: "1.125rem",
-  fontWeight: 600,
+  fontSize: "1.25rem",
+  fontWeight: 500,
   lineHeight: 1.3,
   overflowWrap: "anywhere",
   "& a": {
-    display: "flex",
-    alignItems: "center",
+    display: "block",
     minHeight: 44,
+    py: "10px",
     my: "-10px",
-    color: "text.primary",
+    color: "primary.main",
     textDecoration: "none",
     borderRadius: 1,
+    "&:visited": { color: "primary.main" },
     "&:hover": { textDecoration: "underline" },
     "&:focus-visible": { textDecoration: "underline", outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
-  },
-} as const;
-
-/**
- * The single-date card is one press wherever it is pressed, as it was — and one link, as it was
- * not: the whole card used to be one `<a>` whose accessible name was every word on the card. Now
- * the title is the link, and its `::after` is stretched over the card (the card is the containing
- * block), so a press anywhere on the card is a press on the title, a screen reader hears the
- * title, and nothing is a link inside a link. The door stands above the stretched box
- * (`CARD_DOOR_SX`) so it takes its own presses. Only the single card: a series card holds a fold
- * and a link per date, and a card-sized target under those would take every near miss.
- */
-export const CARD_STRETCHED_TITLE_SX = {
-  ...CARD_TITLE_SX,
-  "& a": {
-    ...CARD_TITLE_SX["& a"],
-    "&::after": { content: '""', position: "absolute", inset: 0 },
   },
 } as const;
 
@@ -121,9 +118,9 @@ export const CARD_FOLD_SX = {
 } as const;
 
 /**
- * Where the door to the page sits: right after the content, above a stretched title's box. Four
- * pixels of margin, because its 44-pixel box already holds about thirteen invisible pixels above
- * its line on a wide card — `GROUP_GAP` and a little, as the eye measures it — and only four once
- * its words wrap onto two lines on a 320-pixel phone, where the four keep it off the pills.
+ * Where the door to the page sits: right after the content. Four pixels of margin, because its
+ * 44-pixel box already holds about thirteen invisible pixels above its line on a wide card —
+ * `GROUP_GAP` and a little, as the eye measures it — and only four once its words wrap onto two
+ * lines on a 320-pixel phone, where the four keep it off the facts.
  */
-export const CARD_DOOR_SX = { position: "relative", zIndex: 1, mt: 0.5 } as const;
+export const CARD_DOOR_SX = { mt: 0.5 } as const;

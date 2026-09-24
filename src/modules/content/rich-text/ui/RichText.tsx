@@ -29,9 +29,10 @@ import { tableSx } from "./table-layout";
  * place that difference is handled.
  *
  * `links={false}` is the listing card's reading (§NNN): a link mark is its words and a bare web
- * address is its host ("register.hakuapp.com/…", `shortenUrls`). A card is a summary, a whole-card
- * link must not hold a second link inside it, and a ninety-character address wrapped over two
- * lines of a card was one of the holes the owner pointed at. The event page keeps every link.
+ * address is its host ("register.hakuapp.com/…", `shortenUrls`). A card is a summary of a page
+ * one press away, its three clamped lines are no place for a link that may be cut in half, and a
+ * ninety-character address wrapped over two lines of a card was one of the holes the owner pointed
+ * at. The event page keeps every link.
  */
 export default function RichText({ body, links = true }: { body: unknown; links?: boolean }) {
   const doc = readRichText(body);

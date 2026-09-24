@@ -24,11 +24,9 @@ import { editionNote, recurrenceSentence } from "./series-sentence";
 
 /**
  * A repeated event as one card (`DECISIONS.md` §113): the title once, how it recurs, the next
- * occurrence's facts, and the coming dates as links. Not one press wherever it is pressed like
- * `EventCard` — a fold and a link per date would sit on a card-sized target that took every near
- * miss (`CARD_STRETCHED_TITLE_SX`) — so the title is the link to the next occurrence's page, and
- * every date is its own. Each link is 44px tall (BR-REQ-041-01 criterion 6), like every other on
- * the listing.
+ * occurrence's facts, and the coming dates as links. The same structure as `EventCard` (§NNN): the
+ * title is the link to the next occurrence's page, the place is its map, and every date is its
+ * own link. Each link is 44px tall (BR-REQ-041-01 criterion 6), like every other on the listing.
  */
 export default async function SeriesCard({
   members,
@@ -91,9 +89,9 @@ export default async function SeriesCard({
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Box>
 
-        {/* The title in the one style every card's title has (`CARD_TITLE_SX`): the text's colour,
+        {/* The title in the one style every card's title has (`CARD_TITLE_SX`): the club's blue,
             visited or not, underlined under a pointer or the keyboard — no longer the browser's
-            blue-then-purple underlined link beside a black one (§NNN). */}
+            blue-then-purple underlined link beside a black heading (§NNN). */}
         <Typography variant="h2" sx={CARD_TITLE_SX}>
           <Link href={{ pathname: "/events/[slug]", params: { slug: next.slug } }}>{next.title}</Link>
         </Typography>
@@ -107,8 +105,9 @@ export default async function SeriesCard({
             address (`CARD_EXCERPT_SX`, §NNN) — the same excerpt the single-event card renders. */}
         <EventExcerpt place="card" excerptJson={next.excerptJson} excerpt={next.excerpt} />
 
-        {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · 18:30" on one line — the
-            label used to be a line of its own above them — then the place and the pills. */}
+        {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" on one line — the
+            label used to be a line of its own above them — then the place, its map link, and the
+            pills. */}
         <Box sx={{ mt: GROUP_GAP }}>
           <EventFacts event={next} now={now} variant="compact" whenLead={t("series.nextLabel")} />
         </Box>

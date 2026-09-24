@@ -5,6 +5,7 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -32,6 +33,15 @@ import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph, type GlyphName } from "./glyp
 const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1 } as const;
 
 /**
+ * The clock in front of the time, inside the "când" line (§NNN; the owner, 2026-09-24, of a
+ * listing card: "for the time I would like a clock icon as well"): "[calendar] Duminică, 27 sept. 2026 ·
+ * [clock] 10:00". The row glyph's size, colour and alignment — one family with the calendar and the
+ * pin — and half its gap, because it sits inside a line of words rather than at its head. On the
+ * page, the hero and the cards alike: the time is one fact, drawn one way.
+ */
+const CLOCK_SX = { ...ROW_ICON_SX, mr: 0.5 } as const;
+
+/**
  * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
  * page and the cards read alike. Its label wraps rather than ending in an ellipsis: MUI cuts a
  * chip's label to one line, and a club's own amount ("50 lei la înscriere, 70 lei în ziua
@@ -55,8 +65,8 @@ type Pill = { glyph: GlyphName; label: string };
  *
  * Three forms of the same facts:
  * - **the listing card** (`variant="compact"`): no labels — a line for when and one for where, each
- *   with the page's row glyph in front of it, then the route and the cost as the page's pills
- *   (§NNN);
+ *   with the page's row glyph in front of it, the place as its map link, then the route and the
+ *   cost as the page's pills, then the state of registration (§NNN);
  * - **the listing's featured hero** (the default): the `<dl>`, each row one line of short
  *   pieces separated by a middle dot — a summary above the fold, with a button to reach;
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
@@ -102,7 +112,9 @@ export default async function EventFacts({
   /**
    * Whether the facts may carry links of their own: the meeting point as the map link (the
    * owner: "this address should be a link if I set that in the console"), the route, Strava.
-   * False inside a card that is itself one link (`EventCard`), where a nested link is invalid.
+   * Every caller now wants them — no card is one whole link any more (§NNN), so the one-off card's
+   * place is its map link as the series card's always was ("I do not see the google maps link for
+   * this event, although I've put the maps URL"). False stays for a surface that is itself a link.
    */
   links?: boolean;
 }) {
@@ -130,13 +142,15 @@ export default async function EventFacts({
   // line it sits on is as tall as its text, so the place's name sits right above its address and a
   // payment link beside its pill. Only for a link whose neighbours above and below are words —
   // two tight links wrapped one under the other would share their targets, so a row of links
-  // (the route's) keeps its full height.
+  // (the route's) keeps its full height. The twenty are padding as well as margin (§NNN): a place
+  // long enough to wrap onto two lines of a card is taller than 44 already, and a margin alone
+  // would pull the lines around it into its words; padding given back as margin never does.
   const outLink = (href: string, label: string, network?: "strava" | "facebook", tight = false) => (
     <Link
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, ...(tight ? { my: "-10px" } : {}) }}
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, ...(tight ? { py: "10px", my: "-10px" } : {}) }}
     >
       {network && <SocialIcon network={network} size={18} />}
       {label}
@@ -154,12 +168,25 @@ export default async function EventFacts({
   /* When: the date, then the times — a race has two, each named; anything else has one, bare,
      right after the date on the same line, where the middle dot binds the two. §169 named the
      lone time ("începe la 09:00") only because the page had put it on a bullet of its own; the
-     page's "când" is one line again (§356), so the name went with the bullet. */
+     page's "când" is one line again (§356), so the name went with the bullet. The times are led
+     by a clock (§NNN), once — before the first, so a race's two read as one group. */
+  const clock = <ScheduleIcon aria-hidden="true" sx={CLOCK_SX} />;
   const when: ReactNode[] = [<strong key="date">{date}</strong>];
   if (event.raceStartsAt) {
-    when.push(t("gatheringAt", { time: time(event.startsAt) }), t("raceStartAt", { time: time(event.raceStartsAt) }));
+    when.push(
+      <>
+        {clock}
+        {t("gatheringAt", { time: time(event.startsAt) })}
+      </>,
+      t("raceStartAt", { time: time(event.raceStartsAt) }),
+    );
   } else {
-    when.push(time(event.startsAt));
+    when.push(
+      <>
+        {clock}
+        {time(event.startsAt)}
+      </>,
+    );
   }
 
   /* Where: the meeting point — itself the map link when the organizer pasted one and a link
@@ -226,9 +253,11 @@ export default async function EventFacts({
    * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
    * comma and an "and". A partner may carry any number of links now (§344), and a sentence has
    * room for one, so each name is its own link to the partner's own site — its first link if it
-   * named no site — except where the facts may carry no links at all (a card that is itself one
-   * link). The compact card and the listing's featured hero keep this sentence exactly (§169);
-   * only the event page's facts do not, below.
+   * named no site — except where the facts may carry no links at all. The listing's featured hero
+   * keeps this sentence exactly (§169); the event page's facts draw each partner in full, below;
+   * and the listing card no longer says it among its facts (§NNN — the owner saw "Împreună cu
+   * Brașov Running Festival" between the place and the kilometres): the partner's mark on a card
+   * belongs to its chips.
    */
   const coHosts = readCoHosts(event);
   const coHostNames = coHosts.map((host) => host.name);
@@ -265,8 +294,7 @@ export default async function EventFacts({
    *
    * Plain `<span>`s throughout, never a `<ul>` or a `<p>`: it was written to sit inside an inline
    * element, and a block has no business nested in one. `links` gates it exactly as it gates
-   * every other link on this component — false inside a card that is itself one link
-   * (`EventCard`), where this is never called at all.
+   * every other link on this component; the listing card never calls it at all (§NNN).
    */
   const partnerFacts = (host: (typeof coHosts)[number]) => {
     const description = coHostDescription(host, locale);
@@ -347,9 +375,10 @@ export default async function EventFacts({
     flex item, so the line breaks between pieces before it breaks inside one.
 
     The card's form (§NNN) adds a `lead` — a series card's "Următoarea:" — which is a piece with no
-    dot after it, and keeps every piece whole: on a 320-pixel phone "Următoarea: Miercuri, 30 sept.
-    2026 · 18:30" is wider than the card, and the one break it may take is after the word, so the
-    date and its time go to the next line together rather than "2026 ·" ending up on a line alone.
+    dot after it, and keeps every piece whole, so the line breaks only between pieces: wherever the
+    card is wide enough, "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" is one line, and on a 320-pixel
+    phone, where it is wider than the card, the time goes under the date with its clock in front
+    of it — never "2026" alone, never the word "Următoarea:" on a line of its own above the date.
   */
   const flow = (items: ReactNode[], card?: { lead?: string }) => (
     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", columnGap: 0.75 }}>
@@ -395,44 +424,26 @@ export default async function EventFacts({
   if (compact) {
     /*
       The listing card (§NNN; the owner, 2026-09-24, of the listing: "There is too much whitespace
-      on these cards, it needs to be better spaced"). The event page's own shapes, smaller: a line
-      for when and a line for where, each led by the page's row glyph (`ROW_ICON_SX`, §356) in a
-      flex row, so the glyph stays on the first line of its words and a long place wraps under
-      itself — the old line was an inline glyph followed by an inline-flex block of pieces, and a
-      block too wide for what was left of the line dropped whole under the glyph and left the pin
-      alone on a line. Then the route and the cost as the page's pills. No labels: the glyphs are
-      the questions on a card.
+      on these cards, it needs to be better spaced", and of the one-off card's facts beside the
+      event page's pills: "I like these pills on the full page details! this is currently pretty
+      ugly!"). The event page's own shapes, smaller:
+
+      - a line for when and a line for where, each led by the page's row glyph (`ROW_ICON_SX`,
+        §356) in a flex row, so the glyph stays on the first line of its words and a long place
+        wraps under itself — the old line was an inline glyph followed by an inline-flex block of
+        pieces, and a block too wide for what was left of the line dropped whole under the glyph
+        and left the pin alone on a line;
+      - the place is its map link on every card now that no card is one whole link;
+      - the route and the cost as the page's pills, one wrapping row, no middle dots;
+      - the state of registration last, where BR-REQ-011-01 criterion 18 reads it.
+
+      No labels: the glyphs are the questions on a card. No partner either: "Împreună cu …"
+      between the place and the kilometres was one of the things the owner pointed at, and the
+      partner's mark on a card belongs to its chips, not to its facts.
     */
-    const lines: Array<{ key: string; icon: Glyph; value: ReactNode; secondary?: boolean }> = [
-      /*
-        "Următoarea: Luni, 28 sept. 2026 · 18:30" on a series card, one line wherever it fits. A
-        date and its one bare time are one piece — "Sâmbătă, 26 sept. 2026 · 08:00", some two
-        hundred pixels at the widest weekday and month in either language — so a phone breaks the
-        line after "Următoarea:" and never leaves "18:30" on a line of its own. A race's two named
-        times stay pieces of their own: together they are wider than a 320-pixel card.
-      */
-      {
-        key: "when",
-        icon: CalendarMonthIcon,
-        value: flow(
-          event.raceStartsAt
-            ? when
-            : [
-                <Fragment key="date-time">
-                  {when[0]}
-                  <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", mx: 0.75 }}>
-                    ·
-                  </Box>
-                  {when[1]}
-                </Fragment>,
-              ],
-          { lead: whenLead },
-        ),
-      },
-    ];
-    // Where: the place — the map link where the card may carry one (a series card), tight like the
-    // page's (§356) so the line is as tall as its words — or the sentence while it is to be
-    // announced (§328), whose query has already withheld the name, the address and the map.
+    // Where: the place — the map link when the club pasted one, tight like the page's (§356) so
+    // the line is as tall as its words — or the sentence while it is to be announced (§328), whose
+    // query has already withheld the name, the address and the map.
     const place = event.locationToBeAnnounced
       ? t("locationToBeAnnounced")
       : event.locationName
@@ -442,44 +453,6 @@ export default async function EventFacts({
         : links && event.mapUrl
           ? outLink(event.mapUrl, t("openMap"), undefined, true)
           : null;
-    if (place) lines.push({ key: "where", icon: PlaceIcon, value: place });
-    // Held with somebody (§168): the card says so in the same words the page does, and through
-    // the same sentence — so where the card may carry links at all (a series card, which is not
-    // itself one link), each partner is its own link here too, and where it may not (`EventCard`)
-    // the sentence is words (§169). One `coHostSentence` for both, never a second join.
-    if (coHosts.length > 0) {
-      lines.push({
-        key: "coHost",
-        icon: HandshakeIcon,
-        secondary: true,
-        value: (
-          <>
-            {t("coHost")} {coHostSentence()}
-          </>
-        ),
-      });
-    }
-    if (mentionsRegistration) {
-      // The state of registration — and, while the window is ahead, the date it opens rather than
-      // "not yet" (§146), read through the one helper the feed reads it through, never a formula
-      // of this file's own. And while it is open, until when (§308) — the same helper family, so
-      // the card's date is the instant the button goes away.
-      const opensAt = upcomingRegistrationOpening(event, now);
-      const closesAt = openRegistrationClosing(event, now);
-      // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§349).
-      const shortDate = (date: Date) =>
-        formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
-      lines.push({
-        key: "registration",
-        icon: HowToRegIcon,
-        secondary: true,
-        value: opensAt
-          ? t("cta.opensOnShort", { date: shortDate(opensAt) })
-          : closesAt
-            ? t("cta.openUntilShort", { date: shortDate(closesAt) })
-            : t(`registrationState.${state}`),
-      });
-    }
 
     /*
       The pills: the page's route pills, then the surface — said here once, so the chips at the
@@ -492,27 +465,50 @@ export default async function EventFacts({
     if (event.surface) cardPills.push({ glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) });
     if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
 
+    // The state of registration — and, while the window is ahead, the date it opens rather than
+    // "not yet" (§146), read through the one helper the feed reads it through, never a formula of
+    // this file's own. And while it is open, until when (§308) — the same helper family, so the
+    // card's date is the instant the button goes away.
+    let registration: string | null = null;
+    if (mentionsRegistration) {
+      const opensAt = upcomingRegistrationOpening(event, now);
+      const closesAt = openRegistrationClosing(event, now);
+      // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§349).
+      const shortDate = (date: Date) =>
+        formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
+      registration = opensAt
+        ? t("cta.opensOnShort", { date: shortDate(opensAt) })
+        : closesAt
+          ? t("cta.openUntilShort", { date: shortDate(closesAt) })
+          : t(`registrationState.${state}`);
+    }
+
+    // One line of the card: its glyph, then its words beside it — the glyph on the first line.
+    const cardLine = (key: string, Icon: Glyph, value: ReactNode, secondary = false) => (
+      <Typography
+        component="div"
+        variant="body2"
+        color={secondary ? "text.secondary" : "text.primary"}
+        data-fact={key}
+        sx={{ display: "flex", alignItems: "flex-start", minWidth: 0 }}
+      >
+        <Icon aria-hidden="true" sx={ROW_ICON_SX} />
+        <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{value}</Box>
+      </Typography>
+    );
+
     return (
       <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
-        {lines.map((line) => (
-          <Typography
-            key={line.key}
-            component="div"
-            variant="body2"
-            color={line.secondary ? "text.secondary" : "text.primary"}
-            data-fact={line.key}
-            sx={{ display: "flex", alignItems: "flex-start", minWidth: 0 }}
-          >
-            <line.icon aria-hidden="true" sx={ROW_ICON_SX} />
-            <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{line.value}</Box>
-          </Typography>
-        ))}
+        {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113). */}
+        {cardLine("when", CalendarMonthIcon, flow(when, { lead: whenLead }))}
+        {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§NNN). */}
         {cardPills.length > 0 && (
           <Box data-fact="pills" sx={{ mt: GROUP_GAP - LINE_GAP }}>
             {pillRow(cardPills)}
           </Box>
         )}
+        {registration && cardLine("registration", HowToRegIcon, registration, true)}
       </Box>
     );
   }

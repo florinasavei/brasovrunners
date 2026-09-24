@@ -137,8 +137,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // Open every fold, so the links are measured as a reader would see them.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
-    // Criterion 6. Every card's title is its link (§NNN) — 44 pixels tall at either width, and on
-    // a single-date card stretched over the whole card — and so is its door (§319).
+    // Criterion 6. Every card's title is its link (§NNN; no card is one whole link any more) — 44
+    // pixels tall at either width — and so is its door (§319) and its place's map link.
     const titles = page.locator("main ul > li h2 a");
     expect(await titles.count()).toBeGreaterThan(0);
     for (let i = 0; i < (await titles.count()); i += 1) {
@@ -211,6 +211,10 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     await expect(when).toHaveText(/^(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}·\d{2}:\d{2}$/);
     const lineHeight = await when.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
     expect((await when.boundingBox())?.height ?? Infinity).toBeLessThan(lineHeight * 1.5);
+    // A clock in front of the time (§NNN), the row glyph's size, as the listing cards have it.
+    const clock = when.locator('svg[data-testid="ScheduleIcon"]');
+    await expect(clock).toHaveCount(1);
+    expect(Math.round((await clock.boundingBox())?.width ?? 0)).toBe(20);
 
     // Every row's glyph the same size, whichever question it answers.
     const glyphs = await facts.locator("dt svg").evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)));
