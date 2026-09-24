@@ -4,7 +4,7 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
-import { type FormEvent, type ReactNode, useActionState, useEffect, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
@@ -103,6 +103,23 @@ export default function ActionForm({
   const [tracked, setTracked] = useState<{ state: FormOutcome | null; generation: number }>({ state, generation: 0 });
   if (tracked.state !== state) setTracked({ state, generation: tracked.generation + 1 });
 
+  /*
+    **One value per answer, not one per render (§NNN).** A press re-renders this component before
+    anything is sent: `useActionState` marks its action pending the moment the form submits, in
+    the same task as the press. A value built inline was a new object on that render, so every box
+    that reads the recall — every `RecallField`, picker, select, rich-text editor and fold of the
+    event editor, a few hundred MUI components — re-rendered too, for nothing: the answer had not
+    changed. That was the whole of the owner's "blocked UI updates for 352ms" (1.5–2 s on a phone
+    at 4× CPU), measured by `tests/e2e/perf/inp.spec.ts`. Memoised on what the value is made of,
+    the press re-renders the buttons that show "Se salvează…" and nothing else; an answer from the
+    server still changes it, and every box still re-mounts from the recalled values (§315).
+  */
+  const fieldError = messages.fieldError;
+  const recall = useMemo(
+    () => ({ values: state?.values ?? null, fields: state?.fields ?? [], generation: tracked.generation, fieldError, scope }),
+    [state, tracked.generation, fieldError, scope],
+  );
+
   const summary = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!state?.error) return;
@@ -143,15 +160,7 @@ export default function ActionForm({
 
   return (
     <form action={formAction} {...formProps} onInvalidCapture={onInvalidCapture}>
-      <RecallProvider
-        value={{
-          values: state?.values ?? null,
-          fields: state?.fields ?? [],
-          generation: tracked.generation,
-          fieldError: messages.fieldError,
-          scope,
-        }}
-      >
+      <RecallProvider value={recall}>
         {state?.error && (
           <Alert
             ref={summary}

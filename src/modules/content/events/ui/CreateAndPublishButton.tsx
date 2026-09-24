@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { VALIDITY_PROXY_ATTRIBUTE } from "@/shared/forms/ValidityProxy";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import RunnerLoader from "@/shared/ui/RunnerLoader";
@@ -68,17 +69,21 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
       setMissing(first ? publishGapLabel(first, labels) : null);
     };
     // The editor writes its document into a hidden field after the keystroke it answers, so the
-    // measure is deferred a tick; the observer catches the write itself, whichever comes first.
-    const deferred = () => setTimeout(measure, 0);
+    // measure waits; the observer catches the write itself, whichever comes first. It waits for
+    // the frame, too, and runs once for a burst (§NNN): a whole-form read on every mutation —
+    // every keystroke in a rich text, every node of the commit that paints "Se salvează…" — was
+    // work queued ahead of the very paint the reader was waiting for.
+    const scheduler = paintedScheduler(measure);
     measure();
-    form.addEventListener("input", deferred);
-    form.addEventListener("change", deferred);
-    const observer = new MutationObserver(deferred);
+    form.addEventListener("input", scheduler.schedule);
+    form.addEventListener("change", scheduler.schedule);
+    const observer = new MutationObserver(scheduler.schedule);
     observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
     return () => {
-      form.removeEventListener("input", deferred);
-      form.removeEventListener("change", deferred);
+      form.removeEventListener("input", scheduler.schedule);
+      form.removeEventListener("change", scheduler.schedule);
       observer.disconnect();
+      scheduler.cancel();
     };
   }, [locales, labels]);
 

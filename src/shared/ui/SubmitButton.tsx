@@ -7,6 +7,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
@@ -181,11 +182,16 @@ export default function SubmitButton({
       setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
-    form.addEventListener("input", measure);
-    form.addEventListener("change", measure);
+    // Behind the frame the keystroke leads to, once per frame (§NNN): the scan reads every box of
+    // the form, and the event editor has a few hundred — inside the keystroke it was paid before
+    // the letter appeared, and a `change` on leaving a box put it inside the press of this button.
+    const scheduler = paintedScheduler(measure);
+    form.addEventListener("input", scheduler.schedule);
+    form.addEventListener("change", scheduler.schedule);
     return () => {
-      form.removeEventListener("input", measure);
-      form.removeEventListener("change", measure);
+      form.removeEventListener("input", scheduler.schedule);
+      form.removeEventListener("change", scheduler.schedule);
+      scheduler.cancel();
     };
   }, [watches, incompleteHint]);
 
