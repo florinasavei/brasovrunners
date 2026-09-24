@@ -10,6 +10,7 @@ import {
  * BR-REQ-030-01, BR-REQ-031-01 — a visitor can actually reach the registration form.
  * BR-REQ-034-01 — the free-place count is on the page.
  * BR-REQ-041-01 — the whole journey works at 320px as well as on a desktop.
+ * §NNN — how full the event is, read from the same numbers as the free-place count.
  *
  * The registration lifecycle was built, tested and unreachable: `/events/[slug]/register`
  * existed and nothing on the site linked to it. This walks the door that was missing — the
@@ -33,6 +34,10 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await expect(hero).toBeVisible();
     // BR-REQ-034-01: the count is a number of places, stated in words next to the button.
     await expect(hero.getByText(/locuri libere/)).toBeVisible();
+    // §NNN: "N înscriși din 50 de locuri" — the same free-place count read the other way round.
+    // Loosely matched: other Playwright projects register real people against this same shared
+    // event, so the taken count is whatever it is by the time this test runs, never a fixed one.
+    await expect(hero.getByTestId("registration-fill")).toHaveText(/\d+ (înscris|înscriși) din 50 de locuri/);
 
     const enter = hero.getByRole("link", { name: "Înscrie-te la eveniment" });
     // BR-REQ-041-01 criterion 6: a 44px tap target, on the page whose whole purpose is to be

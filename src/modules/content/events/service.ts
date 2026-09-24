@@ -21,6 +21,7 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -282,7 +283,11 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * §12.3 requires an approved declaration on an internal event, and it cannot be a CHECK because
  * "approved" lives in another table.
  */
-function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
+async function assertCoherentRegistrationBlock<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: EventFieldsInput,
+  now: Date,
+): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
@@ -300,14 +305,35 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
     );
   }
 
-  if (fields.participantListVisibility === "NAMES" && fields.registrationMode !== "INTERNAL") {
-    // For NONE there are no participants to list, and for EXTERNAL the people who entered are
-    // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      "a start list can only be published for an event that takes registrations here",
-      ["participantListVisibility"],
-    );
+  if (fields.participantListVisibility === "NAMES") {
+    if (fields.registrationMode !== "INTERNAL") {
+      // For NONE there are no participants to list, and for EXTERNAL the people who entered are
+      // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "a start list can only be published for an event that takes registrations here",
+        ["participantListVisibility"],
+      );
+    }
+
+    /**
+     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §NNN: the disclosure MUST NOT be switched on
+     * before the approved privacy notice describes it. §32 recorded the rule and left it
+     * unenforced because no environment had an approved notice at all yet, so nothing could be
+     * blocked — that stopped being true on 2026-09-22, when production approved one. The check
+     * asks the same question `legal-documents/service.ts` asks for "in force" — approved,
+     * effective by now, never withdrawn — and by key alone, the same way `declarationNone`
+     * reads the environment rather than one locale: an event is publishable only with both
+     * languages complete (§28), so a notice missing from one language is not a state a public
+     * disclosure should be allowed to launch from either.
+     */
+    if (!(await findCurrentApprovedVersionId(db, "PRIVACY_NOTICE", now))) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "the participant list cannot be published before an approved, effective privacy notice describes the disclosure",
+        ["participantListVisibility"],
+      );
+    }
   }
 
   if (fields.registrationMode === "EXTERNAL") {
@@ -735,7 +761,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
   const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
-  assertCoherentRegistrationBlock(fields);
+  await assertCoherentRegistrationBlock(db, fields, now);
   const times = resolveTimes(fields);
 
   /**
@@ -1080,7 +1106,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
     }
-    assertCoherentRegistrationBlock(parsedEventFields);
+    await assertCoherentRegistrationBlock(db, parsedEventFields, now);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
 
@@ -1186,7 +1212,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   }
 
   const parsed = normalizeForType(parseOrThrow(newEventSchema, input.fields));
-  assertCoherentRegistrationBlock(parsed);
+  await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
 
   return db.transaction(async (tx) => {
