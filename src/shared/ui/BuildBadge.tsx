@@ -7,21 +7,28 @@ import { env } from "@/shared/config/env";
 import BuildBadgeLink from "./BuildBadgeLink";
 
 /**
- * When this site was last updated — and, for the club's own people, the way in.
+ * When this site was built — and, for the club's own people, the way in.
  *
- * Fixed to the bottom-right corner so the answer is on every page without any page having to
- * carry it. The visible text is deliberately short: which deployment this is, and when the code
- * behind it last changed. The exact build — the baseline and the commit — moved into the badge's
- * `title` and its accessible name, because a corner label that nobody can read at a glance is
- * two facts too many, and `/api/health` reports the same values to anybody who needs them
- * exactly.
+ * **The last line of the footer's fold, since §365, and nowhere on screen until somebody opens
+ * it.** It was fixed to the bottom-right corner from `md` and a label under the bar below that,
+ * so every visitor on every page read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" — on a
+ * phone as a third line of footer, 37 pixels under a bar that was already two. The owner,
+ * 2026-09-24: "version shows by default". Nobody the public site is for has a use for it; the
+ * people who do — the owner checking a release, a developer, staff looking for the door — open
+ * "Despre club" once, and `/api/health` and `/devs` report the same values exactly. One rule at
+ * every width and in every environment: QA says it is QA in words above the header
+ * (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only place that fact was
+ * read, and a rule keyed on the environment would need a production build to test at all.
  *
- * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a phone, or `Enter` when it
- * has focus, opens it (`BuildBadgeLink`). That replaced a "Staff" link in the footer — a
- * permanent invitation on a page every visitor reads. Where `STAFF_AUTH_MODE=disabled` there is
- * no door at all, so the badge stays exactly what it was: a label with `pointerEvents: "none"`,
- * which is what keeps a fixed element from swallowing a tap in the corner a thumb lands in on a
- * 320px screen.
+ * The visible text is deliberately short: which deployment this is, and when the code behind it
+ * last changed. The exact build — the baseline and the commit — is in the `title` and the
+ * accessible name too.
+ *
+ * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a
+ * phone, or `Enter` when it has focus, opens it (`BuildBadgeLink`, §34). That replaced a "Staff"
+ * link in the footer — a permanent invitation on a page every visitor reads — and in the fold it
+ * is one step further out of a visitor's way. Where `STAFF_AUTH_MODE=disabled` there is no door
+ * at all, so the stamp is a label with `pointerEvents: "none"`.
  *
  * A Server Component either way: the values are inlined at build time and never change while
  * the page is open. Only the interactive half is a client island, and only where it is real.
@@ -36,11 +43,9 @@ export default async function BuildBadge() {
   /**
    * Which deployment this is, first, and only where it is not production.
    *
-   * The commonest confusion this badge exists to settle is not "which build" but "which of the
-   * two sites am I looking at" — qa and production run the same code from the same repository
-   * on hostnames nobody memorises. On the club's real site that prefix is noise; everywhere
-   * else it is the whole point, and it is the same value every safety rule in
-   * `shared/config/env.ts` keys on.
+   * qa and production run the same code from the same repository on hostnames nobody
+   * memorises. On the club's real site that prefix is noise; everywhere else it names the
+   * environment every safety rule in `shared/config/env.ts` keys on.
    */
   const parts = [
     ...(env.APP_ENV === "production" ? [] : [env.APP_ENV]),
@@ -51,55 +56,24 @@ export default async function BuildBadge() {
   const text = parts.join(" · ");
 
   /**
-   * Floating on a large screen, part of the page on a phone.
-   *
-   * Fixed, it is a permanent 250px label over the bottom-right of a 390px screen — on the
-   * event page it covered the difficulty row outright, and covering a fact to announce a build
-   * number is the wrong trade on the viewport the whole site is designed for first
-   * (BR-REQ-041-01). From `md` up there is room to spare and the corner is empty, so it floats
-   * there as before.
-   *
-   * Below the footer rather than above it when static: it is the least important thing on the
-   * page, and this is the one place where saying so costs nothing.
-   *
-   * `md`, not `sm` (2026-09-23): between 600 and 900 pixels the fixed label — up to three
-   * quarters of the width, by the bound below — reached the footer's social marks and sat on
-   * the Instagram one (the owner's screenshot). A tablet held upright, or a narrowed window, is
-   * a phone's footer with more room, and the badge takes its own line under the bar there too.
+   * A quiet line of the panel, not a pill over the page: small, muted, as wide as its words
+   * (`alignSelf`, so a press beside it on the panel is not a press on it) and wrapping rather
+   * than cut when a phone is narrower than the stamp. 44 pixels tall, like everything else in
+   * the panel, because a long press is aimed at it (BR-REQ-041-01 criterion 6).
    */
   const sx = {
-    position: { xs: "static", md: "fixed" },
-    alignSelf: "flex-end",
-    right: 8,
-    bottom: 8,
-    m: { xs: 1, md: 0 },
-    px: 0.75,
-    py: 0.25,
-    borderRadius: 1,
-    pointerEvents: "none",
-    // The literal rather than `theme.zIndex.fab`: an `sx` callback is a function, and a
-    // function cannot cross the server/client boundary this Box sits on. 1050 is what the
-    // default theme's `fab` resolves to — above content, below modal (1300).
-    zIndex: 1050,
-    bgcolor: "background.paper",
+    alignSelf: "flex-start",
+    display: "flex",
+    alignItems: "center",
+    minHeight: 44,
+    maxWidth: "100%",
+    m: 0,
     color: "text.disabled",
-    border: 1,
-    borderColor: "divider",
-    opacity: 0.75,
     fontSize: "0.6875rem",
     lineHeight: 1.4,
     fontVariantNumeric: "tabular-nums",
-    /**
-     * A label, never a panel: at most three quarters of the viewport, one line, and an ellipsis
-     * when the text is longer — the full version is in `title`. The end-to-end test asserts the
-     * 75% bound at 320px, and the label first crossed it on the first two-digit day of a month
-     * ("16 sept." is one glyph wider than "7 sept.") under the fonts CI renders with — which is
-     * not a reason to cover the page.
-     */
-    maxWidth: "75vw",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    overflowWrap: "anywhere",
+    pointerEvents: "none",
   };
 
   if (env.STAFF_AUTH_MODE === "disabled") {
