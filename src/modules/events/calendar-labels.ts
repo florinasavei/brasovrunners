@@ -23,7 +23,7 @@ export function calendarLabels(locale: "ro" | "en"): CalendarLabels {
 }
 
 /**
- * "Locația se anunță în curând" outside a request (§NNN): the emails' facts line and a
+ * "Locația se anunță în curând" outside a request (§328): the emails' facts line and a
  * `{eventLocationName}` in the club's own copy, in the same words — the same key — as the page,
  * the card and the calendar.
  */

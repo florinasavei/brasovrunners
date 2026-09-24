@@ -11,7 +11,7 @@ import { z } from "zod";
  * it), $0.35 per GB-month of storage and $0.20 per GB-month of changes kept for Instant
  * Restore, with no monthly minimum. Neon's API tells this code the consumption and the plan of
  * the account that owns the project (`owner.subscription_type` on the project row, which a
- * project-scoped key reads — §NNN), never the invoice. So the plan Neon reports is the plan,
+ * project-scoped key reads — §326), never the invoice. So the plan Neon reports is the plan,
  * and every figure on `/devs` and `/admin/tasks` follows it; the setting an Administrator
  * states (`platform_settings.neonPlan`, the same shape as the Mailgun plan's, §100) is what the
  * pages fall back on when the key is not set or Neon does not answer.
@@ -103,7 +103,7 @@ export function readNeonPlanValue(value: unknown): NeonPlanSetting {
 }
 
 /**
- * The plan Neon reports for the account that owns the project (§NNN): the project row's
+ * The plan Neon reports for the account that owns the project (§326): the project row's
  * `owner.subscription_type` — `"launch_v3"` for the club on 2026-09-23, `"free_v3"` on Free.
  * The suffix is Neon's pricing generation, so the prefix is what is matched; anything else
  * (Scale, Business, a name this code has not met) is null, and the stated setting decides
@@ -119,7 +119,7 @@ export function neonPlanFromSubscription(subscriptionType: unknown): NeonPlanId 
 
 /**
  * The plan every figure is read against: what Neon reports when it answered, the stated
- * setting when it did not (§NNN). The owner, 2026-09-23, with Launch bought the day before
+ * setting when it did not (§326). The owner, 2026-09-23, with Launch bought the day before
  * and `/admin/tasks` still printing Free: a setting nobody had changed was being believed over
  * the vendor's own answer, which the page had been receiving all along.
  */

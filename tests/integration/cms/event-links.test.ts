@@ -15,7 +15,7 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — "Linkuri și fișiere", saved through the
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332) — "Linkuri și fișiere", saved through the
  * editor's service and read back by the public page's query: the order kept, the spare line
  * dropped, a bad row refused by its number with nothing written, an empty list stored as none,
  * a caller that says nothing leaving the column alone; the database refusing what the form
@@ -112,7 +112,7 @@ async function codeOf(operation: Promise<unknown>): Promise<string> {
   }
 }
 
-describe("BR-REQ-011-01 criterion 19 saving the links", () => {
+describe("BR-REQ-011-01 criterion 20 saving the links", () => {
   it("stores them in the editor's order without the spare line, and the public page reads them back", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, links: POSTED });
@@ -157,7 +157,7 @@ describe("BR-REQ-011-01 criterion 19 saving the links", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 19 the database's own rule", () => {
+describe("BR-REQ-011-01 criterion 20 the database's own rule", () => {
   const write = async (links: unknown) => {
     const event = await createDraft("RACE", `raw-${Math.random().toString(36).slice(2, 8)}`);
     // A hand-written UPDATE, the path the form's checks never see.
@@ -185,7 +185,7 @@ describe("BR-REQ-011-01 criterion 19 the database's own rule", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 19 the links are the series'", () => {
+describe("BR-REQ-011-01 criterion 20 the links are the series'", () => {
   it("are carried onto every repeated date and by a duplicate, like the route", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, links: POSTED });

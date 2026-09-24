@@ -141,7 +141,7 @@ export default async function EventFieldsForm({
     url: host.url ?? "",
   }));
 
-  /** The links as boxes (§NNN), read through the one function that decides what a stored row means. */
+  /** The links as boxes (§332), read through the one function that decides what a stored row means. */
   const linkRows = readEventLinks(event?.links ?? null).map((link) => ({
     kind: link.kind,
     url: link.url,
@@ -275,7 +275,7 @@ export default async function EventFieldsForm({
             second box wrote, `location_address`, stays for the rows that have one and is shown
             where it exists; nothing writes it any more.
 
-            Above it, whether the place is announced at all (§NNN; the owner: "I want to be able
+            Above it, whether the place is announced at all (§328; the owner: "I want to be able
             to set the location as TBD, and to not announce it yet"). The switch is the island;
             the box's constraints are still read here, off the schema, and handed to it as data
             — the island only takes `required` away while the switch is on.
@@ -373,7 +373,7 @@ export default async function EventFieldsForm({
               {...box("capacity", { inputMode: "numeric" })}
             />
 
-            {/* Who may enter (§NNN, amending §321: "actually this min age must be set at event
+            {/* Who may enter (§329, amending §321: "actually this min age must be set at event
                 level!"): years reached by the event's day, fourteen unless the organizer says
                 otherwise, zero for none. In this panel, so a group run — which takes nobody's
                 registration (§111) — never shows it. The bounds are the schema's (§315). */}
@@ -626,7 +626,7 @@ export default async function EventFieldsForm({
             />
           </Stack>
 
-          {/* "Linkuri și fișiere" (§NNN), beside the route because that is what most of them
+          {/* "Linkuri și fișiere" (§332), beside the route because that is what most of them
               are — the GPX on Google Drive, the map on a platform — and then the rest: a PDF,
               the album, the results. Links, never an upload (`AGENTS.md` §17). */}
           <Stack spacing={1}>

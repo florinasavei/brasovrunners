@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — the participants hear about an event change only when the organizer asks
+ * `DECISIONS.md` §331 — the participants hear about an event change only when the organizer asks
  * ("Anunță participanții despre schimbare", unticked by default), and only about something they
  * plan by: the place, the start, the programme — or a note the organizer chose to write. A
  * cancellation says why, tells everyone active unless the organizer unticks it, leaves every
@@ -28,7 +28,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * lapsed registration. A test registration is written to like a real one (§12.6) and counted
  * nowhere.
  */
-describe("§NNN the participants hear about a change when the organizer asks", () => {
+describe("§331 the participants hear about a change when the organizer asks", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let editor: StaffUser;
@@ -286,7 +286,7 @@ describe("§NNN the participants hear about a change when the organizer asks", (
     expect(result.notice).toBeUndefined();
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.update_notice_sent"))).toHaveLength(0);
-    // And a save with no notice at all — every caller before §NNN — is the same.
+    // And a save with no notice at all — every caller before §331 — is the same.
     expect((await save(event.id, { fields: { locationName: "Poiana Brașov, sus" } })).notice).toBeUndefined();
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
   });

@@ -132,7 +132,7 @@ describe("the place's name in each language", () => {
       expect(messages.Admin.editor.locationNameInLanguageHelp, file).toContain("{panel}");
     }
     // The meeting point itself is still one fact, asked once in "Când și unde" — in the island
-    // whose `required` follows the "to be announced" switch (§NNN), rendered by the event form.
+    // whose `required` follows the "to be announced" switch (§328), rendered by the event form.
     expect(EVENT_FORM).toContain("<PlaceToBeAnnounced");
     expect(read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx")).toContain('name="event.locationName"');
   });

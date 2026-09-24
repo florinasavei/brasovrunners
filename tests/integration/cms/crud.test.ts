@@ -213,11 +213,11 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
   });
 
   /*
-    §NNN — the owner: "actually this min age must be set at event level!". A box in the
+    §329 — the owner: "actually this min age must be set at event level!". A box in the
     registration panel, fourteen unless the organizer says otherwise, zero for no minimum; the
     database's CHECK and the schema say the same bounds.
   */
-  describe("the minimum age (§NNN)", () => {
+  describe("the minimum age (§329)", () => {
     const withMinAge = (minAge: string | undefined, slug: string) => ({
       ...NEW_EVENT,
       ...(minAge === undefined ? {} : { minAge }),

@@ -187,7 +187,7 @@ export async function GET(request: Request): Promise<Response> {
       registeredName: row.registeredName,
       firstName: row.firstName ?? "",
       lastName: row.lastName ?? "",
-      // Whose document is whose (§NNN): the participant's own in its column, the parent's beside
+      // Whose document is whose (§330): the participant's own in its column, the parent's beside
       // the parent's name — never the parent's document under a minor's name, as one column did.
       idDocument: identityDocumentsOf(row).participant ?? "",
       email: row.participantEmail,

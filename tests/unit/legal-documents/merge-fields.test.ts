@@ -47,7 +47,7 @@ describe("the declaration's merge fields", () => {
     const en = mergeFieldsIn(declarationEn);
     expect([...ro].sort()).toEqual([...en].sort());
     /*
-      Since §NNN the platform's text opens with the participant and their own document, and names
+      Since §330 the platform's text opens with the participant and their own document, and names
       the parent or guardian with theirs in a sentence of its own — a minor's declaration is signed
       by both. `{{declarant}}` and `{{idDocument}}` (§108, §95) stay fields every approved text may
       use; this template no longer needs them.
@@ -58,7 +58,7 @@ describe("the declaration's merge fields", () => {
     expect(asksForIdDocument(declarationRo)).toBe(true);
   });
 
-  /** §NNN — each signer's document is a field of its own, and naming any document asks for them. */
+  /** §330 — each signer's document is a field of its own, and naming any document asks for them. */
   it("knows the two newer document fields, and asks for documents when a text names any of the three", () => {
     for (const field of ["idDocument", "participantIdDocument", "guardianIdDocument"]) {
       expect(isMergeField(field), field).toBe(true);
@@ -72,7 +72,7 @@ describe("the declaration's merge fields", () => {
   });
 
   /**
-   * §NNN — the production gate. A minor signs beside the parent, with the minor's own document,
+   * §330 — the production gate. A minor signs beside the parent, with the minor's own document,
    * only under a text that names `{{participantIdDocument}}`: the platform's template, in both
    * languages. A text the club approved before it — the parent declares with the parent's
    * document — does not, and a minor's declaration under it is signed by the parent alone.
@@ -91,7 +91,7 @@ describe("the declaration's merge fields", () => {
     });
 
     it("is off for a text approved before two signatures, in either language", () => {
-      // The pre-§NNN template's shape: the declarant and the declarant's document.
+      // The pre-§330 template's shape: the declarant and the declarant's document.
       expect(asksForMinorSignature(text("Subsemnatul/a {{declarant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar că particip la {{event}}."))).toBe(false);
       expect(asksForMinorSignature(text("I, {{declarant}}, holder of identity document {{idDocument}}, take part in {{event}}."))).toBe(false);
       // The parent's document alone is the declarant's anyway: it asks nothing of the minor.

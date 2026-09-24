@@ -39,7 +39,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   const { done, invalid, eventOff } = await searchParams;
   const t = await getTranslations("Registrations");
 
-  // The link was good, but the event was cancelled or is over (§NNN): nothing was allocated and
+  // The link was good, but the event was cancelled or is over (§331): nothing was allocated and
   // nothing sent, and the page says why rather than "confirmed, now sign".
   if (eventOff) {
     return (

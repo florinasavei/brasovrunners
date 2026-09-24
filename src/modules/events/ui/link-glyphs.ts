@@ -8,7 +8,7 @@ import type { EventLinkKind } from "../domain/links";
 import type { Glyph } from "./glyphs";
 
 /**
- * One glyph per kind of link (`DECISIONS.md` §NNN), for the public page's "Linkuri și fișiere"
+ * One glyph per kind of link (`DECISIONS.md` §332), for the public page's "Linkuri și fișiere"
  * and the editor's kind select alike — the same picture on both sides, the way the type and the
  * surface wear the same glyph in the editor and on the page (§112, §121).
  *

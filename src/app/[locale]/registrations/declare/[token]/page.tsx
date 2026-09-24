@@ -42,19 +42,19 @@ type Props = {
 
 /*
   The signature boxes' ids are the names they post (`typedName`, and `minorTypedName` on a minor's
-  declaration, §NNN): what the refusal's links point at, so following one focuses its box.
+  declaration, §330): what the refusal's links point at, so following one focuses its box.
 */
 
 const ID_DOCUMENT_TYPES = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const;
 
-/** A document's series box, by the name it posts: the declarant's, and on a minor's declaration the minor's (§NNN). */
+/** A document's series box, by the name it posts: the declarant's, and on a minor's declaration the minor's (§330). */
 type DocumentBox = "idDocument" | "minorIdDocument";
 
 /**
  * One signer's identity document, as the declaration asks for it (§95, §283): the kind, chosen
  * from a closed list, and the series and number, typed — never scanned. An adult has one; a minor's
  * declaration has two, the minor's (`minorIdDocument`) and the parent's (`idDocument`), each the
- * same two boxes under its own words (§NNN). The action composes each pair into the one line the
+ * same two boxes under its own words (§330). The action composes each pair into the one line the
  * declaration prints.
  *
  * Rendered on the server with the page: it passes strings to MUI and nothing else
@@ -81,7 +81,7 @@ function IdDocumentFields({
   kinds: ReadonlyArray<{ kind: string; label: string }>;
   defaultKind: string;
   defaultValue: string;
-  /** The server refused the press for this box (`?invalid=document`, §NNN): shown in its red state. */
+  /** The server refused the press for this box (`?invalid=document`, §330): shown in its red state. */
   refused: boolean;
 }) {
   return (
@@ -209,7 +209,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const nameRefused = context.ok && invalid === "name";
   /*
     `invalid=document` is an identity document the text asks for and the press left out, or typed
-    as something that is not a series and number (§NNN, found in review) — past the browser's own
+    as something that is not a series and number (§330, found in review) — past the browser's own
     check. Its own refusal for the same reason: the generic sentence asks for a tick.
   */
   const documentRefused = context.ok && invalid === "document";
@@ -272,7 +272,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
 
   /*
-    The text the signature binds to (§NNN): the version above, in the registration's language —
+    The text the signature binds to (§330): the version above, in the registration's language —
     the translation `signDeclaration` reads to decide who signs and which documents it asks for.
     The same translation as the one shown whenever the link is opened in the language it was sent
     in, which is every email; read again only when somebody switched language on the page, so the
@@ -284,11 +284,11 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       : declaration;
 
   /*
-    Who signs, and under which name (§314, §108, §NNN): an adult once, with their registered name;
+    Who signs, and under which name (§314, §108, §330): an adult once, with their registered name;
     a minor's declaration by the parent or guardian, the declarant the text names — and, when the
     text asks the minor to sign (it names `{{participantIdDocument}}`, `asksForMinorSignature`),
     by the minor as well at the same press, with the name they were registered under. Under a text
-    approved before that, the parent signs alone with one document, exactly as before §NNN: the
+    approved before that, the parent signs alone with one document, exactly as before §330: the
     production gate, because the privacy notice approved beside such a text does not describe a
     minor's own identity number. `minorName` is null for an adult and under such a text, and it is
     the one question every part of this page asks: one signer or two. `signsForMinor` is the
@@ -310,7 +310,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const canReply = Boolean(env.EMAIL_REPLY_TO);
   /*
     What the refused press had typed, brought back sealed by the action (§314) and read only for
-    the refusals that keep it, a name's or a document's (§NNN) — a stale draft never fills a form
+    the refusals that keep it, a name's or a document's (§330) — a stale draft never fills a form
     it was not kept for.
 
     Read, not consumed: a Server Component cannot delete a cookie, exactly as for the registration
@@ -324,7 +324,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
   const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
   /*
-    Which boxes the server refused (§NNN). The URL carries the code and nothing else (§14.5), so
+    Which boxes the server refused (§330). The URL carries the code and nothing else (§14.5), so
     the page asks again, of what the refused press typed, with the one function the service
     refused it with — the red boxes and the refusal cannot name different ones. Without the kept
     draft (its ten minutes are over) every box is named: the page cannot know which, and each box
@@ -336,13 +336,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       ? mismatchedSignatures({ typedName: draft.typedName ?? "", minorTypedName: draft.minorTypedName ?? "" }, expected)
       : [];
   const refusedBoxes: SignatureBox[] = !nameRefused ? [] : judged.length > 0 ? judged : everyBox;
-  // Whether the text names an identity document, so the form asks for one — or two (§95, §NNN):
+  // Whether the text names an identity document, so the form asks for one — or two (§95, §330):
   // of the text the server decides from, like the signers above.
   const needsDocuments = signingText ? asksForIdDocument(signingText.body) : false;
   const boxLabel = (box: SignatureBox) =>
     box === "minorTypedName" ? t("declare.minorTypedName") : minorName !== null ? t("declare.guardianTypedName") : t("declare.typedName");
   /*
-    Which document boxes the server refused (§NNN): the ones the kept draft left empty — the draft
+    Which document boxes the server refused (§330): the ones the kept draft left empty — the draft
     keeps only what was typed. A box typed but refused (not a series and number) leaves none
     empty, and neither does a draft whose ten minutes are over; then every document box is named,
     as for the signatures.
@@ -395,7 +395,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             registered with, the event, its date and place. The identity documents stay blanks
             until they are typed below — the form is where they are asked, the text is where they
             land when printed — except a guardian's on an adult's declaration, which is the em
-            dash `{{guardian}}` reads too (§NNN). What is signed is the template, by id and hash.
+            dash `{{guardian}}` reads too (§330). What is signed is the template, by id and hash.
           */}
           <LegalDocumentBody
             body={declaration.body}
@@ -408,7 +408,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               eventDate: eventDetails
                 ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
                 : undefined,
-              // The city while the place is to be announced (§NNN), as in the PDF — never the typed place.
+              // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
             }}
           />
@@ -430,7 +430,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             the eye goes to retype it, and where it stays while the box is still wrong. Said here
             as well it was the same sentence twice, a screen apart (found in review).
 
-            A minor's declaration has two boxes when the text asks the minor to sign (§NNN): a link
+            A minor's declaration has two boxes when the text asks the minor to sign (§330): a link
             to each one refused, and for each its own way out — the club corrects the minor's
             registered name, and nobody corrects a guardian's, so that one is cancel and register
             again, whether the parent signs beside the minor or alone.
@@ -457,7 +457,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            An identity document refused on the server (§NNN): the same place, the same focusable
+            An identity document refused on the server (§330): the same place, the same focusable
             summary, a link to each box it names. Never both summaries at once — the URL carries
             one code — so the id they share stays unique.
           */}
@@ -505,7 +505,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 `{{idDocument}}`, `{{participantIdDocument}}`, `{{guardianIdDocument}}`.
 
                 One signer: an adult, or a parent signing alone for a minor under a text that does
-                not ask the minor to sign (§NNN) — the page a minor's declaration had before, with
+                not ask the minor to sign (§330) — the page a minor's declaration had before, with
                 the parent's hint in the box (§108) and one document, the declarant's.
               */}
               {minorName === null ? (
@@ -542,7 +542,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 <>
                   {/*
                     A minor's declaration, under a text that asks the minor to sign, is signed by
-                    two people at one press (§NNN; the owner: "I wanna have the ID document of the
+                    two people at one press (§330; the owner: "I wanna have the ID document of the
                     minor and the parent, and also 2 signatures!"):
                     the minor, then the parent or guardian, each with their own document and their
                     own name, each box checked against its own name. Two headed groups rather than

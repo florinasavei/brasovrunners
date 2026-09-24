@@ -30,7 +30,7 @@ export type RegistrationCsvRow = {
   firstName: string;
   lastName: string;
   /**
-   * The participant's own identity document — the adult's, or since a minor signs too (§NNN) the
+   * The participant's own identity document — the adult's, or since a minor signs too (§330) the
    * minor's — empty once cleared, seven days after the event (§95). `identityDocumentsOf` decides.
    */
   idDocument: string;
@@ -53,7 +53,7 @@ export type RegistrationCsvRow = {
   instagramHandle: string;
   /** The parent or guardian of a minor (§108), empty for an adult. */
   guardianName: string;
-  /** Their identity document, beside the minor's (§NNN); empty for an adult, and once cleared. */
+  /** Their identity document, beside the minor's (§330); empty for an adult, and once cleared. */
   guardianIdDocument: string;
   submittedAt: string;
   confirmedAt: string;
@@ -79,7 +79,7 @@ const HEADER = [
   "Strava",
   "Instagram",
   "Guardian",
-  // Beside the guardian's name (§NNN): the kit goes to that person (§108), against this document.
+  // Beside the guardian's name (§330): the kit goes to that person (§108), against this document.
   "Guardian identity document",
   "Submitted",
   "Confirmed",

@@ -85,7 +85,7 @@ async function loadEvent<T extends Record<string, unknown>>(
     raceId: event.raceId,
     publishedAt: event.publishedAt,
     timezone: event.timezone,
-    // A TEST row meets the event's own minimum exactly as a real one would (§NNN, AGENTS.md §12.6).
+    // A TEST row meets the event's own minimum exactly as a real one would (§329, AGENTS.md §12.6).
     minAge: event.minAge,
   };
 }
@@ -94,7 +94,7 @@ async function loadEvent<T extends Record<string, unknown>>(
 const SYNTHETIC_BIRTH_DATE = "1990-01-01";
 
 /**
- * A birth date the event's own minimum admits (§NNN) — the synthetic adult, unless the event asks
+ * A birth date the event's own minimum admits (§329) — the synthetic adult, unless the event asks
  * for more years than they have (a veterans' race, say), and then exactly that many years before
  * the event's day.
  *

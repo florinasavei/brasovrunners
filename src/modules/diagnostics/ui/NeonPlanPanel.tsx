@@ -16,7 +16,7 @@ type Props = {
   locale: Locale;
   plan: NeonPlanState;
   /**
-   * Where the plan in force came from (§NNN): Neon's own answer, or — when the key is not set
+   * Where the plan in force came from (§326): Neon's own answer, or — when the key is not set
    * or Neon did not answer — the setting below.
    */
   source: "neon" | "setting";
@@ -38,7 +38,7 @@ type Props = {
  * The same panel as the Mailgun plan's (§100). It was written believing Neon's API gives this
  * code the consumption and never the plan; the project row names the owning account's plan
  * (`owner.subscription_type`), so the pages read that first and the select below is the
- * fallback for an environment with no key or a Neon that did not answer (§NNN). The day the
+ * fallback for an environment with no key or a Neon that did not answer (§326). The day the
  * plan changes is still not a deployment, and now not even a click. A Server Component with
  * one form: the select and
  * the note post as ordinary fields; the service validates and the audit row records who said

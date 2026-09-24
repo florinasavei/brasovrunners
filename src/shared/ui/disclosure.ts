@@ -21,7 +21,7 @@ import { TAP_TARGET } from "./tap-target";
  * its marker from `sm` up because on a wide screen it is always open and is not a control.
  */
 /**
- * The arrow on the heading's own line (§NNN; the owner, of the editor's "Rezumat" fold: "I would
+ * The arrow on the heading's own line (§325; the owner, of the editor's "Rezumat" fold: "I would
  * like this arrow to be aligned with the text", then "same for all accordions").
  *
  * The browser's marker is a list-item marker, and a summary whose child is a block — a

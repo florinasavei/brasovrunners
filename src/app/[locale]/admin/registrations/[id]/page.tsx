@@ -85,7 +85,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
     /*
-      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§NNN): the
+      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
       declaration in effect in this registration's language — the one the press binds to — asks
       the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
     */
@@ -367,7 +367,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 <Typography variant="body2" color="text.secondary">
                   {tr("desk.fastTrackHelp")}
                   {/* A minor's paper is signed by the minor and the parent, and the press attests both
-                      (§NNN) — where the declaration in effect asks the minor to sign. */}
+                      (§330) — where the declaration in effect asks the minor to sign. */}
                   {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
                 </Typography>
               </Stack>
@@ -756,7 +756,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           ))}
         {acceptances.map((acceptance, index) => {
           /*
-            A minor's declaration is signed by two (§NNN): the minor's signature and document, then
+            A minor's declaration is signed by two (§330): the minor's signature and document, then
             the parent's — each in the hand, each named. An adult's, and a minor's signed before two
             signatures were asked, read as they always did.
           */

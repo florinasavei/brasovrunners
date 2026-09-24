@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.68-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.69-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1214,7 +1214,7 @@ Core invariants:
 2. unique database constraint;
 3. no place consumed before email confirmation;
 4. declaration required before Confirmed;
-5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§NNN); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
+5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
@@ -1266,7 +1266,7 @@ expired is re-allocated by `confirmByStaff` rather than refused, so the desk sti
 it while a place is free. `WAITLIST_OFFERED -> EXPIRED` happens at the offer's deadline
 regardless — an offer is a promise to the queue.
 
-A `CANCELLED` event's holds are left standing (§NNN), started or not: no declaration hold is
+A `CANCELLED` event's holds are left standing (§331), started or not: no declaration hold is
 released, no lapsed offer is written as expired, no waiting-list entry is closed at the start
 and nobody is offered a place. The registrations keep their status as the record of who had
 entered, and a race put back on finds its queue where it left it. Every read still counts an
@@ -1291,7 +1291,7 @@ publicDirectAvailability =
 Rules:
 
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
-- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§NNN) — and a registration that waits behind a kept hold is offered that place in the same transaction;
+- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
@@ -2435,7 +2435,7 @@ On explicit POST with valid token/action session:
    called off in between must not still be signed into;
 5. expire stale holds (a lapsed declaration hold is stale only as far as the queue wants its
    place, or once the event has started, §160; a cancelled event was refused at step 4, and its
-   holds are left standing, §NNN);
+   holds are left standing, §331);
 6. verify current hold still active — a hold past its deadline that nothing wants is;
 7. if expired, allocate older eligible waiting entries first, then renew the hold only if direct capacity remains; otherwise move this participant to Waitlisted at the queue tail and stop;
 8. insert immutable acceptance;
@@ -2666,7 +2666,7 @@ Registration maintenance:
   first, or all of them on an event that has started (`DECISIONS.md` §160); a lapsed hold
   nothing wants is kept, and its event is not even selected;
 - select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
-  left as it was cancelled (§NNN) — no hold or offer expired, no waiting list closed, no place
+  left as it was cancelled (§331) — no hold or offer expired, no waiting list closed, no place
   offered, no number settled, nothing mailed;
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
@@ -2748,7 +2748,7 @@ EVENT_UPDATE_NOTICE
 EVENT_CANCELLED
 ```
 
-`EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED` are never automatic (§NNN): the first goes only
+`EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED` are never automatic (§331): the first goes only
 when an organizer ticks "Anunță participanții despre schimbare" on a save that moved the place,
 the start or the programme, put a cancelled event back on, or carries a note; the second when a
 save cancels the event and "tell them" is left ticked, with the reason the organizer typed. Both

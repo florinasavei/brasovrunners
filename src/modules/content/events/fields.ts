@@ -237,7 +237,7 @@ const scheduleRowSchema = z
 export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
 
 /**
- * A meeting point, unless the place is to be announced (§NNN).
+ * A meeting point, unless the place is to be announced (§328).
  *
  * On the object because it reads two fields, and named on `locationName` so the refusal
  * summary links to the box (§47). With the switch off it is exactly the rule the field used to
@@ -253,7 +253,7 @@ function placeRule(fields: { locationName: string | null; locationToBeAnnounced:
 }
 
 /**
- * One link row as the editor posts it (`DECISIONS.md` §NNN): a kind from the select, the
+ * One link row as the editor posts it (`DECISIONS.md` §332): a kind from the select, the
  * address, and a label in each language. Every box a string, empty allowed here; the list
  * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
  * address's https pattern off it (§315) rather than typing them a second time.
@@ -273,7 +273,7 @@ type EventLinkRowInput = z.infer<typeof eventLinkRowSchema>;
 const isBlankLinkRow = (row: EventLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * The links, as the editor posts them — "Linkuri și fișiere" (§NNN).
+ * The links, as the editor posts them — "Linkuri și fișiere" (§332).
  *
  * Every refusal names the row **as the editor numbered it** — the posted index, before the
  * spare lines are dropped — so "link 2" is the second row on the screen and the summary's link
@@ -366,7 +366,7 @@ export const eventFieldsSchema = z
      * The meeting point is required, even though the column accepts null: the column has to
      * tolerate rows written before it existed, and a public event page without a meeting point
      * is missing the one fact a runner actually needs — **unless the place is to be announced**
-     * (`locationToBeAnnounced` below, §NNN), when blank is the honest answer and whatever was
+     * (`locationToBeAnnounced` below, §328), when blank is the honest answer and whatever was
      * typed is kept without being shown.
      *
      * So the refusal is the object's (`placeRule`, at the foot of this schema), which is the one
@@ -378,7 +378,7 @@ export const eventFieldsSchema = z
     locationName: optionalText(200).meta({ html: { required: true } }),
     locationAddress: optionalText(300),
     /**
-     * "Locația se anunță mai târziu" (§NNN): the place is not announced yet. A switch, so absent
+     * "Locația se anunță mai târziu" (§328): the place is not announced yet. A switch, so absent
      * — an older caller, a fixture — is "announced", like `isSpecial`: every row before it was.
      */
     locationToBeAnnounced: z.boolean().optional().default(false),
@@ -453,7 +453,7 @@ export const eventFieldsSchema = z
       .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
       .optional(),
     /**
-     * "Linkuri și fișiere" (§NNN): the GPX on Google Drive, a PDF, the album, the results — at
+     * "Linkuri și fișiere" (§332): the GPX on Google Drive, a PDF, the album, the results — at
      * most twelve, each https, each label optional. Not part of what publication requires (§28):
      * an empty label is the kind's own word in the reader's language.
      */
@@ -521,7 +521,7 @@ export const eventFieldsSchema = z
     confirmationOpensDaysBefore: wholeNumberWithDefault(7, { min: 0, max: 60 }),
     confirmationDeadlineDaysBefore: wholeNumberWithDefault(2, { min: 0, max: 60 }),
     /**
-     * The youngest a participant may be on the day of the event, in years (§NNN, amending §321:
+     * The youngest a participant may be on the day of the event, in years (§329, amending §321:
      * "actually this min age must be set at event level!"). Absent or empty means the club's
      * fourteen, which is also the column's default; zero means no minimum. The bounds are the
      * database's CHECK, said again here so the box carries them (§315).

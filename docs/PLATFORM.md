@@ -29,7 +29,7 @@ waiting on.
 | Service | Plan / SKU | What it holds | Console | State |
 | --- | --- | --- | --- | --- |
 | **Vercel** | Hobby | Account exists. Both applications. One project per environment, function region `fra1` — QA's was `iad1` until read back on 2026-09-16 (`SETUP.md` §26) | vercel.com/dashboard | QA live; production project created 2026-09-16, configured, **never deployed** |
-| **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). The pages read the plan from Neon's project row; `platform_settings.neonPlan` is the fallback without a key (`DECISIONS.md` §NNN). Capped 2026-09-23: production ≤ 1 CU and 100 CU-hours a month, QA 0.25 CU and 30 (`SETUP.md` §40) | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
+| **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). The pages read the plan from Neon's project row; `platform_settings.neonPlan` is the fallback without a key (`DECISIONS.md` §326). Capped 2026-09-23: production ≤ 1 CU and 100 CU-hours a month, QA 0.25 CU and 30 (`SETUP.md` §40) | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
 | **Zitadel** | Free | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | One instance, one project, one application per environment. QA live since 2026-09-04; production application created 2026-09-17. Own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05). Setup, traps and limits: `docs/RUNBOOKS.md` § Staff sign-in |
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
@@ -83,7 +83,7 @@ projects fit, and only then make and document the plan change. Until that explic
 every operational page and estimate must treat Launch as current.
 
 **Which plan the pages read against is Neon's own answer, and the setting is the fallback**
-(`DECISIONS.md` §NNN, correcting the premise below). The project row the pages already read names
+(`DECISIONS.md` §326, correcting the premise below). The project row the pages already read names
 the owning account's plan (`owner.subscription_type`); that wins. `platform_settings.neonPlan`
 — `FREE` or `LAUNCH`, with a note and who/when, audited like the Mailgun plan (§100) — is set by
 an Administrator on `/admin/tasks` → Costuri and is used only when the key is not set or Neon did

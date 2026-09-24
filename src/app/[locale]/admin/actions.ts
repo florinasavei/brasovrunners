@@ -160,7 +160,7 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The links (§NNN), posted as `event.links[i].<box>` by `LinkRowsEditor` — gathered by index
+   * The links (§332), posted as `event.links[i].<box>` by `LinkRowsEditor` — gathered by index
    * like the two lists above, blanks included; `fields.ts` drops the spare line and refuses a
    * row whose address is not https, naming the row by this same index.
    */
@@ -193,7 +193,7 @@ function eventFieldsFrom(form: FormData) {
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
     locationAddress: null,
-    // "Locația se anunță mai târziu" (§NNN): a switch, so an absent value is "announced" —
+    // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
     // the state every event was in before the switch existed.
     locationToBeAnnounced: form.get("event.locationToBeAnnounced") === "on",
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
@@ -228,7 +228,7 @@ function eventFieldsFrom(form: FormData) {
         : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
-    // The event's own minimum age (§NNN); an empty box is the club's fourteen (`fields.ts`).
+    // The event's own minimum age (§329); an empty box is the club's fourteen (`fields.ts`).
     minAge: value("minAge"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
     registrationClosesAtWallTime: wallTime("registrationClosesAt"),
@@ -498,7 +498,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
       /*
         "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
-        its "tell them" box (§NNN). Read as posted and judged by the service — the role, the
+        its "tell them" box (§331). Read as posted and judged by the service — the role, the
         reason required on a cancellation, the five hundred characters — so a replayed POST
         meets the same rules as the page. An unticked box posts nothing, which is "no".
       */
@@ -506,11 +506,11 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       cancellation: form.has("cancel.reason") ? { reason: text(form, "cancel.reason"), notify: form.get("cancel.notify") === "on" } : undefined,
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
-    // So does what the participants were told (§NNN): the kind and the count, never who.
+    // So does what the participants were told (§331): the kind and the count, never who.
     outcome = {
       ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
       offered: offered > 0 ? String(offered) : undefined,
-      // The save that announced the place (§NNN): the banner says it is public now. A flag, never
+      // The save that announced the place (§328): the banner says it is public now. A flag, never
       // the place itself — nothing typed goes in a URL. When the organizer also told the
       // participants, the notice's own banner says so, and "nobody was written to" would be false.
       announced: placeAnnounced && notice?.kind !== "update" ? "1" : undefined,

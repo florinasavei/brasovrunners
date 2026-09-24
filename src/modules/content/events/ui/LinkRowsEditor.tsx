@@ -43,7 +43,7 @@ export default function LinkRowsEditor(props: ComponentProps<typeof LinkRowsEdit
 }
 
 /**
- * "Linkuri și fișiere" in the editor (`DECISIONS.md` §NNN): per row, what it is (with its glyph,
+ * "Linkuri și fișiere" in the editor (`DECISIONS.md` §332): per row, what it is (with its glyph,
  * the same the public page shows), the address, and a label in each language side by side. A
  * client island for the three things a form cannot do by itself — add a row, remove one, move
  * one up or down — and nothing else: every box is an ordinary input named
@@ -187,7 +187,7 @@ function LinkRowsEditorIsland({
           </Stack>
         );
       })}
-      {/* The list's own ceiling (§NNN): the button stops at twelve rather than letting a
+      {/* The list's own ceiling (§332): the button stops at twelve rather than letting a
           thirteenth row be typed and then refused. */}
       <Button
         type="button"

@@ -46,14 +46,14 @@ export async function eventShareImage(
   labels: {
     type: string;
     cancelled: string;
-    /** "Locația se anunță în curând" (§NNN), where the meeting point would be. */
+    /** "Locația se anunță în curând" (§328), where the meeting point would be. */
     locationToBeAnnounced: string;
     distanceKm: (km: string) => string;
     elevationM: (m: string) => string;
   },
 ): Promise<ImageResponse> {
   // A picture outlives the page it was made from — it is saved, posted, forwarded — so a place
-  // not yet announced is said as such, and the query has withheld the typed one (§NNN).
+  // not yet announced is said as such, and the query has withheld the typed one (§328).
   const place = event.locationToBeAnnounced ? labels.locationToBeAnnounced : event.locationName;
   const { width, height } = SHARE_SHAPES[shape];
   const square = shape === "square";

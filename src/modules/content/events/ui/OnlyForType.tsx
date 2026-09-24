@@ -14,7 +14,7 @@ import { useRecall } from "@/shared/forms/recall";
  * and the server render reads the recalled value rather than the page's.
  *
  * `OnlyForType` below reads the type select with it; the notice beside the save button reads
- * the status select (`EventNoticeFields`, §NNN).
+ * the status select (`EventNoticeFields`, §331).
  */
 export function useSelectedValue(selectName: string, initialValue: string): string {
   const recall = useRecall();

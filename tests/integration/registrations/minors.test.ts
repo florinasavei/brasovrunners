@@ -54,7 +54,7 @@ const LABELS = {
 };
 
 /**
- * The PDF labels, watched (§NNN): which of them the renderer read says which signature block it
+ * The PDF labels, watched (§330): which of them the renderer read says which signature block it
  * drew — `whereuponTogether` and `minorSignature` only for the two-signer one — where the
  * compressed page itself cannot be read back.
  */
@@ -70,7 +70,7 @@ function trackedLabels() {
 }
 
 /**
- * A declaration approved before two signatures were asked (§NNN): the shape of the platform's text
+ * A declaration approved before two signatures were asked (§330): the shape of the platform's text
  * until then, and of production's approved one — the parent declares, with the parent's document,
  * and nothing names the minor's own.
  */
@@ -168,7 +168,7 @@ describe("a minor registered by a parent (§108)", () => {
     expect(minor.registeredName).toBe("Maria Popescu");
 
     await confirmEmail(db, event, minor.id, NOW);
-    // The minor and the parent sign together (§NNN), each with their own name and document.
+    // The minor and the parent sign together (§330), each with their own name and document.
     await signDeclaration(
       db,
       event,
@@ -184,7 +184,7 @@ describe("a minor registered by a parent (§108)", () => {
     // asserted here — the same function the renderer and the screen both use.
     const merged = mergeLegalBody(entry!.body, entry!.values ?? {});
     const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
-    // The platform's text since §NNN: the minor declares with their own document, and the parent
+    // The platform's text since §330: the minor declares with their own document, and the parent
     // is named with theirs in a sentence of its own.
     expect(text).toContain("Subsemnatul/a Maria Popescu, posesor/posesoare al actului de identitate MP 123456");
     expect(text).toContain("părintele sau tutorele legal: Ion Popescu, posesor/posesoare al actului de identitate BV 654321");
@@ -201,7 +201,7 @@ describe("a minor registered by a parent (§108)", () => {
   });
 
   /**
-   * §NNN — the production gate. A text the club approved before two signatures were asked names
+   * §330 — the production gate. A text the club approved before two signatures were asked names
    * `{{declarant}}` and `{{idDocument}}` and not `{{participantIdDocument}}` — production's
    * approved declaration is one, and the privacy notice approved beside it says nothing of a
    * minor's own identity number. Under it a minor's declaration is exactly what it was (§108,
@@ -259,7 +259,7 @@ describe("a minor registered by a parent (§108)", () => {
   });
 
   /**
-   * §NNN — the same text, with the platform's template in effect: a minor must sign beside the
+   * §330 — the same text, with the platform's template in effect: a minor must sign beside the
    * parent, and a post without the minor's box or document — what the page asked before — is
    * refused on that box alone, with nothing recorded.
    */
@@ -283,7 +283,7 @@ describe("a minor registered by a parent (§108)", () => {
   });
 
   /**
-   * §67, §NNN — "Confirmă pe hârtie" for a minor, under the platform's text (it asks the minor to
+   * §67, §330 — "Confirmă pe hârtie" for a minor, under the platform's text (it asks the minor to
    * sign). The paper at the desk carries both signatures, and what the press records is exactly
    * that: the parent as the declarant and the minor beside them, the volunteer as the one who saw
    * the paper. Nobody on staff signs; the documents stay on the paper, as they always did.
@@ -329,7 +329,7 @@ describe("a minor registered by a parent (§108)", () => {
   });
 
   /**
-   * §67, §NNN — the same press under a text approved before two signatures. The paper is the one
+   * §67, §330 — the same press under a text approved before two signatures. The paper is the one
    * the parent signed alone, and the row records that and nothing more: the parent as the
    * declarant, no minor's name. The minor's printable form is the one-signature form there,
    * whatever was asked for, since the text does not ask the minor to sign.
@@ -363,7 +363,7 @@ describe("a minor registered by a parent (§108)", () => {
     expect(drawn.read.has("minorSignature")).toBe(false);
   });
 
-  /** §NNN — the gate the desk and the registration's page read before the press, per language. */
+  /** §330 — the gate the desk and the registration's page read before the press, per language. */
   it("says per language whether the declaration in effect asks a minor to sign", async () => {
     expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: false, en: false });
     await approve(db, LEGACY_DECLARATION);

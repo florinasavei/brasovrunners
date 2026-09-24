@@ -224,7 +224,7 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     // Claimed first, in the same transaction as the rows: two organizers pressing at once
     // means one of them finds `thanks_sent_at` already set. Never for a cancelled event
-    // (§NNN): "thank you for running with us" about a race that did not run.
+    // (§331): "thank you for running with us" about a race that did not run.
     const [event] = await tx
       .update(events)
       .set({ thanksSentAt: now })

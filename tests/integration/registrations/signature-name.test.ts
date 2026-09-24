@@ -154,7 +154,7 @@ describe("BR-REQ-033-02 §314 a signature that is not the declarant's name", () 
   });
 
   /**
-   * §NNN — a minor's declaration is signed by two at one press: the minor, with the name they
+   * §330 — a minor's declaration is signed by two at one press: the minor, with the name they
    * were registered under and their own document, and the parent or guardian, with theirs (the
    * owner: "I wanna have the ID document of the minor and the parent, and also 2 signatures!").
    * Each wrong or missing piece is refused on its own field, before anything moves, with nothing

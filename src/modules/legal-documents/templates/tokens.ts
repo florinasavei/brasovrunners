@@ -30,7 +30,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
   { token: "{{declarant}}", messageKey: "declarant", example: "Mihai Popescu (părinte)" },
   { token: "{{guardian}}", messageKey: "guardian", example: "Mihai Popescu" },
   { token: "{{idDocument}}", messageKey: "idDocument", example: "CI XB 123456" },
-  // Each signer's own document (§NNN): a minor's declaration is signed by the minor and the parent.
+  // Each signer's own document (§330): a minor's declaration is signed by the minor and the parent.
   { token: "{{participantIdDocument}}", messageKey: "participantIdDocument", example: "CI XB 654321" },
   { token: "{{guardianIdDocument}}", messageKey: "guardianIdDocument", example: "CI XB 123456" },
   { token: "{{event}}", messageKey: "event", example: "Crosul aniversar Brașov Runners" },

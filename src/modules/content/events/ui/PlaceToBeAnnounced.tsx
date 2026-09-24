@@ -32,7 +32,7 @@ type Props = {
 };
 
 /**
- * "Locația se anunță mai târziu" (`DECISIONS.md` §NNN; the owner: "I want to be able to set the
+ * "Locația se anunță mai târziu" (`DECISIONS.md` §328; the owner: "I want to be able to set the
  * location as TBD, and to not announce it yet") — the switch, and the meeting point's box whose
  * `required` follows it.
  *

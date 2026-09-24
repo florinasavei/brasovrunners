@@ -167,7 +167,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
   /**
    * The Neon plan, and the month read against it: Free's ceilings and the red past eighty
    * percent, or Launch's estimate at the catalogue's rates and no ceiling at all. What Neon
-   * reports for the account when it answered (§NNN); the plan stated on `/admin/tasks` →
+   * reports for the account when it answered (§326); the plan stated on `/admin/tasks` →
    * Costuri when it did not — this page links there for a reader who may open that screen.
    */
   const neonPlan = await readNeonPlan(db);
@@ -519,7 +519,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
           </Typography>
           {/* Which plan the figures are read against, and where it is set: a link for a reader who may open that screen, a sentence for the rest. */}
           <Typography variant="body2" sx={{ mb: 2 }} data-testid="neon-plan-sentence">
-            {/* Neon's own answer needs no link: nothing on the costs panel would change it (§NNN). */}
+            {/* Neon's own answer needs no link: nothing on the costs panel would change it (§326). */}
             {neonInForce.source === "neon" ? (
               t(`neon.planFromNeon.${neonBlock.plan}`)
             ) : (

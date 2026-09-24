@@ -142,7 +142,7 @@ describe("CSV formula neutralization", () => {
   });
 
   /**
-   * §NNN — a minor's declaration carries two identity documents: the minor's own in the
+   * §330 — a minor's declaration carries two identity documents: the minor's own in the
    * participant's column, and the parent's beside the parent's name, where the kit goes (§108).
    */
   it("carries a minor's document and the parent's, each in its own column", () => {

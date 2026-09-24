@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * `DECISIONS.md` §NNN — "Anunță participanții despre schimbare", end to end. An organizer makes a
+ * `DECISIONS.md` §331 — "Anunță participanții despre schimbare", end to end. An organizer makes a
  * race of their own (the featured one is shared by every spec, and its place is read by others),
  * a walk-in is entered at the desk so somebody is registered, and then:
  *
@@ -15,7 +15,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * Each Playwright project makes its own event, named by the project, so the two never share a
  * count.
  */
-test.describe("§NNN the participants hear about a change when the organizer asks", () => {
+test.describe("§331 the participants hear about a change when the organizer asks", () => {
   test("the box shows the count, the save reports what it queued, and a cancellation asks why", async ({ page }) => {
     test.setTimeout(150_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;

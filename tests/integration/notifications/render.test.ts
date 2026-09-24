@@ -210,7 +210,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
   });
 
-  it("points the reminder at the page's links with one line, only when the event has links (§NNN)", async () => {
+  it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {
     const [event] = await db.select().from(events).limit(1);
     await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
     const row = {

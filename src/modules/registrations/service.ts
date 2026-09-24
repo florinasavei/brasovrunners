@@ -90,7 +90,7 @@ export type EventForRegistration = {
    */
   timezone?: string;
   /**
-   * The event's own minimum age (`events.min_age`, §NNN), counted on that day at every door.
+   * The event's own minimum age (`events.min_age`, §329), counted on that day at every door.
    * The three callers that submit read it off the row and pass it; absent on a partial row
    * means the column's default, `MIN_PARTICIPANT_AGE` — the same fourteen the column gives an
    * event nobody set a number on, so a fixture built without it counts what the row holds.
@@ -328,7 +328,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<number> {
   /*
-    A cancelled event's queue stands still (§NNN). Nobody is offered a place in a race that will
+    A cancelled event's queue stands still (§331). Nobody is offered a place in a race that will
     not run — the offer's email would be a link that answers "cancelled" — and no hold is
     released either: the registrations keep their status as the record of who had entered, and
     a race that is put back on finds its queue where it left it. Every caller passes the row it
@@ -651,7 +651,7 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
     ? await repo.findRegistrationByEventAndParticipant(db, input.eventId, participant.id)
     : await repo.findLatestActiveRegistrationForParticipant(db, participant.id);
   if (!registration || !isActiveStatus(registration.status)) return;
-  // A cancelled event hands out no link (§NNN): each would open onto "this event is cancelled",
+  // A cancelled event hands out no link (§331): each would open onto "this event is cancelled",
   // and its participants were told so in a message of its own. The same silent answer as above.
   // Asked without an event, the lookup has already passed over cancelled ones, so a runner with
   // another race still gets that one's link rather than nothing.
@@ -715,7 +715,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    */
   /*
     …and one rule is added here for every caller alike: the event's own minimum age on the day
-    of the event (§321; the number is the event's since §NNN, fourteen unless set otherwise).
+    of the event (§321; the number is the event's since §329, fourteen unless set otherwise).
 
     Here because this is the first line that knows the event, and the one door every
     registration passes — the public form, a staff entry and the desk's walk-in behind it, a
@@ -1135,7 +1135,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     }
 
     /*
-      The event is not being run any more (§NNN): cancelled, or over. Confirming the address
+      The event is not being run any more (§331): cancelled, or over. Confirming the address
       would allocate a place, draw a provisional number and send "sign the declaration" for a
       race that will not happen — so nothing is written and nothing is sent. The registration is
       returned still unconfirmed, which is how the confirmation page knows to say why rather
@@ -1168,7 +1168,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
  * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
  * whole transaction, token spend included, so the same link re-renders the current text.
  *
- * Asked before anything else is read from the text (§NNN): who signs and which documents are
+ * Asked before anything else is read from the text (§330): who signs and which documents are
  * asked come from it, and must come from the text the page showed.
  */
 function declarationChanged(version: number): DomainError {
@@ -1237,7 +1237,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      */
     /*
       The text this signature binds to: the version current for this registration's language,
-      read once, before anything is compared (§NNN). Who signs and which documents are asked are
+      read once, before anything is compared (§330). Who signs and which documents are asked are
       read from it, so it has to be the text the page showed — and that is checked first: the
       page posts the id and hash of the version it rendered, and a newer version approved in
       between is refused here with CONFLICT (`declarationChanged`, BR-REQ-033-02 criterion 6,
@@ -1250,7 +1250,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     /*
-      A minor's declaration is signed twice at this one press (§NNN) — by the parent, in
+      A minor's declaration is signed twice at this one press (§330) — by the parent, in
       `typedName` as above, and by the minor, in `minorTypedName`, with the name they were
       registered under — when the text asks the minor to sign: when it names the minor's own
       document, `{{participantIdDocument}}` (`asksForMinorSignature`). A text approved before that
@@ -1269,7 +1269,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     const signedByMinorToo = expected.minorTypedName !== null;
 
     /*
-      The identity documents, asked for before anything moves too (§NNN), for the reason the names
+      The identity documents, asked for before anything moves too (§330), for the reason the names
       are: a refusal must never reach the allocator. A text naming any of the three document
       fields (`asksForIdDocument`) asks for the declarant's document, and — when the minor signs
       too — the minor's as well. Each missing one is named, so the page can say which box.
@@ -1310,7 +1310,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     /*
       The identity documents were required above, when the text names one (§95: the club hands
       out kits against it, so a signature without one is not the declaration the club wrote), and
-      are stored only then. The minor's signature and document ride on the same row (§NNN): one
+      are stored only then. The minor's signature and document ride on the same row (§330): one
       acceptance, one instant, one text, signed by both.
     */
     await repo.insertDeclarationAcceptance(tx, {
@@ -1470,7 +1470,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
   }
   /*
-    Who signed the paper, as the row records it (§NNN). An adult's paper carries one signature:
+    Who signed the paper, as the row records it (§330). An adult's paper carries one signature:
     the registered name. A minor's carries the parent's, as the declarant (`typed_name`, the same
     person `expectedSignatures` wants online) — and, when the declaration in effect asks the minor
     to sign (`asksForMinorSignature`, the same gate as online), the minor's beside it
@@ -1555,7 +1555,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
     if (current.status === "CONFIRMED") return current;
-    // No desk for a race that will not run (§NNN): a paper confirmation here would allocate and
+    // No desk for a race that will not run (§331): a paper confirmation here would allocate and
     // send "you are in" for a cancelled event, exactly what `signDeclaration` refuses online.
     if (lockedEvent.eventStatus === "CANCELLED") {
       throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
@@ -1598,7 +1598,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
     const locked = withLockedRow(event, lockedEvent);
-    // As at the desk's confirmation (§NNN): nobody is given a place in a cancelled race.
+    // As at the desk's confirmation (§331): nobody is given a place in a cancelled race.
     if (locked.eventStatus === "CANCELLED") {
       throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
     }
@@ -1654,7 +1654,7 @@ export async function checkIn<T extends Record<string, unknown>>(
   if (event?.eventStatus === "COMPLETED") {
     throw new DomainError("VALIDATION_ERROR", "the event is completed; the desk is closed");
   }
-  // Nor at a race that will not run (§NNN): a check-in there would put somebody on the
+  // Nor at a race that will not run (§331): a check-in there would put somebody on the
   // thank-you's list for an event that never happened.
   if (event?.eventStatus === "CANCELLED") {
     throw new DomainError("VALIDATION_ERROR", "the event is cancelled; the desk is closed");

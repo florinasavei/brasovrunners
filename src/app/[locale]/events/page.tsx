@@ -366,7 +366,7 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<
             // The heading sits on its list, not a line above it (§252).
             mb: 0.5,
             cursor: { xs: "pointer", sm: "default" },
-            // Its arrow hides from sm up, where the fold is always open and not a control (§NNN).
+            // Its arrow hides from sm up, where the fold is always open and not a control (§325).
             "&::before": { display: { xs: "block", sm: "none" } },
             pointerEvents: { xs: "auto", sm: "none" },
           }}

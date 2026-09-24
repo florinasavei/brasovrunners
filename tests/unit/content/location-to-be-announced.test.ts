@@ -11,7 +11,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — "Locația se anunță mai târziu".
+ * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — "Locația se anunță mai târziu".
  *
  * The owner, 2026-09-23: "I want to be able to set the location as TBD, and to not announce it
  * yet". A state of the event, not an empty field: with the switch on, the meeting point is not

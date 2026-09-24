@@ -227,7 +227,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     expect(untouched.status).toBe("PENDING_DECLARATION");
   });
 
-  it("leaves a cancelled event's registrations as they were when it was cancelled (§NNN, amending §160)", async () => {
+  it("leaves a cancelled event's registrations as they were when it was cancelled (§331, amending §160)", async () => {
     const event = await createInternalEvent(db, { capacity: 1 });
     await submitRegistration(db, event, submissionInput("late@example.ro"), NOW);
     const [pending] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));

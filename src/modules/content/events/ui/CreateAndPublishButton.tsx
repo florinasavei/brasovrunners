@@ -46,7 +46,7 @@ function publicationGaps(form: HTMLFormElement, locales: Props["locales"], label
   };
 
   const gaps: Gap[] = [];
-  // No meeting point is a gap only while the place is announced (§NNN): with the switch on, the
+  // No meeting point is a gap only while the place is announced (§328): with the switch on, the
   // server publishes without one and every surface says it is to be announced.
   const announcedLater = data.get("event.locationToBeAnnounced") === "on";
   if (!announcedLater && text("event.locationName") === "") gaps.push({ name: "event.locationName", label: labels.locationName });

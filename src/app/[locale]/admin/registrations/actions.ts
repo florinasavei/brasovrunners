@@ -249,7 +249,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       Under the event's minimum age on the race day (§321) is the one refusal here about a fact
       the volunteer typed and can check with the person in front of them, so it keeps its own
       sentence — the generic "check what you entered" would send them hunting through a form that
-      is correct. The sentence names the chosen event's own number (§NNN), read from the event
+      is correct. The sentence names the chosen event's own number (§329), read from the event
       the refusal was about, in the backoffice's language. The rule's marker is not a box: the
       summary names the birth date alone, under its label.
     */

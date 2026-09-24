@@ -25,7 +25,7 @@ const EVENT_FORM = read("src/modules/content/events/ui/EventFieldsForm.tsx");
 const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFieldsForm.tsx");
 
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
-// `links` is an island of rows (§NNN) whose boxes read their constraints off `eventLinkRowSchema`.
+// `links` is an island of rows (§332) whose boxes read their constraints off `eventLinkRowSchema`.
 const NOT_A_BOX = new Set(["featured", "isSpecial", "participantListVisibility", "bibDesign", "scheduleRows", "coHosts", "links", "locationAddress", "locationToBeAnnounced"]);
 
 describe("the event form's constraints are the schema's (§315)", () => {
@@ -70,7 +70,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
     expect(eventInputConstraints("durationMinutes")).toMatchObject({ type: "number", min: 1, max: 7 * 24 * 60, step: 1 });
     expect(eventInputConstraints("confirmationOpensDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
     expect(eventInputConstraints("confirmationDeadlineDaysBefore")).toMatchObject({ type: "number", min: 0, max: 60 });
-    // The event's minimum age (§NNN): the database's CHECK, zero (no minimum) to ninety-nine.
+    // The event's minimum age (§329): the database's CHECK, zero (no minimum) to ninety-nine.
     expect(eventInputConstraints("minAge")).toMatchObject({ type: "number", min: 0, max: 99, step: 1 });
     // Optional: an empty capacity is "no limit", never a refusal; an empty minimum is fourteen.
     expect(eventInputConstraints("capacity").required).toBeUndefined();

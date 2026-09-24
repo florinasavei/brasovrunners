@@ -4,7 +4,7 @@ import { eventFormFieldName } from "@/modules/content/events/form-names";
 import { htmlConstraints } from "@/shared/forms/constraints";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — "Linkuri și fișiere" as the editor posts them.
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332) — "Linkuri și fișiere" as the editor posts them.
  *
  * The rows arrive as strings from an ordinary form, so everything the column must never hold is
  * refused here, and every refusal names the row the organizer sees: an address that is not
@@ -49,7 +49,7 @@ const issuesOf = (links: unknown) => {
   return parsed.error?.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })) ?? [];
 };
 
-describe("BR-REQ-011-01 criterion 19 the links a form may post", () => {
+describe("BR-REQ-011-01 criterion 20 the links a form may post", () => {
   it("keeps the order, the kind and both labels, and turns an empty label into none", () => {
     const parsed = parse([
       { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "" },

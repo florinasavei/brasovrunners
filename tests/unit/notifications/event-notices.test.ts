@@ -5,7 +5,7 @@ import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * `DECISIONS.md` §NNN — "Detalii actualizate" and "Eveniment anulat", as they are built: one line
+ * `DECISIONS.md` §331 — "Detalii actualizate" and "Eveniment anulat", as they are built: one line
  * per fact the save changed, read from the event as it stands; the organizer's own words as plain
  * text; nothing to act on. And the three message types nothing queues, held to that by the source.
  */
@@ -23,7 +23,7 @@ const DATA: TemplateData = {
 const build = (messageType: "EVENT_UPDATE_NOTICE" | "EVENT_CANCELLED", data: Partial<TemplateData>, actionUrl?: string) =>
   buildOutgoingEmail({ to: "ana@example.ro", locale: "ro", idempotencyKey: `test:${messageType}`, messageType, data: { ...DATA, ...data }, actionUrl });
 
-describe("§NNN the update notice", () => {
+describe("§331 the update notice", () => {
   it("names each fact the save changed, in both languages, and only those", () => {
     const email = build("EVENT_UPDATE_NOTICE", { updateChanges: ["place", "time"] }, DATA.eventUrl);
     expect(email.subject).toBe("Detalii actualizate pentru Crosul de toamnă / Updated details for Crosul de toamnă");
@@ -60,7 +60,7 @@ describe("§NNN the update notice", () => {
   });
 });
 
-describe("§NNN the cancellation", () => {
+describe("§331 the cancellation", () => {
   it("says the event is cancelled, why, that the registration stays and nothing is owed, and where to ask", () => {
     const email = build("EVENT_CANCELLED", { cancellationReason: "Avertizare meteo: traseul nu e sigur.", replyTo: "contact@example.test" }, "https://example.test/ignored");
     expect(email.subject).toBe("Evenimentul „Crosul de toamnă” a fost anulat / “Crosul de toamnă” has been cancelled");
@@ -83,7 +83,7 @@ function sources(dir: string): { path: string; text: string }[] {
   });
 }
 
-describe("§NNN the message types nothing queues", () => {
+describe("§331 the message types nothing queues", () => {
   it("are queued nowhere in the source — no `messageType:` names them", () => {
     const offenders = sources(join(process.cwd(), "src")).flatMap(({ path, text }) =>
       [...NEVER_QUEUED_MESSAGE_TYPES].filter((type) => new RegExp(`messageType:\\s*"${type}"`).test(text)).map((type) => `${path}: ${type}`),

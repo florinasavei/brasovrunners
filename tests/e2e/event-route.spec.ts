@@ -18,7 +18,7 @@ import { hydrated, signIn } from "./support/featured-event";
 // Built from parts: `AGENTS.md` §8 forbids a hostname literal, and `docs:check` enforces it
 // across the whole repository rather than only under `src/`.
 const ROUTE_LINK = ["https:/", "routes.example.test", "traseu-tampa"].join("/");
-// A GPX shared from a file host (BR-REQ-011-01 criterion 19, `DECISIONS.md` §NNN) — the owner's
+// A GPX shared from a file host (BR-REQ-011-01 criterion 20, `DECISIONS.md` §332) — the owner's
 // "google drive files for GPX track files", on a host of the tests' own.
 const GPX_LINK = ["https:/", "drive.example.test", "file", "d", "e2e-gpx", "view"].join("/");
 

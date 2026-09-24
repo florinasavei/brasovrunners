@@ -27,7 +27,7 @@ export type EventNoticeLabels = {
 
 /**
  * Beside the editor's save button: whether the participants hear about this save (`DECISIONS.md`
- * §NNN; the owner: "I want to know exactly when and if participants get email alerts").
+ * §331; the owner: "I want to know exactly when and if participants get email alerts").
  *
  * Two blocks, and at most one of them, chosen by what the status select says *now*:
  *
@@ -96,7 +96,7 @@ export default function EventNoticeFields({
               Ticked when it appears. After a refused save it comes back as posted — but only when
               that save carried the cancellation at all (its reason box posts even when empty). One
               posted while the select still said "Programat" never had this box, and "not posted"
-              there means "not drawn", not "unticked", so the box keeps its default (§315, §NNN).
+              there means "not drawn", not "unticked", so the box keeps its default (§315, §331).
             */}
             <FormControlLabel
               control={

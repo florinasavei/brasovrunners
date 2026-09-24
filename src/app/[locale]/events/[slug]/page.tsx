@@ -295,7 +295,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         </Stack>
       )}
 
-      {/* "Linkuri și fișiere" (§NNN), under `#links`: right after the route's facts and the map,
+      {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.
           Nothing at all when the event has none. */}
       <EventLinks

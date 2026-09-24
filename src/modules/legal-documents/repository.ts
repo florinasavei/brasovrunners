@@ -89,7 +89,7 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 
 /**
  * Whether the declaration in effect in `locale` asks a minor to sign beside the parent, with the
- * minor's own document (§NNN, `asksForMinorSignature`) — false while no declaration is approved,
+ * minor's own document (§330, `asksForMinorSignature`) — false while no declaration is approved,
  * since then nothing is signed at all.
  *
  * For the screens that say what a minor's paper must carry before the press (the desk, the
@@ -106,7 +106,7 @@ export async function declarationAsksMinorToSign<T extends Record<string, unknow
   return document ? asksForMinorSignature(document.body) : false;
 }
 
-/** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§NNN). */
+/** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */
 export async function declarationAsksMinorToSignByLocale<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,

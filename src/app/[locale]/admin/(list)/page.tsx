@@ -213,7 +213,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {members.some((member) => member.event.featured) && (
                 <Chip size="small" color="primary" label={t("events.featured")} />
               )}
-              {/* The place is not announced yet (§NNN): the next date's state, the one the
+              {/* The place is not announced yet (§328): the next date's state, the one the
                   public listing shows. Staff see the typed place in the editor, marked there. */}
               {next.event.locationToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.placeToBeAnnounced")} />

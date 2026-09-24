@@ -169,7 +169,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
   });
 
   /**
-   * The minor's and the parent's documents (§NNN), always asked here, and filled without asking
+   * The minor's and the parent's documents (§330), always asked here, and filled without asking
    * whether the boxes exist (found in review: a conditional fill let the spec pass silently on a
    * text that asked for none, and never proved both documents are stored). Every non-production
    * database carries the approved sample declaration, which is the platform's text
@@ -186,7 +186,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
   }
 
   /**
-   * §NNN — the owner: "I wanna have the ID document of the minor and the parent, and also 2
+   * §330 — the owner: "I wanna have the ID document of the minor and the parent, and also 2
    * signatures!" A minor's declaration is signed by both at one press, each with their own name
    * and document; each box is checked against its own name, and each refused box says its own way
    * out: the club corrects a minor's registered name, and nobody corrects a parent's, so that one

@@ -578,7 +578,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
   });
 });
 
-test.describe("BR-REQ-031-04 the minimum age is the event's own (§NNN)", () => {
+test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => {
   test("the form's picker and its sentences follow the number set in the editor: sixteen, then none", async ({ page }) => {
     /*
       The owner, 2026-09-23: "actually this min age must be set at event level!". An event of its

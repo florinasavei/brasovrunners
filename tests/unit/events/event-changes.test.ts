@@ -9,7 +9,7 @@ import {
 } from "@/modules/events/domain/event-changes";
 
 /**
- * `DECISIONS.md` §NNN — what a save changed that a registered runner plans by: the place, the
+ * `DECISIONS.md` §331 — what a save changed that a registered runner plans by: the place, the
  * start, the programme's timing, the event on again. Compared on the event as loaded and as
  * written; only the kinds come back, never a value.
  */
@@ -27,7 +27,7 @@ const BEFORE: EventChangeFacts = {
 
 const after = (changes: Partial<EventChangeFacts>): EventChangeFacts => ({ ...BEFORE, ...changes });
 
-describe("§NNN the changes worth telling the participants about", () => {
+describe("§331 the changes worth telling the participants about", () => {
   it("nothing changed is nothing to tell", () => {
     expect(eventChangesToAnnounce(BEFORE, after({}))).toEqual([]);
   });
@@ -82,7 +82,7 @@ describe("§NNN the changes worth telling the participants about", () => {
  * the comparison is of what a runner can read — a place is news when it is announced, and never
  * while it stays hidden.
  */
-describe("§NNN a place that is not announced yet", () => {
+describe("§331 a place that is not announced yet", () => {
   // No programme here, so each case is about the meeting point alone; the programme's own rule is last.
   const SHOWN = after({ scheduleItems: null, locationToBeAnnounced: false });
   const HIDDEN: EventChangeFacts = { ...SHOWN, locationToBeAnnounced: true };
@@ -133,7 +133,7 @@ describe("§NNN a place that is not announced yet", () => {
   });
 });
 
-describe("§NNN the organizer's note and reason, as plain text", () => {
+describe("§331 the organizer's note and reason, as plain text", () => {
   it("trims, keeps line breaks as one kind, and drops every other control character", () => {
     expect(eventNoticeTextSchema.parse("  Adu frontala.\r\nParcarea e închisă.\u0007  ")).toBe("Adu frontala.\nParcarea e închisă.");
     expect(readEventNoticeText("   ")).toBeUndefined();

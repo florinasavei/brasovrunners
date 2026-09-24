@@ -3,14 +3,14 @@ import { mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields
 import { runText } from "@/modules/registrations/declaration-pdf";
 
 /**
- * §225 as fixed by §NNN — the signed declaration's paragraphs are drawn a run at a time so the
+ * §225 as fixed by §330 — the signed declaration's paragraphs are drawn a run at a time so the
  * fill-ins can be bold, and each run is drawn straight after the one before it. The runs after
  * the first used to lose their options (pdfkit reads a third argument only when an `x` is given),
  * which broke the line after every fill-in; once they flowed, `plainInline`'s trim showed as
  * "Subsemnatul/aAna Pop". pdfkit writes an embedded font's text as glyph ids in a deflated
  * stream, so the page cannot be searched; what each run hands the PDF is asserted instead.
  */
-describe("§NNN a declaration paragraph's runs keep the spaces between them", () => {
+describe("§330 a declaration paragraph's runs keep the spaces between them", () => {
   it("keeps a space at either end of a run, and strips the marks", () => {
     expect(runText("Subsemnatul/a ")).toBe("Subsemnatul/a ");
     expect(runText(", posesor al actului de identitate ")).toBe(", posesor al actului de identitate ");

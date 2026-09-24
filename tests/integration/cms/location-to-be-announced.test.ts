@@ -30,7 +30,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — the place to be announced, end to end.
+ * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, end to end.
  *
  * The owner, 2026-09-23: "I want to be able to set the location as TBD, and to not announce it
  * yet". Publication accepts an event whose place is to be announced and refuses a blank place
@@ -95,7 +95,7 @@ const TYPED_NOT_ANNOUNCED = { ...TYPED_EVENT_HALF, translations: TRANSLATIONS };
 /** Whether any of the typed place's words appear anywhere in a rendering. */
 const leaks = (text: string) => [SECRET_NAME, SECRET_EN_NAME, SECRET_MAP, SECRET_ROW_PLACE, "sala-secreta"].filter((word) => text.includes(word));
 
-describe("BR-REQ-011-01 criterion 19 the place to be announced (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

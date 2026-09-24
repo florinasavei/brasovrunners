@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * "Linkuri și fișiere" on an event (`DECISIONS.md` §NNN; the owner, 2026-09-23: "Also on Event I
+ * "Linkuri și fișiere" on an event (`DECISIONS.md` §332; the owner, 2026-09-23: "Also on Event I
  * wanna be able to put other links such as google drive files for GPX track files, etc").
  *
  * An ordered list in `events.links`, `[{ kind, url, labelRo, labelEn }]`, at most twelve: the

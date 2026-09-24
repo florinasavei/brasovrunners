@@ -22,7 +22,7 @@ import {
 /**
  * §321 — a participant has reached the event's minimum age on the day of the event, by calendar
  * years, the arithmetic `isMinorOn` has always used; the day is the race's own, in the race's own
- * zone. Since §NNN the number is the event's (`events.min_age`), fourteen unless set otherwise.
+ * zone. Since §329 the number is the event's (`events.min_age`), fourteen unless set otherwise.
  *
  * The integration suite (`registrations/minimum-age.test.ts`) proves every door refuses; this
  * proves the counting those refusals rest on, at the edges where counting goes wrong: the
@@ -90,7 +90,7 @@ describe("§321 the minimum age is counted by the calendar, on the race day", ()
   });
 });
 
-describe("§NNN a number of years, as a sentence says it", () => {
+describe("§329 a number of years, as a sentence says it", () => {
   it("puts 'de' before 'ani' where Romanian does — last two digits 00 or 20 to 99 — and '1 an' in the singular", () => {
     const expected: Record<number, string> = {
       0: "0 ani",
@@ -176,7 +176,7 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
     expect(result.success).toBe(true);
   });
 
-  it("counts the event's own number (§NNN): sixteen refuses fifteen and takes sixteen on the day", () => {
+  it("counts the event's own number (§329): sixteen refuses fifteen and takes sixteen on the day", () => {
     const fifteen = { ...complete, birthDate: "2011-11-22" };
     expect(paths(registrationSubmissionSchema.superRefine(minimumAgeRule("2026-11-21", 16)).safeParse(fifteen))).toEqual([
       "birthDate",
@@ -217,9 +217,9 @@ describe("§321 the rule on the schema, for whichever caller adds it", () => {
   });
 });
 
-describe("§NNN every sentence about the minimum age says the event's number, through yearsPhrase", () => {
+describe("§329 every sentence about the minimum age says the event's number, through yearsPhrase", () => {
   /*
-    Until §NNN the catalogues wrote "14 ani" in words and this test held them to the constant,
+    Until §329 the catalogues wrote "14 ani" in words and this test held them to the constant,
     because Romanian changes at twenty and an interpolated number would have read wrongly the day
     somebody raised it. The number is the event's now, so the sentences interpolate `{age}` and
     the grammar lives in one tested helper, `yearsPhrase`: this holds every sentence to that —
@@ -296,7 +296,7 @@ describe("§NNN every sentence about the minimum age says the event's number, th
   });
 });
 
-describe("§NNN the platform's legal templates leave the number to the event", () => {
+describe("§329 the platform's legal templates leave the number to the event", () => {
   /*
     The terms and the privacy notice used to say "14". The number is each event's now, so the
     templates say that a minimum is set per event and shown on its page — and no number of their

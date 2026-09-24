@@ -292,13 +292,13 @@ export type TemplateData = {
   eventLocationName?: string;
   /**
    * The place in the other language's words, for the bilingual message's second half — set only
-   * while the place is to be announced (§NNN), when the "place" is a sentence and not a name.
+   * while the place is to be announced (§328), when the "place" is a sentence and not a name.
    */
   eventLocationNameOther?: string;
   eventStartsAtFormatted?: string;
   /** The same instant in the other language's words, for the bilingual message's second half (§96). */
   eventStartsAtFormattedOther?: string;
-  /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§NNN). */
+  /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
   eventRaceStartsAtFormatted?: string;
   currentStatus?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
@@ -325,7 +325,7 @@ export type TemplateData = {
   eventRulesUrl?: string;
   /** The programme on that page, when there is one (§96). */
   eventScheduleUrl?: string;
-  /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§NNN); on the confirmation and the reminder. */
+  /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
   eventLinksUrl?: string;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
@@ -366,20 +366,20 @@ export type TemplateData = {
   staffEmail?: string;
   signInUrl?: string;
   /**
-   * "Detalii actualizate" (§NNN): which facts the save changed — the place, the start, the
+   * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
    */
   updateChanges?: readonly EventChangeKind[];
   /** The organizer's own words on that message, plain text, at most 500 characters. */
   organizerNote?: string;
-  /** Why the event was cancelled, as the organizer typed it (§NNN). */
+  /** Why the event was cancelled, as the organizer typed it (§331). */
   cancellationReason?: string;
 };
 
 /**
  * The organizer's own words — the note on an update, the reason for a cancellation — as a block
- * of its own (§NNN): a bold label, then the text escaped, its line breaks kept, and **no**
+ * of its own (§331): a bold label, then the text escaped, its line breaks kept, and **no**
  * emphasis markers read inside it. The platform's sentences may carry `**` and `__` (§189,
  * §309); a note typed in the backoffice is not the platform's sentence, and a stray pair of
  * asterisks in it must print as asterisks.
@@ -504,7 +504,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
-        // One line for the links (§NNN), never the links themselves: they live on the page.
+        // One line for the links (§332), never the links themselves: they live on the page.
         ...(d.eventLinksUrl ? [{ label: "Linkuri și fișiere: pe pagina evenimentului", url: d.eventLinksUrl }] : []),
         ...(d.declarationPdfUrl ? [{ label: "Declarația pe care ai semnat-o (PDF)", url: d.declarationPdfUrl }] : []),
       ],
@@ -655,7 +655,7 @@ const T = {
         `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
     },
-    /** What the update and the cancellation add around the club's words (§NNN): the facts named as new, the labels of the organizer's text. */
+    /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
       time: (d: TemplateData) =>
@@ -964,7 +964,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
 };
 
 /**
- * The sentences the update and the cancellation add after the body (§NNN) — machinery, like the
+ * The sentences the update and the cancellation add after the body (§331) — machinery, like the
  * provisional-number line (§237), so a club that rewrote the message's words (§247) still sends
  * the new place and the reason: they are statements about the event, not about how the club
  * likes to write. One line per kind the save changed, in the order a runner reads a morning — on
@@ -1091,7 +1091,7 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.map(fill)
           : entry.body(data)),
-      // What changed and the organizer's own words, after the body and whoever wrote it (§NNN).
+      // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).

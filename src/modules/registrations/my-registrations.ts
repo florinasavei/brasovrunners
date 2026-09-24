@@ -81,7 +81,7 @@ export type MyRegistration = {
   /** "I am here" is offered from the day before the start, confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
-   * The event was cancelled (§NNN). The registration keeps its own status — it is the record of
+   * The event was cancelled (§331). The registration keeps its own status — it is the record of
    * who had entered — and the page says, beside it, that the race will not run.
    */
   eventCancelled: boolean;

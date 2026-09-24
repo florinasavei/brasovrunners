@@ -5,7 +5,7 @@ import { type EventLinkKind, eventLinkHost, eventLinkLabel, readEventLinks } fro
 import { LINK_GLYPH } from "./link-glyphs";
 
 /**
- * "Linkuri și fișiere" under `#links` (`DECISIONS.md` §NNN): the GPX on Google Drive, the rules
+ * "Linkuri și fișiere" under `#links` (`DECISIONS.md` §332): the GPX on Google Drive, the rules
  * as a PDF, the album, the results — one row each, in the club's order. Nothing at all when the
  * event has none, so the anchor the emails point at exists only when it leads somewhere (the
  * rule `EventProgramme` follows for `#schedule`).

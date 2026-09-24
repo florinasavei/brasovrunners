@@ -73,7 +73,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   // on the public form, so the server's render and the browser's agree.
   const now = new Date();
   const eventDays = Object.fromEntries(events.map((event) => [event.id, dayIn(event.startsAt, event.timezone)]));
-  // Each event's own minimum age (§NNN), so the date's bound follows the event chosen.
+  // Each event's own minimum age (§329), so the date's bound follows the event chosen.
   const eventMinAges = Object.fromEntries(events.map((event) => [event.id, event.minAge]));
   const today = now.toISOString().slice(0, 10);
   const earliestBirthDate = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()))
@@ -157,7 +157,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             a registration recorded with gaps beats one refused for them.
           */}
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
-          {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§NNN, the "N+" beside its name) on
+          {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§329, the "N+" beside its name) on
               the race day is refused, so the field says so before the volunteer presses. */}
           <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
           {/*

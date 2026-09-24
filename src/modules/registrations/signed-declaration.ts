@@ -21,7 +21,7 @@ import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type Decla
  * - `club` — a copy that leaves the platform for a club mailbox (the archive, §99, §244), where
  *   nothing sweeps it: the identity document masked (`maskIdDocument`) wherever the page prints
  *   it, in the text's `{{idDocument}}` and on the signature line alike — and for a minor both
- *   documents, the child's and the parent's (§NNN).
+ *   documents, the child's and the parent's (§330).
  *
  * Required, never defaulted, so a caller added tomorrow has to say which one it is.
  */
@@ -57,7 +57,7 @@ export type SignedDeclaration = {
   /** The declarant's identity document, as `typedName` (§95, §108). */
   idDocument: string | null;
   /**
-   * The minor's own signature and identity document, beside the parent's (§NNN). Null for an
+   * The minor's own signature and identity document, beside the parent's (§330). Null for an
    * adult, and for a minor's acceptance recorded before two signatures were asked.
    */
   minorTypedName: string | null;
@@ -84,7 +84,7 @@ export function declarantValues(participant: string, guardianName: string | null
 }
 
 /**
- * `{{idDocument}}`, `{{participantIdDocument}}` and `{{guardianIdDocument}}` (§95, §NNN).
+ * `{{idDocument}}`, `{{participantIdDocument}}` and `{{guardianIdDocument}}` (§95, §330).
  *
  * `{{idDocument}}` stays the declarant's, as every text the club approved before two signatures
  * reads it: the adult's own, the parent's for a minor (`{{declarant}}` beside it names the same
@@ -189,7 +189,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     values: {
       event: event.title,
       eventDate: dateFormatter(locale, event.timezone, false).format(event.startsAt),
-      // The city while the place is to be announced (§NNN), never the typed place: a signed PDF
+      // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
     },
@@ -219,14 +219,14 @@ function signedEntry(
   const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
   /*
     Masked once, here, so the text's blanks and the signature lines cannot disagree (§320) — both
-    documents of a minor's declaration (§NNN), the parent's and the child's, each wherever the
+    documents of a minor's declaration (§330), the parent's and the child's, each wherever the
     page prints it: `{{idDocument}}`, `{{participantIdDocument}}`, `{{guardianIdDocument}}` and
     the two signature lines are all drawn from these two values.
   */
   const mask = (value: string | null) => (audience === "club" && value !== null ? maskIdDocument(value) : value);
   const idDocument = mask(signed.idDocument);
   const minorIdDocument = mask(signed.minorIdDocument);
-  // The minor's own signature, when a minor signed beside the parent (§NNN). A minor's acceptance
+  // The minor's own signature, when a minor signed beside the parent (§330). A minor's acceptance
   // recorded before two signatures were asked carries the parent's alone, and prints as it did.
   const minor = signed.guardianName && signed.minorTypedName !== null ? { typedName: signed.minorTypedName, idDocument: minorIdDocument } : null;
   return {
@@ -301,12 +301,12 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
 /**
  * The blank form for one event, on the current approved declaration — for the desk.
  *
- * `forMinor` (§NNN) prints the form a minor signs with a parent or guardian: two signature lines
+ * `forMinor` (§330) prints the form a minor signs with a parent or guardian: two signature lines
  * and two identity-document lines, the minor's and the parent's, under "DREPT PENTRU CARE SEMNĂM".
  * The text is the same approved one — it names nobody, so its blanks stay dotted either way.
  *
  * Only where that text asks the minor to sign (`asksForMinorSignature`, the production gate of
- * §NNN): under a text approved before it the parent signs a minor's paper alone, and the form
+ * §330): under a text approved before it the parent signs a minor's paper alone, and the form
  * printed is the one-signature form whatever was asked for — the minor's identity number is not
  * collected on paper either while the approved notice does not describe it.
  */

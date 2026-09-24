@@ -199,7 +199,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     getTranslations("Admin"),
     getFormatter(),
     /*
-      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§NNN): the
+      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
       declaration in effect, per language, looked up by each row's own. Only when a minor is on
       the page — the confirmation's sentence is the only thing that reads it.
     */
@@ -1141,7 +1141,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   formId: `confirm-${row.id}`,
                   confirm: {
                     title: t("desk.confirmOnPaper"),
-                    // A minor's paper carries two signatures, and the press attests both (§NNN) —
+                    // A minor's paper carries two signatures, and the press attests both (§330) —
                     // where the declaration in effect asks the minor to sign; else the one sentence.
                     body:
                       row.guardianName && minorSigns[row.locale]

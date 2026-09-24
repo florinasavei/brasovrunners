@@ -31,7 +31,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * morning and may enter; somebody born the day after is thirteen and may not. The guardian rule
  * is untouched (§108): fourteen to seventeen still register through a parent.
  *
- * §NNN — the owner, the same day: "actually this min age must be set at event level!". The
+ * §329 — the owner, the same day: "actually this min age must be set at event level!". The
  * number is the event's own `events.min_age` now, fourteen by default; the last blocks below try
  * an event that asks for more, one that asks for nothing, and one that never said.
  */
@@ -94,7 +94,7 @@ beforeEach(async () => {
 
 /**
  * A race taking registrations here. `minAge` left out writes nothing to the column, so the row
- * carries the database's default — what every event created before §NNN was given — and the
+ * carries the database's default — what every event created before §329 was given — and the
  * returned object passes on whatever the row holds, as the three callers that submit do.
  */
 async function createRace(startsAt = RACE_START, timezone = "Europe/Bucharest", minAge?: number): Promise<EventForRegistration> {
@@ -377,7 +377,7 @@ describe("§321 a restart of a cancelled registration", () => {
 });
 
 /*
-  §NNN — the number is the event's. The race is still on 21 November 2026 in Brașov; the birth
+  §329 — the number is the event's. The race is still on 21 November 2026 in Brașov; the birth
   dates below are each the last day that reaches a number on that morning, or the day after it.
 */
 const SIXTEEN_ON_RACE_DAY = "2010-11-21";
@@ -398,7 +398,7 @@ const staffEntryFor = (event: EventForRegistration, birthDate: string, fastTrack
   fastTrack,
 });
 
-describe("§NNN an event with a minimum of its own", () => {
+describe("§329 an event with a minimum of its own", () => {
   it("refuses fifteen on the race day at an event that asks for sixteen, names the birth date, and writes nothing", async () => {
     const event = await createRace(RACE_START, "Europe/Bucharest", 16);
     const refused = await refusal(submitRegistration(db, event, submission({ birthDate: FIFTEEN_ON_RACE_DAY }), NOW));
@@ -454,7 +454,7 @@ describe("§NNN an event with a minimum of its own", () => {
   });
 });
 
-describe("§NNN an event with no minimum", () => {
+describe("§329 an event with no minimum", () => {
   it("takes anyone the birth-date range allows — a six-year-old, through a parent", async () => {
     const event = await createRace(RACE_START, "Europe/Bucharest", 0);
     expect(await refusal(submitRegistration(db, event, submission({ birthDate: "2020-03-01" }), NOW))).toBeNull();
@@ -474,7 +474,7 @@ describe("§NNN an event with no minimum", () => {
   });
 });
 
-describe("§NNN an event that never said", () => {
+describe("§329 an event that never said", () => {
   it("was given fourteen by the column's default, and fourteen is what every door counts", async () => {
     // Inserted without the column, as every event that existed before it was.
     const event = await createRace();
@@ -489,7 +489,7 @@ describe("§NNN an event that never said", () => {
   });
 });
 
-describe("§NNN a staff entry and the desk's walk-in follow the chosen event", () => {
+describe("§329 a staff entry and the desk's walk-in follow the chosen event", () => {
   it("refuses twenty at a race that asks for twenty-one and takes the same person at one that asks for nothing", async () => {
     const adultsOnly = await createRace(RACE_START, "Europe/Bucharest", 21);
     const open = await createRace(RACE_START, "Europe/Bucharest", 0);

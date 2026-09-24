@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — the place to be announced, in a browser.
+ * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
  *
  * The owner, 2026-09-23: "I want to be able to set the location as TBD, and to not announce it
  * yet". An Administrator creates a race with the switch on and a venue typed but not announced,
@@ -13,7 +13,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * Each project makes its own event (the suffix), and the spec takes it off the site at the end so
  * the listing other specs count does not grow by one card per run.
  */
-test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§NNN)", () => {
+test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   test("publishes without a place, says so on the page, and announces the place with one save", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `locatie-neanuntata-${suffix}`;

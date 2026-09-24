@@ -62,7 +62,7 @@ export async function registrationStatus(id: string): Promise<string> {
 
 /**
  * The latest declaration acceptance of a registration, as the signing recorded it: both typed
- * names and both documents (§NNN — a minor's declaration is signed by the minor and a parent).
+ * names and both documents (§330 — a minor's declaration is signed by the minor and a parent).
  */
 export async function latestAcceptance(registrationId: string): Promise<{
   typedName: string;

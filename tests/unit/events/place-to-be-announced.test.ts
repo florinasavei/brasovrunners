@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — what a person reads where the place would
+ * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — what a person reads where the place would
  * be, on the surfaces drawn from a public row: the facts on the event page, the listing card and
  * the hero (`EventFacts`, full and compact), the share picture, and the registration form's
  * facts line.

@@ -41,7 +41,7 @@ export type DeclarationEntry = {
     typedName: string;
     idDocument: string | null;
     /**
-     * The minor's own signature and document, signed beside the parent's (§NNN). Null for an
+     * The minor's own signature and document, signed beside the parent's (§330). Null for an
      * adult, and for a minor's acceptance recorded before two signatures were asked — which then
      * prints the one signature it has, as it always did.
      */
@@ -51,7 +51,7 @@ export type DeclarationEntry = {
     method: string;
   };
   /**
-   * The blank form a minor signs with a parent or guardian (§NNN): two signature lines, two
+   * The blank form a minor signs with a parent or guardian (§330): two signature lines, two
    * identity-document lines. Only for the blank form — a signed entry says who signed by itself.
    */
   forMinor?: boolean;
@@ -65,10 +65,10 @@ export type DeclarationPdfInput = {
   labels: {
     organization: string;
     whereupon: string;
-    /** "DREPT PENTRU CARE SEMNĂM" — a minor's declaration, signed by two (§NNN). */
+    /** "DREPT PENTRU CARE SEMNĂM" — a minor's declaration, signed by two (§330). */
     whereuponTogether: string;
     signature: string;
-    /** The two signature lines of a minor's declaration (§NNN): the child's, then the parent's. */
+    /** The two signature lines of a minor's declaration (§330): the child's, then the parent's. */
     minorSignature: string;
     guardianSignature: string;
     date: string;
@@ -223,7 +223,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
         The marks are stripped per run rather than over the whole string, which is the same
         order the screen uses (`LegalDocumentBody`): a value is plain text and never markup.
 
-        Found while checking the two-signature page (§NNN): the runs after the first were
+        Found while checking the two-signature page (§330): the runs after the first were
         passed as `text(run, undefined, undefined, options)`, and pdfkit reads a third argument
         only when an `x` is given — an undefined `x` defaults to `{}` and is taken as the options.
         So every run after the first lost `continued`, the width and the alignment, and the PDF
@@ -252,7 +252,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
 
   /*
     The signature block, kept together at the foot. A minor's declaration is signed by two
-    (§NNN): the minor's signature and document, then the parent's or guardian's, under one date —
+    (§330): the minor's signature and document, then the parent's or guardian's, under one date —
     one press online, one sitting at the desk — so the block is taller and says "we sign".
   */
   const signature = entry.signature;

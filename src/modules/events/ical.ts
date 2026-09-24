@@ -69,7 +69,7 @@ export type CalendarEvent = {
   /** The organizer's map link (§61): the calendar's place, so one tap opens the map (§129). */
   mapUrl?: string | null;
   /**
-   * The place is not announced yet (§NNN): no `LOCATION` at all, and the description opens with
+   * The place is not announced yet (§328): no `LOCATION` at all, and the description opens with
    * the page's sentence where the meeting point would be. The public query has already withheld
    * the three fields above; this says why they are empty.
    */
@@ -212,7 +212,7 @@ function uidHost(baseUrl: string): string {
  * hartă" stands for a name the organizer did not give, as on the page; the address is the
  * next line, as the page's "Adresă".
  *
- * **While the place is to be announced (§NNN) there is no `LOCATION`**, and the first line of
+ * **While the place is to be announced (§328) there is no `LOCATION`**, and the first line of
  * the description is the page's sentence, "📍 Locația se anunță în curând". Not "Brașov": a
  * calendar geocodes `LOCATION` and offers directions to it, and directions to the middle of
  * the city are directions to the wrong place on the morning of a race. The feed changes the

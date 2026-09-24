@@ -209,7 +209,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
 
   // First (§322): seven days after the event, the identity documents out of the declaration and
   // the health note out of the registration. The rows stay; the fields go. A minor's declaration
-  // carries two documents, the parent's and the child's (§NNN), and both go together — the typed
+  // carries two documents, the parent's and the child's (§330), and both go together — the typed
   // names stay, as the signatures, for the three years the declaration is kept. The window whose
   // breach is special-category data runs before anything that could throw ahead of it.
   await step("identity-and-health", async (tx) => {

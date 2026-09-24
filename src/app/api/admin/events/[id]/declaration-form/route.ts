@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
  * current approved text with the event filled in and the person's blanks left dotted. Every
  * staff role, because the desk is every staff role's (BR-REQ-037-08); it names nobody.
  *
- * `?for=minor` (§NNN) is the same form for a minor, who signs it with a parent or guardian: two
+ * `?for=minor` (§330) is the same form for a minor, who signs it with a parent or guardian: two
  * signature lines and two identity-document lines. Still nobody's name — the desk writes those.
  * Only under a declaration that asks the minor to sign (`renderBlankDeclarationPdf` asks the text):
  * under an older one the parent signs alone, and this prints the one-signature form.

@@ -120,12 +120,12 @@ describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
 });
 
 /**
- * §NNN — a minor's declaration is signed by two, where the declaration in effect asks it: the
+ * §330 — a minor's declaration is signed by two, where the declaration in effect asks it: the
  * minor, with the name they were registered under, and the parent or guardian, as the declarant.
  * One pure pair of functions for the page and the service, so the red boxes and the refusal always
  * name the same ones.
  */
-describe("§NNN who signs, and which box is wrong", () => {
+describe("§330 who signs, and which box is wrong", () => {
   const adult = { registeredName: "Florin Munca", guardianName: null };
   const minor = { registeredName: "Maria Popescu", guardianName: "Ion Popescu" };
   const gateOn = { minorSigns: true };
@@ -139,7 +139,7 @@ describe("§NNN who signs, and which box is wrong", () => {
   });
 
   /*
-    The production gate (§NNN): under a declaration that does not name the minor's own document —
+    The production gate (§330): under a declaration that does not name the minor's own document —
     every text the club approved before two signatures — a minor's declaration is the parent's
     alone, as it was (§108, §314). An adult's is the same either way.
   */

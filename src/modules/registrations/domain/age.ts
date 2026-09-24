@@ -9,13 +9,13 @@
  *
  * Two thresholds live here and they are counted against different days, on purpose:
  * - **eighteen, on the day of submission** (`isMinorOn`, §108) — whether a parent registers;
- * - **the event's own minimum, on the day of the event** (`events.min_age`, §321 and §NNN) —
+ * - **the event's own minimum, on the day of the event** (`events.min_age`, §321 and §329) —
  *   whether anybody can. Fourteen unless the organizer set another number.
  */
 
 /**
  * The club's minimum age, **as a default** (§321; the owner, 2026-09-23: "Min age must be 14",
- * then the same day: "actually this min age must be set at event level!", §NNN).
+ * then the same day: "actually this min age must be set at event level!", §329).
  *
  * The rule is the event's own `events.min_age`, counted on the day of the event — that is when
  * the person runs, and the day the form already counts age categories against ("Categoriile de
@@ -30,7 +30,7 @@ export const MIN_PARTICIPANT_AGE = 14;
 export const ADULT_AGE = 18;
 
 /**
- * "14 ani", "20 de ani", "101 ani" — a number of years as a sentence says it (§NNN).
+ * "14 ani", "20 de ani", "101 ani" — a number of years as a sentence says it (§329).
  *
  * The catalogues interpolate the event's minimum as `{age}`, and ICU plurals are not used in this
  * codebase, so the one grammatical rule is here. Romanian puts "de" between a number and its noun
@@ -49,7 +49,7 @@ export function yearsPhrase(years: number, locale: string): string {
 }
 
 /**
- * Which sentence says who may enter an event with this minimum age (§NNN) — the intro line of the
+ * Which sentence says who may enter an event with this minimum age (§329) — the intro line of the
  * form and the event page's age fact:
  * - `minimumAndGuardian` — a minimum under eighteen: "from 14; under 18, a parent registers them";
  * - `minimumOnly` — eighteen or more: nobody who may enter needs a parent, so no guardian sentence;

@@ -156,7 +156,7 @@ describe("BR-REQ-052-02 criterion 3 capacity", () => {
   });
 });
 
-describe("BR-REQ-052-02 who may enter (§NNN)", () => {
+describe("BR-REQ-052-02 who may enter (§329)", () => {
   const race = (overrides: Partial<PublicEvent>) =>
     baseEvent({ type: "RACE", registrationMode: "INTERNAL", minAge: 14, ...overrides } as Partial<PublicEvent>);
 

@@ -247,7 +247,7 @@ const guardianRule = (
 export const UNDER_MINIMUM_AGE = "tooYoung";
 
 /**
- * The event's minimum age on the day of the event (§321; per event since §NNN, `events.min_age`).
+ * The event's minimum age on the day of the event (§321; per event since §329, `events.min_age`).
  *
  * A factory, because the rule needs the one thing this schema does not have: the event — its day
  * and its number. The service knows both (`submitRegistration`) and adds this to whichever schema
@@ -421,7 +421,7 @@ export const declarationSigningSchema = z.object({
    */
   idDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
   /**
-   * A minor's own signature and document, beside the parent's (§NNN). Optional here because an
+   * A minor's own signature and document, beside the parent's (§330). Optional here because an
    * adult posts neither; for a minor the service requires the name always, and the document
    * whenever it requires the parent's. A blank name is left to the service, which refuses it as
    * the signature that does not match — the same refusal, on the same box, as a wrong one.

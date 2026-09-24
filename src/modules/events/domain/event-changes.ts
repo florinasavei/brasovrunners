@@ -2,7 +2,7 @@ import { z } from "zod";
 import { readScheduleItems } from "./schedule";
 
 /**
- * What a save changed that a registered runner needs to hear about (`DECISIONS.md` §NNN; the
+ * What a save changed that a registered runner needs to hear about (`DECISIONS.md` §331; the
  * owner: "I want to know exactly when and if participants get email alerts (e.g. event location
  * gets updated)").
  *
@@ -76,7 +76,7 @@ const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true
 /**
  * Whether the place a runner can *read* moved. Compared on what the pages show, not on what the
  * columns hold, because the message says "the meeting point is now: …" and reads the place at
- * send time (§NNN):
+ * send time (§331):
  *
  * - still hidden after the save, or hidden by it — never. Words typed behind the switch reach no
  *   page, and a message would say "the meeting point is now: to be announced soon" about a place
@@ -108,7 +108,7 @@ const instant = (value: Date | null) => (value ? value.getTime() : null);
 
 /**
  * The programme's timing and places, in order — the rows a runner plans the morning by. A row's
- * place is read as the page shows it: none while the event's place is to be announced (§NNN),
+ * place is read as the page shows it: none while the event's place is to be announced (§331),
  * so a programme place edited behind the switch is no change, and the places appearing when the
  * switch goes off are one.
  */

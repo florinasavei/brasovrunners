@@ -64,7 +64,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.schedule[].ro": `${t("editor.programmeSection")}: ${t("editor.programmeRows.ro")}`,
     "event.schedule[].en": `${t("editor.programmeSection")}: ${t("editor.programmeRows.en")}`,
     "event.schedule[].place": `${t("editor.programmeSection")}: ${t("editor.programmeRows.place")}`,
-    // Beside the save button (§NNN): what changed, and why the event is cancelled.
+    // Beside the save button (§331): what changed, and why the event is cancelled.
     "notice.note": t("editor.notice.note"),
     "cancel.reason": t("editor.notice.cancelReason"),
     "repeat.cadence": t("editor.repeatCadence"),
@@ -73,7 +73,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   };
 
   /*
-    The links (§NNN), named **by row** and by what is wrong with them — "Linkul 2: adresa trebuie
+    The links (§332), named **by row** and by what is wrong with them — "Linkul 2: adresa trebuie
     să înceapă cu https://" — because a link row is refused for one reason a person can cause
     (the address), and "Linkuri: Adresa" in a list of eight would not say which of the rows to
     look at. `ActionForm` reads the exact name first, so the indexed entries win; the unindexed

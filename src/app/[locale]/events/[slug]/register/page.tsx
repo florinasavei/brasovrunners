@@ -89,7 +89,7 @@ const disclosureSx = {
   borderColor: "divider",
   borderRadius: 1,
   px: 2,
-  // The shared summary (§NNN): a flex row with its own arrow on the heading's line.
+  // The shared summary (§325): a flex row with its own arrow on the heading's line.
   "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
   ...DISCLOSURE_OPEN_ARROW,
 } as const;
@@ -184,7 +184,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const emergencySame = (fields ?? "").split(",").includes("emergencySame");
   /**
-   * Under the event's minimum age on the day of the race (§321, §NNN). The same kind of marker
+   * Under the event's minimum age on the day of the race (§321, §329). The same kind of marker
    * as the one above: the summary links the birth date, and this says which rule refused it —
    * "complete this field correctly" about somebody's real birth date would be untrue. Never on
    * an event with no minimum, whatever a typed-in address says: "the minimum age is 0" is no rule.
@@ -194,7 +194,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   /*
     BR-REQ-031-04 criterion 4 and the minimum age (§321), expressed where the browser can enforce
     them too. The upper bound is the latest birth date that still reaches this event's own
-    minimum (`events.min_age`, §NNN) on the race's own day in the race's own zone — computed here,
+    minimum (`events.min_age`, §329) on the race's own day in the race's own zone — computed here,
     for this event, from the arithmetic the server refuses with — so the picker never offers a
     date the submission would be turned back for. Today stays a bound as well: for an event with
     no minimum, and for the event absurdly far ahead that would allow a future date.
@@ -202,7 +202,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const today = now.toISOString().slice(0, 10);
   const youngestAllowed = latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone));
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
-  // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§NNN).
+  // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§329).
   const minimumAge = { age: yearsPhrase(event.minAge, locale) };
   const hasMinimumAge = event.minAge > 0;
   const earliestBirthDate = new Date(
@@ -211,7 +211,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     .toISOString()
     .slice(0, 10);
   const t = await getTranslations("Registration");
-  // The event page's own words for a place still to be announced (§NNN), one key for every surface.
+  // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
   const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
@@ -273,7 +273,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       <Box sx={{ mb: 2 }}>
         <Typography variant="body1" sx={{ fontWeight: 500 }}>
           {whenLabel}
-          {/* The place, or the sentence that it is still to be announced (§NNN) — the same words
+          {/* The place, or the sentence that it is still to be announced (§328) — the same words
               as the event page; the query withholds the typed place itself. */}
           {event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}` : event.locationName ? ` · ${event.locationName}` : ""}
         </Typography>
@@ -296,7 +296,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           </LegalLink>
         </Box>
         {/* Who may enter, among the facts of what is being signed up for and before the first
-            field (§321): the event's own minimum age (§NNN), and who fills the form in for a
+            field (§321): the event's own minimum age (§329), and who fills the form in for a
             minor (§108). A line, not a banner — it is a condition of the race like its date, not
             a warning. Three sentences, so it reads right whatever the number: no minimum says
             only who registers a minor, eighteen or more says nothing about parents, and the
@@ -577,7 +577,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* The event's minimum age and the categories, in the help (§321, §NNN) — only the
+                /* The event's minimum age and the categories, in the help (§321, §329) — only the
                    categories on an event with no minimum; a refusal for age says the rule again
                    rather than "complete this field correctly". */
                 helperText={

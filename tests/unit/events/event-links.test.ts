@@ -16,7 +16,7 @@ import EventLinks from "@/modules/events/ui/EventLinks";
 import { LINK_GLYPH } from "@/modules/events/ui/link-glyphs";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — "Linkuri și fișiere" on the event page.
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332) — "Linkuri și fișiere" on the event page.
  *
  * What a stored row means (`readEventLinks`), what the reader is told a link is when the club
  * wrote no label (the kind's own word, in the reader's language, never the other language's
@@ -39,7 +39,7 @@ const render = (links: unknown, locale: "ro" | "en" = "ro") =>
     }),
   );
 
-describe("BR-REQ-011-01 criterion 19 reading a stored list of links", () => {
+describe("BR-REQ-011-01 criterion 20 reading a stored list of links", () => {
   it("keeps the club's order and at most twelve", () => {
     const stored = Array.from({ length: 14 }, (_, index) => ({ kind: "OTHER", url: `${DRIVE}?n=${index}`, labelRo: null, labelEn: null }));
     const read = readEventLinks(stored);
@@ -76,7 +76,7 @@ describe("BR-REQ-011-01 criterion 19 reading a stored list of links", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 19 the label when the club wrote none", () => {
+describe("BR-REQ-011-01 criterion 20 the label when the club wrote none", () => {
   it("is the club's own label in the reader's language, and never the other language's", () => {
     const link = { labelRo: "Traseul de 21 km", labelEn: null };
     expect(eventLinkLabel(link, "ro")).toBe("Traseul de 21 km");
@@ -107,7 +107,7 @@ describe("BR-REQ-011-01 criterion 19 the label when the club wrote none", () => 
   });
 });
 
-describe("BR-REQ-011-01 criterion 19 the block on the event page", () => {
+describe("BR-REQ-011-01 criterion 20 the block on the event page", () => {
   it("lists each link under #links with its label and host, opening in a new tab", () => {
     const html = render([
       { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null },

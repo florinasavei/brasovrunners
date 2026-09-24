@@ -34,7 +34,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string }> };
 
-/** Nothing queues these any more (§NNN, `domain/never-queued.ts`): listed last, and said so. */
+/** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
 
 /**
@@ -121,7 +121,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event`,
     eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
     eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
-    // "Linkuri și fișiere" (§NNN): the sample event has some, so the preview shows the line.
+    // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
     eventLinksUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#links`,
     manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
@@ -132,7 +132,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     inviterName: "Florin",
     staffEmail: "ana.popescu@example.org",
     signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
-    // "Detalii actualizate" and "Eveniment anulat" (§NNN): a new place and start, the
+    // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
     // organizer's note, and a reason — read only by those two messages' templates.
     updateChanges: ["place", "time"],
     organizerNote: tRo ? "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta." : "We meet at the Livada Poștei entrance, by the map board.",
@@ -142,7 +142,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
 
   /*
     Every type, as it would go out — and the three that nothing queues any more said to be so and
-    listed last, rather than left looking like mail somebody receives (§NNN; the owner: "I want to
+    listed last, rather than left looking like mail somebody receives (§331; the owner: "I want to
     know exactly when and if participants get email alerts"). They stay in the catalogue because
     the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
     renders through them.

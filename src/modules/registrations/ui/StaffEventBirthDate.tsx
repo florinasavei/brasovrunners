@@ -28,7 +28,7 @@ type Choice = {
   choose: (eventId: string) => void;
   /** Each event's calendar day in its own zone, by id. */
   eventDays: Readonly<Record<string, string>>;
-  /** Each event's own minimum age (§NNN), by id; an event missing here reads as the default. */
+  /** Each event's own minimum age (§329), by id; an event missing here reads as the default. */
   eventMinAges: Readonly<Record<string, number>>;
   /** Today and a hundred and twenty years ago, from the server, so both renders agree. */
   today: string;
@@ -101,7 +101,7 @@ export function StaffEventSelect({
 export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
   const { selected, eventDays, eventMinAges, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;
-  // The chosen event's own minimum (§NNN); zero is no minimum, and then the only bound is today.
+  // The chosen event's own minimum (§329); zero is no minimum, and then the only bound is today.
   const minAge = selected ? (eventMinAges[selected] ?? MIN_PARTICIPANT_AGE) : MIN_PARTICIPANT_AGE;
   const youngest = day && minAge > 0 ? latestBirthDateFor(minAge, day) : today;
   const max = youngest < today ? youngest : today;

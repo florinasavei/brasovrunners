@@ -1,7 +1,7 @@
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * The message types nothing in the platform queues any more (`DECISIONS.md` §NNN), checked
+ * The message types nothing in the platform queues any more (`DECISIONS.md` §331), checked
  * against every `enqueueEmail` call and held there by a test that reads the source:
  *
  * - `WAITLIST_OFFER_EXPIRED` — an offer's lapse is silent (`AGENTS.md` §10.5: the offer expires

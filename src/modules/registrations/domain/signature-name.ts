@@ -25,7 +25,7 @@ import { foldName } from "./name-fold";
  * Whose name the declarant's signature must be (§108): the parent or guardian's for a minor — the
  * parent signs, and the declaration names them as the declarant — and the participant's
  * otherwise. The same truthiness `declarantValues` uses, so the text and the rule never name two
- * people. Since §NNN a minor signs as well, in a box of their own, where the declaration in effect
+ * people. Since §330 a minor signs as well, in a box of their own, where the declaration in effect
  * asks for it (`expectedSignatures`).
  */
 export function expectedSignatureName(registration: {
@@ -36,7 +36,7 @@ export function expectedSignatureName(registration: {
 }
 
 /**
- * The boxes a declaration is signed in, by the name each one posts (§NNN).
+ * The boxes a declaration is signed in, by the name each one posts (§330).
  *
  * `typedName` is the declarant's signature, as it has been since §314: the adult's own, or the
  * parent's or guardian's for a minor. `minorTypedName` is the minor's own signature, asked only
@@ -45,7 +45,7 @@ export function expectedSignatureName(registration: {
 export type SignatureBox = "typedName" | "minorTypedName";
 
 /**
- * Who signs a declaration, and under which name each one must (§NNN, the owner: "the minor
+ * Who signs a declaration, and under which name each one must (§330, the owner: "the minor
  * signing must be a bit different … also 2 signatures!").
  *
  * An adult signs once, with the name they registered under. A minor's declaration is signed by
@@ -56,11 +56,11 @@ export type SignatureBox = "typedName" | "minorTypedName";
  * `expectedSignatureName` and `declarantValues` use, so the page, the text and the rule never
  * disagree about who signs.
  *
- * `minorSigns` is the production gate of §NNN: whether the declaration in effect names the minor's
+ * `minorSigns` is the production gate of §330: whether the declaration in effect names the minor's
  * own document (`asksForMinorSignature`). Required, never defaulted, so every caller says which
  * text it read — the page the one it shows, the service the one it binds the signature to, the
  * desk's paper confirmation the one on the paper. Without it a minor's declaration is signed as it
- * was before §NNN: once, by the parent, and no minor's box is expected — so none is ever wrong.
+ * was before §330: once, by the parent, and no minor's box is expected — so none is ever wrong.
  */
 export function expectedSignatures(
   registration: {

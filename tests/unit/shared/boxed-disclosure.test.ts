@@ -64,7 +64,7 @@ describe("§269 the backoffice fold is a box", () => {
 
   it("keeps the summary a control: marker, pointer, 44 pixels, and a wash behind it", () => {
     // Everything §164 asked for, still there — the box is added, not traded for the marker.
-    // The marker is drawn by the summary itself since §NNN: a flex row with the arrow on the
+    // The marker is drawn by the summary itself since §325: a flex row with the arrow on the
     // heading's line, the browser's own marker hidden (a block heading used to drop under it).
     expect(summary.display).toBe("flex");
     expect(summary.alignItems).toBe("center");
@@ -104,7 +104,7 @@ describe("§269 the backoffice fold is a box", () => {
   });
 
   it("leaves the public fold as it was: no border, the same summary", () => {
-    // The public fold has no box — and turns its drawn arrow when open, like every fold (§NNN).
+    // The public fold has no box — and turns its drawn arrow when open, like every fold (§325).
     expect(DISCLOSURE_SX).toEqual({ "& > summary": DISCLOSURE_SUMMARY_SX, "&[open] > summary::before": { transform: "rotate(90deg)" } });
     expect("border" in DISCLOSURE_SX).toBe(false);
     expect("bgcolor" in DISCLOSURE_SUMMARY_SX).toBe(false);

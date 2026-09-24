@@ -26,7 +26,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — a cancelled event allocates nothing and mails nothing on its own.
+ * `DECISIONS.md` §331 — a cancelled event allocates nothing and mails nothing on its own.
  *
  * Before this, cancelling a race in the editor emailed nobody, and then went on behaving as if
  * the race would run: a place freed by a cancellation was offered to the waiting list, an
@@ -78,7 +78,7 @@ function submissionInput(email: string, at: Date) {
   };
 }
 
-describe("§NNN a cancelled event allocates nothing and mails nothing on its own", () => {
+describe("§331 a cancelled event allocates nothing and mails nothing on its own", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

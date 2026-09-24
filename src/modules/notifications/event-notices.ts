@@ -6,7 +6,7 @@ import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { enqueueEmail } from "./outbox";
 
 /**
- * The two messages about an event that go to everybody registered for it (`DECISIONS.md` §NNN):
+ * The two messages about an event that go to everybody registered for it (`DECISIONS.md` §331):
  * "details updated" when the organizer asks for it on a save that changed something, and "the
  * event is cancelled", with the organizer's reason.
  *

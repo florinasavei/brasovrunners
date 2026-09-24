@@ -15,7 +15,7 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * paper form has, which is what a blank declaration printed for the desk should show.
  *
  * The identity documents, since a minor's declaration is signed by the minor and the parent
- * together (§NNN), are three fields that pair with the three names:
+ * together (§330), are three fields that pair with the three names:
  * - `idDocument` — the **declarant's** (`{{declarant}}`): the adult's own, the parent's for a
  *   minor. Unchanged, so every text the club already approved reads as it did.
  * - `participantIdDocument` — the participant's own (`{{participant}}`): the adult's, which is
@@ -39,7 +39,7 @@ export const MERGE_FIELDS = [
 /**
  * The fields that name an identity document. A text naming any of them asks for the documents at
  * signing — one for an adult; for a minor the parent's, and the minor's as well when the text asks
- * the minor to sign (`asksForMinorSignature`, §95, §NNN); a text naming none asks for none.
+ * the minor to sign (`asksForMinorSignature`, §95, §330); a text naming none asks for none.
  */
 export const ID_DOCUMENT_FIELDS = ["idDocument", "participantIdDocument", "guardianIdDocument"] as const;
 
@@ -134,7 +134,7 @@ export function asksForIdDocument(body: unknown): boolean {
 
 /**
  * Whether a body asks a minor to sign beside the parent or guardian, with the minor's own
- * identity document (§NNN): it does when it names `{{participantIdDocument}}`, the minor's own
+ * identity document (§330): it does when it names `{{participantIdDocument}}`, the minor's own
  * document on a minor's declaration.
  *
  * The production gate for the two-signer declaration. A text the club approved before it — the

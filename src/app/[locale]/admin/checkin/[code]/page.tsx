@@ -41,7 +41,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const code = normalizeCheckinCode(raw);
   const db = getDb();
   const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
-  // Whether a minor's paper carries the minor's signature too (§NNN), as on the desk's list.
+  // Whether a minor's paper carries the minor's signature too (§330), as on the desk's list.
   const minorSigns = row ? await declarationAsksMinorToSignByLocale(db, new Date()) : { ro: false, en: false };
 
   return (

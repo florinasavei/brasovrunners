@@ -333,7 +333,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   const databaseBytes = await readDatabaseSizeBytes(db);
   const neon = await readNeonConsumption(env);
-  // The Neon plan (§280's follow-up, §NNN): what Neon reports for the account when it answered,
+  // The Neon plan (§280's follow-up, §326): what Neon reports for the account when it answered,
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
   const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);

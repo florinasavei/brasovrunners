@@ -203,7 +203,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * §320 and §NNN: a minor's declaration carries two documents, and the club's copy masks both —
+   * §320 and §330: a minor's declaration carries two documents, and the club's copy masks both —
    * in every blank of the text that prints one and on both signature lines — while the
    * participant's copy keeps both whole.
    */

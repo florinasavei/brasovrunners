@@ -257,7 +257,7 @@ describe("retention sweep", () => {
       locale: "ro",
       typedName: "Ana Pop",
       idDocument: "BV 123456",
-      // A minor's declaration carries the child's signature and document beside the parent's (§NNN).
+      // A minor's declaration carries the child's signature and document beside the parent's (§330).
       minorTypedName: "Maria Pop",
       minorIdDocument: "MP 654321",
       acceptedAt: NOW,
@@ -271,7 +271,7 @@ describe("retention sweep", () => {
     expect((await db.select().from(declarationAcceptances))[0]).toMatchObject({ idDocument: "BV 123456", minorIdDocument: "MP 654321" });
 
     // Eight days after: the fields go — both identity documents of a minor's declaration, the
-    // parent's and the child's (§NNN) — and the rows stay, with both signatures.
+    // parent's and the child's (§330) — and the rows stay, with both signatures.
     const later = await pruneExpiredRows(db, new Date("2026-10-09T10:00:00.000Z"));
     expect(later.identityDocuments).toBe(1);
     expect(later.healthNotes).toBe(1);

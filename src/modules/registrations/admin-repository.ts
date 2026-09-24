@@ -48,7 +48,7 @@ export type RegistrationListRow = {
   guardianName: string | null;
   /**
    * The registration's language: which translation of the declaration it signs, and so whether
-   * a minor's paper carries the minor's signature too (`declarationAsksMinorToSign`, §NNN).
+   * a minor's paper carries the minor's signature too (`declarationAsksMinorToSign`, §330).
    */
   locale: Locale;
   /**
@@ -70,7 +70,7 @@ export type RegistrationListRow = {
   emailRejectedReason: string | null;
   /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
-  /** The minor's own document, beside the parent's (§NNN); `identityDocumentsOf` says whose is whose. */
+  /** The minor's own document, beside the parent's (§330); `identityDocumentsOf` says whose is whose. */
   minorIdDocument: string | null;
   /**
    * The rest of what the journey column reads (`domain/journey.ts`, §145): the participant's
@@ -184,7 +184,7 @@ const latestIdDocument = sql<string | null>`(
 )`;
 
 /**
- * The minor's own document on the same latest declaration (§NNN): a minor's declaration carries
+ * The minor's own document on the same latest declaration (§330): a minor's declaration carries
  * two, the parent's in `id_document` and the child's here. The same probe on the same index, so a
  * desk page of two hundred rows is still two hundred index lookups per column, never a query each.
  */
@@ -499,7 +499,7 @@ export type RegistrationDetail = {
   instagramHandle: string | null;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
-  /** The registration's language, as on the list row: the declaration translation it signs (§NNN). */
+  /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
   eventId: string;
@@ -754,7 +754,7 @@ export type DeskRegistration = {
   guardianName: string | null;
   /**
    * The registration's language: the declaration translation its paper confirmation binds to,
-   * and so whether a minor's paper carries the minor's signature too (§NNN). A language, never
+   * and so whether a minor's paper carries the minor's signature too (§330). A language, never
    * an address (`AGENTS.md` §15.11).
    */
   locale: Locale;
@@ -780,7 +780,7 @@ export type DeskRegistration = {
   checkedInByName: string | null;
   /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
   emailRejectedReason: string | null;
-  /** The declarant's document, and a minor's own beside it (§95, §NNN; `identityDocumentsOf`). */
+  /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
   idDocument: string | null;
   minorIdDocument: string | null;
 };
@@ -907,7 +907,7 @@ export type DeclarationAcceptanceRow = {
   /** The declarant's signature and document: the adult's, or the parent's for a minor. */
   typedName: string;
   idDocument: string | null;
-  /** The minor's own, beside the parent's (§NNN); null for an adult and for older acceptances. */
+  /** The minor's own, beside the parent's (§330); null for an adult and for older acceptances. */
   minorTypedName: string | null;
   minorIdDocument: string | null;
   declarationVersion: number;
@@ -997,7 +997,7 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
       startsAt: events.startsAt,
       timezone: events.timezone,
       // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
-      // birth date is counted against before pressing (§NNN).
+      // birth date is counted against before pressing (§329).
       minAge: events.minAge,
     })
     .from(events)

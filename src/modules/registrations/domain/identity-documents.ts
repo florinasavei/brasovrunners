@@ -1,9 +1,9 @@
 /**
- * Whose identity document is whose (§95, §108, §NNN).
+ * Whose identity document is whose (§95, §108, §330).
  *
  * `declaration_acceptances.id_document` has always been the **declarant's**: the adult's own, or
  * — for a minor — the parent's or guardian's, because the parent signed and typed theirs (§108).
- * Since a minor's declaration is signed by the minor as well (§NNN; the owner: "I wanna have the ID
+ * Since a minor's declaration is signed by the minor as well (§330; the owner: "I wanna have the ID
  * document of the minor and the parent, and also 2 signatures!"), the minor's own document is
  * `minor_id_document`. The column meanings did not move, so every acceptance recorded before
  * reads as it always did.

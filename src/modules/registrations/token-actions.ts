@@ -197,7 +197,7 @@ export async function consumeAndSignDeclaration(
     typedName: string;
     idDocument?: string;
     /**
-     * A minor's own signature and document, beside the parent's (§NNN): absent for an adult, and
+     * A minor's own signature and document, beside the parent's (§330): absent for an adult, and
      * for a minor under a declaration that does not ask the minor to sign — `signDeclaration`
      * decides which from the text it binds to, never from what was posted.
      */
@@ -248,7 +248,7 @@ export async function readRaceDayContext(secret: string, now: Date) {
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await loadEventForRegistration(db, registration.eventId);
   const opensAt = new Date(event.startsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000);
-  // A cancelled race has no race day (§NNN): the page says so, and offers no desk code or "I am here".
+  // A cancelled race has no race day (§331): the page says so, and offers no desk code or "I am here".
   const eventCancelled = event.eventStatus === "CANCELLED";
   return {
     ok: true as const,

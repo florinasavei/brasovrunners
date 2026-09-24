@@ -125,7 +125,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   const staffUser = await requireStaff();
   const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued } = await searchParams;
-  // What the save told the participants (§NNN), matched against the words there are — the query
+  // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
   const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
@@ -149,7 +149,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const format = await getFormatter();
   const now = new Date();
   /*
-    The minor's paper form (§NNN) only where the declaration in effect, in the language the form
+    The minor's paper form (§330) only where the declaration in effect, in the language the form
     prints in, asks the minor to sign: under an older text the parent signs a minor's paper alone,
     on the one form there is. The route prints the one-signature form then anyway; the link is not
     offered so nobody is told a paper needs two signatures when it needs one.
@@ -196,7 +196,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       : 0;
 
   /*
-    "Anunță participanții despre schimbare", and the cancellation's "tell them" (§NNN): how many
+    "Anunță participanții despre schimbare", and the cancellation's "tell them" (§331): how many
     would be emailed, said before the press, and what that costs against the plan (§100). The
     count is of real registrations — a test row is written to as well, and counted nowhere the
     club looks (`AGENTS.md` §12.6) — while the messages include it and the club's copies (§320),
@@ -378,7 +378,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-        {/* What the save told the participants (§NNN), under whichever banner the save gave. */}
+        {/* What the save told the participants (§331), under whichever banner the save gave. */}
         {noticeOutcome && (
           <Alert severity={noticeOutcome === "none" || noticeOutcome === "cancelledQuiet" ? "info" : "success"} sx={{ mt: 1 }} data-testid="notice-outcome">
             {t(`editor.notice.outcome.${noticeOutcome}`, { queued: queuedCount })}
@@ -387,7 +387,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
-        {/* The save that announced the place (§NNN): public from now on, and nobody was told —
+        {/* The save that announced the place (§328): public from now on, and nobody was told —
             a save writes to no participant, so the sentence says what reaches them anyway: the
             reminder before the event carries the place. The live wording only while the event
             is live: a draft's place is announced to nobody. */}
@@ -491,7 +491,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
                   (§152): on a phone the bar had grown to a third of the screen. */}
               {/*
-                Whether the participants hear about this save (§NNN; the owner: "I want to know
+                Whether the participants hear about this save (§331; the owner: "I want to know
                 exactly when and if participants get email alerts"): unticked, nobody is emailed.
                 Beside the button, with the number of people it would reach, because it is a
                 decision made at the moment of the press. When the status select says "Anulat"
@@ -793,7 +793,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationForm")}
             </GlyphButton>
-            {/* A minor's paper form (§NNN): the minor and the parent each sign and write a document —
+            {/* A minor's paper form (§330): the minor and the parent each sign and write a document —
                 where the declaration in effect asks the minor to sign (`minorFormOffered`). */}
             {minorFormOffered && (
               <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}&for=minor`} variant="text" size="small" sx={{ minHeight: 44 }}>
@@ -907,7 +907,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       */}
       {canManageRegistrations(staffUser.role) &&
         event.registrationMode === "INTERNAL" &&
-        // Not for a race that did not run (§NNN): the service refuses it too.
+        // Not for a race that did not run (§331): the service refuses it too.
         event.eventStatus !== "CANCELLED" &&
         event.startsAt.getTime() <= now.getTime() && (
           <Box component="section">

@@ -4,12 +4,12 @@ import { maskIdDocument } from "@/modules/registrations/declaration-pdf";
 import { identityDocumentValues } from "@/modules/registrations/signed-declaration";
 
 /**
- * §NNN — a minor's declaration carries two identity documents: the parent's, in the column that
+ * §330 — a minor's declaration carries two identity documents: the parent's, in the column that
  * has always held the declarant's (`id_document`), and the minor's own (`minor_id_document`).
  * Every screen, file and merge asks these functions whose is whose, so none can print the
  * parent's document under the child's name.
  */
-describe("§NNN whose identity document is whose", () => {
+describe("§330 whose identity document is whose", () => {
   it("gives an adult's one document to the participant, and no guardian", () => {
     expect(identityDocumentsOf({ guardianName: null, idDocument: "BV 123456", minorIdDocument: null })).toEqual({ participant: "BV 123456", guardian: null });
   });
@@ -31,7 +31,7 @@ describe("§NNN whose identity document is whose", () => {
   });
 });
 
-describe("§NNN the declaration's three document fields", () => {
+describe("§330 the declaration's three document fields", () => {
   it("keeps {{idDocument}} the declarant's, and fills each signer's own field", () => {
     // An adult: the participant's document is the declarant's, and no guardian signs — a dash, like {{guardian}}.
     expect(identityDocumentValues(null, { idDocument: "BV 123456" })).toEqual({

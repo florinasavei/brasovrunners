@@ -31,7 +31,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
         */
         idDocument: idDocumentFrom(form, t, "idDocument"),
         /*
-          A minor's own signature and document (§NNN), posted only by the page a minor's
+          A minor's own signature and document (§330), posted only by the page a minor's
           registration renders under a declaration that asks the minor to sign. A box that was on
           the page and left empty is posted as the empty string, which the service refuses on that
           box; a box that was never on the page is absent. Whether it was asked is not read from
@@ -66,7 +66,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       for (seven days after the event, §95), and making somebody retype a document number to
       recover from a refusal about their name is friction charged to the wrong field (§286).
 
-      A minor's declaration has two signature boxes (§NNN), and either refused lands here with the
+      A minor's declaration has two signature boxes (§330), and either refused lands here with the
       same code: the page compares both kept signatures again with the one pure function the
       service used (`mismatchedSignatures`) and marks whichever is wrong, so the URL still carries
       a code and nothing else.
@@ -80,7 +80,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       redirect(`${path}?invalid=name#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
     /*
-      An identity document the text asks for, left out or not a series and number (§NNN, found in
+      An identity document the text asks for, left out or not a series and number (§330, found in
       review): its own refusal as well, for the reason the name has one — the generic sentence
       below asks for a tick, and a parent who had ticked would be left guessing that the child's
       document was the missing piece. Reachable only past the browser's own `required` and
@@ -114,7 +114,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
 /**
  * What a refused signature brings back to the form (§314): these fields and nothing else — the
  * tick, and for each signer the kind of document, its series and number, and the signature (the
- * minor's three only on a minor's declaration, §NNN). Not `draftValuesOf(form)` — that keeps
+ * minor's three only on a minor's declaration, §330). Not `draftValuesOf(form)` — that keeps
  * every posted string, and this form posts the action link's secret, the one value that must
  * never be copied anywhere, sealed or not.
  */
@@ -138,7 +138,7 @@ function declarationDraftOf(form: FormData): Record<string, string> {
 /**
  * The chosen kind and the typed series, as the one string the declaration carries (§283) — for
  * the declarant's document (`idDocument`, `idDocumentType`) or a minor's (`minorIdDocument`,
- * `minorIdDocumentType`, §NNN): the kind's box is the series box's name with `Type` after it.
+ * `minorIdDocumentType`, §330): the kind's box is the series box's name with `Type` after it.
  */
 function idDocumentFrom(form: FormData, t: (key: string) => string, field: "idDocument" | "minorIdDocument"): string | undefined {
   const series = String(form.get(field) ?? "").trim();

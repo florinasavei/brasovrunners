@@ -48,8 +48,8 @@ import { signatureNameMatches } from "../domain/signature-name";
  *
  * ## Who signs in this box
  *
- * `signer` picks the words (§NNN): `self` for an adult, who signs once; `guardian` for the parent's
- * or guardian's box on a minor's declaration, the declarant of §108 — alone, as before §NNN, when
+ * `signer` picks the words (§330): `self` for an adult, who signs once; `guardian` for the parent's
+ * or guardian's box on a minor's declaration, the declarant of §108 — alone, as before §330, when
  * the declaration in effect does not ask the minor to sign, or beside the minor's box when it
  * does; and `minor` for the child's own box, their registered name. Each box checks its own name
  * with the same pure function, so either can be refused alone, and each has its own way out when
@@ -76,7 +76,7 @@ export default function SignatureField({
   refused,
 }: {
   id: string;
-  /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§NNN). */
+  /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§330). */
   name: "typedName" | "minorTypedName";
   signer: Signer;
   /** The box's label, as the page's refusal summary names it. */
@@ -137,7 +137,7 @@ export default function SignatureField({
   const mine = (chunks: ReactNode) => <MuiLink href={myRegistrationsHref}>{chunks}</MuiLink>;
   /*
     What to do when the name the box wants is itself wrong (§314). A participant's registered name
-    — an adult's, or a minor's in their own box (§NNN) — is one the club corrects ("Corectează
+    — an adult's, or a minor's in their own box (§330) — is one the club corrects ("Corectează
     numele") and the same link then signs; a guardian's is not — no staff verb edits it
     (`AGENTS.md` §15.11) — so the parent is told what actually works: cancel, and register the
     minor again with the right name.

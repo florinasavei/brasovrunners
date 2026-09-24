@@ -141,11 +141,11 @@ describe("the block on /devs, given the plan and the month", () => {
 });
 
 /**
- * §NNN — Neon's answer wins over the stated setting. The owner, 2026-09-23: "Neon is already on
+ * §326 — Neon's answer wins over the stated setting. The owner, 2026-09-23: "Neon is already on
  * Launch at $0.106/CU-hour, and here it shows Free" — the project row had said "launch_v3" all
  * along, and the pages believed a setting nobody had changed.
  */
-describe("§NNN the plan Neon reports", () => {
+describe("§326 the plan Neon reports", () => {
   it("matches Neon's subscription names by prefix, and knows nothing else", () => {
     expect(neonPlanFromSubscription("launch_v3")).toBe("LAUNCH");
     expect(neonPlanFromSubscription("launch")).toBe("LAUNCH");

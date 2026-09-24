@@ -4,7 +4,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN, §315) — a refused link is named by its row.
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332, §315) — a refused link is named by its row.
  *
  * The refusal summary lists each field a refusal names as a link to its box, under the label
  * `eventFormFieldLabels` gives that box's `name`. For the links that label is the row and what
@@ -22,7 +22,7 @@ vi.mock("next-intl/server", () => ({
 
 const { eventFormFieldLabels } = await import("@/modules/content/events/ui/field-labels");
 
-describe("BR-REQ-011-01 criterion 19 the refusal summary names the link's row", () => {
+describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", () => {
   it("names the address of each row by its number, in Romanian", async () => {
     catalogue = ro;
     locale = "ro";

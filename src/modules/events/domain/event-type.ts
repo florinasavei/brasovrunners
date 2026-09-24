@@ -85,7 +85,7 @@ export function takesRegistrations(type: EventType): boolean {
 }
 
 /**
- * Whether the event's age rule is said in public — on its page, in its structured data (§NNN).
+ * Whether the event's age rule is said in public — on its page, in its structured data (§329).
  *
  * Only where the club takes the registrations itself: that is the one place the platform counts
  * `min_age` (`submitRegistration`). An event one turns up to has no registration to be too young

@@ -107,7 +107,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
   const eventDetails = eventId ? await findEventNotificationDetails(db, eventId, locale) : undefined;
-  // The place is not announced yet (§NNN): the query has withheld the place and the map, and the
+  // The place is not announced yet (§328): the query has withheld the place and the map, and the
   // facts line — and a `{eventLocationName}` in the club's own copy — says so in the page's words,
   // each half of the bilingual message in its own language.
   const placeLater = eventDetails?.locationToBeAnnounced === true;
@@ -161,7 +161,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
   /*
-    "Detalii actualizate" (§NNN): which facts the save changed, from the payload; the facts
+    "Detalii actualizate" (§331): which facts the save changed, from the payload; the facts
     themselves are the ones above, read now. Nothing the event held before the save is in the
     row, so nothing it held before can reach the runner — a place corrected twice before this
     batch runs is sent once, as it now stands.
@@ -178,17 +178,17 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       }).format(eventDetails.raceStartsAt);
     }
   }
-  // "{event} a fost anulat" (§NNN): the reason the organizer typed, and nothing to act on.
+  // "{event} a fost anulat" (§331): the reason the organizer typed, and nothing to act on.
   if (row.messageType === "EVENT_CANCELLED") {
     const reason = readEventNoticeText((row.payloadJson as { reason?: unknown } | null)?.reason);
     if (reason) data.cancellationReason = reason;
   }
-  // "Linkuri și fișiere" (§NNN): one line pointing at `#links`, only when the page has one — the
+  // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
   // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the
   // email names where they are, never a raw Drive link in a message that is forwarded.
   if (data.eventUrl && eventDetails && readEventLinks(eventDetails.links).length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
   // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
-  // and in the update notice when the programme is what changed (§NNN).
+  // and in the update notice when the programme is what changed (§331).
   if ((row.messageType === "EVENT_REMINDER" || updateChanges.includes("programme")) && eventDetails) {
     const items = readScheduleItems(eventDetails.scheduleItems);
     if (items.length > 0) {
@@ -225,7 +225,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
     payloadActionUrl = data.signInUrl;
   }
-  // The update's one button is the event's own page (§NNN): public, no token — and, like every
+  // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.
   if (row.messageType === "EVENT_UPDATE_NOTICE" && data.eventUrl) payloadActionUrl = data.eventUrl;
   // "Registration is open" (§146): no participant, no token; the action is the ordinary

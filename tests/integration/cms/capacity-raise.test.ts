@@ -230,7 +230,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
       translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: { slug: ro.slug, title: ro.title, excerpt: ro.excerpt ?? "", seoTitle: "", seoDescription: "" } }],
       acknowledgeLiveEdit: true,
       scope,
-      // A save that cancels says why (§NNN); these tests are about the offers, so nobody is told.
+      // A save that cancels says why (§331); these tests are about the offers, so nobody is told.
       ...(changes.eventStatus === "CANCELLED" && row.eventStatus !== "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
       now: at,
     });

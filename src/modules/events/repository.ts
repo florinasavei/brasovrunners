@@ -8,7 +8,7 @@ import type { Database as GenericDatabase } from "@/db/types";
 type Locale = (typeof eventTranslations.locale.enumValues)[number];
 
 /**
- * A fact about the place, or null while the place is to be announced (`DECISIONS.md` §NNN).
+ * A fact about the place, or null while the place is to be announced (`DECISIONS.md` §328).
  *
  * In SQL, on every public read, rather than a flag each surface is trusted to check: a page, a
  * card, the calendar feed, the structured data, the share picture or an email that forgets the
@@ -30,7 +30,7 @@ const publicLocationName = unlessToBeAnnounced<string | null>(
 
 /**
  * The programme's rows (§117) as the public reads them: whole, except that each row's own place
- * is emptied while the place is to be announced (§NNN) — "Ridicarea kitului — Sala Sporturilor"
+ * is emptied while the place is to be announced (§328) — "Ridicarea kitului — Sala Sporturilor"
  * names the venue as surely as the meeting point does. The time and the label stay. The place
  * becomes `null`, the value a row without one already carries, never a missing key, which
  * `readScheduleItems` would refuse along with the whole programme. Only a well-formed list is
@@ -72,7 +72,7 @@ const PUBLIC_COLUMNS = {
   timezone: events.timezone,
   // The meeting point on a map, as the organizer pasted it: stored, never assembled, because
   // AGENTS.md §8 forbids a provider hostname under src/. Null while the place is to be
-  // announced (§NNN), like the name and the address below.
+  // announced (§328), like the name and the address below.
   mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
@@ -86,7 +86,7 @@ const PUBLIC_COLUMNS = {
   coHosts: events.coHosts,
   coHostName: events.coHostName,
   coHostUrl: events.coHostUrl,
-  // "Linkuri și fișiere" (§NNN): addresses the organizer pasted to be clicked by anybody —
+  // "Linkuri și fișiere" (§332): addresses the organizer pasted to be clicked by anybody —
   // public by nature, read only through `readEventLinks`.
   links: events.links,
   featured: events.featured,
@@ -99,7 +99,7 @@ const PUBLIC_COLUMNS = {
   registrationClosesAt: events.registrationClosesAt,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
-  // Who may enter (§NNN): the page says it, the form's picker is bounded by it, and the
+  // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
   // structured data states it as `typicalAgeRange`. A condition of the race, like its date.
   minAge: events.minAge,
   externalRegistrationUrl: events.externalRegistrationUrl,
@@ -110,7 +110,7 @@ const PUBLIC_COLUMNS = {
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other
-  // row (BR-REQ-040-02). While the place is to be announced (§NNN) all three are null and the
+  // row (BR-REQ-040-02). While the place is to be announced (§328) all three are null and the
   // flag says why, so a surface says "se anunță în curând" instead of saying nothing.
   locationName: publicLocationName,
   locationAddress: unlessToBeAnnounced<string | null>(events.locationAddress),
@@ -129,7 +129,7 @@ const PUBLIC_COLUMNS = {
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
-  // their places while the place is to be announced (§NNN).
+  // their places while the place is to be announced (§328).
   scheduleItems: publicScheduleItems,
   /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
   updatedAt: events.updatedAt,
@@ -390,15 +390,15 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       hasRules: sql<boolean>`${eventTranslations.rulesJson} IS NOT NULL`,
       hasSchedule: sql<boolean>`${eventTranslations.scheduleJson} IS NOT NULL OR ${events.scheduleItems} IS NOT NULL`,
       // The rows themselves, for the reminder (§117) — without their places while the place is
-      // to be announced (§NNN), as on the page.
+      // to be announced (§328), as on the page.
       scheduleItems: publicScheduleItems,
-      // Whether the page has "Linkuri și fișiere" to point at (§NNN), read by what the rows
+      // Whether the page has "Linkuri și fișiere" to point at (§332), read by what the rows
       // mean — `readEventLinks` — rather than by the column being non-null.
       links: events.links,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own. The place's name in the runner's language when the club gave it one
       // (migration `0059`), else the event's — the same rule as `PUBLIC_COLUMNS`, and like it,
-      // no place and no map while the place is to be announced (§NNN): an email is as public as
+      // no place and no map while the place is to be announced (§328): an email is as public as
       // the page, and a reminder is the likeliest thing to be forwarded.
       checklist: eventTranslations.checklist,
       locationName: publicLocationName,
@@ -407,7 +407,7 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       stravaEventUrl: events.stravaEventUrl,
       facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,
-      // A race's gun time, for the update notice that says the time changed (§NNN).
+      // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
     })

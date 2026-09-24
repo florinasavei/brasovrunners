@@ -116,7 +116,7 @@ function organizers(event: PublicEvent, organizationName: string) {
 /**
  * Where the event is, as a schema.org `Place` — which Google's event result requires.
  *
- * While the place is to be announced (§NNN) it is the city and nothing more: `name` and
+ * While the place is to be announced (§328) it is the city and nothing more: `name` and
  * `addressLocality` "Brașov", the country, no street, no map. That is true, it is what a
  * search engine may show ("Brașov"), and it keeps the block valid without inventing a venue.
  * The query has already withheld the typed place; this does not reach for it.
@@ -199,7 +199,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     location: eventPlace(event),
     sport: "Running",
     /*
-      Who may enter (§NNN): schema.org's own spelling of an open-ended range, "14-". Only where
+      Who may enter (§329): schema.org's own spelling of an open-ended range, "14-". Only where
       the page says it too (`hasAgeRule`: the club takes the registrations and counts the age),
       and only for a minimum — zero is no minimum, and "0-" would state a rule nobody set.
     */

@@ -357,12 +357,12 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     // would be indistinguishable from "remove them", and on a row saved before the list
     // existed that would erase the partner its two old columns still hold.
     ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
-    // "Linkuri și fișiere" (§NNN), by the same discipline: a caller that said nothing writes
+    // "Linkuri și fișiere" (§332), by the same discipline: a caller that said nothing writes
     // nothing. An empty list is written as null, not `[]` — unlike the partners there is no
     // older column for `[]` to shadow, and one value for "none" means a series edit never
     // reports a change between a row that never had links and one whose links were removed.
     ...(fields.links === undefined ? {} : { links: fields.links.length > 0 ? fields.links : null }),
-    // Whatever was typed is written even while the place is to be announced (§NNN): it is kept
+    // Whatever was typed is written even while the place is to be announced (§328): it is kept
     // for staff and shown the moment the switch goes off, and no public reader is handed it.
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
@@ -391,7 +391,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
-    // Who may enter, counted on the event's day at every door (§NNN).
+    // Who may enter, counted on the event's day at every door (§329).
     minAge: fields.minAge,
     registrationOpensAt: times.registrationOpensAt,
     registrationClosesAt: times.registrationClosesAt,
@@ -623,7 +623,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
  * question any more. Every save through this module fills it; this catches a row written before
  * the column existed and never saved since.
  *
- * An event whose place is to be announced (§NNN) is complete without one: every public surface
+ * An event whose place is to be announced (§328) is complete without one: every public surface
  * says "Locația se anunță în curând" instead, which is a whole answer to "where", and publishing
  * the race before the venue is settled is exactly what the switch is for.
  */
@@ -719,7 +719,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   return updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
 }
 
-// --- Telling the participants (§NNN) --------------------------------------------------------
+// --- Telling the participants (§331) --------------------------------------------------------
 
 /** "Anunță participanții despre schimbare", as the editor's save posts it: the box, and the optional note. */
 export type EventNoticeRequest = { notify: boolean; note?: string | null };
@@ -754,7 +754,7 @@ type NoticeRequest = {
 };
 
 /**
- * The notice and the cancellation, checked before any row is locked (§NNN).
+ * The notice and the cancellation, checked before any row is locked (§331).
  *
  * **Cancelling asks why.** A save that moves the event to `CANCELLED` must carry a reason: it
  * goes to the participants when they are told, and into the audit trail whether or not they are
@@ -806,7 +806,7 @@ type SavedDate = {
 };
 
 /**
- * Tell one date's participants what the save did to it, inside the save's transaction (§NNN).
+ * Tell one date's participants what the save did to it, inside the save's transaction (§331).
  *
  * A date the save cancelled gets `EVENT_CANCELLED` — when the organizer left the box ticked —
  * and an audit row naming who and why either way. A date that is still on and whose place, start
@@ -907,7 +907,7 @@ function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[])
 }
 
 /**
- * Tell every date the save reached (§NNN): this one, then each date of the series it carried
+ * Tell every date the save reached (§331): this one, then each date of the series it carried
  * the change to — each date's own registrants once, about their own date. The save is named by
  * the event that was saved and the version it now has, so a retried press queues nothing twice.
  *
@@ -939,9 +939,9 @@ export type SaveEventFieldsInput = {
   eventId: string;
   expectedVersion: number;
   fields: unknown;
-  /** Tell the participants what changed (§NNN); absent or unticked sends nothing. */
+  /** Tell the participants what changed (§331); absent or unticked sends nothing. */
   notice?: EventNoticeRequest;
-  /** Required when the save moves the event to CANCELLED (§NNN). */
+  /** Required when the save moves the event to CANCELLED (§331). */
   cancellation?: EventCancellationRequest;
   now?: Date;
 };
@@ -971,7 +971,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   assertCoherentRegistrationBlock(fields);
   const times = resolveTimes(fields);
-  // The same rule as the editor's save (§NNN): a cancellation says why, and tells whom it was asked to.
+  // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
 
   /**
@@ -1034,9 +1034,9 @@ export type SaveEventAndTranslationsInput = {
   acknowledgeLiveEdit?: boolean;
   /** Which dates of the series this save reaches (§130); "this" — the default — is the one event. */
   scope?: SeriesEditScope;
-  /** "Anunță participanții despre schimbare" (§NNN); absent or unticked sends nothing, as before. */
+  /** "Anunță participanții despre schimbare" (§331); absent or unticked sends nothing, as before. */
   notice?: EventNoticeRequest;
-  /** Required when the save moves the event to CANCELLED (§NNN): the reason, and whether to tell. */
+  /** Required when the save moves the event to CANCELLED (§331): the reason, and whether to tell. */
   cancellation?: EventCancellationRequest;
   now?: Date;
 };
@@ -1057,13 +1057,13 @@ const SERIES_COLUMNS = [
   "timezone",
   "mapUrl",
   "routeUrl",
-  // The links are the route's kin (§NNN): the GPX and the rules do not change from one
+  // The links are the route's kin (§332): the GPX and the rules do not change from one
   // Wednesday to the next, so a series edit carries them like the route.
   "links",
   "coHosts",
   "locationName",
   "locationAddress",
-  // Whether the place is announced travels with the place (§NNN): a series moved to a venue
+  // Whether the place is announced travels with the place (§328): a series moved to a venue
   // not yet settled is moved on every date it reaches, and announced on them all at once.
   "locationToBeAnnounced",
   "difficulty",
@@ -1078,7 +1078,7 @@ const SERIES_COLUMNS = [
   "bibDesign",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",
-  // One race, one age rule: every date of a series takes the same people (§NNN).
+  // One race, one age rule: every date of a series takes the same people (§329).
   "minAge",
   "declarationDocumentId",
   "participantListVisibility",
@@ -1142,7 +1142,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     after: EditableEvent;
     translationsBefore: readonly EditableTranslation[];
     translationsAfter: readonly EditableTranslation[];
-    /** Hand back each touched date as it was and as it was written, for its participants' notice (§NNN). */
+    /** Hand back each touched date as it was and as it was written, for its participants' notice (§331). */
     collect?: boolean;
     now: Date;
   },
@@ -1227,7 +1227,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
       }
     }
 
-    // Read before anything is written to this date, only when a notice needs to compare (§NNN).
+    // Read before anything is written to this date, only when a notice needs to compare (§331).
     const memberTranslationsBefore = input.collect ? await listTranslationsForEvent(tx, member.id) : [];
     let touched = false;
     if (Object.keys(changes).length > 0) {
@@ -1361,7 +1361,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     assertCoherentRegistrationBlock(parsedEventFields);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
-  // The notice and the cancellation's reason, refused here like any other box (§NNN, §315).
+  // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
 
   return db.transaction(async (tx) => {
@@ -1443,7 +1443,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       otherDates.push(...series.dates);
     }
     /*
-      This save announced the place (§NNN): the switch was on and is off now, so the place is on
+      This save announced the place (§328): the switch was on and is off now, so the place is on
       every public surface from this commit. Nobody is written to about it: a message sent as a
       side effect of a save would reach every entrant for a typo fixed the minute after, so telling
       the participants is the organizer's own, separate act, and the editor's banner says so.
@@ -1451,7 +1451,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     const placeAnnounced = current.locationToBeAnnounced && !savedEvent.locationToBeAnnounced;
 
     /*
-      Telling the participants (§NNN), last, when every date is written and nothing is left to
+      Telling the participants (§331), last, when every date is written and nothing is left to
       refuse: a refused save queues nothing, because the messages are rows in this transaction.
       This date's languages as they now stand are the ones written above, and the rest as loaded.
     */
@@ -1703,7 +1703,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
-    // The links travel with the route (§NNN), to a duplicate and to every date of a repeat:
+    // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
     links: source.links,
     // Not carried by a *duplicate*: a film is of one edition, and last year's would be wrong on
@@ -1726,7 +1726,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     repeatOf: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
-    // A copy of an event whose place is not announced is not announced either (§NNN): the
+    // A copy of an event whose place is not announced is not announced either (§328): the
     // hidden place travels with it and stays hidden until somebody switches it on.
     locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
@@ -1740,7 +1740,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     capacity: source.capacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
-    // Who may enter is a property of the race, not of one edition (§NNN): a copy and every date
+    // Who may enter is a property of the race, not of one edition (§329): a copy and every date
     // of a series keep the source's minimum age, like its capacity.
     minAge: source.minAge,
     registrationMode: source.registrationMode,

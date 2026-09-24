@@ -86,7 +86,7 @@ export default async function PreviewEventPage({ params }: Props) {
    * `events` or `event_translations` cannot arrive on a public component by accident — the
    * public queries name their columns for the same reason (BR-REQ-070-01).
    */
-  // The place not announced yet (§NNN) is withheld here exactly as the public query withholds it,
+  // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
   // so the preview shows the sentence the page will show — including the programme rows' places.
   const placeLater = event.locationToBeAnnounced;
   const preview: PublicEvent = {
@@ -175,7 +175,7 @@ export default async function PreviewEventPage({ params }: Props) {
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
 
-      {/* The links (§NNN), before the programme as on the public page, in the public words. */}
+      {/* The links (§332), before the programme as on the public page, in the public words. */}
       <EventLinks
         links={preview.links}
         locale={locale}

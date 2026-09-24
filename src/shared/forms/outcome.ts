@@ -26,7 +26,7 @@ export type FormOutcome = {
   error: string;
   /**
    * What the sentence for `error` needs filled in, by placeholder name — `{ age: "16 ani" }` for
-   * `Admin.errors.UNDER_MINIMUM_AGE` (§NNN), whose number is the event's. Words the action
+   * `Admin.errors.UNDER_MINIMUM_AGE` (§329), whose number is the event's. Words the action
    * computed, never anything typed: the summary substitutes them into the catalogue's `{age}`.
    * Absent for every code whose sentence has no placeholder.
    */

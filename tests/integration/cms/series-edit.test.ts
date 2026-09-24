@@ -105,7 +105,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     registrationMode: row.registrationMode,
     participantListVisibility: "HIDDEN" as const,
     capacity: row.capacity === null ? "" : String(row.capacity),
-    // The editor's box always posts what it shows (§NNN), so a save that did not touch it
+    // The editor's box always posts what it shows (§329), so a save that did not touch it
     // carries the row's number rather than the schema's default.
     minAge: String(row.minAge),
     registrationOpensAtWallTime: toWallTimeInput(row.registrationOpensAt, row.timezone),
@@ -134,7 +134,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
       expectedVersion: row.version,
       translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, changes.ro) }],
       scope,
-      // A save that cancels says why (§NNN); nobody is registered here, so nobody is told.
+      // A save that cancels says why (§331); nobody is registered here, so nobody is told.
       ...(changes.fields?.eventStatus === "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
       now: NOW,
     });
@@ -325,7 +325,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     expect((await reload(oct25.id)).capacity).not.toBe(40);
   });
 
-  // §NNN: one race, one age rule — the dates a rule makes inherit it, and a series edit carries it.
+  // §329: one race, one age rule — the dates a rule makes inherit it, and a series edit carries it.
   it("gives every date the source's minimum age, and carries a new one to the dates the save reaches", async () => {
     const { source, dates } = await seedSeries({ minAge: 16 });
     const [oct18, oct25, nov1, nov8] = dates;

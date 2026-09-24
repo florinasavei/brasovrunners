@@ -74,7 +74,7 @@ export default async function DeskRow({
   readOnly?: boolean;
   /**
    * Whether the declaration in effect asks a minor to sign beside the parent, per language
-   * (`declarationAsksMinorToSignByLocale`, §NNN): read once by the page, looked up here by the
+   * (`declarationAsksMinorToSignByLocale`, §330): read once by the page, looked up here by the
    * row's own language — the translation "Confirmă pe hârtie" binds to.
    */
   minorSigns: Readonly<Record<Locale, boolean>>;
@@ -99,7 +99,7 @@ export default async function DeskRow({
   */
   const terminal = isTerminalStatus(row.status);
   const voidedAt = row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt;
-  // Whose document is whose (§NNN): the minor's and the parent's on a minor's declaration.
+  // Whose document is whose (§330): the minor's and the parent's on a minor's declaration.
   const documents = identityDocumentsOf(row);
   const printedVoid = terminal && row.bibPrintedAt !== null && row.bibNumber !== null;
 
@@ -253,7 +253,7 @@ export default async function DeskRow({
           )}
           {/*
             The document the kit is handed out against (§95): what the volunteer compares the card
-            to. A minor's declaration carries two (§NNN) — the minor's and the parent's, to whom the
+            to. A minor's declaration carries two (§330) — the minor's and the parent's, to whom the
             kit goes (§108) — each shown the way one always was, and each labelled whose it is.
           */}
           {row.guardianName ? (
@@ -288,7 +288,7 @@ export default async function DeskRow({
             </form>
           )}
           {/*
-            A minor's paper is signed by two (§NNN) where the declaration in effect asks the minor
+            A minor's paper is signed by two (§330) where the declaration in effect asks the minor
             to sign: the minor and the parent or guardian, each with their own document. The press
             records exactly that — both names on the row, the volunteer as the one who saw the
             paper — so the row says it before the press, and offers the form with both lines for a

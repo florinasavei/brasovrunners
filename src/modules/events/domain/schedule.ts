@@ -31,7 +31,7 @@ export function readScheduleItems(json: unknown): ScheduleItem[] {
 }
 
 /**
- * The same rows, none with a place (`DECISIONS.md` §NNN): what the public reads while the event's
+ * The same rows, none with a place (`DECISIONS.md` §328): what the public reads while the event's
  * place is to be announced, for the staff preview. The public queries do the same in SQL
  * (`events/repository.ts#publicScheduleItems`).
  */

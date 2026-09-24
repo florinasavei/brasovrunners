@@ -199,11 +199,11 @@ describe("§239 the links every message carries", () => {
 });
 
 /**
- * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §NNN) — "Linkuri și fișiere" in the two emails a
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332) — "Linkuri și fișiere" in the two emails a
  * participant keeps: one line on the confirmation and the reminder pointing at `#links`, only
  * when the event has links, and nowhere else.
  */
-describe("§NNN the links line on the confirmation and the reminder", () => {
+describe("§332 the links line on the confirmation and the reminder", () => {
   const LINKS = "https://example.test/ro/evenimente/cros#links";
   const WITH_LINKS: TemplateData = { ...DATA, eventUrl: "https://example.test/ro/evenimente/cros", eventLinksUrl: LINKS };
 

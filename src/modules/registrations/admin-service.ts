@@ -129,7 +129,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     );
   }
   /*
-    A cancelled event's links lead nowhere (§NNN): the declaration refuses, the offer refuses,
+    A cancelled event's links lead nowhere (§331): the declaration refuses, the offer refuses,
     the confirmation's QR opens a desk that is closed. Its participants were told in a message
     of its own, so the one thing still worth sending is where their registration stands.
   */
@@ -203,7 +203,7 @@ async function eventForRegistration<T extends Record<string, unknown>>(
     raceId: event.raceId,
     publishedAt: event.publishedAt,
     timezone: event.timezone,
-    // The event's own minimum age (§NNN): a staff entry and the desk's walk-in meet the same one.
+    // The event's own minimum age (§329): a staff entry and the desk's walk-in meet the same one.
     minAge: event.minAge,
   };
 }
@@ -531,7 +531,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   });
   // The runner is told (§105): a number given or changed by hand after the confirmation went
   // out would otherwise live only on the desk's screen. A cleared number is not news, and
-  // neither is a number at a race that will not run (§NNN): it is written, and nobody is mailed.
+  // neither is a number at a race that will not run (§331): it is written, and nobody is mailed.
   const event = bibNumber !== null && updated.status === "CONFIRMED" ? await findEventForAllocation(db, updated.eventId) : undefined;
   if (bibNumber !== null && updated.status === "CONFIRMED" && event?.eventStatus !== "CANCELLED") {
     await db.transaction(async (tx) => {

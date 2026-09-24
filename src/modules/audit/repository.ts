@@ -108,13 +108,13 @@ export type AuditAction =
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
   /**
-   * The event cancelled in the editor (§NNN): the reason the organizer typed, whether the
+   * The event cancelled in the editor (§331): the reason the organizer typed, whether the
    * participants were told and how many were — never who they are. One row per date the save
    * cancelled, a date of the series that had already begun included: that one is marked
    * `alreadyStarted` and told nobody.
    */
   | "event.cancelled"
-  /** "Detalii actualizate" queued (§NNN): which facts changed, the organizer's note and the count. */
+  /** "Detalii actualizate" queued (§331): which facts changed, the organizer's note and the count. */
   | "event.update_notice_sent"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like

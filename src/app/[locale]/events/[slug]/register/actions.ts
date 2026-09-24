@@ -92,7 +92,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
         raceId: internalEvent.raceId,
         publishedAt: publicEvent.publishedAt,
         // The day the minimum age is counted against is the race's own (§321), and so is the
-        // number (§NNN).
+        // number (§329).
         timezone: internalEvent.timezone,
         minAge: internalEvent.minAge,
       },

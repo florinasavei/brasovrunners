@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.68-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.69-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1059,7 +1059,7 @@ only worth it once the `r2.dev` address in the gallery's image URLs bothers some
 Two minutes, optional, read-only (BR-REQ-090-07). Launch bills CU-hours instead of suspending the
 project at Free's former 100-hour allowance, and the figure lives in Neon's console, which no
 organizer opens. With these two variables `/devs` reads CU-hours, active hours and the billing
-period. **Which plan the figures are read against is Neon's own answer** (`DECISIONS.md` §NNN,
+period. **Which plan the figures are read against is Neon's own answer** (`DECISIONS.md` §326,
 correcting §306): the project row the page already reads names the owning account's plan
 (`owner.subscription_type`, `launch_v3` since 2026-09-22). The Administrator's choice on
 `/admin/tasks` → Costuri → „Planul Neon (baza de date)" is only the fallback for an environment
@@ -1415,7 +1415,7 @@ operations log: the bill is **time awake**, not size. Both computes averaged 0.2
 and on Launch a compute sleeps only after **5 idle minutes, a figure Launch does not let anybody
 lower** — so every request that touches the database costs at least 5 minutes at 0.25 CU.
 Production was awake 25 h of the first 37 h: about 75 wakes from the job and health monitors at
-:00/:15/:30/:45, about 64 from visitors, crawlers, staff and deployments. `DECISIONS.md` §NNN.
+:00/:15/:30/:45, about 64 from visitors, crawlers, staff and deployments. `DECISIONS.md` §327.
 
 **What is set, on Neon itself (read back after each change):**
 

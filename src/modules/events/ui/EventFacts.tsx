@@ -118,7 +118,7 @@ export default async function EventFacts({
 
   /* Where: the meeting point — itself the map link when the organizer pasted one and a link
      may sit here; the same destination is never offered twice on one line. While the place is
-     to be announced (§NNN) the sentence that says so, on the page, the cards and the hero alike;
+     to be announced (§328) the sentence that says so, on the page, the cards and the hero alike;
      the query has already withheld the name, the address and the map. */
   const where: ReactNode[] = [];
   if (event.locationToBeAnnounced) {
@@ -283,7 +283,7 @@ export default async function EventFacts({
   }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
   /*
-    Who may enter (§NNN): the event's own minimum age and who registers a minor, in the sentence
+    Who may enter (§329): the event's own minimum age and who registers a minor, in the sentence
     the form's intro line says — one sentence, read from one place, so the page and the form
     cannot disagree. On the page only (`stacked`): it is a condition of the race a runner reads
     before pressing, and the hero above the fold is a summary with a button to reach. Only where
