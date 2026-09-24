@@ -86,7 +86,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
       const card = main.locator("#email-REGISTRATION_CANCELLED");
       await expect(main.getByTestId("participant-emails")).toHaveAttribute("open", "");
       await expect(card).toHaveAttribute("open", "");
-      await expect(card.getByTestId("participant-email-sample-values")).toHaveText("textul salvat are valori de exemplu");
+      await expect(card.getByTestId("participant-email-sample-values")).toHaveText("textul salvat (RO) are valori de exemplu");
 
       const editor = main.getByTestId("email-copy-REGISTRATION_CANCELLED");
       const warning = editor.getByTestId("email-copy-samples");
@@ -105,6 +105,34 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
       await withDatabase((client) =>
         client.query(`UPDATE platform_settings SET value = value - $1::text WHERE key = 'emailCopy'`, [STALE_KEY]),
       );
+    }
+  });
+
+  test("an English text with the sample's values is flagged on the Romanian tab too, naming the language", async ({ page }) => {
+    // Every message goes out in both languages (§96): the English half of every Romanian message
+    // would carry the sample's title, so the Romanian tab says so rather than waiting for a switch.
+    const key = "WAITLIST_OFFER_EXPIRED:en";
+    const stale = { subject: "Expired: The autumn cross", paragraphs: ["The time to confirm your place at The autumn cross has run out."] };
+    await withDatabase((client) =>
+      client.query(
+        `INSERT INTO platform_settings (key, value, updated_at) VALUES ('emailCopy', jsonb_build_object($1::text, $2::jsonb), now())
+         ON CONFLICT (key) DO UPDATE SET value = platform_settings.value || jsonb_build_object($1::text, $2::jsonb), updated_at = now()`,
+        [key, JSON.stringify(stale)],
+      ),
+    );
+    try {
+      await signIn(page, "Dev Copywriter");
+      await page.goto("/ro/admin/emails?lang=ro");
+      const main = page.locator("#main");
+
+      const card = main.locator("#email-WAITLIST_OFFER_EXPIRED");
+      await expect(main.getByTestId("participant-emails")).toHaveAttribute("open", "");
+      await expect(card).toHaveAttribute("open", "");
+      await expect(card.getByTestId("participant-email-sample-values")).toHaveText("textul salvat (EN) are valori de exemplu");
+      // The warning and its button belong to the language being edited, which here is clean.
+      await expect(main.getByTestId("email-copy-WAITLIST_OFFER_EXPIRED").getByTestId("email-copy-samples")).toHaveCount(0);
+    } finally {
+      await withDatabase((client) => client.query(`UPDATE platform_settings SET value = value - $1::text WHERE key = 'emailCopy'`, [key]));
     }
   });
 });

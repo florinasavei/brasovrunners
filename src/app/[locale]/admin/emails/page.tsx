@@ -14,6 +14,7 @@ import {
   emailSampleActionUrl,
   emailSampleData,
   placeholdersUsedBy,
+  sampleLanguagesOf,
   sampleValuesIn,
 } from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
@@ -144,9 +145,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       Said on the card, closed or open, to whoever may write the words — nobody else can act on it.
     */
     const samples = mayWrite && own ? sampleValuesIn(own, messageType, emailLocale) : [];
-    return { messageType, content, own, samples };
+    /*
+      And in which languages — both, whichever tab is open: every message goes out in both (§96),
+      so an English text holding the sample's title reaches every Romanian participant too. The
+      closed card names the language to switch to; the warning and the button above stay with the
+      language being edited.
+    */
+    const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];
+    return { messageType, content, own, samples, sampleLanguages };
   });
-  const anySamples = cards.some((card) => card.samples.length > 0);
+  const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
 
   return (
     <Stack spacing={3}>
@@ -217,16 +225,18 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           label: t(`emails.lang.${candidate}`),
           active: candidate === emailLocale,
         }))}
-        // A saved text holding sample values opens the card to whoever may fix it (§NNN).
+        // A saved text holding sample values, in either language, opens the card to whoever may fix it (§NNN).
         openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
-        messages={cards.map(({ messageType, content, own, samples }) => {
+        messages={cards.map(({ messageType, content, own, samples, sampleLanguages }) => {
           return {
             type: messageType,
             name: t(`emails.types.${messageType}`),
             whenShort: t(`emails.whenShort.${messageType}`),
             // The three types nothing queues any more are said to be so on the closed card (§331).
             ...(NEVER_QUEUED.has(messageType) ? { neverSent: t("emails.neverSent") } : {}),
-            ...(samples.length > 0 ? { sampleValues: t("emails.copy.sampleMarker") } : {}),
+            ...(sampleLanguages.length > 0
+              ? { sampleValues: t("emails.copy.sampleMarker", { languages: sampleLanguages.map((language) => language.toUpperCase()).join(", ") }) }
+              : {}),
             when: t(`emails.when.${messageType}`),
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,

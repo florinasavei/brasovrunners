@@ -1,7 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
-import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
@@ -1005,8 +1005,10 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
  * so a club text that repeated them would say them twice.
  *
  * The editor's starting text is built from this (§NNN, `email-copy-fields.ts`), with every field of
- * the closed set standing for itself, so nothing of the page's sample reaches the box. The send
- * path never calls it: `buildTemplateContent` below reads the same entries itself, unchanged.
+ * the closed set standing for itself, so nothing of the page's sample reaches the box — and each
+ * sentence the platform adds only when a fact exists in a paragraph of its own, so a saved text
+ * drops it the same way. The send path never calls it: `buildTemplateContent` below reads the same
+ * entries itself, unchanged.
  */
 export function platformWords(
   messageType: EmailMessageType,
@@ -1122,11 +1124,14 @@ export function buildTemplateContent(
         A stored document that cannot be read — an older shape, a node an email may not carry —
         falls back to the plain paragraphs beside it rather than to nothing, which is the same
         direction `readEmailCopy` takes with an unreadable setting: a message still goes out.
+        Either way a paragraph whose only fields are facts this message lacks is not sent
+        (§NNN): the platform's "only when there is a number", said the one way a text the club
+        wrote can.
       */
       ...(writtenBody
         ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
         : written
-          ? written.paragraphs.map(fill)
+          ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),

@@ -37,7 +37,10 @@ export type EmailSampleValues = {
   checkinCode: string;
   bibNumber: number;
   eventChecklist: string;
-  /** The staff invitation (§141): a made-up colleague, added by a made-up administrator. */
+  /**
+   * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name
+   * nobody at the club has, so it is refused in every message, as the runner's is (§NNN).
+   */
   staffRole: string;
   inviterName: string;
   staffEmail: string;
@@ -57,7 +60,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     bibNumber: 42,
     eventChecklist: "Apă, o haină de ploaie, bună dispoziție",
     staffRole: "Organizator",
-    inviterName: "Florin",
+    inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",
     organizerNote: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
     cancellationReason: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
@@ -72,7 +75,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     bibNumber: 42,
     eventChecklist: "Water, a rain jacket, good spirits",
     staffRole: "Organizator",
-    inviterName: "Florin",
+    inviterName: "Ion Exemplu",
     staffEmail: "ana.popescu@example.org",
     organizerNote: "We meet at the Livada Poștei entrance, by the map board.",
     cancellationReason: "An orange weather warning for Tâmpa: the route is not safe.",
@@ -87,6 +90,14 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
   ro: ["duminică, 4 octombrie 2026, 09:00"],
   en: ["Sunday, 4 October 2026, 09:00"],
 };
+
+/**
+ * The sample inviter before §NNN: "Florin", which is also a real first name at the club — a text
+ * the club signs "Florin" is its own. So it is not refused as a word: it is looked for only inside
+ * the platform's own invitation sentence, where a text saved from the old editor still carries it
+ * (`email-copy-fields.ts`), exactly as the bib and the status are.
+ */
+export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 
 /** The sample's value for a field of the closed set, in one language, or `undefined` for the two the sample has none of. */
 export function emailSampleValueOf(name: EmailCopyPlaceholder, locale: EmailLocale): string | undefined {
@@ -115,9 +126,9 @@ export type EmailSampleLiteral = {
   placeholder?: EmailCopyPlaceholder;
   words?: Readonly<Record<EmailLocale, string>>;
   /**
-   * Only in these messages. The sample colleague's role and inviter are ordinary words — a club
-   * may well sign a reminder "Florin", or write "Organizator" in a sentence of its own — so they are
-   * sample values only in the one message whose platform text names them.
+   * Only in these messages. The sample colleague's role is an ordinary word — it is the platform's
+   * own label for the role, and a club may well write "Organizator" in a sentence of its own — so it
+   * is a sample value only in the one message whose platform text names it.
    */
   only?: readonly EmailMessageType[];
 };
@@ -130,9 +141,10 @@ const EVERY_LOCALE: readonly EmailLocale[] = ["ro", "en"];
  *
  * Not here, on purpose: the bib (42) and the status ("confirmată", "confirmed"), which are too
  * ordinary to refuse on their own — "42 de kilometri" is a sentence a running club writes. They
- * are found where the platform's own sentence carried them (`email-copy-fields.ts`). Nor the
- * organizer's note and the cancellation reason: they are the platform's lines around the words,
- * never part of the editor's text.
+ * are found where the platform's own sentence carried them (`email-copy-fields.ts`), and so is the
+ * inviter's former name (`EMAIL_SAMPLE_FORMER_INVITER`). Nor the organizer's note and the
+ * cancellation reason: they are the platform's lines around the words, never part of the editor's
+ * text.
  */
 export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([
   // The address first: its local part is the sample name, and it must be replaced whole.
@@ -146,7 +158,7 @@ export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([
     { value: EMAIL_SAMPLE[locale].checkinCode, placeholder: "checkinCode" },
     { value: EMAIL_SAMPLE[locale].eventChecklist, placeholder: "eventChecklist" },
     { value: EMAIL_SAMPLE[locale].staffRole, placeholder: "staffRole", only: ["STAFF_INVITATION"] },
-    { value: EMAIL_SAMPLE[locale].inviterName, placeholder: "inviterName", only: ["STAFF_INVITATION"] },
+    { value: EMAIL_SAMPLE[locale].inviterName, placeholder: "inviterName" },
   ]),
 ]);
 

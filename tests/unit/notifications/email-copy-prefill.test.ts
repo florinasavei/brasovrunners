@@ -25,6 +25,7 @@ import {
   emailSampleData,
   placeholdersUsedBy,
   replaceSampleValues,
+  sampleLanguagesOf,
   sampleValuesIn,
 } from "@/modules/notifications/email-copy-fields";
 import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
@@ -105,6 +106,18 @@ const REAL: TemplateData = {
 };
 const ACTION = "https://example.test/ro/action/secret";
 
+/**
+ * The same facts as a send so often has them (`render.ts`): no number yet, no checklist, no desk
+ * code, the hold's deadline behind us. `BIB_ASSIGNED` is the one message never queued without a
+ * number (`admin-service.ts`, `maintenance.ts`), so it keeps one.
+ */
+function sparse(messageType: EmailMessageType): TemplateData {
+  const data: TemplateData = { ...REAL };
+  for (const key of ["eventChecklist", "checkinCode", "checkinQrUrl", "holdExpiresAtFormatted", "holdExpiresAtFormattedOther"] as const) delete data[key];
+  if (messageType !== "BIB_ASSIGNED") delete data.bibNumber;
+  return data;
+}
+
 /** The starting text saved unchanged, in both languages, as the editor would post it. */
 function savedPrefill(messageType: EmailMessageType): EmailCopy {
   return emailCopySchema.parse(
@@ -115,6 +128,47 @@ function savedPrefill(messageType: EmailMessageType): EmailCopy {
       }),
     ),
   );
+}
+
+/** The paragraph both the platform's sentences and the club's words are drawn as. */
+const P = '<p style="margin:0 0 14px;font-size:16px;line-height:1.5">';
+
+/**
+ * Where the starting text starts a paragraph the platform's own message does not (§NNN,
+ * `ownParagraphsOf`): at the sentence the platform tacks on to the one before only when a fact
+ * exists — the hold's deadline, the desk code, the number.
+ */
+const OWN_PARAGRAPH: Partial<Record<EmailMessageType, Record<(typeof LOCALES)[number], string>>> = {
+  COMPLETE_DECLARATION: { ro: "Dacă se formează lista de așteptare", en: "If a waiting list forms" },
+  BIB_ASSIGNED: { ro: "Îl ridici la masă", en: "Collect it at the desk" },
+  CLUB_CONFIRMATION_NOTICE: { ro: "Numărul de concurs:", en: "Race number:" },
+};
+
+/** `BIB_ASSIGNED`'s second sentence as the platform writes it with no desk code — the club's copy. */
+const COLLECT_WITHOUT_CODE = { ro: " Îl ridici la masă în ziua cursei.", en: " Collect it at the desk on race day." };
+
+/**
+ * The platform's own message as the starting text saved unchanged sends it, for these facts: the
+ * same bytes but for a paragraph break before each sentence in `OWN_PARAGRAPH` that the message
+ * carries — and, with no desk code, without `BIB_ASSIGNED`'s "collect it at the desk", which the
+ * starting text keeps in the one paragraph with the code, so it goes with the code.
+ */
+function platformAsSaved(messageType: EmailMessageType, locale: (typeof LOCALES)[number], data: TemplateData) {
+  const platform = renderBilingual(messageType, locale, data, ACTION);
+  let { html, text } = platform;
+  for (const half of LOCALES) {
+    if (messageType === "BIB_ASSIGNED" && (data.clubCopy || !data.checkinCode)) {
+      html = html.replace(COLLECT_WITHOUT_CODE[half], "");
+      text = text.replace(COLLECT_WITHOUT_CODE[half], "");
+      continue;
+    }
+    const opening = OWN_PARAGRAPH[messageType]?.[half];
+    if (!opening) continue;
+    // The card puts each paragraph on a line of its own.
+    html = html.replace(` ${opening}`, `</p>\n${P}${opening}`);
+    text = text.replace(` ${opening}`, `\n${opening}`);
+  }
+  return { subject: platform.subject, html, text };
 }
 
 describe("§NNN the editor starts from the platform's words, with the fields", () => {
@@ -153,16 +207,48 @@ describe("§NNN the editor starts from the platform's words, with the fields", (
     expect(emailCopyPrefill("STAFF_INVITATION", "ro").paragraphs[1]).toMatch(/^Intri cu adresa aceasta:/);
     expect(emailCopyPrefill("STAFF_INVITATION", "en").paragraphs[1]).toMatch(/^You sign in with this address:/);
   });
+
+  it("gives each sentence a fact may be missing from a paragraph of its own, and keeps a paragraph that opens with one whole", () => {
+    expect(emailCopyPrefill("COMPLETE_DECLARATION", "ro").paragraphs.slice(1)).toEqual([
+      "Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.",
+      "Dacă se formează lista de așteptare, locul îți este ținut până la {holdExpiresAtFormatted}; până atunci semnează.",
+    ]);
+    expect(emailCopyPrefill("BIB_ASSIGNED", "en").paragraphs).toEqual([
+      "You have number {bibNumber} at {eventTitle}.",
+      "Collect it at the desk on race day, with the QR code below or by saying the code {checkinCode}.",
+      "If an earlier email gave you a different number, this one replaces it.",
+    ]);
+    expect(emailCopyPrefill("CLUB_CONFIRMATION_NOTICE", "ro").paragraphs.slice(0, 2)).toEqual([
+      "{participantName} și-a confirmat înscrierea la {eventTitle}, {eventStartsAtFormatted}.",
+      "Numărul de concurs: {bibNumber}.",
+    ]);
+    // "Îl primești la masă" leans on the number before it: it goes with it, as the platform's does.
+    expect(emailCopyPrefill("REGISTRATION_CONFIRMED", "ro").paragraphs).toContain("Numărul tău de concurs: {bibNumber}. Îl primești la masă, în ziua cursei.");
+  });
 });
 
 describe("§NNN what goes out is what went out before", () => {
   for (const messageType of TYPES) {
     for (const locale of LOCALES) {
-      it(`${messageType} (${locale}): the starting text saved unchanged sends exactly the platform's message`, () => {
-        // Byte for byte, both halves, HTML and plain text: the club's text is the platform's own.
-        expect(renderBilingual(messageType, locale, REAL, ACTION, savedPrefill(messageType))).toEqual(
-          renderBilingual(messageType, locale, REAL, ACTION),
-        );
+      it(`${messageType} (${locale}): the starting text saved unchanged sends the platform's message`, () => {
+        // Byte for byte, both halves, HTML and plain text — but for the paragraph break before a
+        // sentence a fact may be missing from (`OWN_PARAGRAPH`), in three messages.
+        expect(renderBilingual(messageType, locale, REAL, ACTION, savedPrefill(messageType))).toEqual(platformAsSaved(messageType, locale, REAL));
+        if (!OWN_PARAGRAPH[messageType]) {
+          expect(renderBilingual(messageType, locale, REAL, ACTION, savedPrefill(messageType))).toEqual(renderBilingual(messageType, locale, REAL, ACTION));
+        }
+      });
+
+      it(`${messageType} (${locale}): saved unchanged, it leaves out what the platform leaves out when a fact is missing`, () => {
+        // No number, no checklist, no desk code, the hold's deadline past (`sparse`).
+        const data = sparse(messageType);
+        expect(renderBilingual(messageType, locale, data, ACTION, savedPrefill(messageType))).toEqual(platformAsSaved(messageType, locale, data));
+      });
+
+      it(`${messageType} (${locale}): saved unchanged, the club's copy leaves out the desk code's sentence as the platform's does`, () => {
+        // Every fact present, but a club copy carries no desk code whatever it is handed (§320).
+        const data: TemplateData = { ...REAL, clubCopy: true };
+        expect(renderBilingual(messageType, locale, data, ACTION, savedPrefill(messageType))).toEqual(platformAsSaved(messageType, locale, data));
       });
 
       it(`${messageType} (${locale}): a message the club never rewrote is untouched by everybody else's words`, () => {
@@ -210,6 +296,103 @@ describe("§NNN what goes out is what went out before", () => {
   });
 });
 
+/*
+  The review of §NNN: the starting text had every field in it and no condition, so a text saved
+  unchanged printed "Ce să aduci:" for an event with no checklist, "Numărul tău de concurs: ." for a
+  runner with no number, "…sau spune codul." under a club copy with no QR, and "ținut până la;" on a
+  resend after the deadline. The preview, rendered with every sample fact, showed none of it.
+*/
+describe("§NNN a paragraph whose every field is missing is not sent", () => {
+  const text = (messageType: EmailMessageType, data: TemplateData) =>
+    renderBilingual(messageType, "ro", data, ACTION, savedPrefill(messageType)).text;
+
+  it("sends none of the review's four dangling sentences", () => {
+    const confirmed = text("REGISTRATION_CONFIRMED", sparse("REGISTRATION_CONFIRMED"));
+    for (const dangling of ["Ce să aduci", "Numărul tău de concurs", "Îl primești la masă", "What to bring", "Your race number"]) expect(confirmed).not.toContain(dangling);
+    expect(text("REGISTRATION_CONFIRMED", { ...REAL, clubCopy: true })).not.toContain("spune codul");
+    expect(text("EVENT_REMINDER", { ...REAL, clubCopy: true })).not.toContain("say the code");
+    const declaration = text("COMPLETE_DECLARATION", sparse("COMPLETE_DECLARATION"));
+    expect(declaration).not.toContain("ținut până la");
+    // The sentence before it, which names no field, is still there.
+    expect(declaration).toContain("înainte să-ți ridici numărul.");
+    expect(text("CLUB_CONFIRMATION_NOTICE", sparse("CLUB_CONFIRMATION_NOTICE"))).not.toContain("Numărul de concurs");
+    expect(text("BIB_ASSIGNED", { ...REAL, clubCopy: true })).not.toContain("spunând codul");
+  });
+
+  const facts = { participantName: "Maria", eventTitle: "Maratonul" };
+
+  it("leaves out a paragraph whose only fields are facts the message lacks, and keeps every other", () => {
+    const body = readEmailBody({
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Numărul tău: " }, { type: "text", text: "{bibNumber}", marks: [{ type: "bold" }] }, { type: "text", text: "." }] },
+        { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "Ce să aduci: {eventChecklist}" }] },
+        { type: "paragraph", content: [{ type: "text", text: "Ne vedem pe {eventStartsAtFormatted}, la {eventLocationName}." }] },
+        // A fact left in it: sent, with the missing one closed up.
+        { type: "paragraph", content: [{ type: "text", text: "La {eventTitle}, codul {checkinCode}." }] },
+        // The runner's name is no conditional fact: the sentence says what it must without it.
+        { type: "paragraph", content: [{ type: "text", text: "Salut {participantName}, locul tău a fost anulat." }] },
+        { type: "paragraph", content: [{ type: "text", text: "Ne vedem la start." }] },
+      ],
+    }) as RichTextDoc;
+    expect(renderEmailBody(body, { eventTitle: "Maratonul" }).textLines).toEqual([
+      "La Maratonul, codul.",
+      "Salut, locul tău a fost anulat.",
+      "Ne vedem la start.",
+    ]);
+    // Stored as typed: the plain paragraphs keep every word, placeholders and all.
+    expect(emailBodyToParagraphs(body)).toHaveLength(6);
+  });
+
+  it("leaves out such an item of a list and such a paragraph of a quote, and the whole block when nothing is left", () => {
+    const item = (words: string) => ({ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: words }] }] });
+    const body = readEmailBody({
+      type: "doc",
+      content: [
+        { type: "bulletList", content: [item("Numărul: {bibNumber}"), item("Titlul: {eventTitle}")] },
+        { type: "orderedList", content: [item("Codul: {checkinCode}")] },
+        { type: "blockquote", content: [{ type: "paragraph", content: [{ type: "text", text: "{eventChecklist}" }] }] },
+      ],
+    }) as RichTextDoc;
+    const rendered = renderEmailBody(body, facts);
+    expect(rendered.textLines).toEqual(["- Titlul: Maratonul"]);
+    expect(rendered.htmlParts).toHaveLength(1);
+    expect(rendered.htmlParts[0]).not.toContain("Numărul");
+  });
+
+  it("does the same with plain paragraphs, as an entry written before the editor had formatting", () => {
+    const overrides = emailCopySchema.parse({
+      [emailCopyKey("EVENT_REMINDER", "ro")]: { subject: "Ne vedem, {participantName}", paragraphs: ["Numărul tău: {bibNumber}.", "Ne vedem la {eventTitle}."] },
+    });
+    const content = buildTemplateContent("EVENT_REMINDER", "ro", { participantName: "Maria", eventTitle: "Maratonul" }, ACTION, overrides);
+    expect(content.paragraphs).toEqual(["Ne vedem la Maratonul."]);
+  });
+});
+
+describe("§NNN a saved text with sample values is found in either language", () => {
+  const stale = { subject: "Cancelled: The autumn cross", paragraphs: ["Your registration for The autumn cross was cancelled."] };
+  const clean = { subject: "Anulat", paragraphs: ["Înscrierea ta la {eventTitle} a fost anulată."] };
+
+  it("names the English text whichever tab is open, and both languages when both hold one", () => {
+    const english = emailCopySchema.parse({ [emailCopyKey("REGISTRATION_CANCELLED", "en")]: stale, [emailCopyKey("REGISTRATION_CANCELLED", "ro")]: clean });
+    expect(sampleLanguagesOf(english, "REGISTRATION_CANCELLED")).toEqual(["en"]);
+    expect(sampleLanguagesOf(english, "EVENT_REMINDER")).toEqual([]);
+    const both = emailCopySchema.parse({
+      [emailCopyKey("REGISTRATION_CANCELLED", "en")]: stale,
+      [emailCopyKey("REGISTRATION_CANCELLED", "ro")]: { subject: "Anulat: Crosul de toamnă", paragraphs: ["x"] },
+    });
+    expect(sampleLanguagesOf(both, "REGISTRATION_CANCELLED")).toEqual(["ro", "en"]);
+    expect(sampleLanguagesOf({}, "REGISTRATION_CANCELLED")).toEqual([]);
+  });
+
+  it("feeds the closed card's marker and the card of cards from both languages, not only the one on screen", () => {
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    expect(page).toContain("const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];");
+    expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
+    expect(page).toMatch(/sampleLanguages\.length > 0\s*\?\s*\{ sampleValues: t\("emails\.copy\.sampleMarker", \{ languages: sampleLanguages/);
+  });
+});
+
 describe("§NNN the save refuses a sample value", () => {
   const entry = (subject: string, paragraphs: string[]) => ({ subject, paragraphs });
 
@@ -239,7 +422,11 @@ describe("§NNN the save refuses a sample value", () => {
     it(`refuses the sample colleague and inviter in the invitation (${locale}), and the address, naming what goes in its place`, () => {
       expect(sampleValuesIn(entry("Bun venit", [`${sample.inviterName} te-a adăugat ca ${sample.staffRole}.`]), "STAFF_INVITATION", locale)).toEqual([
         { field: "body", value: "Organizator", placeholder: "staffRole" },
-        { field: "body", value: "Florin", placeholder: "inviterName" },
+        { field: "body", value: "Ion Exemplu", placeholder: "inviterName" },
+      ]);
+      // A name nobody at the club has, so it is the sample in every message, as the runner's is.
+      expect(sampleValuesIn(entry("Salut", [`Semnat, ${sample.inviterName}.`]), "EVENT_REMINDER", locale)).toEqual([
+        { field: "body", value: "Ion Exemplu", placeholder: "inviterName" },
       ]);
       expect(sampleValuesIn(entry("Bun venit", [`Intri cu ${sample.staffEmail}.`]), "STAFF_INVITATION", locale)).toEqual([
         { field: "body", value: "ana.popescu@example.org", words: locale === "ro" ? "aceasta" : "this address" },
@@ -262,6 +449,18 @@ describe("§NNN the save refuses a sample value", () => {
     for (const messageType of ["EVENT_REMINDER", "REGISTRATION_CONFIRMED", "REGISTRATION_STATE_NOTICE"] as const) {
       expect(sampleValuesIn(words, messageType, "ro")).toEqual([]);
     }
+  });
+
+  it("accepts an invitation the club signs \"Florin\", and finds the old sample inviter only inside the platform's own sentence", () => {
+    expect(sampleValuesIn(entry("Bun venit", ["Te așteptăm la prima ședință. Semnat, Florin."]), "STAFF_INVITATION", "ro")).toEqual([]);
+    const old = entry("Ești în echipa Brașov Runners", ["Florin te-a adăugat în echipa care administrează site-ul Brașov Runners, ca Organizator."]);
+    expect(sampleValuesIn(old, "STAFF_INVITATION", "ro")).toEqual([
+      { field: "body", value: "Organizator", placeholder: "staffRole" },
+      { field: "body", value: "Florin", placeholder: "inviterName" },
+    ]);
+    expect(replaceSampleValues(old, "STAFF_INVITATION", "ro").paragraphs).toEqual([
+      "{inviterName} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca {staffRole}.",
+    ]);
   });
 
   it("finds the bib and the status where the platform's own sentence carried them, and only there", () => {

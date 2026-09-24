@@ -6,7 +6,7 @@ import {
   type RichTextDoc,
   type RichTextText,
 } from "@/modules/content/rich-text/domain/schema";
-import { fillPlaceholders, placeholdersIn } from "./email-copy";
+import { fillPlaceholders, onlyMissingFacts, placeholdersIn } from "./email-copy";
 
 /**
  * The club's own words for a message, written in the rich-text editor (`DECISIONS.md` §270; the
@@ -222,8 +222,33 @@ export type EmailBodyPart = { html: string; text: string[] };
 /** The club's body as those parts, in order. */
 export function emailBodyParts(doc: RichTextDoc, data: Facts): EmailBodyPart[] {
   return emailBlocksOf(doc)
+    .map((block) => (data === null ? block : sentOf(block, data)))
+    .filter((block): block is EmailBodyBlock => block !== null)
     .map((block) => ({ html: blockHtml(block, data), text: blockText(block, data) }))
     .filter((part) => part.html !== "");
+}
+
+/**
+ * The block as this message sends it (§NNN): without the paragraphs whose only fields are facts the
+ * message lacks (`onlyMissingFacts`) — a heading or a paragraph whole, a list without those items,
+ * a quote without those paragraphs — and nothing when nothing is left. Only when filling: the
+ * stored plain paragraphs keep every word as typed.
+ */
+function sentOf(block: EmailBodyBlock, data: Record<string, unknown>): EmailBodyBlock | null {
+  switch (block.type) {
+    case "paragraph":
+    case "heading":
+      return onlyMissingFacts(textOf(block), data) ? null : block;
+    case "bulletList":
+    case "orderedList": {
+      const content = block.content.filter((item) => !onlyMissingFacts(item.content.map((p) => textOf(p)).join("\n"), data));
+      return content.length > 0 ? { ...block, content } : null;
+    }
+    case "blockquote": {
+      const content = block.content.filter((p) => !onlyMissingFacts(textOf(p), data));
+      return content.length > 0 ? { ...block, content } : null;
+    }
+  }
 }
 
 /**
