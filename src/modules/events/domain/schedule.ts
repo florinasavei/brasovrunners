@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { addWallClockInterval } from "./zoned-time";
 
@@ -122,12 +123,14 @@ function isoDate(day: number): string {
 export function programmeLines(rows: readonly ProgrammeRow[], timeZone: string, locale: Locale): string[] {
   if (rows.length === 0) return [];
   const days = new Set(rows.map((row) => dayOf(row.startsAt, timeZone)));
-  const time = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { hour: "2-digit", minute: "2-digit", timeZone });
-  const day = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone });
+  const time = (at: Date) => formatTime(at, { locale, timeZone });
+  // The day starts the line, so the short form with its capital, then the time after a comma as
+  // every dated time is written (§NNN): "Sâm., 21 nov. 2026, 08:30".
+  const day = (at: Date) => formatDay(at, { locale, timeZone, style: "short" });
   return rows.map((row) => {
-    const when = [days.size > 1 ? day.format(row.startsAt) : "", time.format(row.startsAt) + (row.endsAt ? `–${time.format(row.endsAt)}` : "")]
+    const when = [days.size > 1 ? day(row.startsAt) : "", time(row.startsAt) + (row.endsAt ? `–${time(row.endsAt)}` : "")]
       .filter(Boolean)
-      .join(" ");
+      .join(", ");
     return `${when} — ${row.label}${row.place ? ` (${row.place})` : ""}`;
   });
 }

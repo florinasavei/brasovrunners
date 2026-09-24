@@ -8,7 +8,8 @@ import RecallField, { NeverKeptField } from "@/shared/forms/recall";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -72,7 +73,6 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
 
   const { error } = await searchParams;
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
 
   const now = new Date();
 
@@ -92,7 +92,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   const obstacle = deletionObstacle(facts);
   // "4–20 sept. 2026": the stretch the version was the text in force, up to now if it still is.
   const span = (window: InForceWindow) =>
-    format.dateTimeRange(window.from, window.until ?? now, { dateStyle: "medium" });
+    formatDayRange(window.from, window.until ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
 
   const blocked = (() => {
     switch (obstacle?.kind) {
@@ -160,7 +160,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 {t("legal.erase.whatGoes", {
                   document,
                   version: version.version,
-                  date: format.dateTime(version.effectiveAt, { dateStyle: "long" }),
+                  date: formatDay(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
                 })}
               </Typography>
               {/*
@@ -188,7 +188,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
           <Typography variant="body2" color="text.secondary">
             {version.withdrawnAt
               ? t("legal.erase.alreadyWithdrawn", {
-                  date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
+                  date: formatDay(version.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
                 })
               : t("legal.erase.notWithdrawn")}
           </Typography>

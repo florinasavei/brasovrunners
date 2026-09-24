@@ -114,10 +114,14 @@ describe("the participation window (§104)", () => {
 
     const [queued] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "COMPLETE_DECLARATION"));
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
-    expect(message.subject).toMatch(/^Ești înscris — confirmă participarea până la 9 octombrie 2026/);
+    // The deadline with its weekday, and the English half in English (§NNN).
+    expect(message.subject).toBe(
+      "Ești înscris — confirmă participarea până la vineri, 9 oct. 2026, 09:00 / You are registered — confirm your participation by Friday, 9 Oct 2026, 09:00",
+    );
     expect(message.text).toContain("Cursa e gratuită");
     expect(message.text).toContain("pe hârtie la masa de înscrieri");
-    expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până la 9 octombrie 2026");
+    expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până la vineri, 9 oct. 2026, 09:00");
+    expect(message.text).toContain("If a waiting list forms, the place is held for you until Friday, 9 Oct 2026, 09:00");
   });
 
   it("keeps the thirty minutes inside the window, on a weekly run, and when the window is switched off", async () => {

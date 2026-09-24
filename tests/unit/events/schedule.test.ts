@@ -35,9 +35,10 @@ describe("the programme's rows", () => {
   it("writes one line per row, with the day only when the programme spans days", () => {
     const rows = localizedSchedule(readScheduleItems(ROWS), "en");
     expect(programmeLines(rows, ZONE, "en")).toEqual([
-      "Sat 10 Oct 16:00–19:00 — Kit pickup (Cortul de start)",
-      "Sun 11 Oct 09:30 — Briefing",
-      "Sun 11 Oct 10:00 — Start",
+      // The day in the short form with its weekday and year, then the time (§NNN).
+      "Sat, 10 Oct 2026, 16:00–19:00 — Kit pickup (Cortul de start)",
+      "Sun, 11 Oct 2026, 09:30 — Briefing",
+      "Sun, 11 Oct 2026, 10:00 — Start",
     ]);
     expect(programmeLines(rows.slice(1), ZONE, "ro")).toEqual(["09:30 — Briefing", "10:00 — Start"]);
     expect(programmeLines([], ZONE, "ro")).toEqual([]);

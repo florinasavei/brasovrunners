@@ -308,7 +308,7 @@
       "saving": "Se salvează…",
       "savedOn": "Verificarea anti-bot este pornită.",
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
-      "updatedAt": "Modificat la {when}.",
+      "updatedAt": "Modificat {when}.",
       "honeypot": {
         "on": "Honeypot pornit: un câmp ascuns, pe care oamenii nu îl văd, dar roboții îl completează.",
         "off": "Honeypot oprit. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
@@ -515,7 +515,7 @@
         "none": "—",
         "health": "Notă medicală",
         "healthNone": "Nicio notă",
-        "healthConsented": "acord dat la {date}",
+        "healthConsented": "acord dat {date}",
         "hide": "Ascunde",
         "viewed": "Deschiderea a fost înregistrată în jurnal."
       },
@@ -544,8 +544,8 @@
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
         "pickedUp": "a ridicat nr. {number}",
-        "cancelledAt": "Anulată la {date}",
-        "expiredAt": "Expirată la {date}",
+        "cancelledAt": "Anulată {date}",
+        "expiredAt": "Expirată {date}",
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși",
@@ -1280,8 +1280,8 @@
       "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
       "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "withdrawn": "Retrasă",
-      "withdrawnOn": "Retrasă la {date}",
-      "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
+      "withdrawnOn": "Retrasă pe {date}",
+      "withdrawnNotice": "Versiunea a fost retrasă pe {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
       "showWithdrawn": "Arată și versiunile retrase ({count})",
       "hideWithdrawn": "Ascunde versiunile retrase",
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
@@ -1380,7 +1380,7 @@
           "setting": "Neon nu a spus planul (cheia NEON_API_KEY lipsește sau Neon nu a răspuns), așa că se folosește planul ales mai jos."
         },
         "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
-        "updatedAt": "Setat la {when}. Notă: {note}",
+        "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul de rezervă, când Neon nu răspunde",
         "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate pe {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
         "option": {
@@ -1456,7 +1456,7 @@
       },
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
-        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure la {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure pe {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje care nu au putut fi trimise în ultimele 7 zile: {count} — motivul dat de Mailgun: „{reason}”. Deschide Mailgun → Sending → Logs; dacă domeniul sau cheia s-au schimbat, actualizează variabilele MAILGUN_* în Vercel.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
@@ -2257,7 +2257,7 @@
           "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
           "none": "Nicio adresă: declarațiile semnate nu se trimit nicăieri, se păstrează doar în aplicație."
         },
-        "updatedAt": "Modificat la {when}.",
+        "updatedAt": "Modificat {when}.",
         "declarationsTo": "Declarațiile semnate merg la",
         "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
         "declarationsCc": "Copie vizibilă (Cc)",
@@ -2317,7 +2317,7 @@
           "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
           "none": "Planul {plan}: fără limită. Trimise azi: {sent}; în coadă: {waiting}."
         },
-        "updatedAt": "Setat la {when}. Notă: {note}",
+        "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul pe care e contul Mailgun",
         "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
         "option": "{name} — {ceiling}, {price}",
@@ -2350,7 +2350,7 @@
           "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
-        "updatedAt": "Setat la {when}.",
+        "updatedAt": "Setat {when}.",
         "to": "Către (adrese despărțite prin virgulă)",
         "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
         "cc": "Copie – Cc (adrese despărțite prin virgulă)",
@@ -3207,7 +3207,7 @@
       "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
       "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
-      "period": "Perioada se încheie la {date}",
+      "period": "Perioada se încheie pe {date}",
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
@@ -3215,8 +3215,8 @@
     "sentThisMonth": "Trimise luna aceasta",
     "emailPlanLabel": "Plan Mailgun",
     "jobSchedule": {
-      "quiet": "pingurile așteaptă până la {when} (nimic de făcut; {source})",
-      "floor": "pingurile așteaptă până la {when} (intervalul minim; {source})",
+      "quiet": "pingurile așteaptă până {when} (nimic de făcut; {source})",
+      "floor": "pingurile așteaptă până {when} (intervalul minim; {source})",
       "fromCache": "din cache",
       "fromDatabase": "recalculat din bază",
       "nextPing": "următorul ping rulează",
@@ -3292,7 +3292,7 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Offline": {
-    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, de la {when}. Unele detalii pot fi între timp schimbate.",
+    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
   }

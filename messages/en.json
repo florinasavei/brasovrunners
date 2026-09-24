@@ -1456,7 +1456,7 @@
       },
       "emailStalled": {
         "title": "Emails are not going out.",
-        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves at {resumesAt} (Romania time); nothing is lost.",
+        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost.",
         "failed": "Messages that could not be sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Open Mailgun → Sending → Logs; if the domain or the key changed, update the MAILGUN_* variables in Vercel.",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
         "notify": "To hear about this without opening the page: a cron-job.org monitor on /api/health with failure notifications on — the step in the “Monitors” row."

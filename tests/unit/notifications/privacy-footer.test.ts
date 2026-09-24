@@ -18,7 +18,7 @@ const DATA: TemplateData = {
   participantName: "Ana Pop",
   eventTitle: "Crosul aniversar",
   eventLocationName: "Parcul Tractorul",
-  eventStartsAtFormatted: "11 octombrie 2026, 09:00",
+  eventStartsAtFormatted: "duminică, 11 oct. 2026, 09:00",
   currentStatus: "CONFIRMED",
 };
 

@@ -5,6 +5,7 @@ import { distanceInKm, type EventSurface, type EventType } from "./domain/event-
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { env } from "@/shared/config/env";
+import { formatDay, formatTime } from "@/i18n/dates";
 
 /**
  * The environment on a calendar name and on every entry, QA only (§174; the owner: "the QA
@@ -330,8 +331,8 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const notice = event.eventStatus === "CANCELLED" ? t("cancelledNotice") : event.eventStatus === "COMPLETED" ? t("completedNotice") : "";
 
   // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
-  const time = new Intl.DateTimeFormat(intl, { hour: "2-digit", minute: "2-digit", timeZone });
-  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time.format(event.startsAt) })} · ${t("raceStartAt", { time: time.format(event.raceStartsAt) })}` : "";
+  const time = (at: Date) => formatTime(at, { locale, timeZone });
+  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time(event.startsAt) })} · ${t("raceStartAt", { time: time(event.raceStartsAt) })}` : "";
 
   /*
     The cost (§343), the same short phrase the page's full facts say — an amount for a paid
@@ -374,7 +375,9 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     if (!r) return null;
     if (r.kind === "OPEN") return { text: t("registrationState.OPEN"), url: r.url, separator: " — " };
     if (r.kind === "NOT_YET_OPEN") {
-      const date = new Intl.DateTimeFormat(intl, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone }).format(r.opensAt);
+      // Human text in the DESCRIPTION, so the one long form, inside the sentence (§NNN); the
+      // DTSTART/DTEND stay the machine's.
+      const date = formatDay(r.opensAt, { locale, timeZone, style: "long", withTime: true, position: "inline" });
       return { text: t("cta.opensOnShort", { date }), url: r.url, separator: " — " };
     }
     if (r.kind === "CLOSED") return { text: t("registrationState.CLOSED") };

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -24,8 +25,12 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     while (first.getUTCDay() !== 0) first.setTime(first.getTime() + DAY);
     const plus = (days: number) => new Date(first.getTime() + days * DAY);
     const ymd = (date: Date) => date.toISOString().slice(0, 10);
-    const long = (date: Date) => new Intl.DateTimeFormat("ro-RO", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(date);
-    const short = (date: Date) => new Intl.DateTimeFormat("ro-RO", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(date);
+    // The dates as the page writes them (§NNN): the long form inside the heading's sentence, the
+    // short one capitalised on a chip and a checkbox, and in lower case inside "Deschide data de".
+    // Noon UTC is the same calendar day in Brașov.
+    const long = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "long", position: "inline" });
+    const short = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short" });
+    const shortInline = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short", position: "inline" });
     const escape = (words: string) => words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     await signIn(page, "Dev Superadministrator");
@@ -74,7 +79,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await expect(main.getByRole("button", { name: "Niciuna", exact: true })).toBeVisible();
 
     // The second date — the Wednesday after — one press on its arrow away.
-    await main.getByLabel(`Deschide data de ${short(plus(3))}`, { exact: true }).click();
+    await main.getByLabel(`Deschide data de ${shortInline(plus(3))}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(plus(3)))}(,| la) 08:00`) })).toBeVisible({ timeout: 15_000 });
     await expect(main.getByText("Data 2 din 9 ale seriei")).toBeVisible();
     await hydrated(page);
@@ -95,10 +100,10 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await hydrated(page);
 
     // The last Sunday is at 08:50 now; the source Sunday before this date is still at 08:00.
-    await main.getByLabel(`Deschide data de ${short(plus(28))}`, { exact: true }).click();
+    await main.getByLabel(`Deschide data de ${shortInline(plus(28))}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(plus(28)))}(,| la) 08:50`) })).toBeVisible({ timeout: 15_000 });
     await expect(field("event.startsAtTime")).toHaveValue("08:50");
-    await main.getByLabel(`Deschide data de ${short(first)}`, { exact: true }).click();
+    await main.getByLabel(`Deschide data de ${shortInline(first)}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(first))}(,| la) 08:00`) })).toBeVisible({ timeout: 15_000 });
     await expect(field("event.startsAtTime")).toHaveValue("08:00");
   });

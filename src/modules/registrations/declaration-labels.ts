@@ -1,3 +1,4 @@
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { DeclarationLabels } from "./signed-declaration";
 
@@ -22,11 +23,13 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     date: "Data",
     idDocument: "Act de identitate",
     version: "Versiunea",
-    generatedOn: "Generat la {date}",
+    // "pe", not "la": {date} and {when} start with a weekday — "Generat pe joi, 24 sept. 2026,
+    // 18:05" (§NNN).
+    generatedOn: "Generat pe {date}",
     page: "Pagina {n} din {total}",
     signedByLink:
-      "Semnat electronic la {when}, din linkul trimis pe adresa de email confirmată a participantului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
-    signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who} la {when}. Originalul semnat este păstrat de club.",
+      "Semnat electronic pe {when}, din linkul trimis pe adresa de email confirmată a participantului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+    signedOnPaper: "Semnat pe hârtie, la masa de înscrieri; înregistrat de {who} pe {when}. Originalul semnat este păstrat de club.",
     attesterRemoved: "un membru al echipei (cont șters)",
   },
   en: {
@@ -50,11 +53,8 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
 
 export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   const words = WORDS[locale];
-  const generated = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "long",
-    timeStyle: "short", hourCycle: "h23",
-    timeZone: "Europe/Bucharest",
-  }).format(now);
+  // "Generat pe joi, 24 sept. 2026, 18:05" (§NNN).
+  const generated = formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
   return {
     organization: words.organization,
     whereupon: words.whereupon,

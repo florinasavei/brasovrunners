@@ -14,6 +14,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -267,11 +268,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    */
   const deadline =
     registration?.holdExpiresAt && eventDetails
-      ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-          dateStyle: "medium",
-          timeStyle: "short", hourCycle: "h23",
-          timeZone: eventDetails.timezone,
-        }).format(registration.holdExpiresAt)
+      ? formatDay(registration.holdExpiresAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
       : undefined;
   /**
    * "The deadline has passed, but the place is still yours" — and only where that is true.
@@ -424,7 +421,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ...(registration ? identityDocumentValues(registration.guardianName, {}) : {}),
               event: eventDetails?.title,
               eventDate: eventDetails
-                ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
+                ? formatDay(eventDetails.startsAt, { locale, timeZone: eventDetails.timezone, style: "long", position: "inline" })
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,

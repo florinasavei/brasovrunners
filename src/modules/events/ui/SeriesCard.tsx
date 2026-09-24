@@ -5,7 +5,8 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
@@ -41,7 +42,6 @@ export default async function SeriesCard({
   now: Date;
 }) {
   const t = await getTranslations("Event");
-  const format = await getFormatter();
   const locale = (await getLocale()) as Locale;
   const next = members[0];
   const sentence = await recurrenceSentence(members, next.timezone, locale);
@@ -64,7 +64,8 @@ export default async function SeriesCard({
     members.map(async (member) => ({
       id: member.id,
       href: pageOf(member.slug),
-      label: format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" }),
+      // A chip: the short form, formatted here and handed to the island as text (§NNN, §324).
+      label: formatDay(member.startsAt, { locale, timeZone: member.timezone, style: "short" }),
       note: await editionNote(editionDifference(member, usual)),
     })),
   );

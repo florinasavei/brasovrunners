@@ -4,7 +4,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { unstable_rethrow } from "next/navigation";
-import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -39,7 +40,6 @@ export default async function RegistrationCta({
   raceWeek?: boolean;
 }) {
   const t = await getTranslations("Event");
-  const format = await getFormatter();
   const locale = await getLocale();
 
   /**
@@ -200,14 +200,8 @@ export default async function RegistrationCta({
         : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a
             // Brașov race opens at a Brașov hour wherever the page is read.
-            date: format.dateTime(cta.opensAt, {
-              timeZone: event.timezone,
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit", hourCycle: "h23",
-            }),
+            // Inside the sentence, so the weekday keeps its lower case (§NNN).
+            date: formatDay(cta.opensAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
           });
 
   // The opening date is the one fact a visitor wants before the window (§146; the owner:
