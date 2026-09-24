@@ -200,8 +200,13 @@
     },
     "costValues": {
       "FREE": "Free",
-      "PAID": "Paid"
+      "PAID": "Paid",
+      "DONATION": "Donation"
     },
+    "costPaidAmount": "Fee: {amount}",
+    "costPaidWhere": "payment on {host}",
+    "costDonation": "Donation: on {host}",
+    "costDonationSuggested": "suggested {amount}",
     "series": {
       "weekly": "Every {days}",
       "fortnightly": "Every other {days}",
@@ -658,7 +663,15 @@
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
-      "costHelp": "Free text: \"Free\", \"50 lei\". Leave empty when no cost has been stated.",
+      "costHelp": "What a participant pays. The platform does not collect money itself — the fee or the donation happens directly, with the organiser or at the link below. Leave \"Not stated\" when this has not been decided yet.",
+      "costAmount": "Amount",
+      "costAmountHelp": "For example \"50 lei\". Required for a paid event.",
+      "costPaidUrl": "Where to pay (optional)",
+      "costPaidUrlHelp": "The link where payment is made. Must start with https://.",
+      "costDonationUrl": "Donation link",
+      "costDonationUrlHelp": "Required. The link where the donation is made, on another site. Must start with https://.",
+      "costDonationAmount": "Suggested amount (optional)",
+      "costDonationAmountHelp": "For example \"50 lei\".",
       "fields": {
         "title": "Title",
         "slug": "Page address",
@@ -748,7 +761,8 @@
       },
       "costValues": {
         "FREE": "Free",
-        "PAID": "Paid"
+        "PAID": "Paid",
+        "DONATION": "Donation (on another site)"
       },
       "notStated": "Not stated",
       "routeUrl": "Route link",

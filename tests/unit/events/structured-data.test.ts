@@ -106,7 +106,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
   });
 
-  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121)", () => {
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID or DONATION (§121, §NNN)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);
     expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
@@ -114,8 +114,35 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     const unstated = parsed(sportsEventJsonLd(baseEvent({ costType: null }), URL, "Brașov Runners"));
     expect(unstated.isAccessibleForFree).toBe(true);
     const paid = parsed(sportsEventJsonLd(baseEvent({ costType: "PAID" }), URL, "Brașov Runners"));
-    expect(paid.isAccessibleForFree).toBeUndefined();
+    expect(paid.isAccessibleForFree).toBe(false);
     expect(paid.offers).toBeUndefined();
+    const donation = parsed(sportsEventJsonLd(baseEvent({ costType: "DONATION" } as Partial<PublicEvent>), URL, "Brașov Runners"));
+    expect(donation.isAccessibleForFree).toBe(false);
+    expect(donation.offers).toBeUndefined();
+  });
+
+  it("offers the club's own cost link, never a price parsed out of the free text amount (§NNN)", () => {
+    const paidUrl = "https://revolut.me/brasovrunners";
+    const paid = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "PAID", costAmount: "50 lei", costUrl: paidUrl } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(paid.isAccessibleForFree).toBe(false);
+    expect(paid.offers).toEqual({ "@type": "Offer", url: paidUrl, availability: "https://schema.org/InStock" });
+    expect(paid.offers.price).toBeUndefined();
+
+    const donationUrl = "https://www.wingsforlifeworldrun.com/en/donate";
+    const donation = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "DONATION", costUrl: donationUrl } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(donation.offers).toEqual({ "@type": "Offer", url: donationUrl, availability: "https://schema.org/InStock" });
   });
 
   it("references the club @id as organizer", () => {

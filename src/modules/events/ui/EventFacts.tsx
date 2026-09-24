@@ -12,6 +12,7 @@ import { Fragment, type ReactNode } from "react";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { readCoHosts } from "../domain/co-hosts";
+import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -97,7 +98,7 @@ export default async function EventFacts({
   );
 
   // A word with its glyph in front, for the closed sets (§112); the word is what is read.
-  const withGlyph = (Icon: Glyph, word: string) => (
+  const withGlyph = (Icon: Glyph, word: ReactNode) => (
     <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
       <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
       {word}
@@ -139,7 +140,40 @@ export default async function EventFacts({
   if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
   // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
   if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
-  if (event.costType) route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+  /*
+    The cost (§NNN): the card keeps the closed set's short word, exactly as before — a coin, a
+    hand holding a heart, "Cu taxă", "Donație". The full page says more, the way the meeting
+    point becomes its own map link: a paid event's amount, with "plata pe {host}" as a second,
+    separate link when the club gave one; a donation's whole phrase is the link to give at,
+    with the suggested amount after it when the club stated one. Never a raw URL, only the host
+    a runner recognises (`costUrlHost`), the same rule "Linkuri și fișiere" follows (§332).
+  */
+  if (event.costType === "PAID" && compact) {
+    route.push(withGlyph(COST_GLYPH.PAID, t("costValues.PAID")));
+  } else if (event.costType === "PAID") {
+    route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
+    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+    if (event.costUrl && host) {
+      route.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
+    }
+  } else if (event.costType === "DONATION" && compact) {
+    route.push(withGlyph(COST_GLYPH.DONATION, t("costValues.DONATION")));
+  } else if (event.costType === "DONATION") {
+    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+    route.push(
+      withGlyph(
+        COST_GLYPH.DONATION,
+        event.costUrl && host
+          ? links
+            ? outLink(event.costUrl, t("costDonation", { host }))
+            : t("costDonation", { host })
+          : t("costValues.DONATION"),
+      ),
+    );
+    if (event.costAmount) route.push(t("costDonationSuggested", { amount: event.costAmount }));
+  } else if (event.costType) {
+    route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+  }
   if (!compact && links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
   if (!compact && links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
   // The Facebook event (§144): where the club's people say "going".

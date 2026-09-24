@@ -73,14 +73,19 @@ export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL",
 export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
 
 /**
- * Whether the event costs money — and deliberately not how much.
+ * Whether the event costs money, and how — three answers, not two.
  *
- * A price is not an enum: it is an amount, a currency, and usually a deadline. This column
- * answers the only question every event page must answer today, which is whether a runner
- * needs their wallet. The amount becomes its own nullable column the day the club runs an
- * event that charges, and `PAID` is what will point at it.
+ * `FREE` and `PAID` were migration `0018`'s pair, and the amount was deliberately left for "the
+ * day the club runs an event that charges". That day arrived as a question rather than a race:
+ * the owner, 2026-09-24, on "Cu taxă" showing no box for the money — "usually nothing is paid;
+ * the exception is Wings for Life, where a donation is made on another site". `DONATION` is that
+ * third answer: no fee the platform or the club takes, a link to somewhere else where a runner
+ * gives what they choose. `cost_amount` (free text — a price is rarely just a number: "50 lei",
+ * "20 € la ridicarea kitului") and `cost_url` (https, below) are what `PAID` and `DONATION` point
+ * at — the amount required on a paid event, the link required on a donation, each optional the
+ * other way round, and both null on `FREE` and on an event that has not said.
  */
-export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID"]);
+export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID", "DONATION"]);
 
 /**
  * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
@@ -343,6 +348,20 @@ export const events = pgTable(
      */
     difficulty: eventDifficulty("difficulty"),
     costType: eventCostType("cost_type"),
+    /**
+     * What a paid event costs, or what a donation suggests — free text (§NNN), because a price
+     * is rarely just a number: "50 lei", "20 € la ridicarea kitului", "sugerat 50 lei". Required
+     * by `content/events/fields.ts` when `cost_type` is `PAID`, optional on `DONATION`, kept
+     * whatever it holds while a different kind is chosen — like the meeting point while the
+     * place is to be announced (§328) — so switching back does not lose what was typed.
+     */
+    costAmount: text("cost_amount"),
+    /**
+     * Where a paid event is settled, or where a donation is made — https, checked here as
+     * `map_url` is. Optional on `PAID` ("Unde se plătește"); required by `fields.ts` on
+     * `DONATION`, where it is the whole point of the fact. Null on `FREE` and on an unstated cost.
+     */
+    costUrl: text("cost_url"),
 
     /**
      * The one event the landing page leads with, or none.
@@ -522,6 +541,7 @@ export const events = pgTable(
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    check("events_cost_url_is_https", sql`${t.costUrl} IS NULL OR ${t.costUrl} LIKE 'https://%'`),
     check(
       "events_route_url_is_https",
       sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
