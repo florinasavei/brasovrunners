@@ -54,6 +54,9 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
 
   test("shows every seeded event with its date and meeting point as text", async ({ page }) => {
     await page.goto("/ro/evenimente");
+    // Folded or not, they are text: with more than four cards a phone folds them all (§78), which
+    // another spec's events — `listing-cards.spec.ts`'s series among them — can make true for a moment.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 2 and BR-REQ-070-03 criterion 2: facts as text, not styling or an image.
     const body = await page.locator("body").innerText();
@@ -213,8 +216,11 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     await expect(when).toHaveText(/^(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}·\d{2}:\d{2}$/);
     const lineHeight = await when.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
     expect((await when.boundingBox())?.height ?? Infinity).toBeLessThan(lineHeight * 1.5);
-    // A clock in front of the time (§NNN), the row glyph's size, as the listing cards have it.
-    const clock = when.locator('svg[data-testid="ScheduleIcon"]');
+    // A clock in front of the time (§NNN), the row glyph's size, as the listing cards have it: the
+    // one glyph in the answer, the row's own being in its label. Found by place, because MUI names
+    // its icons (`data-testid="ScheduleIcon"`) only outside a production build, and this suite runs
+    // one; `event-facts-pills.test.ts` checks the name.
+    const clock = when.locator("svg");
     await expect(clock).toHaveCount(1);
     expect(Math.round((await clock.boundingBox())?.width ?? 0)).toBe(20);
 

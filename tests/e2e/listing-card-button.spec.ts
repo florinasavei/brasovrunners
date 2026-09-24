@@ -9,6 +9,9 @@ import { expect, test } from "@playwright/test";
 test.describe("§305 the listing card's door to the page", () => {
   test("every card offers 'Descrierea completă a evenimentului', 44px tall, to its event's page", async ({ page }) => {
     await page.goto("/ro/evenimente");
+    // With more than four cards a phone folds them all under a heading (§78) — which another
+    // spec's events, `listing-cards.spec.ts`'s series among them, can make true for a moment.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const main = page.locator("#main");
     const buttons = main.getByRole("link", { name: "Descrierea completă a evenimentului" });
     const first = buttons.first();

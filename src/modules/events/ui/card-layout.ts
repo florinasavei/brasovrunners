@@ -94,6 +94,15 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * − 8, less than the chips' `GROUP_GAP` above. Nothing overlaps it on either side, whichever
  * neighbour follows, and `listing-cards.spec.ts` presses its edges to prove it. Neither neighbour
  * is a link, so the reach never covers another control.
+ *
+ * **`border-box`, said here, or none of the arithmetic above holds** (§NNN). The cards usually
+ * stand inside a `<details>` — the "other events" fold under a lead event (§78) — and the browser
+ * slots a fold's content into the fold's own shadow tree, where MUI's `box-sizing: inherit` does
+ * not reach: everything in it is `content-box`. There the 44 was the words' box and the eighteen
+ * were added around it: a 62-pixel link, a heading 44 tall rather than its words' 26, and eighteen
+ * more pixels between the title and the line under it than the gap says — on a listing the owner
+ * had asked to be tighter. Nothing overlapped, so the edge presses passed; the browser measure of
+ * the heading against its words is what found it.
  */
 export const CARD_TITLE_SX = {
   mt: GROUP_GAP,
@@ -104,6 +113,7 @@ export const CARD_TITLE_SX = {
   overflowWrap: "anywhere",
   "& a": {
     display: "block",
+    boxSizing: "border-box",
     minHeight: 44,
     pt: "10px",
     mt: "-10px",

@@ -417,6 +417,9 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(anchors).toHaveLength(1);
     expect(anchors[0]).toContain('target="_blank"');
     const rule = ruleOf(html, anchors[0] ?? "");
+    // The 44 includes the padding, said on the link: inside the listing's fold everything is
+    // content-box, and there the link was 64 pixels and its words twelve under the pin (§NNN).
+    expect(rule).toContain("box-sizing:border-box");
     expect(rule).toContain("min-height:44px");
     expect(rule).toContain("padding-top:10px");
     expect(rule).toContain("padding-bottom:10px");
@@ -432,6 +435,9 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
     expect(anchors).toHaveLength(1);
     const rule = ruleOf(html, anchors[0] ?? "");
+    // The 44 includes the padding, said on the link: inside the listing's fold everything is
+    // content-box, and there the link was 64 pixels and its words twelve under the pin (§NNN).
+    expect(rule).toContain("box-sizing:border-box");
     expect(rule).toContain("min-height:44px");
     expect(rule).toContain("padding-top:10px");
     expect(rule).toContain("padding-bottom:10px");

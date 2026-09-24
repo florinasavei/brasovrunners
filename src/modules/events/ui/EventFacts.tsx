@@ -157,6 +157,15 @@ export default async function EventFacts({
   // `"above"` gives back only the ten above: for a link with something nearer than ten pixels
   // under it — which comes later in the page, paints over the link and takes a press there — so
   // the ten below stay in the line and nothing sits on them (the card's place, §NNN).
+  //
+  // `border-box`, said here and not inherited, because inside a `<details>` it is not: the browser
+  // slots a fold's content into the fold's own shadow tree, where MUI's `box-sizing: inherit`
+  // does not reach, so everything under it is `content-box` — and the listing's cards stand in
+  // one whenever there is a lead event ("other events", §78). There the 44 was the words' box and
+  // the twenty were added around it: a 64-pixel link on a line 44 tall rather than its words' 24,
+  // the words twelve pixels under the pin beside them (found by `listing-cards.spec.ts` on a
+  // series with a map link, §NNN). With it the box is 44 and the line 24, or 34 with the ten
+  // above given back only, wherever the facts are drawn.
   const outLink = (href: string, label: string, network?: "strava" | "facebook", tight: boolean | "above" = false) => (
     <Link
       href={href}
@@ -166,6 +175,7 @@ export default async function EventFacts({
         display: "inline-flex",
         alignItems: "center",
         gap: 0.75,
+        boxSizing: "border-box",
         minHeight: 44,
         ...(tight === true ? { py: "10px", my: "-10px" } : tight === "above" ? { py: "10px", mt: "-10px" } : {}),
       }}

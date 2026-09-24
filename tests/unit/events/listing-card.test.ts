@@ -245,6 +245,9 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
     expect(rules).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline/);
     // 44 pixels to a thumb, given back as margin so the line is as tall as its words: ten above the
     // words, and below them a line's gap and no more (§NNN) — the nearest anything sits under a title.
+    // The 44 includes the padding, said on the link: inside the listing's fold everything is
+    // content-box, and there the link was 62 pixels and the heading 44 tall rather than 26 (§NNN).
+    expect(rules).toMatch(/ a\{[^}]*box-sizing:border-box/);
     expect(rules).toMatch(/ a\{[^}]*min-height:44px/);
     expect(rules).toMatch(/ a\{[^}]*padding-top:10px/);
     expect(rules).toMatch(/ a\{[^}]*margin-top:-10px/);
@@ -407,5 +410,23 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     expect(links.at(-1)).toBe("Descrierea completă a evenimentului");
     expect(links).toContain("Lun., 5 oct. 2026");
     expect(withoutStyles(html)).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
+  });
+
+  it("gives every date in the fold a link at least 44 by 44 around its small pill, not the 24-pixel pill as the link (BR-REQ-041-01 criterion 6, §NNN)", async () => {
+    const html = await repeated();
+    const markup = withoutStyles(html);
+    const fold = markup.slice(markup.indexOf("<details"), markup.indexOf("</details>"));
+    const dates = [...fold.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)];
+    expect(dates.map(([, , inner]) => text(inner))).toEqual(["Lun., 28 sept. 2026", "Lun., 5 oct. 2026", "Lun., 12 oct. 2026"]);
+    for (const [, attributes, inner] of dates) {
+      // The pill is a picture inside the link — a `<span>` — and the link is not a chip itself.
+      expect(attributes).not.toContain("MuiChip");
+      expect(inner).toMatch(/^<span\b[^>]*class="[^"]*\bMuiChip-root\b[^"]*\bMuiChip-sizeSmall\b/);
+      const rules = rulesFor(html, /class="[^"]*\b(css-[\w-]+)"/.exec(attributes)?.[1] ?? "none");
+      expect(rules).toContain("min-height:44px");
+      expect(rules).toContain("min-width:44px");
+      // No negative margin: in a wrapping row it would lay one row's target on the next's.
+      expect(rules).not.toMatch(/margin[^:;]*:-/);
+    }
   });
 });
