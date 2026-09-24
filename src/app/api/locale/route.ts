@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
+import { cachedLocaleSwitch } from "@/modules/public-cache/reads";
 
 /**
  * The language switcher (BR-REQ-040-01 criterion 5).
@@ -34,11 +33,14 @@ export async function GET(request: NextRequest) {
     ? (requested as (typeof routing.locales)[number])
     : routing.defaultLocale;
 
-  const destination = await resolveLocaleSwitch(getDb(), isSafePath(from) ? from : "/", target);
+  // The pair of slugs from the public cache (§NNN), which publishing expires — the switch is a
+  // click every visitor may make, and it should not be the one that wakes the database.
+  const destination = await cachedLocaleSwitch(isSafePath(from) ? from : "/", target);
 
   const response = NextResponse.redirect(new URL(destination, request.nextUrl.origin), 307);
-  // The answer depends on the database and on which locales are published, so no cache may
-  // hold it (AGENTS.md §14.5).
+  // The answer depends on the database and on which locales are published, so no HTTP cache may
+  // hold it (AGENTS.md §14.5) — the public cache above is expired by publication; a browser's or
+  // a CDN's copy would not be.
   response.headers.set("Cache-Control", "no-store");
   return response;
 }

@@ -9,10 +9,8 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
-import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
@@ -33,7 +31,11 @@ import { toCalendarEvent } from "@/modules/events/calendar";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import {
+  cachedCurrentApprovedDocument,
+  cachedPublishedEventBySlug,
+  cachedPublishedTranslations,
+} from "@/modules/public-cache/reads";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
@@ -52,6 +54,12 @@ type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: 
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
  * snapshot would show a run as scheduled after it was called off. It also keeps the database
  * out of the build, which is what lets CI build without one.
+ *
+ * Per request, and still not per query (§NNN). The page reads things no cache may freeze — the
+ * address (`?lista=`, `?interest=`), the clock (whether registration is open, the countdown) and
+ * whether a staff member is signed in, for the "edit" button — so the HTML is made afresh every
+ * time, from rows the public cache keeps: the event, its translations, the free places, the start
+ * list and the privacy notice, each expired by the write that changes it.
  */
 export const dynamic = "force-dynamic";
 
@@ -75,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
 
-  const event = await findPublishedEventBySlug(getDb(), locale, slug);
+  const event = await cachedPublishedEventBySlug(locale, slug);
   if (!event) return {};
 
   return {
@@ -88,7 +96,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       // slugs differ per locale, so a concatenated URL is a 404.
       // Only published locales appear; advertising a draft one is worse than advertising none.
       languages: Object.fromEntries(
-        (await findPublishedTranslations(getDb(), event.id)).map((t) => [
+        (await cachedPublishedTranslations(event.id)).map((t) => [
           t.locale,
           eventUrl(t.locale, t.slug),
         ]),
@@ -121,15 +129,16 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const read = await readWithLastGood(
     `event:${locale}:${slug}`,
     async () => {
-      const found = await findPublishedEventBySlug(getDb(), locale, slug);
+      const found = await cachedPublishedEventBySlug(locale, slug);
       if (!found) return { event: null, interestBox: false };
       // "Tell me when registration opens" (§146) takes an address, and an address is taken only
       // under an approved privacy notice — the registration form's own rule (BR-REQ-053-01). One
-      // read, only while there is a box to show.
+      // read, only while there is a box to show. The box's own action asks the database again
+      // before it keeps an address; this only decides whether to draw it.
       const interestBox =
         found.registrationMode === "INTERNAL" &&
         registrationState(found, now) === "NOT_YET_OPEN" &&
-        (await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, now)) !== undefined;
+        (await cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)) !== undefined;
       return { event: found, interestBox };
     },
     now,

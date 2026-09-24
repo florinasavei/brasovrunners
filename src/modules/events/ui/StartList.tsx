@@ -2,12 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { getDb } from "@/db/client";
-import {
-  countAnonymousStartListEntries,
-  countPublicStartList,
-  listPublicStartList,
-} from "@/modules/registrations/repository";
+import { cachedStartListCounts, cachedStartListPage } from "@/modules/public-cache/reads";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -66,17 +61,13 @@ export default async function StartList({
 
   const t = await getTranslations("Event");
   const locale = await getLocale();
-  const db = getDb();
-  // Two counts first, so one page of fifty never fetches four hundred rows (§250).
-  const [named, anonymous] = await Promise.all([
-    countPublicStartList(db, event.id),
-    countAnonymousStartListEntries(db, event.id),
-  ]);
+  // Two counts first, so one page of fifty never fetches four hundred rows (§250). Both, and the
+  // page, from the public cache (§NNN): a confirmation, a cancellation, an erasure or somebody
+  // leaving the list expires them, so a name is never shown after its owner withdrew it.
+  const { named, anonymous } = await cachedStartListCounts(event.id);
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE);
   const participants =
-    view.namedLimit > 0
-      ? await listPublicStartList(db, event.id, { offset: view.namedOffset, limit: view.namedLimit })
-      : [];
+    view.namedLimit > 0 ? await cachedStartListPage(event.id, view.namedOffset, view.namedLimit) : [];
 
   /** A relative query, so the link stays on this event whatever its address is (§8). */
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;

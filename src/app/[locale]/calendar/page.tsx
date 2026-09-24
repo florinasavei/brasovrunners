@@ -7,12 +7,11 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
-import { listPublishedEventsBetween } from "@/modules/events/repository";
+import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
 import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
 import Wordmark from "@/shared/ui/Wordmark";
@@ -53,7 +52,6 @@ export default async function CalendarPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("Events");
   const now = new Date();
-  const db = getDb();
 
   // The same three readings of the address the listing made (§89, §116, §137), so a link that
   // was in somebody's history still means what it meant.
@@ -72,8 +70,9 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
   const events = readWithLastGood(
     key,
+    // From the public cache (§NNN): the range is the key, and an event save expires it.
     () =>
-      listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
+      cachedPublishedEventsBetween(locale, range.from, range.to).then((rows) =>
         rows.filter((event) => !type || event.type === type),
       ),
     now,
