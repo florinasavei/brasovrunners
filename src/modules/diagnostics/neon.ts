@@ -1,5 +1,5 @@
 import type { Env } from "@/shared/config/env";
-import { NEON_PLANS } from "./domain/neon-plan";
+import { NEON_PLANS, type NeonPlanId, neonPlanFromSubscription } from "./domain/neon-plan";
 
 /**
  * The database's consumption this billing period, read from Neon (BR-REQ-090-07).
@@ -15,6 +15,10 @@ import { NEON_PLANS } from "./domain/neon-plan";
  *
  * One request, a short timeout, and a sentence on failure — a diagnostics page that hangs on
  * a third party is worse than one that says "Neon did not answer".
+ *
+ * The same row names the plan of the account that owns the project (`owner.subscription_type`),
+ * so the answer carries it too (§326) and the pages stop depending on somebody remembering to
+ * state it.
  */
 /** Free's monthly compute allowance, from the one catalogue; kept under its old name for the callers that read it. */
 export const NEON_FREE_CU_HOURS = NEON_PLANS.FREE.cuHoursPerMonth as number;
@@ -24,6 +28,8 @@ export type NeonConsumption = {
   activeHours: number;
   periodStart: Date;
   periodEnd: Date;
+  /** The plan Neon reports for the owning account, or null when it names one this code does not know. */
+  reportedPlan: NeonPlanId | null;
 };
 
 export async function readNeonConsumption(
@@ -44,6 +50,7 @@ export async function readNeonConsumption(
         active_time_seconds?: number;
         consumption_period_start?: string;
         consumption_period_end?: string;
+        owner?: { subscription_type?: string };
       };
     };
     const project = body.project;
@@ -57,6 +64,7 @@ export async function readNeonConsumption(
         activeHours: (project.active_time_seconds ?? 0) / 3600,
         periodStart: new Date(project.consumption_period_start),
         periodEnd: new Date(project.consumption_period_end),
+        reportedPlan: neonPlanFromSubscription(project.owner?.subscription_type),
       },
     };
   } catch (error) {

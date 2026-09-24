@@ -47,6 +47,11 @@ export type RegistrationListRow = {
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
   /**
+   * The registration's language: which translation of the declaration it signs, and so whether
+   * a minor's paper carries the minor's signature too (`declarationAsksMinorToSign`, §330).
+   */
+  locale: Locale;
+  /**
    * "Keep my name off the public start list" (BR-REQ-039-01, §186). The club sees who is on
    * the list it published, because "is my name on the site" is a question people ask the
    * club and not the platform.
@@ -63,7 +68,10 @@ export type RegistrationListRow = {
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
+  /** The latest declaration's declarant's document: the adult's, or the parent's for a minor (§95, §108). */
   idDocument: string | null;
+  /** The minor's own document, beside the parent's (§330); `identityDocumentsOf` says whose is whose. */
+  minorIdDocument: string | null;
   /**
    * The rest of what the journey column reads (`domain/journey.ts`, §145): the participant's
    * own click, a staff attestation, the hold or the offer, the latest declaration acceptance,
@@ -169,6 +177,19 @@ function escapeLike(term: string): string {
  */
 const latestIdDocument = sql<string | null>`(
   SELECT ${declarationAcceptances.idDocument}
+  FROM ${declarationAcceptances}
+  WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
+  ORDER BY ${declarationAcceptances.acceptedAt} DESC
+  LIMIT 1
+)`;
+
+/**
+ * The minor's own document on the same latest declaration (§330): a minor's declaration carries
+ * two, the parent's in `id_document` and the child's here. The same probe on the same index, so a
+ * desk page of two hundred rows is still two hundred index lookups per column, never a query each.
+ */
+const latestMinorIdDocument = sql<string | null>`(
+  SELECT ${declarationAcceptances.minorIdDocument}
   FROM ${declarationAcceptances}
   WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
   ORDER BY ${declarationAcceptances.acceptedAt} DESC
@@ -293,6 +314,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
+      locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
@@ -301,6 +323,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
       idDocument: latestIdDocument,
+      minorIdDocument: latestMinorIdDocument,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
       emailVerifiedAt: participants.emailVerifiedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
@@ -476,6 +499,8 @@ export type RegistrationDetail = {
   instagramHandle: string | null;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
+  /** The registration's language, as on the list row: the declaration translation it signs (§330). */
+  locale: Locale;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -512,6 +537,16 @@ export type RegistrationDetail = {
   emailVerifiedAt: Date | null;
   /** The latest declaration acceptance, online or on paper; the journey's fourth step (§145). */
   declarationAcceptedAt: Date | null;
+  /**
+   * Whether a health note (or its consent) is on the row — a boolean, computed in SQL, so the
+   * note itself never rides along with the page's main query (§322). What the withdrawal panel
+   * reads to know whether there is anything to withdraw.
+   */
+  holdsHealthNote: boolean;
+  /** The results consent (BR-REQ-072-01), no longer asked (§322) but withdrawable where given. */
+  resultsNameConsent: boolean;
+  /** For the link to everything held about this person (§322): the identity it is looked up by. */
+  participantCanonicalEmail: string;
 };
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
@@ -548,6 +583,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
+      locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,
@@ -561,6 +597,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       cycleStartedAt: registrations.privacyAcknowledgedAt,
       emailVerifiedAt: participants.emailVerifiedAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
+      holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
+      resultsNameConsent: registrations.resultsNameConsent,
+      participantCanonicalEmail: participants.canonicalEmail,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -581,6 +620,127 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
 }
 
 /**
+ * The four things somebody needs when a runner is on the ground (§322): how to reach them,
+ * whom to call instead, and what the medical team should know.
+ *
+ * **Its own query, for its own section, and nowhere else.** The registration's detail query
+ * above does not carry these columns, so no other part of that page — and no page that reuses
+ * that query — can render them by accident; the desk's `DESK_COLUMNS` below never will
+ * (`AGENTS.md` §15.11: a name, a state and a number). The export leaves all four out
+ * (`csv.ts`, `workbook.ts`). The one caller asserts the role and writes the audit row first
+ * (`admin-service.ts#readEmergencyDetails`).
+ */
+export type EmergencyDetails = {
+  phone: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
+  healthNotes: string | null;
+  /** When the health consent was given — shown beside the note, so it reads as consented. */
+  healthConsentAt: Date | null;
+};
+
+export async function findEmergencyDetails<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<EmergencyDetails | undefined> {
+  const [row] = await db
+    .select({
+      phone: registrations.phone,
+      emergencyContactName: registrations.emergencyContactName,
+      emergencyContactPhone: registrations.emergencyContactPhone,
+      healthNotes: registrations.healthNotes,
+      healthConsentAt: registrations.healthConsentAt,
+    })
+    .from(registrations)
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  return row;
+}
+
+/**
+ * One event's emergency sheet (§322): everyone confirmed — checked in or not, since a runner
+ * who has not reached the desk is still on the course — with the four details and the race
+ * number, in number order and then by name, so the sheet reads like the start list.
+ *
+ * `REAL` rows only, as the export (§30): the sheet is printed and carried, and a synthetic
+ * runner on paper is a phone number nobody should ring. The health column is simply empty after
+ * the seven-day clearing, which is what `jobs/retention.ts` does to the row.
+ */
+export type EmergencySheetRow = EmergencyDetails & {
+  id: string;
+  registeredName: string;
+  bibNumber: number | null;
+  provisionalBibNumber: number | null;
+  checkedInAt: Date | null;
+};
+
+export async function listEmergencySheet<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<EmergencySheetRow[]> {
+  return db
+    .select({
+      id: registrations.id,
+      registeredName: registrations.registeredName,
+      bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
+      checkedInAt: registrations.checkedInAt,
+      phone: registrations.phone,
+      emergencyContactName: registrations.emergencyContactName,
+      emergencyContactPhone: registrations.emergencyContactPhone,
+      healthNotes: registrations.healthNotes,
+      healthConsentAt: registrations.healthConsentAt,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL")))
+    .orderBy(
+      sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) asc nulls last`,
+      asc(registrations.registeredName),
+      asc(registrations.id),
+    );
+}
+
+/**
+ * The extra columns the spreadsheet carries and the CSV does not (§322): sex, the age on race
+ * day, where the runner is from, and the t-shirt size — what a category ranking, the club's
+ * "where do our runners come from" and the kit order need, and nothing the start list itself
+ * reads. One query for the exported ids rather than four more columns on every page of the list.
+ */
+export type WorkbookDetails = {
+  id: string;
+  sex: "FEMALE" | "MALE" | "UNSPECIFIED" | null;
+  birthDate: string | null;
+  nationality: string | null;
+  city: string | null;
+  tshirtSize: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | null;
+  eventStartsAt: Date;
+  /** The event's own zone: race day is the day on the start line's clock (§321). */
+  eventTimezone: string;
+};
+
+export async function listWorkbookDetails<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[],
+): Promise<Map<string, WorkbookDetails>> {
+  if (registrationIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      id: registrations.id,
+      sex: registrations.sex,
+      birthDate: registrations.birthDate,
+      nationality: registrations.nationality,
+      city: registrations.city,
+      tshirtSize: registrations.tshirtSize,
+      eventStartsAt: events.startsAt,
+      eventTimezone: events.timezone,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(inArray(registrations.id, [...registrationIds]));
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+/**
  * What the desk sees (BR-REQ-037-08): one registration as a volunteer needs it to hand over a
  * number — name, status, number, check-in state — and nothing more. No address, no details.
  * Open to every staff role, which is why the selection is this narrow.
@@ -592,6 +752,12 @@ export type DeskRegistration = {
   registeredName: string;
   /** The parent or guardian of a minor (§108): who the kit goes to; null for an adult. */
   guardianName: string | null;
+  /**
+   * The registration's language: the declaration translation its paper confirmation binds to,
+   * and so whether a minor's paper carries the minor's signature too (§330). A language, never
+   * an address (`AGENTS.md` §15.11).
+   */
+  locale: Locale;
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
@@ -614,7 +780,9 @@ export type DeskRegistration = {
   checkedInByName: string | null;
   /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
   emailRejectedReason: string | null;
+  /** The declarant's document, and a minor's own beside it (§95, §330; `identityDocumentsOf`). */
   idDocument: string | null;
+  minorIdDocument: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -623,6 +791,7 @@ const DESK_COLUMNS = {
   kind: registrations.kind,
   registeredName: registrations.registeredName,
   guardianName: registrations.guardianName,
+  locale: registrations.locale,
   eventId: registrations.eventId,
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,
@@ -633,6 +802,7 @@ const DESK_COLUMNS = {
   expiredAt: registrations.expiredAt,
   checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
+  minorIdDocument: latestMinorIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
   emailRejectedReason,
@@ -734,8 +904,12 @@ export type DeclarationAcceptanceRow = {
   method: "EMAIL_LINK" | "PAPER";
   attestedByName: string | null;
   acceptedAt: Date;
+  /** The declarant's signature and document: the adult's, or the parent's for a minor. */
   typedName: string;
   idDocument: string | null;
+  /** The minor's own, beside the parent's (§330); null for an adult and for older acceptances. */
+  minorTypedName: string | null;
+  minorIdDocument: string | null;
   declarationVersion: number;
 };
 
@@ -748,6 +922,8 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
+      minorTypedName: declarationAcceptances.minorTypedName,
+      minorIdDocument: declarationAcceptances.minorIdDocument,
       declarationVersion: declarationAcceptances.declarationVersion,
       method: declarationAcceptances.method,
       attestedByName: staffUsers.displayName,
@@ -813,13 +989,16 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
 export async function listEventsAcceptingRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: "ro" | "en",
-): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string }>> {
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string; minAge: number }>> {
   return db
     .select({
       id: events.id,
       title: eventTranslations.title,
       startsAt: events.startsAt,
       timezone: events.timezone,
+      // Beside each name on the staff form ("14+"), so the volunteer knows which minimum the
+      // birth date is counted against before pressing (§329).
+      minAge: events.minAge,
     })
     .from(events)
     .leftJoin(

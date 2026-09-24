@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "min_age" integer DEFAULT 14 NOT NULL;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_min_age_in_range" CHECK ("events"."min_age" >= 0 AND "events"."min_age" <= 99);

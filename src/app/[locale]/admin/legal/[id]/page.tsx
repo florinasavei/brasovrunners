@@ -233,7 +233,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
                   {translation.title}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
-                <LegalDocumentBody body={translation.body} />
+                <LegalDocumentBody body={translation.body} anchorPrefix={`${translation.locale}-s`} />
               </Paper>
             ))
           )}

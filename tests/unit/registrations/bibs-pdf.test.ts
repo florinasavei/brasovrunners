@@ -4,7 +4,7 @@ import { inflateSync } from "node:zlib";
 import PDFDocument from "pdfkit";
 import { describe, expect, it, vi } from "vitest";
 import { BIB_BAND_FALLBACK, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { BIB_SHEET_FOOTER, bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
+import { BIB_SHEET_CUT, BIB_SHEET_FOOTER, bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
  * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded,
@@ -16,7 +16,6 @@ const sheet = (count: number, layout?: "two" | "one", over: Partial<Parameters<t
     rows: Array.from({ length: count }, (_, i) => ({ bibNumber: i + 1, registeredName: `Alergător Ștefan ${i + 1}` })),
     eventTitle: "Crosul aniversar Brașov Runners",
     eventDate: "11 octombrie 2026",
-    pageLabel: (n, total) => `Pagina ${n} din ${total}`,
     generatedAt: new Date("2026-09-17T12:00:00Z"),
     ...over,
   });
@@ -63,11 +62,15 @@ const carries = (pdf: Buffer, hex: string) => {
 };
 
 describe("BR-REQ-038-01 the bib sheet", () => {
-  it("prints two bibs per page, so five bibs are three pages", async () => {
-    const pdf = await sheet(5);
+  /**
+   * §NNN — every bib is an A5 sheet lying on its side, two to an A4 portrait page, so a page
+   * count is always the rows split into pairs, an odd row's own page left with a blank half.
+   */
+  it.each([1, 2, 3, 4, 5, 6])("prints two A5 bibs per A4 page, so %i bibs are ceil(n/2) pages", async (count) => {
+    const pdf = await sheet(count);
     const text = pdf.toString("latin1");
     expect(text.startsWith("%PDF-1.")).toBe(true);
-    expect(text.match(/\/Type \/Page\b/g)?.length).toBe(3);
+    expect(text.match(/\/Type \/Page\b/g)?.length).toBe(Math.ceil(count / 2));
     expect(text).toMatch(/Roboto/);
     expect(text).toMatch(/\/Subtype \/Image/);
   });
@@ -80,6 +83,24 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   it("is still a file when there is nothing to print", async () => {
     const pdf = await sheet(0);
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
+  });
+
+  /**
+   * §NNN — the cut is the one place a club's scissors or guillotine go: exactly half-way down
+   * the A4 page, the upper bib's foot and the lower bib's top, whether or not a second bib sits
+   * under it (an odd count's last page still gets the line, its lower half left blank).
+   */
+  it("draws the cut exactly half-way down the page, on every page, even the odd one out", async () => {
+    const moveTo = vi.spyOn(PDFDocument.prototype, "moveTo");
+    try {
+      const pdf = await sheet(3);
+      expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(2);
+      const cuts = moveTo.mock.calls.filter(([x, y]) => x === 0 && y === BIB_SHEET_CUT);
+      // Once per page for the dashed line itself (cut marks are off by default).
+      expect(cuts.length).toBe(2);
+    } finally {
+      moveTo.mockRestore();
+    }
   });
 
   /**
@@ -152,7 +173,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
    */
   it("draws each footer line centred on the bib and without a width, so pdfkit cannot wrap it", async () => {
     const input = {
-      partners: ["Expert Port Sportivă Start", "Fort Sport", "Fort Heart Turism Asociația", "Munte", "Port Resort", "Expert Primăria Heart"],
+      partners: ["Expert Port Sportivă Start", "Fort Sport", "Fort Heart Turism Asociația", "Munte", "Port Resort", "Expert Primăria Heart Turism"],
       replyTo: "contact@example.test",
     };
     const lines = bibSheetFooterLines({ ...input, eventTitle: "x", eventDate: "y" }, false);

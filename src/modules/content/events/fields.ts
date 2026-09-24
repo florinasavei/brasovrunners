@@ -1,10 +1,21 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { isYoutubeLink } from "@/modules/events/domain/video";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { MAX_CO_HOSTS, isCoHostUrl } from "@/modules/events/domain/co-hosts";
+import {
+  DEFAULT_EVENT_LINK_KIND,
+  isEventLinkKind,
+  isEventLinkUrl,
+  MAX_EVENT_LINK_LABEL,
+  MAX_EVENT_LINK_URL,
+  MAX_EVENT_LINKS,
+  normalizeEventLinkUrl,
+  type EventLink,
+} from "@/modules/events/domain/links";
 
 /**
  * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
@@ -226,6 +237,89 @@ const scheduleRowSchema = z
 export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
 
 /**
+ * A meeting point, unless the place is to be announced (§328).
+ *
+ * On the object because it reads two fields, and named on `locationName` so the refusal
+ * summary links to the box (§47). With the switch off it is exactly the rule the field used to
+ * carry on its own (`min(1)`, §36); with it on, a blank place is accepted and a typed one kept.
+ */
+function placeRule(fields: { locationName: string | null; locationToBeAnnounced: boolean }, ctx: z.RefinementCtx): void {
+  if (fields.locationToBeAnnounced || fields.locationName !== null) return;
+  ctx.addIssue({
+    code: "custom",
+    path: ["locationName"],
+    message: "a meeting point is required, unless the place is to be announced later",
+  });
+}
+
+/**
+ * One link row as the editor posts it (`DECISIONS.md` §332): a kind from the select, the
+ * address, and a label in each language. Every box a string, empty allowed here; the list
+ * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
+ * address's https pattern off it (§315) rather than typing them a second time.
+ */
+export const eventLinkRowSchema = z
+  .object({
+    kind: z.string().trim().max(20).optional().default(DEFAULT_EVENT_LINK_KIND),
+    url: z.string().trim().max(MAX_EVENT_LINK_URL).optional().default("").meta(HTTPS_BOX),
+    labelRo: z.string().trim().max(MAX_EVENT_LINK_LABEL).optional().default(""),
+    labelEn: z.string().trim().max(MAX_EVENT_LINK_LABEL).optional().default(""),
+  })
+  .strict();
+
+type EventLinkRowInput = z.infer<typeof eventLinkRowSchema>;
+
+/** The editor's spare line: nothing typed. The kind alone is not an answer — the select always posts one. */
+const isBlankLinkRow = (row: EventLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
+
+/**
+ * The links, as the editor posts them — "Linkuri și fișiere" (§332).
+ *
+ * Every refusal names the row **as the editor numbered it** — the posted index, before the
+ * spare lines are dropped — so "link 2" is the second row on the screen and the summary's link
+ * lands on its box (`form-names.ts`). A row with a label and no address is refused rather than
+ * dropped: somebody meant a link there. A kind outside the set did not come from the select and
+ * is refused, never quietly turned into "other".
+ *
+ * Absent means "this caller is not editing the links" — the discipline of `coHosts` (§169) — so
+ * a fixture or an older caller leaves the column as it was. The editor always posts the list;
+ * an empty one is "no links".
+ */
+const eventLinksField = z
+  .array(eventLinkRowSchema)
+  .max(50)
+  .superRefine((rows, ctx) => {
+    let filled = 0;
+    rows.forEach((row, index) => {
+      if (isBlankLinkRow(row)) return;
+      filled += 1;
+      const n = index + 1;
+      if (!isEventLinkKind(row.kind)) {
+        ctx.addIssue({ code: "custom", path: [index, "kind"], message: `link ${n}: the kind must be one of the list` });
+      }
+      if (row.url === "") {
+        ctx.addIssue({ code: "custom", path: [index, "url"], message: `link ${n}: a link needs its address, starting with https://` });
+      } else if (!isEventLinkUrl(row.url)) {
+        ctx.addIssue({ code: "custom", path: [index, "url"], message: `link ${n}: the address must start with https://` });
+      }
+    });
+    if (filled > MAX_EVENT_LINKS) {
+      ctx.addIssue({ code: "custom", message: `at most ${MAX_EVENT_LINKS} links can be listed on one event` });
+    }
+  })
+  .transform((rows): EventLink[] =>
+    rows
+      .filter((row) => !isBlankLinkRow(row))
+      .map((row) => ({
+        kind: isEventLinkKind(row.kind) ? row.kind : DEFAULT_EVENT_LINK_KIND,
+        url: normalizeEventLinkUrl(row.url),
+        labelRo: row.labelRo === "" ? null : row.labelRo,
+        labelEn: row.labelEn === "" ? null : row.labelEn,
+      })),
+  )
+  .optional();
+
+/**
  * The event-level fields, as the form sends them — every column an organizer owns.
  *
  * The times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00" means
@@ -269,13 +363,25 @@ export const eventFieldsSchema = z
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).
      *
-     * The meeting point is required here rather than nullable, even though the column accepts
-     * null: the column has to tolerate rows written before it existed, and every save from this
-     * form fills it. A public event page without a meeting point is missing the one fact a
-     * runner actually needs.
+     * The meeting point is required, even though the column accepts null: the column has to
+     * tolerate rows written before it existed, and a public event page without a meeting point
+     * is missing the one fact a runner actually needs — **unless the place is to be announced**
+     * (`locationToBeAnnounced` below, §328), when blank is the honest answer and whatever was
+     * typed is kept without being shown.
+     *
+     * So the refusal is the object's (`placeRule`, at the foot of this schema), which is the one
+     * place both fields are known; the box still declares itself required, through the `html`
+     * metadata a rule the walker cannot see uses (`shared/forms/constraints.ts`), and the editor
+     * drops that `required` while the switch is on (`PlaceToBeAnnounced`). One rule, read in both
+     * places: the browser refuses a blank place exactly when the server would.
      */
-    locationName: z.string().trim().min(1).max(200),
+    locationName: optionalText(200).meta({ html: { required: true } }),
     locationAddress: optionalText(300),
+    /**
+     * "Locația se anunță mai târziu" (§328): the place is not announced yet. A switch, so absent
+     * — an older caller, a fixture — is "announced", like `isSpecial`: every row before it was.
+     */
+    locationToBeAnnounced: z.boolean().optional().default(false),
     /**
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
@@ -347,6 +453,12 @@ export const eventFieldsSchema = z
       .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
       .optional(),
     /**
+     * "Linkuri și fișiere" (§332): the GPX on Google Drive, a PDF, the album, the results — at
+     * most twelve, each https, each label optional. Not part of what publication requires (§28):
+     * an empty label is the kind's own word in the reader's language.
+     */
+    links: eventLinksField,
+    /**
      * A film of the event: a YouTube link, or nothing. The editor no longer has a box for it —
      * a film goes into the description with the rich text's own YouTube button (§266), sized
      * and placed like a picture — so no form posts this any more. The column stays for the
@@ -408,6 +520,13 @@ export const eventFieldsSchema = z
      */
     confirmationOpensDaysBefore: wholeNumberWithDefault(7, { min: 0, max: 60 }),
     confirmationDeadlineDaysBefore: wholeNumberWithDefault(2, { min: 0, max: 60 }),
+    /**
+     * The youngest a participant may be on the day of the event, in years (§329, amending §321:
+     * "actually this min age must be set at event level!"). Absent or empty means the club's
+     * fourteen, which is also the column's default; zero means no minimum. The bounds are the
+     * database's CHECK, said again here so the box carries them (§315).
+     */
+    minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: 0, max: 99 }),
     registrationOpensAtWallTime: z.string().trim(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,
@@ -423,7 +542,8 @@ export const eventFieldsSchema = z
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
-  .strict();
+  .strict()
+  .superRefine(placeRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

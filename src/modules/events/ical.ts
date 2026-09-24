@@ -68,6 +68,12 @@ export type CalendarEvent = {
   locationAddress?: string | null;
   /** The organizer's map link (§61): the calendar's place, so one tap opens the map (§129). */
   mapUrl?: string | null;
+  /**
+   * The place is not announced yet (§328): no `LOCATION` at all, and the description opens with
+   * the page's sentence where the meeting point would be. The public query has already withheld
+   * the three fields above; this says why they are empty.
+   */
+  locationToBeAnnounced?: boolean;
   /** The short description, plain. */
   excerpt: string | null;
   /** The long description (§156), as a rich-text document or null; its first lines follow the short one (§159). */
@@ -205,11 +211,19 @@ function uidHost(baseUrl: string): string {
  * it (§159), so the reader still knows where "Aleea de sub Tâmpa" is by name; "Vezi pe
  * hartă" stands for a name the organizer did not give, as on the page; the address is the
  * next line, as the page's "Adresă".
+ *
+ * **While the place is to be announced (§328) there is no `LOCATION`**, and the first line of
+ * the description is the page's sentence, "📍 Locația se anunță în curând". Not "Brașov": a
+ * calendar geocodes `LOCATION` and offers directions to it, and directions to the middle of
+ * the city are directions to the wrong place on the morning of a race. The feed changes the
+ * entry when the place is announced; an `.ics` saved earlier keeps the sentence and its link
+ * to the page, which has the place.
  */
 function calendarPlace(
-  event: Pick<CalendarEvent, "locationName" | "locationAddress" | "mapUrl">,
+  event: Pick<CalendarEvent, "locationName" | "locationAddress" | "mapUrl" | "locationToBeAnnounced">,
   labels: CalendarLabels,
 ): { location: string | null; lines: Line[] } {
+  if (event.locationToBeAnnounced) return { location: null, lines: [{ text: `📍 ${labels.t("locationToBeAnnounced")}` }] };
   const name = event.locationName?.trim() ?? "";
   const address = event.locationAddress?.trim() ?? "";
   const mapUrl = event.mapUrl || undefined;

@@ -14,7 +14,7 @@ import { confirmEmailAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; eventOff?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -36,8 +36,21 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid } = await searchParams;
+  const { done, invalid, eventOff } = await searchParams;
   const t = await getTranslations("Registrations");
+
+  // The link was good, but the event was cancelled or is over (§331): nothing was allocated and
+  // nothing sent, and the page says why rather than "confirmed, now sign".
+  if (eventOff) {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("confirm.title")}
+        </Typography>
+        <Alert severity="info">{t("confirm.eventOff")}</Alert>
+      </Container>
+    );
+  }
 
   if (done) {
     return (

@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { DECLARATION_HOLD_MINUTES, WAITLIST_OFFER_HOLD_HOURS } from "../domain/hold-deadlines";
 import { EMAIL_CONFIRMATION_HOLD_HOURS } from "../repository";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 const STEPS = [
   { key: "form", Icon: PersonAddIcon },
@@ -116,7 +117,8 @@ export default async function RegistrationSteps({ folded = false, window = null 
         borderColor: "divider",
         borderRadius: 1,
         px: 2,
-        "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert", fontWeight: 600 },
+        "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5, fontWeight: 600 },
+        ...DISCLOSURE_OPEN_ARROW,
       }}
     >
       <Typography component="summary" variant="body1">

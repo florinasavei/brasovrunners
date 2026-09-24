@@ -11,5 +11,11 @@ export async function confirmEmailAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: { pathname: "/registrations/confirm/[token]", params: { token } } });
 
   const result = await consumeAndConfirmEmail(token, new Date());
-  redirect(result.ok ? `${path}?done=1` : `${path}?invalid=1`);
+  if (!result.ok) redirect(`${path}?invalid=1`);
+  /*
+    The link was good and the registration is still unconfirmed: the event was cancelled or is
+    over, so `confirmEmail` allocated nothing and sent nothing (§331). "Confirmed — now sign the
+    declaration" would be a promise about a race that will not run; the page says so instead.
+  */
+  redirect(result.registration.status === "PENDING_EMAIL_CONFIRMATION" ? `${path}?eventOff=1` : `${path}?done=1`);
 }

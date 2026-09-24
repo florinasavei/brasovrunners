@@ -157,10 +157,18 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
          * rather than each element remembering the header's height. The two values are the
          * header's own two heights: one row everywhere since 2026-09-17, 8px of padding on a
          * phone and 16px from `sm` up.
+         *
+         * And room for the sticky footer below it (§324), for the same reason at the other
+         * edge: what the browser scrolls into view at the bottom — a field or a button reached
+         * with Tab, the send button under a long form — landed behind the bar (WCAG 2.4.11,
+         * focus not obscured). The footer is two 44px lines on a phone since the privacy notice
+         * took the second one (`SiteFooter`), one line from `sm` up, plus its border and a
+         * little air.
          */
         html: {
           scrollPaddingTop: 72,
-          "@media (min-width:600px)": { scrollPaddingTop: 76 },
+          scrollPaddingBottom: 96,
+          "@media (min-width:600px)": { scrollPaddingTop: 76, scrollPaddingBottom: 52 },
         },
 
         /**
