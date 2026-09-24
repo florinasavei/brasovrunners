@@ -581,7 +581,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 {...field("birthDate")}
                 /* The event's minimum age and the categories, in the help (§321, §329) — only the
                    categories on an event with no minimum; a refusal for age says the rule again
-                   rather than "complete this field correctly". */
+                   rather than "complete this field correctly". Left native, not the backoffice's
+                   MUI picker (`shared/forms/pickers`, `DECISIONS.md` §NNN): a runner's own birth
+                   date is decades back, faster typed than paged through a calendar month by
+                   month, and this box is public — the picker never ships here anyway. */
                 helperText={
                   invalid.has("birthDate")
                     ? tooYoung

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
-import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
+import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-031-01, BR-REQ-031-04, BR-REQ-031-05, BR-REQ-031-06, BR-REQ-041-01 — the shape of the
@@ -748,8 +748,8 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     // A race on 3 May 2027 that takes its registrations here, for sixteen and over.
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await field("event.startsAtDate").fill("2027-05-03");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-03");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();

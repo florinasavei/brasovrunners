@@ -54,6 +54,35 @@ export async function hydrated(page: Page) {
   await page.waitForLoadState("networkidle");
 }
 
+/**
+ * A backoffice date box, on MUI's picker since `DECISIONS.md` §NNN — day, month, year in one
+ * segmented field rather than the single `<input type="date">` a page could once `.fill()`
+ * directly. What the field actually posts is a *hidden* input under the box's real name (never
+ * visible, so `.fill()` on it times out); this drives the picker itself, the way a person would:
+ * click the field's own group by the label passed to `DateField`/`WallTimeField`, then type the
+ * digits, which MUI's field advances between day, month and year on its own.
+ *
+ * Scoped to the field's `<label>` text rather than to a section's own name ("Ziua", "Luna"),
+ * because every date picker on the page shares those — MUI's own Romanian locale, not this
+ * repository's translation, names the sections. The label itself is not always unique either —
+ * "Ora" is both the event's own time-of-day label and the programme row's — so `occurrence`
+ * picks which one, in the order the accessibility tree lists them (top to bottom on the page).
+ */
+export async function fillDateField(page: Page, label: string, value: string /* YYYY-MM-DD */, occurrence = 0) {
+  const [year, month, day] = value.split("-");
+  const group = page.getByRole("group", { name: label, exact: true }).nth(occurrence);
+  await group.getByRole("spinbutton").first().click();
+  await page.keyboard.type(`${day}${month}${year}`);
+}
+
+/** The time half of the same picker family, always on the 24-hour clock (§NNN). */
+export async function fillTimeField(page: Page, label: string, value: string /* HH:mm */, occurrence = 0) {
+  const [hour, minute] = value.split(":");
+  const group = page.getByRole("group", { name: label, exact: true }).nth(occurrence);
+  await group.getByRole("spinbutton").first().click();
+  await page.keyboard.type(`${hour}${minute}`);
+}
+
 const modeSelect = (page: Page) => page.getByRole("combobox", { name: "Modul de înscriere" });
 
 /**

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-050-02 criteria 11 and 12 (`DECISIONS.md` §113, §114) — a repeated event is one row,
@@ -23,8 +23,8 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
       // The tabs switch with React state: a click before hydration is discarded when React
       // takes over, the English panel stays hidden, and a hidden box cannot be filled.
       await hydrated(page);
-      await field("event.startsAtDate").fill(date);
-      await field("event.startsAtTime").fill("18:30");
+      await fillDateField(page, "Începutul evenimentului", date);
+      await fillTimeField(page, "Ora", "18:30");
       await field("event.locationName").fill("Parcul Tractorul");
       // One language per tab on the create form too, as on the editor.
       await field("translations.ro.title").fill(title);

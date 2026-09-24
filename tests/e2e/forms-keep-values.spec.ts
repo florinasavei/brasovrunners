@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
@@ -67,8 +67,8 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
-    await field("event.startsAtDate").fill("2027-06-06");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-06-06");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Versiune ${suffix}`);
     await field("translations.ro.slug").fill(`versiune-${suffix}`);
