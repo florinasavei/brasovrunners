@@ -3,7 +3,7 @@
  * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>.
  * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
  *
- * No hardcoded value (§NNN): the courts are "the club's registered seat", never a town written
+ * No hardcoded value (§357): the courts are "the club's registered seat", never a town written
  * in, and the thirty-minute hold says the participation window's deadline where an event has one
  * (§104) — a sentence true of one event and false of the next is a value, not a rule.
  */

@@ -43,7 +43,7 @@ export function isLegalDocumentKey(value: string): value is LegalDocumentKey {
  * §95, §190): the template in both languages, with the club facts the deployment knows written in
  * (§132) and nothing else touched.
  *
- * A function of its own so the one promise it makes can be tested (§NNN): every `{{field}}` of
+ * A function of its own so the one promise it makes can be tested (§357): every `{{field}}` of
  * the template reaches the draft as a field — the merge happens when the declaration is shown,
  * signed or printed, never here — and every club-fact `<PLACEHOLDER>` the environment does not
  * know stays standing for the Administrator to type. A fact the environment does know is its

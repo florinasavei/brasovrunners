@@ -7,7 +7,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { CLUB_NAME, WORDMARK } from "@/theme/brand";
 
 /**
- * §NNN — the owner, 2026-09-24: "I do not [want] hardcoded stuff in the document and emails
+ * §357 — the owner, 2026-09-24: "I do not [want] hardcoded stuff in the document and emails
  * anymore!"
  *
  * One approved declaration serves every event (§95), and one privacy notice and one set of terms
@@ -65,7 +65,7 @@ function hardcodedValuesIn(text: string): string[] {
   return found;
 }
 
-describe("§NNN no hardcoded value in a legal template", () => {
+describe("§357 no hardcoded value in a legal template", () => {
   it("finds what it looks for, so a clean result means something", () => {
     // The checker itself, on sentences the rule forbids.
     expect(hardcodedValuesIn("Crosul are loc pe Tâmpa, lângă Brașov")).toContain(CLUB_LOCALITY);

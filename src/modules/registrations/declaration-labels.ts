@@ -15,7 +15,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
   signedOnPaper: string;
 }> = {
   ro: {
-    // The club's name in the PDF's footer and metadata is the platform's constant (§215), not a literal (§NNN).
+    // The club's name in the PDF's footer and metadata is the platform's constant (§215), not a literal (§357).
     organization: CLUB_NAME,
     whereupon: "DREPT PENTRU CARE SEMNEZ,",
     whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",

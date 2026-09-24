@@ -319,7 +319,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * §NNN — the platform's declaration grew by the risks the runner takes on (animals, terrain,
+   * §357 — the platform's declaration grew by the risks the runner takes on (animals, terrain,
    * the dark and a headlamp, their own pace, their belongings), and every merge field it names
    * still reads filled on what is signed and printed: nothing on a signed copy is left a dotted
    * blank, and the blank form for the desk leaves dotted exactly the person's own fields.
@@ -356,7 +356,7 @@ describe("the club's declaration (§95)", () => {
   });
 
   /**
-   * §NNN — the longer text flows onto a second page rather than being cut: every line of text on
+   * §357 — the longer text flows onto a second page rather than being cut: every line of text on
    * every page lies between the top margin and the footer's rule, and the last page carries the
    * end of the text and the signature block, not a footer alone. Signed (adult and minor) and the
    * blank forms alike, since each is its own layout at the foot.
@@ -419,7 +419,7 @@ describe("the club's declaration (§95)", () => {
 const FOOTER_TOP = DECLARATION_MARGIN.bottom - DECLARATION_FOOTER.gap;
 
 /**
- * Where each line of text starts, page by page, read out of the file (§NNN).
+ * Where each line of text starts, page by page, read out of the file (§357).
  *
  * pdfkit deflates its content streams and draws Roboto by glyph id, so the words are not in the
  * bytes — but the position of every line is: each run of text is set with `1 0 0 1 x y Tm` in

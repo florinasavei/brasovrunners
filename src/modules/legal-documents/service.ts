@@ -830,7 +830,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
       result.alreadyApproved.push(key);
       continue;
     }
-    // The same prefill as "start from the platform's text": the fields kept, the facts written in (§NNN).
+    // The same prefill as "start from the platform's text": the fields kept, the facts written in (§357).
     const prefill = templatePrefill(key, facts);
     const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...prefill[locale] }));
     const blanks = [...new Set(translations.flatMap((translation) => remainingPlaceholders(translation.body)))];

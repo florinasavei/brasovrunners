@@ -6,7 +6,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — the owner, 2026-09-24: "I do not [want] hardcoded stuff in the document and emails
+ * §357 — the owner, 2026-09-24: "I do not [want] hardcoded stuff in the document and emails
  * anymore!"
  *
  * The emails' own sentences name the club through the platform's one constant (`CLUB_NAME`,
@@ -26,7 +26,7 @@ function render(messageType: EmailMessageType, data: TemplateData) {
   return buildOutgoingEmail({ to: "ana@example.ro", locale: "ro", idempotencyKey: `test:${messageType}`, messageType, data, actionUrl: "https://example.test/ro/x/secret" });
 }
 
-describe("§NNN no hardcoded value in the emails' own sentences", () => {
+describe("§357 no hardcoded value in the emails' own sentences", () => {
   it("writes the club's name nowhere in the templates but through the constant", () => {
     const source = readFileSync(path.join(process.cwd(), "src/modules/notifications/templates.ts"), "utf8");
     expect(source).not.toContain(CLUB_NAME);

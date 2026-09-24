@@ -133,7 +133,7 @@ describe("the declaration's merge fields", () => {
         // people properly on how their data is used"): every item now carries its purpose, its
         // basis, who sees it and how long it stays, which is what art. 13 asks, and that is
         // about half as long again as the text it replaced. The declaration has its own since the
-        // runner took ownership of the risks (§NNN; the owner: "wild animals, proper equipment
+        // runner took ownership of the risks (§357; the owner: "wild animals, proper equipment
         // (shoes, headlamp for night running), falling, etc"): seven bullets and a sentence, about
         // two thousand characters, raised on purpose and no further.
         const ceiling = key === "EVENT_DECLARATION" ? 6500 : key === "PRIVACY_NOTICE" ? 17000 : 11000;

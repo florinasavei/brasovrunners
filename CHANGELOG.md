@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.76-2026-09-24
 
+- **The declaration names the risks the runner takes on — wild animals and dogs, falls, the weather and the dark, their own kit with a headlamp after dark — and no legal text or email hardcodes a club or event value any more.** Every "the organiser does not answer" line is limited by the law, and seeded and prefilled texts keep their placeholders. The club approves the new texts in /admin/legal, after a lawyer has read the declaration. §357.
 - **The scheduled jobs now wake the database together with the health check, on the hour.** The hourly safety check lands on the pinger's :00 call instead of an hour after the last run, and a minimum interval lands on its own marks on the clock (:00/:30, the hour, even hours). An idle hour now costs Neon one wake instead of up to three; moving onto those marks may make some checks up to a quarter of an hour late. No health threshold moved. §355.
 - **The event page's facts, grouped and in pills.** On an event's page and its preview, "Când" is one line with its weekday, "Unde" shows the address under the place, the route is one row of pills (distance, climb, difficulty, surface, each with its glyph), and the cost has its own row and pill. Every row's icon is the same size and colour, and the bullets are gone. The listing's hero and cards are unchanged. §356.
 ## BR-V1.75-2026-09-24

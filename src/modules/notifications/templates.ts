@@ -55,7 +55,7 @@ export type TemplateContent = {
 
 /*
   The club's everyday name is the platform's one constant (`CLUB_NAME`, §215), never a literal
-  in a message (§NNN; the owner: "I do not [want] hardcoded stuff in the document and emails
+  in a message (§357; the owner: "I do not [want] hardcoded stuff in the document and emails
   anymore!"): the sign-off, the banner's words, the invitation and the "my registrations" subject
   all read it, so the name is written once, and a message says nothing a constant could not.
 */
@@ -490,7 +490,7 @@ const T = {
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? // "When we remind you", never "a week before": the window is the event's own number (§104, §NNN).
+          ? // "When we remind you", never "a week before": the window is the event's own number (§104, §357).
             `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim, înainte de start.`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
         `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
@@ -543,7 +543,7 @@ const T = {
       subject: "Ne vedem în curând — detaliile pentru ziua cursei",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        // "Se apropie", not "peste două zile": a runner confirmed late gets this a day after confirming, nearer the start (§126, §NNN).
+        // "Se apropie", not "peste două zile": a runner confirmed late gets this a day after confirming, nearer the start (§126, §357).
         `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
@@ -679,7 +679,7 @@ const T = {
       action: "Vezi pagina evenimentului",
     },
     eventCancelled: {
-      // Without a title the sentence names no event — never the club's name standing in for one (§NNN).
+      // Without a title the sentence names no event — never the club's name standing in for one (§357).
       subject: (d: TemplateData) => (d.eventTitle ? `Evenimentul „${d.eventTitle}” a fost anulat` : "Evenimentul a fost anulat"),
       body: (d: TemplateData) => [
         `Ne pare rău: evenimentul${d.eventTitle ? ` „${d.eventTitle}”` : ""}${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,

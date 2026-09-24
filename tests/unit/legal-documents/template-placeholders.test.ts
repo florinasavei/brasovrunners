@@ -7,7 +7,7 @@ import { LEGAL_TEMPLATES, templatePrefill } from "@/modules/legal-documents/temp
 import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 
 /**
- * §NNN — the owner, 2026-09-24: "when I seed a document I must have the placeholders as well!"
+ * §357 — the owner, 2026-09-24: "when I seed a document I must have the placeholders as well!"
  *
  * Two kinds of gap live in the platform's legal texts, and neither may be lost on the way from
  * the template to a version in the database:
@@ -50,7 +50,7 @@ const FACTS = clubFactsFromEnv({
   EMAIL_REPLY_TO: "contact@example.test",
 });
 
-describe("§NNN the gaps of the platform's legal texts survive the seed and the prefill", () => {
+describe("§357 the gaps of the platform's legal texts survive the seed and the prefill", () => {
   it("has gaps to lose: the declaration's merge fields, and club facts in all three", () => {
     // So that "every gap survived" cannot pass by the templates having none.
     expect(fieldCounts(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.body).size).toBeGreaterThanOrEqual(7);

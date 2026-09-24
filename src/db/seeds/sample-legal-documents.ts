@@ -74,7 +74,7 @@ const REVIEW_NOTE_EN = [
  * So every `{{field}}` the template carries is still a field in the seeded version (filled only
  * when the declaration is shown, signed or printed for one person at one event), and every club
  * fact is still its `<PLACEHOLDER>` (a sample must not look approved, §132).
- * `tests/integration/legal/sample-seed.test.ts` fails if either is ever lost (§NNN).
+ * `tests/integration/legal/sample-seed.test.ts` fails if either is ever lost (§357).
  */
 function sample(key: LegalDocumentKey, locale: "ro" | "en"): LegalDocumentTranslationInput {
   const template = LEGAL_TEMPLATES[key][locale];

@@ -79,7 +79,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
     : fromTemplate && template && isLegalDocumentKey(template)
-      ? // Every `{{field}}` stays a field and every unknown fact its placeholder (§NNN).
+      ? // Every `{{field}}` stays a field and every unknown fact its placeholder (§357).
         { key: template, ...templatePrefill(template, facts) }
       : undefined;
   // What is still a blank, named, so the Administrator types two things and not a search.

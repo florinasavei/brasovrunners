@@ -10,7 +10,7 @@
  * effect: production keeps the version the club approved until it approves a new one in
  * `/admin/legal`.
  *
- * No hardcoded value (§NNN): the club is named only by the four club-fact placeholders; the tick
+ * No hardcoded value (§357): the club is named only by the four club-fact placeholders; the tick
  * a member gives is described ("the tick saying you are a member of the group"), not quoted with
  * the club's name in it — and it says "group", as the form does, because the tick is a claim
  * (§48) about running with the group, not membership of the association (§189). What stays

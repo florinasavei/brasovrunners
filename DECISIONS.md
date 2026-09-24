@@ -14451,3 +14451,53 @@ Baseline `BR-V1.76-2026-09-24`.
 **Consequences:** `events/ui/EventFacts.tsx`, `events/ui/glyphs.ts` (`distance`, `elevation`), the event page and the preview (address block removed), `Event.elevationShort` and `Event.costDonateOn` in both catalogues, `Event.startAt` removed from both. BR-REQ-041-01 criterion 15 is superseded; BR-REQ-011-01 criterion 7 and BR-REQ-020-01 criterion 8 are amended.
 
 Baseline `BR-V1.76-2026-09-24`.
+
+## 357. The runner takes ownership of the risks, and nothing in a legal text or an email is written in
+
+**Status:** Decided. Changes the platform's three legal templates (`src/modules/legal-documents/templates/`), the emails' own sentences, the metadata of the declaration and bib PDFs, Zitadel's invitation, the seed and the "start from the platform's text" prefill. No migration. Nothing in effect changes until the club approves new versions in `/admin/legal`, and production still refuses the seed (§29).
+
+The owner, 2026-09-24, said three things. The declaration must "cover us on the encounters with wild animals, proper equipment (shoes, headlamp for night running), falling, etc — basically the runner takes ownership of everything". "When I seed a document I must have the placeholders as well!" And "I do not [want] hardcoded stuff in the document and emails anymore!"
+
+### The runner takes ownership, as informed acceptance and never immunity
+
+The declaration has seven new bullets in its own "• …;" style, in both languages. They cover:
+- the terrain and falls;
+- wild animals and dogs, with the basic rules (keep your distance, do not feed, never run from a bear) and 112;
+- the weather and the dark;
+- the runner's own equipment: shoes suited to the terrain, a charged phone, a working headlamp with charged batteries after dark, reflective elements on roads, and a start refused without the mandatory kit the event's rules announce;
+- their own pace and decisions (a group run is not a guided tour);
+- protected areas;
+- personal belongings.
+
+A sentence in the owner's words closes the list: "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu."
+
+The bullets are informed acceptance of a risk plus the runner's own obligations. They are not a promise that nobody answers for anything. Under Civil Code art. 1355, liability for intent or gross fault cannot be excluded, and harm to the body or health cannot be excused except as the law allows. Accepting a risk is not by itself a waiver of damages. What the text can do is inform the runner and set out the conduct they owe, which counts when the victim caused the harm (art. 1371).
+
+So every sentence that says the organiser does not answer for something carries "în limitele permise de lege" / "to the extent the law allows": the liability paragraph, the belongings bullet, and the paragraph on minors the runner brings along. Review found the belongings bullet and the minors paragraph (carried over from the paper form) without the limit, and both carry it now. `tests/unit/legal-documents/declaration-risks.test.ts` refuses an unqualified "nu răspunde" / "not responsible" in the new bullets and holds every disclaimer in the text to the limit.
+
+**A Romanian lawyer should read the declaration before the club approves it on production.** These notes are the platform's reading of the Civil Code, not legal advice. The club approves the text and relies on it. The paragraphs carried over from the paper form, the liability paragraph and the one on minors, are the ones to ask about first.
+
+### No hardcoded value
+
+One approved declaration serves every event, and one privacy notice and one set of terms serve every event and every year. So no template writes in a value of an event or of the club: an event's facts are merge fields, and a club fact is its `<PLACEHOLDER>` (§132).
+
+- The terms name "the courts of the club's registered seat", not a town, and give the participation window's deadline where an event has one (§104).
+- The privacy notice describes the member tick as "the tick saying you are a member of the group", as the form words it: a claim (§48) about the group (§189), not the association.
+- The seed's banner says "the club".
+- The emails read `CLUB_NAME` (§215).
+- The confirmation no longer promises "a week before", because the window is each event's own (§104).
+- The reminder says the event "se apropie" rather than "peste două zile", because a late confirmer is reminded nearer the start (§126).
+- A cancellation without a title names no event, where it used to name the club in the event's place.
+- The declaration PDF's footer and metadata, the bib sheet's Author and Zitadel's invitation `applicationName` read the constant too.
+
+Some things stay written in because they are neither the club's nor an event's: the laws cited, the supervisory authority's statutory contact (art. 13(2)(d) GDPR), 112, and the platform's own fixed periods. `tests/unit/legal-documents/no-hardcoded-values.test.ts` and `tests/unit/notifications/no-hardcoded-values.test.ts` enforce this.
+
+### The placeholders survive the seed and the prefill
+
+"Start from the platform's text" and the one-press approval now share one function, `templatePrefill` in `templates/catalogue.ts`. Every `{{field}}` stays a field, and every club fact the environment does not know stays its placeholder. The seed keeps both. `yarn db:seed:legal` inserts the next version when a template's hash changed and inserts nothing when it did not. `tests/unit/legal-documents/template-placeholders.test.ts` and `tests/integration/legal/sample-seed.test.ts` count the gaps in the template, the in-memory sample, the stored version and the prefill.
+
+### The longer text on two pages
+
+The signed and blank declaration PDFs, adult and minor, flow onto a second page rather than being cut off. Every line of text sits between the margins, and only the footer is under them. The layout test reads the page geometry from `declaration-pdf.ts`'s exports rather than copies. The right edge is checked only as far as every run starting inside it, because a line's end is not in the file's positions.
+
+Baseline `BR-V1.76-2026-09-24`.

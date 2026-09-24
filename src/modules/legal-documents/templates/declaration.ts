@@ -16,7 +16,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * "for minors" line left empty. `{{declarant}}` and `{{idDocument}}` still work in every text the
  * club approved before; this template simply no longer needs them.
  *
- * **The runner takes ownership (§NNN).** The owner, 2026-09-24: the declaration must "cover us on
+ * **The runner takes ownership (§357).** The owner, 2026-09-24: the declaration must "cover us on
  * the encounters with wild animals, proper equipment (shoes, headlamp for night running), falling,
  * etc — basically the runner takes ownership of everything". So the bullets name those risks —
  * the terrain and falls, wild animals and dogs, the weather and the dark, the runner's own
@@ -37,7 +37,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * `/admin/legal`. The paragraphs carried over from the club's paper form — the liability
  * paragraph and the one on minors — are the ones to ask about first.
  *
- * **No hardcoded value (§NNN).** One approved declaration serves every event, so nothing in it
+ * **No hardcoded value (§357).** One approved declaration serves every event, so nothing in it
  * names an event, a place, a date or a distance — those are the merge fields — and nothing names
  * the club but the footnote's placeholder: "the trails the event uses", never a mountain or a town.
  * `tests/unit/legal-documents/no-hardcoded-values.test.ts` holds all three templates to it.

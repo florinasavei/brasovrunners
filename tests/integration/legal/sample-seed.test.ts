@@ -15,7 +15,7 @@ vi.mock("@/db/client", () => ({ getDb: () => db }));
 const { SAMPLE_DOCUMENTS, seedSampleLegalDocuments } = await import("@/db/seeds/sample-legal-documents");
 
 /**
- * `yarn db:seed:legal` against a real PostgreSQL (PGlite), the way QA is seeded (§29, §NNN).
+ * `yarn db:seed:legal` against a real PostgreSQL (PGlite), the way QA is seeded (§29, §357).
  *
  * The owner, 2026-09-24: "I need to seed and migrate that declaration of participation …", then
  * "when I seed a document I must have the placeholders as well!". Migrating a legal text here is
@@ -43,7 +43,7 @@ async function versionsOf(key: LegalDocumentKey) {
   return db.select({ version: legalDocuments.version, contentSha256: legalDocuments.contentSha256, isApproved: legalDocuments.isApproved }).from(legalDocuments).where(eq(legalDocuments.key, key)).orderBy(asc(legalDocuments.version));
 }
 
-describe("§NNN the sample legal documents, seeded and re-seeded", () => {
+describe("§357 the sample legal documents, seeded and re-seeded", () => {
   const originalAppEnv = process.env.APP_ENV;
   let close: () => Promise<void>;
 

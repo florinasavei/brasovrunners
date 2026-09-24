@@ -3,7 +3,7 @@ import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 
 /**
- * §NNN — the owner, 2026-09-24: the declaration must "cover us on the encounters with wild
+ * §357 — the owner, 2026-09-24: the declaration must "cover us on the encounters with wild
  * animals, proper equipment (shoes, headlamp for night running), falling, etc — basically the
  * runner takes ownership of everything".
  *
@@ -54,7 +54,7 @@ const IMMUNITY = {
   en: new RegExp(`in any way|cannot be held liable|waive|not responsible(?!, ${LAW_LIMIT.en})`, "i"),
 } as const;
 
-describe("§NNN the runner takes ownership — the declaration's risks", () => {
+describe("§357 the runner takes ownership — the declaration's risks", () => {
   for (const { risk, ro, en } of RISKS) {
     it(`names ${risk}, in both languages, in a bullet`, () => {
       for (const pattern of ro) expect(bullets.ro.some((b) => pattern.test(b)), `ro ${pattern}`).toBe(true);
