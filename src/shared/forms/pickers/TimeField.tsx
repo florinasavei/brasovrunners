@@ -93,8 +93,10 @@ export default function TimeField({ name, label, defaultValue = "", required = f
 }
 
 /**
- * The picker and the hidden input that posts for it. Exported for the unit test, which renders it
- * on the server and reads what it would post; pages use `TimeField`.
+ * The picker and the hidden input that posts for it. Exported for
+ * `tests/unit/shared/pickers-running.test.ts`, which renders it on the server under
+ * `PickerProvider` and reads what it would post (`HH:mm`, from the hidden input alone) and what
+ * it shows (`19:00`, two sections and no AM/PM); pages use `TimeField`.
  */
 export function TimePickerInput({
   id,
