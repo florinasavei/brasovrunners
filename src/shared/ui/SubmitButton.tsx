@@ -382,7 +382,15 @@ export default function SubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
-      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      {/*
+        The runner's styles, drawn with the page, so the press adds none (§NNN). The guarantee
+        assumes the button already has a start icon at rest — a verb's glyph or the runner. A
+        button with neither (the pages list's ↑ ↓, the registrations list's compact "Retrimite",
+        the desk's `ConfirmOnArrival`, which presses itself) mounts MUI's start-icon slot for the
+        first time on the press, and its styles may be written then if nothing else on the page
+        drew that slot at that size. Accepted: those are one-line forms, not the heavy ones this
+        was measured on, and each one's missing glyph is deliberate where it is written.
+      */}
       <RunnerLoaderStyles size={GLYPH_PX[size]} color="inherit" />
       {dimmed && hint && (
         <Typography id={hintId} variant="body2" color="text.secondary" role="status">
