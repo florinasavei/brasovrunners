@@ -1,6 +1,7 @@
 import { and, count, desc, eq, gt, isNotNull, lt, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
+import { readJobCadence } from "@/modules/jobs/cadence";
 
 /**
  * "Can the club still send email?" — the answer `/api/health` and `/admin/tasks` give
@@ -59,7 +60,21 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<EmailHealth> {
   const deferredFrom = new Date(now.getTime() + DEFERRED_BEYOND_MS);
-  const overdueBefore = new Date(now.getTime() - OVERDUE_AFTER_MS);
+  /*
+    The Administrator's minimum interval between two real runs (§334) is time the outbox job may
+    legitimately leave a retry waiting, and it is added in full whenever one is set. Not "past
+    the hour": the ninety minutes above already spend their hour on the night pinger, and the
+    interval comes on top of it. At night with sixty minutes, a retry due just after a run at T
+    waits out the interval to T+60, and when the run that started the interval was off the
+    pinger's hour (the GitHub backstop, a run woken between two calls) the hourly call at T+60
+    still falls inside it and the claim is at T+120 — about 110 minutes overdue against ninety.
+    So the worst case is the interval plus one night pinger period, and ninety plus the interval
+    covers it with the backoff's half hour to spare; a club that chose a throttle is never told
+    its email has stalled by it.
+  */
+  const { minutes: cadenceMinutes } = await readJobCadence(db);
+  const overdueAfterMs = OVERDUE_AFTER_MS + cadenceMinutes * 60_000;
+  const overdueBefore = new Date(now.getTime() - overdueAfterMs);
   const failedSince = new Date(now.getTime() - FAILED_WINDOW_MS);
 
   const pending = eq(emailOutbox.status, "PENDING");

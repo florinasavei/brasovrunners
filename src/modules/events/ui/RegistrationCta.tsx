@@ -5,9 +5,7 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { unstable_rethrow } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { getDb } from "@/db/client";
-import { findEventForRegistrationById } from "@/modules/events/repository";
-import { readPublicAvailability } from "@/modules/registrations/service";
+import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { accentOnHover } from "@/theme/surfaces";
@@ -52,9 +50,14 @@ export default async function RegistrationCta({
   let availablePlaces: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
-      const db = getDb();
-      const internal = await findEventForRegistrationById(db, event.id);
-      if (internal) availablePlaces = await readPublicAvailability(db, internal, now);
+      /*
+        From the public cache (§333), and still the allocator's number for this instant: every
+        registration that moves expires it, and the one input the clock changes — a waiting-list
+        offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
+        Without it, an open race's page woke the database for every visitor during exactly the
+        weeks the page is read most.
+      */
+      availablePlaces = await cachedPublicAvailability(event.id, now);
     } catch (error) {
       /*
         The one thing on a page that is never served from a copy (§281).

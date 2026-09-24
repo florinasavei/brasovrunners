@@ -1,10 +1,7 @@
 import type { MetadataRoute } from "next";
-import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { listPublishedAlbums } from "@/modules/content/gallery/repository";
-import { listPublishedPages } from "@/modules/content/pages/repository";
-import { listPublishedEvents } from "@/modules/events/repository";
+import { cachedPublishedAlbums, cachedPublishedPages, cachedSitemapEvents } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 
 /**
@@ -16,6 +13,10 @@ import { env } from "@/shared/config/env";
  *
  * Participant action pages, the backoffice and runner profiles are never listed
  * (AGENTS.md §9.2).
+ *
+ * Per request, from the public cache (§333): a crawler is exactly the visitor that should not
+ * wake the database, and the rows here change only when an event, a page or an album is saved —
+ * each of which expires them.
  */
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of routing.locales) {
-    const events = await listPublishedEvents(getDb(), locale);
+    const events = await cachedSitemapEvents(locale);
 
     /**
      * The site root is deliberately absent: it redirects to the events listing, and listing a
@@ -62,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * returned, and only in a locale that has one — the same rule as everything above.
    */
   for (const locale of routing.locales) {
-    for (const page of await listPublishedPages(getDb(), locale)) {
+    for (const page of await cachedPublishedPages(locale)) {
       entries.push({
         url: `${env.APP_BASE_URL}${getPathname({
           locale,
@@ -86,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Albums (BR-REQ-054-01): the listing once per locale, then each published album.
   for (const locale of routing.locales) {
-    const albums = await listPublishedAlbums(getDb(), locale);
+    const albums = await cachedPublishedAlbums(locale);
     if (albums.length === 0) continue;
     entries.push({
       url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/gallery" })}`,

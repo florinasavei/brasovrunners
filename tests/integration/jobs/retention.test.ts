@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
@@ -14,6 +14,11 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { pruneExpiredRows, RETENTION } from "@/modules/jobs/retention";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+// The public cache's one call (§333, public pages from cache), stubbed so the sweep's deletes can
+// be seen telling it; outside the tests that stub `NEXT_RUNTIME` the helper returns before it.
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), unstable_cache: vi.fn() }));
+const { revalidateTag } = await import("next/cache");
 
 /**
  * The retention sweep (`AGENTS.md` §16.2, `DECISIONS.md` §45).
@@ -349,6 +354,52 @@ describe("retention sweep", () => {
     // The confirmed registration of the fixture is untouched, and so is its participant.
     expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(1);
     expect(await db.select().from(participants).where(eq(participants.id, participantId))).toHaveLength(1);
+  });
+
+  /**
+   * §333 (public pages from cache) × §322: both of the sweep's registration deletes — the lapsed
+   * ones after thirty days and a race's after three years — expire the public "places" rows, and a
+   * sweep that deletes no registration tells the cache nothing (it runs every few minutes).
+   */
+  describe("the public cache", () => {
+    const expiredPlaces = ["public:places", { expire: 0 }] as const;
+
+    beforeEach(() => {
+      vi.stubEnv("NEXT_RUNTIME", "nodejs");
+      vi.mocked(revalidateTag).mockClear();
+    });
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("is told nothing by a sweep that deletes no registration", async () => {
+      await db.insert(jobRuns).values({ jobName: "email-outbox", startedAt: daysAgo(RETENTION.jobRunsDays + 1) });
+
+      const counts = await pruneExpiredRows(db, NOW);
+
+      expect(counts.jobRuns).toBe(1);
+      expect(revalidateTag).not.toHaveBeenCalled();
+    });
+
+    it("is told when lapsed registrations go", async () => {
+      await lapsedRegistration("old@example.ro", RETENTION.unconfirmedRegistrationDays + 1);
+
+      const counts = await pruneExpiredRows(db, NOW);
+
+      expect(counts.unconfirmedRegistrations).toBe(1);
+      expect(counts.registrations).toBe(0);
+      expect(revalidateTag).toHaveBeenCalledWith(...expiredPlaces);
+    });
+
+    it("is told when an old race's registrations go", async () => {
+      const year = 365.25 * 24 * 60 * 60_000;
+
+      const counts = await pruneExpiredRows(db, new Date(Date.UTC(2026, 9, 1) + 3 * year + 24 * 60 * 60_000));
+
+      expect(counts.registrations).toBe(1);
+      expect(counts.unconfirmedRegistrations).toBe(0);
+      expect(revalidateTag).toHaveBeenCalledWith(...expiredPlaces);
+    });
   });
 
   /**

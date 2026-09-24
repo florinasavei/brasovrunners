@@ -547,7 +547,8 @@
       "bulkEraseConfirm": "Type how many you are erasing",
       "bulkEraseConfirmHelp": "Exactly the number of ticked registrations — anything else erases nothing.",
       "bulkEraseAction": "Erase for good",
-      "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased."
+      "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
+      "filtersNone": "no filter · every registration"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -626,7 +627,15 @@
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
-      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them."
+      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
+      "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: a new limit must be above what this period has already spent plus the margin, or it would stop the database the moment it is saved. The spend and the smallest limit are written under the box.",
+      "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
+      "NEON_UNCONFIGURED": "Nothing changed: NEON_API_KEY or NEON_PROJECT_ID is missing on this environment (SETUP.md §33).",
+      "NEON_KEY_FORBIDDEN": "Neon refused the change: the key in NEON_API_KEY reads the project but may not modify it — most likely a personal key whose owner may only view the project. A project-scoped key may: in Neon, the organization's Settings → API keys → Create new → Project-scoped, on this environment's project — an organization Admin creates it, and Neon gives it Editor access to that one project. A personal key works only if its owner is an Admin of the organization or an Editor on the project. Put the key in NEON_API_KEY on the environment's Vercel project and redeploy. The figures above the form are what Neon holds now.",
+      "NEON_BUSY": "Neon was working on another change to the project and did not take this one. Try again in a minute; the figures above the form are what Neon holds now.",
+      "NEON_REFUSED": "Neon refused the values sent. The figures above the form are what Neon holds now; if the size chosen is above what the plan allows, choose a smaller one.",
+      "NEON_UNREACHABLE": "Neon did not answer (or answered with something the page cannot read). The figures above the form are what Neon holds now; try again in a minute.",
+      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1034,7 +1043,9 @@
       "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
-      "inviting": "Adding…"
+      "inviting": "Adding…",
+      "inviteAsideSends": "the account and the invitation, in one step",
+      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console"
     },
     "queue": {
       "title": "The registration queue",
@@ -1272,6 +1283,55 @@
         "saved": "The Neon plan is saved; the figures on /devs and the Neon row below follow it from now on.",
         "readOnly": "The Administrator changes the plan. The figures above are current for you too."
       },
+      "neonLimits": {
+        "title": "The database's limits",
+        "intro": "Two brakes on the Neon bill, set in Neon itself: how large the database may grow, and how many CU-hours it may spend in a billing period. Everything here is read from Neon each time the page opens; after a save you see what Neon says, not what was sent.",
+        "unconfigured": "{missing} is missing on this environment, so the page can neither read the limits nor change them. Set NEON_API_KEY and NEON_PROJECT_ID on the environment's Vercel project (SETUP.md §33) and redeploy.",
+        "failure": {
+          "forbidden": "Neon refused the key (HTTP {status}): the key in NEON_API_KEY may not read this project. The limits cannot be read, so they cannot be changed either.",
+          "busy": "Neon is working on another change to this project. Reload the page in a minute.",
+          "refused": "Neon refused the request (HTTP {status}). Check NEON_PROJECT_ID: it must be this environment's project.",
+          "unavailable": "Neon has a problem (HTTP {status}). The limits cannot be read now; reload the page later.",
+          "timeout": "Neon did not answer within 5 seconds. The limits cannot be read now, so they cannot be changed either; reload the page in a minute.",
+          "network": "Neon could not be reached (a network error). Reload the page in a minute.",
+          "unexpected": "Neon answered with something the page cannot read. The limits cannot be shown here; check them in the Neon console."
+        },
+        "keyNeeded": "The same key changes them when it may modify the project. A project-scoped key always may — Neon gives it Editor access to its one project (the organization's Settings → API keys → Create new → Project-scoped, on this environment's project) — and so does the personal key of an organization Admin or of an Editor on the project. The personal key of a Viewer reads the figures and cannot change them.",
+        "readout": "Maximum size: {size} · Monthly limit: {quota}",
+        "size": "{cu} CU (≈ {ram} GB RAM)",
+        "sizeUnknown": "unknown (Neon showed no read-write compute)",
+        "quotaNone": "none",
+        "quotaSet": "{hours} CU-hours per period",
+        "price": "At Launch's rate ({rate} $/CU-hour), at the maximum size: at most {perHour} $ for each hour awake, which is {perMonth} $ a month if it stayed awake at the maximum all the time. The usual bill is the time awake: on average the database uses ≈ 0.25 CU.",
+        "usage": "This period: {used} CU-hours spent, {active} hours awake; the period ends on {end}.",
+        "defaults": "A compute created again gets {min}–{max} CU by default (the project's setting).",
+        "defaultsUnset": "The project has no default size for a new compute; saving gives it the one chosen below.",
+        "manyComputes": "The project has {count} read-write computes: the largest size is shown, and saving changes them all.",
+        "quotaActive": "Limit in force: {hours} CU-hours, of which {used} spent. When it is reached, Neon stops the database until {end}.",
+        "readOnly": "The Administrator changes the limits. The figures above are current for you too.",
+        "maxCu": "The database's maximum size",
+        "maxCuHelp": "The site uses ≈ 0.25 CU on average; more only helps under heavy load. The minimum stays {min} CU. Beside each size, the worst case at Launch's rate: one hour awake at that size, and a whole month awake.",
+        "choose": "— choose a size —",
+        "option": "{cu} CU (≈ {ram} GB RAM) — at most {perHour} $/hour, {perMonth} $/month",
+        "planCeiling": "The account's plan allows at most {max} CU, so the larger sizes are not offered.",
+        "warningTitle": "A monthly limit switches the site off",
+        "warning": "When the limit is reached, Neon SUSPENDS the database until the next billing period ({end}), and it does not wake at the next connection. Until then the site does not work: no registrations, no race-day desk, no emails. This page needs the database too, so a limit that has stopped it can only be lifted in the Neon console.",
+        "recommend": "Recommended: a monthly limit with room — {hours} CU-hours on this environment (SETUP.md §40; production spent about 4 CU-hours a day even on days of heavy testing) — together with the spending notification on Neon's Billing page as the early warning.",
+        "recommendConfirm": "On production, a new, changed or removed limit needs the confirmation box below ticked: reached, the limit stops the site; removed, production is left with no cap.",
+        "quotaMode": "Monthly limit (CU-hours)",
+        "quotaModeNone": "No limit",
+        "quotaModeLimit": "With a limit — the number below",
+        "quotaCuHours": "CU-hours per period, with a limit",
+        "quotaCuHoursHelp": "A new limit: at least {smallest}. Ignored with “No limit”.",
+        "floor": "Spent this period: {used} CU-hours. A new limit must be at least {smallest} CU-hours (the spend plus a margin of {margin}): a smaller one would stop the database the moment it is saved. The limit in force, left as it is, stays exactly as Neon holds it.",
+        "confirmField": "Confirming the limit change",
+        "confirm": "I understand what I am changing on production's limit: with a limit, the database stops when it is reached and the site does not work until {end}; “No limit” leaves production with no spending cap at all.",
+        "writeNote": "Saving sends the size to the database's compute and to the project's default (so a compute created again inherits it), and the limit to the project — only what differs from Neon's figures — then the page reads Neon again. The key in NEON_API_KEY needs the right to modify the project, which a project-scoped key has.",
+        "save": "Save the limits",
+        "saving": "Sending to Neon…",
+        "saved": "The limits were sent to Neon; below is what Neon says now.",
+        "savedSame": "Nothing to change: Neon already had these values."
+      },
       "filter": {
         "who": "Who",
         "kind": "Kind",
@@ -1470,6 +1530,17 @@
             "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
+        },
+        "neonLimits": {
+          "title": "The database's monthly compute-time limit",
+          "todo": "No monthly limit is set on this environment (or it could not be read from Neon — the card says which), so nothing caps the Neon bill. Set one with room on the Costs tab → “The database's limits” — the card names the figure recommended for this environment (SETUP.md §40) — and keep the spending notification on Neon's Billing page. The limit is what suspends the database when it is reached, so leave room.",
+          "broken": "This period has already spent 80% or more of the monthly limit. Neon suspends the whole database — every page, until the next billing period — the moment it is reached: raise the limit or wait for the reset, today rather than when it happens.",
+          "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
+          "how": [
+            "On the Costs tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon with the key /devs already uses (SETUP.md §33).",
+            "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
+            "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
+          ]
         }
       },
       "freeVerdict": {
@@ -1608,6 +1679,42 @@
         "day": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
         "month": "This month {sent} of {allowance} messages went out (plan {plan}, no daily limit). Enough for about {count} more complete registrations — a floor, because somebody who lands on the waiting list costs more messages.",
         "none": "Plan {plan} has no message limit. {sent} went out today."
+      },
+      "jobCadence": {
+        "title": "How often the platform checks",
+        "intro": "The platform has two scheduled jobs: registration maintenance (holds that lapse, waiting-list offers, reminders, race numbers) and the email outbox. An external service calls them every 15 minutes by day and hourly at night. When they have nothing to do they answer from Vercel's cache without waking the database — and Neon bills every wake-up as at least 5 minutes of compute. Here you choose how often, at most, they may look at the database.",
+        "inForce": {
+          "onDemand": "In force: on demand (default) — only when something is due, and in any case at least once every {cap} min.",
+          "every": "In force: at most once every {minutes} min, for each job."
+        },
+        "cost": "What a longer interval costs: a waiting-list offer, a reminder, an announcement or a race number may go out up to that many minutes late.",
+        "safe": "What does not change: a held place still lapses on time — every reading of the places counts the deadline at that moment, whether or not the scheduled job has run. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
+        "job": {
+          "maintenance": "Registration maintenance",
+          "outbox": "Email outbox"
+        },
+        "lastRun": "last real run: {when}",
+        "nextByWork": "next at the latest: {when}",
+        "nextByCadence": "next at the latest: {when} (your interval)",
+        "nextPing": "next: at the next ping",
+        "lastPingRan": "last ping: {when}, ran",
+        "lastPingSkipped": "last ping: {when}, skipped without the database",
+        "updatedAt": "Set on {when}.",
+        "readOnly": "The Administrator changes the interval. The figures above are current for you too.",
+        "field": "At most once every",
+        "fieldHelp": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do. \"On demand\" means only the \"when something is due\" rule and the {cap}-minute safety check.",
+        "option": {
+          "onDemand": "On demand (default) — when something is due, at least once every {cap} min",
+          "every": "{minutes} min",
+          "everyLong": "{minutes} min — the {cap}-minute safety check also moves to every {minutes} min"
+        },
+        "save": "Save the interval",
+        "saving": "Saving…",
+        "saved": "The interval was saved. Each job looks at the database again at its next ping and plans by it.",
+        "emails": {
+          "immediate": "Emails go out right after the request that queued them, whatever the interval; the scheduled queue only picks up what is left (a retry, a message deferred until the daily allowance resets).",
+          "scheduled": "Emails now go out only when the scheduled queue runs (the club's sending setting is on “scheduled”), so a longer interval delays them too, by up to that many minutes."
+        }
       }
     },
     "richText": {
@@ -1842,9 +1949,8 @@
       "backToEvent": "← Back to the event",
       "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
-      "page": "Page {n} of {total}",
-      "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
-      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two A5-sized numbers per A4 page, one above the other with a cut line between them, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "downloadAll": "Download every number ({count}) — a PDF to print",
       "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
     },
@@ -1958,6 +2064,8 @@
       "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere.",
       "link": "See the emails participants receive →",
       "subject": "Subject",
+      "aside": "{count} messages · {language}",
+      "langLabel": "The language you see and write the messages in:",
       "lang": {
         "ro": "Română",
         "en": "English"
@@ -2006,8 +2114,31 @@
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link."
       },
+      "whenShort": {
+        "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
+        "COMPLETE_DECLARATION": "after the address is confirmed, when there is a place",
+        "WAITLIST_JOINED": "after the address is confirmed, when the event is full",
+        "WAITLIST_SPOT_OFFER": "when a place frees up",
+        "REGISTRATION_CONFIRMED": "after the declaration is signed",
+        "REGISTRATION_CANCELLED": "on a withdrawal or a cancellation",
+        "WAITLIST_OFFER_EXPIRED": "when the offer's 24 hours pass",
+        "REGISTRATION_MANAGE_LINK": "on request, “Resend the link”",
+        "PROFILE_MANAGE_LINK": "on request, every registration",
+        "REGISTRATION_STATE_NOTICE": "resent by an organizer",
+        "EVENT_REMINDER": "two days before the start",
+        "EVENT_THANKS": "by hand, after the event",
+        "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
+        "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
+        "BIB_ASSIGNED": "when registration closes, or a number is set by hand",
+        "STAFF_INVITATION": "when a colleague is added",
+        "REGISTRATION_OPENED": "when registration opens",
+        "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
+        "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
+        "EVENT_CANCELLED": "when the event is cancelled, if ticked"
+      },
       "clubNotices": {
         "title": "The club's copies",
+        "aside": "Addresses receiving copies: {count}",
         "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
         "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
         "source": {
@@ -2065,6 +2196,11 @@
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
         "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
+        "aside": {
+          "day": "Plan {plan} · {sent} of {allowance} today",
+          "month": "Plan {plan} · {sent} of {allowance} this month",
+          "none": "Plan {plan} · no limit"
+        },
         "status": {
           "day": "Plan {plan}: {sent} of {allowance} messages sent today, {remaining} left; waiting: {waiting}.",
           "month": "Plan {plan}: {sent} of {allowance} messages sent this month, {remaining} left; no daily limit; waiting: {waiting}.",
@@ -2095,6 +2231,8 @@
       },
       "contacts": {
         "title": "Who receives the contact messages",
+        "aside": "They currently reach: {to}",
+        "asideNobody": "nobody",
         "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another, “Hidden copy (Bcc)” get a copy without appearing in the message. Saved here, with no redeploy.",
         "source": {
           "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
@@ -2205,7 +2343,8 @@
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
-            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment."
+            "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
+            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
           ],
           "roles": [
             "ADMIN",
@@ -2956,7 +3095,18 @@
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     },
     "sentThisMonth": "Sent this month",
-    "emailPlanLabel": "Mailgun plan"
+    "emailPlanLabel": "Mailgun plan",
+    "jobSchedule": {
+      "quiet": "pings wait until {when} (nothing due; {source})",
+      "floor": "pings wait until {when} (minimum interval; {source})",
+      "fromCache": "from the cache",
+      "fromDatabase": "recomputed from the database",
+      "nextPing": "the next ping runs",
+      "pingRan": "last ping {when}: ran",
+      "pingSkipped": "last ping {when}: skipped",
+      "cadenceOnDemand": "Minimum interval: on demand — at least one real run every {cap} min (/admin/tasks → Costs).",
+      "cadenceEvery": "Minimum interval: {minutes} min between two real runs (/admin/tasks → Costs)."
+    }
   },
   "Error": {
     "title": "Something went wrong",

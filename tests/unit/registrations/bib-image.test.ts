@@ -1,7 +1,8 @@
 import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { BIB_IMAGE, bibImageFooterLines, renderBibImage } from "@/modules/registrations/bib-image";
+import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import { bibImageFooterLines, renderBibImage } from "@/modules/registrations/bib-image";
 
 /**
  * §94, §180 — the picture the preview route answers with, and the club's only look at a bib

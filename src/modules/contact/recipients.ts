@@ -4,6 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -111,5 +112,8 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
       now,
     });
   });
+  // The header's "Contact" entry and the contact page ask the public cache whether anybody is
+  // named (§333); this is the write that changes the answer.
+  revalidatePublicContent("settings");
   return { ...next, updatedAt: now };
 }

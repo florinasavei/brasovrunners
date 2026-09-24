@@ -10,9 +10,9 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { notFound } from "next/navigation";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { listPublishedAlbums } from "@/modules/content/gallery/repository";
+import type { PublicAlbumSummary } from "@/modules/content/gallery/repository";
+import { cachedPublishedAlbums } from "@/modules/public-cache/reads";
 import CardLink from "@/shared/ui/CardLink";
 import ContactLink from "@/shared/ui/ContactLink";
 import { GalleryGridSkeleton } from "@/shared/ui/PublicSkeleton";
@@ -43,8 +43,9 @@ export default async function GalleryPage({ params }: Props) {
 
   const t = await getTranslations("Gallery");
   // Started, not awaited (§166): the heading and the intro reach the browser at once, and
-  // the covers fill a grid of their own size when the query answers.
-  const albums = readWithLastGood(`gallery:${locale}`, () => listPublishedAlbums(getDb(), locale));
+  // the covers fill a grid of their own size when the query answers — from the public cache,
+  // which publishing an album or adding a photo expires (§333).
+  const albums = readWithLastGood(`gallery:${locale}`, () => cachedPublishedAlbums(locale));
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -77,7 +78,7 @@ export default async function GalleryPage({ params }: Props) {
  * The query is started by the page and awaited here, so the shell is sent while the database
  * is still answering and the wait is a grid of covers rather than a blank page.
  */
-async function AlbumGrid({ albums: pending }: { albums: ReturnType<typeof listPublishedAlbums> }) {
+async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSummary[]> }) {
   const t = await getTranslations("Gallery");
   const format = await getFormatter();
   const albums = await pending;

@@ -5,6 +5,7 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type ReactNode, useActionState, useEffect, useRef, useState } from "react";
+import { openFoldsAround } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
 
@@ -92,7 +93,12 @@ export default function ActionForm({
 
   const summary = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (state?.error) summary.current?.focus();
+    if (!state?.error) return;
+    // The folds around the form first (§336): backoffice folds start closed, and an element in
+    // a closed `<details>` cannot take focus. Normally the person opened it to press and it is
+    // still open; this is for whatever closed it in between.
+    openFoldsAround(summary.current);
+    summary.current?.focus();
   }, [state]);
 
   // The label under the exact name, then unindexed (`event.schedule[].date`), then the panel

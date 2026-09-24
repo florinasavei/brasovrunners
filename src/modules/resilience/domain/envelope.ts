@@ -11,6 +11,10 @@
  * mid-flight — takes the whole site's content with it, and a stranger meets an error page on the
  * week they were deciding whether to enter a race.
  *
+ * Since §333 the rows come through the public cache first (`modules/public-cache/`), which every
+ * write expires; an outage then costs nothing while the cache holds the answer, and this copy is
+ * what stands behind a cache miss that finds the database away.
+ *
  * So each public read keeps its last good answer, and serves it if the database cannot be
  * reached. Normally nothing is stale at all: the snapshot is consulted **only** when the live
  * read throws.
@@ -42,7 +46,11 @@ export type StoredEnvelope = { takenAt: string; value: unknown };
 
 const DATE_KEY = "__date";
 
-function tagDates(value: unknown): unknown {
+/**
+ * Exported for the public cache (`modules/public-cache/cache.ts`, §333), which stores the same
+ * rows as JSON for the same reason and must hand back a `Date` wherever the database did.
+ */
+export function tagDates(value: unknown): unknown {
   if (value instanceof Date) return { [DATE_KEY]: value.toISOString() };
   if (Array.isArray(value)) return value.map(tagDates);
   if (value && typeof value === "object") {
@@ -51,7 +59,7 @@ function tagDates(value: unknown): unknown {
   return value;
 }
 
-function untagDates(value: unknown): unknown {
+export function untagDates(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(untagDates);
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;

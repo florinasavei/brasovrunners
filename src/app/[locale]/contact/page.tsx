@@ -11,12 +11,13 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { unstable_rethrow } from "next/navigation";
-import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
-import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { routing } from "@/i18n/routing";
-import { contactFormReaches } from "@/modules/contact/delivery";
-import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
+import {
+  cachedBotCheckSiteKey,
+  cachedContactFormReaches,
+  cachedPublishedEventBySlug,
+} from "@/modules/public-cache/reads";
 import {
   CONTACT_ERROR_SUMMARY_ID,
   CONTACT_MESSAGE_MAX,
@@ -24,7 +25,6 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { env } from "@/shared/config/env";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -37,6 +37,11 @@ type Props = {
   searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string }>;
 };
 
+/**
+ * Per request: the page reads the draft cookie and the outcome in the address. Its three reads —
+ * the captcha switch, who receives the messages, the event in `?about=` — come from the public
+ * cache (§333); sending a message reads the switch and the recipients from the database itself.
+ */
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -79,7 +84,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
     catalogue, not in the database. Without the captcha's key the widget is not drawn and the
     form still posts; without the event the box simply opens empty.
   */
-  const siteKey = await orNull(() => activeBotCheckSiteKey(getDb(), new Date()));
+  const siteKey = await cachedBotCheckSiteKey();
 
   const error = parseContactError(rawError);
   const rejected = parseContactErrorFields(fields);
@@ -92,7 +97,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const writeTo = env.EMAIL_REPLY_TO;
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
-  const formAvailable = contactFormReaches(env, await readContactRecipientsOrNull());
+  const formAvailable = await cachedContactFormReaches();
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
   /**
@@ -104,7 +109,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
    * published events rather than printed, because anybody can type one into a URL and this text
    * goes into an email the club reads.
    */
-  const aboutEvent = about ? await orNull(() => findPublishedEventBySlug(getDb(), locale, about)) : null;
+  const aboutEvent = about ? await orNull(() => cachedPublishedEventBySlug(locale, about)) : null;
 
   const field = (name: "name" | "email" | "message", help?: string) => ({
     id: fieldId(name),

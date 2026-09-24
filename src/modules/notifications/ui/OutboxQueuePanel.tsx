@@ -3,6 +3,7 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { getTranslations } from "next-intl/server";
 import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/emails/actions";
 import type { Locale } from "@/i18n/routing";
@@ -16,6 +17,8 @@ type Props = {
   volume: EmailVolumeToday;
   /** "Trimite acum" is the Administrator's (§80); the queue itself is read by whoever may read the registrations (§291). */
   mayEdit: boolean;
+  /** Why the fold opens by itself, as the page knows it: "send now" just answered (§336). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -31,7 +34,7 @@ type Props = {
  * message do not fit a table at 320 pixels, and a table that scrolls sideways is worse than a
  * paragraph (the same reasoning §196 applied to the one place a table is unavoidable).
  */
-export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit }: Props) {
+export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const when = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "short",
@@ -46,7 +49,9 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit 
       intro={t("emails.queue.intro")}
       aside={t("outbox.waitingShort", { count: queue.total })}
       collapsible
-      defaultOpen={queue.total > 0}
+      // Open while something waits (§269), and after "send now" answered — sent or refused (§336).
+      openWhen={{ ...openWhen, attention: queue.total > 0 }}
+      id="outbox-queue"
       data-testid="outbox-queue"
     >
 
