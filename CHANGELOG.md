@@ -8,6 +8,14 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.77-2026-09-24
+
+- **The event editor's first box holds the status, the course and the links.** "Ce fel de eveniment" now contains "Starea evenimentului", "Traseul" and "Linkuri și fișiere" as named cards, on the editor and on the create page, where the status is read-only "Programat". Its closed line reads like "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri". It turns amber with the count when people are registered, and says once, for a role that may only read, that the settings are not theirs. §358.
+## BR-V1.76-2026-09-24
+
+- **The declaration names the risks the runner takes on — wild animals and dogs, falls, the weather and the dark, their own kit with a headlamp after dark — and no legal text or email hardcodes a club or event value any more.** Every "the organiser does not answer" line is limited by the law, and seeded and prefilled texts keep their placeholders. The club approves the new texts in /admin/legal, after a lawyer has read the declaration. §357.
+- **The scheduled jobs now wake the database together with the health check, on the hour.** The hourly safety check lands on the pinger's :00 call instead of an hour after the last run, and a minimum interval lands on its own marks on the clock (:00/:30, the hour, even hours). An idle hour now costs Neon one wake instead of up to three; moving onto those marks may make some checks up to a quarter of an hour late. No health threshold moved. §355.
+- **The event page's facts, grouped and in pills.** On an event's page and its preview, "Când" is one line with its weekday, "Unde" shows the address under the place, the route is one row of pills (distance, climb, difficulty, surface, each with its glyph), and the cost has its own row and pill. Every row's icon is the same size and colour, and the bullets are gone. The listing's hero and cards are unchanged. §356.
 ## BR-V1.75-2026-09-24
 
 - **Lighter public pages, and a real redirect at the root.** A public page no longer carries the whole message catalogue, the backoffice's included, in its payload, only the few words its buttons translate in the browser. The listing drops from 119 KB to 39 KB gzipped and an event page from 113 KB to 31 KB. `/ro` and `/en` now answer with a real 308 to the listing instead of a 200 and a 300 KB error page. Locally and in tests, a missing translation now breaks the page, where it used to show its key. §353.
