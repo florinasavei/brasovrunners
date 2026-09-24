@@ -745,6 +745,12 @@ export const eventTranslations = pgTable(
      * one — and null means "the event's own name", which is what every row written before
      * this column has. Never a fallback to the *other* language: a blank here reads the event
      * row, exactly as before (BR-REQ-040-02 is untouched).
+     *
+     * Since §362 the editor asks the place once per language (the Locul box, both required) and
+     * the event's own save writes this column on both rows — the Romanian box here and on
+     * `events.location_name`, the English box here even when it says the same — under the event
+     * row's version, never a text save's. So a saved event carries its name in both rows; null is
+     * left only on rows nobody has saved since, and still means "the event's own name".
      */
     locationName: text("location_name"),
 

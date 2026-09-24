@@ -53,6 +53,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await fillDateField(page, "Începutul evenimentului", ymd(first));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Un cros lunar, pentru seria de ciorne.");

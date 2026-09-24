@@ -116,10 +116,14 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
-    // Nullable on the event row now that the meeting point is one value for the whole event
+    // The place in the runner's language (§362), nullable on an event row from before the column
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
     eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
-    ...(placeLater ? { eventLocationNameOther: placeToBeAnnouncedWords(locale === "ro" ? "en" : "ro") } : {}),
+    // And in the other language, for the second half of the bilingual message: its own name for
+    // the place, never the first half's words — or the sentence while it is to be announced (§328).
+    eventLocationNameOther: placeLater
+      ? placeToBeAnnouncedWords(otherLocale(locale))
+      : (eventDetails?.locationNames[otherLocale(locale)] ?? undefined),
     eventStartsAtFormatted: formatEventStart(eventDetails, locale),
     // The other language's half of the bilingual message reads its own date (§96).
     eventStartsAtFormattedOther: formatEventStart(eventDetails, locale === "ro" ? "en" : "ro"),

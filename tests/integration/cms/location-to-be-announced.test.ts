@@ -79,7 +79,7 @@ const EVENT_FIELDS = {
 
 const TRANSLATIONS = {
   ro: { slug: "crosul-de-iarna", title: "Crosul de iarnă", excerpt: "Zece kilometri." },
-  en: { slug: "winter-cross", title: "Winter cross", excerpt: "Ten kilometres.", locationName: SECRET_EN_NAME },
+  en: { slug: "winter-cross", title: "Winter cross", excerpt: "Ten kilometres." },
 };
 
 /** The race with its place typed and not announced: the name, the map, a programme row's place. */
@@ -87,6 +87,8 @@ const TYPED_EVENT_HALF = {
   ...EVENT_FIELDS,
   locationToBeAnnounced: true,
   locationName: SECRET_NAME,
+  // The English box of "Punct de întâlnire" (§362), typed and hidden like the Romanian one.
+  locationNameEn: SECRET_EN_NAME,
   mapUrl: SECRET_MAP,
   scheduleRows: [{ date: "2026-11-21", time: "08:00", endTime: "", ro: "Ridicarea kitului", en: "Kit pickup", place: SECRET_ROW_PLACE }],
 };

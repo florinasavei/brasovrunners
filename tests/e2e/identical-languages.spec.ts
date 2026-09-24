@@ -29,6 +29,9 @@ test("the same long text in both languages is a warning in the box, on the tab a
   await fillDateField(page, "Începutul evenimentului", day);
   await fillTimeField(page, "Ora", "18:30");
   await field("event.locationName").fill(`Telecabina Tâmpa ${suffix}`);
+  // A place's name may be the same in both languages (§362): one press fills the empty English box.
+  await page.getByTestId("place-copy-to-english").click();
+  await expect(field("event.locationNameEn")).toHaveValue(`Telecabina Tâmpa ${suffix}`);
   await field("translations.ro.title").fill(`Happy Monday ${suffix}`);
   await field("translations.ro.slug").fill(`happy-monday-${suffix}`);
   await languageTab(page, "title", "en").click();

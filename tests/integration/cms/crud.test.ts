@@ -131,6 +131,8 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         actor: admin,
         fields: {
           ...EVENT_FIELDS,
+          // The place in English, from the Locul box's second name (§362).
+          locationNameEn: "Tractorul Park",
           translations: {
             ro: {
               slug: "crosul-aniversar",
@@ -138,7 +140,6 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
               excerpt: "",
               excerptBody: paragraph("Cursa clubului,  în parc."),
               body: paragraph("Descrierea întreagă."),
-              locationName: "",
             },
             en: {
               slug: "anniversary-cross",
@@ -146,7 +147,6 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
               excerpt: "",
               excerptBody: paragraph("The club's own race."),
               body: paragraph("The whole description."),
-              locationName: "Tractorul Park",
             },
           },
         },
@@ -159,10 +159,10 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       expect(ro.excerptJson).not.toBeNull();
       expect(JSON.stringify(ro.bodyJson)).toContain("Descrierea întreagă.");
       expect(JSON.stringify(en.bodyJson)).toContain("The whole description.");
-      // The place's name in this language (migration `0058`): typed for English, blank for
-      // Romanian — which means the event's own name, never the other language's.
+      // The place's name in each language (§362): the Romanian box on the Romanian row (it is
+      // the event's own meeting point too), the English box on the English row.
       expect(en.locationName).toBe("Tractorul Park");
-      expect(ro.locationName).toBeNull();
+      expect(ro.locationName).toBe("Parcul Tractorul");
     });
 
     it("is publishable straight away, because both languages were required", async () => {
