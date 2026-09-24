@@ -70,7 +70,10 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     still falls inside it and the claim is at T+120 — about 110 minutes overdue against ninety.
     So the worst case is the interval plus one night pinger period, and ninety plus the interval
     covers it with the backoff's half hour to spare; a club that chose a throttle is never told
-    its email has stalled by it.
+    its email has stalled by it. Since §NNN the interval ends on a boundary of its own length and
+    may run up to a quarter of an hour past it on the way there, landing on a quarter-hour the
+    hourly night pinger reaches at most 45 minutes later: the interval plus about an hour, as
+    before, still inside ninety plus the interval (`tests/unit/jobs/schedule-alignment.test.ts`).
   */
   const { minutes: cadenceMinutes } = await readJobCadence(db);
   const overdueAfterMs = OVERDUE_AFTER_MS + cadenceMinutes * 60_000;

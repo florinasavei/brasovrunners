@@ -17,7 +17,12 @@ import {
  * real run leaves behind, and of the verdict a ping reads from it; the database half is
  * `tests/integration/jobs/next-work.test.ts`, the cache half `job-sleep.test.ts`.
  */
-const RAN = new Date("2026-10-01T10:00:00.000Z");
+/*
+  Noon in Brașov (UTC+3 on 1 October): on every boundary the pinger has — a quarter-hour, a
+  half-hour, an hour, an even hour — so the plan's ends below are §334's whole minutes after the
+  run, and the alignment of §NNN, tested further down, moves none of them.
+*/
+const RAN = new Date("2026-10-01T09:00:00.000Z");
 const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);
 /** Where a cap or an interval of `n` minutes ends: `PLAN_GRACE_MINUTES` early. */
 const ends = (n: number) => minutes(n - PLAN_GRACE_MINUTES);

@@ -2096,6 +2096,7 @@
         },
         "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
         "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp — fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
+        "onTheHour": "Verificarea de siguranță se face la ora fixă (la 2 ore, la orele pare), odată cu monitorul /api/health, așa că o oră fără nimic de făcut costă cel mult o trezire a bazei de date, nu câte una pentru fiecare lucrare. Cu un interval ales, verificările respectă și reperele lui de pe ceas (:00 și :30, ora fixă, orele pare); ca să ajungă acolo, unele verificări pot întârzia fiecare cu până la un sfert de oră.",
         "job": {
           "maintenance": "Mentenanța înscrierilor",
           "outbox": "Coada de emailuri"
