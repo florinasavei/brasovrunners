@@ -16,7 +16,7 @@ import {
  * Which Neon plan the club is on: read by `/devs` and `/admin/tasks`, which print the
  * database's month against it, written by an Administrator on `/admin/tasks` → Costuri.
  *
- * The setting is the fallback, not the answer (§NNN): Neon's project row names the owning
+ * The setting is the fallback, not the answer (§326): Neon's project row names the owning
  * account's plan, and the pages read that first (`effectiveNeonPlan`). The setting decides only
  * when the key is not set or Neon does not answer — so the panel that sets it shows the month's
  * hours and the estimate next to it, and the audit row says who changed it and from what. The same

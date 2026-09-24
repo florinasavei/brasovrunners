@@ -141,6 +141,22 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
     expect(body.database).toBe("ok");
   });
 
+  // §322: a retention sweep that failed twice running is a job that is not doing its work.
+  it("answers 503 when the maintenance job is failing its retention sweep", async () => {
+    checkJobHealth.mockImplementation(async (_db: unknown, jobName: string) => ({
+      jobName,
+      status: jobName === "registration-maintenance" ? "failing" : "ok",
+      lastFinishedAt: "2026-09-22T09:50:00.000Z",
+    }));
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.status).toBe("degraded");
+    expect(body.jobs.find((job: { jobName: string }) => job.jobName === "registration-maintenance").status).toBe("failing");
+  });
+
   it("still answers degraded for stalled email, and down for a schema behind the build", async () => {
     checkEmailHealth.mockResolvedValue({ status: "stalled", deferred: 3 });
     expect((await (await GET()).json()).status).toBe("degraded");

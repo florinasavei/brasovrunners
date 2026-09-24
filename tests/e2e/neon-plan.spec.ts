@@ -32,7 +32,7 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     // The default: Free, with its ceilings — no key in CI, so the sentence without the hours.
     await expect(panel.getByRole("heading", { name: "Planul Neon (baza de date)" })).toBeVisible();
     await expect(panel.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Free/);
-    // No key in CI, so the setting stands in for Neon's answer, and the panel says so (§NNN).
+    // No key in CI, so the setting stands in for Neon's answer, and the panel says so (§326).
     await expect(panel.getByTestId("neon-plan-source")).toContainText("se folosește planul ales mai jos");
 
     await panel.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("LAUNCH");

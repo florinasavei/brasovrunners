@@ -8,8 +8,10 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { count } from "drizzle-orm";
+import { and, count, eq, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { events, eventTranslations } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
@@ -190,6 +192,29 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club being an NGO does not settle it (`DECISIONS.md` §50).
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
+  /**
+   * The events whose downloaded lists and printed sheets are due for the shredder (§323): seven
+   * to thirty days after the start, and only those that took at least one real registration
+   * here — an event with none (or only TEST rows, §30) left nothing on anybody's laptop. A title
+   * once, however many dates of a series fall in the window (review finding).
+   *
+   * Whatever the event's publication state now (§324): a race unpublished or archived after
+   * race day left its exports and sheets behind all the same.
+   */
+  const day = 24 * 60 * 60_000;
+  const shredderRows = await db
+    .selectDistinct({ eventId: events.id, title: eventTranslations.title })
+    .from(events)
+    .innerJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.kind, "REAL")))
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
+    .where(
+      and(
+        eq(events.registrationMode, "INTERNAL"),
+        gte(events.startsAt, new Date(now.getTime() - 30 * day)),
+        lte(events.startsAt, new Date(now.getTime() - 7 * day)),
+      ),
+    );
+  const raceDaySheetsDue = [...new Set(shredderRows.map((row) => row.title ?? row.eventId))];
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
@@ -243,7 +268,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
   // count and different problems.
-  const staleJobNames = jobs.filter((job) => job.status !== "ok").map((job) => job.jobName);
+  const staleJobNames = jobs.filter((job) => job.status === "stale" || job.status === "never_run").map((job) => job.jobName);
+  // A job that runs on time and fails its retention sweep (§322) is not a missing monitor (§324).
+  const failingJobNames = jobs.filter((job) => job.status === "failing").map((job) => job.jobName);
 
   // Read early, ahead of the task board: the derived `neonLimits` row (§NNN) needs this
   // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
@@ -264,9 +291,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
       appEnv: env.APP_ENV,
       staleJobNames,
+      failingJobNames,
       staffCount,
       inviteKey: { kind: inviteKey.kind, reason: "reason" in inviteKey ? inviteKey.reason : undefined },
       publishedEventCount,
+      raceDaySheetsDue,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
       // Configured *and* switched on (§254): a row that said "done" while the check was off
@@ -316,7 +345,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   });
 
   const databaseBytes = await readDatabaseSizeBytes(db);
-  // The Neon plan (§280's follow-up, §NNN): what Neon reports for the account when it answered,
+  // The Neon plan (§280's follow-up, §326): what Neon reports for the account when it answered,
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
   const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);

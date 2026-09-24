@@ -362,9 +362,12 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     if (inHeader) {
       expect(Math.abs(centre(logoBox) - centre(languageBox))).toBeLessThan(8);
     } else {
-      // On the footer's one line, centred in it — a 44px bar and a 44px stack of RO over EN.
+      // On the footer's last line, centred in it. A phone's footer has two lines since §324 — the
+      // summary on the first, the privacy notice and the language on the second (footer.spec.ts) —
+      // each a 44px row, so the 44px stack of RO over EN centres on the bar's bottom 44 pixels.
       const barBox = await page.locator("footer").boundingBox();
-      expect(Math.abs(centre(languageBox) - centre({ y: barBox?.y ?? NaN, height: 44 }))).toBeLessThan(8);
+      const lastLine = { y: (barBox?.y ?? NaN) + (barBox?.height ?? NaN) - 44, height: 44 };
+      expect(Math.abs(centre(languageBox) - centre(lastLine))).toBeLessThan(8);
       await expect(page.locator("footer").getByRole("navigation", { name: "Limbă" })).toHaveCount(1);
     }
     // Less than two tap targets tall: the two-row header this replaced was 112px.

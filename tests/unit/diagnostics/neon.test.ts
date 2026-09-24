@@ -35,7 +35,7 @@ describe("BR-REQ-090-07 the database's consumption", () => {
     expect(result.consumption.reportedPlan).toBeNull();
   });
 
-  // §NNN: the project row names the owning account's plan, which a project-scoped key reads —
+  // §326: the project row names the owning account's plan, which a project-scoped key reads —
   // "launch_v3" for the club on 2026-09-23, while /admin/tasks still printed the default Free.
   it("reads the account's plan from the project's owner", async () => {
     const answer = (subscription_type: string) => async () =>

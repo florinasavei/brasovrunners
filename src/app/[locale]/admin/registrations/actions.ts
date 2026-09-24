@@ -15,8 +15,11 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
+  withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { findEventForRegistrationById } from "@/modules/events/repository";
+import { MIN_PARTICIPANT_AGE, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
@@ -216,6 +219,9 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
           emergencyContactName: optional(form, "emergencyContactName"),
           emergencyContactPhone: optional(form, "emergencyContactPhone"),
           clubName: optional(form, "clubName"),
+          // A minor's parent (§108), asked by the form once the birth date says under eighteen
+          // (§324); the schema requires it then, and ignores it for an adult.
+          guardianName: optional(form, "guardianName"),
           clubMemberDeclared: form.get("clubMemberDeclared") === "on",
           tshirtSize: optional(form, "tshirtSize") as
             | "NONE"
@@ -240,17 +246,23 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
     /*
       The form comes back as typed, the event still selected (§315).
 
-      Under fourteen on the race day (§321) is the one refusal here about a fact the volunteer
-      typed and can check with the person in front of them, so it keeps its own sentence — the
-      generic "check what you entered" would send them hunting through a form that is correct.
-      The rule's marker is not a box: the summary names the birth date alone, under its label.
+      Under the event's minimum age on the race day (§321) is the one refusal here about a fact
+      the volunteer typed and can check with the person in front of them, so it keeps its own
+      sentence — the generic "check what you entered" would send them hunting through a form that
+      is correct. The sentence names the chosen event's own number (§329), read from the event
+      the refusal was about, in the backoffice's language. The rule's marker is not a box: the
+      summary names the birth date alone, under its label.
     */
     const refusal = refused(error, form, {
       fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE),
     });
-    return isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE)
-      ? { ...refusal, error: "UNDER_MINIMUM_AGE" }
-      : refusal;
+    if (!(isDomainError(error) && error.fields.includes(UNDER_MINIMUM_AGE))) return refusal;
+    const event = await findEventForRegistrationById(getDb(), eventId);
+    return {
+      ...refusal,
+      error: "UNDER_MINIMUM_AGE",
+      errorValues: { age: yearsPhrase(event?.minAge ?? MIN_PARTICIPANT_AGE, locale) },
+    };
   }
 
   // A success goes to where the new row is visible with the status it actually landed in —
@@ -300,6 +312,32 @@ export async function cancelRegistrationAction(_previous: FormOutcome | null, fo
 export async function cancelRegistrationFromRowAction(form: FormData): Promise<void> {
   const refusal = await cancelRegistrationAction(null, form);
   if (refusal) backTo(detailPath(toLocale(form.get("uiLocale")), text(form, "registrationId")), { error: refusal.error });
+}
+
+/**
+ * Withdraw a participant's optional data on their behalf (§322, `AGENTS.md` §15.11): the ticked
+ * groups, the reason typed. `requireStaffRole("ADMIN")` is the coarse gate and the service asks
+ * `canManageRegistrations` again, so a replayed POST from an Organizer's session goes nowhere.
+ */
+export async function withdrawConsentAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const fields = {
+      ...(form.get("health") === "on" ? { health: true as const } : {}),
+      ...(form.get("socials") === "on" ? { socials: true as const } : {}),
+      ...(form.get("results") === "on" ? { results: true as const } : {}),
+    };
+    await withdrawOptionalData(getDb(), actor, registrationId, fields, text(form, "reason"), new Date());
+    outcome = { saved: "consentWithdrawn" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**

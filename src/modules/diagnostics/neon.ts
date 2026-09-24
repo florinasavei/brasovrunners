@@ -28,7 +28,7 @@ const NEON_API = "https://console.neon.tech/api/v2";
  * a third party is worse than one that says "Neon did not answer".
  *
  * The same row names the plan of the account that owns the project (`owner.subscription_type`),
- * so the answer carries it too (§NNN) and the pages stop depending on somebody remembering to
+ * so the answer carries it too (§326) and the pages stop depending on somebody remembering to
  * state it.
  */
 /** Free's monthly compute allowance, from the one catalogue; kept under its old name for the callers that read it. */

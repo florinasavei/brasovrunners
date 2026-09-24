@@ -64,7 +64,13 @@ describe("§269 the backoffice fold is a box", () => {
 
   it("keeps the summary a control: marker, pointer, 44 pixels, and a wash behind it", () => {
     // Everything §164 asked for, still there — the box is added, not traded for the marker.
-    expect(summary.listStyle).toBe("revert");
+    // The marker is drawn by the summary itself since §325: a flex row with the arrow on the
+    // heading's line, the browser's own marker hidden (a block heading used to drop under it).
+    expect(summary.display).toBe("flex");
+    expect(summary.alignItems).toBe("center");
+    expect(summary.listStyle).toBe("none");
+    expect(summary["&::-webkit-details-marker"]).toEqual({ display: "none" });
+    expect(summary["&::before"]).toMatchObject({ content: '""', borderColor: "transparent transparent transparent currentColor" });
     expect(summary.cursor).toBe("pointer");
     expect(summary.minHeight).toBe(TAP_TARGET.minHeight);
     expect(summary.minHeight).toBeGreaterThanOrEqual(44);
@@ -76,10 +82,8 @@ describe("§269 the backoffice fold is a box", () => {
     // pads itself back, so the text and the body's text line up.
     expect(summary.mx).toBe(-BOXED_DISCLOSURE_SX.px);
     expect(summary.px).toBe(BOXED_DISCLOSURE_SX.px);
-    // With the marker inside its own box, or the negative margin would put it outside the border.
-    expect(summary.listStylePosition).toBe("inside");
-    // Never `display: flex`: Chrome and Safari drop the marker when it is.
-    expect("display" in summary).toBe(false);
+    // The arrow turns a quarter when the fold is open, from the <details> itself.
+    expect((BOXED_DISCLOSURE_SX as Record<string, unknown>)["&[open] > summary::before"]).toEqual({ transform: "rotate(90deg)" });
   });
 
   it("keeps the box when open: square shoulders, a rule under the summary, room for the body", () => {
@@ -100,7 +104,8 @@ describe("§269 the backoffice fold is a box", () => {
   });
 
   it("leaves the public fold as it was: no border, the same summary", () => {
-    expect(DISCLOSURE_SX).toEqual({ "& > summary": DISCLOSURE_SUMMARY_SX });
+    // The public fold has no box — and turns its drawn arrow when open, like every fold (§325).
+    expect(DISCLOSURE_SX).toEqual({ "& > summary": DISCLOSURE_SUMMARY_SX, "&[open] > summary::before": { transform: "rotate(90deg)" } });
     expect("border" in DISCLOSURE_SX).toBe(false);
     expect("bgcolor" in DISCLOSURE_SUMMARY_SX).toBe(false);
   });

@@ -55,9 +55,11 @@ export type TaskId =
   | "approveLegalText"
   | "liveEmail"
   | "scheduler"
+  | "retentionSweep"
   | "inviteStaff"
   | "inviteKey"
   | "publishEvents"
+  | "raceDaySheets"
   | "mediaStorage"
   | "botCheck"
   | "declarationArchiveMail"
@@ -74,9 +76,11 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   liveEmail: "account",
   scheduler: "check",
+  retentionSweep: "check",
   inviteStaff: "account",
   inviteKey: "account",
   publishEvents: "text",
+  raceDaySheets: "check",
   mediaStorage: "account",
   botCheck: "account",
   declarationArchiveMail: "decision",
@@ -148,6 +152,13 @@ export type OwnerTaskInputs = {
    */
   staleJobNames: readonly string[];
   /**
+   * The jobs that run on time and fail their work (`jobs/health.ts`, `failing`, §322): today only
+   * registration-maintenance, whose retention sweep failed two runs in a row. Not a stale
+   * scheduler — the monitors are fine, and the steps for setting them up would send the reader
+   * the wrong way — so it is its own row (§324), pointing at `/devs` and the failed steps.
+   */
+  failingJobNames: readonly string[];
+  /**
    * How many staff accounts exist. The first Administrator is a row inserted by hand, because
    * the screen that invites people is itself behind the sign-in it would be granting; a second
    * row means somebody used `/admin/staff`, which is the whole of "the team is invited".
@@ -161,6 +172,14 @@ export type OwnerTaskInputs = {
   inviteKey: InviteKeyState;
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
+  /**
+   * The events with registration on the site that started between seven and thirty days ago,
+   * by title (§323). The privacy notice promises that exported lists and printed race-day sheets
+   * are destroyed within 30 days of the event, and the identity numbers are gone from the
+   * database after seven — so for those three weeks the copies outside it are the club's to
+   * delete, and nothing in the system can see them. The row is the reminder; it goes by itself.
+   */
+  raceDaySheetsDue: readonly string[];
   /**
    * Can this environment store a photo? Derived from the five `R2_*` variables (`env.ts`,
    * `STORAGE_MODE`), so the row reads the environment and never a checklist. Local and test
@@ -247,6 +266,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     detail: input.staleJobNames.join(", ") || undefined,
   });
 
+  // Only while it fails (§324): the retention sweep ran and could not do its work, two runs in a
+  // row. Red, the developer's, and never folded into "scheduler", whose steps are about monitors.
+  if (input.failingJobNames.length > 0) {
+    push("retentionSweep", {
+      owner: "developer",
+      state: "broken",
+      detail: input.failingJobNames.join(", "),
+    });
+  }
+
   // Not blocking: one Administrator can run a race alone. It is open because a club with one
   // account is a club whose backoffice goes with that one person's holiday.
   push("inviteStaff", {
@@ -278,6 +307,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     owner: "club",
     state: input.publishedEventCount > 0 ? "done" : "open",
   });
+
+  // Only while there is something to destroy (§323): seven to thirty days after an event, open
+  // and never blocking, naming the events. There is no "done" to reach — the system cannot see
+  // a spreadsheet on somebody's laptop — so the row simply leaves when the window closes.
+  if (input.raceDaySheetsDue.length > 0) {
+    push("raceDaySheets", {
+      owner: "club",
+      state: "open",
+      detail: input.raceDaySheetsDue.join(", "),
+    });
+  }
 
   // Not blocking: registrations do not need photos. Open until the bucket exists, because an
   // album page without an upload button is a gallery nobody can fill (BR-REQ-054-01).
