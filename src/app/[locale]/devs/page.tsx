@@ -766,7 +766,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             </Typography>
             {jobs.map((job, index) => {
               const schedule = jobSchedules[index];
-              // Inside a sentence ("pingurile așteaptă până joi, …"), in the club's zone (§NNN weekday).
+              // Inside a sentence ("pingurile așteaptă până joi, …"), in the club's zone (§350 weekday).
               const at = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
               return (
                 <Typography variant="body2" key={job.jobName} data-testid={`job-schedule-${job.jobName}`}>

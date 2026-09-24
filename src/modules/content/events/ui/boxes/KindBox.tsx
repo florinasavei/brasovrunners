@@ -9,7 +9,7 @@ import TypeNote from "../TypeNote";
 import { type BoxProps, SettingsReadOnly } from "./box-kit";
 
 /**
- * Box 1, "Ce fel de eveniment" (§NNN): the type, which switches other boxes' fields on and off —
+ * Box 1, "Ce fel de eveniment" (§350): the type, which switches other boxes' fields on and off —
  * a group run has no registration and no programme (§111), only a race has a gun time (§71).
  *
  * Open on the create page, because the type decides what the other boxes ask; folded on the

@@ -12,7 +12,7 @@ import { type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryW
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * Box 5, "Locul" (§NNN): the shared half first — whether the place is announced at all (§328),
+ * Box 5, "Locul" (§350): the shared half first — whether the place is announced at all (§328),
  * the meeting point, the map link — then each language's own name for the place in Română |
  * English tabs (migration `0058`, moved here from the title's tab: two boxes for one place belong
  * in one box).

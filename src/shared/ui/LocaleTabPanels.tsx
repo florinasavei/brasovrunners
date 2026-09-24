@@ -17,7 +17,7 @@ export type LocalePanel = {
 };
 
 /**
- * Which of the panel's boxes make its tab "· incomplet", re-read as the person types (§NNN):
+ * Which of the panel's boxes make its tab "· incomplet", re-read as the person types (§350):
  *
  * - `required` — any watched box empty in this language (the title and the summary, the address);
  * - `parity` — a watched box empty here while the other language has it (an optional text, where
@@ -36,7 +36,7 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  * that language, and the save would write empty strings over somebody's English text. `hidden`
  * removes it from the page and from the accessibility tree while leaving it in the form.
  *
- * **Many strips on one page** (§NNN): the event editor gives every box with per-language text its
+ * **Many strips on one page** (§350): the event editor gives every box with per-language text its
  * own Română | English tabs, so the ids carry the box's `idPrefix` — `title-tab-en`,
  * `address-panel-ro` — and never collide. There is no page-wide language switch any more, so a
  * setting shared by both languages never hides behind a language tab.
@@ -121,7 +121,7 @@ export default function LocaleTabPanels({
   }, [bringForward, panels.length]);
 
   /*
-    The marks follow the typing (§NNN). Read from the form's own boxes by name, on `input`,
+    The marks follow the typing (§350). Read from the form's own boxes by name, on `input`,
     `change` and `focusout` inside this strip — the rich-text field announces its hidden value
     with a bubbling `input` — so a language marked unfinished loses the mark the moment its last
     box is filled, and the other language gains one when a parity text is written here first.

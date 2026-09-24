@@ -170,7 +170,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     return facts;
   };
   // "joi, 4 sept. 2026 – dum., 20 sept. 2026": the stretch a terms version was the text in
-  // force, inside the sentence (§NNN).
+  // force, inside the sentence (§349).
   const span = (window: InForceWindow) =>
     formatDayRange(window.from, window.until ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
   const missingFacts = (

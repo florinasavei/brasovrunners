@@ -139,7 +139,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     {t("manage.selfCheckInClosed", {
-                      // It opens at an hour, the day before, in the event's zone (§NNN).
+                      // It opens at an hour, the day before, in the event's zone (§349).
                       date: formatDay(confirmed.selfCheckinOpensAt, { locale, timeZone: confirmed.eventTimezone, style: "long", withTime: true, position: "inline" }),
                     })}
                   </Typography>

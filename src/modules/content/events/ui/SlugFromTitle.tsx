@@ -11,7 +11,7 @@ function writeValue(input: HTMLInputElement, value: string) {
 }
 
 /**
- * The create page's page address, filled from the title until the person writes one (§NNN; the
+ * The create page's page address, filled from the title until the person writes one (§350; the
  * weekly group run is type, title, summary, date, place, the repeat tick, then "Creează și
  * publică" — nobody should have to invent `alergare-de-luni` by hand as well).
  *

@@ -139,7 +139,7 @@ describe("BR-REQ-034-01 an open event", () => {
 
 describe("BR-REQ-035-01 a full event", () => {
   it("offers the waiting list rather than refusing", () => {
-    // No limit said — every event before §NNN, and every caller that does not pass one.
+    // No limit said — every event before §348, and every caller that does not pass one.
     expect(registrationCta(event({ availablePlaces: 0 }), DURING)).toEqual({ kind: "FULL", waitlistRoom: null });
   });
 
@@ -151,10 +151,10 @@ describe("BR-REQ-035-01 a full event", () => {
 });
 
 /**
- * BR-REQ-035-01 (§NNN) — the waiting list's length: its room under the button while it has
+ * BR-REQ-035-01 (§348) — the waiting list's length: its room under the button while it has
  * some, a sentence and no button once it is full, and an event with no line closed as full.
  */
-describe("BR-REQ-035-01 a full event whose waiting list has a limit (§NNN)", () => {
+describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", () => {
   it("offers the waiting list with the room it has left", () => {
     expect(registrationCta(event({ availablePlaces: 0, waitlistCapacity: 10, waitlistRoom: 3 }), DURING)).toEqual({
       kind: "FULL",

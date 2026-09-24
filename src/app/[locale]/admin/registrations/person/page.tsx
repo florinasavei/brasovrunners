@@ -55,7 +55,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
   /** One stored value as text: dates in the reader's format, objects as JSON, empties as a dash. */
   const show = (value: unknown): string => {
     if (value === null || value === undefined || value === "") return "—";
-    // A timestamp in the short form with its time (§NNN); a birth date is a stored string and
+    // A timestamp in the short form with its time (§349); a birth date is a stored string and
     // is shown as it is stored.
     if (value instanceof Date) return formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
     if (typeof value === "object") return JSON.stringify(value);

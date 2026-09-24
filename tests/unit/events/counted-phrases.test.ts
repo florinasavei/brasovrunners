@@ -51,7 +51,7 @@ describe("§346 fillPhrase — 'taken of capacity', in each language's own wordi
   });
 });
 
-describe("§NNN waitlistRoomPhrase — the room a capped waiting list has left", () => {
+describe("§348 waitlistRoomPhrase — the room a capped waiting list has left", () => {
   it("reads Romanian's singular, its plural and its 'de' from twenty on", () => {
     const say = translator("ro");
     expect(waitlistRoomPhrase(say, "ro", 1)).toBe("Mai este 1 loc pe lista de așteptare");

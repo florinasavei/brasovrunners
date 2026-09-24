@@ -43,7 +43,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * A new event (BR-REQ-050-01), on the editor's own page (§NNN).
+ * A new event (BR-REQ-050-01), on the editor's own page (§350).
  *
  * **The same page as the editor, minus what needs a saved event** — the owner asked for "a
  * WordPress-like editor" and then for create and edit to stop drifting apart ("this event create
@@ -127,7 +127,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
       <ActionForm action={createEventAction} messages={messages} id="event-create-form" data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
-        {/* No status box on create: an event that does not exist yet is scheduled (§NNN). */}
+        {/* No status box on create: an event that does not exist yet is scheduled (§350). */}
         <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
         <EventEditorLayout

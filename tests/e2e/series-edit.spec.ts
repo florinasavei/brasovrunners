@@ -5,7 +5,7 @@ import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold"
 
 /**
  * BR-REQ-050-02 criteria 7, 15, 16 and 17 (`DECISIONS.md` §128, §130, §131, and the editor's
- * boxes, §NNN) — a series from the event page keeps the event's own day; the Recurență box on any
+ * boxes, §350) — a series from the event page keeps the event's own day; the Recurență box on any
  * date says which date it is, the rule, the next dates and how the series renews itself; the save
  * reaches "this date and the following" by default — three radios in the Salvare box, the dates
  * one by one folded under them — at the same hour on each date's own day; and from a copied date
@@ -13,7 +13,7 @@ import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold"
  */
 
 /*
-  The dates as the editor writes them — the site's short form (`src/i18n/dates.ts`, §NNN weekday
+  The dates as the editor writes them — the site's short form (`src/i18n/dates.ts`, §350 weekday
   on every date): "Dum., 4 oct. 2026, 08:00" where a date starts a line or a link, "dum., 4 oct.
   2026" inside the Salvare box's sentence. The dates below are at noon UTC, the same calendar day
   in Brașov, and the time is the one the event was given on its own clock.
@@ -75,7 +75,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
     await fillDateField(page, "Până la (opțional)", ymd(plus(28)));
     // The rule in one live sentence, before the press.
     await expect(recurrence.getByTestId("repeat-rule-sentence")).toContainText("În fiecare miercuri și duminică, la 08:00");
-    // "Publică datele noi automat" is shown and ticked by default (§NNN); this event is a draft,
+    // "Publică datele noi automat" is shown and ticked by default (§350); this event is a draft,
     // so the box says its dates stay drafts while it is one.
     await expect(recurrence.getByRole("checkbox", { name: "Publică datele noi automat" })).toBeChecked();
     await expect(recurrence.getByTestId("repeat-publish-field")).toContainText("Cât timp evenimentul e ciornă");
@@ -98,7 +98,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
     await expect(page.getByText(`Data 2 din 9 · ${title}`)).toBeVisible({ timeout: 15_000 });
     await hydrated(page);
 
-    // 08:50 for this date and the following ones (§130): the default now (§NNN, reversing §240),
+    // 08:50 for this date and the following ones (§130): the default now (§350, reversing §240),
     // said in the Salvare box as a radio and a sentence counting the dates the save reaches.
     await openEditorBox(page, "Data și ora");
     await fillTimeField(page, "Ora", "08:50");

@@ -15,12 +15,12 @@ import {
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * BR-REQ-035-01 (§NNN) — the waiting list's length, as the arithmetic the allocator asks under
+ * BR-REQ-035-01 (§348) — the waiting list's length, as the arithmetic the allocator asks under
  * the event lock. The line is `WAITLISTED` plus the offers still open; a limit of null is none,
  * 0 is no waiting list at all, and a limit lowered under the line refuses the next without
  * removing anybody.
  */
-describe("§NNN the waiting list's length and room", () => {
+describe("§348 the waiting list's length and room", () => {
   it("counts the people waiting and the offers still open as one line", () => {
     expect(waitlistLength({ waitlisted: 5, openOffers: 2 })).toBe(7);
     expect(waitlistLength({ waitlisted: 0, openOffers: 0 })).toBe(0);
@@ -52,7 +52,7 @@ describe("§NNN the waiting list's length and room", () => {
   });
 });
 
-describe("§160, §NNN a lapsed declaration hold, for a newcomer the line cannot take", () => {
+describe("§160, §348 a lapsed declaration hold, for a newcomer the line cannot take", () => {
   it("is a place when the line has no room: a limit of 0, or a line at its limit", () => {
     expect(occupiedForNewcomer({ waitlistCapacity: 0, waitlisted: 0, openOffers: 0, occupied: 10, lapsedDeclarationHolds: 2 })).toBe(8);
     expect(occupiedForNewcomer({ waitlistCapacity: 2, waitlisted: 0, openOffers: 2, occupied: 10, lapsedDeclarationHolds: 1 })).toBe(9);
@@ -68,7 +68,7 @@ describe("§160, §NNN a lapsed declaration hold, for a newcomer the line cannot
   });
 });
 
-describe("§NNN the refusal every door gives", () => {
+describe("§348 the refusal every door gives", () => {
   it("names the full line with its own marker, and an event with no line with another", () => {
     const full = waitlistFullError(5);
     expect(full).toBeInstanceOf(DomainError);

@@ -6,7 +6,7 @@ import { distanceInKm } from "@/modules/events/domain/event-type";
  * BR-REQ-040-03 — localized formatting.
  *
  * These assert the behaviour the pages depend on, through the date helper every page, email and
- * PDF writes a date with (`src/i18n/dates.ts`, §NNN). The rules being protected are: an event is
+ * PDF writes a date with (`src/i18n/dates.ts`, §349). The rules being protected are: an event is
  * shown in *its own* timezone rather than the server's or the reader's, each locale gets its own
  * separators, and converting metres for display never changes what is stored. The weekday, the
  * capital by position and the caller's zone are criteria 4–6, in `dates.test.ts`.

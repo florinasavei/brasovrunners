@@ -46,7 +46,7 @@ describe("§334, §221 the throttle card's sentence about email", () => {
   });
 
   /*
-    §NNN weekday on every date: the card's times are platform timestamps, so they are read in the
+    §350 weekday on every date: the card's times are platform timestamps, so they are read in the
     club's zone, with the weekday, and inside the line after a colon the weekday keeps Romanian's
     lower case — the helper's words, not a bare "24 sept. 2026, 10:15".
   */

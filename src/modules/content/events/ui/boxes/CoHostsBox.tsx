@@ -10,7 +10,7 @@ import CoHostRowsEditor from "../CoHostRowsEditor";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 12, "Parteneri — „Împreună cu”" (§168, §344, §NNN the editor re-layout): who holds the
+ * Box 12, "Parteneri — „Împreună cu”" (§168, §344, §350 the editor re-layout): who holds the
  * event with the club, **one card per partner** inside this box — its name and its own typed
  * links (its site, its event, registering with it, its socials) — shown as "Împreună cu …" on the
  * page and, when the bib's footer asks for them, on the race number.

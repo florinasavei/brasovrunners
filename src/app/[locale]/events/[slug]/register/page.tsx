@@ -196,7 +196,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const tooYoung = event.minAge > 0 && (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
   /**
-   * No place, and the waiting list full — or no waiting list at all (§NNN). A rule about the
+   * No place, and the waiting list full — or no waiting list at all (§348). A rule about the
    * event, like the throttle's marker: read from the raw parameter, matched against the two
    * literals it may be, and said with the event page's own sentence.
    */
@@ -207,7 +207,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       ? WAITLIST_FULL
       : null;
   /*
-    The same, said before anybody types (§NNN): somebody who reached this form by its address —
+    The same, said before anybody types (§348): somebody who reached this form by its address —
     the event page offers no button then — reads why it would refuse, above the first field. The
     form stays, so a slot that opens a minute later is still one press away, and so a refusal can
     keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
@@ -285,7 +285,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // What they are signing up for, on the form itself (§102): the date, the place, and the
   // event's page, its rules and the two legal texts as links — the owner: "show the race date,
   // details and TOS on the sign-up form as links". Formatted in the event's own zone.
-  // The long form with the time (§NNN): capitalised where it starts the line, and in lower case
+  // The long form with the time (§349): capitalised where it starts the line, and in lower case
   // inside the sentence of the screen after the form ("…locul la Crosul, sâmbătă, 21 nov.").
   const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
   const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
@@ -472,7 +472,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {waitlistRefusal ? (
                 /*
-                  No place and nothing to join (§NNN): the event page's own sentence, and that
+                  No place and nothing to join (§348): the event page's own sentence, and that
                   nothing was registered or sent. Everything typed is still in the boxes below,
                   for the moment a slot opens — the refusal is about the event, not the form.
                 */

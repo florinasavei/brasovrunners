@@ -115,7 +115,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
 
   it("reads `required` and the ceiling off the schema, so the browser refuses what the server refuses", () => {
     expect(eventInputConstraints("locationName")).toMatchObject({ required: true, maxLength: 200 });
-    // The Locul box hands the island the schema's own box, never a second list (§NNN).
+    // The Locul box hands the island the schema's own box, never a second list (§350).
     expect(read("src/modules/content/events/ui/boxes/PlaceBox.tsx")).toContain('box: textFieldConstraints(eventInputConstraints("locationName"))');
   });
 
@@ -144,7 +144,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
   });
 
   it("is on both pages, and the create button's gap follows it", () => {
-    // One Locul box for the editor and the create page (§303, §NNN).
+    // One Locul box for the editor and the create page (§303, §350).
     expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<PlaceBox");
     expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<PlaceBox");
     // The create button and the Publicare list ask the one shared check, which follows the switch.

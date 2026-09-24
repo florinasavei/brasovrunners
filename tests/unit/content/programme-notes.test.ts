@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
  *
  * The owner, in the editor: "programul evenimentului e duplicat!". Two folds far apart carried
  * the same word, and two hints had to say where the other one was. Since the editor's boxes
- * (§NNN) the rows and the notes share one box, "Programul zilei și ce să aduci" — the rows first,
+ * (§350) the rows and the notes share one box, "Programul zilei și ce să aduci" — the rows first,
  * then the notes and what to bring in the box's own Română | English tabs — so the hints are gone:
  * nothing is far away any more.
  *
@@ -39,7 +39,7 @@ describe("BR-REQ-050-02 criterion 13 — the rows are the programme, the text is
     expect(piece).toContain(`summary={t("editor.fields.scheduleNotes")}`);
     expect(piece).not.toContain(`t("editor.fields.schedule")`);
     expect(piece).toContain(`emptyHint={t("editor.bodyEmpty")}`);
-    // What to bring is on every type, in the same tabs (moved out of the description, §NNN).
+    // What to bring is on every type, in the same tabs (moved out of the description, §350).
     expect(piece.indexOf(`name={name("checklist")}`)).toBeGreaterThan(fold);
   });
 

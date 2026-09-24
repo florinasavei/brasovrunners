@@ -129,7 +129,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     participantName: tRo ? "Ana Popescu" : "Ana Popescu",
     eventTitle: tRo ? "Crosul de toamnă" : "The autumn cross",
     eventLocationName: tRo ? "Stația de telecabină Tâmpa" : "Tâmpa cable-car station",
-    // Through the one helper the send path uses (§NNN), so the preview cannot drift from the mail.
+    // Through the one helper the send path uses (§349), so the preview cannot drift from the mail.
     eventStartsAtFormatted: sampleWhen(emailLocale),
     eventStartsAtFormattedOther: sampleWhen(tRo ? "en" : "ro"),
     currentStatus: tRo ? "confirmată" : "confirmed",

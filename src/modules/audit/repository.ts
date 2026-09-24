@@ -126,7 +126,7 @@ export type AuditAction =
    */
   | "event.hard_deleted"
   /**
-   * A series' "Publică datele noi automat" switched (§NNN): on the source's rule, from and to,
+   * A series' "Publică datele noi automat" switched (§350): on the source's rule, from and to,
    * and which date's editor it was pressed from — a change to what the site will publish by
    * itself every week, so the trail says who made it.
    */

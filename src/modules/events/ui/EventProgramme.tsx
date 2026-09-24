@@ -45,7 +45,7 @@ export default async function EventProgramme({
           {days.map((day) => (
             <Fragment key={day}>
               {days.length > 1 && (
-                /* The day heading in the one long form (§NNN), its capital from the helper: CSS's
+                /* The day heading in the one long form (§349), its capital from the helper: CSS's
                    `capitalize` would have capitalised the month as well. */
                 <Typography component="div" variant="subtitle2" sx={{ gridColumn: "1 / -1", mt: 1 }}>
                   {formatDay(rows.find((row) => dayKey(row.startsAt, timeZone) === day)?.startsAt ?? new Date(), { locale, timeZone, style: "long" })}

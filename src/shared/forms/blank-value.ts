@@ -1,5 +1,5 @@
 /**
- * Whether a posted value says nothing (§NNN, the event editor's "· incomplet" tab marks).
+ * Whether a posted value says nothing (§350, the event editor's "· incomplet" tab marks).
  *
  * A plain box is blank when it holds only whitespace. A rich-text field posts its Tiptap
  * document as JSON (`RichTextEditor`'s hidden input), and an empty editor still posts a document

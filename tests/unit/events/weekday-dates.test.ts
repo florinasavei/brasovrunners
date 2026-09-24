@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-040-03 criteria 4 and 5 (§NNN) — the day of the week on the surfaces a runner reads the
+ * BR-REQ-040-03 criteria 4 and 5 (§349) — the day of the week on the surfaces a runner reads the
  * race's date on, in the language of the page or the picture: the facts on the event page and on
  * the listing card, the countdown line's sentence, and the share picture.
  */

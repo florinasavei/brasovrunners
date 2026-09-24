@@ -74,7 +74,7 @@ export default async function EventFacts({
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
-  // The date starts its line, so it takes a capital (§NNN): "Sâmbătă, 21 nov. 2026".
+  // The date starts its line, so it takes a capital (§349): "Sâmbătă, 21 nov. 2026".
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
   const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
 
@@ -315,7 +315,7 @@ export default async function EventFacts({
     // the instant the button goes away.
     const opensAt = upcomingRegistrationOpening(event, now);
     const closesAt = openRegistrationClosing(event, now);
-    // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§NNN).
+    // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§349).
     const shortDate = (date: Date) =>
       formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
     const registrationPiece = opensAt

@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
 /**
- * The one page the create form and the editor share (§NNN): a main column of boxes in three
+ * The one page the create form and the editor share (§350): a main column of boxes in three
  * labelled groups, and a narrow side column — Publicare and Recurență — that comes **first on a
  * phone** (it is what you came to check, and forty fields above it are a scroll nobody makes) and
  * stays pinned on the right from `md` up.

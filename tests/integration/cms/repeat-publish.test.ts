@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * date the standing job created a draft for good, with no way back short of stopping and
  * restarting the series. This is the switch: only the rule's `publish` flag moves, the cadence,
  * weekdays and end stay exactly as chosen, and turning it on asks for a role that may publish.
- * A draft source's "on" is stored and waits (the editor's redesign, §NNN): the dates go live only
+ * A draft source's "on" is stored and waits (the editor's redesign, §350): the dates go live only
  * while the source is live too. It is switched from any date of the series.
  */
 describe("§341 setRepeatPublish — the running series' publish switch", () => {
@@ -90,7 +90,7 @@ describe("§341 setRepeatPublish — the running series' publish switch", () => 
     expect(await ruleOf(source.id)).toEqual(weekly(false));
   });
 
-  it("stores publication on while the source is a draft — it waits for the source (§NNN)", async () => {
+  it("stores publication on while the source is a draft — it waits for the source (§350)", async () => {
     // The rule says what was asked; `materializeSeries` publishes a date only while the source is
     // live too, and the editor says "waiting" for exactly this state. The create page's own
     // "Publică datele noi automat" stores the same thing for a new draft.
@@ -99,7 +99,7 @@ describe("§341 setRepeatPublish — the running series' publish switch", () => 
     expect(await ruleOf(source.id)).toEqual(weekly(true));
   });
 
-  it("switches the source's rule from any date of the series, and the trail says who (§NNN)", async () => {
+  it("switches the source's rule from any date of the series, and the trail says who (§350)", async () => {
     const source = await seedSource({ published: true, rule: weekly(false) });
     const [copy] = await db
       .insert(events)

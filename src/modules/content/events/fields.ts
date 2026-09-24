@@ -612,7 +612,7 @@ export const eventFieldsSchema = z
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
     /**
-     * How long the waiting list may grow (§NNN): empty is no limit, zero is no waiting list at
+     * How long the waiting list may grow (§348): empty is no limit, zero is no waiting list at
      * all, and the bounds are the database's CHECK said again so the box carries `min` (§315).
      * Optional, and absent means "this caller is not editing it" — the service writes nothing
      * then, so a save from anything that does not post the box keeps the limit the organizer set.

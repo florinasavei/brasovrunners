@@ -752,7 +752,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await fillDateField(page, "Începutul evenimentului", "2027-05-03");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
-    // Registration is one box; who may enter and what they sign is its own card (§NNN).
+    // Registration is one box; who may enter and what they sign is its own card (§350).
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();

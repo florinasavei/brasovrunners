@@ -125,7 +125,7 @@ export function programmeLines(rows: readonly ProgrammeRow[], timeZone: string, 
   const days = new Set(rows.map((row) => dayOf(row.startsAt, timeZone)));
   const time = (at: Date) => formatTime(at, { locale, timeZone });
   // The day starts the line, so the short form with its capital, then the time after a comma as
-  // every dated time is written (§NNN): "Sâm., 21 nov. 2026, 08:30".
+  // every dated time is written (§349): "Sâm., 21 nov. 2026, 08:30".
   const day = (at: Date) => formatDay(at, { locale, timeZone, style: "short" });
   return rows.map((row) => {
     const when = [days.size > 1 ? day(row.startsAt) : "", time(row.startsAt) + (row.endsAt ? `–${time(row.endsAt)}` : "")]

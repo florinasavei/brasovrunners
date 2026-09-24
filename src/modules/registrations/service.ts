@@ -125,7 +125,7 @@ function withLockedRow(
   },
 ): LockedEventForRegistration {
   /*
-    The waiting list's length (§NNN) is only ever read here, off the locked row, and never off
+    The waiting list's length (§348) is only ever read here, off the locked row, and never off
     the caller's: no caller passes it, so none can pass a stale one, and the type below is what
     makes `allocateOrWaitlist` refuse an event that did not come through this function.
   */
@@ -134,7 +134,7 @@ function withLockedRow(
 
 /** The event as `withLockedRow` hands it over: the caller's row, the lock's numbers. */
 type LockedEventForRegistration = EventForRegistration & {
-  /** `events.waitlist_capacity` as it stands under the lock (§NNN): null no limit, 0 no waiting list. */
+  /** `events.waitlist_capacity` as it stands under the lock (§348): null no limit, 0 no waiting list. */
   waitlistCapacity: number | null;
 };
 
@@ -277,7 +277,7 @@ async function deliveryEmailOf<T extends Record<string, unknown>>(
  * already queued by `fillAvailableSpots`.
  *
  * **Refuses with `waitlistFullError`** when there is no place and the event's waiting list is
- * at its limit (§NNN) — nothing is written by the refusal, and the throw takes the caller's
+ * at its limit (§348) — nothing is written by the refusal, and the throw takes the caller's
  * whole transaction back with it, the token spend included, as `declarationChanged` does. The
  * count is the one taken just above for the place, under the same lock, so two registrations
  * racing for the last slot in the line are serialised like two racing for the last place, and
@@ -298,7 +298,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   let direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted });
 
-  // No place: this registration would join the line, and the line may be full (§NNN).
+  // No place: this registration would join the line, and the line may be full (§348).
   if (
     !direct &&
     !waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds })
@@ -493,7 +493,7 @@ export async function readPublicAvailability<T extends Record<string, unknown>>(
   return (await readPublicPlaces(db, { ...event, waitlistCapacity: null }, now)).availablePlaces;
 }
 
-/** What the event page says about places (§NNN): the free ones, and the room left in the line. */
+/** What the event page says about places (§348): the free ones, and the room left in the line. */
 export type PublicPlaces = {
   /** `readPublicAvailability`'s number: null for an uncapped event. */
   availablePlaces: number | null;
@@ -505,7 +505,7 @@ export type PublicPlaces = {
 };
 
 /**
- * `readPublicAvailability` and the waiting list's room, from the same two counts (§NNN).
+ * `readPublicAvailability` and the waiting list's room, from the same two counts (§348).
  *
  * The same read, with the same guarantees and the same absence of a lock: nothing is decided
  * here. A "Mai sunt 3 locuri pe lista de așteptare" can be one slot stale the instant it renders;
@@ -537,7 +537,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
 }
 
 /**
- * The door's own answer when the places and the waiting list are both full (§NNN), before a
+ * The door's own answer when the places and the waiting list are both full (§348), before a
  * registration is written at all.
  *
  * Not the decision: a submission takes no place and no slot in the line — the address is still
@@ -948,7 +948,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   }
 
   /*
-    The places and the waiting list both full (§NNN): refused here, at every door alike — the
+    The places and the waiting list both full (§348): refused here, at every door alike — the
     public form, a staff entry and the desk's walk-in behind it, a restart, a TEST batch — and
     before the throttle is spent or anything is written. Before the participant is looked up
     too, so the answer is the same for an address that is registered already and one that is not

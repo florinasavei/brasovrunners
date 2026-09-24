@@ -26,7 +26,7 @@ type Props = {
 };
 
 /**
- * Sub-sub-card 8.4.2, "Alocare și tipărire" (§NNN), edit only: the race numbers given out and the
+ * Sub-sub-card 8.4.2, "Alocare și tipărire" (§350), edit only: the race numbers given out and the
  * sheet to print — the one card for race numbers now holds what they look like and whether they
  * exist, where it used to be a section below the page.
  *

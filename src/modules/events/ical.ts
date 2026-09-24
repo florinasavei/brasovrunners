@@ -375,7 +375,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     if (!r) return null;
     if (r.kind === "OPEN") return { text: t("registrationState.OPEN"), url: r.url, separator: " — " };
     if (r.kind === "NOT_YET_OPEN") {
-      // Human text in the DESCRIPTION, so the one long form, inside the sentence (§NNN); the
+      // Human text in the DESCRIPTION, so the one long form, inside the sentence (§349); the
       // DTSTART/DTEND stay the machine's.
       const date = formatDay(r.opensAt, { locale, timeZone, style: "long", withTime: true, position: "inline" });
       return { text: t("cta.opensOnShort", { date }), url: r.url, separator: " — " };

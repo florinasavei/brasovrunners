@@ -153,7 +153,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
   // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
   if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
-    // Each half of the bilingual message in its own words (§96, §NNN).
+    // Each half of the bilingual message in its own words (§96, §349).
     const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
     data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
     data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
@@ -396,7 +396,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
         : undefined;
       // Beside the calendar file, never instead of it: the confirmation carries both (§174).
       if (pdf) attachments = [...(attachments ?? []), { filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }];
-      // In the message's language — the registration's — and the other half in its own (§NNN);
+      // In the message's language — the registration's — and the other half in its own (§349);
       // the PDF beside it is in the declaration's.
       const signedZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
       data.signedAtFormatted = formatInSentence(signed.acceptedAt, signedZone, locale);
@@ -439,7 +439,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
 };
 
 /**
- * "duminică, 11 oct. 2026, 09:00" / "Sunday, 11 Oct 2026, 09:00", in the event's zone (§NNN).
+ * "duminică, 11 oct. 2026, 09:00" / "Sunday, 11 Oct 2026, 09:00", in the event's zone (§349).
  *
  * In the language's own case: nearly every template sets it inside a sentence ("programat
  * duminică, …"); the one line it starts — the facts under the heading — capitalises it there.
@@ -449,7 +449,7 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
   return formatInSentence(event.startsAt, event.timezone, locale);
 }
 
-/** The long form with its time, inside a sentence of a message (§NNN). */
+/** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
 }

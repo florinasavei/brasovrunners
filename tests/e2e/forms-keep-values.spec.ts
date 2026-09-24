@@ -125,7 +125,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
 });
 
 /*
-  §315 and the editor's boxes (§NNN): a refusal whose field sits in a card three folds deep. An
+  §315 and the editor's boxes (§350): a refusal whose field sits in a card three folds deep. An
   internal registration needs an approved declaration — a rule only the server can judge (the
   select has no `required`: the mode decides) — and the declaration is in "Participare și
   înscrieri" › "Condiții de participare și declarația", both shut on arrival. The refusal must
@@ -173,7 +173,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
-  §NNN, found by review: a box the chosen registration mode hides cannot stop the save.
+  §350, found by review: a box the chosen registration mode hides cannot stop the save.
 
   The boxes of the other modes stay in the document, hidden, so switching back finds them — and
   they keep their `pattern`. A link typed as "www.club.ro" under "Înscrieri la organizator" and
@@ -182,7 +182,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
   are read-only now, which the browser does not check, and the service ignores what the mode hides
   before its schema reads it.
 */
-test.describe("§NNN a wrong value in a hidden registration mode", () => {
+test.describe("§350 a wrong value in a hidden registration mode", () => {
   test("a link typed under 'la organizator', then 'Fără înscrieri', then create: the event is created", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     await signIn(page, "Dev Administrator");

@@ -36,7 +36,7 @@ test("the editor adds a partner with two links, and the preview shows both under
   await languageTab(page, "address", "en").click();
   await field("translations.en.slug").fill(`partners-cross-${suffix}`);
 
-  // The partners' cards live in their own box, "Parteneri — „Împreună cu”" (§NNN, the editor's
+  // The partners' cards live in their own box, "Parteneri — „Împreună cu”" (§350, the editor's
   // boxes), folded until it is opened.
   await openEditorBox(page, "Parteneri");
 

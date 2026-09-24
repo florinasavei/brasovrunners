@@ -191,7 +191,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const basePath = getPathname({ locale, href: "/admin" });
 
-  // A table cell: the short form, with its weekday (§NNN).
+  // A table cell: the short form, with its weekday (§349).
   const shortDate = (event: EditableEvent) => formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" });
 
   // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
@@ -361,7 +361,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   // so the hint names exactly the button and the heading the reader will find:
                   // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
                   // in the source's "Recurență" box — its tick and its own save (§341 hints,
-                  // moved by the editor's boxes, §NNN).
+                  // moved by the editor's boxes, §350).
                   always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
                   autoPublishOff: t("events.seriesDraftsWhyOff", {
                     section: t("editor.boxes.recurrence.title"),
@@ -433,7 +433,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           <Alert severity="success">
             {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
               dates: datesWords(countOf(created)),
-              // Inside the sentence, in the club's zone (§NNN weekday on every date).
+              // Inside the sentence, in the club's zone (§350 weekday on every date).
               until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
             })}
           </Alert>

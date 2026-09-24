@@ -10,7 +10,7 @@ import GlyphSelect from "../GlyphSelect";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 10, "Traseul" (§NNN): what they run on, how hard, how long and how steep, and where the
+ * Box 10, "Traseul" (§350): what they run on, how hard, how long and how steep, and where the
  * route can be seen — a separate question from the meeting point (§49). All optional, so folded
  * on both pages. "Nespecificat" is a real answer on the two selects: the page omits the row rather
  * than guessing (migration `0018`).

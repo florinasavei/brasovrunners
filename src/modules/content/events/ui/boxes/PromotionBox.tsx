@@ -7,7 +7,7 @@ import { promotionSummary } from "../box-summaries";
 import { BoxNote, type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 13, "Evidențiere pe site" (§NNN): the two marks that make an event stand out — the site's
+ * Box 13, "Evidențiere pe site" (§350): the two marks that make an event stand out — the site's
  * lead event, one at a time, and a special edition (§168), any number of them, on one date of a
  * series too.
  */

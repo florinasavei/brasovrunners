@@ -55,7 +55,7 @@ export default async function RegistrationCta({
   // The event's own number of places, from the same row the count was read against: the
   // "out of" of §346's sentence. Null for an uncapped event, and for every event not read here.
   let capacity: number | null = null;
-  // The waiting list's room and limit (§NNN), off the same cached read; null for no limit.
+  // The waiting list's room and limit (§348), off the same cached read; null for no limit.
   let waitlistRoom: number | null = null;
   let waitlistCapacity: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
@@ -66,7 +66,7 @@ export default async function RegistrationCta({
         offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
         Without it, an open race's page woke the database for every visitor during exactly the
         weeks the page is read most. The same entry carries the event's size beside the free
-        places (§346 public fill count) and the waiting list's room and limit (§NNN waiting-list
+        places (§346 public fill count) and the waiting list's room and limit (§350 waiting-list
         length), off the same row the count was taken against, so neither line costs more.
       */
       const availability = await cachedPublicAvailability(event.id, now);
@@ -156,7 +156,7 @@ export default async function RegistrationCta({
           )
         )}
 
-        {/* The room left in a capped waiting list (§NNN); nothing for a list with no limit. */}
+        {/* The room left in a capped waiting list (§348); nothing for a list with no limit. */}
         {cta.kind === "FULL" && cta.waitlistRoom !== null && (
           <Typography variant="body2" data-testid="waitlist-room" sx={{ fontWeight: 600 }}>
             {waitlistRoomPhrase(t, locale, cta.waitlistRoom)}
@@ -167,7 +167,7 @@ export default async function RegistrationCta({
   }
 
   /*
-    No place and nothing to join (§NNN): the waiting list is full, or the event keeps none. A
+    No place and nothing to join (§348): the waiting list is full, or the event keeps none. A
     sentence and no button — a button would lead to a form that refuses at the end of it — with
     how full the event is beside it, the same line the open state shows. The "anunță-mă" box is
     the page's own and is untouched by this: it belongs to a window not yet open.
@@ -200,7 +200,7 @@ export default async function RegistrationCta({
         : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a
             // Brașov race opens at a Brașov hour wherever the page is read.
-            // Inside the sentence, so the weekday keeps its lower case (§NNN).
+            // Inside the sentence, so the weekday keeps its lower case (§349).
             date: formatDay(cta.opensAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
           });
 

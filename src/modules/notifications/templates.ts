@@ -256,7 +256,7 @@ export function renderBilingual(
   const otherData: TemplateData = {
     ...data,
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
-    // Every date of the second half in its own language (§NNN), not only the event's.
+    // Every date of the second half in its own language (§349), not only the event's.
     ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
@@ -323,7 +323,7 @@ export type TemplateData = {
   declarationPdfUrl?: string;
   /** When it was signed, formatted for the locale — on the declaration's own message. */
   signedAtFormatted?: string;
-  /** The same instant in the other language's words, for the bilingual message's second half (§NNN). */
+  /** The same instant in the other language's words, for the bilingual message's second half (§349). */
   signedAtFormattedOther?: string;
   /** The event's public page, and the manage page (§96): the deep links under the action. */
   eventUrl?: string;
@@ -341,7 +341,7 @@ export type TemplateData = {
    * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
    */
   holdExpiresAtFormatted?: string;
-  /** The same deadline in the other language's words, for the second half (§NNN). */
+  /** The same deadline in the other language's words, for the second half (§349). */
   holdExpiresAtFormattedOther?: string;
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
@@ -402,7 +402,7 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
 function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
-  // The date starts this line, so it takes its capital here (§NNN); every sentence keeps the
+  // The date starts this line, so it takes its capital here (§349); every sentence keeps the
   // language's own lower case. `capitalizeFirst` is the same in both languages' rules for the
   // letters a weekday starts with.
   const line = [d.eventStartsAtFormatted ? capitalizeFirst(d.eventStartsAtFormatted, "ro") : undefined, d.eventLocationName].filter(Boolean).join(" · ");

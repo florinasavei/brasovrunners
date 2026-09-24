@@ -1,5 +1,5 @@
 /**
- * Every date a person reads, written one way, with its day of the week (§NNN; the owner,
+ * Every date a person reads, written one way, with its day of the week (§349; the owner,
  * 2026-09-24: "I want all dates to show the day of the week as well, like 'Sâmbătă, 17 Jan,
  * 2027'").
  *

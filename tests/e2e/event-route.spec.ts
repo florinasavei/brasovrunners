@@ -50,7 +50,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     // BR-REQ-010-01 criterion 1, on the way past: the type defaults to a group run, and the
     // surface is chosen here so the public page can be checked for both labels below.
-    // The surface is the course's, in "Traseul" — folded, all optional (§NNN).
+    // The surface is the course's, in "Traseul" — folded, all optional (§350).
     await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
@@ -75,7 +75,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await hydrated(page);
     await openEditorBox(page, "Traseul");
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // "Linkuri și fișiere" is the box right after the course (§332, §NNN).
+    // "Linkuri și fișiere" is the box right after the course (§332, §350).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.

@@ -58,7 +58,7 @@ async function loadEventForRegistration(
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: null,
-    // The zone the participant's own page reads the event's instants in (§NNN).
+    // The zone the participant's own page reads the event's instants in (§349).
     timezone: event.timezone,
   };
 }

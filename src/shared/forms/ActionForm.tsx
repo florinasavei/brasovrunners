@@ -10,7 +10,7 @@ import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
 
 /**
- * Bring a box into view wherever it sits (§NNN): every closed fold around it opened, and the
+ * Bring a box into view wherever it sits (§350): every closed fold around it opened, and the
  * language tab that holds it — if any — brought forward by the strip itself (`REVEAL_EVENT`
  * bubbles up to it). The event editor puts a box three folds and a tab deep, and a box the reader
  * cannot see is a box the browser cannot focus.
@@ -107,7 +107,7 @@ export default function ActionForm({
   useEffect(() => {
     if (!state?.error) return;
     // The boxes the refusal names first, in order — a strip answers the first of a pass, so the
-    // first named box's tab is the one on top (§NNN): the event editor's boxes start closed, and
+    // first named box's tab is the one on top (§350): the event editor's boxes start closed, and
     // a named box the reader cannot see is a refusal they cannot act on.
     for (const name of state.fields) revealField(document.getElementById(fieldId(name, scope)));
     // The folds around the form (§336): backoffice folds start closed, and an element in
@@ -118,7 +118,7 @@ export default function ActionForm({
   }, [state, scope]);
 
   /*
-    A required box inside a closed fold or behind a hidden tab (§NNN): the browser fires
+    A required box inside a closed fold or behind a hidden tab (§350): the browser fires
     `invalid` on each box it refuses and then focuses the first — which it cannot do while the box
     is out of view. Caught here, during the event, before the browser looks for something to
     focus: the same moment `LocaleTabPanels` has always used for its own tabs.
@@ -175,7 +175,7 @@ export default function ActionForm({
                       href={`#${fieldId(name, scope)}`}
                       color="inherit"
                       // The box may be folded away or behind a tab: open its way before the
-                      // browser scrolls to the fragment (§NNN).
+                      // browser scrolls to the fragment (§350).
                       onClick={() => revealField(document.getElementById(fieldId(name, scope)))}
                     >
                       {labelOf(name)}

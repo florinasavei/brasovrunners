@@ -10,7 +10,7 @@ import { fillIn } from "@/shared/forms/fill-in";
 import { missingForPublish, type PublishGap, publishGapLabel, type PublishGapLabels } from "./publish-check";
 
 /**
- * The publication gaps of the form an element sits in, re-read as the form is typed into (§NNN).
+ * The publication gaps of the form an element sits in, re-read as the form is typed into (§350).
  *
  * The rich-text fields announce their hidden value with a bubbling `input`, and the "to be
  * announced" switch re-sends `change` once its box has lost `required`, so listening on the form
@@ -39,7 +39,7 @@ export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: r
 }
 
 /**
- * "Ce lipsește pentru publicare", on the create page's Publicare box (§NNN): one line per gap,
+ * "Ce lipsește pentru publicare", on the create page's Publicare box (§350): one line per gap,
  * named by the box and the tab that hold it ("Titlu și rezumat › English › Rezumat"), each a link
  * that opens every fold around the box and brings its tab forward before the browser scrolls to
  * it. The same check "Creează și publică" runs (`missingForPublish`), so the list and the button
@@ -89,7 +89,7 @@ export function MissingForPublishList({
 }
 
 /**
- * One line of the editor's server-computed "Ce lipsește pentru publicare" (§NNN): a link to the
+ * One line of the editor's server-computed "Ce lipsește pentru publicare" (§350): a link to the
  * box it names that opens every fold around it and brings its tab forward first.
  */
 export function RevealLink({ name, children }: { name: string; children: string }) {

@@ -95,7 +95,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
-  // The timeline's short form with the time (§NNN): a value beside its label, so capitalised;
+  // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>

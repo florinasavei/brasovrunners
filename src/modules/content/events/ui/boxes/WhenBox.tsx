@@ -27,7 +27,7 @@ function timezoneOptions(current: string): readonly string[] {
 }
 
 /**
- * Box 4, "Data și ora" (§NNN): when it starts, the gun time on a race (§71), how long it lasts —
+ * Box 4, "Data și ora" (§350): when it starts, the gun time on a race (§71), how long it lasts —
  * and, folded away under them, the time zone, which is changed only for an event somewhere else
  * (it used to be the first box of the form).
  *

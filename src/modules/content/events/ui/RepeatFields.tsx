@@ -9,7 +9,7 @@ import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./
 /**
  * How an event repeats (BR-REQ-050-02 criterion 7, §122): the cadence, the days of the week,
  * until when — a date, or nothing for a series without an end, which the maintenance job keeps
- * eight weeks ahead — and whether the dates it makes go live by themselves (§NNN). The same
+ * eight weeks ahead — and whether the dates it makes go live by themselves (§350). The same
  * fields on the create page and on an event's Recurență box, so the two cannot drift.
  *
  * `prefix` namespaces the fields (`repeat.cadence` on the creation form, bare on the event page,
@@ -18,7 +18,7 @@ import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./
  * locked — on the event page from the stored date, on the create page following the start date
  * as it is typed (`RepeatRuleFields`). Under them, the rule in one live sentence.
  *
- * "Publică datele noi automat" is always shown now, ticked by default (§NNN) — it was offered only
+ * "Publică datele noi automat" is always shown now, ticked by default (§350) — it was offered only
  * on a live event, so a series started from a draft could never say it wanted its dates to go
  * live; its help says what off means, and that the dates of a draft stay drafts until it is
  * published (`materializeSeries`: rule.publish **and** a published source).

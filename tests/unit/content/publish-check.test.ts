@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { missingForPublish, publishGapLabel } from "@/modules/content/events/ui/publish-check";
 
 /**
- * §315, §NNN — what publication would refuse, read off the form as it stands: one check for
+ * §315, §350 — what publication would refuse, read off the form as it stands: one check for
  * "Creează și publică" (which names the first gap) and the Publicare box's list (which names them
  * all), in the order of the editor's boxes, each gap named by its box and tab.
  */
@@ -21,7 +21,7 @@ const complete: Record<string, string> = {
 const reader = (values: Record<string, string>) => (name: string) => values[name] ?? "";
 const LOCALES = ["ro", "en"];
 
-describe("§NNN missingForPublish", () => {
+describe("§350 missingForPublish", () => {
   it("finds nothing on a complete form", () => {
     expect(missingForPublish(reader(complete), LOCALES)).toEqual([]);
   });

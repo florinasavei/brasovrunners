@@ -8,7 +8,7 @@ import EditionMark, { type EditionNote } from "./EditionMark";
 export type SeriesDate = {
   id: string;
   href: string;
-  /** The chip's words: the short date, capitalised (§NNN). */
+  /** The chip's words: the short date, capitalised (§349). */
   label: string;
   /** The same date inside a sentence ("Deschide data de mie., 30 sept. 2026"), when one is built. */
   labelInline?: string;

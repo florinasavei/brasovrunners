@@ -29,7 +29,7 @@ export type RuleSentenceWords = {
   horizon: string;
   /**
    * The seven weekday names by ISO number, written on the server (`series-sentence.ts#weekdayNames`)
-   * and handed here as strings: a client island formats no date itself (§324, §NNN weekday on
+   * and handed here as strings: a client island formats no date itself (§324, §350 weekday on
    * every date).
    */
   weekdayNames: Readonly<Record<string, string>>;
@@ -37,7 +37,7 @@ export type RuleSentenceWords = {
 
 /**
  * "Se repetă săptămânal, lunea și miercurea, la 18:30 — la nesfârșit." — the rule, in words,
- * from the boxes as they stand (§NNN). Pure: the caller reads the form.
+ * from the boxes as they stand (§350). Pure: the caller reads the form.
  *
  * The end is echoed as the date box shows it while it is typed (`30.09.2026`, the pickers'
  * format, §303); once saved, the Recurență box writes the rule on the server, with its weekday.
@@ -60,7 +60,7 @@ export function ruleSentenceFrom(
 }
 
 /**
- * The days of the week a series runs on, and the rule in one live sentence under them (§NNN).
+ * The days of the week a series runs on, and the rule in one live sentence under them (§350).
  *
  * The event's own day is always in the series (§128): it is ticked and locked, and — a disabled
  * box posts nothing — a hidden input posts it. On the editor the day is known and fixed; on the
@@ -177,7 +177,7 @@ export default function RepeatRuleFields({
 }
 
 /**
- * "Publică datele noi automat" (§NNN): ticked by default, now always shown (it was only offered on
+ * "Publică datele noi automat" (§350): ticked by default, now always shown (it was only offered on
  * a live event), with what it means when it is off and while the event is a draft.
  */
 export function RepeatPublishField({

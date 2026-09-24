@@ -8,12 +8,12 @@ import { weekdayNames } from "@/modules/events/ui/series-sentence";
 import { isBlankValue } from "@/shared/forms/blank-value";
 
 /**
- * §NNN — the small pure pieces the event editor's boxes stand on: the page address from a title,
+ * §350 — the small pure pieces the event editor's boxes stand on: the page address from a title,
  * a blank value (the tab marks), the series scope's presets and its new default, the live rule
  * sentence, and `normalizeForMode`.
  */
 
-describe("§NNN slugFromTitle — the create page's address, from the title", () => {
+describe("§350 slugFromTitle — the create page's address, from the title", () => {
   it("lowercases, drops the diacritics (comma and cedilla forms), and joins the words with hyphens", () => {
     expect(slugFromTitle("Crosul Tâmpei 2026")).toBe("crosul-tampei-2026");
     expect(slugFromTitle("Alergare de luni — Șprint în Parcul Tractorul")).toBe("alergare-de-luni-sprint-in-parcul-tractorul");
@@ -28,7 +28,7 @@ describe("§NNN slugFromTitle — the create page's address, from the title", ()
   });
 });
 
-describe("§NNN isBlankValue — what the tabs call unfinished", () => {
+describe("§350 isBlankValue — what the tabs call unfinished", () => {
   it("reads whitespace and an empty editor document as blank, a word or a picture as not", () => {
     expect(isBlankValue("")).toBe(true);
     expect(isBlankValue("   ")).toBe(true);
@@ -42,7 +42,7 @@ describe("§NNN isBlankValue — what the tabs call unfinished", () => {
   });
 });
 
-describe("§NNN the series scope: three words, 'this and the following' by default (reversing §240)", () => {
+describe("§350 the series scope: three words, 'this and the following' by default (reversing §240)", () => {
   const dates = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
 
   it("starts on this date and the ones after it", () => {
@@ -59,7 +59,7 @@ describe("§NNN the series scope: three words, 'this and the following' by defau
   });
 });
 
-describe("§NNN the rule in one live sentence", () => {
+describe("§350 the rule in one live sentence", () => {
   const words = {
     weekly: ro.Event.series.weekly,
     fortnightly: ro.Event.series.fortnightly,
@@ -94,7 +94,7 @@ describe("§NNN the rule in one live sentence", () => {
   });
 });
 
-describe("§NNN normalizeForMode — what the chosen mode hides is ignored, not refused (extending §111)", () => {
+describe("§350 normalizeForMode — what the chosen mode hides is ignored, not refused (extending §111)", () => {
   const fields = {
     registrationMode: "NONE",
     capacity: 20,
@@ -121,7 +121,7 @@ describe("§NNN normalizeForMode — what the chosen mode hides is ignored, not 
   });
 });
 
-describe("§NNN ignoreHiddenFields — what the type or mode hides is replaced before the schema reads it", () => {
+describe("§350 ignoreHiddenFields — what the type or mode hides is replaced before the schema reads it", () => {
   const posted = {
     type: "RACE",
     registrationMode: "INTERNAL",
@@ -177,7 +177,7 @@ describe("§NNN ignoreHiddenFields — what the type or mode hides is replaced b
   });
 });
 
-describe("§NNN normalizeForMode and the waiting list's length (the waiting-list cap)", () => {
+describe("§350 normalizeForMode and the waiting list's length (the waiting-list cap)", () => {
   const base = { type: "RACE", registrationMode: "NONE", capacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
 
   it("stores no length where nothing queues, and writes nothing when the caller never sent one", () => {

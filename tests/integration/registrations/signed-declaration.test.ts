@@ -40,7 +40,7 @@ const LABELS = {
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
-  // What declarationWords writes for NOW (§NNN): "pe" before a date that starts with its weekday.
+  // What declarationWords writes for NOW (§349): "pe" before a date that starts with its weekday.
   generatedOn: "Generat pe vineri, 4 sept. 2026, 13:00",
   page: (n: number, total: number) => `Pagina ${n} din ${total}`,
   signedByLink: (when: string) => `Semnat electronic pe ${when}`,
@@ -165,7 +165,7 @@ describe("the club's declaration (§95)", () => {
     expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
     expect(text).not.toContain("{{");
     expect(entry!.signature?.idDocument).toBe("bv 123456");
-    // Under the "Data" label the signing instant starts the value, with its weekday (§NNN).
+    // Under the "Data" label the signing instant starts the value, with its weekday (§349).
     expect(entry!.signature?.signedAt).toBe("Vineri, 4 sept. 2026, 13:00");
     // An English declaration writes the event's date in English — the declaration's language.
     expect((await eventMergeValues(db, event.id, "en"))?.values.eventDate).toBe("Sunday, 11 Oct 2026");

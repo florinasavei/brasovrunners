@@ -235,7 +235,7 @@ function RichTextEditorIsland({
   const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   /*
     The hidden value is written by React, which fires no event a form can hear, so every write is
-    announced with a bubbling `input` from the hidden box itself (§NNN): the event editor's tab
+    announced with a bubbling `input` from the hidden box itself (§350): the event editor's tab
     marks ("· incomplet") and the "missing for publication" list re-read the form on `input`.
     Not on mount — nothing was typed yet.
   */

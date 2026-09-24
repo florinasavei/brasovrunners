@@ -64,7 +64,7 @@ export default async function SeriesCard({
     members.map(async (member) => ({
       id: member.id,
       href: pageOf(member.slug),
-      // A chip: the short form, formatted here and handed to the island as text (§NNN, §324).
+      // A chip: the short form, formatted here and handed to the island as text (§349, §324).
       label: formatDay(member.startsAt, { locale, timeZone: member.timezone, style: "short" }),
       note: await editionNote(editionDifference(member, usual)),
     })),

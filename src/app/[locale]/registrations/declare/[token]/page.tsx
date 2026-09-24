@@ -145,7 +145,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   /*
     The hold had lapsed at the press and the place went on down the line, and the line was full
-    too (§NNN): the allocator refused to queue this registration, the refusal rolled everything
+    too (§348): the allocator refused to queue this registration, the refusal rolled everything
     back — the token spend included — and nothing was signed. Said as that, never as a dead link.
   */
   if (full) {

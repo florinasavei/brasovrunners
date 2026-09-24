@@ -115,7 +115,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     });
   });
 
-  it("carries the waiting list's room and limit in the same entry (§NNN waiting-list length)", async () => {
+  it("carries the waiting list's room and limit in the same entry (§350 waiting-list length)", async () => {
     const event = await openRace(2, 3);
     await confirm(event.id, 2);
     await confirm(event.id, 1, "WAITLISTED", 2);

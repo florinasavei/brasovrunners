@@ -59,7 +59,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
     {
       key: "takenOn",
       label: t("gallery.columnTakenOn"),
-      // A calendar day stored at noon UTC (the album form): read as the day it names (§NNN).
+      // A calendar day stored at noon UTC (the album form): read as the day it names (§349).
       render: (row) => formatCalendarDay(row.takenOn, { locale, style: "short" }),
     },
     {

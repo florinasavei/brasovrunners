@@ -8,7 +8,7 @@ import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/l
  * that links a named field to its box (§47, `DECISIONS.md` §315), so an organizer reads
  * "Titlu și rezumat › Română › Titlu" and never `translations.ro.title`.
  *
- * Every label starts with the title of the editor box that holds it (§NNN): the form is fourteen
+ * Every label starts with the title of the editor box that holds it (§350): the form is fourteen
  * boxes now, most of them shut, and the summary's line is what tells the reader which one to
  * open — the link opens it for them. The names are exactly the ones the form posts; only the
  * words changed.

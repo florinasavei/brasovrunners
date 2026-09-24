@@ -59,7 +59,7 @@ export async function eventShareImage(
   const { width, height } = SHARE_SHAPES[shape];
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
-  // "Duminică, 11 oct. 2026": the long form, starting its line (§NNN), in the picture's language.
+  // "Duminică, 11 oct. 2026": the long form, starting its line (§349), in the picture's language.
   const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
   const time = formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone });
   const km = distanceInKm(event.distanceMeters);

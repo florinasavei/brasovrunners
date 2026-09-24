@@ -14,7 +14,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * The 2026-09-24 third batch, integrated (§347): five branches — what a runner pays (cost amount
  * and donation), partners with many links, "Linkuri și fișiere" (§332), the place to be
  * announced (§328, §339) and the date pickers — each added boxes to the one event form (since
- * the editor's boxes, §NNN, the boxes under `content/events/ui/boxes/` that the create page and
+ * the editor's boxes, §350, the boxes under `content/events/ui/boxes/` that the create page and
  * the editor both render), the one reader (`admin/actions.ts#eventFieldsFrom`), the one schema
  * (`content/events/fields.ts`) and the one save (`service.ts`). Each branch proved its own
  * boxes alone; this proves them together, the way the create page and the editor post them:

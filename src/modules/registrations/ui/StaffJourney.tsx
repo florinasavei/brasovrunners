@@ -32,7 +32,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
   const locale = await getLocale();
 
   const label = JOURNEY_STEP_LABEL;
-  // The timeline's short form with the time (§NNN): inside a step's words ("până la …") in lower
+  // The timeline's short form with the time (§349): inside a step's words ("până la …") in lower
   // case, and capitalised where it starts a step's caption.
   const when = (value: Date | null | undefined) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;

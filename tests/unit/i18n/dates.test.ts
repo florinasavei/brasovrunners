@@ -15,7 +15,7 @@ import {
 
 /**
  * BR-REQ-040-03 criteria 4–6 — every date a person reads carries its day of the week, written
- * one way (§NNN): the long and the short form, 24-hour times, a capital where the date starts a
+ * one way (§349): the long and the short form, 24-hour times, a capital where the date starts a
  * line and the language's own case inside a sentence, always in the zone the caller names.
  */
 
@@ -122,7 +122,7 @@ describe("BR-REQ-040-03 criterion 6 the zone the caller names, never the server'
   });
 });
 
-describe("the same formats, registered by name for next-intl (§NNN)", () => {
+describe("the same formats, registered by name for next-intl (§349)", () => {
   it("formats `format.dateTime(date, \"dayLong\")` with the weekday, in the language's own case", () => {
     const ro = createFormatter({ locale: "ro", timeZone: BUCHAREST, formats: { dateTime: DATE_FORMATS } });
     const en = createFormatter({ locale: "en-GB", timeZone: BUCHAREST, formats: { dateTime: DATE_FORMATS } });
@@ -139,7 +139,7 @@ describe("the same formats, registered by name for next-intl (§NNN)", () => {
 });
 
 /**
- * The helper is the one way (§NNN): a date written anywhere else with `dateStyle` or a
+ * The helper is the one way (§349): a date written anywhere else with `dateStyle` or a
  * hand-picked Intl locale is a date without its weekday, or with a different comma. The
  * machine formats (`en-CA`), the calendar's column headers and the series sentence's weekday
  * names do not name a display locale and pass.

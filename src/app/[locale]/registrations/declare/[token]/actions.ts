@@ -53,7 +53,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   } catch (error) {
     /*
       The hold had lapsed at the press, its place went on down the waiting list, and the list is
-      full (§NNN): the allocator would not queue this registration again. Its own sentence, first,
+      full (§348): the allocator would not queue this registration again. Its own sentence, first,
       because the refusal is a VALIDATION_ERROR and the generic branch below would call it an
       unticked box. Nothing was recorded and the token was not spent.
     */

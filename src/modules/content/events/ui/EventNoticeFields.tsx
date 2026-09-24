@@ -44,7 +44,7 @@ type NoticeProps = {
  * Whether the participants hear about this save (`DECISIONS.md` §331; the owner: "I want to know
  * exactly when and if participants get email alerts") — two blocks, and at most one of them,
  * chosen by what the status select says *now*, each in the box of the editor it belongs to
- * (§NNN):
+ * (§350):
  *
  * - **Cancelled, on an event that was not** (`EventCancelFields`, in "Starea evenimentului",
  *   beside the select that cancels) — the reason, required, and "tell the participants", ticked.

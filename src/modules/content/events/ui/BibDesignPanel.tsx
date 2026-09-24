@@ -58,7 +58,7 @@ export default async function BibDesignPanel({
 }: {
   /**
    * The event being designed; the preview asks the picture route for its title and date. Null on
-   * the create page (§NNN): every setting is there, and no preview — the route needs an event.
+   * the create page (§350): every setting is there, and no preview — the route needs an event.
    */
   eventId: string | null;
   /** What is stored, or the platform's own on an event nobody has designed. */

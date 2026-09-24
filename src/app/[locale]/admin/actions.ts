@@ -229,7 +229,7 @@ function eventFieldsFrom(form: FormData) {
     isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
-    // The waiting list's length (§NNN), only when the form carried its box: an empty box is "no
+    // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
     bibStartNumber: value("bibStartNumber"),
@@ -600,7 +600,7 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
             cadence: cadence as RepeatCadence,
             weekdays: weekdaysFrom(form),
             until: text(form, "repeat.until") || null,
-            // "Publică datele noi automat" (§NNN), ticked by default: the rule stores it, and the
+            // "Publică datele noi automat" (§350), ticked by default: the rule stores it, and the
             // dates go live only while the event is live too.
             publish: form.get("repeat.publish") === "on",
           }
@@ -700,7 +700,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
 
 /**
  * The series' automatic publication, on or off (§341): whether the dates made from now on go
- * live as they are made. Posted from the Recurență box on any date of the series (§NNN, the
+ * live as they are made. Posted from the Recurență box on any date of the series (§350, the
  * editor's boxes): the tick "Publică datele noi automat" is the rule's new flag — ticked posts
  * `publish=on`, unticked posts nothing — and "Salvează setarea" sends it. The service resolves the
  * date to the series' source and asserts the role (switching it on asks for the role that
@@ -845,14 +845,14 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
     });
     if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
   } catch (error) {
-    // The places and the waiting list full before the first row (§NNN): said as such, the count
+    // The places and the waiting list full before the first row (§348): said as such, the count
     // still in its box — the marker is a rule about the event, not a box the summary could name.
     const full = waitlistRefusalCode(error);
     const refusal = refused(error, form);
     return full ? { ...refusal, error: full, fields: [] } : refusal;
   }
 
-  // Stopped part-way at the waiting list's limit (§NNN): how many went in, and why the rest did not.
+  // Stopped part-way at the waiting list's limit (§348): how many went in, and why the rest did not.
   if (stoppedAt !== null) backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
   backTo(path, { saved: "testRegistrationsAdded" });
 }

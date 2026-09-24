@@ -1040,7 +1040,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
    * seed used to be the only way to set.
    */
   describe("the registration block", () => {
-    it("ignores a capacity the chosen mode hides, rather than refusing a box nobody can see (§NNN)", async () => {
+    it("ignores a capacity the chosen mode hides, rather than refusing a box nobody can see (§350)", async () => {
       // The editor keeps the "Pe site" fields in the document behind "Fără înscrieri"
       // (`OnlyForMode`), so a capacity typed before the switch still posts: it is saved as none.
       const { event } = await seedEvent();
@@ -1071,7 +1071,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ).toBe("VALIDATION_ERROR");
     });
 
-    it("refuses an external event with no link, and ignores a link behind any other mode (§NNN)", async () => {
+    it("refuses an external event with no link, and ignores a link behind any other mode (§350)", async () => {
       const { event } = await seedEvent();
       const link = ["https:/", "entries.example.test", "race"].join("/");
 

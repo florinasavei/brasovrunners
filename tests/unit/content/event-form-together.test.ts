@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  * "Linkuri și fișiere" (§332), the place to be announced (§328, §339) and the date pickers all
  * added boxes to the event form and lines to `admin/actions.ts#eventFieldsFrom`, on branches
  * that could not see each other — and the waiting list's length (the waiting-list cap) after them.
- * Since the editor's boxes (§NNN) the form is the boxes under `content/events/ui/boxes/`, which
+ * Since the editor's boxes (§350) the form is the boxes under `content/events/ui/boxes/`, which
  * the create page and the editor both render: one page, create and edit alike. The save itself is proven end to end in
  * `tests/integration/cms/event-fields-together.test.ts`; these are the seams a merge can open
  * without any single branch's test noticing — a box read twice, a box read and never rendered,
@@ -30,7 +30,7 @@ const readAll = (dir: string) =>
     .filter((file) => file.endsWith(".tsx"))
     .map((file) => read(`${dir}/${file}`))
     .join("\n");
-/** The event form: the boxes both pages render (§NNN), in place of the one `EventFieldsForm` before them. */
+/** The event form: the boxes both pages render (§350), in place of the one `EventFieldsForm` before them. */
 const EVENT_FORM = readAll(BOX_DIR);
 const UI = `${readAll(UI_DIR)}\n${EVENT_FORM}`;
 /** The field boxes, by component — the same list on both pages, the editor adding what needs a saved event. */

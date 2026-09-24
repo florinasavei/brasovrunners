@@ -1,7 +1,7 @@
 import { isBlankValue } from "@/shared/forms/blank-value";
 
 /**
- * What publication would refuse, read off a form as it stands (§315, §NNN) — the same rule the
+ * What publication would refuse, read off a form as it stands (§315, §350) — the same rule the
  * server applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): a title and
  * a summary in every language, the meeting point unless the place is to be announced (§328), and
  * a page address in every language.

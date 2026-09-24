@@ -75,7 +75,7 @@ export default async function EventCalendar({
 
   // The grid and the agenda already say the day: the weekday is the column's header (or the
   // label over the day's number), the month and the year the heading — so a cell carries the
-  // time alone, and is the one place a date goes without its year (§NNN).
+  // time alone, and is the one place a date goes without its year (§349).
   const time = (event: PublicEvent) => formatTime(event.startsAt, { locale, timeZone: event.timezone });
 
   // A date unlike its series' others (§122) — read against the dates on view, which is the

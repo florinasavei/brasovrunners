@@ -42,7 +42,7 @@ type Props = {
 };
 
 /**
- * The Recurență box for a date of a series (§NNN, "state B") — the source or **any** copied date:
+ * The Recurență box for a date of a series (§350, "state B") — the source or **any** copied date:
  * a copied date showed nothing of its series but a 2-pixel box with the way back, and whoever
  * opened next Monday's run could not see the rule, stop it or switch its publication without first
  * finding the first date. Every question about the series is answered here, from any of its dates:
@@ -121,7 +121,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
           {running ? t("editor.repeatRenewal", { date: lastCreated ?? "—" }) : t("editor.repeatStopped")}
         </Typography>
 
-        {/* Whether the dates made from now on go live by themselves (the hints branch's switch, §NNN),
+        {/* Whether the dates made from now on go live by themselves (the hints branch's switch, §350),
             as a tick and its own "Salvează setarea" — on the source's rule, from any date. */}
         {running && (
           <Box data-testid="repeat-publish">

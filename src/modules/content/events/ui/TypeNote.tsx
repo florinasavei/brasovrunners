@@ -29,7 +29,7 @@ export default function TypeNote({
   initialType: string;
   /** One sentence per type, keyed by the value the select posts. */
   notes: Readonly<Record<string, string>>;
-  /** Amber rather than grey: a sentence about who a change reaches (§NNN). */
+  /** Amber rather than grey: a sentence about who a change reaches (§350). */
   warning?: boolean;
 }) {
   const recall = useRecall();

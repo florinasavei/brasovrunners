@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN (the editor's boxes, building on §170 and §260) — the event editor as one
+ * `DECISIONS.md` §350 (the editor's boxes, building on §170 and §260) — the event editor as one
  * page of boxes, in the order of the questions they answer.
  *
  * The owner asked for the editor to read "like the event's fact sheet": each box answers one
@@ -51,7 +51,7 @@ const EDITOR_ORDER = [
   'id="box-save"',
 ];
 
-describe("§NNN the editor's boxes, in order", () => {
+describe("§350 the editor's boxes, in order", () => {
   it("renders the three groups and their boxes in the order of the design, then Salvare", () => {
     const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
     for (let index = 1; index < positions.length; index += 1) {

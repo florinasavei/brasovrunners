@@ -50,7 +50,7 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
 /**
  * `costRule` (`content/events/fields.ts`) names `event.costAmount` only for a `PAID` event and
  * `event.costUrl` only for a `DONATION` one, so each has one real label — never the raw name a
- * caller sees when `ActionForm.labelOf` finds none (§343). Since the editor's boxes (§NNN) every
+ * caller sees when `ActionForm.labelOf` finds none (§343). Since the editor's boxes (§350) every
  * label starts with the title of the box that holds it, so the summary says which box to open.
  */
 describe("the cost amount and the donation link are named, not left as their own path", () => {

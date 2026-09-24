@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 
 /**
  * BR-REQ-050-02 criterion 19 — the editor's panels, and the sentences inside them
- * (`DECISIONS.md` §170; since the editor's boxes, §NNN, the named cards of "Participare și
+ * (`DECISIONS.md` §170; since the editor's boxes, §350, the named cards of "Participare și
  * înscrieri").
  *
  * The registration panel holds two windows: when people may sign up, and when the ones who

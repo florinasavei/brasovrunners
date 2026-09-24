@@ -118,7 +118,7 @@ export async function confirmRegistrationNowAction(form: FormData): Promise<void
     const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date());
     outcome = { saved: result.status === "CONFIRMED" ? "registrationConfirmed" : "registrationWaitlisted" };
   } catch (error) {
-    // No place and the waiting list full (§NNN): the desk says so, rather than "check the data"
+    // No place and the waiting list full (§348): the desk says so, rather than "check the data"
     // about a button with no data behind it. Nothing was written; the row stays as it was.
     outcome = { error: waitlistRefusalCode(error) ?? outcomeOf(error).error };
   }
@@ -260,7 +260,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       fieldNames: (failure) => failure.fields.filter((name) => name !== UNDER_MINIMUM_AGE),
     });
     /*
-      No place and the waiting list full (§NNN), for a staff entry and the desk's walk-in alike: no
+      No place and the waiting list full (§348), for a staff entry and the desk's walk-in alike: no
       bypass (`AGENTS.md` §15.11), and a sentence that says so rather than "check what you entered"
       — the form is correct, the line is full. The marker names no box; every box stays filled.
       A walk-in whose row went in and whose confirmation, a moment later, found the line full has

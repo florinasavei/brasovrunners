@@ -24,7 +24,7 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
 }
 
 /**
- * "Mai sunt 3 locuri pe lista de așteptare" / "3 places left on the waiting list" (§NNN): the
+ * "Mai sunt 3 locuri pe lista de așteptare" / "3 places left on the waiting list" (§348): the
  * room a capped waiting list has left, under its button. Romanian's "de" from twenty on, as the
  * rest: "Mai este 1 loc", "Mai sunt 19 locuri", "Mai sunt 20 de locuri".
  */

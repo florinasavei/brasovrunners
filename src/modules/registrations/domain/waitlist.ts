@@ -1,7 +1,7 @@
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * How long a waiting list may grow (`DECISIONS.md` §NNN; the owner: "for the waiting list, I
+ * How long a waiting list may grow (`DECISIONS.md` §348; the owner: "for the waiting list, I
  * also need to set a queue length"), as pure functions over counts a caller already has.
  *
  * **Not a second capacity formula.** Nothing here decides whether a place is free — that is
@@ -54,7 +54,7 @@ export function waitlistHasRoom(input: WaitlistInput): boolean {
 
 /**
  * The occupied count a newcomer is measured against — `computeOccupied`'s, less the lapsed
- * declaration holds when the waiting list has no room for them (§160, §NNN).
+ * declaration holds when the waiting list has no room for them (§160, §348).
  *
  * §160 keeps a hold past its deadline until somebody wants the place, and "somebody" used to be
  * only a person in the line. Where the line has room that is still how it goes: the count says
@@ -87,7 +87,7 @@ export type WaitlistRefusal = typeof WAITLIST_FULL | typeof NO_WAITLIST;
 /**
  * The marker on the desk walk-in's refusal when the row was entered but its confirmation, a
  * moment later and in a transaction of its own, found the last place and the last slot in the
- * line gone (§NNN). Unlike the two above, something *was* written — an unconfirmed row, and the
+ * line gone (§348). Unlike the two above, something *was* written — an unconfirmed row, and the
  * audit entry that says who entered it — so the desk is told that, not "nothing changed".
  */
 export const WALK_IN_LEFT_UNCONFIRMED = "walkInLeftUnconfirmed";

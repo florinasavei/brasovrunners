@@ -428,7 +428,7 @@ export type OccupiedCountsRow = {
   /**
    * Of `pendingDeclarationHolds`, the ones past their deadline (§160): still occupying, and
    * counted in `computeOccupied` like any other, but a place a newcomer the waiting list cannot
-   * take is given (§NNN, `domain/waitlist.ts#occupiedForNewcomer`).
+   * take is given (§348, `domain/waitlist.ts#occupiedForNewcomer`).
    */
   lapsedDeclarationHolds: number;
 };
@@ -461,7 +461,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
 
 /**
  * The instants at which the clock alone changes what the event page is told about places
- * (`DECISIONS.md` §333, and §NNN waiting-list length): when each open waiting-list offer lapses,
+ * (`DECISIONS.md` §333, and §350 waiting-list length): when each open waiting-list offer lapses,
  * and — on an event whose waiting list has a limit — when each declaration hold does.
  *
  * An offer occupies its place while `hold_expires_at > now` and not a moment after. A declaration
@@ -562,7 +562,7 @@ export type EventForExpiry = {
  * released: the rows stay `PENDING_DECLARATION`, keep occupying their places (`countOccupied`)
  * and can still be signed online or on paper at the desk.
  *
- * `wanting` is anybody else who wants a place and is not in the line (§NNN): the registration
+ * `wanting` is anybody else who wants a place and is not in the line (§348): the registration
  * the allocator is deciding, when the waiting list's limit leaves no room for it — on an event
  * with no waiting list, every newcomer once the places are gone. Nobody would ever be
  * `WAITLISTED` there to want the place, so without this a runner who never signed would keep it
@@ -613,7 +613,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * serialised against this decision rather than racing it.
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
- * place (§NNN) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
+ * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Database<T>,

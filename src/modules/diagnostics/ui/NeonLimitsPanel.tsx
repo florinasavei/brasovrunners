@@ -65,7 +65,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const usdPerHour = (value: number) => format.number(value, { maximumFractionDigits: 3 });
   // The period's end, with its weekday, inside the sentence ("până pe luni, 12 oct. 2026"), in
-  // the club's zone (§NNN weekday on every date).
+  // the club's zone (§350 weekday on every date).
   const day = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" });
   const production = appEnv === "production";
   const rate = NEON_PLANS.LAUNCH.usdPerCuHour;

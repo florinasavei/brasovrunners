@@ -35,7 +35,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const today = new Date();
     const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 8, 9));
     const ymd = (date: Date) => date.toISOString().slice(0, 10);
-    // A draft's chip as the list writes it (§NNN weekday on every date): the short form, starting
+    // A draft's chip as the list writes it (§350 weekday on every date): the short form, starting
     // the link, so capitalised — "Vin., 9 oct. 2026". The same calendar day in UTC as in Brașov at 09:00.
     const short = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short" });
 
@@ -66,7 +66,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(main.getByText("Publicat", { exact: true })).toBeVisible();
 
     // The tick first, the frequency after it (§169), in the Recurență box. "Publică datele noi
-    // automat" is ticked by default now (§NNN) and is unticked here — this is the case the whole
+    // automat" is ticked by default now (§350) and is unticked here — this is the case the whole
     // feature is about.
     const recurrence = await openEditorBox(page, "Recurență");
     await recurrence.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
@@ -112,7 +112,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
     await expect(tooltip).toContainText("publicarea automată e oprită");
     // Where the switch really is, and what the list's tick really does (§341 hints): the tick and
-    // its save in the "Recurență" box (§NNN, the editor's boxes), and the bar's verb for a series' tick.
+    // its save in the "Recurență" box (§350, the editor's boxes), and the bar's verb for a series' tick.
     await expect(tooltip).toContainText("în caseta „Recurență”, bifează „Publică datele noi automat” și apasă „Salvează setarea”");
     await expect(tooltip).toContainText("bifează seria în listă");
     await expect(tooltip).toContainText("„Publică cele bifate”");

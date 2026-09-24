@@ -14,7 +14,7 @@ import { openEditorBox, openFold } from "./support/fold";
 test.describe("§317 the footer, composed in the designer", () => {
   test("switching the email off redraws the preview without it, and the club's line joins it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    // Registration on the site, which is where race numbers exist (§NNN): converges, never saves
+    // Registration on the site, which is where race numbers exist (§350): converges, never saves
     // when another spec already did.
     await ensureRegistrationIsOpen(page);
     await page.reload();

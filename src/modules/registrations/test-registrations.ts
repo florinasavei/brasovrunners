@@ -129,7 +129,7 @@ export type AddTestRegistrationsInput = {
 export type AddTestRegistrationsResult = {
   created: number;
   /**
-   * The batch stopped before `count` because the places and the waiting list were full (§NNN):
+   * The batch stopped before `count` because the places and the waiting list were full (§348):
    * a test row is refused at the limit exactly as a real one is (`AGENTS.md` §12.6), and the
    * rest of the batch would only be refused the same way.
    */
@@ -177,7 +177,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
 
   let created = 0;
   /*
-    The waiting list's limit (§NNN) refuses a test row as it refuses a real one — at the form, or
+    The waiting list's limit (§348) refuses a test row as it refuses a real one — at the form, or
     at the confirmation if the line filled in between. The first refusal ends the batch: every row
     after it would meet the same full line. With nothing added the refusal is the answer, and the
     form says it; with some added, the batch reports how many and that it stopped.

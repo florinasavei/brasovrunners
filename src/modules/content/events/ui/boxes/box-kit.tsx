@@ -7,7 +7,7 @@ import type { SummaryWords } from "../box-summaries";
 import type { TranslationDraft } from "../TranslationFields";
 
 /**
- * What every box of the event editor is handed (§NNN). One set of props for the create page and
+ * What every box of the event editor is handed (§350). One set of props for the create page and
  * the editor, so the two are the same page: `event` is null on create, and a box that needs a
  * saved event says so by rendering nothing of that part.
  */
@@ -16,7 +16,7 @@ export type BoxProps = {
   event: EditableEvent | null;
   /** Whether the reader may change the event row (`canEditEventFields`); the server asks again. */
   mayEditSettings: boolean;
-  /** The people a change here reaches, when the box is one that reaches them (§NNN). */
+  /** The people a change here reaches, when the box is one that reaches them (§350). */
   risk?: RiskMark | null;
 };
 
@@ -32,7 +32,7 @@ export type LanguageEntry = { translation: TranslationDraft; mayEdit: boolean; l
 
 /**
  * The catalogue's summary templates, for `box-summaries.ts`. The dates in them are written by
- * `src/i18n/dates.ts` in the reader's language (§NNN weekday on every date), so no weekday words
+ * `src/i18n/dates.ts` in the reader's language (§350 weekday on every date), so no weekday words
  * travel with them.
  */
 export async function summaryWords(): Promise<{ words: SummaryWords }> {

@@ -30,7 +30,7 @@ import {
 import { fillIn } from "@/shared/forms/fill-in";
 
 /**
- * §NNN — the line each box of the event editor shows while it is shut, so the editor reads like
+ * §350 — the line each box of the event editor shows while it is shut, so the editor reads like
  * the event's fact sheet. Pure functions of the saved event, with the real catalogue's templates:
  * a template whose placeholder the function does not fill would show `{count}` to an organizer,
  * which is what this would catch.
@@ -58,7 +58,7 @@ function language(locale: string, overrides: Partial<SummaryTranslation> = {}): 
   };
 }
 
-describe("§NNN dates in the summaries: the site's short form (src/i18n/dates.ts), the reader's language, the event's zone", () => {
+describe("§350 dates in the summaries: the site's short form (src/i18n/dates.ts), the reader's language, the event's zone", () => {
   it("writes a Saturday race start as `Sâm., 21 nov. 2026, 09:00` in Bucharest, whatever the server's zone", () => {
     const start = new Date("2026-11-21T07:00:00Z"); // 09:00 in Bucharest (UTC+2 in November)
     expect(summaryDateTime(start, ZONE, "ro")).toBe("Sâm., 21 nov. 2026, 09:00");
@@ -77,7 +77,7 @@ describe("§NNN dates in the summaries: the site's short form (src/i18n/dates.ts
   });
 });
 
-describe("§NNN each box's summary, empty and filled", () => {
+describe("§350 each box's summary, empty and filled", () => {
   const event = {
     type: "RACE",
     startsAt: new Date("2026-11-21T07:00:00Z"),
@@ -212,7 +212,7 @@ describe("§NNN each box's summary, empty and filled", () => {
   });
 });
 
-describe("§NNN the tabs' first-paint marks", () => {
+describe("§350 the tabs' first-paint marks", () => {
   it("marks a required text missing here, and an optional one written only in the other language", () => {
     const translations = [language("ro", { title: "Cros", excerptJson: doc("x"), bodyJson: doc("Tot.") }), language("en", { title: "" })];
     expect(incompleteLocales(translations, "required", BLANK.titleSummary)).toEqual(["en"]);
@@ -235,7 +235,7 @@ describe("§NNN the tabs' first-paint marks", () => {
   });
 });
 
-describe("§NNN every summary template, in both catalogues, fills without a stray placeholder", () => {
+describe("§350 every summary template, in both catalogues, fills without a stray placeholder", () => {
   const leaves = (node: unknown, prefix = ""): Array<[string, string]> =>
     node && typeof node === "object"
       ? Object.entries(node).flatMap(([key, value]) => leaves(value, prefix ? `${prefix}.${key}` : key))

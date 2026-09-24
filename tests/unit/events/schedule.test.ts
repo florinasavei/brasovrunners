@@ -35,7 +35,7 @@ describe("the programme's rows", () => {
   it("writes one line per row, with the day only when the programme spans days", () => {
     const rows = localizedSchedule(readScheduleItems(ROWS), "en");
     expect(programmeLines(rows, ZONE, "en")).toEqual([
-      // The day in the short form with its weekday and year, then the time (§NNN).
+      // The day in the short form with its weekday and year, then the time (§349).
       "Sat, 10 Oct 2026, 16:00–19:00 — Kit pickup (Cortul de start)",
       "Sun, 11 Oct 2026, 09:30 — Briefing",
       "Sun, 11 Oct 2026, 10:00 — Start",

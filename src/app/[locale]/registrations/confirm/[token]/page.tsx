@@ -39,7 +39,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   const { done, invalid, eventOff, full } = await searchParams;
   const t = await getTranslations("Registrations");
 
-  // No place and the waiting list full (§NNN): nothing was confirmed and the link was not spent,
+  // No place and the waiting list full (§348): nothing was confirmed and the link was not spent,
   // so the page says why and that the same link can be opened again. `closed` is an event with no
   // waiting list at all, said without mentioning one.
   if (full) {

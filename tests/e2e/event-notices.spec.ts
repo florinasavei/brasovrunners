@@ -33,7 +33,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await fillDateField(page, "Începutul evenimentului", day);
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
-    // Everything about registration is one box, and the declaration is in its own card (§NNN).
+    // Everything about registration is one box, and the declaration is in its own card (§350).
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();

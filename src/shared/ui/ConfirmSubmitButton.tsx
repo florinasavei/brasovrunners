@@ -30,7 +30,7 @@ type Props = {
    */
   formAction?: (formData: FormData) => void | Promise<void>;
   /**
-   * The id of the form this button submits, when it sits inside another one (§NNN): the event
+   * The id of the form this button submits, when it sits inside another one (§350): the event
    * editor's "Alocă numerele" is drawn in the bib card of the save form, and posts the small form
    * rendered after it — HTML forms cannot nest, and the `form` attribute is how a control belongs
    * to a form it is not inside.

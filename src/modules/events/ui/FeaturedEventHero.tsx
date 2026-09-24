@@ -98,7 +98,7 @@ export default async function FeaturedEventHero({
         >
           {t(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
             days: week.days,
-            // "În 3 zile, sâmbătă, 21 nov. 2026, 10:00" — after the comma, lower case (§NNN).
+            // "În 3 zile, sâmbătă, 21 nov. 2026, 10:00" — after the comma, lower case (§349).
             when: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
           })}
         </Typography>

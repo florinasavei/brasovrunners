@@ -28,7 +28,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-035-01 (§NNN) — an event may cap its waiting list.
+ * BR-REQ-035-01 (§348) — an event may cap its waiting list.
  *
  * The line is `WAITLISTED` plus the offers still open; null is no limit, 0 is no waiting list.
  * When a registration would join a full line it is refused, at every door — the public form, the
@@ -164,7 +164,7 @@ async function statusCounts(eventId: string) {
   };
 }
 
-describe("BR-REQ-035-01 a waiting list with a limit (§NNN)", () => {
+describe("BR-REQ-035-01 a waiting list with a limit (§348)", () => {
   it("queues two behind the one place and refuses the third, writing nothing for it", async () => {
     const event = await createInternalEvent(1, 2);
     expect((await registerAndConfirm(event, "place@example.test")).status).toBe("PENDING_DECLARATION");
@@ -323,7 +323,7 @@ describe("BR-REQ-035-01 a waiting list with a limit (§NNN)", () => {
  * it until the race while every newcomer is turned away, which on an event with no waiting list
  * nothing else would ever end.
  */
-describe("§160, §NNN a lapsed declaration hold goes to the newcomer the line cannot take", () => {
+describe("§160, §348 a lapsed declaration hold goes to the newcomer the line cannot take", () => {
   const afterHold = new Date(NOW.getTime() + 31 * 60_000);
 
   it("with a limit of 0: the hold lapses and the newcomer gets the place — the page and the form say so first", async () => {
@@ -403,7 +403,7 @@ describe("§160, §NNN a lapsed declaration hold goes to the newcomer the line c
   });
 });
 
-describe("BR-REQ-037-05, BR-REQ-037-07 the staff doors meet the same limit (§NNN, AGENTS.md §15.11)", () => {
+describe("BR-REQ-037-05, BR-REQ-037-07 the staff doors meet the same limit (§348, AGENTS.md §15.11)", () => {
   const entry = (event: EventForRegistration, email: string, fastTrack = false) =>
     createRegistrationByStaff(
       db,
@@ -470,7 +470,7 @@ describe("§30, AGENTS.md §12.6 a batch of test rows stops at the limit", () =>
   });
 });
 
-describe("§NNN what the event page reads: the free places and the line's room", () => {
+describe("§348 what the event page reads: the free places and the line's room", () => {
   it("counts the room from the same counts as the places, offers included", async () => {
     const event = await createInternalEvent(1, 3);
     expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 3 }, NOW)).toEqual({ availablePlaces: 1, waitlistRoom: 3 });

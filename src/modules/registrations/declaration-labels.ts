@@ -24,7 +24,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     idDocument: "Act de identitate",
     version: "Versiunea",
     // "pe", not "la": {date} and {when} start with a weekday — "Generat pe joi, 24 sept. 2026,
-    // 18:05" (§NNN).
+    // 18:05" (§349).
     generatedOn: "Generat pe {date}",
     page: "Pagina {n} din {total}",
     signedByLink:
@@ -53,7 +53,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
 
 export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   const words = WORDS[locale];
-  // "Generat pe joi, 24 sept. 2026, 18:05" (§NNN).
+  // "Generat pe joi, 24 sept. 2026, 18:05" (§349).
   const generated = formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
   return {
     organization: words.organization,

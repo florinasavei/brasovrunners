@@ -19,7 +19,7 @@ type Props = {
   notReadyHint: string;
   /** The languages the public page needs. */
   locales: readonly string[];
-  /** The words a gap is named by — the box, the language, the field (§NNN). */
+  /** The words a gap is named by — the box, the language, the field (§350). */
   labels: PublishGapLabels;
 };
 

@@ -281,7 +281,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "BR-REQ-035-01 (§NNN): one slot left in a capped waiting list, twenty simultaneous confirmations — exactly one joins it",
+    "BR-REQ-035-01 (§348): one slot left in a capped waiting list, twenty simultaneous confirmations — exactly one joins it",
     async () => {
       // One place, taken; a waiting list of two, one already in it. One slot left in the line.
       const event = await createInternalEvent(1, 2);

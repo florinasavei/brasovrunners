@@ -12,7 +12,7 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
 
 /**
- * Box 11, "Linkuri și fișiere" (§332, §NNN), directly after the course because that is what most
+ * Box 11, "Linkuri și fișiere" (§332, §350), directly after the course because that is what most
  * of them are — the GPX on Google Drive, the map on a platform — then the rest: a PDF, the album,
  * the results, and the Strava and Facebook events. Links, never an upload (`AGENTS.md` §17). The
  * rows keep their Romanian and English labels side by side in the row, never in tabs: a label

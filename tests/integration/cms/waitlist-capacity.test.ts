@@ -19,10 +19,10 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-035-01 (§NNN) — "Lungimea maximă a listei de așteptare" in the editor: a number beside
+ * BR-REQ-035-01 (§348) — "Lungimea maximă a listei de așteptare" in the editor: a number beside
  * the places, empty for no limit and 0 for no waiting list, refused below nought by the form, the
  * service and the database alike; left alone by a caller that does not post it; stored as none on
- * an event that takes no registrations here, like the capacity (the mode hides both, §NNN); and
+ * an event that takes no registrations here, like the capacity (the mode hides both, §350); and
  * carried by a repeat, a duplicate and a series edit, like the capacity. Lowering it below the
  * line removes nobody.
  */
@@ -116,7 +116,7 @@ async function refusalOf(operation: Promise<unknown>): Promise<{ code: string; f
   }
 }
 
-describe("BR-REQ-035-01 saving the waiting list's length (§NNN)", () => {
+describe("BR-REQ-035-01 saving the waiting list's length (§348)", () => {
   it("stores a number, 0 for no waiting list, and an empty box as no limit", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS(), waitlistCapacity: "10" });
@@ -154,7 +154,7 @@ describe("BR-REQ-035-01 saving the waiting list's length (§NNN)", () => {
   });
 
   /*
-    Since the editor's boxes (§NNN, extending §111 to the mode), a box the chosen mode hides is
+    Since the editor's boxes (§350, extending §111 to the mode), a box the chosen mode hides is
     ignored rather than refused — the capacity first, and the waiting list's length with it, since
     it sits beside the capacity inside "Pe site": a length left behind a switch to "Fără înscrieri"
     is a box the organizer can no longer see, and a refusal would name it. Nothing queues on such
@@ -227,7 +227,7 @@ describe("BR-REQ-035-01 saving the waiting list's length (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-035-01 the database's own rule (§NNN)", () => {
+describe("BR-REQ-035-01 the database's own rule (§348)", () => {
   it("accepts null, 0 and a count, and refuses a negative length whatever writes it", async () => {
     const event = await createDraft();
     for (const value of [null, 0, 25]) {
@@ -240,7 +240,7 @@ describe("BR-REQ-035-01 the database's own rule (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-035-01 the length is the series', like the places (§NNN)", () => {
+describe("BR-REQ-035-01 the length is the series', like the places (§348)", () => {
   it("is carried onto every repeated date and by a duplicate", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS(), waitlistCapacity: "8" });

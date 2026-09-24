@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import pg from "pg";
 
 /**
- * BR-REQ-035-01, BR-REQ-041-01 — a waiting list with a limit, as a visitor reads it (§NNN), on
+ * BR-REQ-035-01, BR-REQ-041-01 — a waiting list with a limit, as a visitor reads it (§348), on
  * a phone and on a desktop: the room left under the button while the line has some; the full
  * sentence and no button once it is full; an event with no waiting list closed as full, without
  * mentioning one; and the registration form saying the same before anybody types.
@@ -86,7 +86,7 @@ async function removeEvents(ids: readonly string[]): Promise<void> {
   });
 }
 
-test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§NNN)", () => {
+test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§348)", () => {
   const created: string[] = [];
   test.afterAll(async () => removeEvents(created));
 

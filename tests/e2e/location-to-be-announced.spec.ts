@@ -45,7 +45,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(field("event.locationName")).not.toHaveAttribute("required", "");
     await expect(field("event.locationName")).toBeHidden();
     await expect(field("event.mapUrl")).toBeHidden();
-    // Each language's own name for the place hides with them, in the same box (§328, §NNN).
+    // Each language's own name for the place hides with them, in the same box (§328, §350).
     await expect(languageTab(page, "place", "ro")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
 
@@ -89,7 +89,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(field("event.locationName")).toHaveValue(secret);
 
     /*
-      A map link typed wrong while the place was shown, then hidden by the switch (§328; §NNN, the
+      A map link typed wrong while the place was shown, then hidden by the switch (§328; §350, the
       editor's boxes, found by re-review): the hidden box used to keep its https rule, so the
       browser refused Salvează over a box it could not show, and said nothing. Hidden, it is
       read-only now — kept, posted, and not a rule the browser checks — and the save goes through.

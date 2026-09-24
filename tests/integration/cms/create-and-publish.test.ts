@@ -186,7 +186,7 @@ describe("BR-REQ-050-02 create and publish in one press (§315)", () => {
   });
 
   /*
-    §NNN — the create page's "Publică datele noi automat" (`repeat.publish`), ticked by default.
+    §350 — the create page's "Publică datele noi automat" (`repeat.publish`), ticked by default.
     The rule stores what was asked; the dates go live only while the source is live too.
   */
   it("stores the create page's publish choice on the rule, even for a draft, and the copies wait", async () => {

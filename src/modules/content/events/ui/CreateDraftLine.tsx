@@ -24,7 +24,7 @@ function useTicked(anchor: RefObject<HTMLElement | null>, name: string): boolean
 }
 
 /**
- * The create page's Salvare line (§NNN): "Se creează ca ciornă", and — while "Repetă evenimentul"
+ * The create page's Salvare line (§350): "Se creează ca ciornă", and — while "Repetă evenimentul"
  * is ticked in the Recurență box — "și datele seriei din următoarele opt săptămâni", read off the
  * form as it changes, so what the press will make is said before the press.
  */
@@ -39,7 +39,7 @@ export default function CreateDraftLine({ draft, withSeries, repeatName }: { dra
 }
 
 /**
- * A fold's closed line that follows one tick of the form (§NNN): the create page's Recurență box
+ * A fold's closed line that follows one tick of the form (§350): the create page's Recurență box
  * reads "Nu se repetă" until "Repetă evenimentul" is ticked and "Se repetă" once it is, so the
  * closed box never contradicts the box open under it. A span, because it sits inside the fold's
  * heading.

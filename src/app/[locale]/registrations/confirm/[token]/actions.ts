@@ -16,7 +16,7 @@ export async function confirmEmailAction(form: FormData): Promise<void> {
     result = await consumeAndConfirmEmail(token, new Date());
   } catch (error) {
     /*
-      No place, and the waiting list full (§NNN): the allocator refused, and the refusal took the
+      No place, and the waiting list full (§348): the allocator refused, and the refusal took the
       whole transaction back with it — the token spend included — so nothing was confirmed,
       nothing held and nothing sent, and the same link can be opened again. The page says so,
       and says which of the two sentences: a full line, or an event with no line at all.

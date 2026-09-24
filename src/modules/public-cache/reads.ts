@@ -197,7 +197,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * - `available`: the free places (`readPublicPlaces`, the allocator's formula);
  * - `capacity`: the event's own number of places, off the very row the formula counted, for
  *   "12 înscriși din 50 de locuri" (§346 public fill count);
- * - `waitlistRoom`: how many more the waiting list takes (§NNN waiting-list length), `null` when
+ * - `waitlistRoom`: how many more the waiting list takes (§350 waiting-list length), `null` when
  *   it has no limit, counted from the same two counts as the places — an offer lapsing, the key's
  *   clock, frees a slot in the line exactly when it frees a place;
  * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all.
@@ -227,7 +227,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
 
 /**
  * What `cachedPublicAvailability` answers for a capped event: its free places, its size, and the
- * waiting list's room and limit (§346, §NNN waiting-list length).
+ * waiting list's room and limit (§346, §350 waiting-list length).
  */
 export type PublicAvailability = {
   available: number;

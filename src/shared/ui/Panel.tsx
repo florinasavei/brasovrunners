@@ -6,7 +6,7 @@ import { BOXED_DISCLOSURE_SX } from "./disclosure";
 import { type FoldOpenWhen, opensByItself } from "./fold";
 
 /**
- * What a box is saying about itself beyond its words (§NNN, the event editor's boxes):
+ * What a box is saying about itself beyond its words (§350, the event editor's boxes):
  * `risk` — changing what is inside reaches people who already registered, an amber border;
  * `danger` — what is inside destroys, the red the erase panel has always had.
  */
@@ -20,7 +20,7 @@ function toneSx(tone: PanelTone) {
 }
 
 /**
- * A card inside a card inside a card still fits at 320 pixels (§NNN): levels 3 and 4 pad a step
+ * A card inside a card inside a card still fits at 320 pixels (§350): levels 3 and 4 pad a step
  * narrower on a phone, and the summary reaches the border with the same negative margin.
  */
 const NESTED_PADDING = { xs: 1.5, sm: 2 } as const;
@@ -64,7 +64,7 @@ type Props = {
   badge?: string;
   /**
    * The boxed frame with no toggle at all, as a `<section>` — for the box that must never be
-   * shut: a required tick in a closed box is a Save that silently does nothing (§NNN).
+   * shut: a required tick in a closed box is a Save that silently does nothing (§350).
    */
   static?: boolean;
   id?: string;

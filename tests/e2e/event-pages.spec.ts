@@ -60,7 +60,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // The seeded meeting points, as words on the page.
     expect(body).toContain("Tâmpa");
     // A Romanian date with its weekday, formatted in the event's timezone — capitalised where
-    // it starts the facts, the month abbreviated (§NNN).
+    // it starts the facts, the month abbreviated (§349).
     expect(body).toMatch(/(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}/);
     // A start time, not only a date.
     expect(body).toMatch(/\b\d{2}:\d{2}\b/);

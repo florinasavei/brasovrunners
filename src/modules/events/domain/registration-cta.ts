@@ -23,7 +23,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    */
   availablePlaces: number | null;
   /**
-   * How many more the waiting list takes (`registrations/domain/waitlist.ts#waitlistRoom`, §NNN),
+   * How many more the waiting list takes (`registrations/domain/waitlist.ts#waitlistRoom`, §348),
    * or null — or absent — when it has no limit. Read with `availablePlaces`, under the same
    * condition: only once the places are gone does the line matter.
    */
@@ -45,13 +45,13 @@ export type RegistrationCta =
   | { kind: "OPEN"; availablePlaces: number | null }
   /**
    * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
-   * takes when it has a limit (§NNN) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
+   * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
    * it has none, which says no number, as today.
    */
   | { kind: "FULL"; waitlistRoom: number | null }
-  /** No place and the waiting list at its limit (§NNN): a sentence, no button. */
+  /** No place and the waiting list at its limit (§348): a sentence, no button. */
   | { kind: "WAITLIST_FULL" }
-  /** No place on an event with no waiting list (a limit of 0, §NNN): closed as full, no button. */
+  /** No place on an event with no waiting list (a limit of 0, §348): closed as full, no button. */
   | { kind: "FULL_NO_WAITLIST" };
 
 export function registrationCta(event: RegistrationCtaInput, now: Date): RegistrationCta {
@@ -90,7 +90,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
       if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces };
-      // …unless the event keeps no waiting list, or keeps one that is full (§NNN): then there is
+      // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it.
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };

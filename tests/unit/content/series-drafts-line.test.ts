@@ -57,7 +57,7 @@ describe("§341 the events list's series-drafts line", () => {
   /**
    * Integration review (§341 hints): the first wording sent the reader to "the series' settings",
    * which do not exist — the switch is a tick and its own save in the "Recurență" box, on any
-   * date of the series since the editor's boxes (§NNN) — and offered to publish one date "from
+   * date of the series since the editor's boxes (§350) — and offered to publish one date "from
    * the list, by ticking it", when the list's tick on a series ticks every date (§113). Each
    * sentence now names what is actually on the screen, by the catalogue's own words for it.
    */
@@ -95,7 +95,7 @@ describe("§341 the events list's series-drafts line", () => {
  * The running series' publish switch (`setRepeatPublish`, proven directly in
  * `tests/integration/cms/repeat-publish.test.ts`): the Recurență box's own words for the three
  * states (`on`, `waiting`, `off`), the tick and its "Salvează setarea", and the alert after
- * each press. Since the editor's boxes (§NNN) it lives in `RecurrenceSeriesPanel`, on every date
+ * each press. Since the editor's boxes (§350) it lives in `RecurrenceSeriesPanel`, on every date
  * of the series, and it is a tick rather than two buttons.
  */
 describe("§341 the editor's repeat-publish switch", () => {

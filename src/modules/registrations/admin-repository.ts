@@ -761,7 +761,7 @@ export type DeskRegistration = {
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
-  /** The event's own zone, which the desk reads its date in (§NNN). */
+  /** The event's own zone, which the desk reads its date in (§349). */
   eventTimezone: string;
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */

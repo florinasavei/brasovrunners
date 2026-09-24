@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  * event create page is a bit inconsistent with the event edit". And earlier: "«Repetă
  * evenimentul» ar trebui să apară sus de tot, la început." And of the time boxes: "timepickerul ar
  * trebui să fie tot element MUI". And of the place: "ar trebui să pot pune și denumirea locației
- * în română și în engleză." Since the editor's boxes (§NNN) the two are literally one page
+ * în română și în engleză." Since the editor's boxes (§350) the two are literally one page
  * (`EventEditorLayout`), minus what needs a saved event.
  *
  * Source assertions, like `editor-order.test.ts`: these are Server Components rendering what
@@ -184,7 +184,7 @@ describe("a required box behind a tab or a fold", () => {
   it("is brought into view when the browser refuses the submit", () => {
     expect(TABS).toContain("onInvalid={reveal(index)}");
     expect(TABS).toContain("if (element) element.hidden = false;");
-    // Any fold around it, and any strip's tab, from the form itself (§NNN).
+    // Any fold around it, and any strip's tab, from the form itself (§350).
     expect(FORM).toContain("onInvalidCapture={onInvalidCapture}");
     expect(FORM).toMatch(/openFoldsAround\(element\);\s*element\.dispatchEvent\(new CustomEvent\(REVEAL_EVENT/);
     // The address box opens on its own while an address is missing — so on the create page.

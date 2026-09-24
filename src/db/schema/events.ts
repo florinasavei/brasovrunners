@@ -434,7 +434,7 @@ export const events = pgTable(
 
     capacity: integer("capacity"),
     /**
-     * How long the waiting list may grow (§NNN; the owner: "for the waiting list, I also need
+     * How long the waiting list may grow (§348; the owner: "for the waiting list, I also need
      * to set a queue length"). Null is no limit — every event before this column, unchanged;
      * zero is no waiting list at all: once the places are gone, registration is refused.
      *
@@ -609,7 +609,7 @@ export const events = pgTable(
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
 
     /**
-     * A waiting list's length is a count of people (§NNN): zero — no waiting list — or more.
+     * A waiting list's length is a count of people (§348): zero — no waiting list — or more.
      * Null is no limit. The form says the same bound; this is for the seed and the script.
      */
     check("events_waitlist_capacity_non_negative", sql`${t.waitlistCapacity} IS NULL OR ${t.waitlistCapacity} >= 0`),

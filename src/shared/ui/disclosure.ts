@@ -131,7 +131,7 @@ export const BOXED_DISCLOSURE_SX = {
   */
   "&:not([open]):has([id^='form-refusal'])::details-content": { contentVisibility: "visible", display: "block" },
   /*
-    The same for a box the refusal *named* (§NNN, the event editor's boxes): the summary sits at
+    The same for a box the refusal *named* (§350, the event editor's boxes): the summary sits at
     the top of the form and the field it names may be three folds down. MUI marks a named box
     `aria-invalid`, so a closed fold holding one shows its body without JavaScript as well.
   */

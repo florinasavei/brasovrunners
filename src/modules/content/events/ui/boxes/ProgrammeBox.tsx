@@ -14,7 +14,7 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { LanguageTabs } from "./TextBoxes";
 
 /**
- * Box 6, "Programul zilei și ce să aduci" (§NNN): the timed rows first (§117) — one list for both
+ * Box 6, "Programul zilei și ce să aduci" (§350): the timed rows first (§117) — one list for both
  * languages, one calendar entry each, repeated in the reminder, with "Ce (română)" and "Ce
  * (engleză)" side by side in the row, never in tabs — then, in Română | English tabs, the notes
  * under them and what to bring. The rows and their notes used to live in two panels far apart

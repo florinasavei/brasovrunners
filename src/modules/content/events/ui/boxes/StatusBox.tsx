@@ -12,7 +12,7 @@ import { type RiskMark, RiskLine, SettingsReadOnly } from "./box-kit";
 const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
 
 /**
- * Box 9, "Starea evenimentului" (§NNN), edit only — the create page posts a hidden `SCHEDULED`,
+ * Box 9, "Starea evenimentului" (§350), edit only — the create page posts a hidden `SCHEDULED`,
  * so "Anulat" and "Încheiat" are never offered for an event that does not exist yet.
  *
  * Inside the save form, so a refusal keeps it (§315); while "Anulat" is chosen on an event that

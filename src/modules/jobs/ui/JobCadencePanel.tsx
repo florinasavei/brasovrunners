@@ -45,7 +45,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
   const t = await getTranslations("Admin");
   // A platform timestamp, in the club's zone, with its weekday, inside the line after a colon
   // ("ultima rulare reală: joi, 24 sept. 2026, 10:15") — so the weekday keeps its lower case
-  // (§NNN weekday on every date).
+  // (§350 weekday on every date).
   const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const when = (at: Date | null) => (at ? clock(at) : "—");
 

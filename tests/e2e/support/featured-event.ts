@@ -132,7 +132,7 @@ export async function ensureRegistrationIsOpen(page: Page) {
     await expect(page).toHaveURL(/\/admin\/events\//);
     await hydrated(page);
 
-    // Everything about registration is one box of the editor now (§NNN), shut on arrival.
+    // Everything about registration is one box of the editor now (§350), shut on arrival.
     await openEditorBox(page, "Participare și înscrieri");
     if ((await modeSelect(page).textContent()) === "Înscrieri pe site") return;
 

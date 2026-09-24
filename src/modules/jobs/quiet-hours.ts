@@ -11,7 +11,7 @@
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 
-// The club's zone is defined once, in the date helper (§NNN); the scheduler reads the same one.
+// The club's zone is defined once, in the date helper (§349); the scheduler reads the same one.
 
 /** Quiet from `from` o'clock up to (not including) `to` o'clock, club time. */
 export const QUIET_HOURS = { from: 23, to: 7 } as const;

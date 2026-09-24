@@ -8,7 +8,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 criterion 10, extended to the registration mode (§111, §NNN; found by review):
+ * BR-REQ-050-02 criterion 10, extended to the registration mode (§111, §350; found by review):
  * a box the chosen type or mode hides is ignored even when what it holds is **wrong**, not only
  * when it is blank.
  *
@@ -90,7 +90,7 @@ const create = (fields: Record<string, unknown>) =>
   createEvent(db, { actor: organizer, fields: { ...FIELDS, declarationDocumentId: declarationId, ...fields, translations: TRANSLATIONS }, now: NOW });
 const reload = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
 
-describe("§NNN a box the chosen mode hides cannot refuse the save", () => {
+describe("§350 a box the chosen mode hides cannot refuse the save", () => {
   it("'Pe site' ignores a wrong link and an over-long organizer left under 'La organizator'", async () => {
     const created = await create({ externalRegistrationUrl: "www.club.ro", externalProvider: "x".repeat(200) });
     const saved = await reload(created.id);
@@ -145,7 +145,7 @@ describe("§NNN a box the chosen mode hides cannot refuse the save", () => {
   });
 });
 
-describe("§NNN the waiting list's length, the capacity's kin (the waiting-list cap)", () => {
+describe("§350 the waiting list's length, the capacity's kin (the waiting-list cap)", () => {
   it("'La organizator' ignores a length nobody can see, even one below nought", async () => {
     const elsewhere = await create({
       registrationMode: "EXTERNAL",
@@ -163,7 +163,7 @@ describe("§NNN the waiting list's length, the capacity's kin (the waiting-list 
   });
 });
 
-describe("§328, §NNN a map link the place switch hides cannot refuse the save", () => {
+describe("§328, §350 a map link the place switch hides cannot refuse the save", () => {
   it("saves a TBA event over a hidden 'www.harta.ro', as no link, keeping the venue it hides", async () => {
     const created = await create({ locationToBeAnnounced: true, locationName: "Sala secretă", mapUrl: "www.harta.ro" });
     const saved = await reload(created.id);
@@ -182,7 +182,7 @@ describe("§328, §NNN a map link the place switch hides cannot refuse the save"
   });
 });
 
-describe("§NNN what the chosen mode shows, and what every mode keeps, is still checked", () => {
+describe("§350 what the chosen mode shows, and what every mode keeps, is still checked", () => {
   it("refuses a zero capacity under 'Pe site', naming the box", async () => {
     await expect(create({ capacity: "0" })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["capacity"] });
   });

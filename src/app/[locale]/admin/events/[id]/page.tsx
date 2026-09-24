@@ -100,7 +100,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), as boxes (§NNN; the owner asked for "a
+ * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), as boxes (§350; the owner asked for "a
  * WordPress-like editor", and then for it to read like the event's fact sheet).
  *
  * **The same page as the create form** (`EventEditorLayout`): a side column — Publicare and
@@ -142,7 +142,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
   const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
-  // How many test rows went in before the waiting list's limit stopped the batch (§NNN).
+  // How many test rows went in before the waiting list's limit stopped the batch (§348).
   const stoppedCount = /^\d+$/.test(created ?? "") ? Number(created) : 0;
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
@@ -213,7 +213,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const noticeTestNote = noticeRecipients.test > 0 ? ` ${t("editor.notice.countTest", { test: String(noticeRecipients.test) })}` : "";
 
   /*
-    Who registered: the real ones mark the boxes a change reaches (§NNN; `AGENTS.md` §12.6 — a test
+    Who registered: the real ones mark the boxes a change reaches (§350; `AGENTS.md` §12.6 — a test
     row is counted nowhere the club looks), and the total decides whether Delete is offered (§170).
   */
   const registered = {
@@ -246,7 +246,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const seriesDates = inSeries ? await listSeriesDates(db, event.repeatOf ?? event.id) : [];
   const usual = usualOf(seriesDates);
   /*
-    Every date of the series as the site writes it (`src/i18n/dates.ts`, §NNN weekday on every
+    Every date of the series as the site writes it (`src/i18n/dates.ts`, §350 weekday on every
     date): the short form with its time where it starts a line or a link — "Mie., 7 oct. 2026,
     18:30" — and in lower case inside the Salvare box's sentence, in the reader's language and
     each date's own zone. Rendered here and handed to the islands as strings (§324).
@@ -280,7 +280,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     .map((member) => ({ id: member.id, label: dateLabel(member), current: member.id === event.id }));
 
   /*
-    "Ce lipsește pentru publicare", in the words on the screen (§170, §NNN): each gap named by the
+    "Ce lipsește pentru publicare", in the words on the screen (§170, §350): each gap named by the
     box and the tab that hold it, and linked to the box itself.
   */
   const languageName = (code: string) => tSite(`languageName.${code as "ro" | "en"}`);
@@ -335,7 +335,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Typography>
         </Box>
 
-        {/* The event's own name, then what it is right now (§NNN). */}
+        {/* The event's own name, then what it is right now (§350). */}
         <Box>
           <Typography variant="h2" sx={{ fontSize: "1.35rem", mb: 1 }} data-testid="editor-heading">
             {heading}
@@ -402,7 +402,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
-          {/* A batch of test rows that met the waiting list's limit part-way (§NNN, the waiting-list
+          {/* A batch of test rows that met the waiting list's limit part-way (§350, the waiting-list
               cap): how many went in, and that the rest were refused as a real registration would be.
               A counted phrase — "1 înscriere", "19 înscrieri", "20 de înscrieri". */}
           {saved === "testRegistrationsStopped" && (

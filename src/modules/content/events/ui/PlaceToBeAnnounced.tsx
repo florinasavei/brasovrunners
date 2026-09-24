@@ -108,7 +108,7 @@ function Island({ initial, labels, locationName, children }: Props & { initial: 
         back in its box the moment the switch goes off (§328). `display: none` keeps them out of
         the accessibility tree as well as out of sight; nothing is required while they are hidden.
 
-        And nothing in them can stop the save while hidden (§NNN, the editor's boxes, found by
+        And nothing in them can stop the save while hidden (§350, the editor's boxes, found by
         re-review): the map link keeps its https pattern, and one typed as `www.harta.ro` before
         the switch went on made the browser refuse the submit and then fail to focus a box it
         could not show — Salvează did nothing and said nothing. `ShownWhen` makes every box in the

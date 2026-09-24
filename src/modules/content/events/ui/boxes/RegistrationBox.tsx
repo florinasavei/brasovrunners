@@ -58,7 +58,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * Box 8, "Participare și înscrieri" (§NNN): what it costs, how people register — here, with
+ * Box 8, "Participare și înscrieri" (§350): what it costs, how people register — here, with
  * another organizer, or not at all — and under which rules. Everything about registration is in
  * this one box, as named cards: the period, who may enter and what they sign, the confirmation
  * window, the race numbers (with the bib design and, on the editor, allocation and printing), and
@@ -74,7 +74,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *
  * The cost's amount and its payment or donation link sit with the cost, at the top (§343,
  * `CostFields`, which shows them only while the chosen kind needs them); the waiting list's length
- * sits beside the capacity (§NNN, the waiting-list cap), and "not here" stores no length either.
+ * sits beside the capacity (§350, the waiting-list cap), and "not here" stores no length either.
  */
 export default async function RegistrationBox({
   event,
@@ -224,7 +224,7 @@ export default async function RegistrationBox({
 
               <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
                 <Stack spacing={2}>
-                  {/* The places and the waiting list's length side by side (§NNN, the waiting-list
+                  {/* The places and the waiting list's length side by side (§350, the waiting-list
                       cap): the second only means anything once the first is set, and a row says
                       they are one question. Stacked on a phone. Empty is no limit for both; 0 on
                       the second is no waiting list at all. */}

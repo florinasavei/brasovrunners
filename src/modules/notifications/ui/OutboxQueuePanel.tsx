@@ -37,7 +37,7 @@ type Props = {
  */
 export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
-  // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§NNN).
+  // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
 
   return (

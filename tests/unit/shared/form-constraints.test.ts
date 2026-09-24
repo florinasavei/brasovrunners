@@ -21,7 +21,7 @@ import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/f
  * is the drift this exists to prevent, so the form sources are checked for the call.
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
-// The event editor's boxes (§NNN): every box that renders an event field, read as one source.
+// The event editor's boxes (§350): every box that renders an event field, read as one source.
 const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");

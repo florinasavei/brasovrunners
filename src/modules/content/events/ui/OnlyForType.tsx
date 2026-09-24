@@ -65,7 +65,7 @@ function relaxHiddenBoxes(root: HTMLElement): void {
 }
 
 /**
- * The block `OnlyForType` and `OnlyForMode` draw (§NNN, found by review): shown while the answer
+ * The block `OnlyForType` and `OnlyForMode` draw (§350, found by review): shown while the answer
  * wants it, hidden otherwise — and while hidden, nothing in it can stop the save.
  *
  * Hidden, not removed, so what was typed is still posted and switching back finds it. But a hidden

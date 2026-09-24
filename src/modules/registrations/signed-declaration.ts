@@ -183,7 +183,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     values: {
       event: event.title,
       // "…care va avea loc în data de sâmbătă, 21 nov. 2026": inside the sentence, in the
-      // declaration's own language and the event's zone (§NNN).
+      // declaration's own language and the event's zone (§349).
       eventDate: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", position: "inline" }),
       // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
@@ -213,7 +213,7 @@ function signedEntry(
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
   // Inside a sentence ("Semnat electronic pe sâmbătă, …") and under the "Data" label, where it
-  // starts the value and takes a capital (§NNN) — both in the declaration's language.
+  // starts the value and takes a capital (§349) — both in the declaration's language.
   const when = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const whenStart = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true });
   /*

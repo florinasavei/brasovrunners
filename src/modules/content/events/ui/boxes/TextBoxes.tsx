@@ -19,7 +19,7 @@ import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } fro
 import { type LanguageEntry, summaryWords } from "./box-kit";
 
 /**
- * The four boxes of the event editor that are only words (§NNN): the title and summary, the
+ * The four boxes of the event editor that are only words (§350): the title and summary, the
  * description, the rules, the page address. Each has its own Română | English tabs — six strips on
  * one page, so each carries its box's `idPrefix` — and each tab says "· incomplet" by its own rule:
  * a required text missing here (the title, the summary, the address), or an optional one written

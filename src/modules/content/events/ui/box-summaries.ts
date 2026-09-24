@@ -8,7 +8,7 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import type { EditableEvent } from "../repository";
 
 /**
- * The line each box of the event editor shows while it is shut (§NNN; the owner asked for the
+ * The line each box of the event editor shows while it is shut (§350; the owner asked for the
  * editor to read "like the event's fact sheet"): "Parcul Titulescu · hartă", "Pe site · 150 locuri
  * · de la 14 ani · declarația v3". A closed fold that says nothing is a fold nobody opens, and a
  * fold that says its answer is one nobody has to open to check it.
@@ -19,7 +19,7 @@ import type { EditableEvent } from "../repository";
  * read with `t.raw`), filled here with `fillIn`, because the catalogues carry no ICU plurals: a
  * counted noun is three keys and `countForm` picks one.
  *
- * Dates are the site's short form (`src/i18n/dates.ts`, §NNN weekday on every date) — `Sâm., 21
+ * Dates are the site's short form (`src/i18n/dates.ts`, §350 weekday on every date) — `Sâm., 21
  * nov. 2026, 09:00` / `Sat, 21 Nov 2026, 09:00` — in the reader's language and the event's own
  * time zone, never the server's or the browser's clock; times are 24-hour.
  */
@@ -77,7 +77,7 @@ function join(words: SummaryWords, parts: readonly (string | null | undefined | 
 
 /**
  * `Sâm., 21 nov. 2026, 09:00` — a date and its time as the site writes them in a list or a closed
- * line (`formatDay`'s short form, §NNN), in the reader's language and the event's zone. `inline`
+ * line (`formatDay`'s short form, §350), in the reader's language and the event's zone. `inline`
  * keeps Romanian's lower case for a date inside a sentence ("până la dum., 1 nov. 2026").
  */
 export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {

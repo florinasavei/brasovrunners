@@ -101,6 +101,6 @@ export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): 
   const date = new Date(info.committedAt);
   if (Number.isNaN(date.getTime())) return null;
 
-  // A chip on /devs: the short form with the time (§NNN).
+  // A chip on /devs: the short form with the time (§349).
   return formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
 }

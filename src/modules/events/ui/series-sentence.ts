@@ -69,7 +69,7 @@ export async function recurrenceSentence(
     return t("series.dates", {
       // "12 date", "20 de date", "1 dată" (§341): the count picks the catalogue's phrasing.
       dates: t(`series.count.${countForm(members.length, locale)}`, { count: members.length }),
-      // "12 date, până pe duminică, 14 dec. 2026": inside the sentence, lower case (§NNN).
+      // "12 date, până pe duminică, 14 dec. 2026": inside the sentence, lower case (§349).
       last: formatDay(last.startsAt, { locale, timeZone, style: "long", position: "inline" }),
     });
   }

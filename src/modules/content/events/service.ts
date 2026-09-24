@@ -294,7 +294,7 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
 ): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
-    // The waiting list's length is the places' kin (§NNN): nothing queues on an event that takes
+    // The waiting list's length is the places' kin (§348): nothing queues on an event that takes
     // no registrations here, so a number left in its box is refused with the capacity's sentence.
     const waitlistCapacitySet = fields.waitlistCapacity !== undefined && fields.waitlistCapacity !== null;
     if (fields.capacity !== null || waitlistCapacitySet || fields.declarationDocumentId !== null) {
@@ -416,7 +416,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
-    // The waiting list's length (§NNN), by the partners' discipline: a caller that said nothing
+    // The waiting list's length (§348), by the partners' discipline: a caller that said nothing
     // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
     // limit the organizer set just by not mentioning it. The editor and the create form post it.
     ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
@@ -460,7 +460,7 @@ function normalizeForType<T extends EventFieldsInput>(fields: T): T {
 }
 
 /**
- * The waiting list's length is written only by a caller that sent it (§NNN, the waiting-list
+ * The waiting list's length is written only by a caller that sent it (§350, the waiting-list
  * cap): a hidden block stores null in its place when the form posted the box, and nothing at all
  * when it did not — so a save that never mentioned the limit never lifts it.
  */
@@ -474,7 +474,7 @@ const TURN_UP_FIELDS = {
   scheduleRows: [],
   registrationMode: "NONE",
   capacity: null,
-  // A turn-up event queues nobody (§NNN, the waiting-list cap).
+  // A turn-up event queues nobody (§350, the waiting-list cap).
   waitlistCapacity: null,
   declarationDocumentId: null,
   registrationOpensAtWallTime: "",
@@ -485,7 +485,7 @@ const TURN_UP_FIELDS = {
 } as const;
 
 /**
- * What the chosen registration mode hides is ignored, not refused (§NNN, extending §111's shape
+ * What the chosen registration mode hides is ignored, not refused (§350, extending §111's shape
  * to the mode): the editor's "Participare și înscrieri" box shows only the fields of the chosen
  * mode (`OnlyForMode`) and keeps the others in the document, hidden, so switching back finds what
  * was typed. A capacity left behind a switch to "Fără înscrieri" is a box the organizer can no
@@ -510,7 +510,7 @@ function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
 }
 
 /**
- * The same two rules on the form **as posted**, before the schema reads it (§NNN, found by
+ * The same two rules on the form **as posted**, before the schema reads it (§350, found by
  * review). Applied only after parsing, "ignored, not refused" held for what was left blank and not
  * for what was left wrong: a link typed as `www.club.ro` under "La organizator" and then hidden by
  * a switch to "Pe site" still reached `httpsUrl`, and the refusal named a box that was not on the
@@ -535,7 +535,7 @@ export function ignoreHiddenFields(raw: unknown): unknown {
   const replaced = { ...posted };
   for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
   /*
-    The place behind "Locația se anunță mai târziu" (§328; §NNN, the editor's boxes, found by
+    The place behind "Locația se anunță mai târziu" (§328; §350, the editor's boxes, found by
     re-review): hidden with the switch on, and kept — a venue and a map link typed before the
     switch went on are saved as typed, never published. But a map link that is not one cannot be
     stored, and refusing the save over it names a box the switch hides: it is written as no link,
@@ -1210,7 +1210,7 @@ const SERIES_COLUMNS = [
   "elevationGainMeters",
   "registrationMode",
   "capacity",
-  // The waiting list's length, like the places (§NNN). No lock and no allocation when it moves:
+  // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
   // raising it offers nobody anything, and lowering it removes nobody already waiting.
   "waitlistCapacity",
   // One race, one band: a series is the same event on several dates (§173, §177).
@@ -1745,7 +1745,7 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
     // The series, as drafts — or live, when the source has just gone live and the rule asks for it
-    // (§NNN): the create page's "Publică datele noi automat", ticked by default. A caller that
+    // (§350): the create page's "Publică datele noi automat", ticked by default. A caller that
     // does not say keeps the old answer — live exactly when the source went live.
     const rule = { ...input.repeat, publish: input.repeat.publish ?? published };
     const series = await namedUnder("repeat", () => repeatEvent(tx, { actor: input.actor, eventId: event.id, rule, now }));
@@ -1896,7 +1896,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Wednesday another club's race passes through — and the copy is a different one.
     isSpecial: false,
     capacity: source.capacity,
-    // The waiting list's length goes with the places it queues for (§NNN): a copy, and every
+    // The waiting list's length goes with the places it queues for (§348): a copy, and every
     // date of a series, queue as many as the source does.
     waitlistCapacity: source.waitlistCapacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
@@ -2001,7 +2001,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
     The rule stores what was **asked** — "publish the new dates by themselves" — and each date made
     goes live only while the source is live too (`materializeSeries`). It used to store the
     effective answer, so a series started from a draft with the box ticked came out "off" for good
-    and made a draft every week after the source was published (§NNN; the create page's
+    and made a draft every week after the source was published (§350; the create page's
     `repeat.publish` is ticked by default now, and a new event is a draft).
   */
   const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
@@ -2175,7 +2175,7 @@ export async function stopRepeat<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  // From any date of the series (§NNN): the rule lives on the source, and the Recurență box offers
+  // From any date of the series (§350): the rule lives on the source, and the Recurență box offers
   // "Oprește recurența" on every date, so a copied date's id is resolved to its source.
   const source = await seriesSourceOf(db, input.eventId);
   await db
@@ -2210,12 +2210,12 @@ export async function setRepeatPublish<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  // From any date of the series (§NNN): the Recurență box offers the switch on every date.
+  // From any date of the series (§350): the Recurență box offers the switch on every date.
   const source = await seriesSourceOf(db, input.eventId);
   const rule = readRepeatRule(source.repeatRule);
   if (!rule) throw new DomainError("VALIDATION_ERROR", "this series does not repeat any more; start it again from its first event");
   /*
-    Switching it on while the source is a draft is stored and waits (§NNN, amending the hints
+    Switching it on while the source is a draft is stored and waits (§350, amending the hints
     branch's refusal): the rule says what was asked, and the dates go live only while the source
     is live too (`materializeSeries`) — the editor says "waiting" for exactly that state, and the
     create page's own tick stores the same thing for a new draft.

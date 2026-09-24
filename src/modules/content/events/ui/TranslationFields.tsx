@@ -21,7 +21,7 @@ async function editorLabels() {
 }
 
 /**
- * One language's text, split by the box of the event editor that asks for it (§NNN).
+ * One language's text, split by the box of the event editor that asks for it (§350).
  *
  * The editor used to hold a language in one tab of one "Conținut" panel — the title, the place's
  * name, the summary, the description, the rules, the programme's notes, what to bring and the

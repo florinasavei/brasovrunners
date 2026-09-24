@@ -102,7 +102,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
 
     // The words are theirs: the Romanian title is a field, not a sentence about permissions —
-    // in the "Titlu și rezumat" box, shut on arrival like every box of the editor (§NNN).
+    // in the "Titlu și rezumat" box, shut on arrival like every box of the editor (§350).
     const titles = await openEditorBox(page, "Titlu și rezumat");
     const romanian = titles.getByRole("tabpanel", { name: /Română/ });
     await expect(romanian.getByRole("textbox", { name: "Titlu", exact: true })).toBeVisible();
@@ -161,7 +161,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // in view, the English one behind its tab, and a hidden box cannot be filled.
     await field("translations.ro.title").fill(`Cros de probă ${suffix}`);
     await field("translations.ro.slug").fill(`cros-de-proba-${suffix}`);
-    // Every box with per-language text has its own Română | English tabs (§NNN).
+    // Every box with per-language text has its own Română | English tabs (§350).
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Trial cross ${suffix}`);
     await languageTab(page, "address", "en").click();
@@ -213,7 +213,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await page.getByRole("option", { name: "Alt eveniment" }).click();
     // "Ora" also labels the event's own time of day, already filled above: the row's boxes are
     // looked up inside the row, never by where they fall on the page. The programme and the
-    // partners are boxes of their own, shut on the create page (§NNN).
+    // partners are boxes of their own, shut on the create page (§350).
     await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
     await fillDateField(row, "Data", "2027-05-02");
@@ -368,7 +368,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The publish button says what publication still needs; the English tab is empty.
     await expect(page.getByText(/Nu se poate publica încă — lipsește: Titlu și rezumat › English › Titlu/)).toBeVisible();
-    // The Publicare box lists every gap by box and tab, from the same check (§NNN).
+    // The Publicare box lists every gap by box and tab, from the same check (§350).
     const publication = await openEditorBox(page, "Publicare");
     await expect(publication.getByTestId("missing-for-publish").getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();
 
@@ -423,7 +423,7 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
     // A staff preview still renders the draft, with a notice saying what it is.
     await page.goto(editorUrl);
     await hydrated(page);
-    // The previews are in the Publicare box, one per language (§NNN).
+    // The previews are in the Publicare box, one per language (§350).
     await page.locator("#box-publication").getByRole("link", { name: /^Română/ }).click();
     // Wait for the navigation itself before reading the document: what follows inspects the
     // page's head, and mid-transition that head belongs to two routes at once.
@@ -542,7 +542,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await loadAfresh(page);
 
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
-    // "Data și ora" is folded on the editor (§NNN).
+    // "Data și ora" is folded on the editor (§350).
     await openEditorBox(page, "Data și ora");
     await fillDateField(page, "Începutul evenimentului", "2027-05-13");
     await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
@@ -618,13 +618,13 @@ test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-y
 });
 
 /*
-  The editor's boxes (§NNN): the weekly group run in a minute — the type is already a group run,
+  The editor's boxes (§350): the weekly group run in a minute — the type is already a group run,
   the addresses fill themselves from the titles, so it is the titles, the summaries, the date, the
   place, the repeat tick with Monday and Wednesday, and "Creează și publică". The date is far past
   the eight weeks a series is created into (§122), so this makes one event, not a series of them;
   the recurrence is stopped and the event taken off the site at the end.
 */
-test.describe("BR-REQ-050-02 the weekly group run, created in one page (§NNN)", () => {
+test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)", () => {
   test("type by default, titles, summaries, date, place, Monday and Wednesday, create and publish", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const field = (name: string) => page.locator(`[name="${name}"]`);

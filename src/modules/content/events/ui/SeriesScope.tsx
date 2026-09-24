@@ -18,9 +18,9 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * Which dates of a series a save reaches (`DECISIONS.md` §134, §NNN).
+ * Which dates of a series a save reaches (`DECISIONS.md` §134, §350).
  *
- * **Three words, in the Salvare box** (§NNN; the design the owner asked to have implemented):
+ * **Three words, in the Salvare box** (§350; the design the owner asked to have implemented):
  * "Doar această dată / Această dată și următoarele / Toate datele seriei", one radio group,
  * beside the button — with the individual dates folded underneath for the exceptions, and a
  * sentence saying how many dates the save will change. The wall of date chips in the header, and
@@ -44,7 +44,7 @@ type Preset = "this" | "following" | "all";
 
 /**
  * A date of the series, with its day as the sentence reads it ("mie., 30 sept. 2026") — written
- * on the server by `src/i18n/dates.ts` (§NNN weekday on every date) and handed here as a string,
+ * on the server by `src/i18n/dates.ts` (§350 weekday on every date) and handed here as a string,
  * so this island formats no date itself (§324).
  */
 export type ScopeDate = SeriesDate & { day: string };
@@ -78,7 +78,7 @@ export function presetOf(dates: readonly { id: string }[], currentId: string, ti
 }
 
 export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly ScopeDate[]; currentId: string; children: ReactNode }) {
-  // "This and the following" when the editor opens (§NNN, reversing §240's "all").
+  // "This and the following" when the editor opens (§350, reversing §240's "all").
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set(followingIds(dates, currentId)));
   const value = useMemo<ScopeState>(() => {
     const others = dates.filter((date) => date.id !== currentId).map((date) => date.id);

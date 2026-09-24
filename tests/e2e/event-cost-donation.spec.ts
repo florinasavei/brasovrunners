@@ -45,7 +45,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await field("translations.en.slug").fill(englishSlug);
     await excerpt("en", "A free run, with an optional donation for Wings for Life.");
 
-    // The cost is the first thing in "Participare și înscrieri" (§NNN, the editor's boxes), with
+    // The cost is the first thing in "Participare și înscrieri" (§350, the editor's boxes), with
     // its two extra boxes under it. Before a kind is chosen, those are not on screen.
     await openEditorBox(page, "Participare și înscrieri");
     await expect(field("event.costUrl")).toBeHidden();
