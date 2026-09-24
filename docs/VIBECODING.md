@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
-**Baseline `BR-V1.82-2026-09-24`**
+**Baseline `BR-V1.83-2026-09-24`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -57,7 +57,8 @@ literal, or a hex colour outside `src/theme/brand.ts`.
 ## The rules that bite
 
 - **Both languages or none.** Every message key exists in both files; the test `i18n/messages.test.ts` checks every `t("…")` in `src/` — use one-word namespaces (`getTranslations("Admin")` + `t("queue.title")`), never `"Admin.queue"`.
-- **Server → client.** A Server Component may not pass a function or a component reference to a client component (MUI `Chip`, `IconButton`, `Link`): use `component="a"` with a string `href` from `getPathname(...)`. An icon too: pass its name (`icon="save"`) to the backoffice-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never an element — and a public page never imports `action-icons.ts` (a test enforces it, §318).
+- **Server → client.** A Server Component may not pass a function or a component reference to a client component (MUI `Chip`, `IconButton`, `Link`): use `component="a"` with a string `href` from `getPathname(...)`. An icon too: pass its name (`icon="save"`) to the backoffice-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never an element — and a public page never imports `action-icons.ts` (a test enforces it, §318). `divider` is on the list too, and `yarn check` refuses any element-valued prop into a client component (§370).
+- **Messages with `{x}` or a tag** are `t("key", values)` or `t.raw("key")`, never a bare `t("key")`: a production build prints it raw and `next dev` prints the key. Write a literal `<` as `'<'` (§370).
 - **No hostname of the club's in `src/`** — everything derives from `APP_BASE_URL`; a third party's fixed host (Cloudflare, Vercel, Facebook) goes in `PROVIDER_HOSTS` in `scripts/docs-check.mjs` with one line saying why.
 - **Migrations expand only.** Add a column or an enum value; never drop or rename in the same release (`yarn migrations:check`).
 - **Tap targets are 44 px** — every link and button on a public page; the e2e suite measures them.

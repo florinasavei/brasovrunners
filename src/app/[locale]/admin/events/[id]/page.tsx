@@ -709,7 +709,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             pendingLabel={t("editor.saving")}
                             icon="save"
                             incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
-                            incompleteHintNamed={t("forms.incompleteFirst")}
+                            incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                             size="medium"
                           />
                         </Box>
@@ -789,7 +789,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
                       {/* 16.1 — the queue as the allocator sees it, and the waiting list in its order (§92). */}
                       <Panel collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
-                        <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity }} waiting={waiting} now={now} />
+                        <QueuePanel
+                          db={db}
+                          event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone }}
+                          waiting={waiting}
+                          now={now}
+                        />
                         {interestsWaiting !== null && (
                           <Box sx={{ mt: 3 }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>

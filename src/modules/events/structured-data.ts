@@ -47,7 +47,7 @@ export function sportsOrganizationJsonLd(name: string, url: string) {
     name,
     url,
     sport: "Running",
-    areaServed: { "@type": "City", name: "Brașov" },
+    areaServed: { "@type": "City", name: CLUB_LOCALITY },
     ...(sameAs.length > 0 ? { sameAs } : {}),
   };
 }
@@ -160,6 +160,49 @@ function eventPlace(event: PublicEvent) {
 }
 
 /**
+ * Whether a runner needs their wallet, as schema.org says it (§343, amended by §369).
+ *
+ * - `FREE`, and an event that has not said (what most club events still are): free, with a
+ *   zero-price offer at the event's own page — the page where the place is taken.
+ * - `PAID`: not free. An `offers.url` only when the club gave an https payment link, and never a
+ *   `price`: `cost_amount` is free text ("50 lei", "sugerat 50 lei") that schema.org's number
+ *   cannot represent honestly, and a guessed one would tell a search engine something the club
+ *   never said.
+ * - `DONATION`: **free**. schema.org's `isAccessibleForFree` is whether the event can be
+ *   attended without payment, and a donation is money given without compensation — the place
+ *   is not bought with it. §343 records it as the runner's choice ("sugerat 50 lei" is a
+ *   suggestion), and no column says a donation is required, so nothing here guesses one from the
+ *   free text. The offer is the same zero-price one a free event carries, at the event's page;
+ *   the donation link is a `DonateAction` — schema.org's own verb for it — and never the
+ *   offer's `url`, which is where the thing offered (the place) is taken: a zero-price offer
+ *   pointing at a donation page would read as "free tickets, bought over there". An event whose
+ *   entry *is* the payment is `PAID`, with that link as its payment link.
+ */
+function costJsonLd(event: PublicEvent, url: string) {
+  if (event.costType === "PAID") {
+    return {
+      isAccessibleForFree: false,
+      ...(event.costUrl ? { offers: { "@type": "Offer", url: event.costUrl, availability: "https://schema.org/InStock" } } : {}),
+    };
+  }
+  const freeEntry = {
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "RON",
+      url,
+      availability: "https://schema.org/InStock",
+      validFrom: toOffsetIsoString(event.publishedAt ?? event.startsAt, event.timezone),
+    },
+  };
+  if (event.costType === "DONATION" && event.costUrl) {
+    return { ...freeEntry, potentialAction: { "@type": "DonateAction", target: event.costUrl } };
+  }
+  return freeEntry;
+}
+
+/**
  * BR-REQ-052-02 criteria 2 and 4. `locale` is the page's language: the one thing the public row
  * does not carry, and what a partner's description needs to be said in (§352). Left out, the
  * partners are named without one — never in a language guessed for them.
@@ -199,32 +242,7 @@ export function sportsEventJsonLd(
     // first, the partners in the club's own order. A bare object when the club hosts alone,
     // because `organizer` is one value there and an array of one reads as a list of one.
     organizer: organizers(event, organizationName, locale),
-    /**
-     * Whether a runner needs their wallet (§343, reversing part of the owner's 2026-09-19 "state
-     * somewhere that Brașov Runners events are always free"): true for `FREE` and for an event
-     * that has not said, which is what most club events still are and what the owner's sentence
-     * was written for; false for `PAID` and `DONATION` alike — a donation is still something a
-     * runner may choose to pay, and schema.org has no third state for "optional". Only `PAID`
-     * and `DONATION` ever carry a real `offers.url`, and only when the club gave an https link:
-     * no price is parsed out of the free text `cost_amount`, which schema.org's `price` cannot
-     * represent honestly ("50 lei" is not a number, "sugerat 50 lei" is not a price at all).
-     */
-    ...(event.costType === "PAID" || event.costType === "DONATION"
-      ? {
-          isAccessibleForFree: false,
-          ...(event.costUrl ? { offers: { "@type": "Offer", url: event.costUrl, availability: "https://schema.org/InStock" } } : {}),
-        }
-      : {
-          isAccessibleForFree: true,
-          offers: {
-            "@type": "Offer",
-            price: "0",
-            priceCurrency: "RON",
-            url,
-            availability: "https://schema.org/InStock",
-            validFrom: toOffsetIsoString(event.publishedAt ?? event.startsAt, event.timezone),
-          },
-        }),
+    ...costJsonLd(event, url),
     location: eventPlace(event),
     sport: "Running",
     /*

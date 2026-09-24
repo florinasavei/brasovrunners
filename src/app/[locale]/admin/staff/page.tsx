@@ -244,7 +244,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 label={t("staff.invite")}
                 pendingLabel={t("staff.inviting")}
                 icon="addPerson"
-                incompleteHintNamed={t("forms.incompleteFirst")}
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                 size="medium"
               />
             </Box>

@@ -8,14 +8,17 @@ import {
   createContext,
   type FormEvent,
   type ReactNode,
+  startTransition,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { createTwinFoldStore, REVEAL_EVENT, type TwinFoldStore, twinFoldKey } from "./fold";
@@ -84,6 +87,13 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  */
 export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
+/** Panel `index` shown and every other one hidden, on the DOM itself (§371; see `bringForward`). */
+function showOnly(panels: readonly (HTMLElement | null)[], index: number) {
+  panels.forEach((panel, other) => {
+    if (panel) panel.hidden = other !== index;
+  });
+}
+
 /**
  * One tab per language, over panels that are all part of the same form.
  *
@@ -146,16 +156,43 @@ export default function LocaleTabPanels({
     [folds, panels, active],
   );
 
-  /** Bring panel `index` forward — the DOM attribute at once, React's state after it. */
-  const bringForward = useCallback((index: number, element: HTMLElement | null) => {
+  /**
+   * Bring panel `index` forward — the DOM at once, React's state after it.
+   *
+   * **The whole swap is done by hand, and the state follows as a transition (§371).** The browser
+   * needs the panel shown before it looks for a box to focus, so that part was always by hand; the
+   * state was set at once, and React renders an update made inside an `invalid` event before the
+   * event ends — the strip, and MUI's `Tabs`, which measures its tabs after every render: a forced
+   * layout of the panel just revealed, inside the refused press, before the browser's own. Now the
+   * siblings are hidden by hand too, so the frame shows one language, and the strip catches up in a
+   * transition that does not hold the frame the refusal paints.
+   *
+   * Until that transition commits, the panel's folds still say `shown: false` (§363), so a
+   * description whose twin is open mounts its editor in the transition's render — after the frame
+   * that paints the refusal, not inside the press. What the browser points at is the fold's
+   * summary line (`ValidityProxy`), which is there either way.
+   */
+  const bringForward = useCallback((index: number) => {
     if (revealed.current) return;
     revealed.current = true;
     setTimeout(() => {
       revealed.current = false;
     }, 0);
-    if (element) element.hidden = false;
-    setActive(index);
+    showOnly(panelRefs.current, index);
+    startTransition(() => setActive(index));
   }, []);
+
+  /*
+    The DOM back in step with the state whenever the state moves (§371). The hand swap above runs
+    ahead of React, and React writes `hidden` only where the prop changed since its last commit, so
+    the moment a new `active` commits every panel's attribute is rewritten from it. A tab press can
+    also end on the `active` React already has — when it lands while a refusal's transition is
+    still pending — and then nothing commits at all, so the strip's `onChange` swaps by hand too:
+    between the two, the strip never names one language over the other language's panel.
+  */
+  useLayoutEffect(() => {
+    showOnly(panelRefs.current, active);
+  }, [active]);
 
   /**
    * A required box on a hidden tab, when the browser refuses the submit.
@@ -177,7 +214,7 @@ export default function LocaleTabPanels({
       if (node instanceof HTMLDetailsElement) node.open = true;
       node = node.parentElement;
     }
-    bringForward(index, event.currentTarget);
+    bringForward(index);
   };
 
   /*
@@ -189,7 +226,7 @@ export default function LocaleTabPanels({
   useEffect(() => {
     const cleanups = panelRefs.current.map((element, index) => {
       if (!element) return () => undefined;
-      const onReveal = () => bringForward(index, element);
+      const onReveal = () => bringForward(index);
       element.addEventListener(REVEAL_EVENT, onReveal);
       return () => element.removeEventListener(REVEAL_EVENT, onReveal);
     });
@@ -210,15 +247,17 @@ export default function LocaleTabPanels({
     const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
       if (watch) {
-        setIncomplete(
-          panels.map((panel) =>
-            watch.names.some((field) => {
-              const blank = isBlankValue(valueOf(panel.locale, field));
-              if (watch.rule === "required") return blank;
-              return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
-            }),
-          ),
+        const next = panels.map((panel) =>
+          watch.names.some((field) => {
+            const blank = isBlankValue(valueOf(panel.locale, field));
+            if (watch.rule === "required") return blank;
+            return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
+          }),
         );
+        // The same marks keep the same array, so React renders nothing (§371): a new one re-rendered
+        // the strip on every keystroke and every focus leaving a box — the press of a save button
+        // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
+        setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
       }
       if (identical) {
         const [first, ...rest] = panels;
@@ -230,10 +269,13 @@ export default function LocaleTabPanels({
         }
       }
     };
-    const deferred = () => setTimeout(measure, 0);
-    for (const type of ["input", "change", "focusout"]) container.addEventListener(type, deferred);
+    // Behind the frame the keystroke or the press leads to, once for a burst (§371): the marks
+    // are not what the reader is waiting for, the letter and the "Se salvează…" are.
+    const scheduler = paintedScheduler(measure);
+    for (const type of ["input", "change", "focusout"]) container.addEventListener(type, scheduler.schedule);
     return () => {
-      for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, deferred);
+      for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, scheduler.schedule);
+      scheduler.cancel();
     };
   }, [watch, identical, live, panels]);
 
@@ -241,7 +283,12 @@ export default function LocaleTabPanels({
     <Box ref={root}>
       <Tabs
         value={active}
-        onChange={(_, value: number) => setActive(value)}
+        onChange={(_, value: number) => {
+          // By hand first as well: a press on a tab while a refusal's transition is still pending
+          // may compute the `active` React already has, and then React rewrites no attribute (§371).
+          showOnly(panelRefs.current, value);
+          setActive(value);
+        }}
         variant="scrollable"
         scrollButtons={false}
         /*

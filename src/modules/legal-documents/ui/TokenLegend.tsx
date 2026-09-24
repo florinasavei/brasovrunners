@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
-import { DECLARATION_TOKENS, tokensUsedIn } from "../templates/tokens";
+import { getLocale, getTranslations } from "next-intl/server";
+import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates/tokens";
 
 /**
  * What each `{{token}}` in the declaration becomes, beside the box where the text is written
@@ -21,9 +21,16 @@ import { DECLARATION_TOKENS, tokensUsedIn } from "../templates/tokens";
  *
  * `usedIn` marks the ones the current draft already carries — so a text that lost `{{eventDate}}`
  * in an edit says so on the page rather than at the first signature.
+ *
+ * The example is in both languages where they differ (§369): the form writes the Romanian and
+ * the English text on one screen, and each becomes its own words at a signature. The reader's
+ * language first, the other after it, each marked with its `lang`.
  */
 export default async function TokenLegend({ body }: { body?: string }) {
   const t = await getTranslations("Admin.legal");
+  const locale = await getLocale();
+  const first: TokenLocale = locale === "en" ? "en" : "ro";
+  const second: TokenLocale = first === "ro" ? "en" : "ro";
   const used = body ? tokensUsedIn(body) : null;
 
   return (
@@ -67,7 +74,13 @@ export default async function TokenLegend({ body }: { body?: string }) {
               )}
             </Typography>
             <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0 }}>
-              {t(`tokens.${entry.messageKey}`)} — <em>{entry.example}</em>
+              {t(`tokens.${entry.messageKey}`)} — <em lang={first}>{entry.example[first]}</em>
+              {entry.example[second] !== entry.example[first] && (
+                <>
+                  {" / "}
+                  <em lang={second}>{entry.example[second]}</em>
+                </>
+              )}
             </Typography>
           </Box>
         ))}

@@ -233,7 +233,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                   icon="erase"
                   label={t("legal.erase.action")}
                   pendingLabel={t("legal.erase.action")}
-                  incompleteHintNamed={t("forms.incompleteFirst")}
+                  incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                   color="error"
                   size="medium"
                 />

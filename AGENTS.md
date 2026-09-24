@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.83-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2257,6 +2257,10 @@ delivers it as a lazy reference with no `props` — so a client component that r
 `control.props` throws, and the page answers 500 the day the tree grows (`DECISIONS.md` §60:
 the registration form, and every page that wrote `control={<Checkbox />}`). Make the element on
 the client side of the boundary — `shared/ui/CheckboxField` is the pattern — or pass children.
+
+- The rule is enforced by `tests/unit/shared/server-element-props.test.ts` in `yarn check` (§370).
+- The third instance was `Stack`'s `divider` in `AdminSkeleton`: `Stack` clones its divider, and in development the Flight client can deliver an element as a lazy wrapper — a 500 under `next dev` on every backoffice list.
+- One allowance, verified against MUI's source: `Alert`'s `action`, which MUI renders as a child (§370).
 
 ### 14.2 Validation
 

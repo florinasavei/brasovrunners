@@ -15,17 +15,20 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The primary buttons respond within 200 ms (INP) — measured before and after at 4× CPU | `perf/inp-submit` | Vercel flagged 352 ms |
-| Leftover literal club names (email sender name, PDF metadata, Zitadel invitation, legend example), a donation event's structured data, the queue panel's times in the event's zone | `chore/no-hardcoded-leftovers` | |
-| `yarn dev` answers 500 on `/admin/tasks` and `/admin/gallery` (production is fine) — root cause and a guard | `fix/dev-ssr-invalid-element` | |
-| The email editor's placeholder legend like the documents' (code chip, meaning, example; this message's fields first), the preview sample with every field, precise sample-value matching, and a bilingual email's second half in its own language (title, what to bring, place) | `feat/email-followup` | on top of `BR-V1.78` |
-| "Termene": every participant-facing deadline a club setting — confirmation link, declaration hold, waiting-list offer, reminder (with a per-event override), self check-in, race week, series horizon — and every number in emails, pages and legal texts follows it | `feat/deadlines-config` | one expand-only migration (the per-event reminder); new values apply to new holds and offers only |
+| The phone footer in one row from 320 px — everything visible, a lock glyph for the privacy notice, the languages as flags, 24 px targets at 320 and 28 px from 360 | `fix/footer-one-row` | the owner's choice of 2026-09-24 22:50 |
+| The email editor's placeholder legend, the preview sample with every field, the second half of a bilingual email in its own language — the status in words | `feat/email-followup` | second fix round |
+| "Termene": every participant-facing deadline a club setting | `feat/deadlines-config` | migration `0069`; its own release |
+| The `/admin/legal` notice says what the code enforces and folds closed; a malformed admin id answers 404 | `fix/backoffice-small` | |
+| The dispatcher guards its own context; `yarn ship` continues past a merged batch PR; a worktree sweep card; a resumed implementer that commits nothing still gets a review | `chore/dispatcher-guards` | |
+| Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
+| Tighter spacing on phones for the public pages | `fix/mobile-density` | after `BR-V1.83` |
+| "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after the deadlines land |
 
 ## Ready for the next release
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.76` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.83` |
 
 ## Next, queued
 
@@ -48,14 +51,15 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 ## Later
 
 - The newsletter and mailing alerts (the owner's weekend item).
-- A donation event's structured data says it is not free (`isAccessibleForFree: false`) — confirm that is what the club wants.
-- The queue panel's times are in the club's zone rather than the event's.
 - Neon: re-measure after the first quiet night (the operations log, `SETUP.md` §40).
+- `yarn test:e2e:dev` (the `next dev` walk of every page, minutes) is on demand; say if it should also run nightly on qa.
+- The public site's own toasts: the contact form's sent state, self-unregistration, the participation confirmation (after `feat/toasts-and-confirms`).
 
 ## Released
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.83` | the club's name from one source and the last hardcoded values gone — a donation event reads as free to attend with a `DonateAction`, the queue panel in the event's zone, the legal editor keeps its height · the backoffice works under `yarn dev` again, a source-walk test refuses element props into client components, `yarn test:e2e:dev` · a save press paints "Se salvează…" first, every measured press under 200 ms at 4× CPU |
 | `BR-V1.82` | the listing's cards are one structure — the title a blue link, the place a link to its map, a clock by the time, route and cost as the event page's pills, no empty bands · a handshake and the partner's name on a partnered event's card, calendar entry and page; one tooltip per calendar entry; a series' usual place read rather than compared letter for letter, so "Nu în locul obișnuit" appears only when the place really differs · the dispatcher in the repository (`docs/DISPATCHER.md`, `yarn docs:land`, `yarn ship`) |
 | `BR-V1.81` | **hotfix** — the rich-text editor's selection and table bars show their buttons again (Tiptap's production build dropped their stacking order); a fold opened in one language tab stays open in the other; closing a fold no longer loses what was typed · "Trimite un mesaj participanților": a bilingual message to an event's participants by group, previewed, sent through the outbox, audited (migration `0068`) · the phone footer floats one line and rests two, RO \| EN side by side, the build stamp in the "Despre club" fold |
 | `BR-V1.80` | the meeting point once per language — Română and English side by side, both required unless to be announced, "Același nume și în engleză" for an empty English box; every page, email, calendar file and the declaration name the place in the reader's language |

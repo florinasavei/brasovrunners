@@ -4,7 +4,7 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { formatDay } from "@/i18n/dates";
 import type { Database } from "@/db/types";
 import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
@@ -29,7 +29,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   now,
 }: {
   db: Database<T>;
-  event: { id: string; capacity: number | null; waitlistCapacity: number | null };
+  /** `timezone` is the event's own zone, which every time on the panel is written in (§349). */
+  event: { id: string; capacity: number | null; waitlistCapacity: number | null; timezone: string };
   /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
   waiting: number;
   now: Date;
@@ -38,8 +39,13 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const locale = await getLocale();
   // The hold and the offer the help sentences name: the club's (§NNN), the lengths new ones get.
   const words = deadlineWords(locale, await deadlinesForThisRequest());
-  // Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349).
-  const when = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+  /*
+    Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349), and
+    in the event's own zone (§369), like every other time of the event: the offer's deadline is
+    the one the runner's email names (`render.ts`, the event's zone), and a panel reading the
+    club's clock beside it would put two hours on one deadline for an event held elsewhere.
+  */
+  const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
   const counts = await countOccupied(db, event.id, now);
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id);

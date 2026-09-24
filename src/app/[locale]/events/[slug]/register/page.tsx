@@ -874,7 +874,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               )}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
-                  {t("disclosure.race")}
+                  {t("disclosure.race", { club: CLUB_NAME })}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
                   {/*
@@ -888,7 +888,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     checked against `staff_users`.
                   */}
                   <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={prefill("clubMemberDeclared") === "on"}>
-                    {t("clubMemberDeclared")}
+                    {t("clubMemberDeclared", { club: CLUB_NAME })}
                     {/* What the claim means, where it is claimed (§189): "grup" rather than
                         "echipă", because the club is a group somebody runs with and not a squad
                         somebody is selected for, and the tooltip says where the line is. */}
