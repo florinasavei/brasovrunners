@@ -20,6 +20,7 @@ import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { previewPause, type PreviewLanguage } from "./preview-pause";
 
 /**
  * One choice of who receives the message, with everything the page says about it already worded
@@ -102,8 +103,9 @@ const PREVIEW_PAUSE_MS = 500;
  * **The preview is the real message.** Each pause in typing asks the server to render the words
  * through the same template the outbox sends with, over this event's facts, to a made-up runner —
  * the Romanian registrant's copy or the English one, as the tabs choose — and shows it sandboxed,
- * like `/admin/emails` (§91). Answers that arrive out of order are dropped. Without JavaScript
- * there is no preview, and the form still sends.
+ * like `/admin/emails` (§91). Answers that arrive out of order are dropped, and a tab picked
+ * cancels the pause still running from typing (`preview-pause.ts`), so the copy under a tab is
+ * always that tab's. Without JavaScript there is no preview, and the form still sends.
  *
  * **Send asks first**, and only once the browser's own checks pass: an empty box is pointed at
  * before any question, so the question is only ever about sending.
@@ -124,13 +126,14 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
   }, []);
 
   const [identical, setIdentical] = useState(() => identicalInBothLanguages(recall.value("bodyRo") ?? "", recall.value("bodyEn") ?? ""));
-  const [language, setLanguage] = useState<"ro" | "en">("ro");
+  const [language, setLanguage] = useState<PreviewLanguage>("ro");
   const [shown, setShown] = useState<{ state: "loading" | "ready" | "unavailable"; result: PreviewResult }>({ state: "loading", result: null });
   const asked = useRef(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The pause after typing, which a tab picked cancels (`preview-pause.ts`): one for the composer's life.
+  const [pause] = useState(() => previewPause(PREVIEW_PAUSE_MS, "ro"));
 
   const refresh = useCallback(
-    (nextLanguage: "ro" | "en") => {
+    (nextLanguage: PreviewLanguage) => {
       const ticket = ++asked.current;
       const words = readWords();
       preview({ eventId, language: nextLanguage, ...words })
@@ -147,18 +150,18 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
 
   // The first preview once the boxes exist — after a refusal too, when they hold what was typed.
   useEffect(() => {
+    // Asking afresh: a pause still running from before would only ask again for the same words.
+    pause.cancel();
     refresh(language);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
+    return () => pause.cancel();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per answer; typing asks below
   }, [recall.generation]);
 
   const onInput = () => {
     const words = readWords();
     setIdentical(identicalInBothLanguages(words.bodyRo, words.bodyEn));
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => refresh(language), PREVIEW_PAUSE_MS);
+    // Asked when the pause ends, for the tab open then — not the one open when the key was pressed.
+    pause.typed(refresh);
   };
 
   const [confirming, setConfirming] = useState(false);
@@ -276,9 +279,10 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
         </Typography>
         <Tabs
           value={language}
-          onChange={(_event, next: "ro" | "en") => {
+          onChange={(_event, next: PreviewLanguage) => {
             setLanguage(next);
-            refresh(next);
+            // Now, for this tab, and the pause still running from typing is dropped: it was for the tab left.
+            pause.switched(next, refresh);
           }}
           aria-label={labels.preview}
           sx={{ mb: 1, "& .MuiTab-root": TAP_TARGET }}
