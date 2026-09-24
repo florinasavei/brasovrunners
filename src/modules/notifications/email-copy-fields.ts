@@ -120,8 +120,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     organizerNoteOther: other.organizerNote,
     cancellationReason: sample.cancellationReason,
     cancellationReasonOther: other.cancellationReason,
-    // "Trimite un mesaj participanților" (§364): a sample message, both languages, read only by its
-    // template — with the title and what to bring in the second half's language, as its send has them.
+    // "Trimite un mesaj participanților" (§364): a sample organizer subject and body, both
+    // languages, read only by its template.
     organizerSubject: sample.organizerSubject,
     organizerSubjectOther: other.organizerSubject,
     organizerBody: sample.organizerBody,

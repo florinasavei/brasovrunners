@@ -277,12 +277,6 @@ async function renderRow(
     "Trimite un mesaj participanților" (§364): the organizer's subject and body, this registrant's
     language first and the other language's own words in the second half (§354). A row whose
     payload cannot be read goes with the platform's subject and framing sentence alone.
-
-    The second half's placeholders read the second language's facts — the event's title and "what
-    to bring" in English under the English words — which §354 left undone for every other message
-    because it costs a second read per message. Here the organizer writes `{eventTitle}` into both
-    halves, and an English sentence carrying the Romanian title is the thing "bilingual always"
-    exists to prevent, so this message pays for the read.
   */
   if (row.messageType === "ORGANIZER_MESSAGE") {
     const words = readOrganizerMessagePayload(row.payloadJson);
@@ -292,11 +286,6 @@ async function renderRow(
       data.organizerSubjectOther = words.subject[other];
       data.organizerBody = words.body[locale];
       data.organizerBodyOther = words.body[other];
-    }
-    if (otherDetails) {
-      if (otherDetails.title) data.eventTitleOther = otherDetails.title;
-      if (otherDetails.checklist) data.eventChecklistOther = otherDetails.checklist;
-      if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
     }
     // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
     // without the line that says it can still move (§237).

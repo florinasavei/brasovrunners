@@ -8,6 +8,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { findEventNotificationRows } from "@/modules/events/repository";
+import { registrationStatusWords } from "@/modules/notifications/domain/registration-status-words";
 import { forgetCachedEmailCopy, updateEmailCopy } from "@/modules/notifications/email-copy";
 import { processOutboxBatch } from "@/modules/notifications/outbox";
 import { createOutboxRenderer, type EventRowsReader, renderOutboxMessage } from "@/modules/notifications/render";
@@ -277,18 +278,25 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     expect(waitlistedEn.text).not.toContain("WAITLISTED");
   });
 
-  it("gives each half {currentStatus} in its own language's words, never the registrant's repeated (§NNN, email follow-up)", async () => {
-    const event = await bilingual();
-    const [ro1, en1] = halves(await renderOutboxMessage(await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED"), db, NOW));
-    expect(ro1).toContain("confirmată");
-    expect(en1).toContain("confirmed");
-    expect(en1).not.toContain("confirmată");
-
-    const [en2, ro2] = halves(await renderOutboxMessage(await queue(event.id, "en", "REGISTRATION_STATE_NOTICE", {}, "WAITLISTED"), db, NOW));
-    expect(en2).toContain("on the waiting list");
-    expect(ro2).toContain("pe lista de așteptare");
-    expect(ro2).not.toContain("on the waiting list");
-  });
+  it.each([
+    ["ro", "CONFIRMED"],
+    ["ro", "WAITLISTED"],
+    ["en", "CONFIRMED"],
+    ["en", "WAITLISTED"],
+  ] as const)(
+    "gives each half {currentStatus} in its own language's words, never the registrant's repeated (locale=%s, status=%s) (§NNN, email follow-up)",
+    async (locale, status) => {
+      const event = await bilingual();
+      const other = locale === "ro" ? "en" : "ro";
+      const [first, second] = halves(await renderOutboxMessage(await queue(event.id, locale, "REGISTRATION_STATE_NOTICE", {}, status), db, NOW));
+      const ownWords = registrationStatusWords(status, locale);
+      const otherWords = registrationStatusWords(status, other);
+      expect(first).toContain(ownWords);
+      expect(first).not.toContain(otherWords);
+      expect(second).toContain(otherWords);
+      expect(second).not.toContain(ownWords);
+    },
+  );
 
   it("asks again after a read that failed, rather than failing the rest of the batch with it", async () => {
     const race = await bilingual();

@@ -271,5 +271,20 @@ describe("§NNN the sample has every field, and each half of a preview its own l
       expect(update.subject).toContain(EMAIL_SAMPLE.ro.eventTitle);
       expect(update.subject).toContain(EMAIL_SAMPLE.en.eventTitle);
     });
+
+    it(`previews {currentStatus} of a ${locale} REGISTRATION_STATE_NOTICE with each half in its own words, matching the legend's example`, async () => {
+      const message = renderBilingual(
+        "REGISTRATION_STATE_NOTICE",
+        locale,
+        emailSampleFor("REGISTRATION_STATE_NOTICE", locale),
+        emailSampleActionUrl(locale),
+      );
+      const [first, second] = message.text.split("\n— — —\n");
+      expect(first).toContain(EMAIL_SAMPLE[locale].currentStatus);
+      expect(second).toContain(EMAIL_SAMPLE[other].currentStatus);
+
+      const legendHtml = await render("REGISTRATION_STATE_NOTICE", locale);
+      expect(rowOf(legendHtml, "currentStatus").markup).toContain(`<em>${EMAIL_SAMPLE[locale].currentStatus}</em>`);
+    });
   }
 });
