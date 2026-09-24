@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.78-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.79-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.78-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.79-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14588,3 +14588,54 @@ Baseline `BR-V1.78-2026-09-24`.
 - `tests/e2e/config-panels.spec.ts` gains a 320-px walk over the to-do screen, the configuration's general panel and the gallery's pictures. It checks the current link carries `aria-current`, there are no buttons in the row, and the entries sit on one line. It checks every entry is at least 44 px and the page does not overflow. It checks a 2-px underline in a colour no other entry wears, and weight 600. Squeezed to 60 pixels, the row is still one line, overflows and scrolls.
 
 Baseline `BR-V1.78-2026-09-24`.
+
+## 361. The text editors' toolbars wear Material glyphs, one button for both editors
+
+**Context.** The owner, 2026-09-24, with a screenshot of `/admin/legal`'s toolbar ("H2 | ¶ | 🔗 | 🖼 | ↶ | ↷"), pointing at the picture: "I hate this image icon!" Both text editors drew their buttons from characters. The legal editor used "¶", "🔗", "🖼", "↶" and "↷". The pages' editor used "B", "I", "•—", "1.", "❝", "⊞", "🔗", "↶" and "↷", and its table bar used "+↓", "+→", "−↓", "−→", "▦/▤/▢", "↕", "▦", "▩", "H" and "⊟". An emoji is whatever the reader's system font makes of it: a tiny grey picture on Windows, and on 2026-09-18 a broken box on the owner's machine. That was why the pages' editor fell back to words ("Imagine", "Din galerie", "YouTube") and why §274 called the toolbar's rule "words, not icons". The arrows and box-drawing characters read as noise.
+
+**Decision.** *One button for both editors.* `shared/ui/ToolbarButton.tsx` replaces the two local `Control` components. Every button has:
+- a filled Material glyph at 20 px (`TOOLBAR_GLYPH_PX`), in the button's own colour (`action.active`, and the text colour once pressed);
+- a target at least 44 px square;
+- `ToggleButton`'s `aria-pressed` for the states;
+- its full label as `aria-label`, and as an MUI `Tooltip` that shows on hover and on a long press (`enterTouchDelay`).
+
+The tooltip is `disableInteractive`: it never takes the pointer, so in a wrapped row it cannot sit over the next button and take its click. The native `title` is gone, because two tooltips at once is noise too.
+
+The editors are client islands, so the glyph is passed as the component itself, and nothing crosses the server boundary. `action-icons.ts` (§318) remains the registry for buttons a Server Component renders.
+
+*The glyphs.* One family (filled, like the rest of the backoffice, §318), one file per glyph, never the barrel (§90).
+- Bold `FormatBold`, italic `FormatItalic`, lists `FormatListBulleted` and `FormatListNumbered`, quote `FormatQuote`. The three alignments keep §274's glyphs.
+- Insert a table `TableChart`, link `Link`, a picture `AddPhotoAlternate` (in both editors), the gallery `PhotoLibrary`, undo `Undo`, redo `Redo`, and preview `Visibility` (previously the outlined eye, the only glyph from another family).
+- A YouTube film is `SmartDisplay`, the play mark, not YouTube's logo: §90 refused Material's brand glyphs.
+- The table's bar:
+  - Rows (`TableRows`) and columns (`ViewColumn`) wear a small plus or minus badge (`AddCircle`/`RemoveCircle`). That is two pictures and two signs, not four unrelated glyphs, since Material has none for these verbs.
+  - The borders control shows the state it is in: `BorderAll`, `BorderHorizontal` or `BorderClear`.
+  - Middle alignment is `VerticalAlignCenter`.
+  - The line colour is `BorderColor` and the header fill `FormatColorFill`, the two glyphs every office suite uses for these.
+  - The header row is `WebAsset`, a box whose top band is filled.
+  - Deleting the table is the §318 bin.
+
+*Words where a word is clearer.* "H2" and "H3" stay words at the glyph's height. A heading level is read faster as its name than as any picture. The legal editor's paragraph button reads "Text" (catalogue `Admin.legal.editor.paragraphShort`, the same in both languages), beside "H2", the pair every word processor's style list offers. Material's glyphs for "a block of text" (`Notes`, `Subject`) are lines of text, which is exactly what "align left" looks like in the pages' editor. `FormatTextdirectionLToR` is a text-direction control, not a paragraph.
+
+*The floating bars above the sticky toolbar.* Tiptap appends the table's bar and the selection's bar to the writing area with no stacking order of their own. The sticky toolbar's `zIndex: 2` (§273) therefore painted over the table's bar whenever a table sat at the top of the body, and every table verb was hidden behind it. Both bars now take `style={FLOATING_BAR_STYLE}` (`zIndex: 3`), a module constant like the bars' other props, so it is one object across renders (§274's React #185). That puts them above the toolbar and far below MUI's app bar and popovers.
+
+*Unchanged.* Every command, shortcut, catalogue label and pressed-state rule, and the three-state cycles of the table controls. The legal editor's row is now a named `role="toolbar"`, like the pages' editor. The short words the three media buttons wore (`imageShort`, `imageFromGalleryShort`, `youtubeShort`) are no longer drawn; like `alignShort` and `previewShort` before them, they stay in the catalogue until a cleanup drops them.
+
+*Amends §274 and §263.* §274's "words, not icons" was a rule about emoji, and an SVG glyph cannot render as a broken box. §263's box-drawing characters for the borders state are replaced by the three border glyphs.
+
+**Refused.**
+- *Keeping emoji or Unicode characters with a font stack that draws them better.* The owner's complaint is the picture itself, and no font is on every machine.
+- *The registry by name (`action-icons.ts`) for these buttons.* Both editors are client islands that make their own elements. Routing twenty-five editor-only glyphs through the server-safe lookup would add them to every backoffice page that renders a `GlyphButton`.
+- *YouTube's own logo.* §90 refused Material's brand glyphs.
+- *A lines glyph for the paragraph.* It would be read as "align left".
+- *An interactive tooltip.* Over a wrapped row of buttons, it takes the click meant for the next button.
+
+**Test.** `tests/unit/content/editor-toolbar-icons.test.ts`:
+- renders both editors' toolbars as the server does;
+- for every button, checks: a name, no `title`, no old character or letter as its face, and either "H2", "H3" or "Text", or a glyph and nothing else;
+- checks that every glyph in an editor shares one CSS class, drawn at 20 px with no colour of its own;
+- reads the table's bar and the selection's bar from the source (29 `ToolbarButton` elements, each an icon or "H2"/"H3", two plus badges and two minus badges, no `Control` left);
+- checks both bars' `zIndex`, the non-interactive tooltip, and the one-file-per-glyph, filled-only imports;
+- checks that none of the old characters remains in either editor's code.
+
+Baseline `BR-V1.79-2026-09-24`.
