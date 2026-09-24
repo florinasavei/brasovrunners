@@ -89,26 +89,61 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';
     const stamps = html.split(label).length - 1;
-    // One instance for a phone (inside the fold, shown from `md` down to `xs`... actually
-    // hidden from `md`), one for `md` up, pinned outside the fold — mutually exclusive by
-    // `display`, both present in the markup so CSS alone decides which one shows.
+    // One instance for a phone, shown below `md`; one for `md` up, pinned to the bar's own
+    // corner — mutually exclusive by `display`, both present in the markup so CSS alone
+    // decides which one shows.
     expect(stamps, "two build stamps in the footer's markup").toBe(2);
 
-    const details = html.indexOf("<details");
-    const summaryEnd = html.indexOf("</summary>");
+    // Neither copy is inside `<details>` any more (review finding 2): the fold holds only its
+    // `<summary>`, so opening it never changes the `<details>` element's own size, and the two
+    // build stamps — like the panel around the phone's copy — are its siblings, not its
+    // children. Native `<details>` still owns show and hide; CSS reads its `[open]` state back
+    // via `:has()` on their common ancestor (checked below).
     const detailsEnd = html.indexOf("</details>");
-    expect(details).toBeGreaterThanOrEqual(0);
+    const panelStart = html.indexOf('data-testid="footer-about-panel"');
+    const pinnedStart = html.indexOf('data-testid="footer-build-badge-pinned"');
+    expect(detailsEnd).toBeGreaterThanOrEqual(0);
+    expect(panelStart).toBeGreaterThan(detailsEnd);
+    expect(pinnedStart).toBeGreaterThan(detailsEnd);
+
     const first = html.indexOf(label);
     const second = html.indexOf(label, first + 1);
-    // The first copy is inside the `<details>`, after its `<summary>`: in the panel, which a
-    // closed fold does not show — so a phone shows it at no width until "Despre club" opens.
-    expect(first).toBeGreaterThan(summaryEnd);
-    expect(first).toBeLessThan(detailsEnd);
-    // The second copy is outside the fold altogether, pinned to the bar's own corner.
-    expect(second).toBeGreaterThan(detailsEnd);
+    // The first copy is inside the panel; the second is inside the pinned corner box.
+    expect(first).toBeGreaterThan(panelStart);
+    expect(first).toBeLessThan(pinnedStart);
+    expect(second).toBeGreaterThan(pinnedStart);
     // Still the build and still the staff entrance (§34): the version in the title, the way in
     // named for a screen reader.
     expect(html).toMatch(/title="(BR-V\d+\.\d+|dev)[^"]*"/);
+  });
+
+  it("shows the panel only when the fold's own `<details>` is open, read back with `:has()` on their common ancestor", async () => {
+    // Review finding 2: the panel used to be nested inside `<details>`, and opening it grew
+    // that flex item to `calc(100% - 44px)`, which pushed every sibling after it (the marks,
+    // the privacy notice, the language) onto a second flex line — under the whole panel, not
+    // beside the switch and the summary. The panel is a sibling of the row now, and its own
+    // visibility is CSS alone: `display: none` by default, `display: flex` only while an
+    // ancestor `:has()`s the fold's own `<details>[open]`.
+    const html = await renderFooter();
+    const markup = markupOnly(html);
+    const css = cssOnly(html);
+
+    const fold = emotionClassOf(markup, 'data-testid="footer-about-fold"');
+    const panel = emotionClassOf(markup, 'data-testid="footer-about-panel"');
+    const bar = rulesOf(css, emotionClassOf(markup, "<footer"));
+    // Attribute selectors, not classes: the rule names the testids directly rather than an
+    // Emotion hash, so it survives a class name changing under it.
+    expect(bar, "the bar's own rules read the fold's open state with :has()").toMatch(
+      /:has\(\[data-testid="footer-about-fold"\]\[open\]\) \[data-testid="footer-about-panel"\]\{[^}]*display:flex;?\}/,
+    );
+
+    const panelRules = rulesOf(css, panel);
+    expect(panelRules, "the panel is hidden by default").toMatch(/display:none;/);
+
+    // The `<details>` element's own rules no longer grow it on `[open]` (review finding 7's
+    // arithmetic bug lived in that rule, which is gone with it).
+    const detailsRules = rulesOf(css, fold);
+    expect(detailsRules).not.toMatch(/\[open\]/);
   });
 
   it("is not rendered by the page's layout, beside the footer", () => {
@@ -128,7 +163,8 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     expect(bar).toMatch(/position:sticky;/);
     expect(bar).toMatch(/bottom:0;/);
     expect(bar).not.toMatch(/bottom:-/);
-    expect(bar).not.toMatch(/:has\(/);
+    // The bar's own rules do carry one `:has()`, since §NNN: it is what shows the fold's panel,
+    // a sibling of the row rather than its content (review finding 2, checked on its own above).
 
     // Both on the bar, outside the fold: after `</details>`, not inside it.
     const detailsEnd = markup.indexOf("</details>");

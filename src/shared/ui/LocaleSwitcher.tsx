@@ -72,7 +72,9 @@ export default function LocaleSwitcher() {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        gap: 0.25,
+        // Zero at `xs` (§NNN): the footer's one row needs every pixel it can get at 320px
+        // (finding 1); `sm` up is the header's own copy, unchanged.
+        gap: { xs: 0, sm: 0.25 },
         flexShrink: 0,
       }}
     >
@@ -97,7 +99,9 @@ export default function LocaleSwitcher() {
           // (BR-REQ-041-01 criterion 6), from `sm` up and everywhere else this renders.
           minHeight: { xs: 32, sm: 44 },
           lineHeight: 1,
-          px: { xs: 0.5, sm: 0.75 },
+          // Tighter at `xs` (§NNN, finding 1): the footer's one row leaves 47px for the fold's
+          // label at 320px unless every other item gives up its own air first.
+          px: { xs: 0.25, sm: 0.75 },
         } as const;
 
         return isActive ? (

@@ -137,6 +137,21 @@ test.describe("the build badge", () => {
     expect(box!.x + box!.width).toBeGreaterThan((footer!.x + footer!.width) / 2);
   });
 
+  test("is the staff entrance from md too: a double-click opens sign-in, and so does Enter", async ({ page }, testInfo) => {
+    // Review finding 5: the only staff-entrance tests skipped unless the project was "mobile",
+    // driving the panel copy. From `md` the entrance is the pinned copy instead, and the PR CI
+    // run (desktop project only, §209) checked no staff entrance at all.
+    test.skip(testInfo.project.name !== "desktop", "the pinned copy only shows from md");
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    await pinnedBadge(page).dblclick();
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    await pinnedBadge(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+  });
+
   test("does nothing on a single tap", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });

@@ -90,8 +90,12 @@ test.describe("BR-REQ-041-01 the footer's one line, at every width", () => {
 
       const phone = width < SM;
       // The footer-only exception to BR-REQ-041-01 criterion 6 (§NNN): 32px below `sm`, 44 at
-      // and above it.
+      // and above it. The social marks are their own, smaller tier below `sm` (review finding
+      // 1): 28px, still above the 24px WCAG 2.5.5 AA floor — the one item that gave up more
+      // than the rest once the switch, the fold's label, the privacy notice and the language
+      // had each already given up their own padding and the row was still 6px short at 320px.
       const minTarget = phone ? 32 : 44;
+      const minMarkTarget = phone ? 28 : 44;
 
       const boxes: Array<[string, Box]> = [
         ["the summary", await boxOf(summary, "the summary")],
@@ -112,8 +116,8 @@ test.describe("BR-REQ-041-01 the footer's one line, at every width", () => {
         const mark = marks.nth(i);
         const name = (await mark.getAttribute("aria-label")) ?? `mark ${i}`;
         const box = await boxOf(mark, name);
-        expect(box.width, `${name} is ${minTarget} wide`).toBeGreaterThanOrEqual(minTarget);
-        expect(box.height, `${name} is ${minTarget} tall`).toBeGreaterThanOrEqual(minTarget);
+        expect(box.width, `${name} is ${minMarkTarget} wide`).toBeGreaterThanOrEqual(minMarkTarget);
+        expect(box.height, `${name} is ${minMarkTarget} tall`).toBeGreaterThanOrEqual(minMarkTarget);
         await mark.click({ trial: true });
         boxes.push([name, box]);
       }
@@ -159,36 +163,68 @@ test.describe("BR-REQ-041-01 the footer's one line, at every width", () => {
     });
   }
 
-  test("keeps the marks visible, tappable and clear of the panel when the fold is open, below md", async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 720 });
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const { footer, summary, marks, language, panelBadge } = controls(page);
-    const count = await marks.count();
-    test.skip(count === 0, "no social address is configured for this server");
+  for (const width of [320, 360, 768] as const) {
+    test(`keeps the row intact and the panel below it when the fold opens, at ${width}px (review finding 2)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 720 });
+      await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+      const { footer, summary, toggle, marks, privacy, language, panelBadge } = controls(page);
+      const count = await marks.count();
+      test.skip(count === 0, "no social address is configured for this server");
 
-    await summary.click();
-    // The panel's links, and the privacy notice beside the fold, which wraps under it (§323).
-    const panelLinks = footer.getByRole("link", { name: /confidențialitate|termeni|înscrierile|scrie-ne/i });
-    await expect(panelLinks.first()).toBeVisible();
-    // Open, the bar is taller: measured at the page's new end, where no trial click moves it.
-    await restAtTheEnd(page);
+      await summary.click();
+      // The panel's links, and the bar's own privacy notice, which `getByRole` also matches.
+      const panelLinks = footer.getByRole("link", { name: /confidențialitate|termeni|înscrierile|scrie-ne/i });
+      await expect(panelLinks.first()).toBeVisible();
+      // Open, the page is taller: measured at its new end, where no trial click moves it.
+      await restAtTheEnd(page);
 
-    const boxes: Array<[string, Box]> = [];
-    for (let i = 0; i < (await panelLinks.count()); i++) boxes.push([`panel link ${i}`, await boxOf(panelLinks.nth(i), `panel link ${i}`)]);
-    for (let i = 0; i < count; i++) {
-      const mark = marks.nth(i);
-      await expect(mark).toBeVisible();
-      await mark.click({ trial: true });
-      boxes.push([`mark ${i}`, await boxOf(mark, `mark ${i}`)]);
-    }
-    if ((await language.count()) === 1 && (await language.isVisible())) {
-      boxes.push(["the language", await boxOf(language, "the language")]);
-    }
-    // The build stamp is the panel's last line, clear of everything else on the bar.
-    await expect(panelBadge).toBeVisible();
-    boxes.push(["the build stamp", await boxOf(panelBadge, "the build stamp")]);
-    expectDisjoint(boxes, page.viewportSize()?.width ?? 0);
-  });
+      const phone = width < SM;
+      // Review finding 2: opening used to grow the fold's own flex item to nearly the row's
+      // full width, which pushed the marks, the privacy notice and the language onto a second
+      // flex line — under the whole panel, not beside the switch and the summary. The panel is
+      // a sibling of the row now (`SiteFooter.tsx`), so every row item stays on the switch's
+      // own line regardless, and the panel is the thing that drops below, full width.
+      const switchBox = await boxOf(toggle, "the switch");
+      const switchMid = switchBox.y + switchBox.height / 2;
+      const rowBoxes: Array<[string, Box]> = [
+        ["the summary", await boxOf(summary, "the summary")],
+        ["the privacy notice", await boxOf(privacy, "the privacy notice")],
+      ];
+      for (let i = 0; i < count; i++) {
+        const mark = marks.nth(i);
+        await expect(mark).toBeVisible();
+        await mark.click({ trial: true });
+        rowBoxes.push([`mark ${i}`, await boxOf(mark, `mark ${i}`)]);
+      }
+      if (phone) {
+        await expect(language).toBeVisible();
+        rowBoxes.push(["the language", await boxOf(language, "the language")]);
+      }
+      for (const [name, box] of rowBoxes) {
+        expect(
+          Math.abs(box.y + box.height / 2 - switchMid),
+          `${name} stays on the switch's row once the fold is open at ${width}px`,
+        ).toBeLessThan(8);
+      }
+
+      // The panel sits below the whole row, never beside it or under only part of it — its own
+      // width is capped (`maxWidth: "40rem"`, unrelated to this fix), so it is never wider than
+      // the viewport rather than as wide as the row.
+      const rowBottom = Math.max(switchBox.y + switchBox.height, ...rowBoxes.map(([, box]) => box.y + box.height));
+      const panel = footer.getByTestId("footer-about-panel");
+      const panelBox = await boxOf(panel, "the panel");
+      expect(panelBox.y, `the panel is below the row at ${width}px`).toBeGreaterThanOrEqual(rowBottom - 1);
+      expect(panelBox.x, `the panel starts at the row's left edge at ${width}px`).toBeLessThan(rowBoxes[0]![1].x);
+      expect(panelBox.x + panelBox.width, `the panel never runs past the viewport at ${width}px`).toBeLessThanOrEqual(width);
+
+      // Below `md` the build stamp is the panel's own copy, its last line.
+      if (width < MD) {
+        await expect(panelBadge).toBeVisible();
+        const stampBox = await boxOf(panelBadge, "the build stamp");
+        expect(stampBox.y).toBeGreaterThanOrEqual(panelBox.y);
+      }
+    });
+  }
 });
 
 /**
@@ -240,6 +276,17 @@ test.describe("§NNN one row on a phone, the build stamp's two doors", () => {
       await expect(toggle).toBeVisible();
       await expect(summary).toBeVisible();
       await expect(summary).toContainText(/despre club/i);
+      // `toContainText` passes on clipped text too (review finding 1: the label read "Des…" at
+      // 320px and still contained "despre club" as far as that matcher could tell). The text is
+      // never ellipsised: its own span's `scrollWidth` never exceeds what it is actually given.
+      const summaryTextWidths = await summary.locator("span").first().evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      expect(
+        summaryTextWidths.scrollWidth,
+        `the summary's label is not ellipsised at ${width}px`,
+      ).toBeLessThanOrEqual(summaryTextWidths.clientWidth);
       const count = await marks.count();
       for (let i = 0; i < count; i++) await expect(marks.nth(i)).toBeVisible();
       await expect(privacy).toBeVisible();
