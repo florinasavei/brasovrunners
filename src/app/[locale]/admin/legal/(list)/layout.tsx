@@ -1,11 +1,7 @@
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { canReadContent } from "@/modules/staff-identity/domain/roles";
-import Panel from "@/shared/ui/Panel";
 
 export const dynamic = "force-dynamic";
 
@@ -30,23 +26,5 @@ export default async function SectionLayout({ children }: { children: ReactNode 
   const actor = await requireStaff();
   if (!canReadContent(actor.role)) notFound();
 
-  const t = await getTranslations("Admin");
-
-  return (
-    <>
-      {/*
-        The rule this section lives by, folded shut by default (§336) — it explains, it does not
-        warn, so nothing opens it by itself. Shown only here, where "the page below" is true:
-        every other admin page used to carry this and had nothing below it to point at.
-      */}
-      <Box sx={{ mb: 3 }}>
-        <Panel title={t("legalNotice.title")} collapsible>
-          <Typography variant="body2" color="text.secondary">
-            {t("legalNotice.body")}
-          </Typography>
-        </Panel>
-      </Box>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

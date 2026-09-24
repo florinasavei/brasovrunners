@@ -349,7 +349,7 @@
     "backToEvents": "Înapoi la lista de evenimente",
     "legalNotice": {
       "title": "Cum funcționează versiunile textelor legale",
-      "body": "Nota de confidențialitate, termenii și declarația se scriu și se aprobă aici. Orice versiune aprobată rămâne neschimbată pentru totdeauna — o corectură este versiunea următoare, pornită din textul ei, niciodată o rescriere. O versiune aprobată poate fi ștearsă doar dacă nimeni nu s-a bazat pe ea — o semnătură, o confirmare la înscriere sau un eveniment care o folosește — și nu este versiunea în vigoare acum. Înscrierea este refuzată dacă o declarație și o notă de confidențialitate nu sunt amândouă în vigoare în același timp."
+      "body": "Nota de confidențialitate, termenii și declarația se scriu și se aprobă aici. Orice versiune aprobată rămâne neschimbată pentru totdeauna — o corectură este versiunea următoare, pornită din textul ei, niciodată o rescriere. O versiune aprobată poate fi ștearsă doar dacă nimeni nu s-a bazat pe ea — o semnătură, o confirmare la înscriere sau un eveniment care o folosește — și nu este versiunea în vigoare acum. Înscrierea este refuzată cât timp nu e în vigoare nicio notă de confidențialitate, iar niciun loc nu poate fi confirmat cât timp nu e în vigoare nicio declarație."
     },
     "pickers": {
       "datePlaceholder": "AAAA-LL-ZZ",
