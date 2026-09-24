@@ -75,6 +75,20 @@ async function askTheDatabase(
 
 const JOB_NAMES = ["registration-maintenance", "email-outbox"] as const;
 
+/**
+ * Asked afresh on every call, whatever else in the application is cached.
+ *
+ * Three branches of one batch put Next's data cache to work — the public pages' rows (§NNN,
+ * public pages from cache), the jobs' "nothing due until" slots (§NNN, jobs sleep when nothing is
+ * due), and this route's own fifteen-minute reading of the Neon quota (§NNN, Neon limits). None of
+ * that may reach the answer itself: a monitor that is told `ok` from a cached response while the
+ * database is down is the one failure this endpoint exists to prevent (§98). Route handlers are
+ * dynamic by default in this Next, and a `fetch` with `next.revalidate` inside one caches that
+ * fetch, not the route; saying it here means nobody has to know that to read this file, and a
+ * future default cannot turn the probe below into a prerendered constant.
+ */
+export const dynamic = "force-dynamic";
+
 type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
 type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
 

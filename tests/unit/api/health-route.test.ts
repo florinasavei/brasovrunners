@@ -240,3 +240,38 @@ describe("BR-REQ-090-07 criterion 10, DECISIONS.md §NNN — /api/health's early
     expect(body.neon).not.toHaveProperty("usedCuHours");
   });
 });
+
+/**
+ * §NNN (the batch that caches: public pages, job pings, the Neon quota) — whatever else is
+ * cached, the answer is not. A monitor told `ok` from a stored response while the database is
+ * away is the one failure this endpoint exists to prevent (§98).
+ */
+describe("DECISIONS.md §98, §NNN /api/health asks the database on every call", () => {
+  it("is a dynamic route, never a prerendered or cached one", async () => {
+    const route = await import("@/app/api/health/route");
+    expect(route.dynamic).toBe("force-dynamic");
+    expect(route).not.toHaveProperty("revalidate");
+  });
+
+  it("probes the database and reads both jobs again on each request", async () => {
+    await GET();
+    await GET();
+    await GET();
+
+    expect(execute).toHaveBeenCalledTimes(3);
+    expect(checkSchemaVersion).toHaveBeenCalledTimes(3);
+    expect(checkJobHealth).toHaveBeenCalledTimes(6);
+    expect(checkEmailHealth).toHaveBeenCalledTimes(3);
+  });
+
+  it("turns down the moment the database does, with no answer carried over from the last call", async () => {
+    expect((await GET()).status).toBe(200);
+
+    execute.mockRejectedValue(new Error("connect ECONNREFUSED"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect((await response.json()).database).toBe("down");
+  });
+});
