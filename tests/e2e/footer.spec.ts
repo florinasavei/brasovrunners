@@ -13,7 +13,12 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  *
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
  * 393 the owner's phone, 640 and 768 the band where the marks used to land on the summary and
- * the badge, and 1280 a desktop with the badge floating in the corner.
+ * the badge, and 1280 a desktop, where the badge used to float in the corner.
+ *
+ * Since §NNN (the owner, 2026-09-24: "it now takes way too much space, and version shows by
+ * default") a phone's bar is two short lines and nothing under them: the language sits side by
+ * side on the second line, beside the privacy notice, both on screen at every scroll position,
+ * and the build stamp is the fold's last line — on screen at no width until the fold is opened.
  */
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -48,8 +53,7 @@ function controls(page: Page) {
  *
  * Since the page reserves room above the sticky footer for whatever the browser scrolls into view
  * (`scroll-padding-bottom`, theme.ts), a trial click on a control *in* the bar scrolls the page
- * to its end — the only place a sticky bar can move out of that room — and on a phone the build
- * badge is under the bar there, so the bar rises by the badge's height. Measured from the end,
+ * to its end — the only place a sticky bar can move out of that room. Measured from the end,
  * every box is taken with the bar where it stays, and no click moves it.
  */
 async function restAtTheEnd(page: Page) {
@@ -116,7 +120,8 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       // And no third line: the bar is one or two tap targets tall, nothing more.
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(phone ? 90 : 46);
 
-      if ((await badge.count()) === 1) boxes.push(["the build badge", await boxOf(badge, "the build badge")]);
+      // §NNN: the build stamp is in the closed fold, on screen at no width.
+      await expect(badge).toBeHidden();
       expectDisjoint(boxes, width);
 
       // Criterion 1: nothing on the bar widened the page.
@@ -130,7 +135,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
 
   test("keeps the marks visible, tappable and clear of the panel when the fold is open", async ({ page }) => {
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const { footer, summary, marks, language } = controls(page);
+    const { footer, summary, marks, language, badge } = controls(page);
     const count = await marks.count();
     test.skip(count === 0, "no social address is configured for this server");
 
@@ -153,16 +158,109 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       await expect(language).toBeVisible();
       boxes.push(["the language", await boxOf(language, "the language")]);
     }
+    // The build stamp is the panel's last line (§NNN), clear of everything else on the bar.
+    await expect(badge).toBeVisible();
+    boxes.push(["the build stamp", await boxOf(badge, "the build stamp")]);
     expectDisjoint(boxes, page.viewportSize()?.width ?? 0);
   });
 
-  test("gives the build badge its own line under the bar below `md`", async ({ page }) => {
-    // The band the owner's screenshot came from: the badge floated here and the marks sat on it.
-    await page.setViewportSize({ width: 640, height: 720 });
+  for (const width of [320, 640, 1280] as const) {
+    test(`at ${width}px the build stamp is on screen only once the fold is opened`, async ({ page }) => {
+      // §NNN, the owner: "version shows by default". It was a label under the bar below `md`
+      // and floated in the bottom-right corner from `md`; now no visitor sees it unless they
+      // open "Despre club", at any width and in any environment — so this local server says
+      // what production does.
+      await page.setViewportSize({ width, height: 720 });
+      await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+      const { footer, summary, badge } = controls(page);
+      await expect(badge).toBeHidden();
+      await restAtTheEnd(page);
+      await expect(badge).toBeHidden();
+
+      await summary.click();
+      await expect(badge).toBeVisible();
+      await restAtTheEnd(page);
+      // Inside the footer, as one of its lines — not under it, not over the page's corner.
+      const bar = await boxOf(footer, "the footer");
+      const label = await boxOf(badge, "the build stamp");
+      expect(label.y).toBeGreaterThanOrEqual(bar.y);
+      expect(label.y + label.height).toBeLessThanOrEqual(bar.y + bar.height + 1);
+      expect(label.x + label.width).toBeLessThanOrEqual(width);
+    });
+  }
+});
+
+/**
+ * §NNN — the owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile…
+ * it now takes way too much space, and version shows by default."
+ *
+ * Measured at 320, 360 and 390 pixels wide on production builds, on a page three screens long:
+ * before, the sticky bar was **89px on every screen** (two 44px lines and the border, §324), and
+ * at the page's end **127px** from the bar's top to the document's end — the bar plus the build
+ * badge's own line (21px and its margins) — with RO stacked over EN. After: the bar is **89px**
+ * with nothing under it, RO and EN side by side, and the badge on screen nowhere until the fold
+ * is opened. From 600px up the bar was and is 45px, and the badge no longer floats in the corner.
+ *
+ * Both lines stay on screen while the page scrolls. Letting the second wait under the edge would
+ * float 45 pixels, but it would take the privacy notice off the always-visible bar
+ * (BR-REQ-041-01 criterion 21, §323) and a phone's only language switch with it — a documented
+ * rule, which this change does not move.
+ */
+test.describe("§NNN the phone's footer is two short lines and nothing else", () => {
+  test("at 320px both lines float at every scroll position, and nothing is under them", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const { footer, badge } = controls(page);
-    const bar = await boxOf(footer, "the footer");
-    const label = await boxOf(badge, "the build badge");
-    expect(label.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+    const { footer, privacy, language, badge } = controls(page);
+
+    // At the top of the page and halfway down: the whole bar on screen, its second line with it,
+    // so the privacy notice and the language are reachable without scrolling to the end
+    // (criterion 21, §323). No trial click here: that scrolls a control in the bar into view,
+    // which is exactly what must not be needed.
+    for (const where of ["the top", "halfway down"] as const) {
+      if (where === "halfway down") await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 2));
+      const bar = await boxOf(footer, "the footer");
+      expect(bar.y + bar.height, `the bar's bottom edge at ${where}`).toBeLessThanOrEqual(721);
+      expect(bar.height, `the bar's height at ${where}`).toBeLessThanOrEqual(90);
+      for (const [name, locator] of [["the privacy notice", privacy], ["the language", language]] as const) {
+        const box = await boxOf(locator, name);
+        expect(box.y + box.height, `${name} is on screen at ${where}`).toBeLessThanOrEqual(720);
+      }
+      await expect(badge).toBeHidden();
+    }
+
+    // At the end of the page: the same two lines, and nothing below them — the badge's line is
+    // gone. Before: 126 from the bar's top to the document's end.
+    await restAtTheEnd(page);
+    const resting = await boxOf(footer, "the footer");
+    expect(resting.height, "the resting bar's height at 320px").toBeLessThanOrEqual(90);
+    const chrome = await page.evaluate(() => {
+      const bar = document.querySelector("footer")!.getBoundingClientRect();
+      return document.documentElement.scrollHeight - (bar.top + window.scrollY);
+    });
+    expect(chrome, "from the bar's top to the document's end at 320px").toBeLessThanOrEqual(90);
+    await expect(badge).toBeHidden();
+
+    // RO and EN side by side on the second line, each a 44px target — not stacked.
+    const english = language.getByRole("link", { name: "English" });
+    const current = await boxOf(language.locator("[aria-current]"), "the current language");
+    const other = await boxOf(english, "the English link");
+    expect(Math.abs(current.y + current.height / 2 - (other.y + other.height / 2))).toBeLessThan(2);
+    expect(other.x).toBeGreaterThanOrEqual(current.x + current.width - 1);
+    expect(current.height).toBeGreaterThanOrEqual(44);
+    expect(other.height).toBeGreaterThanOrEqual(44);
+    await english.click({ trial: true });
+
+    // BR-REQ-041-01 criterion 1.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test("from 600px up the bar is one line at every scroll position", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 720 });
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    const { footer } = controls(page);
+    const floating = await boxOf(footer, "the footer");
+    expect(720 - floating.y).toBeLessThanOrEqual(46);
+    expect(floating.height).toBeLessThanOrEqual(46);
   });
 });
