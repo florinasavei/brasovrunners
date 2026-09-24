@@ -195,11 +195,13 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
  * §NNN — the owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile…
  * it now takes way too much space, and version shows by default."
  *
- * Measured on `/ro/evenimente` at 320×720 before the change: the sticky bar was **89px on every
- * screen** (two 44px lines and the border, §324), and at the page's end **126px** of chrome
- * from the bar's top to the document's end — the bar plus the build badge's own line (21px and
- * its margins). After: the bar floats **45px** (one line and the border) and rests at **89px**
- * with nothing under it; the badge is on screen nowhere until the fold is opened.
+ * Measured at 320, 360 and 390 pixels wide on production builds of the two versions, on a page
+ * three screens long: before, the sticky bar was **89px on every screen** (two 44px lines and
+ * the border, §324), and at the page's end **127px** from the bar's top to the document's end —
+ * the bar plus the build badge's own line (21px and its margins). After: the bar floats **45px**
+ * (one line and the border) and rests at **89px** with nothing under it; the badge is on screen
+ * nowhere until the fold is opened. From 600px up the bar was and is 45px, and the badge no
+ * longer floats in the corner.
  */
 test.describe("§NNN the phone's footer is one floating line", () => {
   test("at 320px it floats one line tall, rests two lines tall, and nothing is under it", async ({ page }) => {
