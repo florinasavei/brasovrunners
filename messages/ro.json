@@ -2879,7 +2879,7 @@
       "body": "Mesajul",
       "bodyHelp": "În ambele limbi, obligatoriu, text simplu, cel mult {max} de caractere în fiecare. Un rând gol începe un paragraf nou. Câmpuri care se completează pentru fiecare participant: {list} — numărul de concurs apare doar la cine îl are deja. Sub mesaj vin singure data și locul evenimentului, butonul către pagina lui și linkurile obișnuite.",
       "preview": "Cum arată emailul",
-      "previewHelp": "Exact emailul care pleacă, pentru un participant de exemplu, Ana Popescu, cu numărul 42. Se actualizează pe măsură ce scrii.",
+      "previewHelp": "Exact emailul care pleacă, pentru un participant de exemplu, {name}, cu numărul {bibNumber}. Se actualizează pe măsură ce scrii.",
       "previewRo": "Înscris în română",
       "previewEn": "Înscris în engleză",
       "previewLoading": "Se pregătește previzualizarea…",

@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
   ORGANIZER_BODY_MAX,
   ORGANIZER_MESSAGE_PLACEHOLDERS,
@@ -204,7 +205,11 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
               bodyHelp: t("participantMessages.bodyHelp", { max: String(ORGANIZER_BODY_MAX), list: placeholderList }),
               identical: t("editor.identical.warning"),
               preview: t("participantMessages.preview"),
-              previewHelp: t("participantMessages.previewHelp"),
+              // Named from the constant the preview is rendered with, so the line cannot name somebody else.
+              previewHelp: t("participantMessages.previewHelp", {
+                name: EMAIL_SAMPLE[locale].participantName,
+                bibNumber: String(EMAIL_SAMPLE[locale].bibNumber),
+              }),
               previewRo: t("participantMessages.previewRo"),
               previewEn: t("participantMessages.previewEn"),
               previewLoading: t("participantMessages.previewLoading"),

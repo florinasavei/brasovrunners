@@ -2879,7 +2879,7 @@
       "body": "Message",
       "bodyHelp": "In both languages, required, plain text, at most {max} characters each. A blank line starts a new paragraph. Fields filled in for each participant: {list} — the race number shows only for those who already have one. The event's date and place, the button to its page and the usual links come under the message by themselves.",
       "preview": "How the email looks",
-      "previewHelp": "Exactly the email that goes out, for a sample participant, Ana Popescu, number 42. It updates as you type.",
+      "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
       "previewRo": "Registered in Romanian",
       "previewEn": "Registered in English",
       "previewLoading": "Preparing the preview…",

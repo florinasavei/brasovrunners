@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
+import { EMAIL_SAMPLE } from "../../src/modules/notifications/domain/email-sample";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
@@ -174,8 +175,11 @@ test.describe("§NNN the organizer writes to an event's participants", () => {
     await field("bodyEn").fill("Hi, {participantName}!\n\nThe start moves to 10:00 because of the storm.");
     const previewSubject = page.getByTestId("participant-message-preview-subject");
     await expect(previewSubject).toContainText(`Vreme rea la Cursa furtunii ${tag} / Bad weather at Storm race ${tag}`, { timeout: 30_000 });
+    // Addressed to the sample runner of /admin/emails, and the help line above it names her from the same constant.
+    const sample = EMAIL_SAMPLE.ro;
+    await expect(page.getByTestId("participant-message-preview")).toContainText(`${sample.participantName}, cu numărul ${sample.bibNumber}`);
     const frame = page.frameLocator('[data-testid="participant-message-preview"] iframe');
-    await expect(frame.locator("body")).toContainText("Salut, Ana Popescu!");
+    await expect(frame.locator("body")).toContainText(`Salut, ${sample.participantName}!`);
     await expect(frame.locator("body")).toContainText("The start moves to 10:00 because of the storm.");
     // …and the English registrant's, English first.
     await page.getByRole("tab", { name: "Înscris în engleză" }).click();

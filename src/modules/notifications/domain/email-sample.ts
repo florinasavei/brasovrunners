@@ -6,7 +6,9 @@ import type { EmailCopyPlaceholder } from "./email-copy";
 
 /**
  * The made-up runner at the made-up event every preview on `/admin/emails` is rendered with
- * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain.
+ * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain. The
+ * participant-message composer's preview is addressed to the same runner, and its help line names
+ * her from here (§NNN): one sample, never a second copy of it beside this one.
  *
  * ## Why the sample and the guard read one constant
  *

@@ -9,6 +9,7 @@ import { type RegistrationStatus, registrations } from "@/db/schema/registration
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
+import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import {
   countParticipantMessageAudiences,
@@ -358,8 +359,9 @@ describe("§NNN the organizer's message to an event's participants", () => {
     const event = await seedEvent();
     const english = await previewParticipantMessage(db, organizer, { eventId: event.id, locale: "en", ...WORDS });
     expect(english.subject).toBe("Bad weather at The autumn cross / Vreme rea la Crosul de toamnă");
-    expect(english.html).toContain("Hi, Ana Popescu!");
-    expect(english.html).toContain("Salut, Ana Popescu!");
+    // Addressed to the one sample runner the /admin/emails previews use, never a second copy of her.
+    expect(english.html).toContain(`Hi, ${EMAIL_SAMPLE.en.participantName}!`);
+    expect(english.html).toContain(`Salut, ${EMAIL_SAMPLE.ro.participantName}!`);
     expect(english.unknown).toEqual([]);
 
     const typo = await previewParticipantMessage(db, organizer, {

@@ -15,6 +15,7 @@ import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
+import { EMAIL_SAMPLE } from "./domain/email-sample";
 import {
   AUDIENCE_STATUSES,
   checkOrganizerMessage,
@@ -251,9 +252,6 @@ export async function listParticipantMessages<T extends Record<string, unknown>>
   });
 }
 
-/** The made-up runner every preview is addressed to, and the number she holds. */
-export const PREVIEW_PARTICIPANT = { name: "Ana Popescu", bibNumber: 42 } as const;
-
 export type ParticipantMessagePreview = {
   subject: string;
   html: string;
@@ -266,7 +264,9 @@ export type ParticipantMessagePreview = {
  * boxes — the composer's live preview.
  *
  * The same template the outbox renders with (`renderBilingual`), over the event's own facts read
- * now, in both languages, and a made-up runner (`PREVIEW_PARTICIPANT`); nothing is queued and no
+ * now, in both languages, and the made-up runner every `/admin/emails` preview is addressed to —
+ * her name and her number read from `EMAIL_SAMPLE`, the one constant the composer's help line
+ * names her from too, so the line and the preview cannot disagree (§NNN). Nothing is queued and no
  * token exists, so nothing in it can be acted on. Empty boxes preview as the platform's fallback
  * subject and an absent body, which is what a send would refuse.
  */
@@ -297,8 +297,8 @@ export async function previewParticipantMessage<T extends Record<string, unknown
     : undefined;
 
   const data: TemplateData = {
-    participantName: PREVIEW_PARTICIPANT.name,
-    bibNumber: PREVIEW_PARTICIPANT.bibNumber,
+    participantName: EMAIL_SAMPLE[locale].participantName,
+    bibNumber: EMAIL_SAMPLE[locale].bibNumber,
     eventTitle: details.title,
     eventTitleOther: otherDetails?.title || undefined,
     eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (details.locationName ?? undefined),
