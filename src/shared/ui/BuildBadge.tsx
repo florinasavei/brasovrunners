@@ -9,8 +9,8 @@ import BuildBadgeLink from "./BuildBadgeLink";
 /**
  * When this site was built — and, for the club's own people, the way in.
  *
- * **The last line of the footer's fold, since §365, and nowhere on screen until somebody opens
- * it.** It was fixed to the bottom-right corner from `md` and a label under the bar below that,
+ * **The fold's own line below `md`, and pinned to the bar's own bottom-right corner from `md`
+ * (`SiteFooter`, §NNN).** It was once fixed to the bottom-right corner from `md` and a label under the bar below that,
  * so every visitor on every page read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" — on a
  * phone as a third line of footer, 37 pixels under a bar that was already two. The owner,
  * 2026-09-24: "version shows by default". Nobody the public site is for has a use for it; the
@@ -56,10 +56,11 @@ export default async function BuildBadge() {
   const text = parts.join(" · ");
 
   /**
-   * A quiet line of the panel, not a pill over the page: small, muted, as wide as its words
-   * (`alignSelf`, so a press beside it on the panel is not a press on it) and wrapping rather
-   * than cut when a phone is narrower than the stamp. 44 pixels tall, like everything else in
-   * the panel, because a long press is aimed at it (BR-REQ-041-01 criterion 6).
+   * A quiet line, not a pill over the page: small, muted, as wide as its words (`alignSelf`, so
+   * a press beside it — on the panel, or on the bar's corner from `md` — is not a press on it)
+   * and wrapping rather than cut when a phone is narrower than the stamp. 44 pixels tall, like
+   * everything else in the panel below `md`, because a long press is aimed at it (BR-REQ-041-01
+   * criterion 6).
    */
   const sx = {
     alignSelf: "flex-start",

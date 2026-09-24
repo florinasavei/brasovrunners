@@ -37,6 +37,21 @@ vi.mock("@/i18n/navigation", () => ({
   getPathname: ({ href }: { href: string }) => `/ro${href}`,
 }));
 
+// The three social marks render only when their URLs are configured (§NNN): stub them so the
+// guarded assertions below actually run in `yarn check`, not skip past a footer with no marks.
+vi.mock("@/shared/config/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/config/env")>();
+  return {
+    ...actual,
+    env: {
+      ...actual.env,
+      CLUB_FACEBOOK_URL: "https://facebook.com/brasovrunners",
+      CLUB_INSTAGRAM_URL: "https://instagram.com/brasovrunners",
+      CLUB_STRAVA_URL: "https://strava.com/clubs/brasovrunners",
+    },
+  };
+});
+
 const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
 const { default: SiteFooter } = await import("@/shared/ui/SiteFooter");
@@ -176,9 +191,9 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     const marks = markup.indexOf('aria-label="Facebook"');
     const privacy = markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"');
     const language = markup.indexOf('aria-label="Limbă"');
-    expect(privacy).toBeGreaterThan(detailsEnd);
+    expect(marks).toBeGreaterThan(detailsEnd);
+    expect(privacy).toBeGreaterThan(marks);
     expect(language).toBeGreaterThan(privacy);
-    if (marks >= 0) expect(privacy).toBeGreaterThan(marks);
   });
 
   it("names the privacy notice on the phone's lock: the tooltip and the accessible name are the notice's", async () => {
@@ -228,7 +243,7 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     const css = cssOnly(html);
     expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Temă întunecată"')), ["min-height", "min-width"], "the switch");
     expectBarTarget(rulesOf(css, emotionClassOf(markup, "<summary")), ["min-height", "line-height"], "the summary");
-    const mark = markup.indexOf('target="_blank"');
-    if (mark >= 0) expectBarTarget(rulesOf(css, emotionClassOf(markup, 'target="_blank"')), ["width", "height"], "a mark");
+    // The three marks render because the social URLs are stubbed above; carry the bar's target.
+    expectBarTarget(rulesOf(css, emotionClassOf(markup, 'target="_blank"')), ["width", "height"], "a mark");
   });
 });

@@ -56,9 +56,9 @@ const BAR_HEIGHT = 44;
  * previous two attempts did (a fold grown to the row's width; then a sibling panel shown by a
  * `:has()` rule, which the `<details>` no longer owned). No `:has()` remains, and no JavaScript.
  *
- * The content's width is the viewport's less 60 pixels (the widest switch, 44, and a 16-pixel
- * margin), capped at 40rem; a desktop's classic scrollbar is under 16 pixels, so it never reaches
- * past the page's edge.
+ * The content's width is the viewport's less 80 pixels — more than a classic desktop scrollbar
+ * (17 pixels on Windows) plus the widest switch and a margin need — capped at 40rem, so it never
+ * reaches past the page's edge nor runs under the scrollbar on a narrow desktop window.
  *
  * ## The build stamp: in the fold below `md`, pinned to the bar's corner from `md`
  *
@@ -187,7 +187,7 @@ export default async function SiteFooter() {
             <Stack
               spacing={1.5}
               sx={{
-                width: "min(40rem, calc(100vw - 60px))",
+                width: "min(40rem, calc(100vw - 80px))",
                 pt: 0.5,
                 pb: 1,
                 // Indented to where the summary's words start, so it reads as the fold's body.
