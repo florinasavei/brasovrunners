@@ -45,7 +45,8 @@ const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: SeriesCard } = await import("@/modules/events/ui/SeriesCard");
 const { default: RichText } = await import("@/modules/content/rich-text/ui/RichText");
 const { shortenUrls } = await import("@/modules/content/rich-text/domain/short-url");
-const { CARD_TITLE_SX } = await import("@/modules/events/ui/card-layout");
+const { CARD_TITLE_SX, LINE_GAP } = await import("@/modules/events/ui/card-layout");
+const { CARD_EXCERPT_SX } = await import("@/modules/events/ui/EventExcerpt");
 
 afterEach(() => {
   currentLocale = "ro";
@@ -242,11 +243,26 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
     expect(rules).toMatch(new RegExp(` a:visited\\{color:${PRIMARY}`));
     expect(rules).toMatch(/ a:hover\{[^}]*;text-decoration:underline/);
     expect(rules).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline/);
-    // 44 pixels to a thumb, given back as margin so the line is as tall as its words.
+    // 44 pixels to a thumb, given back as margin so the line is as tall as its words: ten above the
+    // words, and below them a line's gap and no more (§NNN) — the nearest anything sits under a title.
     expect(rules).toMatch(/ a\{[^}]*min-height:44px/);
     expect(rules).toMatch(/ a\{[^}]*padding-top:10px/);
     expect(rules).toMatch(/ a\{[^}]*margin-top:-10px/);
-    expect(CARD_TITLE_SX["& a"]).toMatchObject({ color: "primary.main", textDecoration: "none", minHeight: 44 });
+    expect(rules).toMatch(/ a\{[^}]*padding-bottom:8px/);
+    expect(rules).toMatch(/ a\{[^}]*margin-bottom:-8px/);
+    expect(CARD_TITLE_SX["& a"]).toMatchObject({ color: "primary.main", textDecoration: "none", minHeight: 44, pb: LINE_GAP, mb: -LINE_GAP });
+  });
+
+  it("puts nothing nearer under the title than its link reaches: the summary a line's gap below, the facts a group's (§NNN)", async () => {
+    // Whatever follows the title paints over it and takes a press on the pixels they share, so the
+    // gap under the title's words is never less than the link's reach below them.
+    expect(CARD_EXCERPT_SX.mt).toBe(LINE_GAP);
+    const html = await single({ excerptJson: null, excerpt: null });
+    // With no summary the facts follow, a group's gap below.
+    const markup = withoutStyles(html);
+    const after = markup.slice(markup.indexOf("</h2>") + "</h2>".length);
+    const facts = /^<div\b[^>]*class="[^"]*\b(css-[\w-]+)"/.exec(after)?.[1] ?? "";
+    expect(rulesFor(html, facts)).toContain("margin-top:12px");
   });
 
   it("titles itself exactly as the series card does — one class, one size, one weight, one blue", async () => {
@@ -360,6 +376,15 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     const when = fact(html, "when");
     expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026·18:30");
     expect(when).toContain('data-testid="ScheduleIcon"');
+  });
+
+  it("sets the rhythm a line's gap under the title — no nearer than the title's link reaches, so the line never sits on it (§NNN)", async () => {
+    const html = await repeated();
+    const rhythm = /<p\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>În fiecare luni, la 18:30<\/p>/.exec(withoutStyles(html))?.[1] ?? "";
+    expect(rhythm).not.toBe("");
+    // Eight pixels: `LINE_GAP`, one of the card's two gaps, and the title link's reach below its words.
+    expect(rulesFor(html, rhythm)).toContain("margin-top:8px");
+    expect(rulesFor(html, titleClass(html))).toMatch(/ a\{[^}]*margin-bottom:-8px/);
   });
 
   it("links its place to the map, with the pin on the same line", async () => {

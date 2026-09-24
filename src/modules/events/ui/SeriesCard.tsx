@@ -8,7 +8,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_FOLD_SX, CARD_TITLE_SX, GROUP_GAP, LINE_GAP } from "./card-layout";
 import type { Locale } from "@/i18n/routing";
 import { riseIn } from "@/theme/motion";
 import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
@@ -96,8 +96,10 @@ export default async function SeriesCard({
           <Link href={{ pathname: "/events/[slug]", params: { slug: next.slug } }}>{next.title}</Link>
         </Typography>
 
-        {/* "În fiecare luni, la 18:30" — the line the card exists for, right under its title. */}
-        <Typography variant="body1" sx={{ fontWeight: 500, mt: 0.5 }}>
+        {/* "În fiecare luni, la 18:30" — the line the card exists for, a line's gap under its title:
+            one of the card's two gaps, and exactly as far as the title's link reaches below its
+            words, so the line never sits on the part of the link a finger presses (§NNN). */}
+        <Typography variant="body1" sx={{ fontWeight: 500, mt: LINE_GAP }}>
           {sentence}
         </Typography>
 

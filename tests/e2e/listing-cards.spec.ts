@@ -97,6 +97,41 @@ test.describe("BR-REQ-041-01 the listing's cards (§NNN)", () => {
     }
   });
 
+  test("leave every title and map link its whole target: a press two pixels inside its top or bottom edge lands on the link", async ({ page }) => {
+    /*
+      A box 44 pixels tall is not a 44-pixel target when something later on the card sits on part
+      of it: what comes later paints over it and takes the press there. The series card's rhythm
+      line once sat six pixels up inside its title link's box (§NNN) while a measure of the box
+      still said 44 — so this presses the box's edges and asks which element answers.
+    */
+    const list = await cards(page);
+    const links = list.locator('h2 a, [data-fact="where"] a');
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+    let pressed = 0;
+    for (let i = 0; i < count; i += 1) {
+      const result = await links.nth(i).evaluate((link) => {
+        link.scrollIntoView({ block: "center", behavior: "instant" });
+        const box = link.getBoundingClientRect();
+        const x = box.left + box.width / 2;
+        const press = (y: number) => {
+          const hit = document.elementFromPoint(x, y);
+          // The sticky header or footer over the point says nothing about the card: not counted.
+          if (!hit || !hit.closest("#main")) return "chrome";
+          return link.contains(hit) ? "link" : `${hit.tagName.toLowerCase()} "${(hit.textContent ?? "").trim().slice(0, 40)}"`;
+        };
+        return { height: box.height, top: press(box.top + 2), bottom: press(box.bottom - 2) };
+      });
+      expect.soft(result.height, `link ${i}: 44 pixels tall`).toBeGreaterThanOrEqual(44);
+      for (const edge of ["top", "bottom"] as const) {
+        if (result[edge] === "chrome") continue;
+        pressed += 1;
+        expect.soft(result[edge], `link ${i}: a press at its ${edge} edge`).toBe("link");
+      }
+    }
+    expect(pressed).toBeGreaterThan(0);
+  });
+
   test("put a clock beside the time on every card's date line", async ({ page }) => {
     const list = await cards(page);
     const count = await list.count();

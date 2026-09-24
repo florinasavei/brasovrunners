@@ -318,6 +318,35 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
+  it("the featured hero's clock is the size of its other glyphs — eighteen pixels, three under the baseline (§NNN)", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
+    const when = row(html, "Când");
+    const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when.dd)?.[0] ?? "";
+    const calendar = /<svg\b[^>]*data-testid="CalendarMonthIcon"[^>]*>/.exec(when.dt)?.[0] ?? "";
+    expect(clock).toContain('aria-hidden="true"');
+    const classOf = (tag: string) => /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1];
+    // One style object for both: the calendar in the label and the clock in the answer.
+    expect(classOf(clock)).toBe(classOf(calendar));
+    const rule = new RegExp(`\\.${classOf(clock)}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+    expect(rule).toContain("font-size:18px");
+    expect(rule).toContain("vertical-align:-3px");
+  });
+
+  it("keeps the hero's own pieces on the hero: its route, Strava and Facebook links and its partner sentence, none of them on a card (§NNN)", async () => {
+    const withEverything = event({
+      routeUrl: "https://www.strava.com/routes/1",
+      stravaEventUrl: "https://www.strava.com/clubs/1/group_events/2",
+      facebookEventUrl: "https://www.facebook.com/events/3",
+      coHosts: [{ name: "Salvamont", links: [{ kind: "SITE", url: "https://salvamont.example.test" }] }],
+    });
+    const hero = renderToStaticMarkup(await EventFacts({ event: withEverything, now: NOW }));
+    expect(hero).toContain("strava.com/routes/1");
+    expect(hero).toContain("facebook.com/events/3");
+    expect(hero).toContain("salvamont.example.test");
+    const card = renderToStaticMarkup(await EventFacts({ event: withEverything, now: NOW, variant: "compact" }));
+    for (const absent of ["strava.com", "facebook.com", "salvamont.example.test", "Salvamont"]) expect(card).not.toContain(absent);
+  });
+
 });
 
 /**
@@ -393,6 +422,21 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(rule).toContain("padding-bottom:10px");
     expect(rule).toContain("margin-top:-10px");
     expect(rule).toContain("margin-bottom:-10px");
+  });
+
+  it("keeps the map link's ten pixels below inside the facts when no pills follow it — nothing nearer may sit on them (§NNN)", async () => {
+    // No distance, climb, difficulty, surface or cost: the state of registration is a line's gap
+    // (eight pixels) under the place, nearer than the link's ten, and would take its bottom.
+    const html = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
+    expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "registration"]);
+    const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
+    expect(anchors).toHaveLength(1);
+    const rule = ruleOf(html, anchors[0] ?? "");
+    expect(rule).toContain("min-height:44px");
+    expect(rule).toContain("padding-top:10px");
+    expect(rule).toContain("padding-bottom:10px");
+    expect(rule).toContain("margin-top:-10px");
+    expect(rule).not.toContain("margin-bottom");
   });
 
   it("writes the place as words where the facts may carry no link", async () => {

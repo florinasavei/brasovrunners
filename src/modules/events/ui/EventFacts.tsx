@@ -37,9 +37,18 @@ const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "mid
  * listing card: "for the time I would like a clock icon as well"): "[calendar] Duminică, 27 sept. 2026 ·
  * [clock] 10:00". The row glyph's size, colour and alignment — one family with the calendar and the
  * pin — and half its gap, because it sits inside a line of words rather than at its head. On the
- * page, the hero and the cards alike: the time is one fact, drawn one way.
+ * page and the cards alike; the hero draws the same clock in its own glyphs' size
+ * (`HERO_GLYPH_SX`), because there the family it sits among is eighteen pixels, not twenty.
  */
 const CLOCK_SX = { ...ROW_ICON_SX, mr: 0.5 } as const;
+
+/**
+ * The listing's featured hero's glyphs: eighteen pixels, sat three pixels under the baseline — the
+ * size and seat its labels' glyphs have always had — and its clock's too (§NNN), so on the
+ * hero the clock is the size of the calendar and the pin beside it, not the event page's larger
+ * row glyph among smaller ones.
+ */
+const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 } as const;
 
 /**
  * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
@@ -145,12 +154,21 @@ export default async function EventFacts({
   // (the route's) keeps its full height. The twenty are padding as well as margin (§NNN): a place
   // long enough to wrap onto two lines of a card is taller than 44 already, and a margin alone
   // would pull the lines around it into its words; padding given back as margin never does.
-  const outLink = (href: string, label: string, network?: "strava" | "facebook", tight = false) => (
+  // `"above"` gives back only the ten above: for a link with something nearer than ten pixels
+  // under it — which comes later in the page, paints over the link and takes a press there — so
+  // the ten below stay in the line and nothing sits on them (the card's place, §NNN).
+  const outLink = (href: string, label: string, network?: "strava" | "facebook", tight: boolean | "above" = false) => (
     <Link
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, ...(tight ? { py: "10px", my: "-10px" } : {}) }}
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.75,
+        minHeight: 44,
+        ...(tight === true ? { py: "10px", my: "-10px" } : tight === "above" ? { py: "10px", mt: "-10px" } : {}),
+      }}
     >
       {network && <SocialIcon network={network} size={18} />}
       {label}
@@ -169,112 +187,34 @@ export default async function EventFacts({
      right after the date on the same line, where the middle dot binds the two. §169 named the
      lone time ("începe la 09:00") only because the page had put it on a bullet of its own; the
      page's "când" is one line again (§356), so the name went with the bullet. The times are led
-     by a clock (§NNN), once — before the first, so a race's two read as one group. */
-  const clock = <ScheduleIcon aria-hidden="true" sx={CLOCK_SX} />;
-  const when: ReactNode[] = [<strong key="date">{date}</strong>];
-  if (event.raceStartsAt) {
-    when.push(
-      <>
-        {clock}
-        {t("gatheringAt", { time: time(event.startsAt) })}
-      </>,
-      t("raceStartAt", { time: time(event.raceStartsAt) }),
-    );
-  } else {
-    when.push(
+     by a clock (§NNN), once — before the first, so a race's two read as one group — in the size
+     of the glyphs around it: the row glyph's on the page and the cards, the hero's own there. */
+  const whenPieces = (clockSx: typeof CLOCK_SX | typeof HERO_GLYPH_SX): ReactNode[] => {
+    const clock = <ScheduleIcon aria-hidden="true" sx={clockSx} />;
+    const day = <strong key="date">{date}</strong>;
+    if (event.raceStartsAt) {
+      return [
+        day,
+        <>
+          {clock}
+          {t("gatheringAt", { time: time(event.startsAt) })}
+        </>,
+        t("raceStartAt", { time: time(event.raceStartsAt) }),
+      ];
+    }
+    return [
+      day,
       <>
         {clock}
         {time(event.startsAt)}
       </>,
-    );
-  }
-
-  /* Where: the meeting point — itself the map link when the organizer pasted one and a link
-     may sit here; the same destination is never offered twice on one line. While the place is
-     to be announced (§328) the sentence that says so, on the page, the cards and the hero alike;
-     the query has already withheld the name, the address and the map. */
-  const where: ReactNode[] = [];
-  if (event.locationToBeAnnounced) {
-    where.push(t("locationToBeAnnounced"));
-  } else if (event.locationName) {
-    where.push(links && event.mapUrl ? outLink(event.mapUrl, event.locationName) : event.locationName);
-  } else if (links && event.mapUrl) {
-    where.push(outLink(event.mapUrl, t("openMap")));
-  }
-
-  /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
-     cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
-     This is the hero's line; the event page (§356) and the listing card (§NNN) draw pills. */
-  const route: ReactNode[] = [];
-  if (distance !== null) {
-    // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
-    route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
-  }
-  if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-  // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
-  if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
-  /*
-    The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its
-    pill below (§NNN). The hero says more, the way the meeting point
-    becomes its own map link: a paid event's amount, with "plata pe {host}" as a second,
-    separate link when the club gave one; a donation's whole phrase is the link to give at,
-    with the suggested amount after it when the club stated one. Never a raw URL, only the host
-    a runner recognises (`costUrlHost`), the same rule "Linkuri și fișiere" follows (§332).
-  */
-  if (event.costType === "PAID") {
-    route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
-    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
-    if (event.costUrl && host) {
-      route.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
-    }
-  } else if (event.costType === "DONATION") {
-    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
-    route.push(
-      withGlyph(
-        COST_GLYPH.DONATION,
-        event.costUrl && host
-          ? links
-            ? outLink(event.costUrl, t("costDonation", { host }))
-            : t("costDonation", { host })
-          : t("costValues.DONATION"),
-      ),
-    );
-    if (event.costAmount) route.push(t("costDonationSuggested", { amount: event.costAmount }));
-  } else if (event.costType) {
-    route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
-  }
-  if (links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
-  if (links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
-  // The Facebook event (§144): where the club's people say "going".
-  if (links && event.facebookEventUrl) route.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
-
-  /**
-   * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
-   * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
-   * comma and an "and". A partner may carry any number of links now (§344), and a sentence has
-   * room for one, so each name is its own link to the partner's own site — its first link if it
-   * named no site — except where the facts may carry no links at all. The listing's featured hero
-   * keeps this sentence exactly (§169); the event page's facts draw each partner in full, below;
-   * and the listing card no longer says it among its facts (§NNN — the owner saw "Împreună cu
-   * Brașov Running Festival" between the place and the kilometres): the partner's mark on a card
-   * belongs to its chips.
-   */
-  const coHosts = readCoHosts(event);
-  const coHostNames = coHosts.map((host) => host.name);
-  const coHostPrimaryLinks = coHosts.map((host) => primaryCoHostLink(host));
-  const coHostSentence = () => {
-    if (!links || coHostPrimaryLinks.every((link) => link === null)) return format.list(coHostNames);
-    return (
-      <>
-        {format.list(
-          coHosts.map((host, index) => {
-            const primary = coHostPrimaryLinks[index];
-            return <Fragment key={index}>{primary ? outLink(primary.url, host.name) : host.name}</Fragment>;
-          }),
-        )}
-      </>
-    );
+    ];
   };
+
+  // The organizations the event is held with (§168, §344): the page draws each in full
+  // (`partnerFacts`, below), the hero says them in one sentence (`coHostSentence`, built in its
+  // branch), and the listing card says neither (§NNN).
+  const coHosts = readCoHosts(event);
 
   /**
    * One partner, in full, for the page's own "Împreună cu" (§344; the owner: "this can have
@@ -358,11 +298,9 @@ export default async function EventFacts({
     </Box>
   );
 
-  // A glyph beside each question (the owner, 2026-09-18: "more icons in the app"), decorative:
-  // the label is the word, the glyph is what the eye finds first on a card.
-  const glyph = (Icon: Glyph) => (
-    <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 }} />
-  );
+  // A glyph beside each of the hero's questions (the owner, 2026-09-18: "more icons in the app"),
+  // decorative: the label is the word, the glyph is what the eye finds first.
+  const glyph = (Icon: Glyph) => <Icon aria-hidden="true" sx={HERO_GLYPH_SX} />;
 
   // A group run says nothing about registration at all (§111; the owner: "group runs don't
   // have registrations!") — not even "none needed": the question does not arise.
@@ -376,9 +314,14 @@ export default async function EventFacts({
 
     The card's form (§NNN) adds a `lead` — a series card's "Următoarea:" — which is a piece with no
     dot after it, and keeps every piece whole, so the line breaks only between pieces: wherever the
-    card is wide enough, "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" is one line, and on a 320-pixel
-    phone, where it is wider than the card, the time goes under the date with its clock in front
-    of it — never "2026" alone, never the word "Următoarea:" on a line of its own above the date.
+    card is wide enough, "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" is one line, and where it
+    is not, the line wraps whole pieces under whole pieces — never "2026" alone, never a dot at the
+    head of a line. Measured (§NNN): on a 320-pixel phone every card's line takes two lines — the
+    time goes under the date with its clock, or, on a series card whose weekday is long
+    ("Miercuri"), the date and the time go under "Următoarea:"; from 375 pixels it is one line on a
+    one-off card and on a series card with a short weekday. One line at 320 would need the short
+    weekday or no lead below a breakpoint — two renderings of one date, picked by width — for a
+    wrap that already falls between whole pieces; not taken.
   */
   const flow = (items: ReactNode[], card?: { lead?: string }) => (
     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", columnGap: 0.75 }}>
@@ -441,19 +384,6 @@ export default async function EventFacts({
       between the place and the kilometres was one of the things the owner pointed at, and the
       partner's mark on a card belongs to its chips, not to its facts.
     */
-    // Where: the place — the map link when the club pasted one, tight like the page's (§356) so
-    // the line is as tall as its words — or the sentence while it is to be announced (§328), whose
-    // query has already withheld the name, the address and the map.
-    const place = event.locationToBeAnnounced
-      ? t("locationToBeAnnounced")
-      : event.locationName
-        ? links && event.mapUrl
-          ? outLink(event.mapUrl, event.locationName, undefined, true)
-          : event.locationName
-        : links && event.mapUrl
-          ? outLink(event.mapUrl, t("openMap"), undefined, true)
-          : null;
-
     /*
       The pills: the page's route pills, then the surface — said here once, so the chips at the
       top of the card no longer carry it (§NNN: the same word twice on one card was one of the
@@ -464,6 +394,29 @@ export default async function EventFacts({
     const cardPills: Pill[] = [...routePills];
     if (event.surface) cardPills.push({ glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) });
     if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+
+    /*
+      Where: the place — the map link when the club pasted one, tight like the page's (§356) so
+      the line is as tall as its words — or the sentence while it is to be announced (§328), whose
+      query has already withheld the name, the address and the map.
+
+      Tight both ways only when the pills follow it, a group's gap (twelve pixels) under the line,
+      more than the ten the link reaches below its words. Anything else after it is nearer — the
+      state of registration a line's gap (eight) under it, or, when the place is the card's last
+      fact, the door four pixels under the facts and a series card's fold right on them — and
+      would take the bottom of the link, since what comes later paints over it (§NNN). There it
+      gives back only the ten above, and keeps the ten below inside the facts, where nothing sits.
+    */
+    const reach = cardPills.length > 0 ? true : "above";
+    const place = event.locationToBeAnnounced
+      ? t("locationToBeAnnounced")
+      : event.locationName
+        ? links && event.mapUrl
+          ? outLink(event.mapUrl, event.locationName, undefined, reach)
+          : event.locationName
+        : links && event.mapUrl
+          ? outLink(event.mapUrl, t("openMap"), undefined, reach)
+          : null;
 
     // The state of registration — and, while the window is ahead, the date it opens rather than
     // "not yet" (§146), read through the one helper the feed reads it through, never a formula of
@@ -500,7 +453,7 @@ export default async function EventFacts({
     return (
       <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113). */}
-        {cardLine("when", CalendarMonthIcon, flow(when, { lead: whenLead }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§NNN). */}
         {cardPills.length > 0 && (
@@ -516,11 +469,106 @@ export default async function EventFacts({
   if (!stacked) {
     /*
       The listing's featured hero: one line per question, the pieces separated by middle dots,
-      and its partners as the cards' one sentence (`coHostSentence`, above) — a summary above
-      the fold with a button to reach, so neither a column of every partner's links nor the
-      page's pills (§169, §356).
+      and its partners as one sentence (`coHostSentence`, below) — a summary above the fold with
+      a button to reach, so neither a column of every partner's links nor the page's pills (§169,
+      §356).
+
+      Its pieces are built here, in its own branch, because nothing else draws them (§NNN): the
+      card and the page draw the place, the route and the cost in shapes of their own, and neither
+      says the partners as a sentence — built for every card, they were three links and a sentence
+      made and thrown away.
     */
-    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[] }> = [{ label: t("when"), icon: CalendarMonthIcon, value: when }];
+
+    /* Where: the meeting point — itself the map link when the organizer pasted one and a link
+       may sit here; the same destination is never offered twice on one line. While the place is
+       to be announced (§328) the sentence that says so, as the page and the cards say it; the
+       query has already withheld the name, the address and the map. */
+    const where: ReactNode[] = [];
+    if (event.locationToBeAnnounced) {
+      where.push(t("locationToBeAnnounced"));
+    } else if (event.locationName) {
+      where.push(links && event.mapUrl ? outLink(event.mapUrl, event.locationName) : event.locationName);
+    } else if (links && event.mapUrl) {
+      where.push(outLink(event.mapUrl, t("openMap")));
+    }
+
+    /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
+       cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
+       This is the hero's line; the event page (§356) and the listing card (§NNN) draw pills. */
+    const route: ReactNode[] = [];
+    if (distance !== null) {
+      // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
+      route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
+    }
+    if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
+    // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
+    if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
+    /*
+      The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its
+      pill (§NNN). The hero says more, the way the meeting point becomes its own map link: a paid
+      event's amount, with "plata pe {host}" as a second, separate link when the club gave one; a
+      donation's whole phrase is the link to give at, with the suggested amount after it when the
+      club stated one. Never a raw URL, only the host a runner recognises (`costUrlHost`), the same
+      rule "Linkuri și fișiere" follows (§332).
+    */
+    if (event.costType === "PAID") {
+      route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
+      const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+      if (event.costUrl && host) {
+        route.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
+      }
+    } else if (event.costType === "DONATION") {
+      const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+      route.push(
+        withGlyph(
+          COST_GLYPH.DONATION,
+          event.costUrl && host
+            ? links
+              ? outLink(event.costUrl, t("costDonation", { host }))
+              : t("costDonation", { host })
+            : t("costValues.DONATION"),
+        ),
+      );
+      if (event.costAmount) route.push(t("costDonationSuggested", { amount: event.costAmount }));
+    } else if (event.costType) {
+      route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+    }
+    if (links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+    if (links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
+    // The Facebook event (§144): where the club's people say "going".
+    if (links && event.facebookEventUrl) route.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
+
+    /**
+     * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
+     * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
+     * comma and an "and". A partner may carry any number of links now (§344), and a sentence has
+     * room for one, so each name is its own link to the partner's own site — its first link if it
+     * named no site — except where the facts may carry no links at all. The listing's featured hero
+     * keeps this sentence exactly (§169); the event page's facts draw each partner in full
+     * (`partnerFacts`); and the listing card no longer says it among its facts (§NNN — the owner
+     * saw "Împreună cu Brașov Running Festival" between the place and the kilometres): the
+     * partner's mark on a card belongs to its chips.
+     */
+    const coHostNames = coHosts.map((host) => host.name);
+    const coHostPrimaryLinks = coHosts.map((host) => primaryCoHostLink(host));
+    const coHostSentence = () => {
+      if (!links || coHostPrimaryLinks.every((link) => link === null)) return format.list(coHostNames);
+      return (
+        <>
+          {format.list(
+            coHosts.map((host, index) => {
+              const primary = coHostPrimaryLinks[index];
+              return <Fragment key={index}>{primary ? outLink(primary.url, host.name) : host.name}</Fragment>;
+            }),
+          )}
+        </>
+      );
+    };
+
+    // The clock in the hero's own glyph size, like the calendar and the pin beside it (§NNN).
+    const lines: Array<{ label: string; icon: Glyph; value: ReactNode[] }> = [
+      { label: t("when"), icon: CalendarMonthIcon, value: whenPieces(HERO_GLYPH_SX) },
+    ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
     if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: HandshakeIcon, value: [coHostSentence()] });
@@ -560,7 +608,7 @@ export default async function EventFacts({
   /* ---- The event page, and the staff preview that draws exactly what it will (§356). ---- */
 
   const rows: Array<{ key: string; label: string; icon: Glyph; value: ReactNode }> = [
-    { key: "when", label: t("when"), icon: CalendarMonthIcon, value: flow(when) },
+    { key: "when", label: t("when"), icon: CalendarMonthIcon, value: flow(whenPieces(CLOCK_SX)) },
   ];
 
   /*

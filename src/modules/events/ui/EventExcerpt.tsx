@@ -56,7 +56,8 @@ export const PAGE_EXCERPT_SX = {
  */
 export const CARD_EXCERPT_SX = {
   color: "text.secondary",
-  // A line's gap under the title (or the series' rhythm): the summary belongs to them.
+  // A line's gap under the title (or the series' rhythm): the summary belongs to them. Never less:
+  // the title's link reaches exactly this far below its words (`CARD_TITLE_SX`, §NNN).
   mt: LINE_GAP,
   display: "-webkit-box",
   WebkitBoxOrient: "vertical",

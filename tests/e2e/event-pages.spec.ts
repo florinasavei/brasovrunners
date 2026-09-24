@@ -138,7 +138,9 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 6. Every card's title is its link (§NNN; no card is one whole link any more) — 44
-    // pixels tall at either width — and so is its door (§319) and its place's map link.
+    // pixels tall at either width — and so is its door (§319) and its place's map link. This
+    // measures the boxes; that nothing later on the card covers part of one, which a box's own
+    // height cannot show, is pressed at its edges in `listing-cards.spec.ts`.
     const titles = page.locator("main ul > li h2 a");
     expect(await titles.count()).toBeGreaterThan(0);
     for (let i = 0; i < (await titles.count()); i += 1) {
