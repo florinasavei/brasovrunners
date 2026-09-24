@@ -238,8 +238,9 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
                 <Typography variant="body2" color="text.secondary">
                   {t("participantMessages.historyWhen", { date: when(entry.at), sender: entry.senderName ?? t("participantMessages.historyNoSender") })}
                 </Typography>
+                {/* The subject in the backoffice's language — the audit row keeps both — and the Romanian one should a row carry no other. */}
                 <Typography variant="body1" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
-                  {entry.subject.ro}
+                  {entry.subject[locale] || entry.subject.ro}
                 </Typography>
                 <Typography variant="body2">
                   {entry.audience ? t(`participantMessages.audiencesShort.${entry.audience}`) : "—"}

@@ -335,11 +335,15 @@ export function canReadRegistrations(role: StaffRole): boolean {
  * the Superadministrator. Written as the conjunction rather than as a new list, so that moving
  * either boundary moves this with it.
  *
- * **The Tehnic role is out on purpose**, although it outranks the Organizer and may save an
- * event's fields: a free-form message to every registrant is an act on the participant list, and
- * `DEV` is the role that never receives it (§38, §289). The update notice carries the platform's
- * sentences and the facts of the event; this carries whatever was typed. The volunteer and the
- * Redactor are out as they are out of the event's settings.
+ * **The Tehnic role is out on purpose — a narrowing of the §331 set, for the owner to confirm**
+ * (§NNN). `DEV` outranks the Organizer and may save an event's fields, so it may send the §331
+ * update and cancellation notices, their free-text note included. Those ride on a change to the
+ * event itself: the note sits under the platform's sentences, goes to everybody active, and only
+ * with a save. This is a message on its own, of whatever was typed, to a group the sender picks
+ * from the registrations' states — an act on the participant list, and `DEV` is the role that
+ * never receives it (§38, §289). Should the owner want the §331 set instead, this becomes
+ * `canEditEventFields` alone. The volunteer and the Redactor are out as they are out of the
+ * event's settings.
  */
 export function canMessageParticipants(role: StaffRole): boolean {
   return canEditEventFields(role) && canReadRegistrations(role);

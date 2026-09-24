@@ -63,7 +63,13 @@ export const ORGANIZER_MESSAGE_PLACEHOLDERS = [
   "eventChecklist",
 ] as const satisfies readonly EmailCopyPlaceholder[];
 
-/** Within what a subject line bears once the two languages are joined with " / " (§96). */
+/**
+ * Per language, as typed — the composer's help says "each". The subject a runner receives joins the
+ * two with " / " (§96) after the placeholders are filled, so it can run past twice this: a long
+ * subject is cut short by the mail client, never refused by the provider, and the stored §247
+ * wording of every other message allows 200 a language. Keeping each box to 150 keeps the
+ * registrant's own language, which comes first, whole on the screens that cut.
+ */
 export const ORGANIZER_SUBJECT_MAX = 150;
 /** A message, not a newsletter: the facts of a morning, with room to explain. */
 export const ORGANIZER_BODY_MAX = 4000;

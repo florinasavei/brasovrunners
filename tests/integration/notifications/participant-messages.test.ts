@@ -327,7 +327,8 @@ describe("§NNN the organizer's message to an event's participants", () => {
 
   it("gives the club its copy of each real recipient's message (§320), and none of a test row's", async () => {
     const event = await seedEvent();
-    await seedRegistrations(event.id, EVERYONE);
+    const rows = await seedRegistrations(event.id, EVERYONE);
+    const byName = (name: string) => rows.find((row) => row.registeredName === name)!;
     const admin = await staff("ADMIN", "admin@dev.test");
     await updateClubNotices(db, admin, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
     await send(event.id, { audience: "CONFIRMED" });
@@ -342,9 +343,15 @@ describe("§NNN the organizer's message to an event's participants", () => {
       expect(copy.recipientEmail).toBe("arhiva@club.test");
       expect(copy.payloadJson).toEqual({ ...WORDS, clubCopy: true });
     }
-    const rendered = await renderOutboxMessage(copies[0], db, NOW);
-    expect(rendered.subject.startsWith("[Copie club] ")).toBe(true);
-    expect(rendered.text).toContain("Startul se mută la 10:00.");
+    // Each copy is the registrant's own message, in their language — picked by registration, since
+    // neither the send nor this select orders the rows.
+    const copyOf = (name: string) => copies.find((copy) => copy.registrationId === byName(name).id)!;
+    const romanian = await renderOutboxMessage(copyOf("ana"), db, NOW);
+    expect(romanian.subject.startsWith("[Copie club] ")).toBe(true);
+    expect(romanian.text).toContain("Startul se mută la 10:00.");
+    const english = await renderOutboxMessage(copyOf("bogdan"), db, NOW);
+    expect(english.subject.startsWith("[Club copy] ")).toBe(true);
+    expect(english.text).toContain("The start moves to 10:00.");
   });
 
   it("previews the message a registrant in either language would receive, and names the placeholders it cannot fill", async () => {
