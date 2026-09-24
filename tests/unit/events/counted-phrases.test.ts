@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -48,6 +48,33 @@ describe("§346 fillPhrase — 'taken of capacity', in each language's own wordi
       const numbers = (text: string) => text.match(/\d+/g);
       expect(numbers(fillPhrase(translator("en"), "en", fill))).toEqual(numbers(fillPhrase(translator("ro"), "ro", fill)));
     }
+  });
+});
+
+describe("§NNN waitlistRoomPhrase — the room a capped waiting list has left", () => {
+  it("reads Romanian's singular, its plural and its 'de' from twenty on", () => {
+    const say = translator("ro");
+    expect(waitlistRoomPhrase(say, "ro", 1)).toBe("Mai este 1 loc pe lista de așteptare");
+    expect(waitlistRoomPhrase(say, "ro", 19)).toBe("Mai sunt 19 locuri pe lista de așteptare");
+    expect(waitlistRoomPhrase(say, "ro", 20)).toBe("Mai sunt 20 de locuri pe lista de așteptare");
+    expect(waitlistRoomPhrase(say, "ro", 21)).toBe("Mai sunt 21 de locuri pe lista de așteptare");
+    // The hundreds fall back under twenty, as the platform's own rule says.
+    expect(waitlistRoomPhrase(say, "ro", 101)).toBe("Mai sunt 101 locuri pe lista de așteptare");
+  });
+
+  it("reads English with one singular and one plural", () => {
+    const say = translator("en");
+    expect(waitlistRoomPhrase(say, "en", 1)).toBe("1 place left on the waiting list");
+    expect(waitlistRoomPhrase(say, "en", 19)).toBe("19 places left on the waiting list");
+    expect(waitlistRoomPhrase(say, "en", 20)).toBe("20 places left on the waiting list");
+    expect(waitlistRoomPhrase(say, "en", 21)).toBe("21 places left on the waiting list");
+  });
+
+  it("has the two sentences a full line and a closed event say, in both catalogues", () => {
+    expect(translator("ro")("cta.waitlistFull")).toBe("Locurile și lista de așteptare sunt pline.");
+    expect(translator("en")("cta.waitlistFull")).toBe("The places and the waiting list are full.");
+    expect(translator("ro")("cta.fullNoWaitlist")).not.toMatch(/așteptare/);
+    expect(translator("en")("cta.fullNoWaitlist")).not.toMatch(/waiting/);
   });
 });
 

@@ -8,6 +8,7 @@ import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import {
   confirmEmail,
   type EventForRegistration,
@@ -76,7 +77,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   });
 
   /** A fresh, uniquely-named event for each test, never reused across tests. */
-  async function createInternalEvent(capacity: number | null): Promise<EventForRegistration> {
+  async function createInternalEvent(capacity: number | null, waitlistCapacity: number | null = null): Promise<EventForRegistration> {
     eventCounter += 1;
     const [event] = await db
       .insert(events)
@@ -85,6 +86,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
         startsAt: new Date("2026-12-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
         capacity,
+        waitlistCapacity,
       })
       .returning();
     createdEventIds.push(event.id);
@@ -274,6 +276,40 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       const rows = await statusesFor(event.id);
       expect(rows.filter((r) => r.status === "PENDING_DECLARATION")).toHaveLength(1);
       expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(19);
+    },
+    30_000,
+  );
+
+  it(
+    "BR-REQ-035-01 (§NNN): one slot left in a capped waiting list, twenty simultaneous confirmations — exactly one joins it",
+    async () => {
+      // One place, taken; a waiting list of two, one already in it. One slot left in the line.
+      const event = await createInternalEvent(1, 2);
+      const holder = await createPendingRegistration(event.id, "holder");
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW }).where(eq(registrations.id, holder.id));
+      const first = await createPendingRegistration(event.id, "first");
+      await db.update(registrations).set({ status: "WAITLISTED", waitlistedAt: NOW }).where(eq(registrations.id, first.id));
+
+      const racing = await Promise.all(
+        Array.from({ length: 20 }, (_, i) => createPendingRegistration(event.id, `slot${i}`)),
+      );
+      const outcomes = await Promise.allSettled(
+        racing.map((registration) => confirmEmail(db, event, registration.id, NOW)),
+      );
+
+      // The count is taken under the event lock that decides the place, so the slot is decided
+      // once: one confirmation queued, nineteen refused with the waiting list's own refusal.
+      const refused = outcomes.filter((outcome) => outcome.status === "rejected");
+      expect(refused).toHaveLength(19);
+      for (const outcome of refused) {
+        expect(waitlistRefusalOf((outcome as PromiseRejectedResult).reason)).toBe(WAITLIST_FULL);
+      }
+
+      const rows = await statusesFor(event.id);
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(2);
+      expect(rows.filter((r) => r.status === "CONFIRMED")).toHaveLength(1);
+      // The refused ones wrote nothing: they are exactly as they were before the press.
+      expect(rows.filter((r) => r.status === "PENDING_EMAIL_CONFIRMATION")).toHaveLength(19);
     },
     30_000,
   );

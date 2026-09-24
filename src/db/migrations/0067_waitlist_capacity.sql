@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "waitlist_capacity" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_waitlist_capacity_non_negative" CHECK ("events"."waitlist_capacity" IS NULL OR "events"."waitlist_capacity" >= 0);

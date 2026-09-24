@@ -368,13 +368,27 @@ export default async function EventFieldsForm({
               ))}
             </RecallField>
 
-            <RecallField
-              name="event.capacity"
-              label={t("editor.capacity")}
-              helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
-              defaultValue={event?.capacity ?? ""}
-              {...box("capacity", { inputMode: "numeric" })}
-            />
+            {/* The places and the waiting list's length side by side (§NNN): the second only means
+                anything once the first is set, and a row says they are one question. Stacked on
+                a phone. Empty is no limit for both; 0 on the second is no waiting list at all. */}
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <RecallField
+                name="event.capacity"
+                label={t("editor.capacity")}
+                helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
+                defaultValue={event?.capacity ?? ""}
+                {...box("capacity", { inputMode: "numeric" })}
+                fullWidth
+              />
+              <RecallField
+                name="event.waitlistCapacity"
+                label={t("editor.waitlistCapacity")}
+                helperText={t("editor.waitlistCapacityHelp")}
+                defaultValue={event?.waitlistCapacity ?? ""}
+                {...box("waitlistCapacity", { inputMode: "numeric" })}
+                fullWidth
+              />
+            </Stack>
 
             {/* Who may enter (§329, amending §321: "actually this min age must be set at event
                 level!"): years reached by the event's day, fourteen unless the organizer says

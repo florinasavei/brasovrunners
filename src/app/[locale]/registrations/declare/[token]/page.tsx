@@ -37,7 +37,7 @@ import { signDeclarationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string }>;
 };
 
 /*
@@ -137,10 +137,28 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, changed } = await searchParams;
+  const { done, invalid, changed, full } = await searchParams;
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
+
+  /*
+    The hold had lapsed at the press and the place went on down the line, and the line was full
+    too (§NNN): the allocator refused to queue this registration, the refusal rolled everything
+    back — the token spend included — and nothing was signed. Said as that, never as a dead link.
+  */
+  if (full) {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("declare.title")}
+        </Typography>
+        <Alert severity="warning" data-testid="declare-waitlist-full">
+          {full === "closed" ? t("declare.noWaitlist") : t("declare.waitlistFull")}
+        </Alert>
+      </Container>
+    );
+  }
 
   if (done) {
     return (

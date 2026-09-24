@@ -25,6 +25,7 @@ import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { erasedBibNumbers } from "./bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus, isTerminalStatus, TERMINAL_STATUSES } from "./domain/state-machine";
+import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
 import {
   findEventForAllocation,
   findRegistrationByEventAndParticipant,
@@ -353,7 +354,20 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   });
 
   if (input.fastTrack && created) {
-    await confirmRegistrationByStaff(db, actor, created.id, now);
+    try {
+      await confirmRegistrationByStaff(db, actor, created.id, now);
+    } catch (error) {
+      /*
+        The last place and the last slot in the line taken between the entry above and this
+        confirmation (§NNN) — two transactions, so a window, however small. The entry stands,
+        unconfirmed, with its audit row, and no email went to the person (`atTheDesk`); it lapses
+        in 48 hours like any unconfirmed registration, or the desk confirms it on paper once a slot
+        opens. The desk is told exactly that rather than the "nothing changed" of a refusal at the
+        entry itself.
+      */
+      if (error instanceof DomainError && waitlistRefusalOf(error) !== null) throw walkInLeftUnconfirmedError(error);
+      throw error;
+    }
   }
 }
 

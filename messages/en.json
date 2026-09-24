@@ -204,6 +204,13 @@
         "other": "{count} places"
       },
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
+      "waitlistFull": "The places and the waiting list are full.",
+      "fullNoWaitlist": "Every place has been taken, so registration has closed.",
+      "waitlistRoom": {
+        "one": "{count} place left on the waiting list",
+        "few": "{count} places left on the waiting list",
+        "other": "{count} places left on the waiting list"
+      },
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
       "openUntilShort": "Registration open until {date}",
@@ -687,7 +694,10 @@
       "NEON_BUSY": "Neon was working on another change to the project and did not take this one. Try again in a minute; the figures above the form are what Neon holds now.",
       "NEON_REFUSED": "Neon refused the values sent. The figures above the form are what Neon holds now; if the size chosen is above what the plan allows, choose a smaller one.",
       "NEON_UNREACHABLE": "Neon did not answer (or answered with something the page cannot read). The figures above the form are what Neon holds now; try again in a minute.",
-      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all."
+      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all.",
+      "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
+      "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
+      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours."
     },
     "editor": {
       "eventSection": "Event details",
@@ -794,6 +804,8 @@
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
       "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, 24 h each.",
+      "waitlistCapacity": "Maximum waiting-list length",
+      "waitlistCapacityHelp": "Leave empty for unlimited. 0 means no waiting list: once the places are gone, registration stops. It only counts with a number of places. Lowered below how many already wait, it removes nobody from the list — it only takes nobody new.",
       "registrationOpensAt": "Registration opens",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
@@ -1147,9 +1159,11 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place or the event starts. Free = places − confirmed − held, exactly the formula the public sees.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place, when somebody registers whom the waiting list has no room for, or when the event starts. Free = places − confirmed − held, exactly the formula the public sees; while the waiting list is full, the public also sees the place of a lapsed hold as free, because the next person to register gets it.",
       "lineTitle": "Waiting list ({count})",
+      "lineTitleLimited": "Waiting list ({count} of {limit})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
+      "lineNone": "This event has no waiting list: once the places are gone, registration stops.",
       "test": "test",
       "offered": "offer until {until}",
       "since": "since {when}",
@@ -1166,7 +1180,12 @@
       "explanation": "Synthetic participants on reserved @test.invalid addresses, which can never receive mail. They go through the ordinary submission and confirmation path, so they occupy places and fill the waiting list exactly as real people do — and they are left out of the CSV export and labelled everywhere they are listed. Not available in production.",
       "count": "How many",
       "add": "Add test registrations",
-      "remove": "Remove all test registrations"
+      "remove": "Remove all test registrations",
+      "stoppedAtLimit": {
+        "one": "{created} test registration added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be.",
+        "few": "{created} test registrations added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be.",
+        "other": "{created} test registrations added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be."
+      }
     },
     "legal": {
       "title": "Legal documents",
@@ -2577,7 +2596,8 @@
       "throttled": "We have had several registrations from this address in the last hour, so we have paused it for a while. Try again in an hour — or, if it is urgent, write to us through the contact form and we will register you ourselves. Nothing you filled in has been lost.",
       "tooFast": "The automated check did not pass first time — it happens to real people too. Your answers are still here.",
       "tooFastNothingSent": "Nothing was registered and no email was sent to you. Press “Send the registration again” — your answers and your ticks are still here.",
-      "tooFastResend": "Send the registration again"
+      "tooFastResend": "Send the registration again",
+      "waitlistFullNothingSent": "Nothing was registered and no email was sent. What you filled in is still in the form."
     },
     "sections": {
       "about": "About you",
@@ -2776,7 +2796,9 @@
       "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed",
-      "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do."
+      "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
+      "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for 48 hours from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
+      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for 48 hours from when you sent the form: if a place frees up in the meantime, open it again."
     },
     "declare": {
       "title": "Event declaration",
@@ -2786,6 +2808,8 @@
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
       "changed": "The declaration was updated while you were reading it. Nothing was recorded. Below is the current text — please read it and sign again.",
+      "waitlistFull": "The deadline to sign had passed and your place goes to somebody on the waiting list. We could not put you back on the list, because it is full too, so the signature was not recorded.",
+      "noWaitlist": "The deadline to sign had passed and your place goes to somebody who was waiting for it. The event has no waiting list and no free places left, so the signature was not recorded.",
       "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",

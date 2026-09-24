@@ -434,6 +434,18 @@ export const events = pgTable(
 
     capacity: integer("capacity"),
     /**
+     * How long the waiting list may grow (§NNN; the owner: "for the waiting list, I also need
+     * to set a queue length"). Null is no limit — every event before this column, unchanged;
+     * zero is no waiting list at all: once the places are gone, registration is refused.
+     *
+     * The queue it bounds is `WAITLISTED` plus every waiting-list offer still open — the line the
+     * queue panel shows (§92). Counted by the allocator under the event lock
+     * (`registrations/service.ts#allocateOrWaitlist`), so two people can never take its last
+     * slot. Lowering it removes nobody already waiting; it only refuses the next. Meaningless
+     * without a `capacity`: an uncapped event never waitlists anybody.
+     */
+    waitlistCapacity: integer("waitlist_capacity"),
+    /**
      * The participation window (`DECISIONS.md` §104): for an event further away than
      * `confirmation_opens_days_before`, a registration that clears email verification keeps its
      * place until `confirmation_deadline_days_before` the start, and the declaration — the
@@ -595,6 +607,12 @@ export const events = pgTable(
      * which is what `registration_mode = NONE` already says honestly.
      */
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    /**
+     * A waiting list's length is a count of people (§NNN): zero — no waiting list — or more.
+     * Null is no limit. The form says the same bound; this is for the seed and the script.
+     */
+    check("events_waitlist_capacity_non_negative", sql`${t.waitlistCapacity} IS NULL OR ${t.waitlistCapacity} >= 0`),
 
     /**
      * A minimum age a person can have (§329): zero (no minimum) to ninety-nine. The form says

@@ -42,7 +42,7 @@ const { default: RegistrationCta } = await import("@/modules/events/ui/Registrat
 
 const NOW = new Date("2026-09-24T10:00:00.000Z");
 
-async function openRace(capacity: number | null) {
+async function openRace(capacity: number | null, waitlistCapacity: number | null = null) {
   const [event] = await db
     .insert(events)
     .values({
@@ -50,6 +50,7 @@ async function openRace(capacity: number | null) {
       startsAt: new Date("2026-11-21T07:00:00.000Z"),
       registrationMode: "INTERNAL",
       capacity,
+      waitlistCapacity,
       editorialStatus: "PUBLISHED",
       publishedAt: new Date("2026-09-01T10:00:00.000Z"),
       locationName: "Parcul Tractorul",
@@ -62,8 +63,8 @@ async function openRace(capacity: number | null) {
   return event;
 }
 
-async function confirm(eventId: string, n: number) {
-  for (let i = 0; i < n; i += 1) {
+async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLISTED" = "CONFIRMED", from = 0) {
+  for (let i = from; i < from + n; i += 1) {
     const email = `runner${i}@example.org`;
     const [participant] = await db
       .insert(participants)
@@ -72,7 +73,7 @@ async function confirm(eventId: string, n: number) {
     await db.insert(registrations).values({
       eventId,
       participantId: participant.id,
-      status: "CONFIRMED",
+      status,
       kind: "REAL",
       locale: "ro",
       registeredName: `Runner ${i}`,
@@ -82,7 +83,7 @@ async function confirm(eventId: string, n: number) {
       resultsNameConsent: false,
       resultsConsentVersion: 1,
       listOptOut: false,
-      confirmedAt: NOW,
+      confirmedAt: status === "CONFIRMED" ? NOW : null,
     });
   }
 }
@@ -106,7 +107,48 @@ describe("§346 the fill line beside the register button, from the cached count"
   it("answers both numbers from one cached read: the free places and the row's own size", async () => {
     const event = await openRace(50);
     await confirm(event.id, 12);
-    expect(await cachedPublicAvailability(event.id, NOW)).toEqual({ available: 38, capacity: 50 });
+    expect(await cachedPublicAvailability(event.id, NOW)).toEqual({
+      available: 38,
+      capacity: 50,
+      waitlistRoom: null,
+      waitlistCapacity: null,
+    });
+  });
+
+  it("carries the waiting list's room and limit in the same entry (§NNN waiting-list length)", async () => {
+    const event = await openRace(2, 3);
+    await confirm(event.id, 2);
+    await confirm(event.id, 1, "WAITLISTED", 2);
+    expect(await cachedPublicAvailability(event.id, NOW)).toEqual({
+      available: 0,
+      capacity: 2,
+      waitlistRoom: 2,
+      waitlistCapacity: 3,
+    });
+  });
+
+  it("renders the fill line and the waiting list's room from that one read", async () => {
+    const event = await openRace(2, 3);
+    await confirm(event.id, 2);
+    await confirm(event.id, 1, "WAITLISTED", 2);
+    const html = await render("cros-plin");
+    expect(html).toContain("2 înscriși din 2 locuri");
+    expect(html).toContain("Mai sunt 2 locuri pe lista de așteptare");
+  });
+
+  it("says the places and the line are full, with the fill line and no button, at the limit", async () => {
+    const event = await openRace(2, 1);
+    await confirm(event.id, 2);
+    await confirm(event.id, 1, "WAITLISTED", 2);
+    const html = await render("cros-plin");
+    expect(html).toContain("Locurile și lista de așteptare sunt pline.");
+    expect(html).toContain("2 înscriși din 2 locuri");
+    expect(html).not.toContain("Înscrie-te");
+  });
+
+  it("is null for an uncapped event, and the line's limit means nothing there", async () => {
+    const event = await openRace(null, 5);
+    expect(await cachedPublicAvailability(event.id, NOW)).toBeNull();
   });
 
   it("says how full it is in Romanian, and the free places beside it add up to the size", async () => {
