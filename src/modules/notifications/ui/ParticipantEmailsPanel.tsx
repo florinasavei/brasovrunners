@@ -20,6 +20,13 @@ export type ParticipantEmailCard = {
    * somebody receives. Absent for every type that is sent.
    */
   neverSent?: string;
+  /**
+   * "textul salvat (EN) are valori de exemplu" (§359): the club's saved words for this message, in
+   * the languages named, still hold a value of the page's sample, which every participant would
+   * receive as written. Said in the closed card's summary on either language's tab, and the card
+   * opens, for whoever may write the words; absent otherwise.
+   */
+  sampleValues?: string;
   /** When it is sent, in full, as the first line inside the card. */
   when: string;
   /** "Subiect: …", as the participant's inbox will show it. */
@@ -70,7 +77,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
         </Typography>
-        <SubNav items={languages} />
+        <SubNav label={languageLabel} items={languages} />
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
@@ -78,11 +85,19 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
             key={message.type}
             title={message.name}
             aside={
-              message.neverSent ? (
+              message.neverSent || message.sampleValues ? (
                 <>
-                  <Box component="span" data-testid="participant-email-never-sent" sx={{ color: "warning.main", fontWeight: 600 }}>
-                    {message.neverSent}
-                  </Box>
+                  {message.neverSent && (
+                    <Box component="span" data-testid="participant-email-never-sent" sx={{ color: "warning.main", fontWeight: 600 }}>
+                      {message.neverSent}
+                    </Box>
+                  )}
+                  {message.neverSent && message.sampleValues && " · "}
+                  {message.sampleValues && (
+                    <Box component="span" data-testid="participant-email-sample-values" sx={{ color: "warning.main", fontWeight: 600 }}>
+                      {message.sampleValues}
+                    </Box>
+                  )}
                   {` · ${message.whenShort}`}
                 </>
               ) : (
@@ -92,7 +107,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
             intro={message.when}
             collapsible
             level={3}
-            openWhen={{ saved: message.justSaved }}
+            openWhen={{ saved: message.justSaved, attention: Boolean(message.sampleValues) }}
             id={`email-${message.type}`}
             data-testid="participant-email"
           >
