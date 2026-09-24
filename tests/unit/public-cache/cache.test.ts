@@ -63,6 +63,18 @@ describe("§NNN publicRead", () => {
     expect(unstable_cache).not.toHaveBeenCalled();
   });
 
+  it("reads straight through while `next build` prerenders, so no static route becomes a regenerated one", async () => {
+    // A cached read in a prerender files the page under its tags and its ceiling: `/ro` and `/en`
+    // (static redirects) became regenerated pages, and the router's prefetch of them hung.
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PHASE", "phase-production-build");
+    const load = vi.fn(async () => []);
+    await publicRead(["pages.published", "ro"], ["pages"], load);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(unstable_cache).not.toHaveBeenCalled();
+  });
+
   describe("inside a production Next server", () => {
     beforeEach(() => {
       vi.stubEnv("NEXT_RUNTIME", "nodejs");

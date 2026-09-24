@@ -45,7 +45,8 @@ import { buildInfo } from "@/shared/config/build-info";
  *
  * Outside a Next server (a test, a script, a seed) there is no data cache: the read goes
  * straight to the database and a revalidation is nothing to do. `next dev` reads live too, so an
- * edited query is never answered from yesterday's rows while somebody is working on it.
+ * edited query is never answered from yesterday's rows while somebody is working on it, and so
+ * does `next build` (`prerenderingAtBuild` says why).
  */
 
 export type PublicContent =
@@ -101,6 +102,22 @@ function insideNextServer(): boolean {
 }
 
 /**
+ * Whether this is `next build` prerendering the few static routes — the locale roots, which
+ * redirect, render the layout and so the header.
+ *
+ * The build reads straight through, and has to. A cached read during a prerender does more than
+ * cache: Next files the page under the read's tags and its ceiling, which turned `/ro` and `/en`
+ * — two static redirects — into pages regenerated on demand, and regenerating them to answer the
+ * router's prefetch left the prefetch hanging (every backoffice spec that waited for the network
+ * to go quiet timed out, found in review). The build also has no business writing the data cache:
+ * CI builds with no database at all, and a Vercel build would fill it under a keyspace nobody
+ * serves from yet.
+ */
+function prerenderingAtBuild(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+/**
  * One public read, answered from the data cache when it can be.
  *
  * `key` names the answer and must be unique to it across the whole application — every read
@@ -120,7 +137,7 @@ export async function publicRead<T>(
   contents: readonly PublicContent[],
   load: () => Promise<T>,
 ): Promise<T> {
-  if (!insideNextServer() || process.env.NODE_ENV !== "production") return load();
+  if (!insideNextServer() || process.env.NODE_ENV !== "production" || prerenderingAtBuild()) return load();
 
   const cached = unstable_cache(async () => tagDates(await load()), [KEYSPACE, ...key.map(String)], {
     tags: contents.map(publicTag),
