@@ -12,6 +12,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -86,6 +87,13 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  */
 export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
+/** Panel `index` shown and every other one hidden, on the DOM itself (§NNN; see `bringForward`). */
+function showOnly(panels: readonly (HTMLElement | null)[], index: number) {
+  panels.forEach((panel, other) => {
+    if (panel) panel.hidden = other !== index;
+  });
+}
+
 /**
  * One tab per language, over panels that are all part of the same form.
  *
@@ -158,19 +166,33 @@ export default function LocaleTabPanels({
    * layout of the panel just revealed, inside the refused press, before the browser's own. Now the
    * siblings are hidden by hand too, so the frame shows one language, and the strip catches up in a
    * transition that does not hold the frame the refusal paints.
+   *
+   * Until that transition commits, the panel's folds still say `shown: false` (§363), so a
+   * description whose twin is open mounts its editor in the transition's render — after the frame
+   * that paints the refusal, not inside the press. What the browser points at is the fold's
+   * summary line (`ValidityProxy`), which is there either way.
    */
-  const bringForward = useCallback((index: number, element: HTMLElement | null) => {
+  const bringForward = useCallback((index: number) => {
     if (revealed.current) return;
     revealed.current = true;
     setTimeout(() => {
       revealed.current = false;
     }, 0);
-    if (element) element.hidden = false;
-    panelRefs.current.forEach((panel, other) => {
-      if (panel && other !== index) panel.hidden = true;
-    });
+    showOnly(panelRefs.current, index);
     startTransition(() => setActive(index));
   }, []);
+
+  /*
+    The DOM back in step with the state whenever the state moves (§NNN). The hand swap above runs
+    ahead of React, and React writes `hidden` only where the prop changed since its last commit, so
+    the moment a new `active` commits every panel's attribute is rewritten from it. A tab press can
+    also end on the `active` React already has — when it lands while a refusal's transition is
+    still pending — and then nothing commits at all, so the strip's `onChange` swaps by hand too:
+    between the two, the strip never names one language over the other language's panel.
+  */
+  useLayoutEffect(() => {
+    showOnly(panelRefs.current, active);
+  }, [active]);
 
   /**
    * A required box on a hidden tab, when the browser refuses the submit.
@@ -192,7 +214,7 @@ export default function LocaleTabPanels({
       if (node instanceof HTMLDetailsElement) node.open = true;
       node = node.parentElement;
     }
-    bringForward(index, event.currentTarget);
+    bringForward(index);
   };
 
   /*
@@ -204,7 +226,7 @@ export default function LocaleTabPanels({
   useEffect(() => {
     const cleanups = panelRefs.current.map((element, index) => {
       if (!element) return () => undefined;
-      const onReveal = () => bringForward(index, element);
+      const onReveal = () => bringForward(index);
       element.addEventListener(REVEAL_EVENT, onReveal);
       return () => element.removeEventListener(REVEAL_EVENT, onReveal);
     });
@@ -261,7 +283,12 @@ export default function LocaleTabPanels({
     <Box ref={root}>
       <Tabs
         value={active}
-        onChange={(_, value: number) => setActive(value)}
+        onChange={(_, value: number) => {
+          // By hand first as well: a press on a tab while a refusal's transition is still pending
+          // may compute the `active` React already has, and then React rewrites no attribute (§NNN).
+          showOnly(panelRefs.current, value);
+          setActive(value);
+        }}
         variant="scrollable"
         scrollButtons={false}
         /*

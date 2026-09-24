@@ -26,15 +26,25 @@ export type PaintClock = {
   hidden?: () => boolean;
 };
 
+/**
+ * The page's own clocks, built once on first use and shared: `afterPaint` runs once per burst of
+ * every keystroke, the path this module exists to keep light, so it allocates no clock of its own.
+ * Lazily, because the module is also imported where there is no window (the server's render, the
+ * unit tests), and there the frame half is simply absent.
+ */
+let pageClock: PaintClock | undefined;
+
 function browserClock(): PaintClock {
+  if (pageClock) return pageClock;
   const scope = globalThis as typeof globalThis & { document?: { hidden?: boolean } };
-  return {
+  pageClock = {
     requestAnimationFrame: typeof scope.requestAnimationFrame === "function" ? (callback) => scope.requestAnimationFrame(callback) : undefined,
     cancelAnimationFrame: typeof scope.cancelAnimationFrame === "function" ? (handle) => scope.cancelAnimationFrame(handle) : undefined,
     setTimeout: (callback, delay) => scope.setTimeout(callback, delay),
     clearTimeout: (handle) => scope.clearTimeout(handle as ReturnType<typeof setTimeout>),
     hidden: () => scope.document?.hidden === true,
   };
+  return pageClock;
 }
 
 /**
