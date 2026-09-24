@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 import { eventInputConstraints } from "@/modules/content/events/constraints";
 import { eventFieldsSchema, newEventSchema } from "@/modules/content/events/fields";
@@ -34,6 +34,14 @@ import { RecallProvider } from "@/shared/forms/recall";
  * `tests/integration/cms/location-name-per-language.test.ts`.
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+
+// The refusal summary's labels are built from the catalogue on the server: here the real Romanian
+// one, through a translator made from the JSON the app ships (as `event-links-summary.test.ts`).
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl");
+  const messages = (await import("../../../messages/ro.json")).default;
+  return { getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as never }) };
+});
 
 const BASE = {
   type: "RACE",
@@ -104,11 +112,13 @@ describe("BR-REQ-011-01 criterion 30 the schema: a meeting point in each languag
     expect(eventInputConstraints("locationNameEn")).toMatchObject({ required: true, maxLength: 200 });
   });
 
-  it("names each box by the name the form posts it under, for the refusal summary", () => {
+  it("names each box by the name the form posts it under, and the refusal summary by its language", async () => {
     expect(PLACE_NAME_FIELD).toEqual({ ro: "locationName", en: "locationNameEn" });
     expect(eventFormFieldName("locationNameEn")).toBe("event.locationNameEn");
-    const labels = read("src/modules/content/events/ui/field-labels.ts");
-    expect(labels).toContain('"event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`)');
+    const { eventFormFieldLabels } = await import("@/modules/content/events/ui/field-labels");
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.locationName"]).toBe("Locul › Punct de întâlnire (Română)");
+    expect(labels["event.locationNameEn"]).toBe("Locul › Punct de întâlnire (English)");
   });
 });
 
