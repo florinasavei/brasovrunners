@@ -109,6 +109,9 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(html).toContain('name="confirmSuspension"');
     // A limit in force is said above the form, and chosen in it.
     expect(words).toContain("Limită lunară: 50 ore-CU pe perioadă");
+    // The period's end with its weekday, in the club's zone, inside the sentence (§NNN weekday
+    // on every date): 1 October at midnight UTC is Thursday morning in Bucharest.
+    expect(words).toContain("perioada se încheie pe joi, 1 oct. 2026");
     expect(html).toContain('data-testid="neon-limits-quota-active"');
     expect(html).toMatch(/<option value="limit" selected="">/);
     expect(html).toMatch(/name="quotaCuHours"[^>]*value="50"|value="50"[^>]*name="quotaCuHours"/);

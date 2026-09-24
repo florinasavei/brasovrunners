@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { updateJobCadenceAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
 import type { JobCadenceState } from "@/modules/jobs/cadence";
@@ -42,13 +43,11 @@ type Props = {
  */
 export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming }: Props) {
   const t = await getTranslations("Admin");
-  const clock = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    hourCycle: "h23",
-    timeZone: "Europe/Bucharest",
-  });
-  const when = (at: Date | null) => (at ? clock.format(at) : "—");
+  // A platform timestamp, in the club's zone, with its weekday, inside the line after a colon
+  // ("ultima rulare reală: joi, 24 sept. 2026, 10:15") — so the weekday keeps its lower case
+  // (§NNN weekday on every date).
+  const clock = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+  const when = (at: Date | null) => (at ? clock(at) : "—");
 
   return (
     <Panel title={t("tasks.jobCadence.title")} intro={t("tasks.jobCadence.intro")} data-testid="job-cadence">
@@ -95,7 +94,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
       </Stack>
       {cadence.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-          {t("tasks.jobCadence.updatedAt", { when: clock.format(cadence.updatedAt) })}
+          {t("tasks.jobCadence.updatedAt", { when: clock(cadence.updatedAt) })}
         </Typography>
       )}
 
