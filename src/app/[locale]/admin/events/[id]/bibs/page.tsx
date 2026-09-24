@@ -85,6 +85,9 @@ export default async function EventBibsPage({ params }: Props) {
         >
           {bibs.map((bib) => (
             <Box component="li" key={bib.id}>
+              {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §NNN), and
+                  a radius here clipped that edge's corners — as the editor preview and the desk row
+                  no longer do either. */}
               <Box
                 component="img"
                 src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
@@ -92,7 +95,7 @@ export default async function EventBibsPage({ params }: Props) {
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
                 loading="lazy"
-                sx={{ width: "100%", height: "auto", display: "block", borderRadius: 1 }}
+                sx={{ width: "100%", height: "auto", display: "block" }}
               />
             </Box>
           ))}

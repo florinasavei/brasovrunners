@@ -30,7 +30,7 @@ import {
 import { readPublicAvailability } from "@/modules/registrations/service";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
-import { publicRead } from "./cache";
+import { type PublicContent, publicRead } from "./cache";
 import { clockWindow } from "./clock";
 
 /**
@@ -45,6 +45,35 @@ import { clockWindow } from "./clock";
  * queries are unchanged — the cache is in front of them, not instead of them — so what a page
  * shows is exactly what it showed before.
  */
+
+// --- The visitor's slug -----------------------------------------------------------------------
+
+/**
+ * What a slug has to look like before it may name a cache entry: the shape every slug the
+ * backoffice saves already has — lowercase words joined by single hyphens (`fields.ts` for events,
+ * pages and albums) — and a length no saved slug comes near (they stop at 120).
+ */
+const CACHEABLE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CACHEABLE_SLUG_MAX_LENGTH = 200;
+
+/**
+ * One read by the slug in the address — cached when the slug could be a real one, live otherwise.
+ *
+ * The slug is the visitor's own input, and a miss is an answer like any other: "no such event"
+ * would stand for the day's ceiling under the key it was asked by. A crawler trying addresses at
+ * random would leave one entry per address, which is the language switch's problem too
+ * (`cachedLocaleSwitch` refuses a path over 300 characters). A slug of the wrong shape or length
+ * can name no row, so it is answered by the database, exactly as before, and filed nowhere.
+ */
+function readBySlug<T>(
+  slug: string,
+  key: readonly (string | number)[],
+  contents: readonly PublicContent[],
+  load: () => Promise<T>,
+): Promise<T> {
+  if (slug.length > CACHEABLE_SLUG_MAX_LENGTH || !CACHEABLE_SLUG.test(slug)) return load();
+  return publicRead(key, contents, load);
+}
 
 // --- Events -----------------------------------------------------------------------------------
 
@@ -87,7 +116,7 @@ export async function cachedPublishedEventsBetween(locale: Locale, from: Date, t
 
 /** `findPublishedEventBySlug`: the event page, its metadata, its pictures and its `.ics`. */
 export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
-  return publicRead(["events.by-slug", locale, slug], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
+  return readBySlug(slug, ["events.by-slug", locale, slug], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
 }
 
 /** `findPublishedTranslations`: the event page's `hreflang` alternates. */
@@ -174,7 +203,7 @@ export async function cachedPublishedPages(locale: Locale) {
 
 /** `findPublishedPageBySlug`: one standing page. */
 export async function cachedPublishedPageBySlug(locale: Locale, slug: string) {
-  return publicRead(["pages.by-slug", locale, slug], ["pages"], () => findPublishedPageBySlug(getDb(), locale, slug));
+  return readBySlug(slug, ["pages.by-slug", locale, slug], ["pages"], () => findPublishedPageBySlug(getDb(), locale, slug));
 }
 
 /** `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation, the sitemap. */
@@ -184,7 +213,9 @@ export async function cachedPublishedAlbums(locale: Locale) {
 
 /** `findPublishedAlbumBySlug`: one album, its photos, and the event it is from — hence `events` too. */
 export async function cachedPublishedAlbumBySlug(locale: Locale, slug: string) {
-  return publicRead(["gallery.by-slug", locale, slug], ["gallery", "events"], () => findPublishedAlbumBySlug(getDb(), locale, slug));
+  return readBySlug(slug, ["gallery.by-slug", locale, slug], ["gallery", "events"], () =>
+    findPublishedAlbumBySlug(getDb(), locale, slug),
+  );
 }
 
 // --- Settings ---------------------------------------------------------------------------------
