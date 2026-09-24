@@ -631,24 +631,68 @@
       "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
-      "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
+      "eventsArchivedDone": {
+        "one": "{count} eveniment arhivat.",
+        "few": "{count} evenimente arhivate.",
+        "other": "{count} de evenimente arhivate."
+      },
+      "eventsArchiveFailed": {
+        "one": "{count} nu a putut fi arhivat.",
+        "few": "{count} nu au putut fi arhivate.",
+        "other": "{count} nu au putut fi arhivate."
+      },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
-      "seriesDraftsOne": "{dates} în ciornă — nu apare pe site:",
-      "seriesDraftsMany": "{dates} în ciornă — nu apar pe site:",
+      "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
+      "seriesDraftsMany": "{dates} în ciornă, nu sunt pe site:",
+      "seriesNewDates": {
+        "one": "{count} dată nouă",
+        "few": "{count} date noi",
+        "other": "{count} de date noi"
+      },
+      "seriesDraftsNewOne": "{dates}, creată automat, nu e pe site:",
+      "seriesDraftsNewMany": "{dates}, create automat, nu sunt pe site:",
+      "seriesDraftsSourceOne": "{dates} a seriei nu e pe site — seria nu e publicată:",
+      "seriesDraftsSourceMany": "{dates} ale seriei nu sunt pe site — seria nu e publicată:",
       "seriesDraftsMore": "și încă {count}",
-      "seriesDraftsAlways": "O dată în ciornă nu e pe site: nimeni n-o vede și nimeni nu se poate înscrie la ea. O singură dată o publici din editorul ei — datele de pe acest rând îl deschid. Toate deodată: bifează seria în listă (bifa ei le cuprinde pe toate datele) și apasă „{button}” — se publică fiecare dată a seriei care nu e încă publicată.",
-      "seriesDraftsWhyOff": "Motivul: la această serie publicarea automată e oprită, așa că fiecare dată nouă pornește ca ciornă. Ca să nu mai fie nevoie s-o faci pentru fiecare dată, deschide oricare dată a seriei și, în caseta „{section}”, bifează „{tick}” și apasă „{button}”.",
-      "seriesDraftsWhySource": "Motivul: sursa seriei nu e publicată acum, iar datele unei surse nepublicate rămân ciorne oricare ar fi setarea. Publică mai întâi evenimentul sursă.",
+      "seriesDraftsHintNew": "Seria își creează singură datele pe următoarele {weeks} săptămâni; cu publicarea automată oprită, fiecare dată nouă rămâne ciornă până o publici.",
+      "seriesDraftsHintSource": "Seria pornește dintr-un eveniment care nu e publicat; până îl publici, și datele pe care le creează rămân ciorne.",
+      "seriesDraftsPublish": "Publică",
+      "seriesDraftsPublishTitle": "Publici {dates}?",
+      "seriesDraftsPublishBody": "Apar pe site și, dacă evenimentul are înscrieri, se deschid înscrierile. O dată cu o limbă necompletată rămâne ciornă.",
+      "seriesDraftsAutoPublish": "Publică automat de acum",
+      "seriesDraftsAutoPublishTitle": "Pornești publicarea automată?",
+      "seriesDraftsAutoPublishBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site. Datele create deja, de pe acest rând, rămân ciorne — pe acelea le publici cu „{button}”.",
+      "seriesDraftsAutoPublishConfirm": "Pornește",
+      "seriesDraftsOpenSource": "Deschide seria",
+      "seriesAutoPublishStarted": "Publicarea automată e pornită: datele noi ale seriei apar singure pe site. Cele create deja rămân ciorne până apeși „{button}”.",
       "bulkSelectAll": "Toate",
       "bulkSelected": "Bifate: {count}",
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "eventsDeletedDone": {
+        "one": "{count} eveniment șters.",
+        "few": "{count} evenimente șterse.",
+        "other": "{count} de evenimente șterse."
+      },
+      "eventsDeleteFailed": {
+        "one": "{count} nu s-a putut șterge — are înscriși. Arhivează-l, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "few": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "other": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile."
+      },
+      "eventsPublishedDone": {
+        "one": "{count} eveniment publicat.",
+        "few": "{count} evenimente publicate.",
+        "other": "{count} de evenimente publicate."
+      },
+      "eventsPublishFailed": {
+        "one": "{count} nu a putut fi publicat (o limbă incompletă, sau modificat între timp).",
+        "few": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp).",
+        "other": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp)."
+      },
       "hardDelete": "Ștergere definitivă…",
       "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },
