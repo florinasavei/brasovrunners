@@ -476,16 +476,33 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     /*
       What Firefox's own form restoration does on reload, and what a country picked in the
       instant before React attaches its listener does too: the select's value changes with no
-      `change` event to tell this island. Set here the same way, directly on the DOM, before
-      `hydrated()` gives the client any time to run — a `change` event would defeat the point.
+      `change` event to tell this island. Set here the same way, directly on the DOM — a
+      `change` event would defeat the point.
+
+      "Before hydration" is made a fact rather than a race: every script of the page is held at
+      the network until the select has been changed, so no client code can run first. (Setting it
+      after `goto` resolved on `load` was racy — the scripts had usually run by then, and the test
+      then proved the ordinary `change`-less update of a hydrated island instead.)
     */
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
-    await page.goto(registerPath);
+    let release!: () => void;
+    const scriptsMayLoad = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const isScript = (url: URL) => url.pathname.startsWith("/_next/static/") && url.pathname.endsWith(".js");
+    await page.route(isScript, async (route) => {
+      await scriptsMayLoad;
+      await route.continue();
+    });
+    // `domcontentloaded`, not `load`: `load` waits for the very scripts that are being held.
+    await page.goto(registerPath, { waitUntil: "domcontentloaded" });
     await page.locator('select[name="phoneCountry"]').evaluate((select) => {
       (select as HTMLSelectElement).value = "MD";
     });
+    release();
     await hydrated(page);
+    await page.unroute(isScript);
 
     const phone = page.locator('[name="phone"]');
     const box = phone.locator("..");
