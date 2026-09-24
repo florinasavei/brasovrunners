@@ -24,7 +24,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * BR-REQ-011-01 criterion 29 (`DECISIONS.md` §NNN) — "Punct de întâlnire", once per language.
+ * BR-REQ-011-01 criterion 30 (`DECISIONS.md` §NNN) — "Punct de întâlnire", once per language.
  *
  * The owner, 2026-09-24, with a screenshot of the Locul box: "There is some redundance on this
  * meeting spot location". The shared meeting point and each language's "Denumirea locului" are
@@ -65,7 +65,7 @@ const BASE = {
 
 const refusedPaths = (value: unknown) => eventFieldsSchema.safeParse(value).error?.issues.map((issue) => issue.path.join(".")) ?? [];
 
-describe("BR-REQ-011-01 criterion 29 the schema: a meeting point in each language", () => {
+describe("BR-REQ-011-01 criterion 30 the schema: a meeting point in each language", () => {
   it("takes both names, trimmed", () => {
     const parsed = eventFieldsSchema.safeParse({ ...BASE, locationName: " Parcul Tractorul ", locationNameEn: " Tractorul Park " });
     expect(parsed.data).toMatchObject({ locationName: "Parcul Tractorul", locationNameEn: "Tractorul Park" });
@@ -112,7 +112,7 @@ describe("BR-REQ-011-01 criterion 29 the schema: a meeting point in each languag
   });
 });
 
-describe("BR-REQ-011-01 criterion 29 what each language's page shows", () => {
+describe("BR-REQ-011-01 criterion 30 what each language's page shows", () => {
   it("reads the language's own name, else the event's — never the other language's", () => {
     expect(placeNameIn({ locationName: "Parcul Tractorul" }, "Tractorul Park")).toBe("Tractorul Park");
     expect(placeNameIn({ locationName: "Parcul Tractorul" }, "  ")).toBe("Parcul Tractorul");
@@ -141,7 +141,7 @@ describe("BR-REQ-011-01 criterion 29 what each language's page shows", () => {
  * with it, or the date keeps the old place in English while a series save sends the new one to
  * every other date.
  */
-describe("BR-REQ-011-01 criterion 29 an older event's English name follows its Romanian one", () => {
+describe("BR-REQ-011-01 criterion 30 an older event's English name follows its Romanian one", () => {
   const older = { locationName: "Parcul Tractorul", locationAddress: null };
 
   it("takes the Romanian name when the English box posted the page's old name and the Romanian moved", () => {
@@ -162,7 +162,7 @@ describe("BR-REQ-011-01 criterion 29 an older event's English name follows its R
   });
 });
 
-describe("BR-REQ-011-01 criterion 29 the English box while the Romanian is typed", () => {
+describe("BR-REQ-011-01 criterion 30 the English box while the Romanian is typed", () => {
   it("follows while the two say the same place, and never when the English is blank or its own", () => {
     expect(englishFollowsTyping("Parcul Tractorul", "Parcul Tractorul")).toBe(true);
     expect(englishFollowsTyping("Parcul Tractorul ", " Parcul  Tractorul")).toBe(true);
@@ -191,7 +191,7 @@ describe("BR-REQ-011-01 criterion 29 the English box while the Romanian is typed
   });
 });
 
-describe("BR-REQ-011-01 criterion 29 the closed Locul box", () => {
+describe("BR-REQ-011-01 criterion 30 the closed Locul box", () => {
   const words = ro.Admin.editor.boxes.summary as SummaryWords;
   const language = (locale: string, locationName: string | null): SummaryTranslation => ({
     locale,
@@ -215,7 +215,7 @@ describe("BR-REQ-011-01 criterion 29 the closed Locul box", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
+describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
   const box = textFieldConstraints(eventInputConstraints("locationName"));
   const labels = {
     toggle: "Locația se anunță mai târziu",
@@ -294,7 +294,7 @@ describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 29 the participants' notice (§331)", () => {
+describe("BR-REQ-011-01 criterion 30 the participants' notice (§331)", () => {
   const before: EventChangeFacts = {
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-10-11T05:00:00.000Z"),
