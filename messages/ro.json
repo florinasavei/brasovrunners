@@ -347,7 +347,10 @@
       "actions": "Acțiuni"
     },
     "backToEvents": "Înapoi la lista de evenimente",
-    "legalNotice": "Textul legal — nota de confidențialitate, termenii și declarația — se scrie aici, dar nu se rescrie: o versiune aprobată rămâne neschimbată, iar o corectură înseamnă o versiune nouă.",
+    "legalNotice": {
+      "title": "Cum funcționează versiunile",
+      "body": "O versiune aprobată pe care cineva s-a bazat — o semnătură, o confirmare la înscriere sau un eveniment care o folosește — rămâne neschimbată pentru totdeauna; o corectură este versiunea următoare, pornită din textul ei. O versiune aprobată pe care nimeni nu s-a bazat cât timp a fost activă poate fi ștearsă definitiv. Cât timp nu sunt aprobate deodată o declarație și o notă de confidențialitate, nicio înscriere nu este acceptată — pagina de mai jos arată care texte sunt în vigoare acum."
+    },
     "pickers": {
       "datePlaceholder": "AAAA-LL-ZZ",
       "dateTyped": "Data, ca 2026-11-21: anul, luna, ziua.",

@@ -1,4 +1,5 @@
-import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,6 +12,7 @@ import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
 import PickerProvider from "@/shared/forms/pickers/PickerProvider";
+import Panel from "@/shared/ui/Panel";
 import { signOutAction } from "./actions";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
@@ -66,12 +68,18 @@ export default async function AdminLayout({ children, params }: Props) {
         notice={
           /*
             The club writes its own legal text now (`DECISIONS.md` §46), so this no longer says it
-            cannot. What it says instead is the rule that is still true and still easy to trip over:
-            an approved version is never rewritten.
+            cannot. What it says instead is the rule that is still true and still easy to trip
+            over: reliance, not approval, is what freezes a version (§46, §53), and a correction
+            is the next version rather than a rewrite (§57). Folded shut by default (§336) — it
+            explains, it does not warn, so nothing opens it by itself.
           */
-          <Alert severity="info" sx={{ mb: 3 }}>
-            {t("legalNotice")}
-          </Alert>
+          <Box sx={{ mb: 3 }}>
+            <Panel title={t("legalNotice.title")} collapsible>
+              <Typography variant="body2" color="text.secondary">
+                {t("legalNotice.body")}
+              </Typography>
+            </Panel>
+          </Box>
         }
       >
         {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,

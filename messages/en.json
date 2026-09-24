@@ -347,7 +347,10 @@
       "actions": "Actions"
     },
     "backToEvents": "Back to the event list",
-    "legalNotice": "Legal text — the privacy notice, the terms and the declaration — is written here, but never rewritten: an approved version stays as it is, and a correction means a new version.",
+    "legalNotice": {
+      "title": "How versions work",
+      "body": "An approved version somebody relied on — a signature, a registration's acknowledgement, or an event that uses it — stays exactly as it is forever; a correction is the next version, started from its text. An approved version nobody relied on while it was in force can be deleted for good. Until a declaration and a privacy notice are approved at the same time, no registration is accepted — the page below shows which texts are in effect now."
+    },
     "pickers": {
       "datePlaceholder": "YYYY-MM-DD",
       "dateTyped": "The date, like 2026-11-21: year, month, day.",
