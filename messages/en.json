@@ -134,7 +134,8 @@
         "INSTAGRAM": "Instagram",
         "STRAVA": "Strava",
         "OTHER": "Link"
-      }
+      },
+      "registerWith": "Register with {partner}"
     },
     "openMap": "Open the map",
     "address": "Address",
@@ -631,24 +632,68 @@
       "bulkArchiveHelp": "Archiving takes an event off the site without deleting anything. An event somebody else has edited in the meantime is not archived, so their change is not lost.",
       "bulkArchiveAction": "Archive the ticked ones",
       "bulkArchivePending": "Archiving…",
-      "eventsArchived": "{archived} events archived. {failed} could not be archived.",
+      "eventsArchivedDone": {
+        "one": "{count} event archived.",
+        "few": "{count} events archived.",
+        "other": "{count} events archived."
+      },
+      "eventsArchiveFailed": {
+        "one": "{count} could not be archived.",
+        "few": "{count} could not be archived.",
+        "other": "{count} could not be archived."
+      },
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
       "eventsRepeatedMany": "The series is running: {dates} created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
-      "seriesDraftsOne": "{dates} in draft — not on the site:",
-      "seriesDraftsMany": "{dates} in draft — not on the site:",
+      "seriesDraftsOne": "{dates} in draft, not on the site:",
+      "seriesDraftsMany": "{dates} in draft, not on the site:",
+      "seriesNewDates": {
+        "one": "{count} new date",
+        "few": "{count} new dates",
+        "other": "{count} new dates"
+      },
+      "seriesDraftsNewOne": "{dates}, created automatically, is not on the site:",
+      "seriesDraftsNewMany": "{dates}, created automatically, are not on the site:",
+      "seriesDraftsSourceOne": "{dates} of the series is not on the site — the series is not published:",
+      "seriesDraftsSourceMany": "{dates} of the series are not on the site — the series is not published:",
       "seriesDraftsMore": "and {count} more",
-      "seriesDraftsAlways": "A draft date is not on the site: nobody sees it and nobody can register for it. To publish one date, use its own editor — the dates on this row open it. To publish them all at once, tick the series in the list (its tick covers every date) and press “{button}”: every date of the series that is not published yet goes live.",
-      "seriesDraftsWhyOff": "Why: this series has automatic publication turned off, so every new date starts as a draft. So you no longer have to do it for each date, open any date of the series and, in the “{section}” box, tick “{tick}” and press “{button}”.",
-      "seriesDraftsWhySource": "Why: the series' source is not published right now, and the dates of an unpublished source stay drafts whatever the setting says. Publish the source event first.",
+      "seriesDraftsHintNew": "The series creates its own dates for the next {weeks} weeks; with automatic publication off, each new date stays a draft until you publish it.",
+      "seriesDraftsHintSource": "The series starts from an event that is not published; until you publish it, the dates it creates stay drafts too.",
+      "seriesDraftsPublish": "Publish",
+      "seriesDraftsPublishTitle": "Publish {dates}?",
+      "seriesDraftsPublishBody": "They go on the site and, if the event takes registrations, registration opens. A date with a language left incomplete stays a draft.",
+      "seriesDraftsAutoPublish": "Publish automatically from now on",
+      "seriesDraftsAutoPublishTitle": "Turn on automatic publication?",
+      "seriesDraftsAutoPublishBody": "From now on, every new date the series creates goes on the site by itself. The dates already created, on this row, stay drafts — publish those with “{button}”.",
+      "seriesDraftsAutoPublishConfirm": "Turn on",
+      "seriesDraftsOpenSource": "Open the series",
+      "seriesAutoPublishStarted": "Automatic publication is on: the series' new dates go on the site by themselves. The ones already created stay drafts until you press “{button}”.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
-      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
-      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile).",
+      "eventsDeletedDone": {
+        "one": "{count} event deleted.",
+        "few": "{count} events deleted.",
+        "other": "{count} events deleted."
+      },
+      "eventsDeleteFailed": {
+        "one": "{count} could not be deleted — it has registrations. Archive it, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+        "few": "{count} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+        "other": "{count} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too."
+      },
+      "eventsPublishedDone": {
+        "one": "{count} event published.",
+        "few": "{count} events published.",
+        "other": "{count} events published."
+      },
+      "eventsPublishFailed": {
+        "one": "{count} could not be published (a language incomplete, or changed meanwhile).",
+        "few": "{count} could not be published (a language incomplete, or changed meanwhile).",
+        "other": "{count} could not be published (a language incomplete, or changed meanwhile)."
+      },
       "hardDelete": "Permanent deletion…",
       "eventErased": "Event permanently deleted, together with {erased} registrations."
     },
@@ -900,6 +945,8 @@
         "moveDown": "Move down partner",
         "partnerNew": "New partner",
         "name": "Partner's name",
+        "about": "About the partnership",
+        "descriptionHelp": "Optional, in both languages · a sentence or two: what we do together. Shown on the event's page, under the partner's name.",
         "kind": "Kind",
         "url": "Address (https://…)",
         "labelRo": "Label in Romanian (optional)",
@@ -913,8 +960,10 @@
         "nameError": "Partner {p}: a partner needs a name",
         "kindError": "Partner {p}, link {l}: choose the kind from the list",
         "urlError": "Partner {p}, link {l}: the address must start with https://",
-        "labelRoError": "Partner {p}, link {l}: the Romanian label is at most {max} characters",
-        "labelEnError": "Partner {p}, link {l}: the English label is at most {max} characters",
+        "labelRoError": "Partner {p}, link {l}: the Romanian label — write it in both languages or neither, at most {max} characters",
+        "labelEnError": "Partner {p}, link {l}: the English label — write it in both languages or neither, at most {max} characters",
+        "descriptionRoError": "Partner {p} — about the partnership (Română): write it in both languages or neither, at most {max} characters",
+        "descriptionEnError": "Partner {p} — about the partnership (English): write it in both languages or neither, at most {max} characters",
         "tooManyLinks": "Partner {p}: at most {max} links on one partner",
         "tooManyLinksGeneric": "A partner can carry at most {max} links",
         "tooMany": "Partners: at most {max} on one event"
@@ -932,8 +981,8 @@
         "row": "Link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",
-        "labelRoError": "Link {n}: the Romanian label is at most {max} characters",
-        "labelEnError": "Link {n}: the English label is at most {max} characters",
+        "labelRoError": "Link {n}: the Romanian label — write it in both languages or neither, at most {max} characters",
+        "labelEnError": "Link {n}: the English label — write it in both languages or neither, at most {max} characters",
         "tooMany": "Links and files: at most {max} on one event"
       },
       "stravaEventUrl": "Strava event link",
@@ -1157,7 +1206,7 @@
         },
         "coHosts": {
           "title": "Co-hosts — “Together with”",
-          "note": "Optional. One card per organization the club holds the event with — an NGO, a shop, a brand, another club — with as many links as it has: its site, its event, registering with it, Facebook, Instagram, Strava or something else. They appear as “Together with …” on the page, each with its links, and, if you tick Partners in the footer, on the race number. Partners travel to every date of a series."
+          "note": "Optional. One card per organization the club holds the event with — an NGO, a shop, a brand, another club — with a sentence or two about the partnership, in Romanian and in English, and as many links as it has: its site, its event, registering with it, Facebook, Instagram, Strava or something else. They appear as “Together with …” on the page, each with its text and links, and, if you tick Partners in the footer, on the race number. Partners travel to every date of a series."
         },
         "promotion": {
           "title": "Promotion on the site"
@@ -1298,6 +1347,8 @@
           },
           "coHosts": {
             "with": "Together with {names}",
+            "described": "with a description",
+            "describedOneLanguage": "description in one language only",
             "none": "No co-hosts"
           },
           "promotion": {
@@ -1740,10 +1791,10 @@
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep — on Free the included hours would run out mid-month with the site down until the next month; on Launch every awake hour is paid for.",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45 (crontab */15 7-22 * * *). Night: Custom → every day, hours 23 and 0–6, minute 0 (0 0-6,23 * * *); the maintenance night job may skip 02:00 and 03:00 (0 0-1,4-6,23 * * *). A ping with nothing due answers without waking the database, so frequent pings cost nothing — the database wakes only when a job has work.",
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
-            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's hours too — included on Free, paid on Launch.",
-            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header, every 30 minutes (Custom → every day, every hour, minutes 0 and 30). Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
+            "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on this page → Costuri „Cât de des verifică platforma” = 2 hours: QA pays for its own database's awake hours too.",
+            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header — production once an hour at minute 2 (Custom → every day, every hour, minute 2; leaving out 02:00 and 03:00 is fine: 2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Not every 30 minutes: each check wakes the database for five minutes, and that is what Neon bills. Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
           ]
         },
         "retentionSweep": {

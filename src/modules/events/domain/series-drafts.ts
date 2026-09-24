@@ -18,8 +18,8 @@ import { readRepeatRule } from "./repeat";
  *   new-event form's own "creează ca ciornă") always stores `publish: false` on the rule
  *   regardless of what was ticked, so the flag alone cannot tell the two cases apart.
  * - `autoPublishOff` — the source is published, but the rule's own `publish` is off: every new
- *   date is a draft until somebody publishes it. The remedy is the rule's own switch, in the
- *   source's editor — and that switch is only there to try once the source is live.
+ *   date is a draft until somebody publishes it. The remedy is the rule's own switch — and that
+ *   switch only takes effect once the source is live.
  * - `null` — no rule among the dates (a hand-made set, §64), or a rule that publishes from a
  *   published source: the drafts were made some other way (by hand, before the switch was on,
  *   or taken back to a draft one by one), and there is no mechanism to name.
@@ -42,32 +42,52 @@ export type SeriesDraftMember = {
 export function seriesDrafts<M extends SeriesDraftMember>(
   members: readonly M[],
   now: Date,
-): { drafts: M[]; reason: DraftReason | null } {
+): {
+  drafts: M[];
+  reason: DraftReason | null;
+  /**
+   * The date that holds the series' rule — the event the series was started from, which the
+   * line's "Publică automat de acum" switches and its "Deschide seria" opens (§351). Null for a
+   * set of dates with no rule among them.
+   */
+  source: M | null;
+} {
+  const source = members.find((member) => readRepeatRule(member.repeatRule) !== null) ?? null;
   const ahead = members
     .filter((member) => member.editorialStatus === "DRAFT" && member.startsAt.getTime() >= now.getTime())
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-  if (ahead.length === 0) return { drafts: [], reason: null };
+  if (ahead.length === 0) return { drafts: [], reason: null, source };
 
   let reason: DraftReason | null = null;
-  for (const member of members) {
-    const rule = readRepeatRule(member.repeatRule);
-    if (!rule) continue;
-    if (member.editorialStatus !== "PUBLISHED") reason = "sourceNotPublished";
+  const rule = source ? readRepeatRule(source.repeatRule) : null;
+  if (source && rule) {
+    if (source.editorialStatus !== "PUBLISHED") reason = "sourceNotPublished";
     else if (!rule.publish) reason = "autoPublishOff";
-    break;
   }
 
-  return { drafts: ahead, reason };
+  return { drafts: ahead, reason, source };
 }
 
 /**
- * The explanation behind the draft line's "?", from the sentences the page translated: what a
- * draft date is and how to publish it, always; why this series makes them, only when the list
- * can name the reason. Joined by a line break, which the tooltip keeps (§257).
+ * What the draft line offers to do about its drafts, by why they are drafts (§351) — before the
+ * viewer's role is asked; the page renders a remedy only for a role the server would let use it.
+ *
+ * The owner, of the line and the paragraphs behind its "?": "ai pus grămadă de text degeaba în
+ * tooltip". The line explained *how* to fix it — which box, which tick, which button — instead of
+ * carrying the fix. It carries it now:
+ *
+ * - `autoPublishOff` — **publish** the dates listed, and **switch the rule on** so the dates the
+ *   series creates from now on need nothing at all. Two separate presses, because they are two
+ *   different things: the switch changes nothing about the dates that already exist.
+ * - `sourceNotPublished` — **open the source**, and nothing else: the cause is the event the
+ *   series starts from, the switch cannot take effect while it is not published, and publishing
+ *   its copies one by one would leave the next date a draft again.
+ * - `null` — drafts made by hand: **publish** them.
  */
-export function draftExplanation(
-  reason: DraftReason | null,
-  sentences: { always: string } & Record<DraftReason, string>,
-): string {
-  return reason ? `${sentences.always}\n${sentences[reason]}` : sentences.always;
+export type DraftRemedies = { publish: boolean; autoPublish: boolean; openSource: boolean };
+
+export function draftRemedies(reason: DraftReason | null): DraftRemedies {
+  if (reason === "autoPublishOff") return { publish: true, autoPublish: true, openSource: false };
+  if (reason === "sourceNotPublished") return { publish: false, autoPublish: false, openSource: true };
+  return { publish: true, autoPublish: false, openSource: false };
 }

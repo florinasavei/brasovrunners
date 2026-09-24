@@ -21,6 +21,8 @@ import type { CoHost } from "@/modules/events/domain/co-hosts";
 /** A partner with its one page, the shape a bare `url` always meant (§168, §344). */
 const partner = (name: string, url: string | null): CoHost => ({
   name,
+  descriptionRo: null,
+  descriptionEn: null,
   links: url ? [{ kind: "SITE", url, labelRo: null, labelEn: null }] : [],
 });
 

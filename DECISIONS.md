@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.73-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.73-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.74-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14138,3 +14138,134 @@ Field names are unchanged, so the §315 kept form, its summary and its recall re
 **Two small corrections.** A block revealed by a refusal stays shown only while the answer it was revealed under holds: changing the type or mode clears the reveal, so switching back later hides the block again. The create page's "Titlu și rezumat" opens as a `primary` fold, because it is the first thing a new event is asked. It no longer opens as `attention`, which is kept for something inside that asks for action.
 
 Baseline `BR-V1.72-2026-09-24`.
+
+## 351. A series' draft line says what the dates are, and carries the fix
+
+The owner, 2026-09-24, looked at a series row reading "Publicat · 8 date" with the line "1 dată în ciornă — nu apare pe site: lun., 16 nov. (?)" and its tooltip, and wrote: "tot nu e clar ce e cu data asta în ciornă... ai pus grămadă de text degeaba în tooltip... practic asta e data din aia de viitor generată automat?". Yes. It is the newest date the series' standing job made (the job keeps the next eight weeks created, §122). It is a draft because the rule's "Publică datele noi automat" is off. §341's line named the dates, and two paragraphs behind the "?" explained *where* the fix was: which box, which tick, which button. That was reading material, not a fix.
+
+**Decision.** The line now says what the dates are, per `seriesDrafts`' reason, and carries the fix. `draftRemedies` in `events/domain/series-drafts.ts` decides which fixes apply; `SeriesDraftLine` renders them.
+
+- `autoPublishOff`: "1 dată nouă, creată automat, nu e pe site:" / "3 date noi, create automat, nu sunt pe site:". The counted noun comes from `events.seriesNewDates.{one,few,other}` via `countForm`, and the verb agrees through `...One`/`...Many`. Then the date links, then two buttons:
+  - **Publică** posts exactly the upcoming drafts the line counts. That means every one of them, not only the six it links, and never a past, published or archived date. They go as `id:version` refs to the list's own `bulkPublishEventsAction`, so the role check, the version guard and the both-languages rule (BR-REQ-040-02) are publication's own. It sits behind a confirmation, because publishing puts the dates on the public site and opens their registration.
+  - **Publică automat de acum** posts `setRepeatPublishAction` aimed at the series' source (which `seriesDrafts` now returns), with `publish=on` and `returnTo=list`. It lands back on the list with its own banner (`saved=repeatPublishOn`). Its confirmation says it acts on the dates the series creates from now on, and that the dates already listed need "Publică".
+- `sourceNotPublished`: "N date ale seriei nu sunt pe site — seria nu e publicată:" and one link-button, **Deschide seria**, to the source's editor.
+  - There is no switch, because it cannot take effect while the source is not published.
+  - There is no Publică either. The cause is the source, and publishing its copies would leave the next date a draft again.
+- `null` (drafts made by hand, or made before the switch was on): "N date în ciornă, nu sunt pe site:" and **Publică**.
+
+**The "?" is one sentence of at most about 25 words.**
+- For `autoPublishOff`: the series creates its own dates for the next eight weeks, and each one stays a draft while automatic publication is off.
+- For `sourceNotPublished`: the series starts from an event that is not published.
+- Drafts made by hand get no "?", because the words already say everything.
+
+`draftExplanation` and the keys `seriesDraftsAlways`, `seriesDraftsWhyOff` and `seriesDraftsWhySource` are removed.
+
+**Who sees the buttons.** The page asks the same question the server asks:
+- "Publică" and "Deschide seria" need a role that may publish: `canTransition(role, IN_REVIEW, PUBLISHED)`, the Administrator (§201). The only fix "Deschide seria" carries is publishing the source.
+- The switch needs `canCreateEvent` and publishing together, which is what `setRepeatPublish` asserts before turning it on.
+
+An Organizer, a Redactor or a Tehnic reads the same words, dates and "?" with no button. The actions assert again (BR-REQ-060-01).
+
+**`returnTo` is one word, never an address.** `setRepeatPublishAction` goes to the list only when `returnTo` is exactly `list`. Any other value goes to the editor as before: a URL, `//host`, a path, `LIST`. Nothing posted can choose where the redirect goes. The Recurență box posts no `returnTo`, so it still lands on the editor.
+
+**Layout.**
+- The words, the date links and the "?" wrap on one flex row. The buttons sit on a second row beneath, each staying whole at 320 px.
+- Buttons are 44 px tall: `ConfirmSubmitButton`'s floor, and the `GlyphButton` is given the same.
+- Sentence case, like the list's own buttons ("shouting is not a size").
+- Left-aligned, even inside the phone layout's right-aligned value column.
+- Each button is its own small form with no id, because `AdminTable` draws a cell twice (the table and the phone list).
+- Glyphs go by name: `publish`, `turnOn`, `edit` (§318).
+- The dates' labels are still server strings (§324).
+
+**Rejected.**
+- A "Publică" that publishes only the linked dates. The six-link cap is a display limit. The drafts past it are the same kind of date and would need a second press nobody could see.
+- One button that both publishes these dates and switches the rule on. They are different acts: one changes dates that exist, the other a rule for dates to come. The owner may want either one alone.
+- A second, list-returning Server Action. One action with a validated one-word field keeps one place that asserts the role and writes the audit row.
+
+**Not changed.** After "Publică", the banner is the bulk bar's existing `eventsPublished` ("{published} evenimente publicate. {failed} nu au putut fi publicate …"). It does not agree with a count of one; this is listed for the owner as a follow-up.
+
+**Tests.**
+- Unit `events/series-drafts.test.ts`: the reason; the source it returns; drafts never archived or published; `draftRemedies` per reason.
+- Unit `content/series-drafts-line.test.ts`: `SeriesDraftLine` rendered to markup. The Publică form carries exactly the refs it is handed. The auto-publish form posts `eventId`=source, `publish=on`, `returnTo=list`. No form and no submit button appear for a viewer with no remedy. Plus the page's source-pinned wiring: all drafts' refs rather than the capped slice, the role gates, the banner. Plus the catalogues: new keys present, old keys gone, one sentence of 25 words or fewer per "?", the Romanian agreement for 1/3/20.
+- Unit `content/repeat-publish-action.test.ts`: the action itself with the session, the service and `redirect` stood in for. `returnTo=list` goes to `/ro/admin?saved=repeatPublishOn`; `/en` for English; no `returnTo` goes to the editor; five hostile values go to the editor; a refusal goes to `/ro/admin?error=FORBIDDEN`.
+- E2e `series-drafts.spec.ts`, on both viewports:
+  - the words, the links and the one-sentence tooltip;
+  - both buttons at least 44 px, and the line inside the 320 px viewport;
+  - a Redactor sees the line and no button;
+  - "Publică automat de acum" returns to the list with the banner, the line then reads "2 date în ciornă" and offers no switch;
+  - "Publică" publishes both dates, the line disappears and the chip reads "Publicat · 3 date";
+  - the former draft's editor reads "Publicat" and the source's switch is on.
+
+Migration: none.
+
+Baseline `BR-V1.74-2026-09-24`.
+
+## 352. A partner says what the partnership is, and every optional text is both languages or neither
+
+**Context.** On Sunday 27 September the club holds a shared event with the Brașov Running Festival. The owner wants its partner card to carry the partner's name, its website, a short description of the partnership, and a link to register for the partner's own event. §344 already gave a partner its name and typed links (site, event, registration, socials, other). What was missing was the description. While this was being briefed, the owner set a standing rule: "I want multi-lingual, always."
+
+**Decision: the description.** `CoHost` gains `descriptionRo` and `descriptionEn`, stored inside the existing `events.co_hosts` JSON (no migration, the column stays read leniently as in §168, §169 and §344).
+- Each is plain text: one short paragraph of at most `MAX_CO_HOST_DESCRIPTION` (300) characters.
+- Every run of whitespace, line breaks included, is collapsed to one space (`normalizeCoHostDescription`). This happens before the limit is counted, so a textarea the browser allowed at `maxLength` (it counts a line break as one character) is never refused by the server over the two characters that line break posts as.
+- Reading is lenient, like everything else in `co-hosts.ts`. Absent, not a string, blank or over-long reads as null and never drops the partner. Every older shape (links, §168's `url`, the two legacy columns) reads with both null.
+
+**Editor.** Under the partner's name, "Despre parteneriat" shows two multiline boxes side by side from `sm`: Română and English, each language in its own words, as the §350 tabs name them. Deliberately not tabs: a pair that is both or neither is always seen together. The length limit is read off `coHostRowSchema`.
+- They post as `event.coHosts[p].descriptionRo` / `.descriptionEn`. They are gathered by `eventFieldsFrom` and recalled by the island after a refusal (§315).
+- They are ordinary uncontrolled inputs, so moving a card carries what was typed in them.
+- A card with a description and no name is refused on the name: somebody meant a partner there.
+
+**Both languages or neither.** Every optional text the club types for a page is Romanian and English together, or left empty in both. One side written and the other empty is refused at every save, a draft's included.
+- The refusal names the empty side's box, and the summary links to it and brings its fold or tab forward.
+- The rule is written once, in `shared/forms/both-languages.ts`: `refuseOneLanguage` inside a Zod schema, `missingLanguage` where both languages are only known in the service. Each schema names its own pairs; there is no list of pairs.
+- Applied to:
+  - the partner description (new);
+  - a partner link's two labels, and a "Linkuri și fișiere" row's two labels. This reverses §332's "an empty label is not a gap" for the half-labelled case only: the kind's own word still stands in for a row with no label, but no longer for half of one;
+  - the event's optional texts: description, rules, programme notes, what to bring, and the SEO title and description. These are checked in `saveEventAndTranslations`, inside the transaction, only when the save carries both languages, and in `createEvent` before anything is written.
+- The event texts are read on the columns as they will be stored, after `translationColumnsFrom`. A group run's programme notes are not stored (§111), so they are never refused: this is §350's "a hidden box never blocks the save" for this rule too.
+- Rich texts use the same blankness rule the "· incomplet" tab marks use (`isBlankValue`), so a tab marked unfinished and a text refused are always the same text.
+- Data already stored in one language only still opens in the editor with its half. It is refused only when saved, pointing at the empty box.
+
+**Deliberately left out of the rule.**
+- The title and the page address: already required in both languages at every save.
+- The summary: required in both before publication (§28), but a draft may be half-written there.
+- A language's own place name: an override of the one meeting point both pages show (§36, migration `0058`). "Tractorul Park" on the English page alone is its whole purpose.
+- `saveEventTranslation`: the single-language service entry point, used by no screen.
+
+**The page.** On the event page and the preview, the partner card reads: name, then the description in the reader's language, then the links (`partnerFacts`).
+- `coHostDescription` answers only when both languages are written. Half a stored pair is shown in neither language, so the English page never carries the Romanian sentence and never describes a partnership the Romanian page is silent about.
+- Links go through `coHostLinksForPage`: a `REGISTRATION` link comes first. With no label of the club's it reads "Înscriere la {partner}" / "Register with {partner}", in bold. It is a link like the others, never a second button competing with the club's own `RegistrationCta`.
+- The one-line forms (listing card, series card, featured hero) stay names only, for §169's reasons.
+- The `SportsEvent` JSON-LD adds `description` to the partner's `Organization` in the page's language, by the same both-or-neither reading. `sportsEventJsonLd` takes an optional `locale` for it; without one, no description rather than a guessed one.
+- The calendar file and the emails carry no description.
+- The closed "Parteneri" box reads "Împreună cu X · 2 linkuri · cu descriere". It says "descriere într-o singură limbă" when a card holds half a pair, since that card is the one the next save will refuse.
+
+**Rejected.**
+- A migration or a column per language: the description is the partner's, like its links, and `co_hosts` is already read leniently.
+- Rich text for the description: one short paragraph under a name on a phone.
+- Falling back to the other language, or showing the one stored language on its own page: the owner's rule is about the site, not only the save.
+- A new domain error code for "one language only": `DomainErrorCode` is `AGENTS.md` §14.3's closed set. The refusal is `VALIDATION_ERROR`, and the box labels say what is owed ("… (English): scrie textul în ambele limbi sau în niciuna").
+- Treating a stored one-sided link label as none on the public page: it still shows the club's label on its own language's page and the kind's own word on the other (no other-language text, no fallback). The next save refuses it until completed.
+
+**Tests.**
+- Unit:
+  - `events/co-hosts.test.ts`: old shapes read as null, lenient junk, the 300 limit, whitespace collapsed, a one-sided stored pair read as null publicly while kept for the editor, registration first.
+  - `content/event-co-hosts-field.test.ts`: description and partner link labels, each side missing, the limit counted after collapsing, a description with no name.
+  - `content/event-links-field.test.ts`: event link labels, each side missing.
+  - `content/event-links-summary.test.ts`: refusal labels in both languages.
+  - `content/co-host-description-editor.test.ts`: the boxes, the limit from the schema, the recall round trip with the empty side marked.
+  - `events/event-facts-co-hosts.test.ts`: RO on /ro, EN on /en, none when half, the registration link first and labelled, one-line forms names only.
+  - `events/structured-data.test.ts`, `content/box-summaries.test.ts`, `shared/form-outcome.test.ts`.
+- Integration: `cms/both-languages.test.ts`:
+  - the description saved and read per language through the public query;
+  - refusals naming the empty box on save and on create, writing nothing;
+  - a half-stored card opens and is refused until completed;
+  - each of the six event texts refused per side;
+  - a group run's hidden notes not refused;
+  - a one-language save not refused over the other language;
+  - the summary and the place name left alone.
+- Existing integration fixtures were given both labels.
+- E2e: `co-host-links.spec.ts` types the Romanian description only and is refused, with the summary linking `#field-event.coHosts[0].descriptionEn` and every box kept. It then adds the English and creates, and checks the preview in `/ro` and `/en`: the description in each language, and the registration link first with its partner-named label.
+
+No migration, no new variable, no new dependency.
+
+Baseline `BR-V1.74-2026-09-24`.

@@ -149,18 +149,21 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name` and
+   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name`,
+   * `event.coHosts[p].descriptionRo` / `.descriptionEn` (§352) and
    * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
    * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
-   * a link and no name, or a link with no address, naming both indices.
+   * a link and no name, a link with no address, or a text in one language only, naming both
+   * indices.
    */
-  const coHosts: Array<{ name?: string; links: Array<Record<string, string>> }> = [];
+  const coHosts: Array<{ name?: string; descriptionRo?: string; descriptionEn?: string; links: Array<Record<string, string>> }> = [];
   for (const [key, entry] of form.entries()) {
     if (typeof entry !== "string") continue;
-    const nameMatch = /^event\.coHosts\[(\d+)\]\.name$/.exec(key);
-    if (nameMatch) {
-      const p = Number(nameMatch[1]);
-      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), name: entry };
+    // The card's own boxes: its name, and what the partnership is in each language (§352).
+    const cardMatch = /^event\.coHosts\[(\d+)\]\.(name|descriptionRo|descriptionEn)$/.exec(key);
+    if (cardMatch) {
+      const p = Number(cardMatch[1]);
+      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), [cardMatch[2]]: entry };
       continue;
     }
     const linkMatch = /^event\.coHosts\[(\d+)\]\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
@@ -202,7 +205,7 @@ function eventFieldsFrom(form: FormData) {
     facebookEventUrl: value("facebookEventUrl"),
     coHosts: coHosts
       .filter((row) => row !== undefined)
-      .map((row) => ({ name: row.name, links: row.links.filter((link) => link !== undefined) })),
+      .map(({ links: cardLinks, ...card }) => ({ ...card, links: cardLinks.filter((link) => link !== undefined) })),
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
@@ -706,11 +709,18 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
  * date to the series' source and asserts the role (switching it on asks for the role that
  * publishes); a draft source is not refused — the switch is stored and waits until the source is
  * live (`setRepeatPublish`).
+ *
+ * Also posted from the events list's draft line, "Publică automat de acum" (§351), which aims it
+ * at the source with `publish=on` and `returnTo=list`: that press lands back on the list, where
+ * the line it came from still shows the dates already created. Only the word `list` is read,
+ * never an address, so nothing posted can choose where the redirect goes — anything else is the
+ * editor, as before.
  */
 export async function setRepeatPublishAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const publish = text(form, "publish") === "on";
+  const back = text(form, "returnTo") === "list" ? getPathname({ locale, href: "/admin" }) : editorPath(locale, eventId);
   let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
@@ -719,7 +729,7 @@ export async function setRepeatPublishAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(editorPath(locale, eventId), outcome);
+  backTo(back, outcome);
 }
 
 /**

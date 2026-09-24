@@ -135,6 +135,98 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
   });
 });
 
+/**
+ * §352 — the Brașov Running Festival's card: the partner's name, what the partnership is in the
+ * reader's language, and where to register with it, first among its links.
+ */
+const FESTIVAL = {
+  name: "Brașov Running Festival",
+  descriptionRo: "Alergăm împreună duminică, la festival.",
+  descriptionEn: "We run together on Sunday, at the festival.",
+  links: [
+    { kind: "SITE", url: "https://festival.example.test" },
+    { kind: "REGISTRATION", url: "https://festival.example.test/inscriere" },
+  ],
+};
+
+describe("BR-REQ-011-01 criterion 16 the partnership's description and the partner's registration link (§352)", () => {
+  it("shows the Romanian description on the Romanian page, between the name and the links", async () => {
+    currentLocale = "ro";
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, stacked: true }));
+    expect(html).toContain("Alergăm împreună duminică, la festival.");
+    expect(html).not.toContain("We run together");
+    const name = html.indexOf("Brașov Running Festival");
+    const description = html.indexOf("Alergăm împreună");
+    const firstLink = html.indexOf("<a ");
+    expect(name).toBeLessThan(description);
+    expect(description).toBeLessThan(firstLink);
+  });
+
+  it("shows the English description on the English page, never the Romanian one", async () => {
+    currentLocale = "en";
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, stacked: true }));
+    expect(html).toContain("We run together on Sunday, at the festival.");
+    expect(html).not.toContain("Alergăm");
+  });
+
+  it("shows no description in either language when the stored row holds only one", async () => {
+    const half = { ...FESTIVAL, descriptionEn: undefined };
+    for (const locale of ["ro", "en"] as const) {
+      currentLocale = locale;
+      const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [half] }), now: NOW, stacked: true }));
+      expect(html, locale).not.toContain("Alergăm");
+      expect(html, locale).not.toContain('data-testid="co-host-description"');
+      expect(html, locale).toContain("Brașov Running Festival");
+    }
+  });
+
+  it("puts where to register first among the partner's links, named with the partner, as a link", async () => {
+    currentLocale = "ro";
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, stacked: true }));
+    const anchors = [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
+    expect(anchors).toHaveLength(2);
+    expect(anchors[0]).toContain('href="https://festival.example.test/inscriere"');
+    expect(anchors[1]).toContain('href="https://festival.example.test"');
+    expect(html).toContain("Înscriere la Brașov Running Festival");
+    // A link like the others — no second button beside the club's own registration.
+    expect(html).not.toMatch(/<button\b/);
+
+    currentLocale = "en";
+    const english = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, stacked: true }));
+    expect(english).toContain("Register with Brașov Running Festival");
+  });
+
+  it("keeps the club's own label for the registration link when it wrote one, in both languages", async () => {
+    const labelled = {
+      ...FESTIVAL,
+      links: [{ kind: "REGISTRATION", url: "https://festival.example.test/inscriere", labelRo: "Înscrie-te la 10 km", labelEn: "Sign up for the 10 km" }],
+    };
+    currentLocale = "en";
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [labelled] }), now: NOW, stacked: true }));
+    expect(html).toContain("Sign up for the 10 km");
+    expect(html).not.toContain("Register with");
+  });
+
+  it("shows a described partner with no links as its name and its description", async () => {
+    currentLocale = "ro";
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [{ ...FESTIVAL, links: [] }] }), now: NOW, stacked: true }));
+    expect(html).toContain("Brașov Running Festival");
+    expect(html).toContain("Alergăm împreună duminică, la festival.");
+    expect(html).not.toContain("<a ");
+  });
+
+  it("keeps the one-line forms — the listing card and the featured hero — to the names alone", async () => {
+    currentLocale = "ro";
+    const card = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, variant: "compact" }));
+    const hero = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW }));
+    for (const html of [card, hero]) {
+      expect(html).toContain("Brașov Running Festival");
+      expect(html).not.toContain("Alergăm");
+      expect(html).not.toContain("Înscriere la Brașov Running Festival");
+    }
+  });
+});
+
 describe("BR-REQ-011-01 criterion 16 the listing card's mention", () => {
   it("keeps the plain sentence, each name its own link to the partner's site (or its first link)", async () => {
     const html = renderToStaticMarkup(

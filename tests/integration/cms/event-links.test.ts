@@ -57,12 +57,12 @@ const PDF = ["https:/", "files.example.test", "regulament.pdf"].join("/");
 
 /** What the editor posts: two links and the spare line. */
 const POSTED = [
-  { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "" },
+  { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "The 21 km route" },
   { kind: "DOCUMENT", url: PDF, labelRo: "", labelEn: "" },
   { kind: "OTHER", url: "", labelRo: "", labelEn: "" },
 ];
 const STORED = [
-  { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null },
+  { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "The 21 km route" },
   { kind: "DOCUMENT", url: PDF, labelRo: null, labelEn: null },
 ];
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.73-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.73-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.74-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -216,6 +216,10 @@ sections and in `CHANGELOG.md`.
   allocator's lock at every door (§348); every date a person reads carries its weekday in the reader's language,
   through one helper, `src/i18n/dates.ts` (§349); the event create page and editor are one layout — Publicare and
   Recurență beside fourteen named cards in three groups, per-card RO/EN tabs, the series scope as three choices (§350).
+- **Batch 5 (2026-09-24):** a series' draft line says "N date noi, create automat, nu sunt pe site" and carries
+  „Publică” and „Publică automat de acum” on the row (§351); a partner card has a short description of the partnership
+  in both languages, its registration link first, and **every optional text the club types is both languages or neither**,
+  refused at save — the owner's rule "multi-lingual, always" (§352, `src/shared/forms/both-languages.ts`).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -301,11 +305,11 @@ it is the authority, this is the summary):
     were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
     in; the two the club alone can decide are marked there (how many places, and how many days
     before the race a confirmation is asked and owed).
-13. **The monitors' cadence, for Neon's bill** (`SETUP.md` §40, 2026-09-23): on cron-job.org
-    the production health monitor hourly at minute 0, QA's at 0/6/12/18; the four job monitors
-    unchanged; after the release that lets an idle ping skip the database, QA's
-    „Cât de des verifică platforma" on `/admin/tasks` → Costuri set to 2 hours. The Neon limits
-    themselves are set (production 100 CU-hours a month, QA 30).
+13. ~~**The monitors' cadence, for Neon's bill**~~ — set 2026-09-24, the eight jobs recorded in
+    `SETUP.md` §40: production health hourly at :02 (not 02:02 or 03:02), QA's every six hours;
+    the job monitors frequent, because an idle ping wakes nothing. **Two small things left:** tick
+    minute 45 on "prod maintenance day", and QA's „Cât de des verifică platforma" → 2 ore. The
+    Neon limits themselves are set (production 100 CU-hours a month, QA 30).
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
@@ -324,7 +328,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0065` (2026-09-24); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; **the pages read the plan from Neon's own answer** (the project row's `owner.subscription_type`), and `platform_settings.neonPlan` is only the fallback without a key (`DECISIONS.md` §280, §306, §326). **Capped since 2026-09-23**: production 0.25–1 CU and 100 CU-hours a month, QA 0.25 CU and 30 — a project that reaches its limit is suspended until the next period (`SETUP.md` §40) |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
-| Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
+| Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | eight monitors, as set 2026-09-24 (`SETUP.md` §40): production jobs every 15 min by day and hourly at night, production health hourly, QA outbox hourly, maintenance every 2 h, health every 6 h; both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun, EU region, on the club's `mail.` subdomain — production with its key, QA with its own (§307); the US sandbox was the first step (§37) and is unused. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built | live: production `live`, QA `allowlist` with the star (§163), every QA subject tagged `[QA]`; both share the domain's daily allowance and its webhooks |
 | Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |
