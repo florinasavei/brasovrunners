@@ -121,6 +121,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event`,
     eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
     eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
+    // "Linkuri și fișiere" (§NNN): the sample event has some, so the preview shows the line.
+    eventLinksUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#links`,
     manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-list`,

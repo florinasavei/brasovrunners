@@ -6,6 +6,16 @@ import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { MAX_CO_HOSTS, isCoHostUrl } from "@/modules/events/domain/co-hosts";
+import {
+  DEFAULT_EVENT_LINK_KIND,
+  isEventLinkKind,
+  isEventLinkUrl,
+  MAX_EVENT_LINK_LABEL,
+  MAX_EVENT_LINK_URL,
+  MAX_EVENT_LINKS,
+  normalizeEventLinkUrl,
+  type EventLink,
+} from "@/modules/events/domain/links";
 
 /**
  * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
@@ -243,6 +253,73 @@ function placeRule(fields: { locationName: string | null; locationToBeAnnounced:
 }
 
 /**
+ * One link row as the editor posts it (`DECISIONS.md` §NNN): a kind from the select, the
+ * address, and a label in each language. Every box a string, empty allowed here; the list
+ * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
+ * address's https pattern off it (§315) rather than typing them a second time.
+ */
+export const eventLinkRowSchema = z
+  .object({
+    kind: z.string().trim().max(20).optional().default(DEFAULT_EVENT_LINK_KIND),
+    url: z.string().trim().max(MAX_EVENT_LINK_URL).optional().default("").meta(HTTPS_BOX),
+    labelRo: z.string().trim().max(MAX_EVENT_LINK_LABEL).optional().default(""),
+    labelEn: z.string().trim().max(MAX_EVENT_LINK_LABEL).optional().default(""),
+  })
+  .strict();
+
+type EventLinkRowInput = z.infer<typeof eventLinkRowSchema>;
+
+/** The editor's spare line: nothing typed. The kind alone is not an answer — the select always posts one. */
+const isBlankLinkRow = (row: EventLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
+
+/**
+ * The links, as the editor posts them — "Linkuri și fișiere" (§NNN).
+ *
+ * Every refusal names the row **as the editor numbered it** — the posted index, before the
+ * spare lines are dropped — so "link 2" is the second row on the screen and the summary's link
+ * lands on its box (`form-names.ts`). A row with a label and no address is refused rather than
+ * dropped: somebody meant a link there. A kind outside the set did not come from the select and
+ * is refused, never quietly turned into "other".
+ *
+ * Absent means "this caller is not editing the links" — the discipline of `coHosts` (§169) — so
+ * a fixture or an older caller leaves the column as it was. The editor always posts the list;
+ * an empty one is "no links".
+ */
+const eventLinksField = z
+  .array(eventLinkRowSchema)
+  .max(50)
+  .superRefine((rows, ctx) => {
+    let filled = 0;
+    rows.forEach((row, index) => {
+      if (isBlankLinkRow(row)) return;
+      filled += 1;
+      const n = index + 1;
+      if (!isEventLinkKind(row.kind)) {
+        ctx.addIssue({ code: "custom", path: [index, "kind"], message: `link ${n}: the kind must be one of the list` });
+      }
+      if (row.url === "") {
+        ctx.addIssue({ code: "custom", path: [index, "url"], message: `link ${n}: a link needs its address, starting with https://` });
+      } else if (!isEventLinkUrl(row.url)) {
+        ctx.addIssue({ code: "custom", path: [index, "url"], message: `link ${n}: the address must start with https://` });
+      }
+    });
+    if (filled > MAX_EVENT_LINKS) {
+      ctx.addIssue({ code: "custom", message: `at most ${MAX_EVENT_LINKS} links can be listed on one event` });
+    }
+  })
+  .transform((rows): EventLink[] =>
+    rows
+      .filter((row) => !isBlankLinkRow(row))
+      .map((row) => ({
+        kind: isEventLinkKind(row.kind) ? row.kind : DEFAULT_EVENT_LINK_KIND,
+        url: normalizeEventLinkUrl(row.url),
+        labelRo: row.labelRo === "" ? null : row.labelRo,
+        labelEn: row.labelEn === "" ? null : row.labelEn,
+      })),
+  )
+  .optional();
+
+/**
  * The event-level fields, as the form sends them — every column an organizer owns.
  *
  * The times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00" means
@@ -375,6 +452,12 @@ export const eventFieldsSchema = z
       })
       .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
       .optional(),
+    /**
+     * "Linkuri și fișiere" (§NNN): the GPX on Google Drive, a PDF, the album, the results — at
+     * most twelve, each https, each label optional. Not part of what publication requires (§28):
+     * an empty label is the kind's own word in the reader's language.
+     */
+    links: eventLinksField,
     /**
      * A film of the event: a YouTube link, or nothing. The editor no longer has a box for it —
      * a film goes into the description with the rich text's own YouTube button (§266), sized

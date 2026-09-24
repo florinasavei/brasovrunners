@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "links" jsonb;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_links_is_a_short_array_of_https_links" CHECK ("events"."links" IS NULL OR CASE WHEN jsonb_typeof("events"."links") = 'array' THEN jsonb_array_length("events"."links") <= 12 AND NOT jsonb_path_exists("events"."links", '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END);

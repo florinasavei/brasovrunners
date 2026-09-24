@@ -16,7 +16,9 @@ import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/e
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import EventLinks from "@/modules/events/ui/EventLinks";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
+import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import Box from "@mui/material/Box";
@@ -292,6 +294,16 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           </Typography>
         </Stack>
       )}
+
+      {/* "Linkuri și fișiere" (§NNN), under `#links`: right after the route's facts and the map,
+          because most of them are the route again — the GPX, a map — and before the programme.
+          Nothing at all when the event has none. */}
+      <EventLinks
+        links={event.links}
+        locale={locale}
+        heading={t("links.heading")}
+        kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+      />
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />

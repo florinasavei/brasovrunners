@@ -325,6 +325,8 @@ export type TemplateData = {
   eventRulesUrl?: string;
   /** The programme on that page, when there is one (§96). */
   eventScheduleUrl?: string;
+  /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§NNN); on the confirmation and the reminder. */
+  eventLinksUrl?: string;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -502,6 +504,8 @@ const T = {
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+        // One line for the links (§NNN), never the links themselves: they live on the page.
+        ...(d.eventLinksUrl ? [{ label: "Linkuri și fișiere: pe pagina evenimentului", url: d.eventLinksUrl }] : []),
         ...(d.declarationPdfUrl ? [{ label: "Declarația pe care ai semnat-o (PDF)", url: d.declarationPdfUrl }] : []),
       ],
     },
@@ -524,6 +528,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Linkuri și fișiere: pe pagina evenimentului", url: d.eventLinksUrl }] : []),
       ],
     },
     eventThanks: {
@@ -755,6 +760,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Links and files: on the event's page", url: d.eventLinksUrl }] : []),
       ],
     },
     eventThanks: {
@@ -853,6 +859,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Links and files: on the event's page", url: d.eventLinksUrl }] : []),
         ...(d.declarationPdfUrl ? [{ label: "The declaration you signed (PDF)", url: d.declarationPdfUrl }] : []),
       ],
     },

@@ -114,6 +114,17 @@
     },
     "rules": "Event rules",
     "schedule": "Event programme",
+    "links": {
+      "heading": "Links and files",
+      "kinds": {
+        "GPX": "Route (GPX)",
+        "MAP": "Route map",
+        "DOCUMENT": "Document",
+        "PHOTOS": "Photo album",
+        "RESULTS": "Results",
+        "OTHER": "Link"
+      }
+    },
     "openMap": "Open the map",
     "address": "Address",
     "locationToBeAnnounced": "Location to be announced soon",
@@ -811,6 +822,24 @@
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner"
+      },
+      "linksSection": "Links and files",
+      "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional in each language: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
+      "linkRows": {
+        "kind": "Kind",
+        "url": "Address (https://…)",
+        "labelRo": "Label in Romanian (optional)",
+        "labelEn": "Label in English (optional)",
+        "add": "Add a link",
+        "remove": "Remove link",
+        "moveUp": "Move up link",
+        "moveDown": "Move down link",
+        "row": "Link",
+        "urlError": "Link {n}: the address must start with https://",
+        "kindError": "Link {n}: choose the kind from the list",
+        "labelRoError": "Link {n}: the Romanian label is at most {max} characters",
+        "labelEnError": "Link {n}: the English label is at most {max} characters",
+        "tooMany": "Links and files: at most {max} on one event"
       },
       "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",

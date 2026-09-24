@@ -254,6 +254,23 @@ export const events = pgTable(
     coHosts: jsonb("co_hosts"),
 
     /**
+     * "Linkuri și fișiere" (`DECISIONS.md` §NNN; the owner: "other links such as google drive
+     * files for GPX track files, etc"): an ordered array of `[{ kind, url, labelRo, labelEn }]`,
+     * at most twelve — the GPX on Google Drive, the extended rules as a PDF, the album, the
+     * results. `kind` is one of `events/domain/links.ts#EVENT_LINK_KINDS`, the address https,
+     * each label optional and at most 80 characters; an empty label is the kind's own word in the
+     * reader's language, so a link never holds up publication (it is not part of §28's gate).
+     *
+     * Links and never files: the file stays wherever the club keeps it (`AGENTS.md` §17), which
+     * is also why this is a sibling of `route_url` rather than an upload. The same on every date
+     * of a series and carried by a duplicate, like the route (§49). Read through
+     * `readEventLinks`, which drops an entry that is not a link rather than rendering it; null is
+     * "no links", like `[]` — the save writes null for an empty list, so a row that never had any
+     * and one whose links were all removed are the same value to a series edit.
+     */
+    links: jsonb("links"),
+
+    /**
      * A standing recurrence (`DECISIONS.md` §122): on the *source* event, how it repeats —
      * `{ cadence, weekdays, until }`, `until` a date or null for "indefinitely" — and the
      * maintenance job keeps the coming weeks' occurrences created from it. Each occurrence is
@@ -524,6 +541,18 @@ export const events = pgTable(
     check(
       "events_co_host_url_is_https",
       sql`${t.coHostUrl} IS NULL OR ${t.coHostUrl} LIKE 'https://%'`,
+    ),
+
+    /**
+     * The links (§NNN): an array of at most twelve, every address https — the same guarantee
+     * the single-link columns above give, for a list. The form refuses first and says which
+     * row; this is what holds when a seed or a hand-written `UPDATE` writes the column. The
+     * `CASE` fixes the order: `jsonb_array_length` raises on a scalar, and a check that raises
+     * is a refusal nobody can read, where one that answers false names itself.
+     */
+    check(
+      "events_links_is_a_short_array_of_https_links",
+      sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 12 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
     ),
 
     check(

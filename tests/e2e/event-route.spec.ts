@@ -18,6 +18,9 @@ import { hydrated, signIn } from "./support/featured-event";
 // Built from parts: `AGENTS.md` §8 forbids a hostname literal, and `docs:check` enforces it
 // across the whole repository rather than only under `src/`.
 const ROUTE_LINK = ["https:/", "routes.example.test", "traseu-tampa"].join("/");
+// A GPX shared from a file host (BR-REQ-011-01 criterion 19, `DECISIONS.md` §NNN) — the owner's
+// "google drive files for GPX track files", on a host of the tests' own.
+const GPX_LINK = ["https:/", "drive.example.test", "file", "d", "e2e-gpx", "view"].join("/");
 
 /**
  * Set once by the first test and read by the rest.
@@ -66,6 +69,12 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
     await field("event.routeUrl").fill(ROUTE_LINK);
+    // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
+    // pick what it is, paste the address, leave both labels empty so the page names the kind.
+    const firstLink = page.getByRole("group", { name: "Linkul 1" });
+    await firstLink.getByRole("combobox").click();
+    await page.getByRole("option", { name: "Traseul (GPX)" }).click();
+    await field("event.links[0].url").fill(GPX_LINK);
     // Publication refuses an incomplete language (`AGENTS.md` §11.2) and an excerpt is one of
     // the fields it counts, so the one save fills both languages as well as the route. The
     // short description is the editor since `DECISIONS.md` §73 and a fold since §260: open the
@@ -112,6 +121,22 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     const box = await route.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
 
+    // Criterion 19: the GPX under "Linkuri și fișiere", named by its kind in the page's language
+    // (no label was typed) with the host it opens on beneath, in a new tab, 44 pixels tall.
+    const linksBlock = page.locator("section#links");
+    await expect(linksBlock.getByRole("heading", { name: "Linkuri și fișiere" })).toBeVisible();
+    const gpx = linksBlock.getByRole("link", { name: /Traseul \(GPX\)/ });
+    await expect(gpx).toHaveAttribute("href", GPX_LINK);
+    await expect(gpx).toContainText("drive.example.test");
+    await expect(gpx).toHaveAttribute("target", "_blank");
+    await expect(gpx).toHaveAttribute("rel", /noopener/);
+    await expect(gpx).toHaveAttribute("rel", /noreferrer/);
+    expect((await gpx.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The English page says the same kind in English, from the same row.
+    await page.goto(`/en/events/route-race-${suffix}`);
+    await expect(page.locator("section#links").getByRole("link", { name: /Route \(GPX\)/ })).toHaveAttribute("href", GPX_LINK);
+    await page.goto(`/ro/evenimente/${slug}`);
+
     // Criterion 1: a long pasted URL must not widen the document.
     const overflow = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
@@ -136,6 +161,11 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // those rather than the row this spec just published.
     await page.goto(editorUrl);
     await page.locator('[name="event.routeUrl"]').fill("");
+    // The link saved by the first test comes back in its row, and removing the row removes it
+    // (criterion 19): no rows left is "no links", not "not editing the links".
+    await expect(page.locator('[name="event.links[0].url"]')).toHaveValue(GPX_LINK);
+    await page.getByRole("button", { name: "Șterge linkul 1" }).click();
+    await expect(page.locator('[name="event.links[0].url"]')).toHaveCount(0);
     // The event is published now, so the save carries the live-edit acknowledgement for the
     // whole form (BR-REQ-051-01 criterion 4) — and cannot be sent without it: the box is
     // required, the button says so beneath itself, and a press is refused by the browser.
@@ -154,5 +184,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The label is matched exactly: the seeded descriptions use the word "traseu" in prose.
     await expect(page.getByRole("link", { name: "Vezi traseul" })).toHaveCount(0);
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(0);
+    // And no "Linkuri și fișiere" once the event has none: no heading, no `#links` anchor.
+    await expect(page.locator("#links")).toHaveCount(0);
   });
 });

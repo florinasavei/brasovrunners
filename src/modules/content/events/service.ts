@@ -357,6 +357,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     // would be indistinguishable from "remove them", and on a row saved before the list
     // existed that would erase the partner its two old columns still hold.
     ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
+    // "Linkuri și fișiere" (§NNN), by the same discipline: a caller that said nothing writes
+    // nothing. An empty list is written as null, not `[]` — unlike the partners there is no
+    // older column for `[]` to shadow, and one value for "none" means a series edit never
+    // reports a change between a row that never had links and one whose links were removed.
+    ...(fields.links === undefined ? {} : { links: fields.links.length > 0 ? fields.links : null }),
     // Whatever was typed is written even while the place is to be announced (§NNN): it is kept
     // for staff and shown the moment the switch goes off, and no public reader is handed it.
     locationName: fields.locationName,
@@ -1052,6 +1057,9 @@ const SERIES_COLUMNS = [
   "timezone",
   "mapUrl",
   "routeUrl",
+  // The links are the route's kin (§NNN): the GPX and the rules do not change from one
+  // Wednesday to the next, so a series edit carries them like the route.
+  "links",
   "coHosts",
   "locationName",
   "locationAddress",
@@ -1695,6 +1703,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
+    // The links travel with the route (§NNN), to a duplicate and to every date of a repeat:
+    // last year's GPX and rules are this year's starting point, and a weekly run's are the same.
+    links: source.links,
     // Not carried by a *duplicate*: a film is of one edition, and last year's would be wrong on
     // next year's; next year's race has its own Strava and Facebook event pages. A *repeat* is
     // different — a recurring Strava club event and a Facebook event with several dates keep one

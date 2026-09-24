@@ -86,6 +86,9 @@ const PUBLIC_COLUMNS = {
   coHosts: events.coHosts,
   coHostName: events.coHostName,
   coHostUrl: events.coHostUrl,
+  // "Linkuri și fișiere" (§NNN): addresses the organizer pasted to be clicked by anybody —
+  // public by nature, read only through `readEventLinks`.
+  links: events.links,
   featured: events.featured,
   // A special edition (§168): a badge on the card and the page, and a tie-break below.
   isSpecial: events.isSpecial,
@@ -389,6 +392,9 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       // The rows themselves, for the reminder (§117) — without their places while the place is
       // to be announced (§NNN), as on the page.
       scheduleItems: publicScheduleItems,
+      // Whether the page has "Linkuri și fișiere" to point at (§NNN), read by what the rows
+      // mean — `readEventLinks` — rather than by the column being non-null.
+      links: events.links,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own. The place's name in the runner's language when the club gave it one
       // (migration `0059`), else the event's — the same rule as `PUBLIC_COLUMNS`, and like it,

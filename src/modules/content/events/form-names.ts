@@ -40,6 +40,11 @@ export function eventFormFieldName(path: string): string {
   const partner = /^coHosts\.(\d+)\.(\w+)$/.exec(path);
   if (partner) return `event.coHosts[${partner[1]}].${partner[2]}`;
   if (path === "coHosts") return "event.coHosts[0].name";
+  // The links (§NNN): a row's box by the index the editor gave it, and the whole list — "more
+  // than twelve" — as the list itself, which `LinkRowsEditor` carries the id of.
+  const link = /^links\.(\d+)\.(\w+)$/.exec(path);
+  if (link) return `event.links[${link[1]}].${link[2]}`;
+  if (path === "links") return "event.links";
   // A wall-clock instant is two boxes; the date is the one the summary points at.
   if (path.endsWith("WallTime")) return `event.${path.slice(0, -"WallTime".length)}Date`;
   if (/^(startsAt|endsAt|raceStartsAt|registrationOpensAt|registrationClosesAt)$/.test(path)) return `event.${path}Date`;
