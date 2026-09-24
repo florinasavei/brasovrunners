@@ -221,6 +221,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
   const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
+  /*
+    Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
+    featured event with no URL parameter to show for it (§178). This is the shape §277 named —
+    "the control that would have explained it, the event filter, was inside a fold §269 had
+    closed" — so the fold below has to open, and say the scope, on this case too, not only on
+    `hasFilters`.
+  */
+  const autoScopedToFeatured = !hasFilters && Boolean(eventFilter.eventId);
 
   /*
     Where the erase panel opens, and where it closes back to (§180).
@@ -894,11 +902,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       */}
       <Panel
         title={t("panels.filters")}
-        aside={hasFilters ? t("registrations.filtersInUse") : undefined}
+        aside={
+          hasFilters
+            ? t("registrations.filtersInUse")
+            : autoScopedToFeatured && featuredEvent
+              ? t("registrations.filterAutoFeatured", { event: featuredEvent.title ?? featuredEvent.id })
+              : undefined
+        }
         collapsible
-        // Open while the list is narrowed, so nobody loses a filter behind a fold (§269); closed
-        // otherwise (§NNN) — the list is what the screen is for.
-        openWhen={{ inUse: hasFilters }}
+        // Open while the list is narrowed, so nobody loses a filter behind a fold (§269) —
+        // including the automatic featured-event scope nobody chose in the address bar, which is
+        // the exact shape §277 named and fixed elsewhere on this same screen; closed otherwise
+        // (§NNN) — the list is what the screen is for.
+        openWhen={{ inUse: hasFilters || autoScopedToFeatured }}
         id="registrations-filters"
         data-testid="registrations-filters"
       >
