@@ -5,13 +5,14 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
+import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
- * The height of the footer's one visible line. Thin, by the owner's instruction: the bar sits at
+ * The height of each of the footer's lines. Thin, by the owner's instruction: the bar sits at
  * the bottom of every page and should cost as little of the screen as a tap target allows. It
  * was 40px while the line held a disclosure and the social marks; since the scheme switch moved
  * here (§115) the line carries a control, and 44px is what BR-REQ-041-01 asks of one.
@@ -27,23 +28,41 @@ const MARK_TARGET = 44;
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it
  * — two lines on a phone since §324, where the privacy notice, named as the notice, and the
- * language share the second (below).
+ * language share the second (below), and **only the first of them floats** (§NNN).
  *
  * Six things share the line, as one flex row that wraps. In the bottom-left corner, the
  * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
- * in the header). Then a `<summary>` that opens the rest — the club, the contact, the terms —
- * and names them (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are,
- * and the registration form links the notice directly where it matters, BR-REQ-070-01). Then
- * the privacy notice, **outside the disclosure** since §323, so nobody has to open anything to
- * find how their data is used. Then the
- * social marks — Facebook, Instagram and the Strava club — **outside the disclosure and always
- * visible**, by the owner's instruction on 2026-09-17. And **on a phone the language switcher
- * in the bottom-right corner** (§262: "eventual mutăm selectorul de limbi in dreapta jos") —
- * the header row of a phone is 328 pixels and the sections need them. From `sm` up the
- * language stays in the header, where a setting sits at the end of the row it is on, and this
- * copy is `display: none`, so exactly one "Limbă" navigation exists at any width. The build
- * badge is under the bar on a phone and a tablet and floats in the corner from `md`
- * (`BuildBadge`).
+ * in the header). Then a `<summary>` that opens the rest — the club, the contact, the terms,
+ * and the build stamp — and names them (`AGENTS.md` §9.2 asks the legal routes be *linked
+ * from* the footer; they are, and the registration form links the notice directly where it
+ * matters, BR-REQ-070-01). Then the privacy notice, **outside the disclosure** since §323, so
+ * nobody has to open anything to find how their data is used. Then the social marks —
+ * Facebook, Instagram and the Strava club — **outside the disclosure**, by the owner's
+ * instruction on 2026-09-17. And **on a phone the language switcher in the bottom-right
+ * corner** (§262: "eventual mutăm selectorul de limbi in dreapta jos") — the header row of a
+ * phone is 328 pixels and the sections need them. From `sm` up the language stays in the
+ * header, where a setting sits at the end of the row it is on, and this copy is
+ * `display: none`, so exactly one "Limbă" navigation exists at every width.
+ *
+ * ## A phone's bar floats one line tall, and rests two lines tall (§NNN)
+ *
+ * The owner, 2026-09-24, on a phone: "it now takes way too much space, and version shows by
+ * default". §324 gave the phone's bar a second line and named the cost — a sticky bar 88
+ * pixels tall on every screen of every page instead of 44 — and asked him to confirm it; this
+ * is his answer. Two things changed:
+ *
+ * - **The bar is `sticky` with `bottom: -44px` on a phone.** A negative sticky offset lets the
+ *   element stop 44 pixels *below* the screen's edge, so while the page scrolls the first line
+ *   floats — the switch, the fold and the marks, one tap target tall, as the bar was designed —
+ *   and the second, the privacy notice and the language, waits under the edge. At the end of
+ *   every page the bar reaches its own place in the flow and both lines are on screen, which is
+ *   where a footer is looked for. Nothing jumps: the second line scrolls in with the page. When
+ *   keyboard focus is anywhere in the footer, or the fold is open, the offset is `0` and the
+ *   whole bar is on screen (`:has()`), so Tab never lands on a link under the edge (WCAG
+ *   2.4.11). From `sm` up the bar is one line and the offset is `0` at every scroll position.
+ * - **The build stamp is the fold's last line** (`BuildBadge`), not a label under the bar (a
+ *   third line on a phone, 37 pixels) or over the corner (from `md`). It is for the club's own
+ *   people, and a visitor has no use for it.
  *
  * ## Why a row that wraps, and not marks positioned on the line
  *
@@ -65,17 +84,18 @@ const MARK_TARGET = 44;
  *
  * ## Sticky at the bottom
  *
- * Sticky like the header, below the badge's layer (1050) and the header's (1100); `mt: "auto"`
- * still pushes it to the bottom of a short page. Full-bleed rather than in the page's column:
- * the switch belongs in the bar's own corner (BR-REQ-041-01 criterion 11), and `PAGE_WIDTH`
- * is `xl`, so the column and the bar have the same edges on every screen there is.
+ * Sticky like the header, below the header's layer (1100); `mt: "auto"` still pushes it to the
+ * bottom of a short page, where both lines are in view. Full-bleed rather than in the page's
+ * column: the switch belongs in the bar's own corner (BR-REQ-041-01 criterion 11), and
+ * `PAGE_WIDTH` is `xl`, so the column and the bar have the same edges on every screen there is.
  *
  * ## Why `<details>` and not a client island
  *
  * It is a collapsible section on the platform: works with JavaScript off, costs no client
  * code, needs no state (§1.5). `display: contents` on the `<details>` would have made the
  * summary and the panel flex items in their own right; Safari does not render a `<details>`
- * that way, and Safari is where this was reported from.
+ * that way, and Safari is where this was reported from. The floating line is CSS alone for the
+ * same reason — no scroll listener, nothing to hydrate.
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
  * reads (§8) — and the marks only when configured. Nothing here invents an address.
@@ -99,7 +119,13 @@ export default async function SiteFooter() {
         bgcolor: "background.paper",
         mt: "auto",
         position: "sticky",
-        bottom: 0,
+        // A phone's second line waits under the screen's edge while the page scrolls (§NNN):
+        // the bar floats one line tall and rests, at the page's end, two lines tall.
+        bottom: { xs: -BAR_HEIGHT, sm: 0 },
+        // The whole bar on screen while the keyboard is in it or the fold is open, so a focused
+        // link is never under the edge. `:focus-visible`, not `:focus-within`: a tap on the
+        // scheme switch focuses it too, and the bar must not rise under the thumb for that.
+        "&:has(:focus-visible), &:has(details[open])": { bottom: 0 },
         zIndex: 1000,
       }}
     >
@@ -127,8 +153,7 @@ export default async function SiteFooter() {
             // shrinks, so a fold sized by its summary would push the marks onto the second line
             // at 320px however much it was allowed to shrink — a basis of zero is the one size
             // that never does. From `sm` up there is room, no language here, and
-            // the fold is only as wide as its summary, so the marks follow the words rather
-            // than sit at the far right, where the build badge floats from `md`.
+            // the fold is only as wide as its summary, so the marks follow the words.
             flex: { xs: "1 1 0%", sm: "0 1 auto" },
             minWidth: 0,
             // Open, the fold takes the rest of the line: the panel gets the width its links
@@ -162,24 +187,34 @@ export default async function SiteFooter() {
               boxSizing: "border-box",
               whiteSpace: "nowrap",
               overflow: "hidden",
-              textOverflow: "ellipsis",
               "&::marker": { color: "text.secondary" },
             }}
           >
-            {footer("about.summaryShort")}
-            {/* The tail — ", contact and legal" — from `sm` up; a phone's line has no room for it. */}
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {footer("about.summaryTail")}
+            {/* One flex item for the words: the summary is a flex row (§325), and the tail as an
+                item of its own took the row's gap — "Despre club , contact și termeni" on every
+                desktop. The ellipsis is here, where the text is. */}
+            <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+              {footer("about.summaryShort")}
+              {/* The tail — ", contact and legal" — from `sm` up; a phone's line has no room for it. */}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {footer("about.summaryTail")}
+              </Box>
             </Box>
           </Box>
 
           {/* Indented to the summary's text, past its marker, so the panel reads as its body. */}
-          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: 3.5, pr: 2, maxWidth: "40rem" }}>
+          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 1, pl: 3.5, pr: 2, maxWidth: "40rem" }}>
             {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
+            {/* A column gap rather than `spacing`: `spacing` is a left margin, which a link that
+                wraps to the next line kept, so on a phone it started 16px in from the one above. */}
             <Stack
               direction="row"
-              spacing={2}
-              sx={{ flexWrap: "wrap", "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 } }}
+              useFlexGap
+              sx={{
+                flexWrap: "wrap",
+                columnGap: 2,
+                "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 },
+              }}
             >
               {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
@@ -198,6 +233,9 @@ export default async function SiteFooter() {
                 {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
               </Typography>
             )}
+            {/* The build stamp and the staff entrance (§34), in the fold since §NNN: on screen
+                only for whoever opens it, never by default. */}
+            <BuildBadge />
           </Stack>
         </Box>
 
@@ -209,11 +247,12 @@ export default async function SiteFooter() {
 
           It reads as the notice's name at every width, "Confidențialitate" (§324; review
           finding: a phone said "GDPR", which names a regulation, not the page). On a phone the
-          line already holds the switch, the summary, three marks and the language in 320
-          pixels, and "Confidențialitate" is a third of that — so there the bar takes a second
-          line: the notice at its start and the language in the bottom-right corner (§262),
-          after a zero-height break that fills the first line. From `sm` up it is one line again,
-          the link beside the fold, the break hidden.
+          line already holds the switch, the summary and three marks in 320 pixels, and
+          "Confidențialitate" is a third of that — so there the bar takes a second line: the
+          notice at its start and the language in the bottom-right corner (§262), after a
+          zero-height break that fills the first line. It is the line that waits under the
+          screen's edge while the page scrolls and comes into view at its end (§NNN). From `sm`
+          up it is one line again, the link beside the fold, the break hidden.
 
           The link's name is the notice's own at every width (review finding: a screen reader
           said "GDPR, link"), and it keeps the visible word inside it, so somebody who says
@@ -258,7 +297,7 @@ export default async function SiteFooter() {
               // On a phone, the end of the first line, before the break (§324).
               order: { xs: 1, sm: 0 },
               // On a phone the free space of the line goes before the marks, so they sit at
-              // the right beside the language; from `sm` up they follow the summary.
+              // the right; from `sm` up they follow the summary.
               ml: { xs: "auto", sm: 1 },
               height: BAR_HEIGHT,
               alignItems: "center",
@@ -293,7 +332,7 @@ export default async function SiteFooter() {
         )}
 
         {/* The language, in the opposite corner and on a phone only (§262): the last item on the
-            line, its own width, so nothing is drawn over the mark beside it. */}
+            second line, its own width, RO and EN side by side (§NNN). */}
         <Box
           sx={{
             display: { xs: "flex", sm: "none" },

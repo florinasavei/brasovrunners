@@ -161,14 +161,15 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
          * And room for the sticky footer below it (§324), for the same reason at the other
          * edge: what the browser scrolls into view at the bottom — a field or a button reached
          * with Tab, the send button under a long form — landed behind the bar (WCAG 2.4.11,
-         * focus not obscured). The footer is two 44px lines on a phone since the privacy notice
-         * took the second one (`SiteFooter`), one line from `sm` up, plus its border and a
-         * little air.
+         * focus not obscured). What floats is one 44px line at every width, plus its border and
+         * a little air: a phone's footer has a second line since §324, but since §NNN it waits
+         * under the screen's edge while the page scrolls, and rises only when the keyboard is in
+         * the footer itself (`SiteFooter`). It was 96 on a phone while both lines floated.
          */
         html: {
           scrollPaddingTop: 72,
-          scrollPaddingBottom: 96,
-          "@media (min-width:600px)": { scrollPaddingTop: 76, scrollPaddingBottom: 52 },
+          scrollPaddingBottom: 52,
+          "@media (min-width:600px)": { scrollPaddingTop: 76 },
         },
 
         /**

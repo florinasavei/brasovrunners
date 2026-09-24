@@ -14,7 +14,7 @@ const LONG_PRESS_MS = 600;
 /**
  * The badge as the staff entrance: a double-click, `Enter` when focused, or — on a phone, where a
  * double-tap is unreliable and zooms — a long press (the owner's ask, 2026-09-17). A single tap
- * still does nothing, so the corner a thumb rests on stays inert.
+ * still does nothing, so a tap that lands on it in the open fold stays inert (§NNN).
  */
 export default function BuildBadgeLink({
   href,
@@ -68,8 +68,8 @@ export default function BuildBadgeLink({
       // `auto` overrides the `none` the inert badge carries: this one has to receive the
       // double-click and the press. `userSelect` and the touch callout are off so a long press
       // selects no text and offers no "copy" bubble instead of opening the door. Everything else
-      // about the box — the corner, the size, the layer below MUI's modal — is the same, and the
-      // comment in `BuildBadge.tsx` explains why each of those matters.
+      // about the box — its place in the footer's fold, its size — is the same, and the comment
+      // in `BuildBadge.tsx` explains why each of those matters.
       sx={{
         ...sx,
         pointerEvents: "auto",
