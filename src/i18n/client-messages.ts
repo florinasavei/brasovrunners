@@ -1,7 +1,7 @@
 import type { AbstractIntlMessages } from "next-intl";
 
 /**
- * The words a client island reads for itself, and nothing else (§NNN).
+ * The words a client island reads for itself, and nothing else (§353).
  *
  * A `NextIntlClientProvider` rendered from a Server Component inherits the whole request
  * configuration in next-intl 4 — every message included — and the root layout rendered one with

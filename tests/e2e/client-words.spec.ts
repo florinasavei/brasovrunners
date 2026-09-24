@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — the public payload diet, walked in a browser.
+ * §353 — the public payload diet, walked in a browser.
  *
  * The client providers carry only the words their islands read now (`src/i18n/client-messages.ts`),
  * and `tests/unit/i18n/client-messages.test.ts` checks the lists against the source. This is the
@@ -27,7 +27,7 @@ async function expectWords(page: Page, path: string) {
   expect(text.match(RAW_KEY)?.[0] ?? null, path).toBeNull();
 }
 
-test.describe("§NNN every island finds its words, and a public page carries only those", () => {
+test.describe("§353 every island finds its words, and a public page carries only those", () => {
   test("the public pages render their islands' words in both languages", async ({ page }) => {
     for (const path of [
       "/ro/evenimente",

@@ -110,7 +110,7 @@ export function readEventLinks(value: unknown): EventLink[] {
  * translation to be published. Never the other language's label: an English page does not show
  * Romanian the club typed for the Romanian one (BR-REQ-040-02's rule for every other word).
  *
- * **Both or neither** (§NNN, bilingual everywhere — `coHostDescription`'s rule for a label): the
+ * **Both or neither** (§354, bilingual everywhere — `coHostDescription`'s rule for a label): the
  * save refuses a label in one language only, and a row stored before that rule, with a label in
  * one language, answers null in **both**, so both pages show the kind's own word rather than the
  * club's label on one page and the default on the other. The editor reads `labelRo`/`labelEn`
@@ -121,7 +121,7 @@ export function eventLinkLabel(link: Pick<EventLink, "labelRo" | "labelEn">, loc
   return locale === "ro" ? link.labelRo : link.labelEn;
 }
 
-/** A row the next save will refuse: a label of the club's in one language and not the other (§NNN). */
+/** A row the next save will refuse: a label of the club's in one language and not the other (§354). */
 export const hasOneLanguageLabel = (link: Pick<EventLink, "labelRo" | "labelEn">): boolean => !link.labelRo !== !link.labelEn;
 
 /**

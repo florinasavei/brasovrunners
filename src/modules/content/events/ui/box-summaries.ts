@@ -25,7 +25,7 @@ import { storedTextValue } from "./publish-check";
  * nov. 2026, 09:00` / `Sat, 21 Nov 2026, 09:00` — in the reader's language and the event's own
  * time zone, never the server's or the browser's clock; times are 24-hour.
  *
- * **Bilingual everywhere** (§NNN): an optional text is both languages or neither, so a closed line
+ * **Bilingual everywhere** (§354): an optional text is both languages or neither, so a closed line
  * names a text stored in one language — "de scris și în EN", "etichetă într-o singură limbă" — as
  * the one the next save will refuse; and a long text whose English says exactly what its Romanian
  * does is named too — "EN identic cu RO" — as a question, never a refusal.
@@ -39,9 +39,9 @@ export type SummaryWords = {
   empty: string;
   nothing: string;
   separator: string;
-  /** "de scris și în {language} (ambele limbi sau niciuna)": an optional text written in the other language only (§NNN). */
+  /** "de scris și în {language} (ambele limbi sau niciuna)": an optional text written in the other language only (§354). */
   oneLanguage: string;
-  /** "{language} identic cu {source}": the same words in both languages (§NNN). */
+  /** "{language} identic cu {source}": the same words in both languages (§354). */
   identical: string;
   titleSummary: { missingTitle: string; missingSummary: string; untitled: string };
   when: { none: string; raceStart: string; duration: string };
@@ -177,13 +177,13 @@ export function titleSummarySummary(words: SummaryWords, translations: readonly 
     ...(translation.title.trim() === "" ? [fillIn(words.titleSummary.missingTitle, { language: code(translation.locale) })] : []),
     ...(summaryBlank(translation) ? [fillIn(words.titleSummary.missingSummary, { language: code(translation.locale) })] : []),
   ]);
-  // The summary is the long text here (§NNN); two identical titles may honestly be a name.
+  // The summary is the long text here (§354); two identical titles may honestly be a name.
   return join(words, [...titles, ...missing, ...identicalMarks(words, translations, ["excerptBody"])]);
 }
 
 /**
  * The languages after the first whose text, for any of `posted` (the names its boxes post after
- * `translations.<locale>.`), is the first language's word for word (§NNN, bilingual everywhere):
+ * `translations.<locale>.`), is the first language's word for word (§354, bilingual everywhere):
  * what a strip marks on the English tab and a closed line names. `identicalInBothLanguages`
  * decides, so a short text never counts.
  */
@@ -205,7 +205,7 @@ function identicalMarks(words: SummaryWords, translations: readonly SummaryTrans
 /**
  * Boxes 3 and 7: `RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)`.
  *
- * A text written in one language only is the one the next save refuses (§NNN, both or neither),
+ * A text written in one language only is the one the next save refuses (§352, both or neither),
  * so the line says which language still owes it rather than what the empty page would fall back
  * to — nothing falls back any more. Then `EN identic cu RO` when both say the same words.
  */
@@ -268,7 +268,7 @@ type ProgrammeEvent = Pick<EditableEvent, "scheduleItems" | "timezone">;
 
 /**
  * Box 6: `4 momente, 08:00–12:30 · ce să aduci: RO, EN`, or a group run's own words — then, for
- * the notes and what to bring (§NNN), the language that still owes one of them, and
+ * the notes and what to bring (§354), the language that still owes one of them, and
  * `EN identic cu RO` when either says the same words in both.
  */
 export function programmeSummary(
@@ -425,7 +425,7 @@ type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "l
 
 /**
  * Box 11: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
- * `etichetă într-o singură limbă` when a row carries a label in one language only (§NNN): the
+ * `etichetă într-o singură limbă` when a row carries a label in one language only (§354): the
  * page shows the kind's own word for it in both languages, and the next save will refuse it.
  */
 export function linksSummary(
@@ -455,7 +455,7 @@ type CoHostEvent = Parameters<typeof readCoHosts>[0];
  * when a card carries it in both languages — and says "descriere într-o singură limbă" instead
  * whenever a card holds half a pair, because that card is the one the next save will refuse and
  * the closed line is where the organizer sees it first. A partner's link with its label in one
- * language only is named the same way, "etichetă într-o singură limbă" (§NNN, bilingual
+ * language only is named the same way, "etichetă într-o singură limbă" (§354, bilingual
  * everywhere), and a description whose English is its Romanian word for word, `EN identic cu RO`.
  */
 export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, locale: string): string {
@@ -485,7 +485,7 @@ export function promotionSummary(words: SummaryWords, event: Pick<EditableEvent,
 
 /**
  * Box 14: `/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare` — and
- * `SEO într-o singură limbă` when a search-engine override is written in one language only (§NNN),
+ * `SEO într-o singură limbă` when a search-engine override is written in one language only (§354),
  * the text the next save refuses.
  */
 export function addressSummary(

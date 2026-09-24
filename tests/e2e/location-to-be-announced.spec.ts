@@ -77,7 +77,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
       the page links (`events/[slug]/page.tsx`, `/${locale}/events/${slug}/calendar.ics`): a path
       with an extension skips the proxy, so the localized `/ro/evenimente/…/calendar.ics` this used
       to ask for was the catch-all's 404 — which passed only while every page's payload carried the
-      whole catalogue, this sentence included (§NNN). Hence the status and the type, too.
+      whole catalogue, this sentence included (§353). Hence the status and the type, too.
     */
     const icsResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
     expect(icsResponse.status()).toBe(200);

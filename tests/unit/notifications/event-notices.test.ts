@@ -52,7 +52,7 @@ describe("§331 the update notice", () => {
     expect(email.html).not.toContain("<strong>apă</strong>");
   });
 
-  it("reads the note in each half's own language when it was written in both (§NNN, bilingual everywhere)", () => {
+  it("reads the note in each half's own language when it was written in both (§354, bilingual everywhere)", () => {
     const email = build("EVENT_UPDATE_NOTICE", { updateChanges: [], organizerNote: "Parcarea e închisă.", organizerNoteOther: "The car park is closed." });
     const [romanian, english] = email.text.split("— — —");
     expect(romanian).toContain("Mesajul organizatorilor:\nParcarea e închisă.");
@@ -91,7 +91,7 @@ describe("§331 the cancellation", () => {
     expect(email.text).not.toContain("https://example.test/ignored");
   });
 
-  it("gives each half the reason in its own language when the organizer wrote both (§NNN)", () => {
+  it("gives each half the reason in its own language when the organizer wrote both (§354)", () => {
     const email = build("EVENT_CANCELLED", { cancellationReason: "Avertizare meteo.", cancellationReasonOther: "A weather warning." });
     const [romanian, english] = email.text.split("— — —");
     expect(romanian).toContain("Motivul:\nAvertizare meteo.");

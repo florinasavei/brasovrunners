@@ -13,7 +13,7 @@ import { languageTab, openEditorBox } from "./support/fold";
  *   - choosing "Anulat" asks for the reason and "tell them" (ticked), and the banner says the
  *     event is cancelled and how many were told.
  *
- * Bilingual everywhere (§NNN): the note and the reason are two boxes, Română and English; a note in
+ * Bilingual everywhere (§354): the note and the reason are two boxes, Română and English; a note in
  * one language only is refused on the English box with everything else kept, and the same words
  * typed in both boxes get the amber "is it translated?" line.
  *
@@ -123,7 +123,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(page.getByTestId("cancel-count")).toContainText("„Eveniment anulat”: 1");
     // The update box is gone while the status says "Anulat".
     await expect(page.getByTestId("notice-fields")).toHaveCount(0);
-    // Why, in both languages: each registrant reads it in theirs (§NNN).
+    // Why, in both languages: each registrant reads it in theirs (§354).
     await field("cancel.reasonRo").fill("Avertizare meteo de cod portocaliu: traseul nu este sigur.");
     await field("cancel.reasonEn").fill("An orange weather warning: the route is not safe.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();

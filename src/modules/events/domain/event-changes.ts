@@ -146,7 +146,7 @@ export function readEventChanges(value: unknown): EventChangeKind[] {
  * "cancelled" — as plain text, at most five hundred characters, which is a paragraph and not a
  * newsletter. Line breaks are kept (a two-line note is written as two lines); every other control
  * character is dropped, and the template escapes the rest. Each language's box is read by this
- * rule on its own (§NNN, bilingual everywhere): five hundred characters in Romanian and five
+ * rule on its own (§354, bilingual everywhere): five hundred characters in Romanian and five
  * hundred in English.
  */
 export const EVENT_NOTICE_TEXT_MAX = 500;
@@ -170,7 +170,7 @@ export function readEventNoticeText(value: unknown): string | undefined {
 }
 
 /**
- * The note or the reason as a message is written from it (§NNN, bilingual everywhere): what the
+ * The note or the reason as a message is written from it (§354, bilingual everywhere): what the
  * half in `language` says, and what the other half says.
  *
  * - **Both languages** — the shape every row queued since the organizer types the text twice:

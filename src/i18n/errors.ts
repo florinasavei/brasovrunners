@@ -1,7 +1,7 @@
 import { type IntlError, IntlErrorCode } from "next-intl";
 
 /**
- * What a missing message does (§NNN).
+ * What a missing message does (§353).
  *
  * next-intl's default is quiet: a `console.error` and the key itself rendered in place of the
  * sentence ("Admin.pickers.dateTyped"). That is the right answer for a visitor on production — a

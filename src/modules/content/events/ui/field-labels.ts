@@ -78,7 +78,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.schedule[].place": inBox("programme", t("editor.programmeRows.place")),
     /*
       In the Salvare box (§331): what changed; in the status box: why the event is cancelled — one
-      box per language (§NNN, bilingual everywhere), each named with its language and what it
+      box per language (§354, bilingual everywhere), each named with its language and what it
       needs, since a both-or-neither refusal names only the empty side.
     */
     "notice.noteRo": inBox("save", t("editor.notice.noteRoError", { max: EVENT_NOTICE_TEXT_MAX })),
@@ -180,7 +180,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
 
 /**
  * The words the Publicare box names a text by when its English is its Romanian word for word
- * (§NNN, bilingual everywhere): the box's title, the partner's number, the language and the
+ * (§354, bilingual everywhere): the box's title, the partner's number, the language and the
  * field, as the boxes themselves say them — "Descrierea evenimentului › English › Descriere".
  */
 export async function identicalTextLabels(): Promise<IdenticalLabels> {

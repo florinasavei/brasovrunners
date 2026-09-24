@@ -129,7 +129,7 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
     expect(html).not.toContain("Site-ul partenerului");
   });
 
-  it("shows the kind's own word on both pages for a link stored with its label in one language only (§NNN)", async () => {
+  it("shows the kind's own word on both pages for a link stored with its label in one language only (§354)", async () => {
     // Saved before both-or-neither: the club's label in Romanian, nothing in English. Neither page
     // shows the Romanian label — both show the kind's word, each in its own language.
     const half = [{ name: "Brașov Marathon", links: [{ kind: "SITE", url: "https://bm.example.test", labelRo: "Site-ul nostru" }] }];

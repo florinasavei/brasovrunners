@@ -47,7 +47,7 @@ function sampleWhen(locale: EmailLocale): string {
 
 /**
  * The sample organizer's note and cancellation reason, written in both languages the way the
- * editor now asks for them (§NNN, bilingual everywhere), so each half of a preview reads its own.
+ * editor now asks for them (§354, bilingual everywhere), so each half of a preview reads its own.
  */
 const SAMPLE_NOTE: Record<EmailLocale, string> = {
   ro: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
@@ -170,7 +170,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
     // organizer's note, and a reason — read only by those two messages' templates. Each in both
-    // languages, as the organizer now writes them (§NNN, bilingual everywhere): the previewed
+    // languages, as the organizer now writes them (§354, bilingual everywhere): the previewed
     // language's half first, the other half's own words after the rule, never the same text twice.
     updateChanges: ["place", "time"],
     organizerNote: SAMPLE_NOTE[emailLocale],

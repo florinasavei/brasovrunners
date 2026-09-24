@@ -58,7 +58,7 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
     .join(" › ");
 }
 
-// --- The same words in both languages (§NNN, bilingual everywhere) ---------------------------
+// --- The same words in both languages (§354, bilingual everywhere) ---------------------------
 
 /**
  * The boxes whose long text is checked for "identical in both languages", in the order of the
@@ -88,7 +88,7 @@ const TRANSLATION_TEXTS: ReadonlyArray<readonly [IdenticalBox, IdenticalField, s
 const suffix = (locale: string) => `${locale.charAt(0).toUpperCase()}${locale.slice(1)}`;
 
 /**
- * Which long texts are the same words in both languages (§NNN, bilingual everywhere) — the
+ * Which long texts are the same words in both languages (§354, bilingual everywhere) — the
  * Romanian description pasted into the English box, as the English "Happy Monday" date carries on
  * production. A **warning** for the Publicare box's check and the boxes themselves, never a
  * refusal: `identicalInBothLanguages` counts only a text longer than forty characters, and even

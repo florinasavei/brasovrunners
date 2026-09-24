@@ -5,7 +5,7 @@ import { type ReactNode, useMemo } from "react";
 import { onIntlError } from "./errors";
 
 /**
- * The client half of `errors.ts` (§NNN): a missing message in an island throws locally and in
+ * The client half of `errors.ts` (§353): a missing message in an island throws locally and in
  * tests, and falls back quietly on QA and production.
  *
  * A function cannot cross from a Server Component to a client one, so `onError` is not among what

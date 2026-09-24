@@ -154,7 +154,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     title={t("editor.publication.missingTitle")}
                     complete={t("editor.publication.nothingMissing")}
-                    // The Romanian pasted into the English box, as it is typed (§NNN): a warning, never a refusal.
+                    // The Romanian pasted into the English box, as it is typed (§354): a warning, never a refusal.
                     identical={{ labels: await identicalTextLabels(), title: t("editor.identical.listTitle") }}
                   />
                 </Stack>

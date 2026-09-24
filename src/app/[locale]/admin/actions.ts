@@ -525,7 +525,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
         its "tell them" box (§331). Read as posted and judged by the service — the role, the
         reason required on a cancellation, the five hundred characters, both languages or
-        neither (§NNN, bilingual everywhere) — so a replayed POST meets the same rules as the
+        neither (§354, bilingual everywhere) — so a replayed POST meets the same rules as the
         page. An unticked box posts nothing, which is "no". The note and the reason are one box
         per language; the cancellation is there when either of its boxes was drawn.
       */

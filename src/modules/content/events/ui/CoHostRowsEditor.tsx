@@ -141,7 +141,7 @@ function CoHostRowsEditorIsland({
     /** One line under both: optional, in both languages, a sentence or two, shown under the name. */
     descriptionHelp: string;
     /**
-     * The amber line under the two boxes when they say the same words (§NNN, bilingual
+     * The amber line under the two boxes when they say the same words (§354, bilingual
      * everywhere): "Textul în engleză e identic cu cel în română — e tradus?". Never a refusal.
      */
     identical: string;
@@ -306,7 +306,7 @@ function CoHostRowsEditorIsland({
                 <Typography id={aboutHelpId} variant="caption" color="text.secondary">
                   {labels.descriptionHelp}
                 </Typography>
-                {/* The Romanian pasted into the English box (§NNN): said here, never refused. */}
+                {/* The Romanian pasted into the English box (§354): said here, never refused. */}
                 {identicalInBothLanguages(descriptionRo, descriptionEn) && (
                   <Alert severity="warning" data-testid={`co-host-${index}-identical`}>
                     {labels.identical}

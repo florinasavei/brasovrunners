@@ -107,7 +107,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(titleSummarySummary(words, englishShort)).toBe("„Crosul Tâmpei” · „Tâmpa Cross” · lipsește rezumatul (EN)");
   });
 
-  it("Descrierea and Regulamentul: per language, and the language a one-sided text still owes (§NNN)", () => {
+  it("Descrierea and Regulamentul: per language, and the language a one-sided text still owes (§354)", () => {
     const one = [language("ro", { bodyJson: doc("Totul despre cursă."), rulesJson: doc("Casca e obligatorie.") }), language("en")];
     // Both or neither: the next save refuses this, so the line names the language that owes it.
     expect(descriptionSummary(words, one)).toBe("RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)");
@@ -117,7 +117,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(descriptionSummary(words, [language("ro"), language("en")])).toBe("RO: gol · EN: gol");
   });
 
-  it("names a long text whose English is its Romanian word for word — and not a short one (§NNN)", () => {
+  it("names a long text whose English is its Romanian word for word — and not a short one (§354)", () => {
     const pasted = "Alergăm pe Tâmpa în fiecare luni seara, pornind de la telecabină.";
     const copied = [language("ro", { bodyJson: doc(pasted), rulesJson: doc(pasted) }), language("en", { bodyJson: doc(`  ${pasted}\n`), rulesJson: doc("Happy Monday") })];
     expect(descriptionSummary(words, copied)).toBe("RO: completat · EN: completat · EN identic cu RO");
@@ -153,7 +153,7 @@ describe("§350 each box's summary, empty and filled", () => {
     };
     const checklist = [language("ro", { checklist: "apă" }), language("en", { checklist: "water" })];
     expect(programmeSummary(words, rows as never, true, checklist, "ro")).toBe("2 momente, 08:00–12:30 · ce să aduci: RO, EN");
-    // What to bring in one language only: the language that owes it (§NNN).
+    // What to bring in one language only: the language that owes it (§354).
     expect(programmeSummary(words, null, false, [language("ro", { checklist: "frontală" }), language("en")], "ro")).toBe(
       "Fără program (alergare de grup) · ce să aduci: RO · de scris și în EN (ambele limbi sau niciuna)",
     );
@@ -228,7 +228,7 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Strava · 2 linkuri (GPX, Hartă)");
-    // A row whose label is in one language only is the one the next save refuses (§NNN).
+    // A row whose label is in one language only is the one the next save refuses (§354).
     expect(
       linksSummary(words, { stravaEventUrl: null, facebookEventUrl: null, links: [{ kind: "GPX", url: "https://g.test", labelRo: "Traseul de 21 km" }] }, { GPX: "GPX" }, "ro"),
     ).toBe("1 link (GPX) · etichetă într-o singură limbă");
@@ -261,7 +261,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(coHostsSummary(words, { coHosts: [{ ...festival, descriptionEn: null, links: [] }], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Brașov Running Festival · descriere într-o singură limbă",
     );
-    // A partner's link labelled in one language only, and a description copied word for word (§NNN).
+    // A partner's link labelled in one language only, and a description copied word for word (§354).
     const halfLabel = { ...festival, links: [{ kind: "SITE", url: "https://festival.example.test", labelRo: "Site-ul festivalului" }] };
     expect(coHostsSummary(words, { coHosts: [halfLabel], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Brașov Running Festival · 1 link · etichetă într-o singură limbă · cu descriere",
@@ -280,7 +280,7 @@ describe("§350 each box's summary, empty and filled", () => {
     const translations = [language("ro", { slug: "crosul-tampei" }), language("en", { slug: "tampa-cross" })];
     expect(addressSummary(words, translations, paths, true)).toBe("/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare");
     expect(addressSummary(words, [language("ro"), language("en", { slug: "x" })], paths, false)).toBe("RO: fără adresă · /en/events/x");
-    // A search-engine override in one language only (§NNN).
+    // A search-engine override in one language only (§354).
     const seoHalf = [language("ro", { slug: "crosul-tampei", seoTitle: "Crosul Tâmpei 2026" }), language("en", { slug: "tampa-cross", seoTitle: "" })];
     expect(addressSummary(words, seoHalf, paths, false)).toBe("/ro/evenimente/crosul-tampei · /en/events/tampa-cross · SEO într-o singură limbă");
   });

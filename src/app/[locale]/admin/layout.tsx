@@ -54,7 +54,7 @@ export default async function AdminLayout({ children, params }: Props) {
 
   return (
     /*
-      The staff islands' words on top of the public ones (§NNN). The root layout's provider carries
+      The staff islands' words on top of the public ones (§353). The root layout's provider carries
       only what a visitor's page needs, and a provider's messages replace its parent's rather than
       merging with them, so this subtree's whole list is named here. `/devs` nests the same.
     */

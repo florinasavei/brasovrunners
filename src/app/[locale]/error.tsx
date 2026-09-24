@@ -64,7 +64,7 @@ export default function LocaleError({
           A plain anchor, not the locale-aware `Link`. This boundary can catch a failure in the
           very routing it would need to build a localized href, and the one thing this page must
           do is work. `/events`, not `/` (§342): the root is itself a redirect to the listing
-          (the proxy's, §NNN), and `/events` — localized by the proxy — names the page this
+          (the proxy's, §353), and `/events` — localized by the proxy — names the page this
           button means without needing any routing code of this page's own to run.
         */}
         <Button component="a" href="/events" variant="outlined" sx={TAP_TARGET}>

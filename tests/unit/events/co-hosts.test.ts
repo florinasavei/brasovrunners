@@ -183,7 +183,7 @@ describe("BR-REQ-011-01 criterion 16 a partner link's label and host, in each la
     expect(hasOneLanguageCoHostLabel(link)).toBe(false);
   });
 
-  it("is null in both languages when the club wrote one only, so both pages show the kind's own word (§NNN)", () => {
+  it("is null in both languages when the club wrote one only, so both pages show the kind's own word (§354)", () => {
     const half = { ...link, labelEn: null };
     expect(coHostLinkLabel(half, "ro")).toBeNull();
     expect(coHostLinkLabel(half, "en")).toBeNull();

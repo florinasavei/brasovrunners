@@ -910,7 +910,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
 // --- Telling the participants (§331) --------------------------------------------------------
 
 /**
- * One of the organizer's texts as the form posts it: a box per language (§NNN, bilingual
+ * One of the organizer's texts as the form posts it: a box per language (§354, bilingual
  * everywhere), either of which may be missing from a caller that did not draw it.
  */
 export type EventNoticeTextInput = { ro?: string | null; en?: string | null };
@@ -970,7 +970,7 @@ function readNoticeTexts(prefix: "notice.note" | "cancel.reason", posted: EventN
 /**
  * The notice and the cancellation, checked before any row is locked (§331).
  *
- * **Both languages** (§NNN, bilingual everywhere; the owner: "I want multi-lingual, always").
+ * **Both languages** (§354, bilingual everywhere; the owner: "I want multi-lingual, always").
  * Every registrant is written to in their own language, so the note and the reason are typed
  * twice, Română and English side by side. The note is optional in both at once: written in both,
  * or in neither — one side only is refused on the empty box, the rest of the form kept (§315). The

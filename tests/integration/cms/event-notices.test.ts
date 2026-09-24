@@ -29,7 +29,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * lapsed registration. A test registration is written to like a real one (§12.6) and counted
  * nowhere.
  *
- * Bilingual everywhere (§NNN): the note and the reason are typed in Romanian and in English, both
+ * Bilingual everywhere (§354): the note and the reason are typed in Romanian and in English, both
  * or neither (the reason: both), travel as `{ ro, en }`, and each registrant's message reads the
  * half in their language first and the other language's own text in the second half — while a
  * row queued before, with one string, still renders as it did.
@@ -306,7 +306,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
 
     // A note is a thing the organizer chose to say: it goes, on its own, escaped as plain text —
-    // written in both languages (§NNN), and it travels as both.
+    // written in both languages (§354), and it travels as both.
     const note = { ro: "Aduceți frontala: <b>**startul**</b> e pe întuneric.\r\nParcarea e închisă.", en: "Bring a head torch: the start is in the dark.\nThe car park is closed." };
     const said = await save(event.id, { ro: { excerpt: "Rapid și plat, pe întuneric." }, notice: { notify: true, note } });
     expect(said.notice).toEqual({ kind: "update", queued: 4, changes: [] });
@@ -377,7 +377,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
   });
 
-  it("refuses a note written in one language only, naming the empty box, and writes nothing (§NNN)", async () => {
+  it("refuses a note written in one language only, naming the empty box, and writes nothing (§354)", async () => {
     const event = await seedEvent();
     await seedRegistrations(event.id, [{ name: "ana", status: "CONFIRMED" }]);
 
@@ -396,7 +396,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect((await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: false, note: { ro: "Doar în română." } } })).notice).toBeUndefined();
   });
 
-  it("an English registrant reads the English note first and the Romanian one second (§NNN)", async () => {
+  it("an English registrant reads the English note first and the Romanian one second (§354)", async () => {
     const event = await seedEvent();
     const [bogdan] = await seedRegistrations(event.id, [{ name: "bogdan", status: "CONFIRMED", locale: "en" }]);
 
@@ -419,7 +419,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true } });
     const [row] = await queued("EVENT_UPDATE_NOTICE");
 
-    // The shape every row had before §NNN: one string.
+    // The shape every row had before §354: one string.
     const legacy = await renderOutboxMessage({ ...row, payloadJson: { changes: ["place"], note: "Parcarea e închisă." } }, db, NOW);
     expect(legacy.text).toContain("Mesajul organizatorilor:\nParcarea e închisă.");
     expect(legacy.text).toContain("A message from the organizers:\nParcarea e închisă.");
@@ -459,7 +459,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const rows = await seedRegistrations(event.id, EVERYONE);
 
     // No reason, no cancellation: the save is refused naming both boxes (the reason is required in
-    // each language, §NNN), and nothing is written.
+    // each language, §354), and nothing is written.
     expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" } }))).toEqual({
       code: "VALIDATION_ERROR",
       fields: ["cancel.reasonRo", "cancel.reasonEn"],

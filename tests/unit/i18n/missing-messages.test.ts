@@ -3,14 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { missingMessagesAreLoud, onIntlError } from "@/i18n/errors";
 
 /**
- * A missing message is loud where somebody can still catch it (§NNN, `src/i18n/errors.ts`).
+ * A missing message is loud where somebody can still catch it (§353, `src/i18n/errors.ts`).
  *
  * The client providers carry only the keys their islands read now, so "a key left out of the
  * list" is a failure that can exist; the end-to-end suite runs a production build with
  * `APP_ENV=local`, and there it must break the page rather than print "Site.nav.more" where a
  * word should be. On QA and production, next-intl's own quiet fallback stays.
  */
-describe("§NNN a missing message", () => {
+describe("§353 a missing message", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("is loud locally and in tests, and quiet on QA and production", () => {

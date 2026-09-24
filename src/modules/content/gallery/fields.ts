@@ -50,7 +50,7 @@ export const albumFieldsSchema = z
         "the event must be chosen from the list",
       ),
     /*
-      Both languages in one save — and the description, optional, is both or neither (§NNN,
+      Both languages in one save — and the description, optional, is both or neither (§354,
       bilingual everywhere): one language written and the other empty is refused on the empty
       box, the rest kept (§315), so the English album page never goes without the words the
       Romanian one carries.

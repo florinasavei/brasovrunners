@@ -14,7 +14,7 @@ import {
 import { DATE_FORMATS } from "@/i18n/dates";
 
 /**
- * The client providers carry only the words their islands read (§NNN, `src/i18n/client-messages.ts`).
+ * The client providers carry only the words their islands read (§353, `src/i18n/client-messages.ts`).
  *
  * The root layout used to render `NextIntlClientProvider` bare, and in next-intl 4 a bare provider
  * inherits every message of the request: each public page shipped the whole catalogue, the
@@ -242,7 +242,7 @@ function leaves(messages: unknown, prefix = ""): Array<[string, string]> {
   );
 }
 
-describe("§NNN the client providers carry the words their islands read, and no more", () => {
+describe("§353 the client providers carry the words their islands read, and no more", () => {
   it("finds the islands it is about, on the side of the line each one is", () => {
     // A walk that broke would pass every check below on nothing, so it has to find these.
     const byFile = new Map(ISLANDS.map((island) => [island.file, island]));

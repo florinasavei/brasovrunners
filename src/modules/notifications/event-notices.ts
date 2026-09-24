@@ -33,7 +33,7 @@ import { enqueueEmail } from "./outbox";
  * (`enqueueEmail` already refuses one for a test row, §320).
  *
  * One outbox row per registration, in the registration's own language (and the organizer's own
- * words in both, §NNN — the row's language decides which half reads first), inside the caller's
+ * words in both, §354 — the row's language decides which half reads first), inside the caller's
  * transaction: the save and its messages commit together or not at all (BR-REQ-080-02). The key
  * names the save — the event that was saved and the version the save gave it — and the
  * registration, so a retried request queues nothing twice, and the next save that asks is a new
@@ -108,7 +108,7 @@ async function queueToEveryone<T extends Record<string, unknown>>(
  * "Detalii actualizate": what changed, by kind, and the organizer's note. The values themselves
  * are read at send time (`render.ts`), never copied here — see `event-changes.ts` for why.
  *
- * The note travels in **both languages**, `note: { ro, en }` (§NNN, bilingual everywhere): the
+ * The note travels in **both languages**, `note: { ro, en }` (§354, bilingual everywhere): the
  * organizer writes it twice, and each registrant's message reads the half in their registration's
  * language — and the other half of the bilingual message reads the other text, never the same one
  * twice. A row queued before this carried one string, and `readEventNoticeWords` still reads it.
@@ -125,7 +125,7 @@ export async function queueEventUpdateNotices<T extends Record<string, unknown>>
   });
 }
 
-/** "{event} a fost anulat", with the reason the organizer typed — in both languages (§NNN), `reason: { ro, en }`. */
+/** "{event} a fost anulat", with the reason the organizer typed — in both languages (§354), `reason: { ro, en }`. */
 export async function queueEventCancelledNotices<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   input: NoticeInput & { reason: BilingualText },

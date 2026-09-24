@@ -171,7 +171,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.updateChanges = updateChanges;
     /*
       The organizer's note in this registrant's language, and the other half's in the other
-      (§NNN, bilingual everywhere). A row queued before carries one string: both halves read it,
+      (§354, bilingual everywhere). A row queued before carries one string: both halves read it,
       as they always did (`readEventNoticeWords`).
     */
     const note = readEventNoticeWords((row.payloadJson as { note?: unknown } | null)?.note, locale);
@@ -182,7 +182,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
   }
   // "{event} a fost anulat" (§331): the reason the organizer typed, and nothing to act on — each
-  // half of the message in its own language (§NNN), or an older row's one text in both.
+  // half of the message in its own language (§354), or an older row's one text in both.
   if (row.messageType === "EVENT_CANCELLED") {
     const reason = readEventNoticeWords((row.payloadJson as { reason?: unknown } | null)?.reason, locale);
     if (reason.text) data.cancellationReason = reason.text;

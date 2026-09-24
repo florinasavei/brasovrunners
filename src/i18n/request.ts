@@ -21,7 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     // A date that starts a line goes through `formatDay` instead, which capitalises it.
     formats: { dateTime: DATE_FORMATS },
     // A missing message throws locally and in tests, and falls back quietly on QA and production
-    // (§NNN, `errors.ts`). Server-side only: a function does not cross to the client, whose
+    // (§353, `errors.ts`). Server-side only: a function does not cross to the client, whose
     // providers get the same handler from `IntlErrorHandling`.
     onError: onIntlError(missingMessagesAreLoud(env.APP_ENV)),
   };

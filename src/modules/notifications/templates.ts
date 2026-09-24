@@ -261,7 +261,7 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
-    // The organizer's own words in the second half's language (§NNN, bilingual everywhere) —
+    // The organizer's own words in the second half's language (§354, bilingual everywhere) —
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
@@ -386,14 +386,14 @@ export type TemplateData = {
   /** The organizer's own words on that message, plain text, at most 500 characters — in this half's language. */
   organizerNote?: string;
   /**
-   * The same note in the other language, for the bilingual message's second half (§NNN, bilingual
+   * The same note in the other language, for the bilingual message's second half (§354, bilingual
    * everywhere). Absent for a row queued before the note was written twice: both halves then
    * carry `organizerNote`, as they always did.
    */
   organizerNoteOther?: string;
   /** Why the event was cancelled, as the organizer typed it (§331) — in this half's language. */
   cancellationReason?: string;
-  /** The same reason in the other language, for the second half (§NNN); absent on an older row. */
+  /** The same reason in the other language, for the second half (§354); absent on an older row. */
   cancellationReasonOther?: string;
 };
 

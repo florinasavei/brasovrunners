@@ -721,7 +721,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
           distanceMeters: "14000",
           elevationGainMeters: "600",
         },
-        // Cancelling says why (§331), in both languages (§NNN).
+        // Cancelling says why (§331), in both languages (§354).
         cancellation: { reason: { ro: "Traseul este închis.", en: "The route is closed." }, notify: false },
       });
 

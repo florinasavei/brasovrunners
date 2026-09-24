@@ -17,7 +17,7 @@ import type { z } from "zod";
  * texts, `content/events/service.ts`; the organizer's note and the cancellation's reason, which
  * that service reads beside the save). No list of pairs lives here; each caller names its own.
  *
- * "Bilingual everywhere" (§NNN) adds the other half of the owner's rule: the same words in both
+ * "Bilingual everywhere" (§354) adds the other half of the owner's rule: the same words in both
  * boxes (`identicalInBothLanguages`) — the Romanian pasted into the English box — which is warned
  * about in the editor and never refused.
  */
@@ -64,7 +64,7 @@ export function refuseOneLanguage(
 }
 
 /**
- * A pair as the platform keeps it once the rule has passed (§NNN, bilingual everywhere): both
+ * A pair as the platform keeps it once the rule has passed (§354, bilingual everywhere): both
  * languages written. The organizer's note on an update and the reason for a cancellation travel
  * in the outbox as one of these, so each registrant's message reads the half in their language.
  */
@@ -73,7 +73,7 @@ export type BilingualText = Readonly<Record<TextLanguage, string>>;
 /** The other language of the pair — the second half of a bilingual email, the box beside this one. */
 export const otherLanguage = (language: TextLanguage): TextLanguage => (language === "ro" ? "en" : "ro");
 
-// --- The same text in both boxes (§NNN, bilingual everywhere) --------------------------------
+// --- The same text in both boxes (§354, bilingual everywhere) --------------------------------
 
 /**
  * How long a text has to be, once normalized, before "identical in both languages" is worth a
@@ -127,7 +127,7 @@ export function comparableText(value: unknown): string {
 }
 
 /**
- * Whether the two languages of one text say exactly the same words (§NNN, bilingual everywhere):
+ * Whether the two languages of one text say exactly the same words (§354, bilingual everywhere):
  * both written, identical once normalized (`comparableText`), and longer than
  * `IDENTICAL_TEXT_MIN_LENGTH`. A **warning**, never a refusal — the editor shows it in the box,
  * marks the English tab and the closed line, and lists it before publication; nothing is refused

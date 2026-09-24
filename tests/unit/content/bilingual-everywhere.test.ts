@@ -9,7 +9,7 @@ import { readEventNoticeWords } from "@/modules/events/domain/event-changes";
 import { comparableText, IDENTICAL_TEXT_MIN_LENGTH, identicalInBothLanguages } from "@/shared/forms/both-languages";
 
 /**
- * §NNN — bilingual everywhere (the owner: "I want multi-lingual, always"). The pure halves of it:
+ * §354 — bilingual everywhere (the owner: "I want multi-lingual, always"). The pure halves of it:
  *
  * - the same words in both languages, as a warning (`identicalInBothLanguages`, `identicalTexts`)
  *   — the English "Happy Monday" date carries the Romanian description on production;
@@ -31,7 +31,7 @@ const { albumFormFieldLabels } = await import("@/modules/content/gallery/ui/fiel
 const doc = (...paragraphs: string[]) => ({ type: "doc", content: paragraphs.map((text) => ({ type: "paragraph", content: [{ type: "text", text }] })) });
 const HAPPY_MONDAY = "Alergăm pe Tâmpa în fiecare luni seara, pornind de la telecabină, în ritmul fiecăruia.";
 
-describe("§NNN the same words in both languages", () => {
+describe("§354 the same words in both languages", () => {
   it("compares a rich text's words, whatever its paragraphs, spaces and capitals", () => {
     expect(comparableText(doc("Prima frază.", "A doua   frază."))).toBe("prima frază. a doua frază.");
     // The JSON a rich-text box posts reads the same as the stored document.
@@ -119,7 +119,7 @@ describe("§NNN the same words in both languages", () => {
   });
 });
 
-describe("§NNN the organizer's note and the reason, read from the outbox", () => {
+describe("§354 the organizer's note and the reason, read from the outbox", () => {
   it("reads each half's own language from a row queued with both", () => {
     const note = { ro: "Parcarea e închisă.", en: "The car park is closed." };
     expect(readEventNoticeWords(note, "ro")).toEqual({ text: "Parcarea e închisă.", other: "The car park is closed." });
@@ -139,7 +139,7 @@ describe("§NNN the organizer's note and the reason, read from the outbox", () =
   });
 });
 
-describe("§NNN a standing page's search-engine texts and an album's description: both or neither", () => {
+describe("§354 a standing page's search-engine texts and an album's description: both or neither", () => {
   const page = (seo: { roTitle?: string; enTitle?: string; roDescription?: string; enDescription?: string }) => ({
     navOrder: "0",
     translations: {
@@ -184,7 +184,7 @@ describe("§NNN a standing page's search-engine texts and an album's description
   });
 });
 
-describe("§NNN the note's and the reason's boxes in the refusal summary", () => {
+describe("§354 the note's and the reason's boxes in the refusal summary", () => {
   it("names each language's box, its box on the page, and what it needs", async () => {
     catalogue = ro;
     locale = "ro";

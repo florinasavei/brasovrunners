@@ -32,7 +32,7 @@ const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translatio
 /**
  * One strip of tabs, its marks computed from what is stored and then from what is typed.
  *
- * `identical` names the long texts of the strip to compare across languages (§NNN, bilingual
+ * `identical` names the long texts of the strip to compare across languages (§354, bilingual
  * everywhere): the same words in both is an amber line over the panels and a mark on the English
  * tab — computed here from what is stored for the first paint, re-read in the browser as typed.
  */

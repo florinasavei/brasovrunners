@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languageTab, openEditorBox } from "./support/fold";
 
 /**
- * §NNN, bilingual everywhere — "Textul în engleză e identic cu cel în română — e tradus?". The
+ * §354, bilingual everywhere — "Textul în engleză e identic cu cel în română — e tradus?". The
  * case live on production: the English "Happy Monday" date carries the Romanian description in
  * its English box. Here with "Ce să aduci", a plain box a person types into like any other:
  *

@@ -25,7 +25,7 @@ export type EventNoticeLabels = {
   cancelReasonHelp: string;
   cancelNotify: string;
   cancelNotifyHelp: string;
-  /** Each language in its own words, over its box: "Română", "English" (§NNN, bilingual everywhere). */
+  /** Each language in its own words, over its box: "Română", "English" (§354, bilingual everywhere). */
   languageRo: string;
   languageEn: string;
   /** The amber line under a pair whose two boxes say the same words — "is it translated?". */
@@ -54,7 +54,7 @@ type NoticeProps = {
  * (§350):
  *
  * - **Cancelled, on an event that was not** (`EventCancelFields`, in "Starea evenimentului",
- *   beside the select that cancels) — the reason, required in Română and in English (§NNN,
+ *   beside the select that cancels) — the reason, required in Română and in English (§354,
  *   bilingual everywhere: `NoticeTextPair`), and "tell the participants", ticked.
  *   Rendered only while the select says "Anulat", so the browser's `required` is honest: a hidden
  *   required box would refuse every ordinary save with a message pointing at nothing. The service
@@ -100,7 +100,7 @@ export function EventCancelFields({ statusSelectName, initialStatus, wasCancelle
         <Typography variant="body2" sx={{ mb: 1.5 }}>
           {labels.cancelIntro}
         </Typography>
-        {/* Why, in both languages (§NNN): each registrant reads the reason in theirs, so both are required. */}
+        {/* Why, in both languages (§354): each registrant reads the reason in theirs, so both are required. */}
         <NoticeTextPair prefix="cancel.reason" label={labels.cancelReason} help={labels.cancelReasonHelp} required maxLength={maxLength} labels={labels} onPaper />
         {offerNotice && (
           <Box sx={{ mt: 1 }}>
@@ -153,7 +153,7 @@ function NotifyToggle({ on: initialOn, maxLength, labels }: { on: boolean; maxLe
 }
 
 /**
- * One of the organizer's texts as two boxes, Română and English side by side from `sm` (§NNN,
+ * One of the organizer's texts as two boxes, Română and English side by side from `sm` (§354,
  * bilingual everywhere — the partner description's pattern): every registrant is written to in
  * the language they registered in, so the words they read have to exist in it. Always seen
  * together, never behind a tab, because they are one text.

@@ -237,7 +237,7 @@ export function coHostLinksForPage(host: Pick<CoHost, "links">): CoHostLink[] {
  * The label the club wrote for this link in this language, or null — the caller shows the
  * kind's own default word then, the same contract `eventLinkLabel` carries for §332.
  *
- * **Both or neither** (§NNN, bilingual everywhere), exactly as `coHostDescription` reads a
+ * **Both or neither** (§354, bilingual everywhere), exactly as `coHostDescription` reads a
  * description: a link stored before the rule with a label in one language answers null on both
  * pages, so the Romanian page does not say "Site-ul lor" while the English one says "Website".
  * The editor reads the stored pair itself and keeps the half until somebody completes it.
@@ -247,10 +247,10 @@ export function coHostLinkLabel(link: Pick<CoHostLink, "labelRo" | "labelEn">, l
   return locale === "ro" ? link.labelRo : link.labelEn;
 }
 
-/** A partner's link the next save will refuse: its label in one language only (§NNN). */
+/** A partner's link the next save will refuse: its label in one language only (§354). */
 export const hasOneLanguageCoHostLabel = (link: Pick<CoHostLink, "labelRo" | "labelEn">): boolean => !link.labelRo !== !link.labelEn;
 
-/** A partner the next save will refuse: its description in one language only (§NNN). */
+/** A partner the next save will refuse: its description in one language only (§354). */
 export const hasOneLanguageCoHostDescription = (host: Pick<CoHost, "descriptionRo" | "descriptionEn">): boolean =>
   !host.descriptionRo !== !host.descriptionEn;
 

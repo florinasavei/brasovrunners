@@ -40,7 +40,7 @@ export default function proxy(request: NextRequest) {
   }
 
   /**
-   * A locale's root is the listing (§NNN): `/ro` → `/ro/evenimente`, a real 308 with an empty
+   * A locale's root is the listing (§353): `/ro` → `/ro/evenimente`, a real 308 with an empty
    * body, the query kept. Answered here rather than by `app/[locale]/page.tsx`'s
    * `permanentRedirect`, which runs after the layout has started streaming and so could only
    * send a 200 and an error document carrying a client-side hop.

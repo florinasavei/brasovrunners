@@ -85,7 +85,7 @@ describe("BR-REQ-011-01 criterion 20 the label when the club wrote none", () => 
     expect(hasOneLanguageLabel(link)).toBe(false);
   });
 
-  it("is null in both languages for a label stored in one language only — both or neither (§NNN)", () => {
+  it("is null in both languages for a label stored in one language only — both or neither (§354)", () => {
     // Saved before the rule: neither page shows the club's label, both show the kind's own word,
     // so the Romanian page never says something the English one does not.
     const romanianOnly = { labelRo: "Traseul de 21 km", labelEn: null };
@@ -99,7 +99,7 @@ describe("BR-REQ-011-01 criterion 20 the label when the club wrote none", () => 
     expect(hasOneLanguageLabel({ labelRo: null, labelEn: null })).toBe(false);
   });
 
-  it("renders the kind's word on both pages for a row whose label is in one language only (§NNN)", () => {
+  it("renders the kind's word on both pages for a row whose label is in one language only (§354)", () => {
     const stored = [{ kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null }];
     expect(render(stored, "ro")).toContain("Traseul (GPX)");
     expect(render(stored, "ro")).not.toContain("Traseul de 21 km");

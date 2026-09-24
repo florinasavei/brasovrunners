@@ -77,7 +77,7 @@ export type PageTranslationInput = z.infer<typeof pageTranslationSchema>;
  * (`AGENTS.md` §11.2), so the editor asks for both from the beginning rather than letting a page
  * exist in one language and discover the rule at the moment somebody tries to publish it.
  *
- * The two search-engine texts are optional, and optional in both languages at once (§NNN,
+ * The two search-engine texts are optional, and optional in both languages at once (§354,
  * bilingual everywhere — the rule the event's own two overrides follow): a title or a description
  * for Google written in one language and left empty in the other is refused on the empty box,
  * every other box kept (§315). The editor posts both languages in one save, so the rule is read

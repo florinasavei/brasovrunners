@@ -5,13 +5,13 @@ import { routing } from "@/i18n/routing";
 import proxy from "@/proxy";
 
 /**
- * The site root is the listing, answered by the proxy with a real status (§NNN).
+ * The site root is the listing, answered by the proxy with a real status (§353).
  *
  * `app/[locale]/page.tsx`'s `permanentRedirect` runs after the root layout has started
  * streaming, so production answered `/ro` with a 200, a 300 KB error document and a client-side
  * hop — a soft redirect on the most-visited URL. The proxy answers before anything renders.
  */
-describe("§NNN the locale root redirects before anything renders", () => {
+describe("§353 the locale root redirects before anything renders", () => {
   it("reads each locale's listing from the route table", () => {
     const localized = routing.pathnames["/events"] as Record<string, string>;
     for (const locale of routing.locales) expect(listingPath(locale)).toBe(`/${locale}${localized[locale]}`);

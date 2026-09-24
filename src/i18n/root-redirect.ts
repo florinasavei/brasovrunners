@@ -1,7 +1,7 @@
 import { type Locale, routing } from "@/i18n/routing";
 
 /**
- * The site root is the listing, and the proxy says so before anything renders (§NNN).
+ * The site root is the listing, and the proxy says so before anything renders (§353).
  *
  * `app/[locale]/page.tsx` used to be the only answer to `/ro`: a `permanentRedirect` thrown from
  * inside a page. By then the root layout had started streaming, so Next could no longer send the

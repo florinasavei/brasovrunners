@@ -118,7 +118,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             {/*
-              Only the words the public islands read (§NNN). Left bare, next-intl 4 hands the
+              Only the words the public islands read (§353). Left bare, next-intl 4 hands the
               client every message and format of the request — the whole catalogue, backoffice
               included, in the payload of every page. The backoffice's layouts nest a provider of
               their own with the staff islands' words added. No `formats`: no island formats a

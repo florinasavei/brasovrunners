@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.75-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.74-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.75-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14269,3 +14269,104 @@ Baseline `BR-V1.74-2026-09-24`.
 No migration, no new variable, no new dependency.
 
 Baseline `BR-V1.74-2026-09-24`.
+
+## 353. A public page carries only its islands' words, and the site root is a real 308
+
+**2026-09-24.** Every public page carried the whole message catalogue in its RSC payload. In next-intl 4, a `NextIntlClientProvider` rendered from a Server Component with no `messages` prop inherits every message and format of the request, and the root layout (`src/app/[locale]/layout.tsx`) rendered one bare. That was about 250 KB of JSON per page, three quarters of it the backoffice's `Admin` namespace, all to serve the eleven client files that call `useTranslations`. A Server Component translates on the server and ships only the sentence it rendered, so the catalogue needs to reach the browser only for what an island translates itself.
+
+**Decision.**
+
+- **Two lists, one per provider** (`src/i18n/client-messages.ts`):
+  - `PUBLIC_CLIENT_MESSAGES`: the header's islands, `[locale]/error.tsx` and the declaration's `SignatureField`.
+  - `STAFF_CLIENT_MESSAGES`: the date and time pickers, and the series scope in the event editor.
+  - The root provider passes `pickMessages(messages, PUBLIC_CLIENT_MESSAGES)` and `formats={null}`.
+  - The `/admin` and `/devs` layouts each nest a provider carrying `BACKOFFICE_CLIENT_MESSAGES` (public plus staff), because a provider's `messages` replace its parent's instead of merging with them.
+  - An entry is a dotted path. An island that builds a key at runtime (`t(section.segment)`, `` t(`languageCode.${locale}`) ``) takes the whole sub-tree above it.
+- **A guard derived from the source, not declared** (`tests/unit/i18n/client-messages.test.ts`):
+  - It walks value imports from every route file (page, layout, error, not-found, template, loading) to each `"use client"` file.
+  - It reads each island's keys from its syntax tree: literal keys, both branches of a ternary, the prefix of a template, or the whole namespace when the key cannot be read.
+  - It fails on a key missing from the island's provider, a list entry no island needs, a `useTranslations` it cannot read, or a server-rendered provider left bare.
+  - An island that any public route reaches is held to the public list.
+- **A missing message is loud where someone can catch it** (`src/i18n/errors.ts`):
+  - With `APP_ENV` `local` or `test`, `MISSING_MESSAGE` and `INSUFFICIENT_PATH` throw. On the server this goes through `request.ts`'s `onError`; in islands it goes through `IntlErrorHandling`, a client provider nested under the root, because a function cannot cross from the server.
+  - The e2e suite runs a production build with `APP_ENV=local`, so every spec now also checks for missing keys on the server and the client.
+  - QA and production keep next-intl's quiet fallback: the failure is logged and the page renders (BR-REQ-040-04 criterion 2).
+  - The check is on `APP_ENV`, not `NODE_ENV`, because `yarn start` runs with `NODE_ENV=production` on a laptop too.
+- **The site root is answered by the proxy** (`src/i18n/root-redirect.ts`, `src/proxy.ts`):
+  - `app/[locale]/page.tsx` threw `permanentRedirect` after the root layout had started streaming. So production answered `/ro`, its most-visited URL, with a 200 and a 300 KB error document (`<html id="__next_error__">`) carrying a client-side hop.
+  - The proxy now answers `/ro` and `/en` with a 308 to the listing, keeping the query. The target is read from `routing.pathnames`, so renaming the listing's path cannot leave the root pointing at a 404.
+  - For `/`, the proxy rewrites next-intl's own redirect to go straight to the listing: one hop, with next-intl's choice of locale and its 307 kept.
+  - `page.tsx` stays as the fallback.
+
+**Measured** locally (`yarn build && yarn start`, gzip on the wire): `/ro/evenimente` 119 KB → 39 KB; an event page 113 KB → 31 KB; `/ro` went from a 308 intent served as a 297 KB body to a 308 with 14 bytes.
+
+**What it found.** The first full e2e run on the branch failed `location-to-be-announced.spec.ts` (§328) on both projects:
+
+- The spec asked for the calendar file at `/ro/evenimente/<slug>/calendar.ics`, and no route answers that address. The page links `/${locale}/events/${slug}/calendar.ics`, and a path with an extension skips the proxy, so the request was the `[...rest]` 404.
+- It had passed on qa only because the 404 page's payload carried the whole catalogue, "Locația se anunță în curând" included. Once the payload no longer carried the catalogue, the assertion lost what it had been passing on by accident.
+- The spec now asks for the linked address and checks for a 200 and `text/calendar`.
+- The lesson for specs: a `toContain` on raw HTML must first check it is looking at the right document.
+
+**Verification:** unit `i18n/client-messages.test.ts`, `i18n/missing-messages.test.ts`, `i18n/root-redirect.test.ts`; e2e `client-words.spec.ts` (every page with a translating island opens, hydrates and shows no raw key or error page, in the public pages and the backoffice; a public page's HTML carries no backoffice key; `/ro` and `/en` are 308s with no body, `/` is one 307). The full suite on 2026-09-24: 338 tests, 325 passed, 13 skipped, 0 failed, mobile 320px and desktop.
+
+Baseline `BR-V1.75-2026-09-24`.
+
+## 354. Bilingual everywhere: the organizer's note and reason in both languages, both-or-neither on pages and albums, labels read as a pair, and a warning for the same words twice
+
+**Context.** The owner, 2026-09-24: "I want multi-lingual, always." The partner commit made an optional bilingual text both languages or neither for the event's own texts, the partner description and the link labels (the `§354` of `shared/forms/both-languages.ts`). Its audit found other places where one language's text could still reach a reader of the other. One of them is live on production: the English "Happy Monday" date has the Romanian description in its English box, so the English page shows Romanian prose. This § closes them.
+
+**1. The organizer's note and the cancellation's reason are written in both languages (amends §331).**
+- **Before.** "Anunță participanții despre schimbare" had one note box, and cancelling had one reason box. Every registrant got that one text, in both halves of the bilingual email, so a Romanian note reached English readers.
+- **The boxes.** Each text is now two boxes, Română and English side by side from `sm`, the partner-description pattern (`EventNoticeFields.tsx#NoticeTextPair`). They post `notice.noteRo`/`notice.noteEn` and `cancel.reasonRo`/`cancel.reasonEn`.
+- **The rules** (`service.ts#readNoticeRequest`):
+  - The note stays optional, both or neither. One side only is refused on the empty box.
+  - The reason was required, so it is required in both. Each empty box is named.
+  - Each language has its own 500-character ceiling.
+  - The rest of the form comes back as typed (§315).
+  - An unticked note is still ignored.
+- **The outbox.** The payload carries `note: { ro, en }` and `reason: { ro, en }`.
+- **Rendering** (`event-changes.ts#readEventNoticeWords`, `render.ts`, `templates.ts`). The row's language reads first, and the second half reads the other language's own text (`organizerNoteOther`, `cancellationReasonOther`), never the same text twice.
+- **Older rows.** A row queued before this carries one string and renders exactly as before: the same words in both halves. The outbox is not rewritten.
+- **Half a pair.** A stored pair with only one side readable (only a hand-made row can have one) renders no note in either half. The rest of the message still goes.
+- **Audit.** `event.update_notice_sent` and `event.cancelled` keep both texts.
+- **Previews.** `/admin/emails` previews both message types with each half in its own language.
+- **Rollback.** A release from before this, reading a new row, finds an object where it expects a string and drops the note or the reason. The message still goes, and nothing is shown in the wrong language. This was accepted rather than writing a redundant string.
+
+**2. A standing page's search-engine texts and an album's description are both or neither.**
+- `pages/fields.ts` refines `translations` on `seoTitle`/`seoDescription`; `gallery/fields.ts` refines it on `description`. Both use `refuseOneLanguage`, on the empty box, with the rest kept (§315).
+- Both editors post both languages in one save, so the rule is read where both are known. Nothing waits for a second save, and no language is saved alone.
+- The refusal line adds "scrie-l/scrie-o în ambele limbi sau în niciuna", because a refused box loses its help to "Verifică acest câmp". Each box also carries a help line.
+- Stored one-sided values are not rewritten. Each public page reads only its own language, so nothing crosses languages. The next save of that page or album is refused until both are written.
+
+**3. A stored label in one language only reads as no label, on both pages.**
+- `eventLinkLabel` and `coHostLinkLabel` answer only when both labels are written, the rule `coHostDescription` applies to descriptions.
+- A "Linkuri și fișiere" row or a partner link saved before the rule, with a label in one language, now shows the kind's own word on both pages. Before, one page showed the club's label and the other the default word.
+- The editor still reads the stored pair, so the half can be completed.
+- The closed lines mark it: `linksSummary`, and the link count in `coHostsSummary`, say "etichetă într-o singură limbă", the way "descriere într-o singură limbă" already worked.
+
+**4. The same words in both languages are warned about, never refused.**
+- **The test** (`both-languages.ts#identicalInBothLanguages`). Both sides are compared on their words: a rich text's text runs, whitespace collapsed, NFC, no case. They count as identical only when both are written, identical, and longer than 40 characters. A name like "Happy Monday", a brand or a short label may honestly read the same in both languages. The same function runs in the browser on every keystroke and on the server over stored rows, so the first paint and the first keystroke agree.
+- **Where it applies.** The summary, the description, the rules, the programme's notes, what to bring, each partner's description, and the notice note/reason pair. Not the title, the place's name or a link's label.
+- **What it shows:**
+  - an amber line in the box (`LocaleTabPanels`' `identical` watch, per card in `CoHostRowsEditor`, under the note/reason pair);
+  - "· identic cu româna" on the English tab;
+  - "EN identic cu RO" on the closed line;
+  - a list in the Publicare box, "De verificat: textul în engleză e identic cu cel în română (nu blochează publicarea)", each line a link to the English box. The editor computes it from what is stored, like "Ce lipsește pentru publicare"; the create page updates it as the form is typed (`publish-check.ts#identicalTexts`, `storedTextReader`).
+- No save and no publication is refused for it.
+
+**5. The closed lines and the guide say the rule.**
+- The description and rules lines used to say what the empty page falls back to ("pagina EN arată rezumatul"). Nothing falls back any more, so they now say "de scris și în EN (ambele limbi sau niciuna)".
+- The programme line names the language that still owes its notes or what to bring. The address line says "SEO într-o singură limbă".
+- The help texts of the description, rules, what to bring and "Linkuri și fișiere" say "în ambele limbi sau în niciuna".
+- `/admin/guide`: the Redactor's "both languages count" step, and one sentence in the Organizer's settings step about the note and the reason.
+
+**Not done.** The second half of every bilingual email still reads the event's title, "what to bring" (`{eventChecklist}`) and a language's own place name in the registrant's language. `findEventNotificationDetails` is read once, for the row's locale. Fixing that is a second read per message and changes every subject line. It is left to its own decision.
+
+No migration: the outbox payload and the co-host and link columns are JSON.
+
+Tests:
+- unit: `content/bilingual-everywhere.test.ts`, `content/box-summaries.test.ts`, `events/event-links.test.ts`, `events/co-hosts.test.ts`, `events/event-facts-co-hosts.test.ts`, `notifications/event-notices.test.ts`;
+- integration: `cms/event-notices.test.ts` (payload shape, per-language rendering, the legacy row, half a pair, refusal naming), `cms/gallery.test.ts`;
+- e2e: `event-notices.spec.ts`, `identical-languages.spec.ts`, `gallery.spec.ts`.
+
+Baseline `BR-V1.75-2026-09-24`.

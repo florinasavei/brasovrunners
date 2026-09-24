@@ -42,7 +42,7 @@ export default async function DevsLayout({ children, params }: Props) {
   const messages = await getMessages({ locale });
 
   return (
-    // The same nested provider as `/admin`'s layout (§NNN): the shell and its islands are the same.
+    // The same nested provider as `/admin`'s layout (§353): the shell and its islands are the same.
     <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
       <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
         {children}

@@ -31,7 +31,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Sunday run ${suffix}`);
     await field("translations.en.slug").fill(`sunday-${suffix}`);
-    // The description in both languages or neither (§NNN, bilingual everywhere).
+    // The description in both languages or neither (§354, bilingual everywhere).
     await field("translations.en.description").fill("Photos from the start.");
     await page.getByRole("button", { name: "Album nou" }).click();
     await expect(page).toHaveURL(/\/admin\/gallery\/[0-9a-f-]{36}/);

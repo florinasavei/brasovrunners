@@ -51,7 +51,7 @@ export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: r
 
 /**
  * The long texts of the form an element sits in whose English says the Romanian word for word
- * (§NNN, bilingual everywhere), re-read as the form is typed into — `usePublishGaps`'s twin for
+ * (§354, bilingual everywhere), re-read as the form is typed into — `usePublishGaps`'s twin for
  * the one check that warns rather than refuses.
  */
 function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: readonly string[], on: boolean): IdenticalText[] {
@@ -76,7 +76,7 @@ function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: reado
 }
 
 /**
- * The texts that say the same words in both languages, under the Publicare box's gaps (§NNN):
+ * The texts that say the same words in both languages, under the Publicare box's gaps (§354):
  * amber, each a link to the English box like a gap's line, and said not to block publication —
  * a short text may honestly be the same. The editor renders the same list from what is stored;
  * the create page's is this one, live.
@@ -118,7 +118,7 @@ export function MissingForPublishList({
   title: string;
   /** "Nothing is missing" — said rather than an empty space. */
   complete: string;
-  /** The texts identical in both languages (§NNN), listed under the gaps as warnings. */
+  /** The texts identical in both languages (§354), listed under the gaps as warnings. */
   identical?: { labels: IdenticalLabels; title: string };
 }) {
   const anchor = useRef<HTMLDivElement>(null);

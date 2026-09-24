@@ -298,7 +298,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   ];
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
   /*
-    And what publication does not refuse but a reader would notice (§NNN, bilingual everywhere):
+    And what publication does not refuse but a reader would notice (§354, bilingual everywhere):
     a long text whose English says the Romanian word for word — the English "Happy Monday" date
     carries the Romanian description today. Read from what is stored, like the gaps above; the
     boxes themselves re-read it as it is typed.
@@ -329,7 +329,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       noticeRecipients.real + noticeRecipients.test === 0
         ? t("editor.notice.cancelCountNone")
         : `${t("editor.notice.cancelCount", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${noticeTestNote}`,
-    // The note and the reason are written in both languages (§NNN, bilingual everywhere), each box
+    // The note and the reason are written in both languages (§354, bilingual everywhere), each box
     // named in its own language like every Română | English tab on this page.
     languageRo: tSite("languageName.ro"),
     languageEn: tSite("languageName.en"),

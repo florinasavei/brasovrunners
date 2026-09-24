@@ -30,7 +30,7 @@ export type LocalePanel = {
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
 
 /**
- * The same words in both languages (§NNN, bilingual everywhere): which of the panel's boxes to
+ * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
  * compare across languages, what the amber line above the panels says, and the word each copying
  * tab wears — every tab after the first, compared with the first (`routing.locales` order). A
  * warning, never a refusal. `initial` is the server's answer from what is stored, so the first
@@ -74,7 +74,7 @@ export default function LocaleTabPanels({
   watch?: TabWatch;
   /** The mark's word ("incomplet") for a tab that becomes unfinished while typing. */
   markLabel?: string;
-  /** Warn when a watched text says the same words in both languages (§NNN). */
+  /** Warn when a watched text says the same words in both languages (§354). */
   identical?: IdenticalWatch;
   /** Whether anything here can be typed into; a read-only strip keeps the server's first answers. */
   live?: boolean;
@@ -215,7 +215,7 @@ export default function LocaleTabPanels({
             label={[
               panel.label,
               incomplete[index] && markWord ? markWord : null,
-              // The copying language's tab — every one after the first — says it (§NNN).
+              // The copying language's tab — every one after the first — says it (§354).
               same && identical && index > 0 ? identical.mark : null,
             ]
               .filter((part): part is string => Boolean(part))
@@ -228,7 +228,7 @@ export default function LocaleTabPanels({
         ))}
       </Tabs>
 
-      {/* The same words in both languages (§NNN): above the panels, so it reads whichever tab is on top. */}
+      {/* The same words in both languages (§354): above the panels, so it reads whichever tab is on top. */}
       {same && identical && (
         <Alert severity="warning" sx={{ mb: 2 }} data-testid={`${idPrefix}-identical`}>
           {identical.warning}
