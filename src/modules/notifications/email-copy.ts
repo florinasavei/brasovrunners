@@ -94,6 +94,12 @@ export async function updateEmailCopy<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not write the emails' words`);
   }
 
+  // The organizer's message is written per send (§NNN): a stored wording for it would never be
+  // read, and a panel that saved one would be saying something untrue about what goes out.
+  if (input.messageType === "ORGANIZER_MESSAGE") {
+    throw new DomainError("VALIDATION_ERROR", "the organizer's message is written per send, on the event's page, not here");
+  }
+
   const key = emailCopyKey(input.messageType, input.locale);
   const before = await readEmailCopy(db);
   let entry: EmailCopyEntry | null = null;

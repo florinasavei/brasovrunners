@@ -59,6 +59,27 @@ const SAMPLE_REASON: Record<EmailLocale, string> = {
 };
 
 /**
+ * The organizer's message (§NNN) is written per send, so its card previews a sample one — both
+ * languages, with a placeholder in each, as the composer on the event's page would send it.
+ */
+const SAMPLE_ORGANIZER_SUBJECT: Record<EmailLocale, string> = {
+  ro: "Vreme rea la {eventTitle}: startul se mută la 10:00",
+  en: "Bad weather at {eventTitle}: the start moves to 10:00",
+};
+const SAMPLE_ORGANIZER_BODY: Record<EmailLocale, string> = {
+  ro: [
+    "Salut, {participantName}!",
+    "Prognoza anunță furtună până la 9:00, așa că mutăm startul la 10:00. Masa de înscrieri se deschide la 9:15, în același loc.",
+    "Aduceți o haină de ploaie.",
+  ].join("\n\n"),
+  en: [
+    "Hi, {participantName}!",
+    "The forecast says storms until 9:00, so we are moving the start to 10:00. The registration desk opens at 9:15, in the same place.",
+    "Bring a rain jacket.",
+  ].join("\n\n"),
+};
+
+/**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
  * a save — so it may never be served from a cache. Without this the panel showed the values
  * it had before the press (found on 2026-09-20: clearing the recipients wrote the row and the
@@ -177,6 +198,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     organizerNoteOther: SAMPLE_NOTE[tRo ? "en" : "ro"],
     cancellationReason: SAMPLE_REASON[emailLocale],
     cancellationReasonOther: SAMPLE_REASON[tRo ? "en" : "ro"],
+    // "Trimite un mesaj participanților" (§NNN): a sample message, both languages, read only by its template.
+    organizerSubject: SAMPLE_ORGANIZER_SUBJECT[emailLocale],
+    organizerSubjectOther: SAMPLE_ORGANIZER_SUBJECT[tRo ? "en" : "ro"],
+    organizerBody: SAMPLE_ORGANIZER_BODY[emailLocale],
+    organizerBodyOther: SAMPLE_ORGANIZER_BODY[tRo ? "en" : "ro"],
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 
@@ -268,8 +294,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // The card whose words were just saved opens with the card around it, so the preview
             // that changed is the first thing in view (§336).
             justSaved: copySaved && savedMessage === messageType,
-            // The words, for whoever writes them (§103, §247). Under the preview it changes.
-            editor: canEditTexts(staff.role) ? (
+            // The words, for whoever writes them (§103, §247). Under the preview it changes. The
+            // organizer's message has none to keep: it is written per send, on the event's page (§NNN).
+            editor: messageType === "ORGANIZER_MESSAGE" ? (
+              <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
+                {t("emails.perSend")}
+              </Alert>
+            ) : canEditTexts(staff.role) ? (
               <EmailCopyEditor
                 locale={locale}
                 emailLocale={emailLocale}

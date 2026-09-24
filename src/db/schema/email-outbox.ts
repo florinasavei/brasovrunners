@@ -53,6 +53,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   // "{event} a fost anulat" (§331): the event was cancelled in the editor, with the reason the
   // organizer typed. One per active registration; the registration itself is left as it was.
   "EVENT_CANCELLED",
+  // "Trimite un mesaj participanților" (§NNN): a message the organizer writes per send — bad
+  // weather, a changed start, anything — in Romanian and English, to the registrants of one event
+  // they choose (confirmed, waiting, owing the declaration, or all three). The words travel in the
+  // payload; the registrant's language reads first. No token, no attachment.
+  "ORGANIZER_MESSAGE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

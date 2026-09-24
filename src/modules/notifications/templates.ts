@@ -2,6 +2,7 @@ import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter"
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { organizerParagraphs } from "./domain/organizer-message";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
@@ -265,6 +266,12 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // The organizer's message (§NNN): its own words in the second half's language, and the event's
+    // facts that its placeholders read — the title, what to bring — in that language too.
+    ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
+    ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
+    ...(data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
+    ...(data.eventChecklistOther ? { eventChecklist: data.eventChecklistOther } : {}),
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
   const a = renderContent(first, locale);
@@ -395,6 +402,29 @@ export type TemplateData = {
   cancellationReason?: string;
   /** The same reason in the other language, for the second half (§354); absent on an older row. */
   cancellationReasonOther?: string;
+  /**
+   * "Trimite un mesaj participanților" (§NNN): the subject and the body the organizer wrote for
+   * this send, in this half's language — plain text, placeholders still in it, filled here with
+   * this half's facts. Absent only for a row whose payload cannot be read, which then goes with
+   * the platform's own subject and framing sentence.
+   */
+  organizerSubject?: string;
+  organizerBody?: string;
+  /** The same two in the other language, for the second half — never the same text twice (§354). */
+  organizerSubjectOther?: string;
+  organizerBodyOther?: string;
+  /**
+   * The event's title and "what to bring" in the other language, for the second half of the
+   * organizer's message, whose placeholders read them (§NNN). Set for that message only: every
+   * other message's second half still reads the registrant's language, as §354 left it.
+   */
+  eventTitleOther?: string;
+  eventChecklistOther?: string;
+  /**
+   * "Înscrierile mele" without a token (§77): the page that asks for an address and mails the link.
+   * On the organizer's message, which mints nothing, so its reader can still find their registration.
+   */
+  myRegistrationsUrl?: string;
 };
 
 /**
@@ -410,6 +440,28 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
     html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5"><strong>${escapeHtml(label)}</strong><br>${lines.map(escapeHtml).join("<br>")}</p>`,
     text: [label, ...lines],
   };
+}
+
+/**
+ * The organizer's own message (§NNN), after the platform's one framing sentence: the body they
+ * typed, its placeholders filled with this half's facts, a blank line starting a paragraph and a
+ * single line break kept. Escaped as plain text, and — like the note on an update (§331) — no
+ * `**` or `__` read inside it: a pair of asterisks somebody typed prints as asterisks.
+ */
+function organizerMessageParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
+  if (messageType !== "ORGANIZER_MESSAGE" || !data.organizerBody) return [];
+  const paragraphs = organizerParagraphs(fillPlaceholders(data.organizerBody, data as unknown as Record<string, unknown>));
+  return paragraphs.map((lines, index) => ({
+    html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,
+    // A blank line between paragraphs in the plain-text part too, so it reads as it was typed.
+    text: index < paragraphs.length - 1 ? [...lines, ""] : lines,
+  }));
+}
+
+/** The subject the organizer wrote, filled with this half's facts (§NNN); the platform's own when a row carries none. */
+function organizerSubject(d: TemplateData, fallback: string): string {
+  if (!d.organizerSubject) return fallback;
+  return fillPlaceholders(d.organizerSubject, d as unknown as Record<string, unknown>) || fallback;
 }
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
@@ -678,6 +730,18 @@ const T = {
         `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
     },
+    /**
+     * "Trimite un mesaj participanților" (§NNN): the organizer's subject and body, written for this
+     * send; the platform adds only the facts line, one sentence saying who writes and why this
+     * person receives it, the event's page as the button and the usual links. Nothing to act on.
+     */
+    organizerMessage: {
+      subject: (d: TemplateData) => organizerSubject(d, `Un mesaj despre ${d.eventTitle ?? "eveniment"}`),
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [`Un mesaj de la organizatorii evenimentului ${d.eventTitle ?? "Brașov Runners"}, la care te-ai înscris:`],
+      action: "Vezi pagina evenimentului",
+      links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
+    },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
@@ -932,6 +996,13 @@ const T = {
         `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
       ],
     },
+    organizerMessage: {
+      subject: (d: TemplateData) => organizerSubject(d, `A message about ${d.eventTitle ?? "the event"}`),
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [`A message from the organizers of ${d.eventTitle ?? "Brașov Runners"}, which you registered for:`],
+      action: "See the event's page",
+      links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
+    },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
       time: (d: TemplateData) =>
@@ -984,6 +1055,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
+  ORGANIZER_MESSAGE: "organizerMessage",
 };
 
 /**
@@ -1063,7 +1135,9 @@ export function buildTemplateContent(
     state of a registration rather than about how the club likes to write, and a club that
     rewrote the confirmation would otherwise silently lose them.
   */
-  const written = copyFor(overrides, messageType, locale);
+  // The organizer's message is written per send (§NNN): there is no stored wording to apply, and a
+  // hand-made entry for it in the setting must not replace what the organizer wrote this time.
+  const written = messageType === "ORGANIZER_MESSAGE" ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1116,6 +1190,8 @@ export function buildTemplateContent(
           : entry.body(data)),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
+      // The organizer's message itself, after its one framing sentence (§NNN).
+      ...organizerMessageParts(messageType, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined

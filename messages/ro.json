@@ -742,7 +742,9 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nu s-a schimbat nimic: scoaterea limitei de pe producție cere aceeași bifă de confirmare — fără limită, producția nu mai are niciun plafon de cheltuieli.",
       "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
-      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură în 48 de ore."
+      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură în 48 de ore.",
+      "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
+      "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -2501,7 +2503,8 @@
         "REGISTRATION_OPENED": "Înscrierile s-au deschis",
         "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat",
         "EVENT_UPDATE_NOTICE": "Detalii actualizate (loc, oră, program)",
-        "EVENT_CANCELLED": "Eveniment anulat"
+        "EVENT_CANCELLED": "Eveniment anulat",
+        "ORGANIZER_MESSAGE": "Mesaj de la organizatori"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -2523,7 +2526,8 @@
         "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
         "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token.",
         "EVENT_UPDATE_NOTICE": "Doar când un organizator bifează „Anunță participanții despre schimbare” la salvarea evenimentului, și doar dacă s-a schimbat locul, data și ora sau programul, ori dacă a scris un mesaj. Câte un email fiecărei înscrieri active (în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată), în limba ei; locul și ora sunt cele de la trimitere. Fără token: butonul duce la pagina evenimentului. Nebifat, nu pleacă nimic.",
-        "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune."
+        "EVENT_CANCELLED": "Când un organizator schimbă starea evenimentului în „Anulat” și lasă bifată „Anunță participanții”. Cu motivul scris de el, către fiecare înscriere activă, în limba ei. Înscrierile nu se anulează; fără token și fără link de acțiune.",
+        "ORGANIZER_MESSAGE": "Doar când un organizator scrie și trimite un mesaj din pagina evenimentului → „Trimite un mesaj participanților” — de exemplu vreme rea sau o schimbare de ultim moment. Subiectul și textul se scriu la fiecare trimitere, în română și în engleză; previzualizarea de aici folosește un text de exemplu. Către grupul ales — confirmați, pe lista de așteptare, cu declarația nesemnată sau toți —, fiecare în limba lui. Fără token și fără atașament: butonul duce la pagina evenimentului."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -2545,7 +2549,8 @@
         "REGISTRATION_OPENED": "când se deschid înscrierile",
         "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club",
         "EVENT_UPDATE_NOTICE": "doar când un organizator anunță o schimbare",
-        "EVENT_CANCELLED": "la anularea evenimentului, dacă e bifat"
+        "EVENT_CANCELLED": "la anularea evenimentului, dacă e bifat",
+        "ORGANIZER_MESSAGE": "doar când un organizator scrie un mesaj"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -2663,7 +2668,8 @@
         "saved": "Destinatarii formularului de contact au fost salvați.",
         "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
       },
-      "neverSent": "nu se mai trimite"
+      "neverSent": "nu se mai trimite",
+      "perSend": "Textul acestui email se scrie la fiecare trimitere, din pagina evenimentului („Trimite un mesaj participanților”), așa că nu are cuvinte de editat aici."
     },
     "guide": {
       "title": "Ghid de utilizare",
@@ -2812,6 +2818,74 @@
       "keptConflict": "Ce ai scris a rămas în câmpuri — copiază ce îți trebuie, apoi reîncarcă pagina.",
       "keptExceptConfirmation": "Ce ai scris a rămas în câmpuri, în afară de confirmare, care se cere din nou.",
       "incompleteFirst": "Completează mai întâi: {field}"
+    },
+    "participantMessages": {
+      "link": "Trimite un mesaj participanților",
+      "title": "Trimite un mesaj participanților",
+      "event": "{event} · {date}",
+      "intro": "Un email scris de tine, în română și în engleză, către cei înscriși la acest eveniment — de exemplu vreme rea, o schimbare de ultim moment sau o anulare. Fiecare îl primește în limba în care s-a înscris, cu cealaltă limbă dedesubt și cu linkul către pagina evenimentului. Pleacă prin coada de emailuri, ca toate celelalte.",
+      "backToEvent": "← Înapoi la eveniment",
+      "compose": "Mesaj nou",
+      "audience": "Cui îi trimiți",
+      "audienceHelp": "Înscrierile anulate sau expirate și adresele de email neconfirmate nu primesc nimic. Numărul de lângă fiecare grup este al înscrierilor de acum.",
+      "audiences": {
+        "ALL_ACTIVE": "Toți cei înscriși: confirmați, pe lista de așteptare și cei care nu au semnat încă declarația",
+        "CONFIRMED": "Doar confirmații",
+        "WAITLIST": "Doar cei de pe lista de așteptare (și cei cărora li s-a oferit un loc)",
+        "PENDING_DECLARATION": "Doar cei înscriși care nu au semnat încă declarația"
+      },
+      "audiencesShort": {
+        "ALL_ACTIVE": "Toți cei înscriși",
+        "CONFIRMED": "Confirmați",
+        "WAITLIST": "Lista de așteptare",
+        "PENDING_DECLARATION": "Declarație nesemnată"
+      },
+      "recipients": {
+        "one": "{count} destinatar",
+        "few": "{count} destinatari",
+        "other": "{count} de destinatari"
+      },
+      "nobody": "Nu e nimeni în grupul ales acum.",
+      "nobodyYet": "Nu e nimeni înscris acum la acest eveniment, așa că nu are cine primi mesajul.",
+      "noRegistrationHere": "Evenimentul nu primește înscrieri pe site, așa că nu are cine primi un mesaj de aici.",
+      "testLine": "Înscrieri de test, care primesc și ele mesajul și nu sunt numărate nicăieri: {test}.",
+      "cost": "Emailuri, cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
+      "waiting": "{waiting} așteaptă deja la coadă",
+      "deferredDay": "Azi pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure după miezul nopții (UTC), când se reface cota zilnică. Nu se pierde niciunul.",
+      "deferredMonth": "Luna aceasta pot pleca {now} dintre ele; celelalte {deferred} rămân la coadă și pleacă singure când se reface cota lunară. Nu se pierde niciunul.",
+      "subject": "Subiect",
+      "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
+      "body": "Mesajul",
+      "bodyHelp": "În ambele limbi, obligatoriu, text simplu, cel mult {max} de caractere în fiecare. Un rând gol începe un paragraf nou. Câmpuri care se completează pentru fiecare participant: {list} — numărul de concurs apare doar la cine îl are deja. Sub mesaj vin singure data și locul evenimentului, butonul către pagina lui și linkurile obișnuite.",
+      "preview": "Cum arată emailul",
+      "previewHelp": "Exact emailul care pleacă, pentru un participant de exemplu, Ana Popescu, cu numărul 42. Se actualizează pe măsură ce scrii.",
+      "previewRo": "Înscris în română",
+      "previewEn": "Înscris în engleză",
+      "previewLoading": "Se pregătește previzualizarea…",
+      "previewUnavailable": "Previzualizarea nu e disponibilă acum. Mesajul se poate trimite oricum.",
+      "previewUnknown": "Câmpuri necunoscute: {names}. Mesajul nu se poate trimite cu ele — folosește doar câmpurile scrise sub casete.",
+      "send": "Trimite mesajul",
+      "confirmTitle": {
+        "one": "Trimiți mesajul la {count} participant?",
+        "few": "Trimiți mesajul la {count} participanți?",
+        "other": "Trimiți mesajul la {count} de participanți?"
+      },
+      "confirmBody": "Emailul pleacă acum prin coada de emailuri, fiecăruia în limba lui, și nu mai poate fi retras.",
+      "confirmSend": "Trimite",
+      "sent": {
+        "one": "Mesaj pus la coadă pentru {count} participant. Pleacă în câteva minute.",
+        "few": "Mesaj pus la coadă pentru {count} participanți. Pleacă în câteva minute.",
+        "other": "Mesaj pus la coadă pentru {count} de participanți. Pleacă în câteva minute."
+      },
+      "sentTest": "Plus înscrieri de test: {test}.",
+      "duplicate": "Mesajul acesta fusese deja trimis, așa că nu s-a mai pus nimic la coadă a doua oară.",
+      "cancelledNote": "Evenimentul este anulat. Mesajul pleacă totuși, dacă îl trimiți — de exemplu ca să anunți o dată nouă.",
+      "seriesNote": "Evenimentul face parte dintr-o serie: mesajul pleacă doar la cei înscriși la această dată. Pentru altă dată, deschide-o din editor și trimite de acolo.",
+      "history": "Mesaje trimise",
+      "historyEmpty": "Niciun mesaj trimis încă de aici pentru acest eveniment.",
+      "historyWhen": "Trimis {date} de {sender}",
+      "historyNoSender": "un cont șters",
+      "historyTest": "înscrieri de test: {test}"
     }
   },
   "NotFound": {

@@ -21,6 +21,7 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { readEmailCopyForSending } from "./email-copy";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -188,6 +189,38 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     if (reason.text) data.cancellationReason = reason.text;
     if (reason.other) data.cancellationReasonOther = reason.other;
   }
+  /*
+    "Trimite un mesaj participanților" (§NNN): the organizer's subject and body, this registrant's
+    language first and the other language's own words in the second half (§354). A row whose
+    payload cannot be read goes with the platform's subject and framing sentence alone.
+
+    The second half's placeholders read the second language's facts — the event's title and "what
+    to bring" in English under the English words — which §354 left undone for every other message
+    because it costs a second read per message. Here the organizer writes `{eventTitle}` into both
+    halves, and an English sentence carrying the Romanian title is the thing "bilingual always"
+    exists to prevent, so this message pays for the read.
+  */
+  if (row.messageType === "ORGANIZER_MESSAGE") {
+    const words = readOrganizerMessagePayload(row.payloadJson);
+    const other = otherLocale(locale);
+    if (words) {
+      data.organizerSubject = words.subject[locale];
+      data.organizerSubjectOther = words.subject[other];
+      data.organizerBody = words.body[locale];
+      data.organizerBodyOther = words.body[other];
+    }
+    const otherDetails = eventId ? await findEventNotificationDetails(db, eventId, other) : undefined;
+    if (otherDetails) {
+      if (otherDetails.title) data.eventTitleOther = otherDetails.title;
+      if (otherDetails.checklist) data.eventChecklistOther = otherDetails.checklist;
+      if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+    }
+    // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
+    // without the line that says it can still move (§237).
+    if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
+    // "Înscrierile mele" by address, not by token: this message mints nothing (§77).
+    data.myRegistrationsUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
+  }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
   // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the
   // email names where they are, never a raw Drive link in a message that is forwarded.
@@ -232,7 +265,8 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.
-  if (row.messageType === "EVENT_UPDATE_NOTICE" && data.eventUrl) payloadActionUrl = data.eventUrl;
+  // The organizer's message too (§NNN): the one place a runner checks what the message is about.
+  if ((row.messageType === "EVENT_UPDATE_NOTICE" || row.messageType === "ORGANIZER_MESSAGE") && data.eventUrl) payloadActionUrl = data.eventUrl;
   // "Registration is open" (§146): no participant, no token; the action is the ordinary
   // registration page, which asks everything itself.
   if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {

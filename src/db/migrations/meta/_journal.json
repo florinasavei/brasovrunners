@@ -477,6 +477,13 @@
       "when": 1790235859807,
       "tag": "0067_waitlist_capacity",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1790254633384,
+      "tag": "0068_organizer_message",
+      "breakpoints": true
     }
   ]
 }
