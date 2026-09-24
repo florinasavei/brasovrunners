@@ -10,6 +10,14 @@ import { staffRegistrationConstraints } from "@/modules/registrations/constraint
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import {
+  StaffBirthDateField,
+  StaffEventScope,
+  StaffEventSelect,
+  StaffGuardian,
+} from "@/modules/registrations/ui/StaffEventBirthDate";
+import { dayIn } from "@/modules/registrations/domain/age";
+import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
@@ -58,6 +66,22 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const rt = await getTranslations("Registration");
   const format = await getFormatter();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
+  // The event the form opens on: the one the desk or the list came from, when it takes entries.
+  const selectedEventId = events.find((event) => event.id === eventId)?.id ?? events[0]?.id ?? "";
+  // The birth date's bounds (§321, §324): each event's own day, for the fourteen-on-race-day
+  // `max` the island computes once an event is chosen, and today and 120 years ago from here, as
+  // on the public form, so the server's render and the browser's agree.
+  const now = new Date();
+  const eventDays = Object.fromEntries(events.map((event) => [event.id, dayIn(event.startsAt, event.timezone)]));
+  // Each event's own minimum age (§329), so the date's bound follows the event chosen.
+  const eventMinAges = Object.fromEntries(events.map((event) => [event.id, event.minAge]));
+  const today = now.toISOString().slice(0, 10);
+  const earliestBirthDate = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()))
+    .toISOString()
+    .slice(0, 10);
+  // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
+  const phoneOrder = phoneCountryOrder(locale);
+  const phoneNames = phoneCountryLabels(locale);
 
   return (
     <Stack spacing={3}>
@@ -92,6 +116,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             firstName: rt("firstName"),
             lastName: rt("lastName"),
             birthDate: rt("birthDate"),
+            guardianName: rt("guardianName"),
             city: rt("city"),
             phone: rt("phone"),
             emergencyContactName: rt("emergencyContactName"),
@@ -106,26 +131,23 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <input type="hidden" name="uiLocale" value={locale} />
           {fromDesk && <input type="hidden" name="back" value="desk" />}
 
+          {/* The event and the birth date know about each other (§324): the date box's upper
+              bound is the latest birth date still fourteen on the chosen event's day (§321). */}
+          <StaffEventScope eventDays={eventDays} eventMinAges={eventMinAges} initialEventId={selectedEventId} today={today} earliest={earliestBirthDate}>
           <Stack spacing={2}>
-            <RecallField
-              select
-              name="eventId"
+            <StaffEventSelect
               label={t("registrations.event")}
-              defaultValue={eventId ?? events[0].id}
-              required
-            >
-              {events.map((event) => (
-                <MenuItem key={event.id} value={event.id}>
-                  {event.title ?? event.id} ·{" "}
-                  {format.dateTime(event.startsAt, {
-                    timeZone: event.timezone,
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </MenuItem>
-              ))}
-            </RecallField>
+              defaultValue={selectedEventId}
+              events={events.map((event) => ({
+                id: event.id,
+                label: `${event.title ?? event.id} · ${format.dateTime(event.startsAt, {
+                  timeZone: event.timezone,
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}${event.minAge > 0 ? ` · ${event.minAge}+` : ""}`,
+              }))}
+            />
 
             <RecallField name="firstName" label={rt("firstName")} {...textFieldConstraints(staffRegistrationConstraints("firstName"))} />
           <RecallField name="lastName" label={rt("lastName")} {...textFieldConstraints(staffRegistrationConstraints("lastName"))} />
@@ -136,23 +158,33 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             a registration recorded with gaps beats one refused for them.
           */}
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
-          {/* Optional here too, and when it is given the server counts it (§321): under fourteen on
+          {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§329, the "N+" beside its name) on
               the race day is refused, so the field says so before the volunteer presses. */}
-          <RecallField
-            name="birthDate"
-            type="date"
-            label={rt("birthDate")}
-            helperText={t("registrations.birthDateMinimumAge")}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
+          <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
+          {/*
+            The parent or guardian (§108), shown when the birth date says under eighteen today —
+            the public form's own island and rule (§188), so a fourteen-to-seventeen-year-old can
+            be entered at the desk with the date rather than refused for a box that was not there
+            (§324). Open whatever the date says when a refusal named it.
+          */}
+          <StaffGuardian>
+            <RecallField
+              name="guardianName"
+              label={rt("guardianName")}
+              helperText={rt("guardianNameHelp")}
+              autoComplete="off"
+              {...textFieldConstraints(staffRegistrationConstraints("guardianName"))}
+            />
+          </StaffGuardian>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
-          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
             label={rt("emergencyContactPhone")}
             countryLabel={rt("phoneCountry")}
-            locale={locale}
+            countryOrder={phoneOrder}
+            countryNames={phoneNames}
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
@@ -180,7 +212,13 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </RecallField>
 
-            <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
+            {/* A disclosure the person has to have asked for (§323): unticked unless they said so. */}
+            <Box>
+              <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
+              <Typography variant="body2" color="text.secondary">
+                {t("registrations.listOptInHelp")}
+              </Typography>
+            </Box>
 
             {/* The service refuses the whole registration without this, so the warning is
                 binding rather than decorative — the same rule the live-edit acknowledgement
@@ -213,6 +251,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               />
             </Box>
           </Stack>
+          </StaffEventScope>
         </ActionForm>
       )}
     </Stack>

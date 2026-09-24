@@ -3,7 +3,7 @@ import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES } from "@/modules/registrations/phone";
+import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import {
   capPhoneDigits,
   caretAfter,
@@ -275,8 +275,12 @@ describe("§NNN the caret stays with its digit", () => {
 });
 
 describe("§NNN one box, rendered on the server", () => {
+  const countryOrder = phoneCountryOrder("ro");
+  const countryNames = phoneCountryLabels("ro");
   const render = (props: Partial<Parameters<typeof PhoneField>[0]>) =>
-    renderToStaticMarkup(createElement(PhoneField, { name: "phone", label: "Telefon", countryLabel: "Țara", locale: "ro", ...props }));
+    renderToStaticMarkup(
+      createElement(PhoneField, { name: "phone", label: "Telefon", countryLabel: "Țara", countryOrder, countryNames, ...props }),
+    );
 
   it("prefills a stored number masked, without the trunk zero splitPhone does not carry", () => {
     const html = render({ value: "+40752189098" });

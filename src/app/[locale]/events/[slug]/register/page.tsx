@@ -24,15 +24,17 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
+import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
-import { dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import CheckYourEmail from "@/modules/registrations/ui/CheckYourEmail";
 import EmailDeliveryNotice from "@/modules/registrations/ui/EmailDeliveryNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import {
   OPTION_GLYPH_SX,
   OPTION_LABEL_SX,
@@ -41,6 +43,7 @@ import {
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
@@ -86,14 +89,9 @@ const disclosureSx = {
   borderColor: "divider",
   borderRadius: 1,
   px: 2,
-  "& > summary": {
-    cursor: "pointer",
-    // Height from padding, not a flex box: `display: flex` on a <summary> removes the
-    // disclosure triangle in Chrome and Safari, and a group that can fold should look like it.
-    py: 1.5,
-    listStyle: "revert",
-    ...TAP_TARGET,
-  },
+  // The shared summary (§325): a flex row with its own arrow on the heading's line.
+  "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+  ...DISCLOSURE_OPEN_ARROW,
 } as const;
 
 /**
@@ -186,30 +184,43 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const emergencySame = (fields ?? "").split(",").includes("emergencySame");
   /**
-   * Under fourteen on the day of the race (§321). The same kind of marker as the one above: the
-   * summary links the birth date, and this says which rule refused it — "complete this field
-   * correctly" about somebody's real birth date would be untrue.
+   * Under the event's minimum age on the day of the race (§321, §329). The same kind of marker
+   * as the one above: the summary links the birth date, and this says which rule refused it —
+   * "complete this field correctly" about somebody's real birth date would be untrue. Never on
+   * an event with no minimum, whatever a typed-in address says: "the minimum age is 0" is no rule.
    */
-  const tooYoung = (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
+  const tooYoung = event.minAge > 0 && (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
 
   /*
     BR-REQ-031-04 criterion 4 and the minimum age (§321), expressed where the browser can enforce
-    them too. The upper bound is the latest birth date that is still fourteen on the race's own
-    day in the race's own zone — computed here, for this event, from the arithmetic the server
-    refuses with — so the picker never offers a date the submission would be turned back for.
-    Today stays a bound as well, for the event absurdly far ahead that would allow a future date.
+    them too. The upper bound is the latest birth date that still reaches this event's own
+    minimum (`events.min_age`, §329) on the race's own day in the race's own zone — computed here,
+    for this event, from the arithmetic the server refuses with — so the picker never offers a
+    date the submission would be turned back for. Today stays a bound as well: for an event with
+    no minimum, and for the event absurdly far ahead that would allow a future date.
   */
   const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = latestBirthDateFor(MIN_PARTICIPANT_AGE, dayIn(event.startsAt, event.timezone));
+  const youngestAllowed = latestBirthDateFor(event.minAge, dayIn(event.startsAt, event.timezone));
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
+  // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§329).
+  const minimumAge = { age: yearsPhrase(event.minAge, locale) };
+  const hasMinimumAge = event.minAge > 0;
   const earliestBirthDate = new Date(
     Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
   )
     .toISOString()
     .slice(0, 10);
   const t = await getTranslations("Registration");
+  // The event page's own words for a place still to be announced (§328), one key for every surface.
+  const tEvent = await getTranslations("Event");
+  const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
+  // The phone prefixes' order and names, sorted and named here and only drawn in the browser
+  // (§324): the two runtimes' ICU data name countries differently, and computing either again
+  // in the browser broke hydration.
+  const phoneOrder = phoneCountryOrder(locale);
+  const phoneNames = phoneCountryLabels(locale);
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -264,7 +275,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       <Box sx={{ mb: 2 }}>
         <Typography variant="body1" sx={{ fontWeight: 500 }}>
           {whenLabel}
-          {event.locationName ? ` · ${event.locationName}` : ""}
+          {/* The place, or the sentence that it is still to be announced (§328) — the same words
+              as the event page; the query withholds the typed place itself. */}
+          {event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}` : event.locationName ? ` · ${event.locationName}` : ""}
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <Link href={{ pathname: "/events/[slug]", params: { slug } }} style={factLink}>
@@ -285,12 +298,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           </LegalLink>
         </Box>
         {/* Who may enter, among the facts of what is being signed up for and before the first
-            field (§321): the minimum age, and who fills the form in for a minor (§108). A line,
-            not a banner — it is a condition of the race like its date, not a warning. Gone once
-            the form has been sent: by then it has been answered. */}
+            field (§321): the event's own minimum age (§329), and who fills the form in for a
+            minor (§108). A line, not a banner — it is a condition of the race like its date, not
+            a warning. Three sentences, so it reads right whatever the number: no minimum says
+            only who registers a minor, eighteen or more says nothing about parents, and the
+            same sentence stands on the event page. Gone once the form has been sent: by then it
+            has been answered. */}
         {!submitted && (
-          <Typography variant="body2" color="text.secondary">
-            {t("ageRule")}
+          <Typography variant="body2" color="text.secondary" data-testid="age-rule">
+            {t(`ageRule.${ageRuleVariant(event.minAge)}`, minimumAge)}
           </Typography>
         )}
       </Box>
@@ -419,7 +435,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                         <MuiLink href={`#${fieldId(name)}`}>{t(`fieldNames.${name}`)}</MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
-                        {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung")}</>}
+                        {name === "birthDate" && tooYoung && <>: {t("errors.tooYoung", minimumAge)}</>}
                       </li>
                     ))}
                   </Box>
@@ -477,9 +493,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               rather than a glyph by name: the verbs' registry is the backoffice's and must not
               reach a public page. The row is a flex container so the button keeps its own width.
             */}
+            {/*
+              And the same hold for Cloudflare's token (§285, §304; §324): this press sends the
+              same form, and the widget below has been redrawn for the new render, so a press
+              before it answers would buy the refusal it is meant to get past. Held, then sent
+              when the token lands — never dropped.
+            */}
             {tooFast && (
               <Box sx={{ display: "flex", mb: 2 }}>
-                <SubmitButton label={t("errors.tooFastResend")} pendingLabel={t("submitting")} runner size="medium" />
+                <SubmitButton
+                  label={t("errors.tooFastResend")}
+                  pendingLabel={t("submitting")}
+                  runner
+                  awaitsBotCheck={Boolean(siteKey)}
+                  botCheckHint={t("botCheckWait")}
+                  slowHint={t("submitSlow")}
+                  size="medium"
+                />
               </Box>
             )}
             <Stack spacing={2}>
@@ -548,15 +578,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Stack>
 
               <TextField
-                {...field("birthDate", t("birthDateHelp"))}
-                /* The minimum age and the categories, in the help (§321); a refusal for age says
-                   the rule again rather than "complete this field correctly". */
+                {...field("birthDate")}
+                /* The event's minimum age and the categories, in the help (§321, §329) — only the
+                   categories on an event with no minimum; a refusal for age says the rule again
+                   rather than "complete this field correctly". */
                 helperText={
                   invalid.has("birthDate")
                     ? tooYoung
-                      ? t("errors.tooYoung")
+                      ? t("errors.tooYoung", minimumAge)
                       : t("errors.field")
-                    : t("birthDateHelp")
+                    : hasMinimumAge
+                      ? t("birthDateHelp", minimumAge)
+                      : t("birthDateHelpNoMinimum")
                 }
                 type="date"
                 label={t("birthDate")}
@@ -564,16 +597,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 autoComplete="bday"
                 slotProps={{
                   inputLabel: { shrink: true },
-                  // The same bounds the server applies — a date in the future, or one that is
-                  // under fourteen on the race day — so the picker refuses them itself rather
-                  // than a round trip.
+                  // The same bounds the server applies — a date in the future, or one under this
+                  // event's minimum age on the race day — so the picker refuses them itself
+                  // rather than a round trip.
                   htmlInput: { min: earliestBirthDate, max: latestBirthDate },
                 }}
               />
 
+              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
+                  not to say" is an answer. */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
-                  {...field("sex")}
+                  {...field("sex", t("sexHelp"))}
                   label={t("sex")}
                   select
                   required
@@ -614,48 +649,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Box>
                   </MenuItem>
                 </TextField>
-
-                <TextField
-                  {...field("nationality")}
-                  label={t("nationality")}
-                  select
-                  required
-                  fullWidth
-                  defaultValue={prefill("nationality", "RO")}
-                  sx={SELECT_WITH_GLYPHS_SX}
-                >
-                  {/*
-                    The flag before the name (§171), from the set `scripts/sync-flags.mjs`
-                    already copies into `public/flags/` — which that script's own comment
-                    anticipated for exactly this ("will show many when a participant can state
-                    their country"). Normalised to 4:3, so a column of two hundred names does
-                    not wobble between Romania's 2:3 and the United Kingdom's 1:2.
-
-                    Not the regional-indicator emoji, which Windows draws as two boxed capitals
-                    — and Windows is what the club's own laptop runs.
-                  */}
-                  {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
-                      {/* The flag is `display: block` and 20×15; the fixed box is what stops it
-                          taking a line of its own in the closed field and what keeps every
-                          country name starting at the same x. */}
-                      <Box component="span" sx={OPTION_GLYPH_SX}>
-                        <Flag code={country.code} width={20} />
-                      </Box>
-                      <Box component="span" sx={OPTION_LABEL_SX}>
-                        {country.label}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </TextField>
               </Stack>
-
-              <TextField
-                {...field("city")}
-                label={t("city")}
-                required
-                autoComplete="address-level2"
-              />
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
@@ -698,7 +692,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 id={fieldId("phone")}
                 label={t("phone")}
                 countryLabel={t("phoneCountry")}
-                locale={locale}
+                countryOrder={phoneOrder}
+                countryNames={phoneNames}
                 required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
@@ -711,8 +706,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 number, and a phone offering the runner's own would be accepted by reflex.
               */}
               <Stack spacing={2}>
+                {/* A third person's name and number (§322): the runner is the one who can tell
+                    them, so the form says to, and says when they would be rung. */}
                 <TextField
-                  {...field("emergencyContactName")}
+                  {...field("emergencyContactName", t("emergencyContactHelp"))}
                   label={t("emergencyContactName")}
                   required
                   fullWidth
@@ -727,7 +724,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
                   countryLabel={t("phoneCountry")}
-                  locale={locale}
+                  countryOrder={phoneOrder}
+                  countryNames={phoneNames}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused
@@ -839,6 +837,63 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
+                Where the runner is from (§322): optional, and on this side of the form for that
+                reason. It was required on the left, and the privacy notice could not say why —
+                nothing the club does with a registration reads either answer. What it is for is
+                said above the two fields, and the country starts unanswered rather than on
+                Romania: a pre-chosen answer is an answer nobody gave.
+              */}
+              <Box component="details" open sx={disclosureSx}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.origin")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("originHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("nationality")}
+                    label={t("nationality")}
+                    select
+                    fullWidth
+                    defaultValue={prefill("nationality", "")}
+                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    sx={SELECT_WITH_GLYPHS_SX}
+                  >
+                    <MenuItem value="" sx={OPTION_ROW_SX}>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {t("nationalityNone")}
+                      </Box>
+                    </MenuItem>
+                    {/*
+                      The flag before the name (§171), from the set `scripts/sync-flags.mjs`
+                      already copies into `public/flags/` — which that script's own comment
+                      anticipated for exactly this ("will show many when a participant can state
+                      their country"). Normalised to 4:3, so a column of two hundred names does
+                      not wobble between Romania's 2:3 and the United Kingdom's 1:2.
+
+                      Not the regional-indicator emoji, which Windows draws as two boxed capitals
+                      — and Windows is what the club's own laptop runs.
+                    */}
+                    {countries.map((country) => (
+                      <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                        {/* The flag is `display: block` and 20×15; the fixed box is what stops it
+                            taking a line of its own in the closed field and what keeps every
+                            country name starting at the same x. */}
+                        <Box component="span" sx={OPTION_GLYPH_SX}>
+                          <Flag code={country.code} width={20} />
+                        </Box>
+                        <Box component="span" sx={OPTION_LABEL_SX}>
+                          {country.label}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField {...field("city")} label={t("city")} autoComplete="address-level2" />
+                </Stack>
+              </Box>
+
+              {/*
                 A minor's parent or guardian (§108, §185, §188): shown when the birth date says so.
 
                 It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
@@ -869,7 +924,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
-                  person can skip without the form being any less complete. */}
+                  person can skip without the form being any less complete. Adults only
+                  (§323): gone once the birth date says under eighteen — disabled as well as
+                  hidden, so neither box is validated or posted — and never stored for a minor
+                  whatever is posted. A rejection naming either box shows it whatever the date. */}
+              <HiddenForMinor
+                birthDateId={fieldId("birthDate")}
+                forceOpen={invalid.has("stravaUrl") || invalid.has("instagramHandle")}
+              >
               <Box component="details" sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.socials")}
@@ -896,6 +958,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+              </HiddenForMinor>
 
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
@@ -946,8 +1009,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 The asterisk comes from `FormControlLabel`, which reads `required` off the
                 control it wraps. It used to be added by hand here, from a reading of MUI that
                 was true once and is not true of the installed version — the two together
-                rendered "nota de confidențialitate * *" on the form. The two consents below
-                say "optional" in words, so the difference is legible without pressing anything.
+                rendered "nota de confidențialitate * *" on the form. The optional consent below
+                says "optional" in words, so the difference is legible without pressing anything.
+                The public-results consent that stood beside it is gone (§322): there are no
+                results to consent to, and a consent to nothing informs nobody.
               */}
               {/*
                 "Declar că sunt apt" (§171), required, and first among the consents because it
@@ -994,9 +1059,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
                 </LegalLink>
-              </CheckboxField>
-              <CheckboxField name="resultsNameConsent" defaultChecked={prefill("resultsNameConsent") === "on"}>
-                {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
                 BR-REQ-039-01, `DECISIONS.md` §85, §143. Asked only when this event publishes a
@@ -1048,6 +1110,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                       {t("errors.captcha")}
                     </Typography>
                   )}
+                  {/* Who sees what for the check, where the check is (§323): a third party
+                      receives the address and the browser's signals, and the form says so. */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {legal("botCheckNotice")}
+                  </Typography>
                 </Box>
               )}
               {/*

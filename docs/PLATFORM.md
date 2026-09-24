@@ -29,7 +29,7 @@ waiting on.
 | Service | Plan / SKU | What it holds | Console | State |
 | --- | --- | --- | --- | --- |
 | **Vercel** | Hobby | Account exists. Both applications. One project per environment, function region `fra1` — QA's was `iad1` until read back on 2026-09-16 (`SETUP.md` §26) | vercel.com/dashboard | QA live; production project created 2026-09-16, configured, **never deployed** |
-| **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). Which plan the pages read against is the setting `platform_settings.neonPlan`, set per environment on `/admin/tasks` → Costuri | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
+| **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). The pages read the plan from Neon's project row; `platform_settings.neonPlan` is the fallback without a key (`DECISIONS.md` §326). Capped 2026-09-23: production ≤ 1 CU and 100 CU-hours a month, QA 0.25 CU and 30 (`SETUP.md` §40) | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
 | **Zitadel** | Free | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | One instance, one project, one application per environment. QA live since 2026-09-04; production application created 2026-09-17. Own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05). Setup, traps and limits: `docs/RUNBOOKS.md` § Staff sign-in |
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
@@ -65,7 +65,12 @@ notice — **re-check before spending, and update the date in this heading when 
 | **Cloudflare R2** *(no account yet)* | Included allowance | 10 GB-month storage, 1M Class A ops, 10M Class B ops, **egress always $0** — which is why R2 and not S3: a gallery viewed a thousand times costs nothing extra. A club gallery of ~2,000 photos at ~500 KB after the thumbnails the site makes is ~1 GB, inside the allowance indefinitely. **A payment method must be on file to enable R2**; nothing is charged inside the allowance (checked 2026-09-17) | Usage-based: $0.015/GB-month storage, $4.50/M Class A (writes), $0.36/M Class B (reads) |
 
 Running cost today: the `.com` registration plus **Neon Launch usage**. The console showed 1.8
-CU-hours and $0.19 in the Sep 22–Oct 1 partial period. If 1.8 CU-hours is representative of one
+CU-hours and $0.19 in the Sep 22–Oct 1 partial period — and **$1.09 for 10.6 CU-hours after the
+first 37 hours** (production 6.3, QA 4.3), measured 2026-09-23 on a day two people tested all day.
+Both computes averaged 0.26 CU while awake: the money is time awake, and Launch's 5-minute
+idle timeout cannot be lowered, so the lever is fewer wakes, not a smaller compute. Since that
+night both projects carry a monthly limit (production 100 CU-hours ≈ $10.60, QA 30 ≈ $3.20) under
+the organisation's $15 spending notification — `SETUP.md` §40. If 1.8 CU-hours is representative of one
 day, 30 days is 54 CU-hours or about **$5.72 compute**, before storage and restore history. A
 0.25 CU compute kept warm for all 720 hours of a 30-day month is **$19.08 per project**; two
 always-warm projects would be $38.16. These are projections, not a fixed subscription or invoice.
@@ -77,10 +82,14 @@ re-check Free's current compute, storage, branch, restore and production constra
 projects fit, and only then make and document the plan change. Until that explicit decision,
 every operational page and estimate must treat Launch as current.
 
-**Which plan the pages read against is a setting, not a constant.** `platform_settings.neonPlan`
+**Which plan the pages read against is Neon's own answer, and the setting is the fallback**
+(`DECISIONS.md` §326, correcting the premise below). The project row the pages already read names
+the owning account's plan (`owner.subscription_type`); that wins. `platform_settings.neonPlan`
 — `FREE` or `LAUNCH`, with a note and who/when, audited like the Mailgun plan (§100) — is set by
-an Administrator on `/admin/tasks` → Costuri, once per environment, because Neon's API tells the
-application the consumption and never the plan or the invoice. Absent, it reads as **Free**: a
+an Administrator on `/admin/tasks` → Costuri and is used only when the key is not set or Neon did
+not answer. It was written believing that Neon's API tells the application the consumption and
+never the plan; that was wrong, and on 2026-09-23 it left the pages printing Free a day after the
+account moved to Launch. Absent, it reads as **Free**: a
 fresh deployment has no reason to assume money, and the plan with the ceilings is the safe one to
 be wrong about. On Free, `/devs` and the Neon row show the 100 CU-hours and the 0.5 GB as
 ceilings, red past 80%, and "stops until next month"; on Launch they show no ceiling, the hours
@@ -303,6 +312,13 @@ follows the `neonPlan` setting above: Free's 100-hour denominator and 80% warnin
 setting says Free, an estimated charge at Launch's rates and no ceiling when it says Launch.
 `/api/health` and the monitors never looked at Neon's hours, so nothing there warns at 80% on
 either plan.
+
+**A limit exists again since 2026-09-23** (`SETUP.md` §40): Launch has no ceiling of its own, but
+each project now carries a monthly `compute_time_seconds` quota — production 100 CU-hours, QA 30 —
+and Neon suspends a project that reaches it until the next period, exactly as Free did at 100. The
+compute's size is capped too (production 1 CU, QA 0.25), which bounds a spike and changes nothing
+on a normal day. What decides the bill is how often something wakes the database: the monitors at
+:00/:15/:30/:45 and every anonymous page view were most of the first 37 hours.
 
 The cold start is also the reason the pool sets no connection timeout: see the next section.
 

@@ -9,10 +9,12 @@ import { z } from "zod";
  * when the hours run out — the site is down until the next month. Launch removes both limits
  * and bills what is used: $0.106 per CU-hour (the console's 1.8 hours for $0.19 reconcile to
  * it), $0.35 per GB-month of storage and $0.20 per GB-month of changes kept for Instant
- * Restore, with no monthly minimum. Neon's API tells this code the consumption, never the plan
- * or the invoice — so which plan the account is on is a setting an Administrator states
- * (`platform_settings.neonPlan`), the same way the Mailgun plan is (§100), and every figure on
- * `/devs` and `/admin/tasks` follows it.
+ * Restore, with no monthly minimum. Neon's API tells this code the consumption and the plan of
+ * the account that owns the project (`owner.subscription_type` on the project row, which a
+ * project-scoped key reads — §326), never the invoice. So the plan Neon reports is the plan,
+ * and every figure on `/devs` and `/admin/tasks` follows it; the setting an Administrator
+ * states (`platform_settings.neonPlan`, the same shape as the Mailgun plan's, §100) is what the
+ * pages fall back on when the key is not set or Neon does not answer.
  *
  * `CUSTOM` is deliberately not here. The Mailgun catalogue needed it because Mailgun's plans
  * change faster than this code; Neon has two plans the club can be on and a third (Scale) the
@@ -98,6 +100,34 @@ export const DEFAULT_NEON_PLAN: NeonPlanSetting = { plan: "FREE", note: "" };
 export function readNeonPlanValue(value: unknown): NeonPlanSetting {
   const parsed = neonPlanSettingSchema.safeParse(value);
   return parsed.success ? parsed.data : { ...DEFAULT_NEON_PLAN };
+}
+
+/**
+ * The plan Neon reports for the account that owns the project (§326): the project row's
+ * `owner.subscription_type` — `"launch_v3"` for the club on 2026-09-23, `"free_v3"` on Free.
+ * The suffix is Neon's pricing generation, so the prefix is what is matched; anything else
+ * (Scale, Business, a name this code has not met) is null, and the stated setting decides
+ * rather than a guess.
+ */
+export function neonPlanFromSubscription(subscriptionType: unknown): NeonPlanId | null {
+  if (typeof subscriptionType !== "string") return null;
+  const value = subscriptionType.trim().toLowerCase();
+  if (value.startsWith("free")) return "FREE";
+  if (value.startsWith("launch")) return "LAUNCH";
+  return null;
+}
+
+/**
+ * The plan every figure is read against: what Neon reports when it answered, the stated
+ * setting when it did not (§326). The owner, 2026-09-23, with Launch bought the day before
+ * and `/admin/tasks` still printing Free: a setting nobody had changed was being believed over
+ * the vendor's own answer, which the page had been receiving all along.
+ */
+export function effectiveNeonPlan(
+  stated: NeonPlanId,
+  reported: NeonPlanId | null,
+): { plan: NeonPlanId; source: "neon" | "setting" } {
+  return reported ? { plan: reported, source: "neon" } : { plan: stated, source: "setting" };
 }
 
 const GB = 1024 * 1024 * 1024;

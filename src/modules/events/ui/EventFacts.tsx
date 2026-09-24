@@ -1,3 +1,4 @@
+import CakeIcon from "@mui/icons-material/Cake";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
@@ -6,11 +7,12 @@ import RouteIcon from "@mui/icons-material/Route";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
+import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { readCoHosts } from "../domain/co-hosts";
-import { distanceInKm, isStravaLink, takesRegistrations } from "../domain/event-type";
+import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
@@ -115,9 +117,13 @@ export default async function EventFacts({
   }
 
   /* Where: the meeting point — itself the map link when the organizer pasted one and a link
-     may sit here; the same destination is never offered twice on one line. */
+     may sit here; the same destination is never offered twice on one line. While the place is
+     to be announced (§328) the sentence that says so, on the page, the cards and the hero alike;
+     the query has already withheld the name, the address and the map. */
   const where: ReactNode[] = [];
-  if (event.locationName) {
+  if (event.locationToBeAnnounced) {
+    where.push(t("locationToBeAnnounced"));
+  } else if (event.locationName) {
     where.push(links && event.mapUrl ? outLink(event.mapUrl, event.locationName) : event.locationName);
   } else if (links && event.mapUrl) {
     where.push(outLink(event.mapUrl, t("openMap")));
@@ -276,6 +282,22 @@ export default async function EventFacts({
     lines.push({ label: t("coHost"), icon: HandshakeIcon, value: [coHostSentence()] });
   }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
+  /*
+    Who may enter (§329): the event's own minimum age and who registers a minor, in the sentence
+    the form's intro line says — one sentence, read from one place, so the page and the form
+    cannot disagree. On the page only (`stacked`): it is a condition of the race a runner reads
+    before pressing, and the hero above the fold is a summary with a button to reach. Only where
+    the club counts it (`hasAgeRule`); the legal templates point here for the number.
+  */
+  if (stacked && hasAgeRule(event)) {
+    const rt = await getTranslations("Registration");
+    const locale = await getLocale();
+    lines.push({
+      label: t("age"),
+      icon: CakeIcon,
+      value: [rt(`ageRule.${ageRuleVariant(event.minAge)}`, { age: yearsPhrase(event.minAge, locale) })],
+    });
+  }
   if (state === "NOT_APPLICABLE" && mentionsRegistration) {
     lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
   }

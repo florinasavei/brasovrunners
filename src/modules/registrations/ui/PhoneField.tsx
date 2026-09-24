@@ -159,7 +159,8 @@ function PhoneFieldIsland({
   name,
   label,
   countryLabel,
-  locale,
+  countryOrder,
+  countryNames,
   value,
   draft,
   required = false,
@@ -177,7 +178,20 @@ function PhoneFieldIsland({
   label: string;
   /** The select's accessible name — it draws no label of its own since §NNN. */
   countryLabel: string;
-  locale: "ro" | "en";
+  /**
+   * The prefixes in the order to show them, from `phoneCountryOrder` on the server (§324): the
+   * browser's ICU names countries differently from Node's, so a sort made here disagreed with
+   * the server's markup and cost the form its hydration.
+   */
+  countryOrder: readonly string[];
+  /**
+   * The reader's own name for each code, from `phoneCountryLabels` on the server (§NNN, §324):
+   * the option now carries the country's name as well as its flag and code, and it is server
+   * data for the same reason the order is — computed once with Node's `Intl.DisplayNames` and
+   * handed down as plain data, never recomputed from the browser's own ICU, which is the
+   * mismatch that cost the form its hydration in the first place.
+   */
+  countryNames: Readonly<Record<string, string>>;
   /** A stored E.164 number to prefill, or nothing. */
   value?: string | null;
   /** What was typed before a rejected submit (§142): the two controls as posted, over `value`. */
@@ -205,7 +219,6 @@ function PhoneFieldIsland({
   /** What precedes the composed number once it is valid: "we will ring". */
   validLabel?: string;
 }) {
-  const names = new Intl.DisplayNames([locale], { type: "region" });
   const split = splitPhone(value ?? null);
   const initialCountry =
     draft?.country && (PHONE_COUNTRY_CODES as readonly string[]).includes(draft.country)
@@ -319,29 +332,24 @@ function PhoneFieldIsland({
   }, [sameAsOther, mustDifferLabel]);
 
   /*
-    The list the phone opens: flag, name and code — "🇷🇴 România (+40)" (§NNN, superseding the
-    width argument of §236).
+    The list the phone opens: flag, name and code — "🇷🇴 România (+40)" (§NNN, superseding
+    §236's cut to the flag and the code alone).
 
-    §236 cut the options to the flag and the code because the select *was* the box, 104 pixels
-    of it, and "România (+4…" lost the one part worth reading. The select is no longer drawn —
-    the box shows a real flag and the select lies invisible over it — so the options are only
-    ever read in the phone's own full-width list, where the name fits and is what somebody
-    hunting for a country they cannot picture the flag of needs.
+    §236 cut the name because the select *was* the box, 104 pixels of it, and "România (+4…"
+    lost the one part worth reading. The select is no longer drawn — the box shows a real flag
+    and the select lies invisible over it — so the options are only ever read in the phone's
+    own full-width list, where the name fits and is what somebody hunting for a country they
+    cannot picture the flag of needs.
 
-    Still sorted by the country's name in the reader's language, Romania first.
-
-    `suppressHydrationWarning` on each option, and it is narrow on purpose: the names come from
-    `Intl.DisplayNames`, which is the server's ICU on the first render and the browser's on
-    hydration, and the two can spell a country differently (CLDR moves). A text mismatch would
-    make React throw the server's form away and render it again — the §211 failure, wiping
-    whatever somebody had begun to type. The server's spelling is kept; both are correct.
+    Both the order and the names are the server's (`countryOrder`, `countryNames`, §324):
+    sorting or naming them again here, from the browser's own ICU data, is exactly what cost
+    the form its hydration before — Node and a browser can spell a country differently, and
+    worse, can disagree on where it sorts. Drawn as plain data instead, the client never
+    computes either, so there is nothing left for the two to disagree on.
   */
-  const options = PHONE_COUNTRY_CODES.map((code) => ({
-    code,
-    name: names.of(code) ?? code,
-  }))
-    .sort((a, b) => (a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.name.localeCompare(b.name, locale)))
-    .map((option) => ({ ...option, label: `${flagEmoji(option.code)} ${option.name} (+${DIALING_CODES[option.code]})` }));
+  const options = countryOrder
+    .filter((code) => code in DIALING_CODES)
+    .map((code) => ({ code, label: `${flagEmoji(code)} ${countryNames[code] ?? code} (+${DIALING_CODES[code]})` }));
 
   const adornment = (
     <Box sx={COUNTRY_ADORNMENT_SX}>
@@ -371,7 +379,7 @@ function PhoneFieldIsland({
         }}
       >
         {options.map((option) => (
-          <option key={option.code} value={option.code} suppressHydrationWarning>
+          <option key={option.code} value={option.code}>
             {option.label}
           </option>
         ))}

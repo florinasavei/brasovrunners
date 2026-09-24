@@ -34,6 +34,7 @@ export default async function RegistrationInterestForm({
   outcome: InterestOutcome | null;
 }) {
   const t = await getTranslations("Event");
+  const legal = await getTranslations("Legal");
   const siteKey = turnstileSiteKey();
 
   return (
@@ -91,6 +92,10 @@ export default async function RegistrationInterestForm({
               <Box>
                 <div className="cf-turnstile" data-sitekey={siteKey} data-language={locale} />
                 <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
+                {/* The sentence the registration and contact forms carry under their check (§323). */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                  {legal("botCheckNotice")}
+                </Typography>
               </Box>
             )}
 

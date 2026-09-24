@@ -15,7 +15,10 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
   ro: {
     organization: "Brașov Runners",
     whereupon: "DREPT PENTRU CARE SEMNEZ,",
+    whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
     signature: "Semnătura",
+    minorSignature: "Semnătura minorului",
+    guardianSignature: "Semnătura părintelui sau tutorelui",
     date: "Data",
     idDocument: "Act de identitate",
     version: "Versiunea",
@@ -29,7 +32,10 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
   en: {
     organization: "Brașov Runners",
     whereupon: "IN WITNESS WHEREOF, I SIGN,",
+    whereuponTogether: "IN WITNESS WHEREOF, WE SIGN,",
     signature: "Signature",
+    minorSignature: "Minor's signature",
+    guardianSignature: "Parent's or guardian's signature",
     date: "Date",
     idDocument: "Identity document",
     version: "Version",
@@ -52,7 +58,10 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   return {
     organization: words.organization,
     whereupon: words.whereupon,
+    whereuponTogether: words.whereuponTogether,
     signature: words.signature,
+    minorSignature: words.minorSignature,
+    guardianSignature: words.guardianSignature,
     date: words.date,
     idDocument: words.idDocument,
     version: words.version,
