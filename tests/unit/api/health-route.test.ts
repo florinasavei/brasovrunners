@@ -177,7 +177,7 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
  * `checkNeonQuotaHealth` is mocked here (it is unit-tested on its own account against a fake
  * Neon in `diagnostics/neon.test.ts`), so these assert only what the route does with its answer.
  */
-describe("DECISIONS.md §NNN /api/health's early warning for the Neon quota", () => {
+describe("BR-REQ-090-07 criterion 10, DECISIONS.md §NNN — /api/health's early warning for the Neon quota", () => {
   it("carries the reading in a `neon` block and stays ok under the warning", async () => {
     checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
 

@@ -7,7 +7,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNeon, instantSleep, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
- * BR-REQ-090-07 criterion 8 (§NNN) — the database's brakes are the Administrator's, asserted in
+ * BR-REQ-090-07 criterion 9 (§NNN) — the database's brakes are the Administrator's, asserted in
  * the service; checked against a fresh read of Neon; audited from and to as Neon states them
  * before and after, never as requested. Neon is the in-memory fake: nothing here reaches it.
  */
@@ -112,11 +112,30 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
     expect(outcome.after?.quotaCuHours).toBe(200);
     expect((await audits())[0].metadataJson).toMatchObject({ environment: "production", to: { quotaCuHours: 200 } });
 
-    // Throttling the size alone on production needs no confirmation: it never stops the site.
-    await updateNeonLimits(db, admin, { maxCu: "0.5", quotaMode: "limit", quotaCuHours: "200", confirmSuspension: true }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch });
+    // Throttling the size alone on production needs no confirmation: the quota box comes back
+    // with the limit Neon holds, which is not a new limit — and no quota is sent at all.
+    neon.calls.length = 0;
+    await expect(
+      updateNeonLimits(db, admin, { maxCu: "0.5", quotaMode: "limit", quotaCuHours: "200", confirmSuspension: false }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch }),
+    ).resolves.toMatchObject({ changed: true, after: { quotaCuHours: 200, computes: [{ maxCu: 0.5 }] } });
+    const patches = neon.calls.filter((call) => call.method === "PATCH");
+    expect(patches.length).toBeGreaterThan(0);
+    expect(patches.some((call) => JSON.stringify(call.body).includes("compute_time_seconds"))).toBe(false);
+
+    // Removing the limit needs none either: it can only keep the site up.
     await expect(
       updateNeonLimits(db, admin, { maxCu: "0.25", quotaMode: "none" }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch }),
     ).resolves.toMatchObject({ changed: true });
+  });
+
+  it("keeps a quota Neon holds in odd seconds exactly, when the box comes back as the card filled it", async () => {
+    // 100000 seconds: 27.777… CU-hours, shown by the card as 27.7778 (`quotaBoxValue`).
+    const state = productionLikeState();
+    state.project.settings = { quota: { compute_time_seconds: 100_000 } };
+    const neon = fakeNeon(state);
+    await updateNeonLimits(db, admin, { maxCu: "0.5", quotaMode: "limit", quotaCuHours: "27.7778" }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch });
+    expect(neon.state.project.settings?.quota).toEqual({ compute_time_seconds: 100_000 });
+    expect(neon.calls.some((call) => call.method === "PATCH" && JSON.stringify(call.body).includes("compute_time_seconds"))).toBe(false);
   });
 
   it("refuses a shape the form cannot mean, before asking Neon", async () => {

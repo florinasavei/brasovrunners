@@ -116,7 +116,7 @@ export async function readNeonConsumption(
   };
 }
 
-/** How long `/api/health`'s own reading of the quota is kept, so a monitor's ping does not put a Neon request behind every one of them. */
+/** How long `/api/health`'s own reading of the quota is kept, so a burst of calls to a public endpoint does not put a Neon request behind every one of them. */
 const NEON_HEALTH_CACHE_SECONDS = 900;
 
 /**
@@ -130,9 +130,13 @@ const NEON_HEALTH_CACHE_SECONDS = 900;
  * a quota is a suspension the owner asked to be warned of before it lands (`DECISIONS.md` §NNN).
  *
  * Cached for fifteen minutes in Next's Data Cache (`next: { revalidate }`) rather than the
- * admin panel's `no-store` — the monitors ping every fifteen minutes by day on production and
- * hourly on QA, and an Administrator reading the Costuri panel wants this second's figure, but a
- * monitor reads the same number whichever minute inside the window it asks. The same console API
+ * admin panel's `no-store`. The health monitors ask hourly on production and every six hours on
+ * QA (`SETUP.md` §40), so a monitor almost always gets a fresh reading; the cache is for
+ * everybody else, because the endpoint is public — a deploy's `yarn smoke`, somebody reloading
+ * it, a crawler — and a burst of those costs one Neon request per window, not one each. An
+ * Administrator reading the Costuri panel wants this second's figure; an 80% warning does not
+ * turn on the minute, and fifteen minutes of lag is small beside the hours between the first
+ * warning and the limit itself. The same console API
  * request as `readNeonConsumption`'s, never a query against the database itself, so this never
  * wakes a suspended (or merely sleeping) compute to answer it.
  *
@@ -172,8 +176,11 @@ export async function checkNeonQuotaHealth(
  * and one refusal code on the form (§NNN), never a stack or Neon's own error text.
  *
  * `forbidden` is the one worth its own word: a key that reads the figures and may not change
- * them (a Viewer's, or an organization key without Editor on the project) answers 401 or 403 to
- * the write while every read above it worked, and the sentence has to say which key is needed.
+ * them answers 401 or 403 to the write while every read above it worked, and the sentence has to
+ * say which key is needed. Per Neon's key documentation (manage/api-keys, checked 2026-09-24) a
+ * project-scoped key has Editor access to its project and an organization key is admin-level,
+ * so both may write; a personal key carries its owner's own access, and one whose owner may only
+ * view the project is the key that reads and cannot write.
  */
 export type NeonFailure =
   | { kind: "unconfigured"; missing: Array<"NEON_API_KEY" | "NEON_PROJECT_ID"> }

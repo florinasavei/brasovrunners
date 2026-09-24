@@ -212,9 +212,9 @@ export type OwnerTaskInputs = {
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
    * from the same Neon project row the consumption panel already fetches (§NNN) — never a
-   * second request. `null` when there is no quota, or when Neon could not be read at all (no
-   * key, or no answer): the row asks for the same next step either way — set a limit, or find
-   * out why it could not be checked — so both are `open`.
+   * second request. `null` when Neon could not be read at all (no key, or no answer), and
+   * `quotaCuHours: null` when it answered and there is no quota: the row asks for the same next
+   * step either way — set a limit, or find out why it could not be checked — so both are `open`.
    */
   neonQuota: { quotaCuHours: number | null; usedCuHours: number } | null;
 };
@@ -368,24 +368,21 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    * today": Neon suspends the whole database at 100%, every page down until the next billing
    * period, and a row that still had time to prevent that must not read as merely `open`.
    *
-   * No quota is two different facts and only one of them is `open`: `input.neonQuota === null`
-   * means Neon could not be read at all (no key, or no answer) — still `open`, the same "find
-   * out why" as before. `input.neonQuota.quotaCuHours === null` means Neon answered and there is
-   * genuinely no limit — on production that is the panel's own recommendation
-   * (`NeonLimitsPanel`'s `recommendProduction`: "no limit on production; use Neon's spending
-   * alert instead"), so a board that kept the row open would be asking the club to undo advice
-   * this same screen gives; everywhere else a limit is still worth setting, so it stays `open`.
+   * No quota is `open` on every environment, production included: the owner capped both
+   * projects on 2026-09-23 ("I want QA to be cheaper and also Prod to be capped, not ok to leave
+   * to unlimited"; `SETUP.md` §40), so a project without one is a limit still owed, and the card
+   * recommends one with room plus Neon's spending alert. `input.neonQuota === null` — Neon could
+   * not be read at all (no key, or no answer) — is `open` too: whether a limit exists is exactly
+   * what could not be checked.
    */
-  const noReading = input.neonQuota === null;
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
-  const noQuotaAsRecommended = !noReading && quota === null && input.appEnv === "production";
   push("neonLimits", {
     owner: "club",
-    state: noReading || quota === null ? (noQuotaAsRecommended ? "done" : "open") : nearLimit ? "broken" : "done",
+    state: quota === null ? "open" : nearLimit ? "broken" : "done",
     // `broken` needs its own sentence — the default "todo"/"done" pair cannot say "this is
     // about to suspend the database", which is the one thing this row exists to say in time.
-    text: nearLimit ? "broken" : noQuotaAsRecommended ? "recommendedProduction" : undefined,
+    text: nearLimit ? "broken" : undefined,
   });
 
   /**

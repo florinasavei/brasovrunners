@@ -627,10 +627,10 @@
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
-      "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: it is below what this period has already spent plus the margin, so it would stop the database the moment it is saved. The spend and the smallest limit are written under the box.",
-      "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
+      "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: a new limit must be above what this period has already spent plus the margin, or it would stop the database the moment it is saved. The spend and the smallest limit are written under the box.",
+      "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
       "NEON_UNCONFIGURED": "Nothing changed: NEON_API_KEY or NEON_PROJECT_ID is missing on this environment (SETUP.md §33).",
-      "NEON_KEY_FORBIDDEN": "Neon refused the change: the key in NEON_API_KEY may read the project but not modify it. It needs a key with the Editor right on the project — in Neon, the organization's settings → API keys → Create new → Project-scoped, on this environment's project — set as NEON_API_KEY on the environment's Vercel project, then a redeploy. The figures above the form are what Neon holds now.",
+      "NEON_KEY_FORBIDDEN": "Neon refused the change: the key in NEON_API_KEY reads the project but may not modify it — most likely a personal key whose owner may only view the project. A project-scoped key may: in Neon, the organization's Settings → API keys → Create new → Project-scoped, on this environment's project — an organization Admin creates it, and Neon gives it Editor access to that one project. A personal key works only if its owner is an Admin of the organization or an Editor on the project. Put the key in NEON_API_KEY on the environment's Vercel project and redeploy. The figures above the form are what Neon holds now.",
       "NEON_BUSY": "Neon was working on another change to the project and did not take this one. Try again in a minute; the figures above the form are what Neon holds now.",
       "NEON_REFUSED": "Neon refused the values sent. The figures above the form are what Neon holds now; if the size chosen is above what the plan allows, choose a smaller one.",
       "NEON_UNREACHABLE": "Neon did not answer (or answered with something the page cannot read). The figures above the form are what Neon holds now; try again in a minute."
@@ -1292,7 +1292,7 @@
           "network": "Neon could not be reached (a network error). Reload the page in a minute.",
           "unexpected": "Neon answered with something the page cannot read. The limits cannot be shown here; check them in the Neon console."
         },
-        "keyNeeded": "To change them, the key needs the right to modify the project: a “Project-scoped” key (the Editor role) — in Neon, the organization's settings → API keys → Create new → Project-scoped, on this environment's project — or the personal key of an organization administrator. A key that only reads shows the figures but cannot change them.",
+        "keyNeeded": "The same key changes them when it may modify the project. A project-scoped key always may — Neon gives it Editor access to its one project (the organization's Settings → API keys → Create new → Project-scoped, on this environment's project) — and so does the personal key of an organization Admin or of an Editor on the project. The personal key of a Viewer reads the figures and cannot change them.",
         "readout": "Maximum size: {size} · Monthly limit: {quota}",
         "size": "{cu} CU (≈ {ram} GB RAM)",
         "sizeUnknown": "unknown (Neon showed no read-write compute)",
@@ -1312,16 +1312,17 @@
         "planCeiling": "The account's plan allows at most {max} CU, so the larger sizes are not offered.",
         "warningTitle": "A monthly limit switches the site off",
         "warning": "When the limit is reached, Neon SUSPENDS the database until the next billing period ({end}), and it does not wake at the next connection. Until then the site does not work: no registrations, no race-day desk, no emails. This page needs the database too, so a limit that has stopped it can only be lifted in the Neon console.",
-        "recommendProduction": "Recommended: no limit on production; use Neon's spending alert. A limit here needs the confirmation box below.",
+        "recommend": "Recommended: a monthly limit with room — {hours} CU-hours on this environment (SETUP.md §40; production spent about 4 CU-hours a day even on days of heavy testing) — together with the spending notification on Neon's Billing page as the early warning.",
+        "recommendConfirm": "On production, a new or changed limit needs the confirmation box below: when it is reached, the site stops.",
         "quotaMode": "Monthly limit (CU-hours)",
         "quotaModeNone": "No limit",
         "quotaModeLimit": "With a limit — the number below",
         "quotaCuHours": "CU-hours per period, with a limit",
-        "quotaCuHoursHelp": "At least {smallest}. Ignored with “No limit”.",
-        "floor": "Spent this period: {used} CU-hours. A limit must be at least {smallest} CU-hours (the spend plus a margin of {margin}): a smaller one would stop the database the moment it is saved.",
+        "quotaCuHoursHelp": "A new limit: at least {smallest}. Ignored with “No limit”.",
+        "floor": "Spent this period: {used} CU-hours. A new limit must be at least {smallest} CU-hours (the spend plus a margin of {margin}): a smaller one would stop the database the moment it is saved. The limit in force, left as it is, stays exactly as Neon holds it.",
         "confirmField": "The stop confirmation",
         "confirm": "I understand: when the limit is reached, the production database stops and the site does not work until {end}.",
-        "writeNote": "Saving sends the size to the database's compute and to the project's default (so a compute created again inherits it), and the limit to the project; then the page reads Neon again. The key in NEON_API_KEY needs the right to modify the project.",
+        "writeNote": "Saving sends the size to the database's compute and to the project's default (so a compute created again inherits it), and the limit to the project — only what differs from Neon's figures — then the page reads Neon again. The key in NEON_API_KEY needs the right to modify the project, which a project-scoped key has.",
         "save": "Save the limits",
         "saving": "Sending to Neon…",
         "saved": "The limits were sent to Neon; below is what Neon says now.",
@@ -1528,13 +1529,12 @@
         },
         "neonLimits": {
           "title": "The database's monthly compute-time limit",
-          "todo": "The database can be capped on the Costuri tab → “The database's limits”: how large it may grow, and how many CU-hours a billing period may spend before Neon suspends it until the next one. No limit is set on this environment yet.",
+          "todo": "No monthly limit is set on this environment (or it could not be read from Neon — the card says which), so nothing caps the Neon bill. Set one with room on the Costs tab → “The database's limits” — the card names the figure recommended for this environment (SETUP.md §40) — and keep the spending notification on Neon's Billing page. The limit is what suspends the database when it is reached, so leave room.",
           "broken": "This period has already spent 80% or more of the monthly limit. Neon suspends the whole database — every page, until the next billing period — the moment it is reached: raise the limit or wait for the reset, today rather than when it happens.",
           "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
-          "recommendedProduction": "No monthly limit on production, which is what this same screen recommends there: a limit stops the whole site the moment it is reached, so Neon's own spending alert is the safer warning. Set one anyway only with the confirmation ticked.",
           "how": [
-            "On the Costuri tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §33).",
-            "A limit needs a key that may modify the project, not only read it (NEON_API_KEY with the Editor right) — the card names the exact key when the one set cannot write.",
+            "On the Costs tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon with the key /devs already uses (SETUP.md §33).",
+            "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
           ]
         }
@@ -2273,7 +2273,7 @@
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back.",
             "“To do” → “Costs” → “The Neon plan”: tell the platform which plan the Neon account is on — Free (hours and storage included, a stop when they run out) or Launch (by usage, chosen on 22 September 2026). /devs and the Neon row in the costs follow it, on each environment separately; the December review is the same choice, with no deployment.",
-            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; on production it needs a ticked box, and the recommendation is no limit, with Neon's spending alert. The NEON_API_KEY key needs the right to modify the project."
+            "“To do” → “Costs” → “The database's limits”: the brakes on the Neon bill, set in Neon itself, on each environment. The maximum size bounds a spike of load — the usual bill is the time the database is awake. A monthly CU-hour limit stops the database when it is reached, until the next period, and the whole site with it; the recommendation is a limit with room on every environment (SETUP.md §40), with Neon's spending notification beside it, and on production a new or changed limit needs a ticked box. A project-scoped NEON_API_KEY already has the right to change them."
           ],
           "roles": [
             "ADMIN",

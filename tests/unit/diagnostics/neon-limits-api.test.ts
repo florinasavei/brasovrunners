@@ -3,7 +3,7 @@ import { NEON_LOCKED_RETRY_MS, readNeonLimits, writeNeonLimits } from "@/modules
 import { FAKE_PROJECT_ID, fakeNeon, instantSleep, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
- * BR-REQ-090-07 criteria 6–7 (§NNN) — the Neon client behind "Limitele bazei de date": what it
+ * BR-REQ-090-07 criteria 7 and 9 (§NNN) — the Neon client behind "Limitele bazei de date": what it
  * asks Neon, what it makes of the answer, and the sentence-sized failure it returns instead of a
  * throw. Every request goes to the in-memory fake; nothing here reaches Neon.
  */

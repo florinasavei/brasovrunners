@@ -26,7 +26,11 @@ export type FakeNeonCall = {
 
 export const FAKE_PROJECT_ID = "quiet-lake-12345678";
 
-/** The shape of production on the evening of 2026-09-23: one compute at 0.25–1 CU, defaults the same, no quota. */
+/**
+ * The shape of production on the evening of 2026-09-23, once its ceiling was lowered and before
+ * its 100 CU-hour quota was set (`SETUP.md` §40): one compute at 0.25–1 CU, defaults the same,
+ * no quota unless the test asks for one.
+ */
 export function productionLikeState(overrides: { usedCuHours?: number; quotaCuHours?: number | null; maxCu?: number } = {}): FakeNeonState {
   const maxCu = overrides.maxCu ?? 1;
   return {

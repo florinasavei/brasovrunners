@@ -109,7 +109,7 @@ describe("BR-REQ-090-07 the database's consumption", () => {
  * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the
  * quota case only (`DECISIONS.md` §NNN); the plan half of that criterion is unchanged.
  */
-describe("§NNN /api/health's early warning for the monthly compute quota", () => {
+describe("BR-REQ-090-07 criterion 10 (§NNN) — /api/health's early warning for the monthly compute quota", () => {
   it("reads ok with no figures without the two variables, and calls nothing", async () => {
     const result = await checkNeonQuotaHealth({ NEON_API_KEY: undefined, NEON_PROJECT_ID: "p" }, () => {
       throw new Error("must not be called");

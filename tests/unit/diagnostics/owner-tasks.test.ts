@@ -289,11 +289,11 @@ describe("the invitation key row (§288)", () => {
  * Costuri panel — never a second request, and never a setting an Administrator could tick
  * without a quota actually existing on Neon.
  */
-describe("the database limit row (§NNN)", () => {
+describe("BR-REQ-090-07 criterion 11 — the database limit row (§NNN)", () => {
   const limitsRow = (neonQuota: OwnerTaskInputs["neonQuota"], appEnv: OwnerTaskInputs["appEnv"] = LAUNCHED.appEnv) =>
     ownerTasks({ ...LAUNCHED, appEnv, neonQuota }).find((task) => task.id === "neonLimits");
 
-  it("is open with no quota set outside production, and open too when Neon could not be read at all", () => {
+  it("is open with no quota set, and open too when Neon could not be read at all", () => {
     expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, "qa")).toMatchObject({
       state: "open",
       owner: "club",
@@ -306,13 +306,11 @@ describe("the database limit row (§NNN)", () => {
     expect(limitsRow(null, "production")?.state).toBe("open");
   });
 
-  it("reads as done on production with no quota — the Costuri panel's own recommendation there — but stays open everywhere else", () => {
-    expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, "production")).toMatchObject({
-      state: "done",
-      text: "recommendedProduction",
-    });
-    for (const appEnv of ["local", "test", "qa"] as const) {
-      expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, appEnv)).toMatchObject({ state: "open", text: undefined });
+  it("is open on production with no quota too — the owner capped production (SETUP.md §40), so no limit is a limit owed", () => {
+    // The earlier reading of production's "no quota" as the card's own advice is gone with that
+    // advice: the card recommends a limit with room everywhere, and the row agrees with it.
+    for (const appEnv of ["production", "local", "test", "qa"] as const) {
+      expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, appEnv), appEnv).toMatchObject({ state: "open", text: undefined });
     }
   });
 
@@ -344,7 +342,8 @@ describe("the database limit row (§NNN)", () => {
       expect(typeof row.todo).toBe("string");
       expect(typeof row.broken).toBe("string");
       expect(typeof row.done).toBe("string");
-      expect(typeof row.recommendedProduction).toBe("string");
+      // The sentence that called production's missing limit "what this screen recommends" is gone.
+      expect(row).not.toHaveProperty("recommendedProduction");
       expect(Array.isArray(row.how)).toBe(true);
       expect(row.how.length).toBeGreaterThan(0);
     }

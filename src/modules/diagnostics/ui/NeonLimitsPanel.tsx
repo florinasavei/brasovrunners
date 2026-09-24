@@ -13,6 +13,8 @@ import {
   NEON_QUOTA_MARGIN_CU_HOURS,
   type NeonLimitsReading,
   offeredCeilings,
+  quotaBoxValue,
+  recommendedNeonQuotaCuHours,
 } from "@/modules/diagnostics/domain/neon-limits";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonFailure } from "@/modules/diagnostics/neon";
@@ -28,7 +30,11 @@ type Props = {
   locale: Locale;
   /** What Neon said when the page asked (`readNeonLimits`), or why it said nothing usable. */
   reading: { ok: true; limits: NeonLimitsReading } | { ok: false; failure: NeonFailure };
-  /** Production asks for a ticked confirmation before a limit and recommends none (§NNN). */
+  /**
+   * Which limit the card recommends (`recommendedNeonQuotaCuHours`, `SETUP.md` §40), and whether a
+   * new or changed limit asks for the ticked confirmation — production's guard, because reaching
+   * the limit suspends the site (§NNN).
+   */
   appEnv: AppEnvironment;
   /** The Administrator's form; `updateNeonLimits` refuses anybody else whatever this says (§291). */
   mayEdit: boolean;
@@ -174,11 +180,15 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
                 <AlertTitle>{t("tasks.neonLimits.warningTitle")}</AlertTitle>
                 {t("tasks.neonLimits.warning", { end: periodEnd })}
               </Alert>
-              {production && (
-                <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-recommendation">
-                  {t("tasks.neonLimits.recommendProduction")}
-                </Typography>
-              )}
+              {/*
+                The advice is a limit with room plus Neon's spending notification, on every
+                environment (the owner, 2026-09-23: production capped too; `SETUP.md` §40). The
+                confirmation sentence is production's guard on the click, not advice against it.
+              */}
+              <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="neon-limits-recommendation">
+                {t("tasks.neonLimits.recommend", { hours: hours(recommendedNeonQuotaCuHours(appEnv)) })}
+                {production && ` ${t("tasks.neonLimits.recommendConfirm")}`}
+              </Typography>
 
               <RecallField
                 select
@@ -193,7 +203,9 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
               <RecallField
                 name="quotaCuHours"
                 label={t("tasks.neonLimits.quotaCuHours")}
-                defaultValue={model.quotaCuHours === null ? "" : String(Math.round(model.quotaCuHours * 10) / 10)}
+                // To the second Neon holds, so a save that changes only the size sends the limit back
+                // unchanged — and `writeNeonLimits` then sends no quota at all.
+                defaultValue={quotaBoxValue(model.quotaCuHours)}
                 slotProps={{ htmlInput: { inputMode: "decimal", autoComplete: "off" } }}
                 helperText={t("tasks.neonLimits.quotaCuHoursHelp", { smallest: hours(model.smallestQuotaCuHours) })}
               />

@@ -1077,23 +1077,6 @@ project are §40.
    with no ceiling and nothing red; on Free against the 100 CU-hours, red past 80%. Nothing else
    reads the key.
 
-**To change the two brakes from Costuri → "The database's limits" (BR-REQ-090-07), not only read
-them, the key needs to write.** The read-only key above stays exactly as it is; a limit is set
-with a second key, or an organization administrator's personal one:
-
-1. Neon console → the organization's **Settings** → **API keys** → **Create new** → choose
-   **Project-scoped**, this environment's project, and give it the **Editor** role.
-2. Vercel → the environment's project → **Settings → Environment Variables** → set
-   `NEON_API_KEY` to this key's value (it replaces the read-only one; `NEON_PROJECT_ID` stays as
-   it was). Redeploy.
-3. `/admin/tasks` → Costuri → "The database's limits": choose the maximum compute size and,
-   optionally, a CU-hours limit for the billing period — on production, tick the confirmation,
-   because reaching the limit suspends every page until the next period — then save. The
-   readout above the form afterwards is what Neon now holds, never what was sent.
-4. A refusal names the exact problem, never a stack trace: the two variables still unset, a key
-   that can read but not write (repeat step 1 with the **Editor** role), Neon busy with another
-   change to the project (retry in a minute), or Neon unreachable (retry later).
-
 **The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
 has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
 it lists deployments, and from those `/devs` shows the month's deployments, today's against

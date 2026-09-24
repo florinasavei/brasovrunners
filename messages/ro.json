@@ -627,10 +627,10 @@
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui.",
       "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana.",
-      "NEON_QUOTA_BELOW_USAGE": "Limita nu a fost trimisă: e sub ce s-a consumat deja în perioada aceasta plus marja, deci ar opri baza de date chiar la salvare. Consumul și limita minimă sunt scrise sub câmp.",
-      "NEON_QUOTA_UNCONFIRMED": "Nu s-a schimbat nimic: o limită pe producție cere bifa de confirmare — când e atinsă, site-ul se oprește până la perioada următoare.",
+      "NEON_QUOTA_BELOW_USAGE": "Limita nu a fost trimisă: o limită nouă trebuie să fie peste ce s-a consumat deja în perioada aceasta plus marja, altfel ar opri baza de date chiar la salvare. Consumul și limita minimă sunt scrise sub câmp.",
+      "NEON_QUOTA_UNCONFIRMED": "Nu s-a schimbat nimic: o limită nouă sau schimbată pe producție cere bifa de confirmare — când e atinsă, site-ul se oprește până la perioada următoare.",
       "NEON_UNCONFIGURED": "Nu s-a schimbat nimic: NEON_API_KEY sau NEON_PROJECT_ID lipsește pe acest mediu (SETUP.md §33).",
-      "NEON_KEY_FORBIDDEN": "Neon a refuzat schimbarea: cheia din NEON_API_KEY poate citi proiectul, dar nu are voie să-l modifice. E nevoie de o cheie cu drept de Editor pe proiect — în Neon, setările organizației → API keys → Create new → Project-scoped, pe proiectul acestui mediu — pusă în NEON_API_KEY pe proiectul Vercel al mediului, apoi redeploy. Cifrele de deasupra formularului sunt ce are Neon acum.",
+      "NEON_KEY_FORBIDDEN": "Neon a refuzat schimbarea: cheia din NEON_API_KEY citește proiectul, dar nu are voie să-l modifice — cel mai probabil o cheie personală al cărei titular poate doar vedea proiectul. O cheie „Project-scoped” are voie: în Neon, Settings al organizației → API keys → Create new → Project-scoped, pe proiectul acestui mediu — o creează un Admin al organizației, iar Neon îi dă acces de Editor pe acel singur proiect. O cheie personală merge doar dacă titularul ei e Admin al organizației sau Editor pe proiect. Pune cheia în NEON_API_KEY pe proiectul Vercel al mediului și fă redeploy. Cifrele de deasupra formularului sunt ce are Neon acum.",
       "NEON_BUSY": "Neon lucra la altă schimbare pe proiect și nu a primit-o pe aceasta. Încearcă din nou peste un minut; cifrele de deasupra formularului sunt ce are Neon acum.",
       "NEON_REFUSED": "Neon a refuzat valorile trimise. Cifrele de deasupra formularului sunt ce are Neon acum; dacă mărimea aleasă e peste ce permite planul, alege una mai mică.",
       "NEON_UNREACHABLE": "Neon nu a răspuns (sau a răspuns ceva ce pagina nu poate citi). Cifrele de deasupra formularului sunt ce are Neon acum; încearcă din nou peste un minut."
@@ -1292,7 +1292,7 @@
           "network": "Neon nu a putut fi contactat (eroare de rețea). Reîncarcă pagina peste un minut.",
           "unexpected": "Neon a răspuns ceva ce pagina nu știe să citească. Limitele nu pot fi arătate aici; verifică-le în consola Neon."
         },
-        "keyNeeded": "Ca să le poată schimba, cheia trebuie să aibă drept de modificare pe proiect: o cheie „Project-scoped” (rol Editor) — în Neon, setările organizației → API keys → Create new → Project-scoped, pe proiectul acestui mediu — sau cheia personală a unui administrator al organizației. O cheie care doar citește arată cifrele, dar nu le poate schimba.",
+        "keyNeeded": "Aceeași cheie le și schimbă, dacă are voie să modifice proiectul. O cheie „Project-scoped” are întotdeauna — Neon îi dă acces de Editor pe proiectul ei (Settings al organizației → API keys → Create new → Project-scoped, pe proiectul acestui mediu) — și la fel cheia personală a unui Admin al organizației sau a unui Editor pe proiect. Cheia personală a cuiva cu rol Viewer citește cifrele, dar nu le poate schimba.",
         "readout": "Mărimea maximă: {size} · Limită lunară: {quota}",
         "size": "{cu} CU (≈ {ram} GB RAM)",
         "sizeUnknown": "necunoscută (Neon nu a arătat niciun calcul read-write)",
@@ -1312,16 +1312,17 @@
         "planCeiling": "Planul contului permite cel mult {max} CU, așa că mărimile mai mari nu apar.",
         "warningTitle": "Limita lunară oprește site-ul",
         "warning": "Când limita e atinsă, Neon SUSPENDĂ baza de date până la următoarea perioadă de facturare ({end}), iar ea nu repornește la următoarea conexiune. Până atunci site-ul nu mai funcționează: nici înscrierile, nici masa din ziua cursei, nici emailurile. Și pagina aceasta are nevoie de baza de date, așa că o limită care a oprit-o se ridică doar din consola Neon.",
-        "recommendProduction": "Recomandat: fără limită pe producție; folosește alerta de cheltuieli din Neon. O limită aici cere bifa de confirmare de mai jos.",
+        "recommend": "Recomandat: o limită lunară cu rezervă — {hours} ore-CU pe acest mediu (SETUP.md §40; producția a consumat cam 4 ore-CU pe zi chiar și în zilele cu teste intense) — împreună cu notificarea de cheltuieli de pe pagina Billing din Neon, ca avertizare din timp.",
+        "recommendConfirm": "Pe producție, o limită nouă sau schimbată cere bifa de confirmare de mai jos: când e atinsă, site-ul se oprește.",
         "quotaMode": "Limită lunară (ore-CU)",
         "quotaModeNone": "Fără limită",
         "quotaModeLimit": "Cu limită — numărul de mai jos",
         "quotaCuHours": "Ore-CU pe perioadă, dacă e cu limită",
-        "quotaCuHoursHelp": "Cel puțin {smallest}. Nu contează la „Fără limită”.",
-        "floor": "Consumate în perioada aceasta: {used} ore-CU. O limită trebuie să fie de cel puțin {smallest} ore-CU (consumul plus {margin} de marjă): una mai mică ar opri baza de date chiar la salvare.",
+        "quotaCuHoursHelp": "O limită nouă: cel puțin {smallest}. Nu contează la „Fără limită”.",
+        "floor": "Consumate în perioada aceasta: {used} ore-CU. O limită nouă trebuie să fie de cel puțin {smallest} ore-CU (consumul plus {margin} de marjă): una mai mică ar opri baza de date chiar la salvare. Limita în vigoare, lăsată cum e, rămâne exact cum o ține Neon.",
         "confirmField": "Confirmarea opririi",
         "confirm": "Înțeleg: când limita e atinsă, baza de date de producție se oprește și site-ul nu mai funcționează până pe {end}.",
-        "writeNote": "Salvarea trimite mărimea la calculul bazei de date și la setarea implicită a proiectului (ca un calcul creat din nou să o moștenească), iar limita la proiect; apoi pagina citește din nou de la Neon. Cheia din NEON_API_KEY trebuie să aibă drept de modificare pe proiect.",
+        "writeNote": "Salvarea trimite mărimea la calculul bazei de date și la setarea implicită a proiectului (ca un calcul creat din nou să o moștenească), iar limita la proiect — doar ce diferă de cifrele de la Neon — apoi pagina citește din nou de la Neon. Cheia din NEON_API_KEY trebuie să aibă drept de modificare pe proiect, pe care o cheie „Project-scoped” îl are.",
         "save": "Salvează limitele",
         "saving": "Se trimite la Neon…",
         "saved": "Limitele au fost trimise la Neon; mai jos e ce spune Neon acum.",
@@ -1528,13 +1529,12 @@
         },
         "neonLimits": {
           "title": "Limita lunară de calcul a bazei de date",
-          "todo": "Baza de date poate fi plafonată în fila Costuri → „Limitele bazei de date”: cât de mare poate crește și câte ore-CU poate consuma o perioadă de facturare înainte ca Neon să o suspende până la următoarea. Pe acest mediu nu e setată încă nicio limită.",
+          "todo": "Pe acest mediu nu e setată nicio limită lunară (sau nu a putut fi citită de la Neon — cardul spune care din două), deci nimic nu plafonează factura Neon. Pune una cu rezervă în fila Costuri → „Limitele bazei de date” — cardul spune cifra recomandată pentru acest mediu (SETUP.md §40) — și păstrează notificarea de cheltuieli de pe pagina Billing din Neon. Limita e cea care suspendă baza de date când e atinsă, așa că lasă rezervă.",
           "broken": "Perioada aceasta a consumat deja 80% sau mai mult din limita lunară. Neon suspendă toată baza de date — fiecare pagină, până la următoarea perioadă de facturare — chiar în clipa în care e atinsă: mărește limita sau așteaptă reînnoirea, azi, nu când se întâmplă.",
           "done": "Pe acest mediu e setată o limită lunară, iar perioada curentă e confortabil sub ea.",
-          "recommendedProduction": "Fără limită lunară pe producție, exact ce recomandă acest ecran acolo: o limită oprește tot site-ul chiar în clipa în care e atinsă, așa că alerta de cheltuieli din Neon e avertizarea mai sigură. Dacă totuși se pune una, doar cu bifa de confirmare.",
           "how": [
-            "În fila Costuri, deschide „Limitele bazei de date”: citește cifrele chiar de la Neon pentru mărimea calculului și limita perioadei, și scrie ambele înapoi la Neon (SETUP.md §33).",
-            "O limită are nevoie de o cheie care poate modifica proiectul, nu doar să-l citească (NEON_API_KEY cu rolul Editor) — cardul numește exact cheia necesară când cea setată nu poate scrie.",
+            "În fila Costuri, deschide „Limitele bazei de date”: citește cifrele chiar de la Neon pentru mărimea calculului și limita perioadei, și scrie ambele înapoi la Neon cu cheia pe care /devs o folosește deja (SETUP.md §33).",
+            "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele. Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
           ]
         }
@@ -2273,7 +2273,7 @@
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc.",
             "„De făcut” → „Costuri” → „Planul Neon”: spune platformei pe ce plan e contul Neon — Free (ore și spațiu incluse, oprire când se termină) sau Launch (pe consum, ales pe 22 septembrie 2026). /devs și rândul Neon din costuri se iau după el, pe fiecare mediu în parte; revizuirea din decembrie e aceeași alegere, fără deploy.",
-            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; pe producție cere o bifă, iar recomandarea e fără limită, cu alerta de cheltuieli din Neon. Cheia NEON_API_KEY trebuie să aibă drept de modificare pe proiect."
+            "„De făcut” → „Costuri” → „Limitele bazei de date”: frânele facturii Neon, puse direct în Neon, pe fiecare mediu. Mărimea maximă mărginește un vârf de încărcare — factura obișnuită o dă timpul cât baza e trează. Limita lunară de ore-CU oprește baza de date când e atinsă, până la perioada următoare, și cu ea tot site-ul; recomandarea e o limită cu rezervă pe fiecare mediu (SETUP.md §40), cu notificarea de cheltuieli din Neon alături, iar pe producție o limită nouă sau schimbată cere o bifă. O cheie NEON_API_KEY „Project-scoped” are deja dreptul să le schimbe."
           ],
           "roles": [
             "ADMIN",

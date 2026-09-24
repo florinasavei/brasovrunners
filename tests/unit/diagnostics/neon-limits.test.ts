@@ -11,6 +11,8 @@ import {
   offeredCeilings,
   parseNeonLimitsRequest,
   priceCeiling,
+  quotaBoxValue,
+  recommendedNeonQuotaCuHours,
   secondsToCuHours,
 } from "@/modules/diagnostics/domain/neon-limits";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
@@ -18,8 +20,9 @@ import { NEON_FAILURE_KINDS } from "@/modules/diagnostics/neon";
 import { NEON_LIMITS_REFUSAL_CODES } from "@/modules/diagnostics/neon-limits";
 
 /**
- * BR-REQ-090-07 criterion 7 (§NNN) — the rules of the database's brakes: the six ceilings and
- * what each costs at worst, a limit that must clear what is spent, and production's confirmation.
+ * BR-REQ-090-07 criterion 8 (§NNN) — the rules of the database's brakes: the six ceilings and
+ * what each costs at worst, a new or changed limit that must clear what is spent, production's
+ * confirmation, the limit in force kept to the second, and the limit the card recommends.
  */
 const READING: NeonLimitsReading = {
   computes: [{ id: "ep-rw-main", minCu: 0.25, maxCu: 1 }],
@@ -102,29 +105,61 @@ describe("BR-REQ-090-07 what the form may post", () => {
 describe("BR-REQ-090-07 the rules against what Neon says now", () => {
   const request = (quotaCuHours: number | null, confirmSuspension = false, maxCu: 0.25 | 0.5 | 1 | 2 | 4 | 8 = 1) => ({ maxCu, quotaCuHours, confirmSuspension });
 
-  it("refuses a limit at or below what is spent plus the margin — it would suspend the database on saving", () => {
-    const context = { usedCuHours: 12.34, plan: "LAUNCH" as const, appEnv: "qa" as const };
+  it("refuses a new limit at or below what is spent plus the margin — it would suspend the database on saving", () => {
+    const context = { usedCuHours: 12.34, quotaCuHours: null, plan: "LAUNCH" as const, appEnv: "qa" as const };
     expect(checkNeonLimits(request(12.34 + NEON_QUOTA_MARGIN_CU_HOURS), context)).toEqual({ code: "NEON_QUOTA_BELOW_USAGE", field: "quotaCuHours" });
     expect(checkNeonLimits(request(10), context)).toEqual({ code: "NEON_QUOTA_BELOW_USAGE", field: "quotaCuHours" });
     expect(checkNeonLimits(request(17.4), context)).toBeNull();
     expect(checkNeonLimits(request(null), context)).toBeNull();
   });
 
-  it("asks production for the ticked confirmation before any limit, and nobody else", () => {
-    const production = { usedCuHours: 1, plan: "LAUNCH" as const, appEnv: "production" as const };
+  it("asks production for the ticked confirmation before a new or changed limit, and nobody else", () => {
+    const production = { usedCuHours: 1, quotaCuHours: null, plan: "LAUNCH" as const, appEnv: "production" as const };
     expect(checkNeonLimits(request(100), production)).toEqual({ code: "NEON_QUOTA_UNCONFIRMED", field: "confirmSuspension" });
     expect(checkNeonLimits(request(100, true), production)).toBeNull();
-    // No limit, no confirmation: throttling the size alone is never a stop.
+    // Changing a limit in force is a new limit too.
+    expect(checkNeonLimits(request(150), { ...production, quotaCuHours: 100 })).toEqual({ code: "NEON_QUOTA_UNCONFIRMED", field: "confirmSuspension" });
+    // No limit, no confirmation: removing one is never a stop.
     expect(checkNeonLimits(request(null), production)).toBeNull();
     expect(checkNeonLimits(request(100), { ...production, appEnv: "qa" })).toBeNull();
     // The usage rule comes first: a confirmed limit that would stop the site at once is still refused.
     expect(checkNeonLimits(request(3, true), production)).toEqual({ code: "NEON_QUOTA_BELOW_USAGE", field: "quotaCuHours" });
   });
 
+  it("leaves the limit Neon holds alone: posted back to the second, it needs no confirmation and meets no usage rule", () => {
+    // Production as set on 2026-09-23 (SETUP.md §40): 100 CU-hours. Throttling the size alone,
+    // the quota box untouched, is not a new limit — not even late in a busy month.
+    const production = { usedCuHours: 97, quotaCuHours: 100, plan: "LAUNCH" as const, appEnv: "production" as const };
+    expect(checkNeonLimits(request(100, false, 0.5), production)).toBeNull();
+    // A quota Neon holds in odd seconds, posted back as the box shows it (`quotaBoxValue`).
+    const odd = { ...production, usedCuHours: 1, quotaCuHours: 100_000 / 3600 };
+    expect(checkNeonLimits(request(Number(quotaBoxValue(odd.quotaCuHours)), false, 0.5), odd)).toBeNull();
+    // A tenth away is a change, and meets both rules again.
+    expect(checkNeonLimits(request(27.8, false, 0.5), odd)).toEqual({ code: "NEON_QUOTA_UNCONFIRMED", field: "confirmSuspension" });
+  });
+
   it("refuses a ceiling above the plan's own autoscaling limit", () => {
-    expect(checkNeonLimits(request(null, false, 4), { usedCuHours: 0, plan: "FREE", appEnv: "qa" })).toEqual({ code: "VALIDATION_ERROR", field: "maxCu" });
-    expect(checkNeonLimits(request(null, false, 2), { usedCuHours: 0, plan: "FREE", appEnv: "qa" })).toBeNull();
-    expect(checkNeonLimits(request(null, false, 8), { usedCuHours: 0, plan: null, appEnv: "qa" })).toBeNull();
+    const qa = { usedCuHours: 0, quotaCuHours: null, appEnv: "qa" as const };
+    expect(checkNeonLimits(request(null, false, 4), { ...qa, plan: "FREE" })).toEqual({ code: "VALIDATION_ERROR", field: "maxCu" });
+    expect(checkNeonLimits(request(null, false, 2), { ...qa, plan: "FREE" })).toBeNull();
+    expect(checkNeonLimits(request(null, false, 8), { ...qa, plan: null })).toBeNull();
+  });
+});
+
+describe("BR-REQ-090-07 the quota box and the limit the card recommends", () => {
+  it("shows a limit Neon holds so that it goes back to exactly the same seconds", () => {
+    expect(quotaBoxValue(null)).toBe("");
+    expect(quotaBoxValue(100)).toBe("100");
+    expect(quotaBoxValue(30)).toBe("30");
+    for (const seconds of [100_000, 360_000, 108_000, 1, 12_345, 35_999_999]) {
+      const shown = quotaBoxValue(seconds / 3600);
+      expect(cuHoursToSeconds(Number(shown)), `${seconds} s shown as ${shown}`).toBe(seconds);
+    }
+  });
+
+  it("recommends the limits the owner set on Neon (SETUP.md §40): 100 CU-hours on production, 30 elsewhere — never none", () => {
+    expect(recommendedNeonQuotaCuHours("production")).toBe(100);
+    for (const appEnv of ["qa", "local", "test"] as const) expect(recommendedNeonQuotaCuHours(appEnv)).toBe(30);
   });
 });
 
@@ -152,6 +187,18 @@ describe("BR-REQ-090-07 the card's words, in both languages", () => {
       for (const message of flatten((messages as unknown as Catalogue).Admin.tasks.neonLimits)) {
         expect(message, `${locale} quotes a Neon rate literally`).not.toMatch(/0[.,]106|\$\s?\d|\d\s?\$\/(oră|hour)/);
       }
+    }
+  });
+
+  it("never advises leaving production without a limit — the owner capped it (SETUP.md §40)", () => {
+    for (const [locale, messages] of [["ro", ro], ["en", en]] as const) {
+      const catalogue = messages as unknown as Catalogue & { Admin: { tasks: { items: { neonLimits: unknown } } } };
+      const words = [...flatten(catalogue.Admin.tasks.neonLimits), ...flatten(catalogue.Admin.tasks.items.neonLimits)];
+      for (const message of words) {
+        expect(message, `${locale} advises no limit`).not.toMatch(/no limit on production|fără limită pe producție|recommends there|recomandă acest ecran acolo/i);
+      }
+      expect(catalogue.Admin.tasks.neonLimits.recommend, `${locale} recommend`).toContain("{hours}");
+      expect(catalogue.Admin.tasks.neonLimits.recommendConfirm, `${locale} recommendConfirm`).toBeTruthy();
     }
   });
 });

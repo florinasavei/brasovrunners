@@ -17,8 +17,12 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * by switching the site off: when the project's compute time reaches it, Neon suspends every
  * compute until the next billing period, and a suspended project does not wake on the next
  * connection (neon.com/docs/guides/consumption-limits). On production that is registrations, the
- * race-day desk and the emails gone until the first of the month, so there the limit asks for a
- * ticked confirmation and the page recommends Neon's own spending alert instead.
+ * race-day desk and the emails gone until the first of the month — and the owner capped
+ * production anyway, the same night ("I want QA to be cheaper and also Prod to be capped, not ok
+ * to leave to unlimited"; `SETUP.md` §40, 100 CU-hours there and 30 on QA). So the page
+ * recommends a limit with room plus Neon's own spending alert on every environment, and on
+ * production a new or changed limit asks for a ticked confirmation: a guard on the click, not
+ * advice against the limit.
  */
 
 /** The floor stays where it is: the site idles at the smallest compute Neon has. */
@@ -42,14 +46,26 @@ export const NEON_GB_RAM_PER_CU = 4;
 export const NEON_AUTOSCALING_CEILING_CU: Record<NeonPlanId, number> = { FREE: 2, LAUNCH: 16 };
 
 /**
- * A limit must clear what this period has already spent by this much, or it suspends the
- * database the moment it is saved — or a few minutes later, which is the same mistake found
- * after the page has been closed. Five CU-hours is about a day of the club's awake time.
+ * A new or changed limit must clear what this period has already spent by this much, or it
+ * suspends the database the moment it is saved — or a few minutes later, which is the same
+ * mistake found after the page has been closed. Five CU-hours is about a day of the club's awake
+ * time.
  */
 export const NEON_QUOTA_MARGIN_CU_HOURS = 5;
 
 /** A limit larger than this is a typo: 8 CU awake every hour of a month is under 6,000. */
 export const NEON_QUOTA_MAX_CU_HOURS = 10_000;
+
+/**
+ * The limit the card recommends, per environment — what the owner set on Neon on 2026-09-23
+ * (`SETUP.md` §40): 100 CU-hours on production, which lets it average 3.3 CU-hours a day for a
+ * whole month, close to the 4 a day measured on days of two people testing all day and well
+ * above an ordinary day; 30 on QA, which nobody registers on. Advice printed on the card, never
+ * a value the form sends by itself.
+ */
+export function recommendedNeonQuotaCuHours(appEnv: AppEnvironment): number {
+  return appEnv === "production" ? 100 : 30;
+}
 
 /**
  * 80%: the one share of a quota that both `/api/health`'s early warning and the derived
@@ -223,15 +239,24 @@ export type NeonLimitsRuleRefusal =
  * The rules a request meets against what Neon says right now, in the order they are told:
  *
  * 1. A ceiling above the plan's own autoscaling limit — Neon would refuse it.
- * 2. A limit at or below what is spent plus the margin — it would stop the database on saving.
- * 3. A limit on production without the ticked confirmation — the site stops when it is reached.
+ * 2. A new or changed limit at or below what is spent plus the margin — it would stop the
+ *    database on saving.
+ * 3. A new or changed limit on production without the ticked confirmation — the site stops when
+ *    it is reached.
+ *
+ * A limit Neon already holds, posted back to the second (`quotaBoxValue`), is neither new nor
+ * changed: 2 and 3 are about what this save does, and keeping the limit in force does nothing.
+ * So throttling the size alone on production, with the quota box untouched, needs no
+ * confirmation — and it is not refused when the period is already close to the limit, which is
+ * exactly when somebody reaches for the size.
  */
 export function checkNeonLimits(
   request: NeonLimitsRequest,
-  context: { usedCuHours: number; plan: NeonPlanId | null; appEnv: AppEnvironment },
+  context: { usedCuHours: number; quotaCuHours: number | null; plan: NeonPlanId | null; appEnv: AppEnvironment },
 ): NeonLimitsRuleRefusal | null {
   if (context.plan && request.maxCu > NEON_AUTOSCALING_CEILING_CU[context.plan]) return { code: "VALIDATION_ERROR", field: "maxCu" };
-  if (request.quotaCuHours !== null) {
+  const quotaChanges = cuHoursToSeconds(request.quotaCuHours) !== cuHoursToSeconds(context.quotaCuHours);
+  if (request.quotaCuHours !== null && quotaChanges) {
     if (request.quotaCuHours <= context.usedCuHours + NEON_QUOTA_MARGIN_CU_HOURS) {
       return { code: "NEON_QUOTA_BELOW_USAGE", field: "quotaCuHours" };
     }
@@ -249,4 +274,15 @@ export function cuHoursToSeconds(cuHours: number | null): number {
 
 export function secondsToCuHours(seconds: unknown): number | null {
   return typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0 ? seconds / 3600 : null;
+}
+
+/**
+ * What the quota box shows for a limit Neon holds: the CU-hours to four decimals at most, which
+ * `cuHoursToSeconds` turns back into exactly the seconds Neon holds (four decimals are within
+ * 0.18 of a second). A box rounded to a tenth would rewrite a quota set in odd seconds — 100000,
+ * say, shown as 27.8 and sent back as 100080 — on a save that only meant to change the size.
+ * A whole number of CU-hours, which is what the card and `SETUP.md` §40 set, shows as itself.
+ */
+export function quotaBoxValue(quotaCuHours: number | null): string {
+  return quotaCuHours === null ? "" : String(Number(quotaCuHours.toFixed(4)));
 }

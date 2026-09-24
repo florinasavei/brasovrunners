@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { NeonLimitsReading } from "@/modules/diagnostics/domain/neon-limits";
 
 /**
- * BR-REQ-090-07 criteria 6 and 8 (§NNN) — the card's three states, rendered to HTML on the server
+ * BR-REQ-090-07 criteria 7 and 8 (§NNN) — the card's three states, rendered to HTML on the server
  * the way the page sends them: no key (what is missing, no form), a read that failed (a sentence,
  * no form), and the values Neon holds above the form that changes them.
  *
@@ -83,25 +83,40 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(html.match(/<option value="(0\.25|0\.5|1|2|4|8)"/g)).toHaveLength(6);
     expect(html).toMatch(/<option value="1" selected="">/);
     expect(html).toMatch(/<option value="none" selected="">/);
-    expect(words).toContain("O limită trebuie să fie de cel puțin 17,4 ore-CU (consumul plus 5 de marjă)");
+    expect(words).toContain("O limită nouă trebuie să fie de cel puțin 17,4 ore-CU (consumul plus 5 de marjă)");
     // The warning is on the page, not folded, and says the site stops.
     expect(html).toContain('data-testid="neon-limits-warning"');
     expect(words).toContain("Neon SUSPENDĂ baza de date");
-    // Not production: no confirmation box and no recommendation.
+    // QA: the recommendation is a limit with room, QA's own figure (SETUP.md §40), and no
+    // confirmation box — that guard is production's.
+    expect(html).toContain('data-testid="neon-limits-recommendation"');
+    expect(words).toContain("Recomandat: o limită lunară cu rezervă — 30 ore-CU pe acest mediu");
+    expect(words).toContain("notificarea de cheltuieli de pe pagina Billing din Neon");
+    expect(words).not.toContain("Pe producție, o limită nouă sau schimbată cere bifa");
     expect(html).not.toContain('name="confirmSuspension"');
-    expect(html).not.toContain('data-testid="neon-limits-recommendation"');
   });
 
-  it("on production, recommends no limit and carries the confirmation box", async () => {
+  it("on production, recommends a limit with room, never none, and carries the confirmation box as a guard", async () => {
     const html = await render({ locale: "ro", reading: { ok: true, limits: { ...LIMITS, quotaCuHours: 50 } }, appEnv: "production", mayEdit: true });
     const words = text(html);
-    expect(words).toContain("Recomandat: fără limită pe producție; folosește alerta de cheltuieli din Neon.");
+    // The owner capped production (2026-09-23): the advice is production's own 100 CU-hours plus
+    // Neon's spending notification, and nothing on the card advises against a limit.
+    expect(words).toContain("Recomandat: o limită lunară cu rezervă — 100 ore-CU pe acest mediu");
+    expect(words).toContain("Pe producție, o limită nouă sau schimbată cere bifa de confirmare de mai jos");
+    expect(words).not.toContain("fără limită pe producție");
     expect(html).toContain('name="confirmSuspension"');
     // A limit in force is said above the form, and chosen in it.
     expect(words).toContain("Limită lunară: 50 ore-CU pe perioadă");
     expect(html).toContain('data-testid="neon-limits-quota-active"');
     expect(html).toMatch(/<option value="limit" selected="">/);
     expect(html).toMatch(/name="quotaCuHours"[^>]*value="50"|value="50"[^>]*name="quotaCuHours"/);
+  });
+
+  it("fills the quota box to the second Neon holds, so a save that only changes the size leaves the limit alone", async () => {
+    // 100000 seconds is 27.777… CU-hours: a box rounded to a tenth would post 27.8, which is
+    // 100080 seconds — a quota rewritten by a save that never touched it.
+    const html = await render({ locale: "ro", reading: { ok: true, limits: { ...LIMITS, quotaCuHours: 100_000 / 3600 } }, appEnv: "qa", mayEdit: true });
+    expect(html).toMatch(/name="quotaCuHours"[^>]*value="27.7778"|value="27.7778"[^>]*name="quotaCuHours"/);
   });
 
   it("on Free, offers no ceiling above the plan's, and keeps an unlisted ceiling from being replaced silently", async () => {

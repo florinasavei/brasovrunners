@@ -15,9 +15,10 @@ import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from
  *
  * The same gate as the Neon plan beside it (`canManageRegistrations`, §280's follow-up),
  * asserted here, where the change is made, whatever the page showed. The rules the form states —
- * one of six ceilings, a limit above what is spent plus a margin, a ticked confirmation for a
- * limit on production — are checked against a fresh read, never against the figures the page
- * rendered a minute ago.
+ * one of six ceilings, a new or changed limit above what is spent plus a margin, a ticked
+ * confirmation for a new or changed limit on production — are checked against a fresh read,
+ * never against the figures the page rendered a minute ago; the limit Neon holds, posted back
+ * untouched, is kept to the second and meets neither rule.
  */
 
 /** One fixed id per setting for the audit row; `…e001`–`…e006` are taken (§100, §164, §244, §247, §254, §306). */
@@ -108,7 +109,12 @@ export async function updateNeonLimits<T extends Record<string, unknown>>(
   if (!read.ok) throw failed(read.failure, "read");
   const before = read.snapshot.limits;
 
-  const rule = checkNeonLimits(request, { usedCuHours: before.usedCuHours, plan: before.reportedPlan, appEnv: deps.env.APP_ENV });
+  const rule = checkNeonLimits(request, {
+    usedCuHours: before.usedCuHours,
+    quotaCuHours: before.quotaCuHours,
+    plan: before.reportedPlan,
+    appEnv: deps.env.APP_ENV,
+  });
   if (rule) {
     throw rule.code === "VALIDATION_ERROR"
       ? new DomainError("VALIDATION_ERROR", `neon limits: ${rule.field} above the plan's ceiling`, [rule.field])
