@@ -18,6 +18,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import { CLUB_NAME } from "@/theme/brand";
 import { deletePageAction, movePageAction, transitionPageAction } from "../actions";
 
 type Props = {
@@ -131,7 +132,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       </Stack>
 
       <Typography variant="body2" color="text.secondary">
-        {t("pages.intro")} {t("pages.moveHelp")}
+        {t("pages.intro", { club: CLUB_NAME })} {t("pages.moveHelp")}
       </Typography>
 
       <AdminTable

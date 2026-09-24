@@ -38,7 +38,7 @@ import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type"
 import { getPathname } from "@/i18n/navigation";
 import CardDoor from "@/modules/events/ui/CardDoor";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 import { specialCard, headingRule } from "@/theme/surfaces";
 
@@ -110,7 +110,6 @@ export default async function EventsPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
-  const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
@@ -141,7 +140,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
         this page is now the homepage — the site root redirects here. Incomplete by design:
         logo and sameAs are absent until the club supplies them. See structured-data.ts.
       */}
-      <JsonLd data={sportsOrganizationJsonLd(tSite("name"), staticRouteUrl(env.APP_BASE_URL, "/events", locale))} />
+      <JsonLd data={sportsOrganizationJsonLd(CLUB_NAME,staticRouteUrl(env.APP_BASE_URL, "/events", locale))} />
 
       {/* The kit-face wordmark — moved here out of the header (`BR-V1.32`), and since 2026-09-22
           also at the head of the calendar and the contact page (`DECISIONS.md` §292). `shared/ui/Wordmark` says where it may appear. */}

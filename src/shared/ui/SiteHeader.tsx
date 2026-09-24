@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
-import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
@@ -79,8 +79,9 @@ async function hasPublishedAlbum(locale: Locale) {
  * height; the owner then moved it out of the header and onto the homepage (`shared/ui/Wordmark`),
  * where it has the room a display face wants — and on 2026-09-22 onto the calendar and the
  * contact page as well, as a page heading, never back into this row. The header is the artwork
- * alone again, and the link's accessible name comes from the message catalogue, so assistive
- * technology announces `Brașov Runners`, spelled properly, and never the artwork.
+ * alone again, and the link's accessible name is the club's name from its one constant
+ * (`CLUB_NAME`, §NNN), so assistive technology announces it spelled properly, and never the
+ * artwork.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
@@ -91,7 +92,6 @@ async function hasPublishedAlbum(locale: Locale) {
  * twice to a screen reader.
  */
 export default async function SiteHeader() {
-  const t = await getTranslations("Site");
   /**
    * One indexed query on every public page, which is a cost worth naming: the header is what
    * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
@@ -185,7 +185,7 @@ export default async function SiteHeader() {
         }}
       >
         <Box sx={{ order: 1, flexShrink: 0 }}>
-        <LogoLink label={t("name")}>
+        <LogoLink label={CLUB_NAME}>
           {/*
             Two files, one shown: the blue lockup by day and the white one after dark, chosen
             by the `data-dark` attribute the theme puts on <html> (§93) — CSS, so the swap

@@ -46,7 +46,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import JsonLd from "@/shared/ui/JsonLd";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string }> };
 
@@ -149,7 +149,6 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const t = await getTranslations("Event");
-  const tSite = await getTranslations("Site");
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The
@@ -163,7 +162,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         data={sportsEventJsonLd(
           event,
           eventUrl(locale, slug),
-          tSite("name"),
+          CLUB_NAME,
           [absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/opengraph-image`), absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/share-image`)],
           // The page's language, for what a partnership is (§352) — said in this language or not at all.
           locale,

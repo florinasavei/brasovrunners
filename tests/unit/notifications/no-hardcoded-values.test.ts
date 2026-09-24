@@ -1,7 +1,10 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { createTranslator } from "next-intl";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import en from "@/../messages/en.json";
+import ro from "@/../messages/ro.json";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { formatSenderIdentity } from "@/infrastructure/email/sender";
@@ -127,6 +130,16 @@ function sourceFiles(directory: string): string[] {
   });
 }
 
+/** Every message of a catalogue by its dotted key; an array's items by their index. */
+function flatMessages(messages: unknown, prefix = ""): Record<string, string> {
+  if (typeof messages === "string") return { [prefix]: messages };
+  if (!messages || typeof messages !== "object") return {};
+  return Object.assign(
+    {},
+    ...Object.entries(messages).map(([key, value]) => flatMessages(value, prefix ? `${prefix}.${key}` : key)),
+  );
+}
+
 /**
  * Where the name may be written: the constant itself, and the sample data a developer seeds — a
  * made-up event may be called anything, and a test fixture reads it by that title.
@@ -156,6 +169,70 @@ describe("§NNN the club's name leaves the platform only through the constant", 
       .filter(({ file }) => !MAY_NAME_THE_CLUB(file))
       .flatMap(({ file, text }) => clubNamesIn(file, text).map((words) => `${file}: ${words}`));
     expect(offenders).toEqual([]);
+  });
+
+  it("no message in either catalogue names the club: a sentence that needs it asks for {club}", () => {
+    // The catalogues are the other place a reader's words come from, and the scan above never
+    // opens them. `Site.name` and `Home.title` were a second and third copy of the constant, the
+    // footer's club description a fourth; a renamed club would have been renamed in `src/` and
+    // gone on reading the old name in the page title, the header and the member tick (§NNN).
+    const offenders = (
+      [
+        ["ro", ro],
+        ["en", en],
+      ] as const
+    ).flatMap(([locale, catalogue]) =>
+      Object.entries(flatMessages(catalogue))
+        .filter(([, text]) => CLUB_NAME_PATTERN.test(fold(text)))
+        .map(([key, text]) => `${locale}.json ${key}: ${text}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("fills every {club} with the constant, at each place the sentence is read", () => {
+    // Which sentences ask, pinned: a new one is a new call site, and it has to pass the name.
+    for (const catalogue of [ro, en]) {
+      const asking = Object.entries(flatMessages(catalogue))
+        .filter(([, text]) => text.includes("{club}"))
+        .map(([key]) => key)
+        .sort();
+      expect(asking).toEqual(
+        [
+          "Admin.pages.intro",
+          "Admin.registrations.clubMemberLabel",
+          "Admin.tasks.items.contactForm.how.1",
+          "Admin.tasks.items.inviteKey.how.0",
+          "Registration.clubMemberDeclared",
+          "Registration.disclosure.race",
+        ].sort(),
+      );
+    }
+    // Each call names the key as its namespace sees it and hands it the constant; a call without
+    // the argument would print "{club}" on QA and production, where a missing value is quiet.
+    const calls: Record<string, number> = {
+      clubMemberDeclared: 2,
+      "disclosure.race": 1,
+      "registrations.clubMemberLabel": 1,
+      "pages.intro": 1,
+    };
+    const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
+    for (const [key, expected] of Object.entries(calls)) {
+      const pattern = new RegExp(`\\b(?:t|rt)\\(\\s*"${key.replace(".", "\\.")}"\\s*([,)])[^)]*`, "g");
+      const found = sources.flatMap((text) => [...text.matchAll(pattern)].map((match) => match[0]));
+      expect(found, key).toHaveLength(expected);
+      for (const call of found) expect(call, key).toMatch(/,\s*\{\s*club:\s*CLUB_NAME\s*\}$/);
+    }
+    // The task steps are read raw and filled by the page from its own values.
+    const tasks = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/tasks/page.tsx"), "utf8");
+    expect(tasks).toMatch(/club:\s*CLUB_NAME,/);
+    // And a filled sentence reads the name in both languages.
+    for (const [locale, messages] of [
+      ["ro", ro],
+      ["en", en],
+    ] as const) {
+      const t = createTranslator({ locale, messages, namespace: "Registration" });
+      expect(t("disclosure.race", { club: CLUB_NAME })).toContain(CLUB_NAME);
+    }
   });
 
   it("sends from the constant by default, and the setting still wins", () => {

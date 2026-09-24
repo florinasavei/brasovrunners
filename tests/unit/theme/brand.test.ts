@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
 import en from "@/../messages/en.json";
@@ -240,20 +241,25 @@ describe("the brand assets the theme points at exist", () => {
     });
 
     it("is the kit's logotype, not the club's name", () => {
-      // The name, spelled properly, comes from the message catalogue and is what the header
-      // link announces to a screen reader. These two are allowed to differ; that is the whole
-      // point. If someone ever "corrects" the constant, the assertion above catches it.
+      // The name, spelled properly, is CLUB_NAME and is what the header link announces to a
+      // screen reader. These two are allowed to differ; that is the whole point. If someone
+      // ever "corrects" the constant, the assertion above catches it.
       expect(WORDMARK).toBe("BRASOV RUNNERS");
-      expect(messages.Site.name).toBe("Brașov Runners");
+      expect(CLUB_NAME).toBe("Brașov Runners");
     });
 
-    it("stores the club's name identically to the one both catalogues show (§215)", () => {
+    it("is the one copy of the club's name: the catalogues ask for it rather than hold it (§215, §NNN)", () => {
       // CLUB_NAME is what a registration *records* when somebody ticks "I am a member": one
       // string, the same for a Romanian and an English submission, so the export has one club
-      // and not three spellings of it. It is a constant rather than a per-request translation
-      // for exactly that reason — and this is what keeps the two from drifting apart.
-      expect(CLUB_NAME).toBe(messages.Site.name);
-      expect(CLUB_NAME).toBe(en.Site.name);
+      // and not three spellings of it. The catalogues used to hold a second copy under
+      // `Site.name`, kept equal by this test; now they hold none, and the tick's own words take
+      // the constant as `{club}`, so the name a runner reads is the name the row stores.
+      expect("name" in messages.Site).toBe(false);
+      expect("name" in en.Site).toBe(false);
+      const ro = createTranslator({ locale: "ro", messages, namespace: "Registration" });
+      const english = createTranslator({ locale: "en", messages: en, namespace: "Registration" });
+      expect(ro("clubMemberDeclared", { club: CLUB_NAME })).toBe(`Sunt membru al grupului ${CLUB_NAME}`);
+      expect(english("clubMemberDeclared", { club: CLUB_NAME })).toBe(`I am a member of the ${CLUB_NAME} group`);
     });
 
     it("ships the font it is set in, with the licence beside it", () => {
