@@ -3,6 +3,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
@@ -84,6 +85,11 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * exist because the event page's route became a row of pills (§356), and a pill with no glyph
  * beside three that have one was exactly the "some with a glyph, some without" the owner
  * pointed at.
+ *
+ * `partner` is the handshake (§367; the owner: "show like a handshake icon on the card and in the
+ * calendar"): an event held with another organization, on the listing card's chip, beside the
+ * calendar entry and on the event page's overline — the same glyph the facts' "Împreună cu" row
+ * has worn since §168, so the marker and the row it summarises are one picture.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -95,6 +101,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
+  partner: HandshakeIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;
