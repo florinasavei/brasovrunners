@@ -2603,11 +2603,12 @@
         "paragraphsHelp": "Un rând gol între paragrafe. **Îngroșat** se scrie între două steluțe.",
         "legend": {
           "title": "Câmpurile pe care le poți folosi",
-          "intro": "Le scrii exact așa, cu acolade — se înlocuiesc la trimitere, pentru fiecare participant. Un câmp pe care mesajul acesta nu îl are rămâne gol.",
+          "intro": "Le scrii exact așa, cu acolade — se înlocuiesc la trimitere, pentru fiecare participant. Un câmp pe care mesajul acesta nu îl are rămâne gol — sau, unde rândul lui o spune, paragraful cu el nu se trimite.",
           "missing": "Cele marcate „poate lipsi” nu sunt în fiecare trimitere: un paragraf care numește doar dintre ele și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Exemplul de lângă un câmp e valoarea pe care o primește în previzualizarea de mai sus.",
           "usedMark": "folosit în textul platformei",
           "mayBeMissing": "poate lipsi",
           "notFilled": "nu se completează în acest mesaj",
+          "notFilledDropped": "nu se completează în acest mesaj, deci un paragraf doar cu el nu se trimite",
           "count": {
             "one": "{count} câmp",
             "few": "{count} câmpuri",
@@ -2616,7 +2617,7 @@
           "used": {
             "one": "{count} folosit aici",
             "few": "{count} folosite aici",
-            "other": "{count} de câmpuri folosite aici"
+            "other": "{count} de folosite aici"
           },
           "noneUsed": "niciunul folosit aici",
           "fields": {

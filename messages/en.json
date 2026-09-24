@@ -2603,11 +2603,12 @@
         "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
         "legend": {
           "title": "The fields you can use",
-          "intro": "Write them exactly like this, braces and all — each is replaced when the message is sent, for every participant. A field this message does not have stays empty.",
+          "intro": "Write them exactly like this, braces and all — each is replaced when the message is sent, for every participant. A field this message does not have stays empty — or, where its row says so, its paragraph is not sent.",
           "missing": "The ones marked “may be missing” are not in every send: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The example beside a field is the value it gets in the preview above.",
           "usedMark": "used in the platform's text",
           "mayBeMissing": "may be missing",
           "notFilled": "not filled in this message",
+          "notFilledDropped": "not filled in this message, so a paragraph with only this field is not sent",
           "count": {
             "one": "{count} field",
             "few": "{count} fields",

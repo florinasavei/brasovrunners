@@ -316,6 +316,12 @@ export type EmailFieldLegendEntry = {
   filled: boolean;
   /** One of the facts a send may lack (`EMAIL_COPY_CONDITIONAL_FACTS`), for a message that carries it. */
   mayBeMissing: boolean;
+  /**
+   * One of those facts, in a message that never carries it: not left empty like `{staffRole}` in a
+   * reminder, because a paragraph naming only such facts is not sent at all (`onlyMissingFacts`).
+   * The dimmed row says so, since it has no "may be missing" mark to point at the rule.
+   */
+  dropsParagraph: boolean;
   /** The sample's value in the language being edited — exactly what the preview above shows. */
   example: string;
 };
@@ -335,6 +341,7 @@ export function emailFieldLegend(messageType: EmailMessageType, locale: EmailLoc
       used: used.has(name),
       filled: filled.has(name),
       mayBeMissing: filled.has(name) && EMAIL_COPY_CONDITIONAL_FACTS.has(name),
+      dropsParagraph: !filled.has(name) && EMAIL_COPY_CONDITIONAL_FACTS.has(name),
       example: emailSampleValueOf(name, locale),
     }),
   ).sort((a, b) => rank(a) - rank(b));

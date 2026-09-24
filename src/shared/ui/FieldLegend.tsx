@@ -44,7 +44,14 @@ const LEGEND_SX = {
   "& > div": { display: "contents" },
   "& dt": { m: 0, typography: "body1" },
   "& dd": { m: 0, typography: "body2", color: "text.secondary" },
-  "& > div[data-muted] > dt, & > div[data-muted] > dd": { opacity: 0.6 },
+  /*
+    Dimmed by colour and outline, never by opacity: the description is already the secondary ink,
+    and 0.6 of it fell to about 2.8:1 on white (3.8:1 in the dark scheme) — words a Redactor has to
+    read, "nu se completează în acest mesaj" among them, so held to 4.5:1 (`AGENTS.md` §18.2).
+    The token takes the secondary ink too, its chip only a dashed outline; the note is in italics.
+  */
+  "& > div[data-muted] > dt": { color: "text.secondary" },
+  "& > div[data-muted] > dd": { fontStyle: "italic" },
   "& code": {
     fontFamily: "monospace",
     fontSize: "0.875rem",
@@ -57,6 +64,7 @@ const LEGEND_SX = {
     whiteSpace: { xs: "normal", sm: "nowrap" },
     overflowWrap: "anywhere",
   },
+  "& > div[data-muted] code": { bgcolor: "transparent", border: 1, borderStyle: "dashed", borderColor: "divider" },
   // A mark reads as an outlined chip, and a long one wraps inside itself on a phone.
   "& dt > span": {
     display: "inline-block",
@@ -83,8 +91,9 @@ const LEGEND_SX = {
  * phone, where the token stacks over its meaning.
  *
  * A Server Component with no state, and each token plain text inside a `<code>`: selecting and
- * copying one is the browser's job. A muted row is dimmed on its term and its description — the
- * row itself is `display: contents` and draws nothing to dim.
+ * copying one is the browser's job. A muted row is set on its term and its description — the row
+ * itself is `display: contents` and draws nothing — in the secondary ink at full strength, so its
+ * words keep the contrast every other row has.
  */
 export default function FieldLegend({ rows, "data-testid": testId }: Props) {
   return (

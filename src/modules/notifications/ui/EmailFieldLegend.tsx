@@ -33,8 +33,10 @@ type Props = {
  * - **a fact a send may lack is marked** "poate lipsi", with the one rule that comes with it said
  *   once above the rows: a paragraph that names only such facts, and has none of them, is not sent;
  * - **a field this message never carries is last and dimmed**, "nu se completează în acest mesaj",
- *   with no example — `{staffRole}` outside the staff invitation, `{bibNumber}` before there is a
- *   number to send (`placeholdersFilledBy`). The preview leaves it empty too.
+ *   with no example — `{staffRole}` outside the staff invitation, `{bibNumber}` in a message that
+ *   never has a number (`placeholdersFilledBy`). The preview leaves it empty too. When it is one of
+ *   the facts above, the row adds that a paragraph with only it is not sent: the intro's "stays
+ *   empty" would otherwise be wrong for it (`dropsParagraph`).
  *
  * A named card folded under the editor, closed (§336), whose closed line counts the fields and the
  * ones this message uses ("12 câmpuri · 4 folosite aici"). A Server Component: the fold is
@@ -72,7 +74,9 @@ export default async function EmailFieldLegend({ locale, emailLocale, messageTyp
           return {
             token: `{${entry.name}}`,
             meaning: t(`emails.copy.legend.fields.${entry.name}`),
-            ...(entry.filled ? { example: entry.example } : { note: t("emails.copy.legend.notFilled"), muted: true }),
+            ...(entry.filled
+              ? { example: entry.example }
+              : { note: t(entry.dropsParagraph ? "emails.copy.legend.notFilledDropped" : "emails.copy.legend.notFilled"), muted: true }),
             ...(marks.length > 0 ? { marks } : {}),
           };
         })}
