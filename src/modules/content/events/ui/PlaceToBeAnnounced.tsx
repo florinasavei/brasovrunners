@@ -1,20 +1,33 @@
 "use client";
 
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { englishFollowsTyping, englishLeftBehind, mayCopyToEnglish } from "@/modules/events/domain/place";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
+import { fillIn } from "@/shared/forms/fill-in";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { PLACE_NAMES_AS_TYPED_FIELD } from "../form-names";
 import { ShownWhen } from "./OnlyForType";
 
 /** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
 const SWITCH_NAME = "event.locationToBeAnnounced";
+/** The two boxes of "Punct de întâlnire" (§362), by the names `eventFieldsFrom` reads. */
+const RO_NAME = "event.locationName";
+const EN_NAME = "event.locationNameEn";
+/** Nothing to listen to: whether the island runs is settled once it has hydrated. */
+const noChanges = () => () => {};
 
-/** The meeting point's box as the Locul box read it off the schema (§315): plain data, never zod. */
-type BoxProps = ReturnType<typeof textFieldConstraints>;
+/** A box's constraints as the Locul box read them off the schema (§315): plain data, never zod. */
+type BoxConstraints = ReturnType<typeof textFieldConstraints>;
+type NameBox = { defaultValue: string; box: BoxConstraints };
 
 type Props = {
   /** The event's own state; the create form starts announced. */
@@ -22,32 +35,88 @@ type Props = {
   labels: {
     toggle: string;
     toggleHelp: string;
-    locationName: string;
+    /** "Punct de întâlnire": the one heading over both boxes. */
+    meetingPoint: string;
+    /** Each box's own label: the language in its own words ("Română", "English"). */
+    ro: string;
+    en: string;
     locationHelp: string;
-    /** "Not published while the place is to be announced", under the box while the switch is on. */
+    /** "Not published while the place is to be announced", under the boxes while the switch is on. */
     unpublished: string;
+    /** "Același nume și în engleză": copies the Romanian box into an empty English one. */
+    copyToEnglish: string;
+    /**
+     * Under the English box when the Romanian place moved and the English name of its own did not:
+     * a catalogue template, `{place}` filled here with what the English box still says.
+     */
+    englishLeftBehind: string;
   };
-  locationName: { defaultValue: string; box: BoxProps };
-  /** The map link's box, rendered by the server form as it always was, under the name. */
+  names: { ro: NameBox; en: NameBox };
+  /** The map link's box, rendered by the server form as it always was, under the names. */
   children: ReactNode;
 };
 
 /**
- * "Locația se anunță mai târziu" (`DECISIONS.md` §328; the owner: "I want to be able to set the
- * location as TBD, and to not announce it yet") — the switch, and the meeting point's box whose
- * `required` follows it.
+ * A label's words a screen reader and the save button's "completează întâi: …" read, and nobody
+ * sees: the heading says "Punct de întâlnire" once over both boxes, and each box shows only its
+ * language — but a box named "English" on its own would say nothing out of context.
  *
- * The box's constraints are the schema's (§315), read on the server and handed over as data:
- * `fields.ts` declares the meeting point required, and `placeRule` there is what refuses a blank
- * one — unless this switch is on. So the browser's rule follows the switch the same way: on, the
- * box is not required and says that what is in it is not published; off, it is required again.
+ * The sizes are strings on purpose: in MUI's `sx` a bare `1` is 100%, and a clipped span as wide
+ * as the label pushed a 320-pixel page to 342 — a sideways scroll on a phone, and every tap below
+ * it landing beside its target.
+ */
+const UNSEEN = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  p: 0,
+  m: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+} as const;
+
+/**
+ * "Locația se anunță mai târziu" (`DECISIONS.md` §328; the owner: "I want to be able to set the
+ * location as TBD, and to not announce it yet") — the switch, and the place's boxes whose
+ * `required` follows it: "Punct de întâlnire" once per language (§362; the owner: "There is some
+ * redundance on this meeting spot location"), Romanian and English side by side from `sm` and
+ * stacked on a phone, then the map link.
+ *
+ * The boxes' constraints are the schema's (§315), read on the server and handed over as data:
+ * `fields.ts` declares both names required, and `placeRule` there is what refuses a blank one —
+ * unless this switch is on. So the browser's rule follows the switch the same way: on, neither box
+ * is required and they say that what is in them is not published; off, both are required again.
  * Nothing typed is cleared by the switch — the organizer may write the venue down the moment it
  * is known and announce it later with one save.
  *
+ * "Același nume și în engleză" under the English box copies the Romanian text into it: a place's
+ * name is often the same in both ("Stadionul Tineretului" is not translated). It fills an **empty**
+ * English box only, and is off otherwise (§362, found by review): a thumb on the 44-pixel button
+ * right under a box holding "Tractorul Park" would replace it in one tap, past the browser's undo.
+ *
+ * **While the two boxes say the same place, the English follows the Romanian as it is typed**
+ * (`englishFollowsTyping`; found by review). An event saved before §362 opens with the event's name
+ * in both boxes — its English page had no name of its own — and moving only the Romanian used to
+ * leave the old place in the English box, saved as that date's English name while a series save
+ * sent the new one to every other date. Now the English box moves with it, on the screen; the
+ * service applies the same rule to a save that did not come through here
+ * (`place.ts#englishNameAfterSave`). A name of its own in the English box is never written: when
+ * the Romanian moves away from it, a line under the box says the English still names the old
+ * place (`englishLeftBehind`), and the organizer decides.
+ *
+ * **What the screen shows is what is saved** (found by re-review). Once the island runs it posts
+ * `PLACE_NAMES_AS_TYPED_FIELD`, and the service then keeps the English box as posted instead of
+ * making it follow a second time: the following already happened here, in view, so an English box
+ * put back to the old name — "Tractorul Park" after the Romanian became "Parcul Tractorul" — is the
+ * organizer's answer to the line above, not an oversight. The server's HTML carries no marker, so a
+ * save with JavaScript off still gets the server's rule.
+ *
  * A client island because the `required` attribute is what changes, and MUI marks a required
  * label itself; a server-rendered box would ask for a place the server no longer wants. With
- * JavaScript off the box keeps the state it was rendered with, and the server's rule is the
- * whole answer — as for every other cross-field rule on this form.
+ * JavaScript off the boxes keep the state they were rendered with, the copy button does nothing,
+ * and the server's rule is the whole answer — as for every other cross-field rule on this form.
  *
  * After a refusal the switch comes back as it was posted (§315): an unticked switch posts
  * nothing, so "not posted" is "off", and the island re-mounts on every answer.
@@ -58,14 +127,27 @@ export default function PlaceToBeAnnounced(props: Props) {
   return <Island key={recall.generation} {...props} initial={initial} />;
 }
 
-function Island({ initial, labels, locationName, children }: Props & { initial: boolean }) {
+function Island({ initial, labels, names, children }: Props & { initial: boolean }) {
+  const recall = useRecall();
   const [later, setLater] = useState(initial);
+  // What each box holds now, for the copy button's state; the boxes themselves stay uncontrolled
+  // (`RecallField`), so a refusal fills them back from what was posted.
+  const [ro, setRo] = useState(recall.value(RO_NAME) ?? names.ro.defaultValue);
+  const [en, setEn] = useState(recall.value(EN_NAME) ?? names.en.defaultValue);
   const own = useRef<HTMLDivElement>(null);
+  const enBox = useRef<HTMLInputElement>(null);
   const mounted = useRef(false);
+  // False in the server's HTML and while hydrating, true from then on: only a box that can follow
+  // on the screen says its English name is final.
+  const running = useSyncExternalStore(
+    noChanges,
+    () => true,
+    () => false,
+  );
 
   /*
     The form's own watchers — the create button's "lipsește: …" and the save button's named hint
-    (§315) — measure on `change`, which the switch fires *before* React has re-rendered the box
+    (§315) — measure on `change`, which the switch fires *before* React has re-rendered the boxes
     without `required`. So once the attribute has actually changed, they are told again, from the
     form itself: no input of theirs is named, so the bib preview and the rest ignore it.
   */
@@ -77,8 +159,62 @@ function Island({ initial, labels, locationName, children }: Props & { initial: 
     own.current?.closest("form")?.dispatchEvent(new Event("change"));
   }, [later]);
 
-  const { box } = locationName;
-  const required = later ? undefined : box.required;
+  /*
+    Text into the English box, as if it had been typed there: through the input's own value setter
+    and an `input` event, so React's `onChange` runs (MUI lifts the label off the text, `en`
+    follows) and every watcher of the form reads the new value — the publish check stops naming
+    the English place. Only ever into an empty box or one that says what the Romanian said, so no
+    name of the organizer's is lost to it.
+  */
+  const writeEnglish = (input: unknown, text: string) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, text);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  const copyToEnglish = () => {
+    if (mayCopyToEnglish(ro, en)) writeEnglish(enBox.current, ro.trim());
+  };
+  // `ro` and `en` are the boxes as the last keystroke left them: linked while they say the same.
+  // The English box is found through the Romanian one's form, in the handler, not a ref read in render.
+  const onRomanian = (text: string, box: HTMLInputElement | HTMLTextAreaElement) => {
+    if (englishFollowsTyping(ro, en)) writeEnglish(box.form?.elements.namedItem(EN_NAME), text);
+    setRo(text);
+  };
+  const leftBehind = englishLeftBehind({ ro: names.ro.defaultValue, en: names.en.defaultValue }, { ro, en });
+
+  const nameBox = (
+    name: string,
+    language: string,
+    value: NameBox,
+    onChange: (text: string, box: HTMLInputElement | HTMLTextAreaElement) => void,
+    inputRef?: typeof enBox,
+  ) => {
+    const required = later ? undefined : value.box.required;
+    return (
+      <RecallField
+        name={name}
+        label={
+          <>
+            <Box component="span" sx={UNSEEN}>
+              {`${labels.meetingPoint} (`}
+            </Box>
+            {language}
+            <Box component="span" sx={UNSEEN}>
+              )
+            </Box>
+          </>
+        }
+        defaultValue={value.defaultValue}
+        fullWidth
+        onChange={(event) => onChange(event.target.value, event.target)}
+        inputRef={inputRef}
+        {...value.box}
+        required={required}
+        slotProps={{ ...value.box.slotProps, htmlInput: { ...value.box.slotProps.htmlInput, required } }}
+      />
+    );
+  };
 
   return (
     <Stack spacing={2} ref={own}>
@@ -118,15 +254,39 @@ function Island({ initial, labels, locationName, children }: Props & { initial: 
       */}
       <ShownWhen shown={!later} answer={later ? "later" : "announced"}>
         <Stack spacing={2} data-place-details>
-          <RecallField
-            name="event.locationName"
-            label={labels.locationName}
-            helperText={later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
-            defaultValue={locationName.defaultValue}
-            {...box}
-            required={required}
-            slotProps={{ ...box.slotProps, htmlInput: { ...box.slotProps.htmlInput, required } }}
-          />
+          <Box component="fieldset" aria-describedby="place-names-help" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="place-names">
+            <Typography component="legend" variant="subtitle2" sx={{ p: 0, mb: 1.5 }}>
+              {labels.meetingPoint}
+            </Typography>
+            {running && <input type="hidden" name={PLACE_NAMES_AS_TYPED_FIELD} value="1" />}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_NAME, labels.ro, names.ro, onRomanian)}</Box>
+              <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                {nameBox(EN_NAME, labels.en, names.en, setEn, enBox)}
+                {leftBehind && (
+                  <Alert severity="warning" data-testid="place-english-left-behind">
+                    {fillIn(labels.englishLeftBehind, { place: en.trim() })}
+                  </Alert>
+                )}
+                {/* A thumb presses it on a phone: 44 pixels tall (BR-REQ-041-01 criterion 6). */}
+                <Button
+                  type="button"
+                  variant="text"
+                  size="small"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={copyToEnglish}
+                  disabled={!mayCopyToEnglish(ro, en)}
+                  data-testid="place-copy-to-english"
+                  sx={{ ...TAP_TARGET, alignSelf: "flex-start", textTransform: "none" }}
+                >
+                  {labels.copyToEnglish}
+                </Button>
+              </Stack>
+            </Stack>
+            <Typography id="place-names-help" variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, px: 1.75 }}>
+              {later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
+            </Typography>
+          </Box>
 
           {children}
         </Stack>

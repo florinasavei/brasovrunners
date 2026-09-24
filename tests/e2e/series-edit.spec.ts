@@ -52,6 +52,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the Recurență box, and a s
     await fillDateField(page, "Începutul evenimentului", ymd(first));
     await fillTimeField(page, "Ora", "08:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
+    await field("event.locationNameEn").fill("Stația de telecabină Tâmpa");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(`tura-de-duminica-${suffix}`);
     await languageTab(page, "title", "en").click();
