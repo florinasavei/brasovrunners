@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -143,6 +143,22 @@ export async function findPublishedPageTranslations<T extends Record<string, unk
     .from(pageTranslations)
     .innerJoin(pages, eq(pages.id, pageTranslations.pageId))
     .where(and(eq(pageTranslations.pageId, pageId), eq(pages.editorialStatus, "PUBLISHED")));
+}
+
+/**
+ * The same, for every page in `pageIds` at once — the sitemap's own twin of the single-page
+ * version above (§NNN), one query for the whole list rather than one per row.
+ */
+export async function findPublishedPageTranslationsForPages<T extends Record<string, unknown>>(
+  db: Database<T>,
+  pageIds: readonly string[],
+): Promise<Array<{ pageId: string; locale: Locale; slug: string }>> {
+  if (pageIds.length === 0) return [];
+  return db
+    .select({ pageId: pageTranslations.pageId, locale: pageTranslations.locale, slug: pageTranslations.slug })
+    .from(pageTranslations)
+    .innerJoin(pages, eq(pages.id, pageTranslations.pageId))
+    .where(and(inArray(pageTranslations.pageId, pageIds as string[]), eq(pages.editorialStatus, "PUBLISHED")));
 }
 
 /**
