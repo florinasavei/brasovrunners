@@ -86,3 +86,74 @@ describe("a date that is not like the series' others", () => {
     expect(editionDifference(member({ startsAt: at("2026-09-23T09:00") }), usual)).toEqual({ kind: "retimed", time: "09:00" });
   });
 });
+
+/**
+ * BR-REQ-020-01 criterion 13, amended (§NNN) — the owner, at a Happy Monday date marked "Nu în
+ * locul obișnuit: Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov": "the
+ * location is actually the same". The dates had been made without ", Brasov" and without a map
+ * link; one was saved later with both. Same entrance, two spellings — and a real move still marked.
+ */
+describe("§NNN the usual place is read, not compared byte for byte", () => {
+  const TRACTORUL = "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic";
+  const MAP = ["https:/", "maps.example.test", "vuCwrzFtgLTDE5H68"].join("/");
+  const monday = (wall: string, values: { locationName?: string | null; mapUrl?: string | null } = {}) => ({
+    startsAt: at(wall),
+    timezone: ZONE,
+    locationName: TRACTORUL,
+    mapUrl: null as string | null,
+    eventStatus: "SCHEDULED",
+    isSpecial: false,
+    ...values,
+  });
+
+  it("marks no date of the owner's September: one date as made, one saved with ', Brasov' and the map", () => {
+    // The month view: two Mondays, one of each spelling — a tie the old byte compare lost.
+    const members = [monday("2026-09-21T18:30"), monday("2026-09-28T18:30", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP })];
+    const usual = usualOf(members);
+    for (const member of members) expect(editionDifference(member, usual)).toBeNull();
+    // Either order: whichever spelling is the usual one, the other is at it.
+    const reversed = [monday("2026-09-21T18:30", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP }), monday("2026-09-28T18:30")];
+    for (const member of reversed) expect(editionDifference(member, usualOf(reversed))).toBeNull();
+  });
+
+  it("marks no date when one spelling has diacritics or a longer address and the rest do not", () => {
+    const members = [
+      monday("2026-10-05T18:30"),
+      monday("2026-10-12T18:30", { locationName: `${TRACTORUL}, Brașov` }),
+      monday("2026-10-19T18:30", { locationName: `${TRACTORUL}, Strada Turnului 5, 500152 Brașov, România` }),
+      // `at` is summer time (+03:00), so every date here stays before the clocks change on 25 October.
+      monday("2026-09-28T18:30", { locationName: "Parcul Sportiv Tractorul - intrarea dinspre Patinoarul Olimpic" }),
+    ];
+    const usual = usualOf(members);
+    for (const member of members) expect(editionDifference(member, usual)).toBeNull();
+  });
+
+  it("marks no date whose name differs but whose map link is the usual dates' link", () => {
+    const members = [monday("2026-10-05T18:30", { mapUrl: MAP }), monday("2026-10-12T18:30", { mapUrl: MAP }), monday("2026-10-19T18:30", { locationName: "Tractorul", mapUrl: MAP })];
+    const usual = usualOf(members);
+    for (const member of members) expect(editionDifference(member, usual)).toBeNull();
+  });
+
+  it("reads the English page's names on the English page", () => {
+    const EN = "Tractorul Sports Park – entrance from the Olympic Ice Rink";
+    const members = [monday("2026-10-05T18:30", { locationName: EN }), monday("2026-10-12T18:30", { locationName: `${EN}, Brasov, Romania` })];
+    const usual = usualOf(members);
+    for (const member of members) expect(editionDifference(member, usual)).toBeNull();
+  });
+
+  it("still marks a date at another park or another entrance, with its own words", () => {
+    const moved = monday("2026-10-26T18:30", { locationName: "Stația de telecabină Tâmpa" });
+    const gate = monday("2026-11-02T18:30", { locationName: "Parcul Sportiv Tractorul – intrarea dinspre Strada Turnului" });
+    const members = [monday("2026-10-05T18:30"), monday("2026-10-12T18:30", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP }), monday("2026-10-19T18:30"), moved, gate];
+    const usual = usualOf(members);
+    expect(editionDifference(moved, usual)).toEqual({ kind: "moved", place: "Stația de telecabină Tâmpa" });
+    expect(editionDifference(gate, usual)).toEqual({ kind: "moved", place: "Parcul Sportiv Tractorul – intrarea dinspre Strada Turnului" });
+  });
+
+  it("says nothing about the place when most dates have none, as before", () => {
+    const members = [monday("2026-10-05T18:30", { locationName: null }), monday("2026-10-12T18:30", { locationName: null }), monday("2026-10-19T18:30")];
+    const usual = usualOf(members);
+    expect(usual.place).toBeNull();
+    for (const member of members) expect(editionDifference(member, usual)).toBeNull();
+  });
+});

@@ -17,7 +17,9 @@ import EventLinks from "@/modules/events/ui/EventLinks";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
-import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import { GLYPHS, SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -72,6 +74,12 @@ function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {
 function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
   const Icon = SURFACE_GLYPH[surface];
   return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
+}
+
+/** The handshake of an event held with a partner (§NNN), the size of the two glyphs before it. */
+function PartnerGlyph() {
+  const Icon = GLYPHS.partner;
+  return <Icon aria-hidden="true" sx={{ fontSize: 18, flexShrink: 0 }} />;
 }
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
@@ -150,6 +158,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
+  // The partner marker (§NNN): "În parteneriat cu …" on the overline, or nothing.
+  const partner = partnerPhrase(t, locale, readCoHosts(event).map((host) => host.name));
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The
@@ -197,8 +207,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
-          each with its glyph (§112); the words stay, the glyphs decorate. */}
-      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held
+          with a partner, the handshake and "În parteneriat cu …" (§NNN) — the marker the listing
+          card and the calendar wear. The line wraps rather than overflowing a phone: a partner's
+          name is long, and the small "·" before it stays at the end of the line it follows. */}
+      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.75, rowGap: 0 }}>
         <TypeGlyph type={event.type} />
         {t(`type.${event.type}`)}
         {event.surface && (
@@ -206,6 +219,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             <span aria-hidden="true">·</span>
             <SurfaceGlyph surface={event.surface} />
             {t(`surface.${event.surface}`)}
+          </>
+        )}
+        {partner && (
+          <>
+            <span aria-hidden="true">·</span>
+            <Box component="span" data-testid="overline-partner" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+              <PartnerGlyph />
+              <span>{partner}</span>
+            </Box>
           </>
         )}
       </Typography>

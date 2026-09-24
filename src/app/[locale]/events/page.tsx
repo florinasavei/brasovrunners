@@ -17,6 +17,7 @@ import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import PartnerChip from "@/modules/events/ui/PartnerChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections, presentEventTypes } from "@/modules/events/domain/listing";
@@ -475,6 +476,8 @@ async function EventCard({
             {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
                 somebody else's race. Any number of events may wear it. */}
             {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
+            {/* Held with a partner (§NNN): the handshake and the partner's name. */}
+            <PartnerChip event={event} />
             {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
             {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
             {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}

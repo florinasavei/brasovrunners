@@ -31,3 +31,14 @@ export default function EditionMark({ note, size = 18 }: { note: EditionNote; si
     </Tooltip>
   );
 }
+
+/**
+ * The same glyph with no tooltip of its own, for a place that already has one: the month grid's
+ * event chip (§NNN). A tooltip inside a tooltip opened both at once — the chip's and the mark's
+ * — so there the note is a line of the chip's own tooltip, and this is only its picture.
+ * Decorative: the chip's link carries the note in its accessible name.
+ */
+export function EditionGlyph({ note, size = 18 }: { note: EditionNote; size?: number }) {
+  const { Icon, color } = MARK[note.kind];
+  return <Icon aria-hidden="true" sx={{ fontSize: size, color, flexShrink: 0, verticalAlign: "-4px" }} />;
+}

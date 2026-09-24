@@ -162,6 +162,15 @@
     },
     "coHost": "Împreună cu",
     "special": "Ediție specială",
+    "partner": {
+      "one": "În parteneriat cu {partner}",
+      "two": "În parteneriat cu {first} și {second}",
+      "more": {
+        "one": "În parteneriat cu {first} și încă {count} partener",
+        "few": "În parteneriat cu {first} și încă {count} parteneri",
+        "other": "În parteneriat cu {first} și încă {count} de parteneri"
+      }
+    },
     "surface": {
       "ASPHALT": "Asfalt",
       "TRAIL": "Trail",

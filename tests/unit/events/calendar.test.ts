@@ -125,7 +125,10 @@ describe("§261 the calendar chip's tooltip", () => {
   });
 
   it("names the whole sentence on the link itself, dense or not", () => {
-    // Nothing is lost for a screen reader where the tooltip is gone.
-    expect(SOURCE).toContain("aria-label={sentence}");
+    // Nothing is lost for a screen reader where the tooltip is gone. Since §NNN the name is every
+    // line the grid's tooltip shows — the note and the partner too — and
+    // `tests/unit/events/partner-marker.test.ts` renders it.
+    expect(SOURCE).toContain("aria-label={name}");
+    expect(SOURCE).toContain("const name = calendarEntryName(lines);");
   });
 });

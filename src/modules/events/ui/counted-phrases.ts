@@ -45,3 +45,22 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
     named: counts.named,
   });
 }
+
+/**
+ * The partner marker's words (§NNN; the owner: "a special marker with this partnered event, so
+ * that people know this is not a regular Brașov Runners group run"): "În parteneriat cu Brașov
+ * Running Festival" / "With Brașov Running Festival" — on the listing card's chip, in the
+ * calendar entry's tooltip and accessible name, and on the event page's overline.
+ *
+ * One partner by name, two by name ("… cu A și B"), and from three the first by name and the rest
+ * counted ("… cu A și încă 2 parteneri"): a chip on a 320-pixel card has room for a name and a
+ * number, not a list — the whole list is the facts' "Împreună cu" row a line below it. Names in
+ * the order the club listed them (`readCoHosts`). Null when the event has no partner: no marker.
+ */
+export function partnerPhrase(say: Say, locale: string, names: readonly string[]): string | null {
+  if (names.length === 0) return null;
+  if (names.length === 1) return say("partner.one", { partner: names[0] });
+  if (names.length === 2) return say("partner.two", { first: names[0], second: names[1] });
+  const others = names.length - 1;
+  return say(`partner.more.${countForm(others, locale)}`, { first: names[0], count: others });
+}

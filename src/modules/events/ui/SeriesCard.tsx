@@ -19,6 +19,7 @@ import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
+import PartnerChip from "./PartnerChip";
 import SeriesDates from "./SeriesDates";
 import { editionNote, recurrenceSentence } from "./series-sentence";
 
@@ -83,6 +84,8 @@ export default async function SeriesCard({
               gives the line would have no visible cause. Which date it is, is the mark in the
               folded list below. */}
           {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
+          {/* The next date's partners (§NNN) — the date whose facts the card shows below. */}
+          <PartnerChip event={next} />
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Stack>
 
