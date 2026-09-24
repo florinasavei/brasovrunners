@@ -57,7 +57,7 @@ describe("§334, §221 the throttle card's sentence about email", () => {
         cadence: { minutes: 60, updatedAt: new Date("2026-09-24T07:00:00Z") },
         jobs: [
           {
-            job: "maintenance",
+            job: "registration-maintenance",
             lastRealRunAt: new Date("2026-09-24T07:15:00Z"),
             nextCheckAt: new Date("2026-09-24T08:15:00Z"),
             waitingFor: "cadence",
