@@ -20,7 +20,7 @@ import { defineConfig, devices } from "@playwright/test";
  * is why it never happened on a laptop.
  */
 /**
- * `E2E_DEV=1` runs the suite against `next dev` rather than a production build (§NNN) — for
+ * `E2E_DEV=1` runs the suite against `next dev` rather than a production build (§370) — for
  * `tests/e2e/dev-routes.spec.ts`, which exists because a page can work built and fail under
  * `yarn dev`. It gets a port of its own, 4784, so it never reuses a production server a routine
  * run left on 4783 and reports that server's answers as the development one's.
@@ -77,7 +77,7 @@ export default defineConfig({
   webServer: {
     // The production server, not `next dev`: this is the artefact that gets deployed, and
     // dev-only behaviour has hidden real bugs before. `E2E_DEV=1` is the one exception, and it
-    // exists for the reverse case — a bug only `next dev` shows (§NNN).
+    // exists for the reverse case — a bug only `next dev` shows (§370).
     command: DEV ? `yarn next dev --port ${PORT}` : `yarn build && yarn start --port ${PORT}`,
     url: `${baseURL}/ro`,
     reuseExistingServer: !process.env.CI,

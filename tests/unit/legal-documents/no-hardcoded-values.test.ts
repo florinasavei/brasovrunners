@@ -115,7 +115,7 @@ describe("§357 no hardcoded value in a legal template", () => {
   });
 });
 
-describe("§NNN the declaration's token legend: made-up examples, in both languages", () => {
+describe("§369 the declaration's token legend: made-up examples, in both languages", () => {
   const example = (token: string) => DECLARATION_TOKENS.find((entry) => entry.token === token)!.example;
 
   it("gives every token an example in each language, and none names the club or its town", () => {

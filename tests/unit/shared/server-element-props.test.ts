@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 /**
  * No Server Component hands a React element to a client component as a prop (`AGENTS.md` §14.1,
- * which states the rule; §NNN, which makes this test its enforcement).
+ * which states the rule; §370, which makes this test its enforcement).
  *
  * The rule has cost this repository three outages, each the same defect in a different prop:
  * `FormControlLabel`'s `control` (a 500 on the registration form, `shared/ui/CheckboxField.tsx`),
@@ -174,7 +174,7 @@ function findings(sources: Sources): string[] {
   return found;
 }
 
-describe("AGENTS.md §14.1 no Server Component hands an element to a client component as a prop (§NNN)", () => {
+describe("AGENTS.md §14.1 no Server Component hands an element to a client component as a prop (§370)", () => {
   it("finds none in src/", () => {
     expect(findings(SOURCES)).toEqual([]);
   });

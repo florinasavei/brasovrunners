@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §92, §349, §NNN — the queue panel on `/admin/events/[id]` writes its times in the event's own
+ * §92, §349, §369 — the queue panel on `/admin/events/[id]` writes its times in the event's own
  * zone, as every other time of an event is written: the offer's deadline is the one the runner's
  * email names (`notifications/render.ts`, the event's zone), and the club's clock beside it would
  * put two hours on one deadline.
@@ -105,7 +105,7 @@ beforeEach(async () => {
   locale = "ro";
 });
 
-describe("§NNN the queue panel's times are the event's own", () => {
+describe("§369 the queue panel's times are the event's own", () => {
   for (const language of ["ro", "en"] as const) {
     it(`writes the offer's deadline and the time a runner joined the line in the event's zone (${language})`, async () => {
       locale = language;

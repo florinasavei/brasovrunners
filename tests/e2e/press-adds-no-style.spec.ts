@@ -2,7 +2,7 @@ import { expect, type Page, type Route, test } from "@playwright/test";
 import { ensureRegistrationIsOpen, FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-041-01 (§NNN) — pressing a form's send or save button adds no CSS rule to the page.
+ * BR-REQ-041-01 (§371) — pressing a form's send or save button adds no CSS rule to the page.
  *
  * MUI's styles sit in cascade layers here, and Chromium answers a layered rule added to a live
  * page by recomputing every element's style and every line's layout: on the email wording page, a

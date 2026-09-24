@@ -80,7 +80,7 @@ async function hasPublishedAlbum(locale: Locale) {
  * where it has the room a display face wants — and on 2026-09-22 onto the calendar and the
  * contact page as well, as a page heading, never back into this row. The header is the artwork
  * alone again, and the link's accessible name is the club's name from its one constant
- * (`CLUB_NAME`, §NNN), so assistive technology announces it spelled properly, and never the
+ * (`CLUB_NAME`, §369), so assistive technology announces it spelled properly, and never the
  * artwork.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image

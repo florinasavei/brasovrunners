@@ -1,7 +1,7 @@
 import type { EditorState } from "@tiptap/pm/state";
 
 /**
- * What the rich-text editor's island is drawn from (§NNN): the document, the selection and the
+ * What the rich-text editor's island is drawn from (§371): the document, the selection and the
  * marks the next letter will carry. The toolbar's pressed buttons, the picture's panel and the
  * table's bar all read one of the three; nothing it draws reads whether the box has focus.
  *

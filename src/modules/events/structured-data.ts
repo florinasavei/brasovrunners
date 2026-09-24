@@ -160,7 +160,7 @@ function eventPlace(event: PublicEvent) {
 }
 
 /**
- * Whether a runner needs their wallet, as schema.org says it (§343, amended by §NNN).
+ * Whether a runner needs their wallet, as schema.org says it (§343, amended by §369).
  *
  * - `FREE`, and an event that has not said (what most club events still are): free, with a
  *   zero-price offer at the event's own page — the page where the place is taken.

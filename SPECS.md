@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.83-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -155,6 +155,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 4. Given either catalogue, when CI runs, then it carries none of those enum labels: one copy of the club's own vocabulary, not two kept in step by a test.
 5. Given a message that a page or a client island asks for and the catalogue lacks, when it renders with `APP_ENV` local or test, then it throws and the error boundary renders. On QA and production the failure is logged and the page still renders, as criterion 2 says (2026-09-24, `DECISIONS.md` §353).
 6. Given any page, when it is served, then its payload carries only the messages its client islands read, and a public page carries none of the backoffice's. A test that walks the import graph from every route fails on a key an island reads that its provider does not carry, and on a listed key no island needs (2026-09-24, `DECISIONS.md` §353).
+7. criterion (new): no message in either catalogue names the club. A sentence that needs the name takes it as `{club}`, and every call site fills it from `CLUB_NAME`; a test walks both catalogues and every such call (§369, superseding §215's `Site.name` equality test).
+8. A message with an argument (`{x}`) or a tag is always looked up with its values, or read with `t.raw` when a client component fills the template itself. It is never looked up bare as `t("key")`: a development build refuses that lookup and shows the key, while a production build returns the message unformatted. A literal angle bracket is written ICU-quoted (`'<id>'`). Every `t.raw` key names a message or a sub-tree of the catalogue. Verification: unit `i18n/messages.test.ts` (2026-09-24, `DECISIONS.md` §370).
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -203,6 +205,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 32. Given a row of listing cards at any width, when one card is shorter than its neighbour, then the cards keep one height and the room left over is below the door, which sits no more than eight pixels under the facts or a series' fold. A card's pieces are separated only by its two gaps, 8 pixels between the lines of a group and 12 between groups, so the first line under a title starts 8 or 12 pixels under the title's words. Nothing is wider than a 320-pixel phone (2026-09-24, `DECISIONS.md` §366).
 33. Given every link and fold on a listing card (the title, the place's map link, a series' fold, each of its dates, the door), when it is pressed two pixels inside any of its four edges on a 320-pixel phone or a desktop, then it receives the press itself. Each is at least 44 by 44 pixels, and nothing later on the card sits on any part of it. A series' dates are 44-pixel links around small pills, with their rows 44 pixels apart. The title's and the place's links give back their extra height as a negative margin no larger than the gap on that side, with the padding inside a `border-box` 44, so the line each stands on is as tall as its words (2026-09-24, `DECISIONS.md` §366).
 34. Given the «Când» row on an event's own page and the featured hero, when they render, then a clock stands before the first time, the size of the glyphs around it: the row glyph's 20 pixels on the page, and the hero's own 18 (2026-09-24, `DECISIONS.md` §366).
+35. A press of a heavy form's primary button (event create, event editor, registration, email wording, legal draft) paints its pending state within 200 ms median at 4x CPU on a mobile viewport, and inserts no CSS rule during the interaction (tests/e2e/perf/inp.spec.ts, tests/e2e/press-adds-no-style.spec.ts).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -590,6 +593,7 @@ holds only the handful of people with backoffice access, so matching against it 
 4. Given any backoffice screen that shows the value, when it renders, then it is worded as a declaration and never as a verified fact, and the registrations list can be narrowed to the people who declared it.
 5. Given the CSV export, when it is produced, then the column reads "Yes" for a declared member and is empty for everybody else, never "No" — an unanswered question and a negative answer are the same stored value and must not be printed as the same statement.
 6. Given a registration an organizer enters for somebody who telephoned, when the form renders, then the same choice is offered.
+7. criterion (new): the member tick's label and its section's summary read the club's name from `CLUB_NAME` in both languages, the same string the registration records (§215, §369).
 
 **Verification:** integration `registrations/club-member.test.ts`; unit `registrations/csv.test.ts`; e2e `registration-form.spec.ts`
 
@@ -1018,6 +1022,7 @@ registration — and it lists registrations and never changes an address.
 7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
 8. Given an Administrator on an event with internal registration, when the event page renders, then it shows the queue as the allocator counts it — places, confirmed, held, free, waiting — and the waiting list numbered in the order it is served, with an offer's deadline where one is out (2026-09-18, `DECISIONS.md` §92).
 9. Given `FEATURE_DISPLAY_NAME` unset or not `true`, when the public or the staff form renders, then no display-name field is offered and a posted value is ignored, so the list shows the registered name; the CSV export always carries the first name, the last name and the identity document beside the registered name (2026-09-18, `DECISIONS.md` §95).
+10. Given an event held in a time zone other than the club's, when its queue panel renders, then an offer's deadline and the time a runner joined the waiting list are written in the event's own zone, as the runner's email writes them, in the reader's language with the weekday (2026-09-24, `DECISIONS.md` §369, §92, §349). Verification: integration `registrations/queue-panel-zone.test.ts`.
 
 **Verification:** integration `registrations/test-kind.test.ts`
 
@@ -1459,8 +1464,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
 8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers, as 44-pixel buttons, the phone's own share sheet where `navigator.share` exists, Facebook, WhatsApp and, under "Instagram", the same card shared through the phone's own sheet where a file can be shared from a coarse pointer — otherwise offered as a download and labelled as one — with "add to calendar" as its own row; and the footer's three social marks are 44×44 items of one wrapping row, never drawn over the text or the build badge at any width (2026-09-18, `DECISIONS.md` §90; 2026-09-19, §140; 2026-09-23, §299).
-9. Given an event not marked as charging a fee, when its block renders, then it carries `isAccessibleForFree: true` and an `Offer` at price `0` in `RON` at the event's own page, valid from its publication; a `PAID` event carries neither; and given an event with co-hosts, then `organizer` is the club followed by each of them as an `Organization` with its page, in the club's own order — and a bare object rather than a list of one when the club hosts alone (2026-09-19, 2026-09-20, `DECISIONS.md` §121, §168).
+9. given a DONATION event, when its block renders, then it carries `isAccessibleForFree: true` and the free event's `Offer` at price `0` in `RON` at the event's own page. A donation link, when given, is a `DonateAction` target and never the offer's `url`, and no price is parsed from the free-text amount. A PAID event is unchanged: `isAccessibleForFree: false`, and an `offers.url` only for an https payment link (§369, amending §343).
 10. Given a published event that the club registers itself (registration mode INTERNAL, not a group run) with a minimum age N above 0, when its block renders, then it carries `typicalAgeRange: "N-"`; with N = 0, or for an event registered elsewhere or not at all, the property is absent (2026-09-23, `DECISIONS.md` §329). Verification: unit `events/structured-data.test.ts`; e2e `registration-form.spec.ts`.
+11. criterion (new): the SportsOrganization and SportsEvent organiser name, the page title, the header link's and wordmark's accessible names, the share pictures, the calendar's PRODID and feed file name, the legal PDF's Author and the EMAIL_FROM_NAME default are all `CLUB_NAME`. No string under `src/` outside `theme/brand.ts` and the seeds names the club, and a test fails otherwise (§369).
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
 
@@ -1506,6 +1512,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 12. Given the platform's declaration template, when it is read in either language, then it names the risks the runner accepts — terrain and falls, wild animals and dogs with what to do on meeting one, weather and darkness, the runner's own equipment including a working headlamp after dark, their own pace and decisions, protected areas and personal belongings — and every sentence in which the organiser does not answer for something is limited "în limitele permise de lege" / "to the extent the law allows"; none promises immunity.
 13. Given any of the platform's legal templates or a seeded sample, when it is read, then it names no event, place, date, time, distance, amount or club fact as words: an event's facts are merge fields and a club's facts are placeholders; only the laws cited, the supervisory authority's statutory contact, 112 and the platform's own fixed periods are written in.
 14. Given the sample seed or "start from the platform's text", when a text is produced, then every merge field of the template stays a merge field and every club fact the environment does not know stays its placeholder; re-seeding a changed template inserts the next version, and an unchanged one inserts nothing.
+15. Given any string, template or JSX text under `src/` outside `theme/brand.ts` and the seeds, when it is read, then it does not name the club. The default sender name of every email and of the contact form, the share picture's heading, the calendar's product id and feed file name, and every PDF's Author read `CLUB_NAME`, and `EMAIL_FROM_NAME` still overrides the sender's name when it is set (2026-09-24, `DECISIONS.md` §369, §357). Verification: unit `notifications/no-hardcoded-values.test.ts`.
 
 **Verification:** integration `legal/versions.test.ts`; unit `legal/inline.test.ts`; e2e `legal-pages.spec.ts`
 
@@ -1547,6 +1554,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 22. Given the backoffice list of versions, when it renders, then each row offers deletion exactly when the service would delete it, because both ask the same function. A terms version shows how many registrations agreed while it was in force instead of "not used yet". One the service would refuse shows the reason, with the count and the dates, instead of the link.
 23. Given the legal document editor, when its toolbar renders, then it is a toolbar named after its box. The heading and paragraph buttons read "H2" and "Text", and the link, the picture, undo and redo are filled Material glyphs of one size and colour. Each button is 44 pixels square and named by its `aria-label` and a tooltip (§361). Verification: unit `content/editor-toolbar-icons.test.ts`; e2e `legal-versions.spec.ts`.
 24. Given the platform's privacy-notice template, when it is read, then its section 5 names the organizers' announcements about the event registered for (a change of place or time, a cancellation, or a message they write) under art. 6(1)(b), not marketing. The notice in effect on a deployment changes only when the club approves a new version in `/admin/legal` (2026-09-24, `DECISIONS.md` §364).
+25. Given the legal document editor, when the page is first painted and before the editor has mounted, then the writing area already holds the stored text, drawn with the editor's own box and rules. It is hidden from assistive technology and holds nothing to focus, press or follow. When the editor mounts, the writing area keeps its height and nothing under it moves (2026-09-24, `DECISIONS.md` §369). Verification: unit `legal-documents/legal-body-reserved-height.test.ts`; e2e `legal-versions.spec.ts`.
+26. Given the declaration's token legend, when it renders, then every token's example is made up and names neither the club, its wordmark nor its town. Each example is given in both languages where they differ, the reader's first. The dates are written by the helper a signature uses, and the declarant reads as a minor's signature produces it (2026-09-24, `DECISIONS.md` §369). Verification: unit `legal-documents/no-hardcoded-values.test.ts`.
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`, `legal/withdrawal.test.ts`
 
@@ -1932,6 +1941,7 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 5. Given any pull request, when CI runs, then `docs:check` is part of the required checks.
 6. Given a clone on which `yarn setup` has been run, when a commit is made and `yarn check` fails, then the commit is blocked and the failure is reported.
 7. Given the CI workflow and the pre-commit hook, when both are inspected, then they invoke the same `yarn check` command, so a change cannot pass locally and fail in CI.
+8. When `yarn check` runs, no Server Component passes a React element as a prop, other than `children`, to a client component. Client components here are anything from `@mui/*`, a `next` client component, next-intl's `Link`, or a local `"use client"` module. The one exception is a prop the installed library is shown, by its own source, to render as a child: `Alert`'s `action`. `yarn test:e2e:dev` runs on demand and not in CI. It requests every backoffice route (as a Superadministrator) and every public route under `next dev`, twice each, and fails on any 5xx. Verification: unit `shared/server-element-props.test.ts`; e2e `dev-routes.spec.ts` with `E2E_DEV=1` (2026-09-24, `DECISIONS.md` §370).
 
 **Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 

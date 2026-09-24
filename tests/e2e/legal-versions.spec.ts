@@ -103,7 +103,7 @@ test.describe("legal documents: the next version starts from the current one", (
   });
 
   /**
-   * §NNN — the editor has its height before Tiptap mounts, so nothing under it moves. The first
+   * §369 — the editor has its height before Tiptap mounts, so nothing under it moves. The first
    * paint is read with every script refused, which is the page as it stands until hydration; the
    * second with the editor mounted. The prefilled sample text measured 4,240 pixels on a desktop
    * and 16,987 on a 320-pixel phone (2026-09-24), so a stand-in that reserved only an empty box's

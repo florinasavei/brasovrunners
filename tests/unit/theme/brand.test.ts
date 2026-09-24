@@ -248,7 +248,7 @@ describe("the brand assets the theme points at exist", () => {
       expect(CLUB_NAME).toBe("Brașov Runners");
     });
 
-    it("is the one copy of the club's name: the catalogues ask for it rather than hold it (§215, §NNN)", () => {
+    it("is the one copy of the club's name: the catalogues ask for it rather than hold it (§215, §369)", () => {
       // CLUB_NAME is what a registration *records* when somebody ticks "I am a member": one
       // string, the same for a Romanian and an English submission, so the export has one club
       // and not three spellings of it. The catalogues used to hold a second copy under

@@ -1,6 +1,6 @@
 /**
  * Work that answers a keystroke or a press but that the reader does not need in the same frame
- * (§NNN): the "fill in first" sentence under a button, the "missing for publication" list, a
+ * (§371): the "fill in first" sentence under a button, the "missing for publication" list, a
  * tab's "· incomplet" mark. Each re-reads the whole form, and on the event editor — a few hundred
  * boxes — a re-read is milliseconds a phone does not have while it owes the reader the letter
  * just typed or the "Se salvează…" just pressed. Interaction to Next Paint counts every task that

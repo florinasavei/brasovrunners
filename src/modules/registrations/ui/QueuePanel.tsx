@@ -37,7 +37,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const locale = await getLocale();
   /*
     Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349), and
-    in the event's own zone (§NNN), like every other time of the event: the offer's deadline is
+    in the event's own zone (§369), like every other time of the event: the offer's deadline is
     the one the runner's email names (`render.ts`, the event's zone), and a panel reading the
     club's clock beside it would put two hours on one deadline for an event held elsewhere.
   */

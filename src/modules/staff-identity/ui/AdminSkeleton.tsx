@@ -32,7 +32,7 @@ const WAVE = shimmerOffForReducedMotion;
 
 /**
  * The rule between the table's rows, drawn by CSS on the row after each row — never
- * `<Stack divider={<Box … />}>` (§NNN).
+ * `<Stack divider={<Box … />}>` (§370).
  *
  * That is what it was, and under `next dev` it answered **500 on every backoffice list** — the
  * events, registrations, legal texts, pages, gallery, team and to-do screen, every route whose

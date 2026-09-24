@@ -163,7 +163,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
   });
 
-  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121, §343, §NNN)", () => {
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121, §343, §369)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);
     expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
@@ -173,7 +173,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     const paid = parsed(sportsEventJsonLd(baseEvent({ costType: "PAID" }), URL, "Brașov Runners"));
     expect(paid.isAccessibleForFree).toBe(false);
     expect(paid.offers).toBeUndefined();
-    // A donation is given, not paid for the place (§NNN): the event is free to attend.
+    // A donation is given, not paid for the place (§369): the event is free to attend.
     const donation = parsed(sportsEventJsonLd(baseEvent({ costType: "DONATION" } as Partial<PublicEvent>), URL, "Brașov Runners"));
     expect(donation.isAccessibleForFree).toBe(true);
     expect(donation.offers).toEqual(free.offers);
@@ -202,7 +202,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
       ),
     );
     // Free to attend, the zero offer at the event's own page, and the donation link as schema.org's
-    // own verb for it — never the offer's url, which would read as "free tickets, over there" (§NNN).
+    // own verb for it — never the offer's url, which would read as "free tickets, over there" (§369).
     expect(donation.isAccessibleForFree).toBe(true);
     expect(donation.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
     expect(donation.offers.url).not.toBe(donationUrl);

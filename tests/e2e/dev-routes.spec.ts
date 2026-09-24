@@ -4,7 +4,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * §NNN — every page answers under `next dev`, for a Superadministrator and for a visitor.
+ * §370 — every page answers under `next dev`, for a Superadministrator and for a visitor.
  *
  * On 2026-09-24 every backoffice list — events, registrations, legal texts, pages, gallery, the
  * to-do screen, the team — answered 500 under `yarn dev` ("Element type is invalid … got:
@@ -147,7 +147,7 @@ function crawler(request: APIRequestContext) {
   return { seen, failed, admit, visit, walk };
 }
 
-test.describe("§NNN every page answers under next dev", () => {
+test.describe("§370 every page answers under next dev", () => {
   test.skip(!DEV, "a next dev check — run it with `yarn test:e2e:dev`");
   test.skip(() => test.info().project.name !== "desktop", "a route answers the same at any width");
   // Every route compiles on its first request; minutes, not the suite's usual seconds.

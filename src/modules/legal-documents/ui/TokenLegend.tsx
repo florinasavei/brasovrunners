@@ -22,7 +22,7 @@ import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates
  * `usedIn` marks the ones the current draft already carries — so a text that lost `{{eventDate}}`
  * in an edit says so on the page rather than at the first signature.
  *
- * The example is in both languages where they differ (§NNN): the form writes the Romanian and
+ * The example is in both languages where they differ (§369): the form writes the Romanian and
  * the English text on one screen, and each becomes its own words at a signature. The reader's
  * language first, the other after it, each marked with its `lang`.
  */

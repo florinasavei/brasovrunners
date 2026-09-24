@@ -7,7 +7,7 @@ import LegalBodyEditor from "@/modules/legal-documents/ui/LegalBodyEditor";
 
 /**
  * BR-REQ-053-02 — the legal document editor's writing area has its size from the first paint, so
- * nothing under it moves when Tiptap mounts (§NNN; the defect §362's addendum fixed in the pages'
+ * nothing under it moves when Tiptap mounts (§369; the defect §362's addendum fixed in the pages'
  * editor, `content/rich-text-reserved-height.test.ts`).
  *
  * Tiptap builds its editor in the browser only, after hydration. Until then the legal editor's

@@ -92,7 +92,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await expect(cost).toContainText("sugerat 50 lei");
     // The platform takes no money itself — the club's own words say so on the editor, and the
     // page never claims a price it cannot honour: no raw currency amount is invented for JSON-LD.
-    // A donation is given, not paid for the place (§NNN): free to attend, a zero offer at the
+    // A donation is given, not paid for the place (§369): free to attend, a zero offer at the
     // event's own page, and the donation link as a DonateAction.
     const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}");
     expect(jsonLd.isAccessibleForFree).toBe(true);

@@ -80,7 +80,7 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
     // Zitadel's invitation carries `applicationName` into its own email; the bib sheet's PDF
     // carries its Author. Neither is one of our templates, and both still leave with the name.
     // The From line's default, the share picture's heading, the calendar's product id and file
-    // name, and a legal document PDF's Author are the same kind of thing (§NNN): each leaves the
+    // name, and a legal document PDF's Author are the same kind of thing (§369): each leaves the
     // platform with the name on it.
     for (const file of [
       "src/modules/staff-identity/zitadel-users.ts",
@@ -146,7 +146,7 @@ function flatMessages(messages: unknown, prefix = ""): Record<string, string> {
  */
 const MAY_NAME_THE_CLUB = (relative: string) => relative === "src/theme/brand.ts" || relative.startsWith("src/db/seeds/");
 
-describe("§NNN the club's name leaves the platform only through the constant", () => {
+describe("§369 the club's name leaves the platform only through the constant", () => {
   it("finds the name in a string, a template and JSX text, and not in a comment", () => {
     const found = clubNamesIn(
       "probe.tsx",
@@ -175,7 +175,7 @@ describe("§NNN the club's name leaves the platform only through the constant", 
     // The catalogues are the other place a reader's words come from, and the scan above never
     // opens them. `Site.name` and `Home.title` were a second and third copy of the constant, the
     // footer's club description a fourth; a renamed club would have been renamed in `src/` and
-    // gone on reading the old name in the page title, the header and the member tick (§NNN).
+    // gone on reading the old name in the page title, the header and the member tick (§369).
     const offenders = (
       [
         ["ro", ro],

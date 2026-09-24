@@ -6,7 +6,7 @@ import { languagePanel, languageTab, openEditorBox } from "../support/fold";
 
 /**
  * How long a press of each heavy form's primary button blocks the page — its Interaction to Next
- * Paint (§NNN). The owner, 2026-09-24, from the Vercel toolbar: "Event handlers on this element
+ * Paint (§371). The owner, 2026-09-24, from the Vercel toolbar: "Event handlers on this element
  * blocked UI updates for 352ms", on a contained primary button of the backoffice.
  *
  * **Opt-in, and never an assertion that can flake**: `PERF_INP=1` runs it, anything else skips
@@ -22,7 +22,7 @@ import { languagePanel, languageTab, openEditorBox } from "../support/fold";
  * Chrome DevTools protocol (a mid-range phone, `PERF_CPU` to change it) for the press alone, and
  * each press is repeated `PERF_RUNS` times (3). Long animation frames overlapping the press are
  * kept beside it, with their scripts, so a regression says where it went — and so are the CSS
- * rules the press inserted, which must be none (§NNN, `instrument`).
+ * rules the press inserted, which must be none (§371, `instrument`).
  *
  * **Nothing is written by a press.** The Server Action's POST is held unanswered while the frame
  * after the press is measured — the pending "Se salvează…" is what that frame paints — and then
@@ -131,7 +131,7 @@ function watchCommits() {
 
 /**
  * Installed before any page script: every event entry and every long animation frame, kept on
- * `window` — and every CSS rule the page inserts after it has loaded (§NNN). MUI's styles sit in
+ * `window` — and every CSS rule the page inserts after it has loaded (§371). MUI's styles sit in
  * cascade layers here (`enableCssLayer`, `modularCssLayers`), and Chromium answers a rule inserted
  * into a layered sheet by rebuilding the layer map and its font cache: every element's style and
  * every text's layout, a whole-page recalculation. A press that renders a style the page has not
@@ -233,7 +233,7 @@ async function pressAndMeasure(page: Page, button: Locator): Promise<Measured> {
 
 /**
  * One keystroke into the box that has focus, measured like a press: typing is an interaction too,
- * and every listener the form hangs on `input` runs inside it (§NNN).
+ * and every listener the form hangs on `input` runs inside it (§371).
  */
 async function keystrokeAndMeasure(page: Page, key: string): Promise<Measured> {
   return measure(page, "keydown", () => page.keyboard.press(key));

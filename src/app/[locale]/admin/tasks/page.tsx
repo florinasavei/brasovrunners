@@ -260,7 +260,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * the club's apex domain (the mail subdomain hangs off it, whichever host QA answers on),
    * the two job endpoints, and the webhook. Never a secret: `JOB_SECRET` is named, not shown.
    * The club's name from its one constant, and the sender's from the setting the From line
-   * reads (§NNN): a step that names either says what this deployment actually uses.
+   * reads (§369): a step that names either says what this deployment actually uses.
    */
   const apex = clubDomainBound ? hostname.split(".").slice(-2).join(".") : hostname;
   const howValues: Record<string, string> = {

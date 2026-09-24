@@ -116,7 +116,7 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
         }
       }
       // And `t.raw("key")`, which the pattern above does not see: a template the client fills
-      // itself (§NNN, below), or a list or a sub-tree (`desk.how`, `guide.sections`).
+      // itself (§370, below), or a list or a sub-tree (`desk.how`, `guide.sections`).
       for (const match of text.matchAll(/\bt\w*\.raw\(\s*["']([\w.]+)["']\s*\)/g)) {
         const key = match[1];
         const resolves = namespaces.some(
@@ -132,7 +132,7 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
   });
 
   /**
-   * §NNN — a message with an argument is either formatted with its values or read raw, never
+   * §370 — a message with an argument is either formatted with its values or read raw, never
    * looked up bare.
    *
    * `t("forms.incompleteFirst")` — "Completează mai întâi: {field}", a template `SubmitButton`

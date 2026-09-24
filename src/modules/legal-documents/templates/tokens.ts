@@ -20,7 +20,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
  * each language the declaration is written in (§97): the form writes both texts on one screen,
  * and "sâmbătă, 21 nov. 2026" is not what the English text will read.
  *
- * The example event is a made-up one, never the club's name (§357, §NNN): the legend sits
+ * The example event is a made-up one, never the club's name (§357, §369): the legend sits
  * beside a text that serves every event, and an example naming the club reads as a value the
  * text may carry. The two dates are written by the helper that writes the real ones (§349).
  */

@@ -458,7 +458,7 @@ function RichTextEditorIsland({
     // Re-rendered by `useEditorState` below, on what the toolbar reads — not on every transaction.
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor: current }) => {
-      // One document per keystroke, read once (§NNN): `getJSON` walks the whole text.
+      // One document per keystroke, read once (§371): `getJSON` walks the whole text.
       const doc = current.getJSON();
       setValue(JSON.stringify(doc));
       setMissingAlt(countMissingAlt(doc));
@@ -491,7 +491,7 @@ function RichTextEditorIsland({
   });
 
   /*
-    **What re-renders the island (§NNN): the document, the selection and the marks to come — the
+    **What re-renders the island (§371): the document, the selection and the marks to come — the
     three things the toolbar, the picture's panel and the table's bar are drawn from
     (`editor-look.ts`).** `shouldRerenderOnTransaction` re-rendered it on every transaction, and
     Tiptap dispatches one for a focus and one for a blur that change none of them: leaving the box

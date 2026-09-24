@@ -119,7 +119,7 @@ export default function RepeatRuleFields({
       setRule((current) => (current.cadence === next.cadence && current.time === next.time && current.until === next.until ? current : next));
     };
     // The whole form is read, so after the frame the keystroke or the press leads to, once for a
-    // burst (§NNN) — never inside the press of a save button, whose `change` on the box it leaves
+    // burst (§371) — never inside the press of a save button, whose `change` on the box it leaves
     // used to pay this before "Se salvează…" could paint.
     const scheduler = paintedScheduler(read);
     read();

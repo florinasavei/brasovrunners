@@ -27,7 +27,7 @@ import {
  * The rich-text fields announce their hidden value with a bubbling `input`, and the "to be
  * announced" switch re-sends `change` once its box has lost `required`, so listening on the form
  * is enough; the measure waits because the editor writes after the keystroke it answers — and it
- * waits for the frame, once for a burst of keystrokes (§NNN), because it reads the whole form
+ * waits for the frame, once for a burst of keystrokes (§371), because it reads the whole form
  * and a keystroke is owed its letter first. The list is replaced only when it changed, so a
  * keystroke that closes no gap re-renders nothing.
  */
@@ -74,7 +74,7 @@ function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: reado
       const next = identicalTexts((name) => String(data.get(name) ?? ""), locales);
       setFound((current) => (sameNames(current, next) ? current : next));
     };
-    // After the frame, once for a burst, and a new list only when it changed — as the gaps (§NNN).
+    // After the frame, once for a burst, and a new list only when it changed — as the gaps (§371).
     const scheduler = paintedScheduler(measure);
     measure();
     form.addEventListener("input", scheduler.schedule);

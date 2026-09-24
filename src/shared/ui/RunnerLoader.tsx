@@ -48,7 +48,7 @@ export default function RunnerLoader({
 }
 
 /**
- * The figure a press is about to show, drawn with the page and never displayed (§NNN), so the
+ * The figure a press is about to show, drawn with the page and never displayed (§371), so the
  * press that shows it adds no style to the page.
  *
  * MUI writes a component's CSS the first time the component renders with those props: on the

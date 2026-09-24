@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { afterPaint, type PaintClock, paintedScheduler } from "@/shared/forms/after-paint";
 
 /**
- * `afterPaint` and `paintedScheduler` (§NNN) — the work a keystroke or a press starts but the
+ * `afterPaint` and `paintedScheduler` (§371) — the work a keystroke or a press starts but the
  * reader does not need in the same frame, queued behind the frame the interaction leads to so the
  * browser paints first (Interaction to Next Paint).
  *

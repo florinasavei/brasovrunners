@@ -70,7 +70,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
     };
     // The editor writes its document into a hidden field after the keystroke it answers, so the
     // measure waits; the observer catches the write itself, whichever comes first. It waits for
-    // the frame, too, and runs once for a burst (§NNN): a whole-form read on every mutation —
+    // the frame, too, and runs once for a burst (§371): a whole-form read on every mutation —
     // every keystroke in a rich text, every node of the commit that paints "Se salvează…" — was
     // work queued ahead of the very paint the reader was waiting for.
     const scheduler = paintedScheduler(measure);
@@ -105,7 +105,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
         size="medium"
         aria-disabled={status.pending}
         aria-busy={pending}
-        // No ink under the finger, as `SubmitButton` (§NNN); the keyboard's focus ripple stays.
+        // No ink under the finger, as `SubmitButton` (§371); the keyboard's focus ripple stays.
         disableTouchRipple
         aria-describedby={dimmed ? "publish-not-ready" : undefined}
         startIcon={pending ? <RunnerLoader size={20} color="inherit" /> : <PublishGlyph fontSize="small" />}
@@ -133,7 +133,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
       >
         {pending ? pendingLabel : label}
       </Button>
-      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      {/* The runner's styles, drawn with the page, so the press adds none (§371). */}
       <RunnerLoaderStyles size={20} color="inherit" />
       {dimmed && (
         <Typography id="publish-not-ready" variant="body2" color="text.secondary" role="status">

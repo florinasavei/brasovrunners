@@ -19,7 +19,7 @@ function useTicked(anchor: RefObject<HTMLElement | null>, name: string): boolean
     const read = () => setTicked(new FormData(form).get(name) === "on");
     read();
     // The whole form is read, and every box's `change` asks — the one a save button's press makes
-    // on the box it leaves too — so after the frame, once for a burst (§NNN).
+    // on the box it leaves too — so after the frame, once for a burst (§371).
     const scheduler = paintedScheduler(read);
     form.addEventListener("change", scheduler.schedule);
     return () => {

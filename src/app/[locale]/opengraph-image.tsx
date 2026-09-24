@@ -7,7 +7,7 @@ import { brandFonts } from "@/theme/pdf/fonts";
 
 /**
  * The site's own share picture (`DECISIONS.md` §90), for every page without one of its own:
- * the listing, a standing page, the gallery index. The club's name (its one constant, §NNN)
+ * the listing, a standing page, the gallery index. The club's name (its one constant, §369)
  * and what it does, in the brand's blue. An event's page has its own, drawn from the event.
  */
 export const size = { width: 1200, height: 630 };

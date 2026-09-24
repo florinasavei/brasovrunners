@@ -87,7 +87,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     // BR-REQ-101-02: every absolute URL derives from APP_BASE_URL.
     metadataBase: new URL(env.APP_BASE_URL),
-    // The club's name from its one constant (§NNN): a proper name, the same in both languages.
+    // The club's name from its one constant (§369): a proper name, the same in both languages.
     title: { default: CLUB_NAME, template: `%s · ${CLUB_NAME}` },
     // The large card on X and everywhere that reads Twitter tags; Facebook reads `og:*`, which
     // the `opengraph-image.tsx` files write (`DECISIONS.md` §90).

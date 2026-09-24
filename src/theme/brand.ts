@@ -206,12 +206,12 @@ export const FONT = {
 export const WORDMARK = "BRASOV RUNNERS";
 
 /**
- * The club's name — the **one** place it is written (§NNN). A runner's club on their
+ * The club's name — the **one** place it is written (§369). A runner's club on their
  * registration (`DECISIONS.md` §215), the From line's default, the page title, the header's and
  * the wordmark's accessible name, the JSON-LD organiser, the share pictures, the calendar, the
  * PDFs' Author, and every catalogue sentence that names the club, which takes it as `{club}`.
  *
- * Until §NNN the catalogues carried a second copy under `Site.name`, "free to differ between
+ * Until §369 the catalogues carried a second copy under `Site.name`, "free to differ between
  * the locales one day". A proper name is not translated, and two copies are two things to rename
  * and one to forget, so the catalogues no longer hold the name at all:
  * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it in `src/` outside this file

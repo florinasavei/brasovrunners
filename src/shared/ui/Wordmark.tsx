@@ -14,7 +14,7 @@ import { CLUB_NAME, FONT, WORDMARK, WORDMARK_SIZE } from "@/theme/brand";
  *
  * The visible text is unaccented — a logotype, not the club's name, and safe only because it is
  * pure ASCII: Facón has no Romanian characters. So the element is an image to assistive
- * technology, named from the club's one constant (`CLUB_NAME`, §NNN), and announces the name
+ * technology, named from the club's one constant (`CLUB_NAME`, §369), and announces the name
  * spelled properly rather than the kit's spelling.
  *
  * A Server Component: it renders one span and needs nothing from the client.

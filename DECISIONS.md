@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.83-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -9674,7 +9674,7 @@ changing, which is after hydration by definition.
 
 *The same rule runs on the server*, so a submission with JavaScript off — or from anything that
 is not this form — records the same string. `CLUB_NAME` is a constant in `theme/brand.ts`
-rather than `Site.name` from the catalogue, because what is stored is a fact and not a
+rather than `Site.name` from the catalogue, because what is stored is a fact and not a (superseded by §369: `Site.name` no longer exists — the name is `CLUB_NAME`, and a sentence that names the club takes it as `{club}`.)
 translation: it must not differ between a Romanian and an English submission. A test asserts
 the constant equals `Site.name` in both catalogues, so the two cannot drift.
 
@@ -13922,7 +13922,7 @@ The owner, 2026-09-24, on the editor's Cost select showing no box for the money 
 
 Both boxes are named in the refusal summary — `event.costAmount` as "Suma", `event.costUrl` as "Link pentru donație" — never the raw path, because `costRule`'s cross-field check only ever names `costAmount` on a `PAID` event and `costUrl` on a `DONATION` one, so each name has exactly one meaning. `required` follows the chosen kind on the box itself — the amount exactly while `PAID` is picked, the link exactly while `DONATION` is — so the browser refuses a blank one before the server does, and no hidden box ever carries `required` with nothing to focus.
 
-Every public surface that says what a runner pays says the same short phrase, independently built by three call sites for now (`EventFacts`, `ical.ts`, the registration form) rather than through one shared helper — a candidate for a later `cost.ts#costParts` pass. JSON-LD (`structured-data.ts`) reports `isAccessibleForFree: false` and an `offers.url` (no `price`, since none of the free text is a number) for `PAID` and `DONATION` alike, which is a change to what an existing `PAID` row already emits: before this release a `PAID` event carried neither field; a price crawler now correctly reads a paid or donation-funded event as not free, at the cost of a "missing price" warning the Rich Results tool treats as non-critical.
+Every public surface that says what a runner pays says the same short phrase, independently built by three call sites for now (`EventFacts`, `ical.ts`, the registration form) rather than through one shared helper — a candidate for a later `cost.ts#costParts` pass. JSON-LD (`structured-data.ts`) reports `isAccessibleForFree: false` and an `offers.url` (no `price`, since none of the free text is a number) for `PAID` and `DONATION` alike, which is a change to what an existing `PAID` row already emits: before this release a `PAID` event carried neither field; a price crawler now correctly reads a paid or donation-funded event as not free, at the cost of a "missing price" warning the Rich Results tool treats as non-critical. (amended by §369: a DONATION event is free to attend — `isAccessibleForFree: true`, a zero-price offer at the event's own page, and the donation link as a `DonateAction`.)
 
 **Rejected.**
 - Parsing a number out of `cost_amount` for schema.org's `price`. "50 lei" and "sugerat 50 lei" are not numbers, and guessing one would tell a search engine something the club never said.
@@ -15047,3 +15047,135 @@ Since §347 the work has run as batches: one session briefs a subagent per chang
 **The repository is public, and so is all of this.** No secret, key, token, database URL, personal address, account id or local path appears in the page, the workflows, the scripts or the briefs they write. The two workflows repeat the rule to every agent and every reviewer checks for it. `yarn ship` takes production's origin from `SHIP_PRODUCTION_URL` in the environment or the git-ignored `.env.local`, never from the file, because the club's domain lives only in `SETUP.md` §26 (§98). Commit attribution is the line each session's own instructions give, not a model name written into a script.
 
 Baseline `BR-V1.82-2026-09-24`.
+
+## 369. The club's name has one source, and the last hardcoded values leave the documents and screens
+
+**Context.** This follows §357, where the owner said on 2026-09-24: "I do not want hardcoded stuff in the documents and emails anymore", and "multi-lingual, always". §357 moved the emails' own sentences onto `CLUB_NAME` (§215). That review turned up six places where a written-in value was still reaching a person or another system: the From line's default, the share pictures, the calendar, the legal PDF, the declaration's token legend, the queue panel's times and the legal editor's height. The catalogues also held a second copy of the name that no guard read.
+
+**Decision — the club's name is written once.** `CLUB_NAME` in `theme/brand.ts` is now the only source of the club's name, and no other copy exists.
+- *What reads it:*
+  - the `EMAIL_FROM_NAME` default, which the From line and the contact form's sender use; the variable still wins when it is set
+  - both share pictures (the event's and the site's)
+  - the calendar's `PRODID` and feed file name, which fold to the same ASCII bytes as before
+  - the legal document PDF's Author
+  - the page title
+  - the accessible names of the header link and the wordmark
+  - the JSON-LD organiser on the listing and on the event page
+- *The catalogues no longer hold the name.* `Site.name` is deleted. So is the whole `Home` namespace, because the root redirects and nothing read it, and so is `Footer.about.description`, which the footer stopped reading earlier. A sentence that names the club takes the name as `{club}`, filled from the constant. That applies to the member tick, its section summary, the backoffice's member filter, the pages intro and two task steps.
+- *The Mailgun step names the sender as `{senderName}`.* The value comes from `EMAIL_FROM_NAME`, the setting the From line actually reads, so an override shows on `/admin/tasks` too.
+- *§215's reasoning is superseded here.* §215 kept a `Site.name` that was "free to differ between the locales one day", with a test to keep it equal to the constant. A proper name is not translated, and two copies of it are two things to rename and one of them gets forgotten.
+- *The guard.* `tests/unit/notifications/no-hardcoded-values.test.ts` parses every file under `src/`. It fails on any string, template piece or JSX text that names the club outside `theme/brand.ts` and the seeds; comments are not counted. The same test also:
+  - walks every message in both catalogues and fails on the name
+  - fixes the list of six `{club}` sentences
+  - checks that every call site passes them `{ club: CLUB_NAME }`
+
+**The declaration's token legend.** The example event is made up ("Crosul de toamnă" / "The autumn cross"), where the old example named the club. Every example exists in both languages. Dates are written by the same helper a signed declaration uses (`formatDay`, same options). The declarant example matches how a minor's signature actually reads.
+
+**A donation is free to attend (reverses one sentence of §343).** §343 had `DONATION` emit `isAccessibleForFree: false` and the donation link as `offers.url`. That is now reversed. schema.org's `isAccessibleForFree` asks whether the place can be had without paying. A donation is given, not paid for the place, and no column says a donation is required.
+- A `DONATION` event now carries the free event's zero-price `Offer` at its own page.
+- The donation link is a `DonateAction` target, never the offer's `url`.
+- No price is ever parsed from the free-text amount.
+- `PAID` is unchanged.
+- This matches BR-REQ-052-02 criterion 9 as written: "an event not marked as charging a fee".
+- An event whose entry *is* the payment (Wings for Life, if the fee is the donation) is `PAID`, with that link as its payment link. The Cost select's help now says so in both languages.
+
+**The queue panel writes times in the event's own zone.** On `/admin/events/[id]`, an offer's deadline and a waiting-list time now use `event.timezone`, as the runner's email does, instead of the club's zone.
+
+**The legal document editor no longer jumps when Tiptap mounts.** Until the editor exists, a stand-in draws the stored text with the editor's own box and rules. The stand-in is `aria-hidden`, has no links or focusable content, and is remounted by key when a recalled text arrives. This is §362's pattern with this editor's numbers, and each editor keeps its own module-private `WRITING_AREA_BOX`. Measured on the prefilled sample: 4,240 px on a desktop and 16,987 px on a 320-px phone, the same before and after mount.
+
+**Tests.**
+- Unit:
+  - `notifications/no-hardcoded-values.test.ts` (the AST scan with its probe, the catalogue scan, the `{club}` call sites, the sender default and override, the calendar's bytes)
+  - `legal-documents/no-hardcoded-values.test.ts` (the legend)
+  - `theme/brand.test.ts` (no `Site.name`; the tick reads the constant in both languages)
+  - `events/structured-data.test.ts` (`DONATION` is free, with a `DonateAction`; `PAID` unchanged)
+  - `legal-documents/legal-body-reserved-height.test.ts` (the stand-in's Emotion rules match `.tiptap`)
+- Integration: `registrations/queue-panel-zone.test.ts` (an event held in New York, both languages).
+- E2e: `legal-versions.spec.ts` (height and the English field's position, with scripts refused and after mount) and `event-cost-donation.spec.ts`.
+
+**Checks.** On the tree merged with qa at BR-V1.81: typecheck and eslint are clean, and `yarn test` passed 313 files and 3861 tests. The branch's earlier commit ran e2e `legal-versions` and `event-cost-donation` 16/16 on a production build, before the re-merge.
+
+Baseline `BR-V1.83-2026-09-24`.
+
+## 370. A page that works built works under `next dev`: no element props into client components, no bare template lookups, and a dev-mode walk
+
+**Context.** The sub-tabs agent found this on 2026-09-24: under `yarn dev`, `/admin/tasks` and `/admin/gallery` answered 500 during server rendering with React's "Element type is invalid: expected a string … but got: undefined". The production build served both pages, and so did the e2e suite. I reproduced it on a worktree database with the dev switcher. It hit every route whose `loading.tsx` renders `AdminListSkeleton`: `/admin` (the events), registrations, legal texts, pages, gallery, the team (for a Superadministrator) and the to-do screen. No route without that skeleton failed. It also depended on order: on a freshly started server the first render of a route passed, and the next ones failed.
+
+No import was undefined. With the dev SSR runtime instrumented, the failing element's key path was `SegmentViewNode "c-loading" → Stack → Box → Stack → "separator-0"`: an element with no type and no props. `AdminSkeleton` is a Server Component, and it passed MUI's client `Stack` an element as a prop, `divider={<Box … />}`. MUI's `Stack` does not render the divider. Its `joinChildren` calls `React.cloneElement(divider, { key })` between each pair of rows.
+
+In development, every element in the Flight payload carries its owner and its stack as references to other rows. When one of those rows is still waiting on another, React's Flight client (`react-server-dom-turbopack`, the `0 < deps` branch of `reviveModel`) delivers the element as a lazy wrapper rather than an element. A lazy wrapper rendered as a child is fine. Cloned, it yields `{ type: undefined, props: {} }`, and Fizz throws. Production payloads carry no owners or stacks, so the divider always arrived whole there. This is the defect `AGENTS.md` §14.1 already forbids (§60's `FormControlLabel control`, §112's `Chip icon`). This time it was in a third prop, in a file nobody had rendered under `next dev`.
+
+Walking every page under `next dev` then found a second dev-only divergence, in the words rather than the tree. Seventeen lookups asked for a message with no values:
+- `t("forms.incompleteFirst")`, "Completează mai întâi: {field}", a template `SubmitButton` fills in the browser (§315), on thirteen backoffice forms;
+- the event create page's "not ready to publish" hint;
+- the gallery's three upload counters.
+
+use-intl's production build returns a value-less message unformatted, through a fast path. Its development build compiles the message to report missing arguments, fails on `{field}`, logs FORMATTING_ERROR and returns the key. So under `yarn dev` every such hint read "Admin.forms.incompleteFirst", and the upload counter read "Admin.gallery.uploaded". That is why `gallery.spec.ts` failed against `next dev` and passed against a build.
+
+`Devs.neon.unavailable` had the same trap in a tag: a literal `--project-id <id>`. A build prints it as written. The dev compiler refuses it as an unclosed tag, so `/devs` showed the key.
+
+**Decision.**
+- *The skeleton's row rules are CSS* (`modules/staff-identity/ui/AdminSkeleton.tsx`). A `Box` carries `"& > * + *": { borderTop: 1, borderColor: "divider" }`: the same one-pixel line under every row but the first, which is where `joinChildren` put its separators. No element crosses the boundary.
+- *`AGENTS.md` §14.1 is enforced in the source* by `tests/unit/shared/server-element-props.test.ts`, which runs in `yarn check`. The test parses every `.tsx` without `"use client"` with the TypeScript compiler. It refuses any JSX attribute that holds an element when the receiving tag is imported from `@mui/*`, `next/link|image|form`, next-intl's `Link` (`i18n/navigation.ts`) or a local `"use client"` module. The element can be direct, in an array or object, or in a conditional; an element inside a function is not counted. `children` is exempt.
+  - There is one allowance: `Alert`'s `action`, used by `RegistrationCta`'s retry link (§281). MUI renders it as the action slot's child and never inspects it. The test checks that line in the installed `@mui/material/Alert/Alert.mjs`, so an upgrade that starts inspecting the prop fails the build.
+  - The test fails on the old `AdminSkeleton` and finds nothing else in `src/`.
+- *A message with an argument or a tag is either formatted with its values or read raw* (`tests/unit/i18n/messages.test.ts`).
+  - The seventeen template lookups are now `t.raw("…") as string`, the pattern the create page's summary already used.
+  - The literal `<id>` is ICU-quoted as `'<id>'`, which both builds print as `<id>`.
+  - The same test now also checks that every `t.raw("key")` names a message or a sub-tree. The key scan could not see those before.
+- *A dev-mode walk, run on demand* (`tests/e2e/dev-routes.spec.ts`, `yarn test:e2e:dev`).
+  - `E2E_DEV=1` makes `playwright.config.ts` start `next dev` on port 4784 instead of building. With a running `yarn dev`'s port in `E2E_PORT`, it reuses that server.
+  - As a Superadministrator, it walks the backoffice from `/ro/admin` and `/ro/devs`, two links deep. It then visits every backoffice route file the links did not reach, filling its `[id]` with one the walk saw for the same parent. An event's bibs, messages, urgent notice and erase page are among these, because they sit behind the "⋮" menu.
+  - As a visitor, it walks every sitemap address and what those pages link to.
+  - Every address is requested twice, because the defect passed the first render. Any 5xx fails the test.
+  - It runs on the desktop project only. Without `E2E_DEV` it is skipped, so CI and the routine suite are unchanged.
+  - On the seeded database it walks 67 backoffice and 47 public addresses in four to five minutes on a fresh server. Only `/admin/checkin/[code]` has no id to fill, because a desk code needs a confirmed registration. The report names it in a "not reached" note.
+
+**Considered and refused.**
+- *An import-cycle check.* This was the brief's first suspect. There was no cycle and no undefined import, so a cycle check would have passed on the broken code.
+- *The dev walk in CI.* Under `next dev` every route compiles on its first request. That would add five minutes and a database to every pull request, to catch a defect class that a source-level test catches in milliseconds. The walk is for whoever touches the server/client boundary or sees a dev 500. CI keeps the unit guards.
+- *One request per address.* A fresh server passed the first render of a broken route. Only the second request failed.
+- *A deny-list of MUI props known to clone (`divider`, `control`, `icon`).* It would catch the three we have met and miss the fourth. The rule `AGENTS.md` states covers the whole boundary, and the one exception is checked against the library's own source.
+- *Moving `RegistrationCta`'s retry link out of `Alert`'s `action`.* That would move a button on a public error state for no reader's benefit. The allowance is exact and verified.
+
+**Consequences.**
+- Every backoffice list renders under `yarn dev` again, and a form's hint names the missing field there, as it does on production.
+- Production renders the same HTML. The skeleton's lines were CSS borders either way, and `t.raw` returns what the production fast path returned.
+- The next element-valued prop into a client component, and the next bare lookup of a `{…}` message, fail `yarn check` before anybody opens a page.
+- Found on the way and left alone: an address with a malformed id answers 500 rather than 404, in production too, because the id reaches a `uuid` column unchecked. Examples are `/admin/events/nope`, `/admin/registrations/nope`, `/admin/legal/nope`, `/admin/gallery/nope`, `/admin/pages/nope` and `events/nope/bibs|erase|urgente`. No link produces such an address.
+- Also left alone: Next's dev server logs a transient "Failed to generate static paths … Unexpected end of JSON input" during concurrent compiles. No request got an error from it.
+
+Baseline `BR-V1.83-2026-09-24`.
+
+## 371. A save press paints "Se salvează…" first (INP)
+
+The owner, 2026-09-24, from the Vercel toolbar: "Event handlers on this element blocked UI updates for 352ms" on a contained primary button of the backoffice. We measured it with the Event Timing API at 4x CPU on a production build (`tests/e2e/perf/inp.spec.ts`, opt-in with `PERF_INP=1`, never in CI). The causes, from largest to smallest:
+
+1. **A new CSS rule inside the press.** MUI's styles sit in cascade layers. Chromium answers a layered rule added to a live page with a whole-page style and layout recalculation. The fix: the runner's styles are drawn with the page (`RunnerLoaderStyles`), and submit buttons mount no touch ripple. The keyboard's focus ripple stays.
+2. **The recall context was a new object on every render,** which re-rendered every box of the event editor. `ActionForm` now memoises it.
+3. **Whole-form reads on input, change and focusout ran before the paint.** They now run behind the next frame, once per burst (`src/shared/forms/after-paint.ts`).
+4. **The rich-text island re-rendered its toolbar on blur.** It now re-renders only on the document, the selection and the stored marks (`editor-look.ts`).
+5. **A refused press re-rendered the language strip** inside the invalid event. The swap is now done by hand, and the strip follows in a transition.
+
+Mobile, 4x CPU, three runs each. "Before" is the median on qa before the change; "after" is the median and max at b87126ab:
+
+| Press | Before | After, median | After, max |
+| --- | --- | --- | --- |
+| Create event | 1504 | 136 | 200 |
+| Create and publish | 3280 | 104 | 152 |
+| Create, refused | 352 | 192 | 216 |
+| Event editor save | 704 | 72 | 88 |
+| Registration | 72 | 72 | 88 |
+| Registration, refused | 128 | 136 | 176 |
+| Email wording save | 424 | 88 | 96 |
+| Legal draft save | 160 | 64 | 64 |
+
+No press inserts a CSS rule any more.
+
+The refused create press is the only one whose worst run is over 200 ms. Its median is under 200. Its long frames show no script from the platform's code beyond React's focus delegation (16 ms); the rest is the browser's own validation, moving focus into the revealed panel.
+
+Two accepted limits:
+- A submit button with no start icon at rest may still write MUI's start-icon slot styles on its first press. These are the pages list's arrows, the registrations list's compact resend and the desk's self-pressing `ConfirmOnArrival`. Each lacks a glyph on purpose.
+- The hidden runner costs a few hundred bytes of HTML per submit button on public pages.
+
+Baseline `BR-V1.83-2026-09-24`.

@@ -182,7 +182,7 @@ export default function SubmitButton({
       setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
-    // Behind the frame the keystroke leads to, once per frame (§NNN): the scan reads every box of
+    // Behind the frame the keystroke leads to, once per frame (§371): the scan reads every box of
     // the form, and the event editor has a few hundred — inside the keystroke it was paid before
     // the letter appeared, and a `change` on leaving a box put it inside the press of this button.
     const scheduler = paintedScheduler(measure);
@@ -333,7 +333,7 @@ export default function SubmitButton({
         aria-busy={pending}
         aria-describedby={dimmed && hint ? hintId : undefined}
         /*
-          No ink under the finger (§NNN): the press answers with "Se salvează…" and the runner in
+          No ink under the finger (§371): the press answers with "Se salvează…" and the runner in
           the same frame, which is the feedback, and the ripple was the costliest thing in it — MUI
           mounts it on the first press, measures the button (a forced layout), and on a page whose
           first press this is, writes its styles into the layered sheet: a whole-page
@@ -383,7 +383,7 @@ export default function SubmitButton({
         {pending ? pendingLabel : label}
       </Button>
       {/*
-        The runner's styles, drawn with the page, so the press adds none (§NNN). The guarantee
+        The runner's styles, drawn with the page, so the press adds none (§371). The guarantee
         assumes the button already has a start icon at rest — a verb's glyph or the runner. A
         button with neither (the pages list's ↑ ↓, the registrations list's compact "Retrimite",
         the desk's `ConfirmOnArrival`, which presses itself) mounts MUI's start-icon slot for the

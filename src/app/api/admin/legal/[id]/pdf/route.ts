@@ -63,7 +63,7 @@ export async function GET(
     locale,
     generatedAt: now,
     labels: {
-      // The PDF's Author: the platform's one constant (§357, §NNN), as the declaration and the
+      // The PDF's Author: the platform's one constant (§357, §369), as the declaration and the
       // bib sheet already carry it — never a second copy of the name kept in the catalogue.
       organization: CLUB_NAME,
       version: t("legal.pdf.version", { version: document.version }),

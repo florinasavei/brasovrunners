@@ -104,7 +104,7 @@ export default function ActionForm({
   if (tracked.state !== state) setTracked({ state, generation: tracked.generation + 1 });
 
   /*
-    **One value per answer, not one per render (§NNN).** A press re-renders this component before
+    **One value per answer, not one per render (§371).** A press re-renders this component before
     anything is sent: `useActionState` marks its action pending the moment the form submits, in
     the same task as the press. A value built inline was a new object on that render, so every box
     that reads the recall — every `RecallField`, picker, select, rich-text editor and fold of the

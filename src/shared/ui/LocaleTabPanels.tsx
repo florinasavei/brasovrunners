@@ -87,7 +87,7 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  */
 export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
-/** Panel `index` shown and every other one hidden, on the DOM itself (§NNN; see `bringForward`). */
+/** Panel `index` shown and every other one hidden, on the DOM itself (§371; see `bringForward`). */
 function showOnly(panels: readonly (HTMLElement | null)[], index: number) {
   panels.forEach((panel, other) => {
     if (panel) panel.hidden = other !== index;
@@ -159,7 +159,7 @@ export default function LocaleTabPanels({
   /**
    * Bring panel `index` forward — the DOM at once, React's state after it.
    *
-   * **The whole swap is done by hand, and the state follows as a transition (§NNN).** The browser
+   * **The whole swap is done by hand, and the state follows as a transition (§371).** The browser
    * needs the panel shown before it looks for a box to focus, so that part was always by hand; the
    * state was set at once, and React renders an update made inside an `invalid` event before the
    * event ends — the strip, and MUI's `Tabs`, which measures its tabs after every render: a forced
@@ -183,7 +183,7 @@ export default function LocaleTabPanels({
   }, []);
 
   /*
-    The DOM back in step with the state whenever the state moves (§NNN). The hand swap above runs
+    The DOM back in step with the state whenever the state moves (§371). The hand swap above runs
     ahead of React, and React writes `hidden` only where the prop changed since its last commit, so
     the moment a new `active` commits every panel's attribute is rewritten from it. A tab press can
     also end on the `active` React already has — when it lands while a refusal's transition is
@@ -254,7 +254,7 @@ export default function LocaleTabPanels({
             return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
           }),
         );
-        // The same marks keep the same array, so React renders nothing (§NNN): a new one re-rendered
+        // The same marks keep the same array, so React renders nothing (§371): a new one re-rendered
         // the strip on every keystroke and every focus leaving a box — the press of a save button
         // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
         setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
@@ -269,7 +269,7 @@ export default function LocaleTabPanels({
         }
       }
     };
-    // Behind the frame the keystroke or the press leads to, once for a burst (§NNN): the marks
+    // Behind the frame the keystroke or the press leads to, once for a burst (§371): the marks
     // are not what the reader is waiting for, the letter and the "Se salvează…" are.
     const scheduler = paintedScheduler(measure);
     for (const type of ["input", "change", "focusout"]) container.addEventListener(type, scheduler.schedule);
@@ -285,7 +285,7 @@ export default function LocaleTabPanels({
         value={active}
         onChange={(_, value: number) => {
           // By hand first as well: a press on a tab while a refusal's transition is still pending
-          // may compute the `active` React already has, and then React rewrites no attribute (§NNN).
+          // may compute the `active` React already has, and then React rewrites no attribute (§371).
           showOnly(panelRefs.current, value);
           setActive(value);
         }}

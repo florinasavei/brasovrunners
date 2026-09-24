@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { editorLook, sameEditorLook } from "@/modules/content/rich-text/ui/editor-look";
 
 /**
- * BR-REQ-041-01 (§NNN) — the rich-text editor's island re-renders on what it draws, not on every
+ * BR-REQ-041-01 (§371) — the rich-text editor's island re-renders on what it draws, not on every
  * transaction. Leaving the box to press "Salvează" is a blur, and Tiptap answers a blur (and a
  * focus) with a transaction that changes nothing on screen; re-rendering the toolbar for it was a
  * tenth of a second inside the press on a phone (`tests/e2e/perf/inp.spec.ts`).
@@ -24,7 +24,7 @@ function start(): EditorState {
   return EditorState.create({ schema, doc: schema.node("doc", null, [schema.node("paragraph", null, [schema.text("Ne vedem la start")])]) });
 }
 
-describe("BR-REQ-041-01 the rich-text island's look (§NNN)", () => {
+describe("BR-REQ-041-01 the rich-text island's look (§371)", () => {
   it("is the same after a blur and after a focus: the transactions Tiptap sends for them change nothing drawn", () => {
     const state = start();
     const blurred = state.apply(state.tr.setMeta("blur", { event: null }).setMeta("addToHistory", false));

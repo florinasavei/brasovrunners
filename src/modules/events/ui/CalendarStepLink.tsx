@@ -38,7 +38,7 @@ export default function CalendarStepLink({
   return (
     <IconButton component={Link} href={href} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
       <StepGlyph direction={direction} />
-      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      {/* The runner's styles, drawn with the page, so the press adds none (§371). */}
       <RunnerLoaderStyles size={24} color="inherit" />
     </IconButton>
   );

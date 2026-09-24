@@ -7,7 +7,7 @@ import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
 import SubmitButton from "@/shared/ui/SubmitButton";
 
 /**
- * BR-REQ-041-01 (§NNN) — a save button's press adds no CSS to the page.
+ * BR-REQ-041-01 (§371) — a save button's press adds no CSS to the page.
  *
  * MUI's styles here sit in cascade layers, and Chromium answers a layered rule added to a live
  * page by recomputing every element's style and every line's layout. The runner that takes a
@@ -32,7 +32,7 @@ function hiddenFigure(html: string): string {
   return html.slice(start);
 }
 
-describe("BR-REQ-041-01 the pending runner's styles are drawn with the page (§NNN)", () => {
+describe("BR-REQ-041-01 the pending runner's styles are drawn with the page (§371)", () => {
   it("draws the hidden figure with the very classes the pending figure takes", () => {
     for (const size of [18, 20, 22, 24]) {
       const pending = classesOf(renderToStaticMarkup(createElement(RunnerLoader, { size, color: "inherit" })));

@@ -22,7 +22,7 @@ import { editorDocToText, type LegalBlock, type LegalEditorDoc, type LegalInline
 /**
  * The writing area's own box: a legal text is long, and a box that looks like a field invites a
  * field's worth of text. One object for the two places that draw it — Tiptap's `.tiptap` and the
- * stand-in shown until Tiptap has mounted — so the two are always the same size (§NNN, the same
+ * stand-in shown until Tiptap has mounted — so the two are always the same size (§369, the same
  * pattern as `WRITING_AREA_BOX` in the pages' editor, §362; the two editors' boxes differ, so the
  * pattern is shared and the numbers are each editor's own).
  */
@@ -61,7 +61,7 @@ function standInRuns(runs: readonly LegalInline[] = []): ReactNode[] {
 }
 
 /**
- * The writing area before Tiptap has mounted (§NNN; the defect §362's addendum fixed in the pages'
+ * The writing area before Tiptap has mounted (§369; the defect §362's addendum fixed in the pages'
  * editor). Tiptap builds its editor only in the browser, after hydration, and until then this
  * area was an empty `div`, zero pixels tall: the moment it mounted, the English box and "Salvează"
  * under it moved down by the whole text — a prefilled sample measured 4,240 pixels on a desktop
