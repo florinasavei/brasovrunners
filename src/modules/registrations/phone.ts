@@ -55,6 +55,24 @@ export const DIALING_CODES: Readonly<Record<string, string>> = {
 /** The country codes a phone prefix can be chosen for: every nationality that has one. */
 export const PHONE_COUNTRY_CODES: readonly string[] = COUNTRY_CODES.filter((code) => code in DIALING_CODES);
 
+/**
+ * The prefix select's order: Romania first, then by the country's name in the reader's language.
+ *
+ * Computed by the page on the server and handed to `PhoneField` as plain data (§324), never
+ * computed again in the browser. The names come from the runtime's own ICU data, and the
+ * server's Node and a visitor's browser do not carry the same version: Chromium named Hong Kong
+ * differently from Node, the two sorts disagreed at the fortieth option, and React answered the
+ * mismatch by throwing the server's form away and drawing it again — taking with it whatever had
+ * been typed before hydration finished, which is the loss §211 was written to prevent. One sort,
+ * in one place, and the browser only draws it.
+ */
+export function phoneCountryOrder(locale: string): string[] {
+  const names = new Intl.DisplayNames([locale], { type: "region" });
+  return PHONE_COUNTRY_CODES.map((code) => ({ code, name: names.of(code) ?? code }))
+    .sort((a, b) => (a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.name.localeCompare(b.name, locale)))
+    .map((entry) => entry.code);
+}
+
 /** E.164: a plus, then at most fifteen digits. Exported for the field schema. */
 export const E164_PHONE = /^\+[1-9]\d{3,14}$/;
 const E164 = E164_PHONE;

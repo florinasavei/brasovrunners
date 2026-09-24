@@ -210,6 +210,46 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
   });
 
+  it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const row = {
+      id: "row-l",
+      participantId,
+      registrationId,
+      messageType: "EVENT_REMINDER" as const,
+      locale: "ro" as const,
+      recipientEmail: "ana@example.ro",
+      payloadJson: {},
+      idempotencyKey: "test:l",
+      requestedByStaffUserId: null,
+      isManualResend: false,
+      status: "PROCESSING" as const,
+      attemptCount: 1,
+      nextAttemptAt: null,
+      lockedAt: NOW,
+      providerMessageId: null,
+      lastError: null,
+      createdAt: NOW,
+      sentAt: null,
+    };
+
+    // No links: no line, and no `#links` anchor to point at a section that is not there.
+    const without = await renderOutboxMessage(row, db, NOW);
+    expect(without.html).not.toContain("#links");
+    expect(without.text).not.toContain("Linkuri și fișiere");
+
+    const drive = ["https:/", "drive.example.test", "file", "d", "gpx", "view"].join("/");
+    await db.update(events).set({ links: [{ kind: "GPX", url: drive, labelRo: null, labelEn: null }] }).where(eq(events.id, event.id));
+    const withLinks = await renderOutboxMessage({ ...row, id: "row-l2", idempotencyKey: "test:l2" }, db, NOW);
+    expect(withLinks.html).toMatch(/\/evenimente\/crosul#links"/);
+    // One line in each half of the bilingual message, naming the page — never the Drive address.
+    expect(withLinks.text).toContain("Linkuri și fișiere: pe pagina evenimentului");
+    expect(withLinks.text).toContain("Links and files: on the event's page");
+    expect(withLinks.html).not.toContain(drive);
+    expect(withLinks.text).not.toContain(drive);
+  });
+
   it("renders a message with no token and no action link", async () => {
     const message = await renderOutboxMessage(
       {

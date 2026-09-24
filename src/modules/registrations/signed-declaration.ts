@@ -5,8 +5,9 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
-import { type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForMinorSignature, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
@@ -19,7 +20,8 @@ import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type Decla
  *   the platform and lose the identity document with the database seven days after the event (§95).
  * - `club` — a copy that leaves the platform for a club mailbox (the archive, §99, §244), where
  *   nothing sweeps it: the identity document masked (`maskIdDocument`) wherever the page prints
- *   it, in the text's `{{idDocument}}` and on the signature line alike.
+ *   it, in the text's `{{idDocument}}` and on the signature line alike — and for a minor both
+ *   documents, the child's and the parent's (§330).
  *
  * Required, never defaulted, so a caller added tomorrow has to say which one it is.
  */
@@ -50,8 +52,16 @@ export type SignedDeclaration = {
   /** The parent or guardian who signed for a minor (§108); null for an adult. */
   guardianName: string | null;
   acceptedAt: Date;
+  /** The declarant's signature: the adult's own, the parent's or guardian's for a minor (§314). */
   typedName: string;
+  /** The declarant's identity document, as `typedName` (§95, §108). */
   idDocument: string | null;
+  /**
+   * The minor's own signature and identity document, beside the parent's (§330). Null for an
+   * adult, and for a minor's acceptance recorded before two signatures were asked.
+   */
+  minorTypedName: string | null;
+  minorIdDocument: string | null;
   method: "EMAIL_LINK" | "PAPER";
   attestedByName: string | null;
   version: number;
@@ -73,6 +83,27 @@ export function declarantValues(participant: string, guardianName: string | null
   return { declarant: `${guardianName} (${relation})`, guardian: guardianName };
 }
 
+/**
+ * `{{idDocument}}`, `{{participantIdDocument}}` and `{{guardianIdDocument}}` (§95, §330).
+ *
+ * `{{idDocument}}` stays the declarant's, as every text the club approved before two signatures
+ * reads it: the adult's own, the parent's for a minor (`{{declarant}}` beside it names the same
+ * person). The two newer fields name each signer's own: the participant's — the adult's, which is
+ * the same document, or the minor's — and the parent's or guardian's, which for an adult is an em
+ * dash, like `{{guardian}}`, so a text that names it reads "—" where no guardian signs.
+ *
+ * A document not yet typed (the page before signing), cleared (seven days after the event, §95)
+ * or never asked for is `undefined`, which the merge prints as the paper form's dotted blank.
+ */
+export function identityDocumentValues(
+  guardianName: string | null | undefined,
+  documents: { idDocument?: string | null; minorIdDocument?: string | null },
+): { idDocument: string | undefined; participantIdDocument: string | undefined; guardianIdDocument: string | undefined } {
+  const declarant = documents.idDocument ?? undefined;
+  if (!guardianName) return { idDocument: declarant, participantIdDocument: declarant, guardianIdDocument: "—" };
+  return { idDocument: declarant, participantIdDocument: documents.minorIdDocument ?? undefined, guardianIdDocument: declarant };
+}
+
 export async function findSignedDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
@@ -90,6 +121,8 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
+      minorTypedName: declarationAcceptances.minorTypedName,
+      minorIdDocument: declarationAcceptances.minorIdDocument,
       method: declarationAcceptances.method,
       attestedByName: staffUsers.displayName,
       version: declarationAcceptances.declarationVersion,
@@ -156,7 +189,9 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     values: {
       event: event.title,
       eventDate: dateFormatter(locale, event.timezone, false).format(event.startsAt),
-      eventLocation: event.locationName,
+      // The city while the place is to be announced (§328), never the typed place: a signed PDF
+      // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
+      eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
     },
     title: event.title,
     timezone: event.timezone,
@@ -182,8 +217,18 @@ function signedEntry(
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
   const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
-  // Masked once, here, so the text's blank and the signature line cannot disagree (§320).
-  const idDocument = audience === "club" && signed.idDocument !== null ? maskIdDocument(signed.idDocument) : signed.idDocument;
+  /*
+    Masked once, here, so the text's blanks and the signature lines cannot disagree (§320) — both
+    documents of a minor's declaration (§330), the parent's and the child's, each wherever the
+    page prints it: `{{idDocument}}`, `{{participantIdDocument}}`, `{{guardianIdDocument}}` and
+    the two signature lines are all drawn from these two values.
+  */
+  const mask = (value: string | null) => (audience === "club" && value !== null ? maskIdDocument(value) : value);
+  const idDocument = mask(signed.idDocument);
+  const minorIdDocument = mask(signed.minorIdDocument);
+  // The minor's own signature, when a minor signed beside the parent (§330). A minor's acceptance
+  // recorded before two signatures were asked carries the parent's alone, and prints as it did.
+  const minor = signed.guardianName && signed.minorTypedName !== null ? { typedName: signed.minorTypedName, idDocument: minorIdDocument } : null;
   return {
     title: signed.title,
     // The template and its values, kept apart so the PDF can set the fill-ins in bold (§225).
@@ -193,7 +238,7 @@ function signedEntry(
       // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
       participant: signed.registeredName,
       ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
-      idDocument,
+      ...identityDocumentValues(signed.guardianName, { idDocument, minorIdDocument }),
       signedAt: when,
     },
     eventTitle: event.title,
@@ -202,6 +247,7 @@ function signedEntry(
     signature: {
       typedName: signed.typedName,
       idDocument,
+      minor,
       signedAt: when,
       method:
         signed.method === "PAPER"
@@ -238,6 +284,8 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
   locale: Locale,
   labels: DeclarationLabels,
   now: Date,
+  /** Told how many declarations the file holds, for the audit row the route writes (§324). */
+  onCount?: (count: number) => void,
 ): Promise<Buffer> {
   const entries: DeclarationEntry[] = [];
   const facts = new Map<Locale, Awaited<ReturnType<typeof eventMergeValues>>>();
@@ -246,16 +294,29 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
     const entry = signedEntry(signed, facts.get(signed.locale), labels, "participant");
     if (entry) entries.push(entry);
   }
+  onCount?.(entries.length);
   return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });
 }
 
-/** The blank form for one event, on the current approved declaration — for the desk. */
+/**
+ * The blank form for one event, on the current approved declaration — for the desk.
+ *
+ * `forMinor` (§330) prints the form a minor signs with a parent or guardian: two signature lines
+ * and two identity-document lines, the minor's and the parent's, under "DREPT PENTRU CARE SEMNĂM".
+ * The text is the same approved one — it names nobody, so its blanks stay dotted either way.
+ *
+ * Only where that text asks the minor to sign (`asksForMinorSignature`, the production gate of
+ * §330): under a text approved before it the parent signs a minor's paper alone, and the form
+ * printed is the one-signature form whatever was asked for — the minor's identity number is not
+ * collected on paper either while the approved notice does not describe it.
+ */
 export async function renderBlankDeclarationPdf<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   locale: Locale,
   labels: DeclarationPdfInput["labels"],
   now: Date,
+  { forMinor = false }: { forMinor?: boolean } = {},
 ): Promise<Buffer | undefined> {
   const [document, event] = await Promise.all([
     findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now),
@@ -271,6 +332,7 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
         eventTitle: event.title,
         version: document.version,
         contentSha256: document.contentSha256,
+        forMinor: forMinor && asksForMinorSignature(document.body),
       },
     ],
     locale,

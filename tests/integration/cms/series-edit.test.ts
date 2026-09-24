@@ -52,10 +52,11 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
   const ZONE = "Europe/Bucharest";
 
   /** A Sunday run on 11 Oct 08:00, repeated every Sunday until 8 Nov — across the clock change on 25 Oct. */
-  async function seedSeries() {
+  async function seedSeries(extra: Partial<typeof events.$inferInsert> = {}) {
     const [source] = await db
       .insert(events)
       .values({
+        ...extra,
         type: "RACE",
         surface: "ASPHALT",
         startsAt: new Date("2026-10-11T08:00:00+03:00"),
@@ -104,6 +105,9 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     registrationMode: row.registrationMode,
     participantListVisibility: "HIDDEN" as const,
     capacity: row.capacity === null ? "" : String(row.capacity),
+    // The editor's box always posts what it shows (§329), so a save that did not touch it
+    // carries the row's number rather than the schema's default.
+    minAge: String(row.minAge),
     registrationOpensAtWallTime: toWallTimeInput(row.registrationOpensAt, row.timezone),
     registrationClosesAtWallTime: toWallTimeInput(row.registrationClosesAt, row.timezone),
     declarationDocumentId: row.declarationDocumentId ?? "",
@@ -130,6 +134,8 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
       expectedVersion: row.version,
       translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, changes.ro) }],
       scope,
+      // A save that cancels says why (§331); nobody is registered here, so nobody is told.
+      ...(changes.fields?.eventStatus === "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
       now: NOW,
     });
   }
@@ -317,6 +323,27 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
 
     expect((await save(await reload(source.id), { ids: [] }, { fields: { capacity: "40" } })).appliedTo).toBe(0);
     expect((await reload(oct25.id)).capacity).not.toBe(40);
+  });
+
+  // §329: one race, one age rule — the dates a rule makes inherit it, and a series edit carries it.
+  it("gives every date the source's minimum age, and carries a new one to the dates the save reaches", async () => {
+    const { source, dates } = await seedSeries({ minAge: 16 });
+    const [oct18, oct25, nov1, nov8] = dates;
+    for (const date of dates) expect(date.minAge).toBe(16);
+
+    // A save that changes something else leaves the number alone on every date.
+    expect((await save(await reload(source.id), "all", { fields: { capacity: "40" } })).appliedTo).toBe(4);
+    for (const date of dates) expect((await reload(date.id)).minAge).toBe(16);
+
+    // Eighteen from 1 November on; the dates before keep sixteen.
+    expect((await save(await reload(nov1.id), "following", { fields: { minAge: "18" } })).appliedTo).toBe(1);
+    expect((await reload(nov1.id)).minAge).toBe(18);
+    expect((await reload(nov8.id)).minAge).toBe(18);
+    for (const earlier of [source, oct18, oct25]) expect((await reload(earlier.id)).minAge).toBe(16);
+
+    // No minimum, for the whole series.
+    expect((await save(await reload(source.id), "all", { fields: { minAge: "0" } })).appliedTo).toBe(4);
+    for (const date of [source, ...dates]) expect((await reload(date.id)).minAge).toBe(0);
   });
 
   it("is ignored on an event that is not part of a series", async () => {

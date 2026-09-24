@@ -145,6 +145,33 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
     eventId = await seedEvent();
   });
 
+  /*
+    The column's default since migration 0060 (§323): the list is a disclosure, so a row written
+    without the person's answer — a script, a seed, a door added later — is off it, not on it.
+    Every insert in the code states the answer; this is the direction the gap fails in.
+  */
+  it("keeps a registration written without an answer off the list", async () => {
+    const [registration] = await db
+      .insert(registrations)
+      .values({
+        eventId,
+        participantId,
+        status: "CONFIRMED",
+        locale: "ro",
+        registeredName: "Ana Popescu",
+        displayName: "Ana P.",
+        privacyNoticeVersion: 1,
+        privacyAcknowledgedAt: NOW,
+        resultsNameConsent: false,
+        resultsConsentVersion: 1,
+        confirmedAt: NOW,
+        checkinCode: newCheckinCode(),
+      })
+      .returning();
+    expect(registration.listOptOut).toBe(true);
+    expect(await listPublicStartList(db, eventId)).toEqual([]);
+  });
+
   it("takes a confirmed runner off the list and puts them back; the trail names the change, never the person", async () => {
     const id = await seedRegistration();
     expect((await listPublicStartList(db, eventId)).map((entry) => entry.displayName)).toEqual(["Ana P."]);

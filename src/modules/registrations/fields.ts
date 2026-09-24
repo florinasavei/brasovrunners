@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { ageOn, isMinorOn, MIN_PARTICIPANT_AGE } from "./domain/age";
+import { ageOn, isMinorOn } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
  * The registration form's editable fields (BR-REQ-031-01 criterion 1): full name, email,
- * locale, the privacy-notice acknowledgment, and the public-results consent. No password
- * field and no login link exist because none is in this schema to render.
+ * locale and the privacy-notice acknowledgment. The public-results consent is no longer asked
+ * (§322) and defaults to false. No password field and no login link exist because none is in
+ * this schema to render.
  *
  * `honeypot` and `renderedAt` are the spam defenses of AGENTS.md §19.4 / WEEKEND.md — a hidden
  * field a human never fills in, and a submission-timing check. Both are validated in
@@ -51,9 +52,16 @@ const submissionFields = z.object({
     }, "birthDate is outside the accepted range"),
 
   sex: z.enum(["FEMALE", "MALE", "UNSPECIFIED"]),
-  /** ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists. */
-  nationality: z.string().trim().length(2).toUpperCase(),
-  city: z.string().trim().min(1).max(120),
+  /**
+   * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
+   *
+   * Optional since §322, with the city beside it. Nothing the club does with a registration
+   * needs either — no place, no category, no message — and the notice had to say why they were
+   * compulsory and could not: "ne arată de unde vin participanții" is a reason to *ask*, not to
+   * insist. The form offers them in the optional column, and blank is absent.
+   */
+  nationality: z.string().trim().length(2).toUpperCase().optional(),
+  city: z.string().trim().min(1).max(120).optional(),
 
   /**
    * The organizer's way of reaching somebody on race day, and somebody else if that fails.
@@ -153,7 +161,16 @@ const submissionFields = z.object({
   emailConfirm: z.email().max(320).optional(),
   locale: z.enum(["ro", "en"]),
   privacyAcknowledged: z.literal(true),
-  resultsNameConsent: z.boolean(),
+  /**
+   * "My name may appear in the public results" (BR-REQ-072-01) — no longer asked (§322).
+   *
+   * There are no results on this site and none are planned before M2, so the form was asking a
+   * person to consent to a publication that does not exist, and a consent to nothing is not a
+   * consent anybody can be informed about. The column stays (a later contract step drops it) and
+   * every new row carries `false`; when results exist, the question comes back with a text that
+   * can say what it is for.
+   */
+  resultsNameConsent: z.boolean().default(false),
   /**
    * "Do not put my name on the public start list" (BR-REQ-039-01).
    *
@@ -230,13 +247,15 @@ const guardianRule = (
 export const UNDER_MINIMUM_AGE = "tooYoung";
 
 /**
- * Fourteen on the day of the event (§321, `MIN_PARTICIPANT_AGE`).
+ * The event's minimum age on the day of the event (§321; per event since §329, `events.min_age`).
  *
- * A factory, because the rule needs the one thing this schema does not have: the event. The
- * service knows it (`submitRegistration`) and adds this to whichever schema the caller gets, so
- * the public form, a staff entry, the desk's walk-in, a restart and a TEST row all meet it
- * through the one door every registration already passes (`AGENTS.md` §12.6: `kind` decides
- * nothing here either).
+ * A factory, because the rule needs the one thing this schema does not have: the event — its day
+ * and its number. The service knows both (`submitRegistration`) and adds this to whichever schema
+ * the caller gets, so the public form, a staff entry, the desk's walk-in, a restart and a TEST row
+ * all meet it through the one door every registration already passes (`AGENTS.md` §12.6: `kind`
+ * decides nothing here either). The number is a parameter with no default on purpose: the club's
+ * fourteen (`MIN_PARTICIPANT_AGE`) is what an event starts with, never what this rule falls back
+ * to behind an event that says otherwise. Zero is no minimum, and then there is nothing to count.
  *
  * *Only when a birth date is given.* The public schema always has one; the staff schema may not
  * (BR-REQ-031-04 criterion 5), and then there is nothing to count — the organizer saw or heard
@@ -245,17 +264,17 @@ export const UNDER_MINIMUM_AGE = "tooYoung";
  * (`ageOn` answers null), so the summary never gives a second, untrue reason.
  *
  * Counted against the day of the event, where the guardian rule above counts against today:
- * fourteen is about the day somebody runs; eighteen is about who fills the form in.
+ * the minimum is about the day somebody runs; eighteen is about who fills the form in.
  */
-export function minimumAgeRule(eventDay: string) {
+export function minimumAgeRule(eventDay: string, minAge: number) {
   return (value: { birthDate?: string }, ctx: z.RefinementCtx): void => {
-    if (!value.birthDate) return;
+    if (minAge <= 0 || !value.birthDate) return;
     const age = ageOn(value.birthDate, eventDay);
-    if (age === null || age >= MIN_PARTICIPANT_AGE) return;
+    if (age === null || age >= minAge) return;
     ctx.addIssue({
       code: "custom",
       path: ["birthDate"],
-      message: `a participant must be at least ${MIN_PARTICIPANT_AGE} on the day of the event (${eventDay})`,
+      message: `a participant must be at least ${minAge} on the day of the event (${eventDay})`,
     });
     ctx.addIssue({ code: "custom", path: [UNDER_MINIMUM_AGE], message: "under the minimum age" });
   };
@@ -370,8 +389,6 @@ export const staffRegistrationSubmissionSchema = submissionFields
   .partial({
     birthDate: true,
     sex: true,
-    nationality: true,
-    city: true,
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,
@@ -398,8 +415,19 @@ export const ID_DOCUMENT = /^[A-Za-z0-9][A-Za-z0-9 .\-\/]{2,28}[A-Za-z0-9]$/;
 export const declarationSigningSchema = z.object({
   accepted: z.literal(true),
   typedName: z.string().trim().min(1).max(200),
-  /** Required when the declaration's text names it (`mergeFieldsIn`); the service decides. */
+  /**
+   * The declarant's document — the adult's, or the parent's for a minor. Required when the
+   * declaration's text names an identity document (`asksForIdDocument`); the service decides.
+   */
   idDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
+  /**
+   * A minor's own signature and document, beside the parent's (§330). Optional here because an
+   * adult posts neither; for a minor the service requires the name always, and the document
+   * whenever it requires the parent's. A blank name is left to the service, which refuses it as
+   * the signature that does not match — the same refusal, on the same box, as a wrong one.
+   */
+  minorTypedName: z.string().trim().max(200).optional(),
+  minorIdDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
   /**
    * The version the page rendered, by id and content hash (BR-REQ-033-02 criterion 6). The
    * service compares both with the version that is current at signing time and refuses a

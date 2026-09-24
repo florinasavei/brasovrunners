@@ -33,6 +33,20 @@ export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Pr
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 
 /**
+ * A refusal's sentence with the action's words in its placeholders (`FormOutcome.errorValues`).
+ *
+ * The catalogue reaches this island raw (`refusalMessages` reads `t.raw("errors")`: a function
+ * cannot cross from a Server Component), so `{age}` is still `{age}` here — the same template
+ * the bulk bar and the photo uploader fill themselves. A placeholder the action did not fill is
+ * left as it is rather than blanked, so a missing value is visible instead of a sentence with a
+ * hole in it.
+ */
+function sentenceFor(template: string, values: Readonly<Record<string, string>> | undefined): string {
+  if (!values) return template;
+  return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => values[name] ?? placeholder);
+}
+
+/**
  * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §315).
  *
  * The one client island a form needs for this, and it holds one thing: the outcome the Server
@@ -115,7 +129,7 @@ export default function ActionForm({
             sx={{ mb: 3, scrollMarginTop: 16 }}
             data-testid="form-refusal"
           >
-            <AlertTitle>{messages.errors[state.error] ?? state.error}</AlertTitle>
+            <AlertTitle>{sentenceFor(messages.errors[state.error] ?? state.error, state.errorValues)}</AlertTitle>
             {state.fields.length > 0 && (
               <Box component="p" sx={{ m: 0 }}>
                 {messages.fieldsIntro}

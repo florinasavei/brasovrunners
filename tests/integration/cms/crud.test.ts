@@ -212,6 +212,49 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     });
   });
 
+  /*
+    §329 — the owner: "actually this min age must be set at event level!". A box in the
+    registration panel, fourteen unless the organizer says otherwise, zero for no minimum; the
+    database's CHECK and the schema say the same bounds.
+  */
+  describe("the minimum age (§329)", () => {
+    const withMinAge = (minAge: string | undefined, slug: string) => ({
+      ...NEW_EVENT,
+      ...(minAge === undefined ? {} : { minAge }),
+      translations: {
+        ro: { ...NEW_EVENT.translations.ro, slug: `${slug}-ro` },
+        en: { ...NEW_EVENT.translations.en, slug: `${slug}-en` },
+      },
+    });
+
+    it("stores the organizer's number, zero for no minimum, and fourteen when the box is empty or absent", async () => {
+      expect((await createEvent(db, { actor: admin, fields: withMinAge("16", "saisprezece") })).minAge).toBe(16);
+      expect((await createEvent(db, { actor: admin, fields: withMinAge("0", "fara-minim") })).minAge).toBe(0);
+      expect((await createEvent(db, { actor: admin, fields: withMinAge("", "gol") })).minAge).toBe(14);
+      expect((await createEvent(db, { actor: admin, fields: withMinAge(undefined, "absent") })).minAge).toBe(14);
+    });
+
+    it("refuses a number no person has, or a fraction, naming the box, and writes nothing", async () => {
+      for (const minAge of ["100", "-1", "14.5", "paisprezece"]) {
+        let fields: readonly string[] = [];
+        try {
+          await createEvent(db, { actor: admin, fields: withMinAge(minAge, `refuzat-${fields.length}`) });
+        } catch (error) {
+          if (!isDomainError(error)) throw error;
+          expect(error.code, minAge).toBe("VALIDATION_ERROR");
+          fields = error.fields;
+        }
+        expect(fields, minAge).toContain("minAge");
+      }
+      expect(await db.select().from(events)).toHaveLength(0);
+    });
+
+    it("travels with a copy, like the capacity: who may enter is the race's, not one edition's", async () => {
+      const source = await createEvent(db, { actor: admin, fields: withMinAge("18", "optsprezece") });
+      expect((await duplicateEvent(db, { actor: admin, eventId: source.id })).minAge).toBe(18);
+    });
+  });
+
   describe("duplicating", () => {
     it("copies the configuration but never the publication, the date or the flag", async () => {
       const source = await createEvent(db, {
