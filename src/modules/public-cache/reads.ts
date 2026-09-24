@@ -235,9 +235,15 @@ const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/gall
  * secret: it must never become a cache key, which is stored and logged where a token has no
  * business being (`AGENTS.md` §12.8). The address is also the visitor's own input, so one of an
  * unreasonable length is answered live rather than filling the cache with whatever was typed.
+ *
+ * **Keyed by the path alone.** The query string changes nothing about where the switch lands —
+ * `parseLocalizedPath` drops it and the answer never carries it — so `?interest=ok`, `?lista=2`
+ * or a campaign's `?utm_…` on the same event page is one entry, not one per variant a visitor or
+ * a crawler happens to send.
  */
 export async function cachedLocaleSwitch(from: string, target: Locale): Promise<string> {
-  const route = parseLocalizedPath(from)?.route;
-  if (!route || !SLUG_ROUTES.has(route) || from.length > 300) return resolveLocaleSwitch(getDb(), from, target);
-  return publicRead(["locale-switch", target, from], ["events", "pages", "gallery"], () => resolveLocaleSwitch(getDb(), from, target));
+  const path = from.split("?")[0];
+  const route = parseLocalizedPath(path)?.route;
+  if (!route || !SLUG_ROUTES.has(route) || path.length > 300) return resolveLocaleSwitch(getDb(), from, target);
+  return publicRead(["locale-switch", target, path], ["events", "pages", "gallery"], () => resolveLocaleSwitch(getDb(), path, target));
 }

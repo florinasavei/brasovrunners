@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { saveEventFields, transitionEvent } from "@/modules/content/events/service";
+import { saveEventAndTranslations, saveEventFields, transitionEvent } from "@/modules/content/events/service";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { approveVersion, createDraftVersion } from "@/modules/legal-documents/service";
@@ -123,6 +123,34 @@ describe("§NNN writes expire the public cache", () => {
       });
 
       expect(revalidateTag).toHaveBeenCalledWith(...expired("events"));
+    });
+
+    it("the whole save expires them — the place to be announced, the links, the minimum age, a notice to the participants (§328, §332, §329, §331)", async () => {
+      const event = await seedDraft();
+
+      await saveEventAndTranslations(db, {
+        actor: admin,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: {
+          ...EVENT_FIELDS,
+          locationToBeAnnounced: true,
+          minAge: "16",
+          links: [{ kind: "GPX", url: ["https:/", "drive.example.test", "gpx"].join("/"), labelRo: "", labelEn: "" }],
+        },
+        translations: [],
+        // Telling the participants writes the outbox and the audit trail, and no public row: the
+        // save's own expiry is the only one, and it is the events'.
+        notice: { notify: true, note: "Locul se anunță săptămâna viitoare." },
+        now: NOW,
+      });
+
+      const [saved] = await db.select().from(events).where(eq(events.id, event.id));
+      expect(saved.locationToBeAnnounced).toBe(true);
+      expect(saved.minAge).toBe(16);
+      expect(Array.isArray(saved.links) && saved.links.length).toBe(1);
+      expect(revalidateTag).toHaveBeenCalledWith(...expired("events"));
+      expect(revalidateTag).not.toHaveBeenCalledWith(...expired("places"));
     });
 
     it("a save that is refused expires nothing: the call comes after the transaction, not before it", async () => {
