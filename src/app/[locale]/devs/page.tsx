@@ -19,6 +19,9 @@ import {
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { readJobCadence } from "@/modules/jobs/cadence";
+import { describeJob } from "@/modules/jobs/overview";
+import { type JobName, NEXT_DUE_CAP_MINUTES } from "@/modules/jobs/schedule";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
@@ -158,6 +161,17 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) =>
       checkJobHealth(db, jobName, now),
+    ),
+  );
+  /*
+    What the pings will do (§NNN): the cached "nothing due until" or the minimum interval, and the
+    last ping and whether it woke the database — from the cache, beside the last real run from
+    `job_runs` above.
+  */
+  const jobCadence = await readJobCadence(db);
+  const jobSchedules = await Promise.all(
+    jobs.map((job) =>
+      describeJob(db, { job: job.jobName as JobName, now, cadenceMinutes: jobCadence.minutes, lastFinishedAt: job.lastFinishedAt }),
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
@@ -749,17 +763,31 @@ export default async function DevsPage({ params, searchParams }: Props) {
             <Typography variant="body2">
               {t("schema")}: <strong>{schema.status}</strong>
             </Typography>
-            {jobs.map((job) => (
-              <Typography variant="body2" key={job.jobName}>
-                {job.jobName}: <strong>{t(`jobStatus.${job.status}`)}</strong>
-                {job.lastFinishedAt
-                  ? ` · ${format.dateTime(new Date(job.lastFinishedAt), {
-                      dateStyle: "medium",
-                      timeStyle: "short", hourCycle: "h23",
-                    })}`
-                  : ""}
-              </Typography>
-            ))}
+            {jobs.map((job, index) => {
+              const schedule = jobSchedules[index];
+              const at = (value: Date) => format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" });
+              return (
+                <Typography variant="body2" key={job.jobName} data-testid={`job-schedule-${job.jobName}`}>
+                  {job.jobName}: <strong>{t(`jobStatus.${job.status}`)}</strong>
+                  {job.lastFinishedAt ? ` · ${at(new Date(job.lastFinishedAt))}` : ""}
+                  {" · "}
+                  {schedule.nextCheckAt
+                    ? t(schedule.waitingFor === "cadence" ? "jobSchedule.floor" : "jobSchedule.quiet", {
+                        when: at(schedule.nextCheckAt),
+                        source: t(schedule.source === "cache" ? "jobSchedule.fromCache" : "jobSchedule.fromDatabase"),
+                      })
+                    : t("jobSchedule.nextPing")}
+                  {schedule.lastPingAt
+                    ? ` · ${t(schedule.lastPingRan ? "jobSchedule.pingRan" : "jobSchedule.pingSkipped", { when: at(schedule.lastPingAt) })}`
+                    : ""}
+                </Typography>
+              );
+            })}
+            <Typography variant="body2" color="text.secondary">
+              {jobCadence.minutes === 0
+                ? t("jobSchedule.cadenceOnDemand", { cap: NEXT_DUE_CAP_MINUTES })
+                : t("jobSchedule.cadenceEvery", { minutes: jobCadence.minutes })}
+            </Typography>
             {/* The orphan sweep's own figure (`DECISIONS.md` §73): what it left. "Sweepable" is
                 what the next run takes, and after a run it reads zero. */}
             <Typography variant="body2" color={pictures.sweepable > 0 ? "warning.main" : "text.primary"}>

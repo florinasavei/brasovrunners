@@ -1608,6 +1608,38 @@
         "day": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
         "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}, fără limită zilnică). Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
         "none": "Planul {plan} nu are o limită de mesaje. Astăzi au plecat {sent}."
+      },
+      "jobCadence": {
+        "title": "Cât de des verifică platforma",
+        "intro": "Platforma are două lucrări programate: mentenanța înscrierilor (rezervări care expiră, oferte de pe lista de așteptare, reamintiri, numere de concurs) și coada de emailuri. Un serviciu extern le cheamă la 15 minute ziua și la o oră noaptea. Când nu au nimic de făcut, răspund din memoria Vercel fără să trezească baza de date — iar Neon facturează fiecare trezire cu cel puțin 5 minute de calcul. Aici alegi cât de des au voie, cel mult, să se uite în bază.",
+        "inForce": {
+          "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum cel puțin o dată la {cap} min.",
+          "every": "Setarea în vigoare: cel mult o dată la {minutes} min, pentru fiecare lucrare."
+        },
+        "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
+        "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp — fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată — iar emailurile pleacă imediat după cererea care le-a pus în coadă. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
+        "job": {
+          "maintenance": "Mentenanța înscrierilor",
+          "outbox": "Coada de emailuri"
+        },
+        "lastRun": "ultima rulare reală: {when}",
+        "nextByWork": "următoarea, cel târziu: {when}",
+        "nextByCadence": "următoarea, cel târziu: {when} (intervalul tău)",
+        "nextPing": "următoarea: la următorul ping",
+        "lastPingRan": "ultimul ping: {when}, a rulat",
+        "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
+        "updatedAt": "Setat la {when}.",
+        "readOnly": "Intervalul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
+        "field": "Cel mult o dată la",
+        "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
+        "option": {
+          "onDemand": "La nevoie (implicit) — când e ceva de făcut, cel puțin o dată la {cap} min",
+          "every": "{minutes} min",
+          "everyLong": "{minutes} min — și verificarea de siguranță de {cap} min trece tot la {minutes} min"
+        },
+        "save": "Salvează intervalul",
+        "saving": "Se salvează…",
+        "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el."
       }
     },
     "richText": {
@@ -2956,7 +2988,18 @@
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
     },
     "sentThisMonth": "Trimise luna aceasta",
-    "emailPlanLabel": "Plan Mailgun"
+    "emailPlanLabel": "Plan Mailgun",
+    "jobSchedule": {
+      "quiet": "pingurile așteaptă până la {when} (nimic de făcut; {source})",
+      "floor": "pingurile așteaptă până la {when} (intervalul minim; {source})",
+      "fromCache": "din cache",
+      "fromDatabase": "recalculat din bază",
+      "nextPing": "următorul ping rulează",
+      "pingRan": "ultimul ping {when}: a rulat",
+      "pingSkipped": "ultimul ping {when}: sărit",
+      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală la {cap} min (/admin/tasks → Costuri).",
+      "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (/admin/tasks → Costuri)."
+    }
   },
   "Error": {
     "title": "Ceva nu a funcționat",

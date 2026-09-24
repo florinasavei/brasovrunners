@@ -45,6 +45,14 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   interestsNotified: number;
   /** Race numbers settled by a registration window closing in this run (§214). */
   bibsSettled: number;
+  /**
+   * The failures the very next run could repair — an event's queue work, a reminder, a
+   * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
+   * series). Above zero, the run promises the pings no quiet, so the next ping tries again rather
+   * than the next hour (§NNN). Retention is here since §322 made it loud: `failing` is two failed
+   * runs in a row, and a retry an hour away would make that alarm an hour late.
+   */
+  retryableErrorCount: number;
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
@@ -52,6 +60,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
   let errorCount = 0;
+  let retryableErrorCount = 0;
   /**
    * Everyone numbered by a close in this run, collected across the per-event transactions and
    * written to afterwards (§214).
@@ -125,6 +134,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
       // One event's failure must not stop the run from reaching the rest — each event's work
       // is independent, and the next run retries whatever this one could not finish.
       errorCount += 1;
+      retryableErrorCount += 1;
     }
   }
 
@@ -173,6 +183,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     remindersQueued = await queueEventReminders(db, now);
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
   // The participation confirmations (§104), the same way: once per registration when the
   // event's window opens; a failure is a late reminder, not a failed run.
@@ -181,6 +192,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     confirmationsQueued = await queueParticipationConfirmations(db, now);
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
   // "Registration is open" (§146): to every address left on the event's page while the window
   // was ahead, once, the row gone with the message; the rows of an event that will never open
@@ -190,6 +202,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     interestsNotified = (await queueRegistrationOpenedMessages(db, now)).queued;
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
 
   /**
@@ -206,6 +219,10 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * `last_error` as `retention:<steps>`, which is what `jobs/health.ts` reads: two runs in a row
    * with it, and `/api/health` says `failing` and answers 503, which is what the monitor emails
    * on.
+   *
+   * Every failed step is also *retryable* (§NNN): the run then promises the pings no quiet, so
+   * the second run that confirms or clears the failure is the next ping, not the next hour, and
+   * the alarm is as prompt as §322 meant it to be.
    */
   let prunedRows = 0;
   let lastError: string | null = null;
@@ -216,11 +233,13 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
       console.error("[retention] sweep step failed", failure.step, failureKind(failure.error));
     }
     errorCount += pruned.failures.length;
+    retryableErrorCount += pruned.failures.length;
     lastError = retentionErrorSummary(pruned.failures);
   } catch (error) {
     // Nothing inside throws past its own step; this is the sweep failing to start at all.
     console.error("[retention] sweep step failed", "sweep", failureKind(error));
     errorCount += 1;
+    retryableErrorCount += 1;
     lastError = retentionErrorSummary([{ step: "identity-and-health", error }]);
   }
 
@@ -264,5 +283,15 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued, interestsNotified, bibsSettled };
+  return {
+    eventsProcessed: eventIds.length,
+    errorCount,
+    prunedRows,
+    orphanPicturesDeleted,
+    remindersQueued,
+    confirmationsQueued,
+    interestsNotified,
+    bibsSettled,
+    retryableErrorCount,
+  };
 }

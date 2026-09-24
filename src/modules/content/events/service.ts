@@ -24,6 +24,7 @@ import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modu
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -723,6 +724,9 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   const moved = await updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
   // Published, unpublished, archived: the listing, the page, the calendar and the feeds change.
   revalidatePublicContent("events");
+  // And the announcements of §146 wait on publication, so the maintenance job looks again at its
+  // next ping (§NNN).
+  wakeJobs("registration-maintenance");
   return moved;
 }
 
@@ -1024,6 +1028,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   // Every column here is on a public page, the capacity included (the free places are expired
   // with the events: `public-cache/reads.ts` files them under both).
   revalidatePublicContent("events");
+  // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§NNN).
+  wakeJobs("registration-maintenance");
   return saved;
 }
 
@@ -1488,6 +1494,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
   // as scheduled, so the cached rows go the moment it commits (§28, §NNN).
   revalidatePublicContent("events");
+  /*
+    The date, the close, the participation window, the status, the capacity: any of them moves
+    what the maintenance job has to do and when (§NNN). Only when the event row itself was saved
+    — a translation's words move nothing the job acts on.
+  */
+  if (parsedEventFields) wakeJobs("registration-maintenance");
   return outcome;
 }
 
@@ -1871,6 +1883,9 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   // Even with every date a draft, the source's rule is public: a date of a series is not history,
   // so it leaves the listing's past events (§275).
   revalidatePublicContent("events");
+  // A new standing rule is the maintenance job's to keep extending (§122); it looks at its next
+  // ping rather than at the end of the quiet it last promised (§NNN).
+  wakeJobs("registration-maintenance");
   return { created, published: publish };
 }
 

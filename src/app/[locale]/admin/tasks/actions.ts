@@ -6,6 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
+import { updateJobCadence } from "@/modules/jobs/cadence";
 import { updateBotCheck } from "@/modules/registrations/bot-check";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -75,4 +76,27 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
   }
   revalidatePath(path);
   redirect(`${path}?panel=costs&saved=neonPlan#admin-alert`);
+}
+
+/**
+ * "Cât de des verifică platforma" (§NNN), from the costs panel beside the Neon plan: the minimum
+ * minutes between two real runs of each scheduled job. The same gate and the same shape as the
+ * Neon plan — Administrator at the door, the service asserting the role again, writing the audit
+ * row and forgetting every cached schedule — and a refusal handed back as the form's state (§315).
+ *
+ * No `revalidatePath` here, unlike its neighbours, on purpose: the service's tag invalidation
+ * already refreshes the page this action answers, and a path revalidation would make every
+ * schedule the page reads from the cache look missing on it until the next real run.
+ */
+export async function updateJobCadenceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/tasks" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await updateJobCadence(getDb(), actor, { minutes: form.get("minutes") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  redirect(`${path}?panel=costs&saved=jobCadence#admin-alert`);
 }

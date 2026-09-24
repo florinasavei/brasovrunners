@@ -129,6 +129,8 @@ export type AuditAction =
   | "email_plan.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
+  /** The minimum minutes between two real runs of each scheduled job, from and to (§NNN). */
+  | "job_cadence.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */

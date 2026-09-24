@@ -1608,6 +1608,38 @@
         "day": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
         "month": "This month {sent} of {allowance} messages went out (plan {plan}, no daily limit). Enough for about {count} more complete registrations — a floor, because somebody who lands on the waiting list costs more messages.",
         "none": "Plan {plan} has no message limit. {sent} went out today."
+      },
+      "jobCadence": {
+        "title": "How often the platform checks",
+        "intro": "The platform has two scheduled jobs: registration maintenance (holds that lapse, waiting-list offers, reminders, race numbers) and the email outbox. An external service calls them every 15 minutes by day and hourly at night. When they have nothing to do they answer from Vercel's cache without waking the database — and Neon bills every wake-up as at least 5 minutes of compute. Here you choose how often, at most, they may look at the database.",
+        "inForce": {
+          "onDemand": "In force: on demand (default) — only when something is due, and in any case at least once every {cap} min.",
+          "every": "In force: at most once every {minutes} min, for each job."
+        },
+        "cost": "What a longer interval costs: a waiting-list offer, a reminder, an announcement or a race number may go out up to that many minutes late.",
+        "safe": "What does not change: a held place still lapses on time — every reading of the places counts the deadline at that moment, whether or not the scheduled job has run — and emails still go out right after the request that queued them. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
+        "job": {
+          "maintenance": "Registration maintenance",
+          "outbox": "Email outbox"
+        },
+        "lastRun": "last real run: {when}",
+        "nextByWork": "next at the latest: {when}",
+        "nextByCadence": "next at the latest: {when} (your interval)",
+        "nextPing": "next: at the next ping",
+        "lastPingRan": "last ping: {when}, ran",
+        "lastPingSkipped": "last ping: {when}, skipped without the database",
+        "updatedAt": "Set on {when}.",
+        "readOnly": "The Administrator changes the interval. The figures above are current for you too.",
+        "field": "At most once every",
+        "fieldHelp": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do. \"On demand\" means only the \"when something is due\" rule and the {cap}-minute safety check.",
+        "option": {
+          "onDemand": "On demand (default) — when something is due, at least once every {cap} min",
+          "every": "{minutes} min",
+          "everyLong": "{minutes} min — the {cap}-minute safety check also moves to every {minutes} min"
+        },
+        "save": "Save the interval",
+        "saving": "Saving…",
+        "saved": "The interval was saved. Each job looks at the database again at its next ping and plans by it."
       }
     },
     "richText": {
@@ -2956,7 +2988,18 @@
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     },
     "sentThisMonth": "Sent this month",
-    "emailPlanLabel": "Mailgun plan"
+    "emailPlanLabel": "Mailgun plan",
+    "jobSchedule": {
+      "quiet": "pings wait until {when} (nothing due; {source})",
+      "floor": "pings wait until {when} (minimum interval; {source})",
+      "fromCache": "from the cache",
+      "fromDatabase": "recomputed from the database",
+      "nextPing": "the next ping runs",
+      "pingRan": "last ping {when}: ran",
+      "pingSkipped": "last ping {when}: skipped",
+      "cadenceOnDemand": "Minimum interval: on demand — at least one real run every {cap} min (/admin/tasks → Costs).",
+      "cadenceEvery": "Minimum interval: {minutes} min between two real runs (/admin/tasks → Costs)."
+    }
   },
   "Error": {
     "title": "Something went wrong",
