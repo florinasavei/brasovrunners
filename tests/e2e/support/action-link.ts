@@ -60,6 +60,17 @@ export async function registrationStatus(id: string): Promise<string> {
   });
 }
 
+/** The two telephone numbers as stored — E.164, whatever the boxes showed (§84). */
+export async function registrationPhones(id: string): Promise<{ phone: string | null; emergencyContactPhone: string | null }> {
+  return withDatabase(async (client) => {
+    const { rows } = await client.query<{ phone: string | null; emergencyContactPhone: string | null }>(
+      `SELECT phone, emergency_contact_phone AS "emergencyContactPhone" FROM registrations WHERE id = $1`,
+      [id],
+    );
+    return rows[0] ?? { phone: null, emergencyContactPhone: null };
+  });
+}
+
 /**
  * The latest declaration acceptance of a registration, as the signing recorded it: both typed
  * names and both documents (§330 — a minor's declaration is signed by the minor and a parent).

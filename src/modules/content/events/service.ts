@@ -23,6 +23,8 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -592,7 +594,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
   const record = await findTranslationWithEventById(db, input.translationId);
   if (!record) throw new DomainError("NOT_FOUND", "no such event translation");
 
-  return applyTranslationSave(db, {
+  const saved = await applyTranslationSave(db, {
     actor: input.actor,
     event: record.event,
     current: record.translation,
@@ -602,6 +604,9 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     eventType: record.event.type,
     now,
   });
+  // The public pages read events from a cache (§333); every write below says so the same way.
+  revalidatePublicContent("events");
+  return saved;
 }
 
 // --- Publication ----------------------------------------------------------------------------
@@ -716,7 +721,13 @@ export async function transitionEvent<T extends Record<string, unknown>>(
     if (current.publishedAt === null) changes.publishedAt = now;
   }
 
-  return updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
+  const moved = await updateEventWithVersionGuard(db, input.eventId, input.expectedVersion, changes, now);
+  // Published, unpublished, archived: the listing, the page, the calendar and the feeds change.
+  revalidatePublicContent("events");
+  // And the announcements of §146 wait on publication, so the maintenance job looks again at its
+  // next ping (§334).
+  wakeJobs("registration-maintenance");
+  return moved;
 }
 
 // --- Telling the participants (§331) --------------------------------------------------------
@@ -980,7 +991,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
    * the event row's lock — the serialization point every allocation takes — so a confirmation
    * landing between the count and the write waits rather than slipping past it.
    */
-  return db.transaction(async (tx) => {
+  const saved = await db.transaction(async (tx) => {
     if (fields.capacity !== null) {
       await lockEventForCapacity(tx, input.eventId);
       const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
@@ -1014,6 +1025,12 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     }
     return saved;
   });
+  // Every column here is on a public page, the capacity included (the free places are expired
+  // with the events: `public-cache/reads.ts` files them under both).
+  revalidatePublicContent("events");
+  // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§334).
+  wakeJobs("registration-maintenance");
+  return saved;
 }
 
 export type SaveEventAndTranslationsInput = {
@@ -1364,7 +1381,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
 
-  return db.transaction(async (tx) => {
+  const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
     if (parsedEventFields && times) {
@@ -1474,6 +1491,16 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       : undefined;
     return notice ? { appliedTo, offered, placeAnnounced, notice } : { appliedTo, offered, placeAnnounced };
   });
+  // The one save of the whole event (§36), cancelling included: a cancelled event must never read
+  // as scheduled, so the cached rows go the moment it commits (§28, §333).
+  revalidatePublicContent("events");
+  /*
+    The date, the close, the participation window, the status, the capacity: any of them moves
+    what the maintenance job has to do and when (§334). Only when the event row itself was saved
+    — a translation's words move nothing the job acts on.
+  */
+  if (parsedEventFields) wakeJobs("registration-maintenance");
+  return outcome;
 }
 
 export type CreateEventInput = {
@@ -1503,7 +1530,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   assertCoherentRegistrationBlock(parsed);
   const times = resolveTimes(parsed);
 
-  return db.transaction(async (tx) => {
+  const created = await db.transaction(async (tx) => {
     if (parsed.featured) await clearFeaturedExcept(tx, null, now);
 
     const [event] = await tx
@@ -1533,6 +1560,10 @@ export async function createEvent<T extends Record<string, unknown>>(
 
     return event;
   });
+  // A draft shows nowhere — but a featured one has just taken the flag from the event the
+  // listing leads with, and that one is public.
+  if (parsed.featured) revalidatePublicContent("events");
+  return created;
 }
 
 export type CreateAndPublishResult = {
@@ -1849,6 +1880,12 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
   const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now);
+  // Even with every date a draft, the source's rule is public: a date of a series is not history,
+  // so it leaves the listing's past events (§275).
+  revalidatePublicContent("events");
+  // A new standing rule is the maintenance job's to keep extending (§122); it looks at its next
+  // ping rather than at the end of the quiet it last promised (§334).
+  wakeJobs("registration-maintenance");
   return { created, published: publish };
 }
 
@@ -1945,6 +1982,9 @@ async function materializeSeries<T extends Record<string, unknown>>(
     }
   });
 
+  // New dates on the listing and the calendar — the maintenance job's one public write (§122).
+  // Drafts show nowhere, so a run that made only drafts expires nothing.
+  if (publish) revalidatePublicContent("events");
   return fresh.length;
 }
 
@@ -1982,6 +2022,8 @@ export async function stopRepeat<T extends Record<string, unknown>>(
     .update(events)
     .set({ repeatRule: null, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
     .where(eq(events.id, input.eventId));
+  // Without its rule the source is a one-off again, and a past one-off is history (§275).
+  revalidatePublicContent("events");
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */
@@ -2060,6 +2102,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // `event_translations` cascades from the event; nothing else references an event with no
   // registrations against it.
   await db.delete(events).where(eq(events.id, input.eventId));
+  revalidatePublicContent("events");
 }
 
 export type HardDeleteEventInput = {
@@ -2139,7 +2182,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
   const now = input.now ?? new Date();
 
-  return db.transaction(async (tx) => {
+  const erased = await db.transaction(async (tx) => {
     // First, inside the transaction: the row that says this happened. It outlives the event —
     // `audit_logs.entity_id` carries no foreign key — and it is written before anything is
     // destroyed so that there is no ordering in which the destruction has no record.
@@ -2169,4 +2212,8 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
     return { registrationsErased };
   });
+  // The event, and an album that pointed at it, leave the public pages (`reads.ts` files the album
+  // under both kinds, so this one call reaches it).
+  revalidatePublicContent("events");
+  return erased;
 }

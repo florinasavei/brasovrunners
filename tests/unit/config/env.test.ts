@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { envSchema } from "@/shared/config/env";
 
 /**
@@ -162,5 +162,43 @@ describe("EMAIL_ALLOWLIST accepts the star", () => {
     expect(captured.success).toBe(false);
     const rubbish = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "not-an-address" });
     expect(rubbish.success).toBe(false);
+  });
+});
+
+/**
+ * §335 (Neon limits) — `E2E_DISABLE_NEON` keeps the end-to-end suite's server off the real Neon
+ * API, and nothing else: on production it would switch off the 80% quota warning the owner kept
+ * production capped for (§327), so a production process ignores it and says so in the log.
+ */
+describe("E2E_DISABLE_NEON never reaches production", () => {
+  const NEON = { NEON_API_KEY: "napi_test", NEON_PROJECT_ID: "project-test" };
+
+  it("blanks both Neon variables where the suite runs", () => {
+    for (const APP_ENV of ["local", "test", "qa"] as const) {
+      const parsed = envSchema.parse({ APP_ENV, ...NEON, E2E_DISABLE_NEON: "true" });
+      expect(parsed.NEON_API_KEY, APP_ENV).toBeUndefined();
+      expect(parsed.NEON_PROJECT_ID, APP_ENV).toBeUndefined();
+      expect(parsed.E2E_DISABLE_NEON, APP_ENV).toBe(true);
+    }
+  });
+
+  it("is ignored on production, with a warning, and the key stays", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const parsed = envSchema.parse({ APP_ENV: "production", ...NEON, E2E_DISABLE_NEON: "true" });
+    expect(parsed.NEON_API_KEY).toBe("napi_test");
+    expect(parsed.NEON_PROJECT_ID).toBe("project-test");
+    expect(parsed.E2E_DISABLE_NEON).toBe(false);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain("E2E_DISABLE_NEON");
+    // The warning names the variable, never its neighbour's value.
+    expect(String(warn.mock.calls[0][0])).not.toContain("napi_test");
+    warn.mockRestore();
+  });
+
+  it("says nothing when it is not set", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    expect(envSchema.parse({ APP_ENV: "production", ...NEON }).NEON_API_KEY).toBe("napi_test");
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

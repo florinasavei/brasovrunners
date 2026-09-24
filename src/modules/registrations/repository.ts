@@ -12,6 +12,7 @@ import {
 } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied } from "./domain/capacity";
@@ -305,6 +306,14 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
     })
     .where(and(eq(registrations.id, params.id), inArray(registrations.status, fromStatuses)))
     .returning();
+  /*
+    The free places and the public start list are cached for the public pages (§333), and this is
+    the one statement every change of state goes through — the allocator's click and its job, the
+    desk, the staff screens, a participant's own link — so the cache is told here, once, rather
+    than in each of them. Next applies it when the request ends, which is after the caller's
+    transaction has committed; one that rolls back costs a refetch.
+  */
+  if (row) revalidatePublicContent("places");
   return row;
 }
 
@@ -443,6 +452,26 @@ export async function countOccupied<T extends Record<string, unknown>>(
   return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0 };
 }
 
+/**
+ * When each open waiting-list offer of one event lapses — the one thing the clock changes about
+ * `countOccupied` (`DECISIONS.md` §333).
+ *
+ * An offer occupies its place while `hold_expires_at > now` and not a moment after, so between
+ * two of these instants the free-place count cannot change without a write. The public cache
+ * keys the count by the stretch `now` is in (`public-cache/clock.ts`), which is what lets a
+ * cached count be the allocator's own answer for this instant rather than a recent one.
+ */
+export async function listOfferExpiries<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<Date[]> {
+  const rows = await db
+    .select({ holdExpiresAt: registrations.holdExpiresAt })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLIST_OFFERED")));
+  return rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : []));
+}
+
 export async function countEligibleWaitlisted<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -560,7 +589,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
 ): Promise<void> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free.
-  await db
+  const lapsedOffers = await db
     .update(registrations)
     // As above (§220): the place goes, so the number goes.
     .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", provisionalBibNumber: null, updatedAt: now })
@@ -570,14 +599,19 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
         eq(registrations.status, "WAITLIST_OFFERED"),
         lte(registrations.holdExpiresAt, now),
       ),
-    );
+    )
+    .returning({ id: registrations.id });
 
   const releasing = await lapsedDeclarationHoldsToRelease(db, event, now);
-  if (releasing.length === 0) return;
-  await db
-    .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
-    .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
+  if (releasing.length > 0) {
+    await db
+      .update(registrations)
+      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
+      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
+  }
+  // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
+  // cache itself (§333): the places these rows held are counted as free from now on.
+  if (lapsedOffers.length > 0 || releasing.length > 0) revalidatePublicContent("places");
 }
 
 /**
@@ -683,6 +717,8 @@ export async function closeWaitlistForStartedEvent<T extends Record<string, unkn
     .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", provisionalBibNumber: null, updatedAt: now })
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED")))
     .returning({ id: registrations.id });
+  // The waiting list is part of the public count (`computePublicAvailability`) — §333.
+  if (rows.length > 0) revalidatePublicContent("places");
   return rows.length;
 }
 

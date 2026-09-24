@@ -3,6 +3,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -81,5 +82,8 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
       now,
     });
   });
+  // Rows the drain was leaving to the pinger, or the pinger to the drain: the outbox job looks
+  // again at its next ping rather than at the end of the quiet it last promised (§334).
+  wakeJobs("email-outbox");
   return { ...next, updatedAt: now };
 }

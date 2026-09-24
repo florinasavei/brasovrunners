@@ -49,12 +49,18 @@ import {
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
-import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readNeonConsumption, readNeonLimits } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan } from "@/modules/diagnostics/domain/neon-plan";
+import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
+import { readJobCadence } from "@/modules/jobs/cadence";
+import { describeJob } from "@/modules/jobs/overview";
+import type { JobName } from "@/modules/jobs/schedule";
+import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
+import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
@@ -271,6 +277,15 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // A job that runs on time and fails its retention sweep (§322) is not a missing monitor (§324).
   const failingJobNames = jobs.filter((job) => job.status === "failing").map((job) => job.jobName);
 
+  // Read early, ahead of the task board: the derived `neonLimits` row (§335) needs this
+  // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
+  // (`readNeonLimits`, the two extra requests) stays gated — the task board's own row only
+  // needs the same project row `readNeonConsumption` already fetches.
+  const [neon, neonLimits] = await Promise.all([
+    readNeonConsumption(env),
+    panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
+  ]);
+
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
@@ -298,6 +313,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
       // the page does: is there a way out, and is there anybody at the other end.
       contactFormConfigured: contactFormReaches(env, contactRecipients),
+      // The same reading the Costuri panel shows, never a second request (§335): null when
+      // Neon could not be read at all, so "no quota" and "we could not check" both read `open`.
+      neonQuota: neon.ok ? { quotaCuHours: neon.consumption.quotaCuHours, usedCuHours: neon.consumption.cuHours } : null,
     }),
   );
 
@@ -332,7 +350,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   });
 
   const databaseBytes = await readDatabaseSizeBytes(db);
-  const neon = await readNeonConsumption(env);
   // The Neon plan (§280's follow-up, §326): what Neon reports for the account when it answered,
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
@@ -343,6 +360,29 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     consumption: neon.ok ? neon.consumption : null,
     now,
   });
+  /*
+    The owner's throttle, beside the plan it pays (§334): the minimum interval between two real
+    runs, and what each job did with it — read only for the panel that shows it, since the
+    overview asks the cache and, when the cache does not answer here, the database.
+  */
+  const [jobCadence, deliveryTiming] = await Promise.all([
+    readJobCadence(db),
+    // Whether the interval delays email too (§221): the panel's sentence about email follows it.
+    readDeliveryTiming(db),
+  ]);
+  const jobOverviews =
+    panel === "costs"
+      ? await Promise.all(
+          jobs.map((job) =>
+            describeJob(db, {
+              job: job.jobName as JobName,
+              now,
+              cadenceMinutes: jobCadence.minutes,
+              lastFinishedAt: job.lastFinishedAt,
+            }),
+          ),
+        )
+      : [];
   const facts = {
     databaseBytes,
     neonPlan: neonInForce.plan,
@@ -442,6 +482,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
+        {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
+        {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
+        {query.saved === "neonLimitsSame" && <Alert severity="info">{t("neonLimits.savedSame")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
@@ -617,6 +660,30 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           same reason the Mailgun panel carries it (§291).
         */}
         <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+
+        {/* How often the platform may wake the database for its scheduled work (§334) — the
+            throttle the owner asked for, beside the plan that bills each wake. */}
+        <JobCadencePanel
+          locale={locale}
+          cadence={jobCadence}
+          jobs={jobOverviews}
+          mayEdit={canManageRegistrations(actor.role)}
+          emailTiming={deliveryTiming.timing}
+        />
+
+        {/*
+          The database's brakes (§335), beside the plan they are priced against: the compute's size
+          ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
+          door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
+        */}
+        {neonLimits && (
+          <NeonLimitsPanel
+            locale={locale}
+            reading={neonLimits.ok ? { ok: true, limits: neonLimits.snapshot.limits } : { ok: false, failure: neonLimits.failure }}
+            appEnv={env.APP_ENV}
+            mayEdit={canManageRegistrations(actor.role)}
+          />
+        )}
 
         {/*
           The money, and the answer before the table that justifies it: what the club pays today,

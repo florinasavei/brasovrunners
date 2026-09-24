@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -22,6 +23,8 @@ type Props = {
    * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
    */
   mayEdit: boolean;
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -34,14 +37,23 @@ type Props = {
  * a Gmail app password belongs in the environment, not in a table the backoffice can read
  * (AGENTS.md §14.5) — so the panel names the two variables and shows neither's value.
  */
-export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit }: Props) {
+export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
 
+  /*
+    Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
+    be closed by default"), with where the messages go right now in the summary — the one thing
+    anybody opens this panel to check. The copies are left to the body: the summary is one line.
+  */
   return (
     <Panel
       title={t("emails.contacts.title")}
       intro={t("emails.contacts.intro")}
+      aside={t("emails.contacts.aside", { to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody") })}
       collapsible
+      openWhen={openWhen}
+      id="contact-recipients"
+      data-testid="contact-recipients"
     >
 
       {/* Where the list in force comes from, so "I saved it and nothing changed" cannot happen. */}

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.70-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.69-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.70-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -13679,3 +13679,193 @@ On the public page (`EventLinks.tsx`), a "Linkuri și fișiere" section renders 
 **Tests.** Unit: `events/event-links.test.ts` (reading a stored list, the label fallback, the block's markup and its placement on the page and the preview), `content/event-links-field.test.ts` (the form schema: https only, the twelve-row ceiling, label lengths, the spare line dropped, a refusal named by row), `content/event-links-summary.test.ts` (the refusal summary's per-row labels in both languages), `notifications/templates.test.ts` (the one line on the confirmation and the reminder, and nowhere else). Integration: `cms/event-links.test.ts` (saving and reading back through the public query, the database's own CHECK, a series edit and a duplicate carrying the links, a caller that says nothing leaving them alone), `notifications/render.test.ts` (the reminder's `#links` line, present only when the event has links, never the raw address). E2e: `event-route.spec.ts` extends the existing route-link spec rather than adding a new heavy one — a GPX link added in the editor, published, read back on both languages' pages with its host and a 44-pixel target, and removed again.
 
 Baseline `BR-V1.69-2026-09-24`.
+
+## 333. Decided — the public site reads its rows from Next's data cache, and every write says what it changed (2026-09-24)
+
+**Context.** The owner, 2026-09-23, with Neon's billing page open: "I've spent 1 dollar in Neon in 2 days, I think I need to throttle or set limits". Neon Launch bills $0.106 per CU-hour, and the compute scales to zero only after five minutes idle (a fixed setting on Launch), so every request that touches the database costs at least five minutes at 0.25 CU. The operations log for 2026-09-22 07:00Z to 2026-09-23 ~20:00Z shows production awake 25 of ~37 hours with 139 wakes. About 75 came from the monitors, which another branch handles. The other ~64 came at random minutes: visitors, crawlers (Google Search Console is indexing the site), staff, deploys. Every public page was `force-dynamic` and queried PostgreSQL on every request, a 404 included, because the header reads the navigation.
+
+**Why the pages were `force-dynamic`, and what of it still holds.** The comments give two reasons: a snapshot taken at build would still show a run as scheduled after it was called off, and it keeps the database out of the build (CI has none). Both still hold. §281 had turned down ISR because the pages take search parameters, and because §28's freshness rule would then depend on invalidation being right everywhere. That objection is also still true of caching the HTML. Besides the address (`?type`, `?view`, `?month`, `?year`, `?lista`, `?interest`, `?since`, and on contact `?sent`/`?error`/`?about` plus the draft cookie), the pages read the clock (registration opens and closes, the countdown, past vs upcoming) and, on the event page, whether a staff member is signed in, for the edit button (§135). The layouts read no cookie and no header: the dark scheme is `InitColorSchemeScript` with the choice in localStorage (§93), and the theme-lab cookie is read in the browser, so the shell needed no change.
+
+**Decision: cache the rows, not the pages.** `modules/public-cache/`:
+- `publicRead(key, kinds, load)` puts a public read behind Next's data cache (`unstable_cache`). Each answer is tagged `public:<kind>`, where the kinds are `events`, `places` (the free-place count and the public start list), `pages`, `gallery`, `legal` and `settings`, and it has a ceiling of one day. Dates survive the JSON round trip through §281's envelope tagging. The keyspace is one per deployment on Vercel, whose data cache every instance shares and which outlives a deployment. Anywhere else it is one per process, because `next start` keeps the cache on disk and a local database is reseeded behind the server's back. It reads straight through in tests and scripts, under `next dev`, and during `next build`. Inside a build prerender a cached read files the page under the read's tags: that turned `/ro` and `/en`, two static redirects, into regenerated pages, and regenerating them to answer the router's prefetch hung. The build also has no business writing the cache.
+- `reads.ts` holds every read a public page makes, in one file. The cache tells two reads apart by their key alone, and a unit test holds the keys unique. A second unit test fails if a public route or component imports the database pool.
+- The pages stay `force-dynamic` and render per request from cached rows. The address, the clock, the staff edit link and the draft cookie work exactly as before, and nothing a page shows changed. No staff-only bit can be cached, because no page is.
+
+**How it stays right.**
+1. *Every write says what it changed.* `revalidatePublicContent(...kinds)` calls `revalidateTag(tag, { expire: 0 })` after the transaction commits. Next applies it when the Server Action or route handler returns, so a call inside a transaction still lands after the commit, and a rollback costs a refetch. It uses `expire: 0` and not `"max"`: "max" would serve the old rows once more while refreshing, and the old rows of a cancelled event say it is on. It never throws: a committed write must not be reported as failed because a cache could not be told. The call sites are the event saves, publication, series dates (from the maintenance job too), deletion and hard deletion; pages; albums and photos; legal approval, withdrawal and deletion; the contact-recipient and bot-check settings. For registrations, the call is in `transitionRegistration`, the one guarded statement every status change goes through, so the allocator's click, its job, the desk, the staff screens and a participant's own link are all covered in one place. The bulk sweeps beside it (`expireStaleHolds`, `closeWaitlistForStartedEvent`), erasure, a list-consent change, removing test rows and the retention sweep each make the call themselves.
+2. *The clock is in the key.* Three reads compare against `now` in SQL: the listing (`coalesce(ends_at, starts_at)`), the legal text in force (`effective_at`), and `countOccupied` (a waiting-list offer's `hold_expires_at`). Their answers change only as time passes one of a known set of instants. The instants are read and cached on their own, since they depend on the rows alone, and the answer is keyed by the next one (`clock.ts`, with the boundary millisecond on the side each comparison puts it). A cached answer is therefore only ever served for a `now` it is true for. An event passing into the past, or a version approved ahead of time taking effect, becomes a new key, not a stale entry. This is what keeps BR-REQ-034-01 criterion 3 true with a cache in front of the count.
+3. *A ceiling of a day* bounds what the code does not know about: a row changed by hand in Neon's console, a seed, a write path somebody adds and forgets to announce. A day, because each expiry is a query that may wake the compute for five billed minutes.
+
+**The interval, and why not 60 seconds.** Time-based revalidation is stale-while-revalidate: the first visit after the interval gets the old answer and triggers a refresh, which is a query. With visits spaced more than a minute apart, which is what a crawler does, a 60-second interval saves nothing. Correctness comes from on-demand expiry and the clock key, so the interval is only a safety ceiling and it can be long.
+
+**The free places and §281.** §281 says the free places are never served from a copy. The cache is not a copy in that sense: every transition expires it and its one clock-driven input is part of its key, so the number served is what `readPublicAvailability` gives for this instant. §281's last good copy still never answers for the count. The door was checked end to end. The page's registration state is worked out per request against the real clock. A submission is refused at the true time (`assertRegistrationOpen`). The allocator counts again under the event lock (`expireStaleHolds`, `countOccupied(now)`). The interest box's action checks the window and the privacy notice again before it keeps an address. The registration form page, the token pages, "Înscrierile mele", `/admin`, `/devs`, the preview, `/api/*` and every Server Action read the database themselves.
+
+**What is not cached, for privacy.** A token path is never a cache key: the language switch caches only the four routes whose other-language address only the database knows. For the contact form, only the yes/no answer ("does it reach anybody") is cached, never the addresses. Start-list names are public by the participant's consent and expire with any change to that consent, an erasure, or the retention sweep.
+
+**Resilience.** While the cache holds an answer, an outage costs a visitor nothing. §281's copy still stands behind a miss that finds the database away.
+
+**Measured.** On `next start` against a private database with every statement logged, 20 public URLs (the listing with and without a filter, the calendar, event pages in both languages, both calendar feeds, the Open Graph and share pictures, the gallery, the terms and privacy pages, contact, the sitemap, the language switch, a 404) cost 40 statements on the first, cold pass and 0 and 0 on the next two. The parent commit: 66, 65 and 68 transactions per pass. The build's route table is unchanged, and the public routes are still `ƒ`, on purpose: the cache sits under the render, not in front of it.
+
+**Rejected.** *ISR, or any whole-page cache.* It would mean moving `?type`, `?month`, `?lista` and `?interest` into the browser, which changes what a crawler and a reader without JavaScript see, plus the staff edit link into a client island, plus a per-page "next clock change" revalidate. All of that to save function invocations, which Vercel Hobby covers, not database wakes, which the row cache already removes. *Cache Components (`"use cache"`)*: a rewrite of every route segment config for the same result. *A 60-second interval*: see above. *Redis, Vercel KV or Edge Config*: a service where Next's own data cache suffices and works under plain `next start` (BR-REQ-101-01). *A hook in the Drizzle logger that expires tags on every INSERT/UPDATE*: it would catch every write, but by magic nobody reading a service would find. *Per-event tags*: a registration expires every event's cached count, but only events open for registration have one, so the cost is a refetch or two, and a tag per kind needs no identifier at any call site.
+
+**Known limits.** A request that began reading before a commit could store the pre-commit rows just after the expiry. That is rare and bounded by the day's ceiling. A change made outside the application (the SQL console, a seed) shows up within a day or at the next deploy. Pages still run a function on every request.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 334. A job ping with nothing due does not wake the database
+
+**2026-09-24.** The owner, 2026-09-23: "I've spent 1 dollar in Neon in 2 days, I think I need to throttle", and "I want toggles in my admin area, so I can throttle myself when needed". The operations log showed production awake 25 of 37 hours. Three wakes in five came at exactly :00/:15/:30/:45: the external pinger posting both job endpoints (§68, §280). Almost every one of those runs found nothing to do, and Neon Launch billed its five idle minutes after each.
+
+**Decision.** Each real run of `registration-maintenance` and `email-outbox` works out the earliest instant its job next has work, using the database it already has awake (`jobs/next-work.ts`):
+
+- **Maintenance:** the soonest hold or offer deadline, email-link lapse, event start, registration close, reminder window (48 h), participation-window opening (§104) or interest opening (§146).
+- **Outbox:** the soonest claimable row.
+
+That instant is capped at an hour, or at the Administrator's longer minimum interval. The run leaves it in Next's data cache as write-once five-minute slots (`jobs/schedule-cache.ts`). A ping before that instant answers 200 `ran: false` with the reason and the instant. It never imports the pool, and it writes no `job_runs` row. The order in `jobs/ping.ts` is: `JOB_SECRET` first, the cache second, the throttle (§39) only for a real run, then the work and the plan.
+
+**Why it is safe.** Expiry is checked on every read (AGENTS.md §10.6). An expired offer occupies nothing on any read, and a lapsed hold goes to the waiting person at the next capacity transaction. A skipped run therefore delays a message or a hand-over, never a place. `tests/integration/jobs/read-time-expiry.test.ts` proves it with no job run at all.
+
+**Waking.** A write path that makes work sooner calls one helper, `wakeJobs`, after its transaction. The call sites are:
+
+- registration: submit (including a verified restart, which wakes for the offer an allocation may make on the way, §160), email confirmation, signing, desk confirmation, promotion, and every cancel and erase through `unregister`;
+- the interest box;
+- event saves and transitions, and a new series;
+- the drain after a request, when it leaves rows behind or runs in `scheduled` delivery (§221);
+- the delivery-timing and cadence settings.
+
+Work further away than the longest promised quiet invalidates nothing. A missed call site costs at most the cap.
+
+**The plan's arithmetic** (`jobs/schedule.ts`, pure and unit-tested):
+
+- The cap and the minimum interval end two minutes early (`PLAN_GRACE_MINUTES`). `ranAt` is taken after a cold start, and without the grace the next on-schedule ping landed a few hundred ms before the boundary and skipped. That turned an hourly real run under the night pinger into one every 60 *or* 120 minutes, at random.
+- A work deadline gets no grace, because before it there is nothing to do.
+- A run that could not finish (`retryableErrorCount > 0`, retention failures included since §322 made them loud) promises no quiet, so the next ping retries. The two-run `failing` alarm is therefore as prompt as §322 meant it to be.
+
+**The owner's throttle.** `/admin/tasks` → Costuri gains "Cât de des verifică platforma" (`platform_settings.jobCadence`: on demand, 15, 30, 60 or 120 minutes). It is Administrator-only on the server and audited as `job_cadence.changed` (from, to). The interval travels in cached floor slots, so a ping inside it answers from the cache. An interval longer than the cap replaces the cap. `/devs` shows each job's cached plan and last ping.
+
+**Health does not cry wolf.** `/api/health` still reads the database on every call.
+
+- **Jobs:** the pinger is measured against the cached pings, skipped or real, with the threshold it always had (twice the cadence plus five minutes). A real run is required within max(cap, interval) plus that threshold. §322's `failing` sits beside both.
+- **Email:** "overdue" widens by the full interval whenever one is set, not by the part past the hour. The 90 minutes already spend their hour on the night pinger. The worst case is the interval plus one night pinger period (≈110 minutes at night under 60), and 90 + interval covers it.
+
+**Known limits, accepted.**
+
+- Ping slots evicted on their own make the last real run stand in for the last ping. By day that can read one false `stale`, which the next ping's slot clears. Trusting a still-cached plan instead would read `ok` for up to the cap after a pinger that died right after a run.
+- A wake can race a run's own slot writes: a commit after the run's `nextWork` read, invalidated before the slots land. It is bounded by the plan and safe by read-time expiry.
+
+**Implementation notes.** The cache callback is *bound*. `unstable_cache` keys an entry on the function's source text, which differed between route and page bundles on a production build and hid the job's slots from `/devs`. A bound function's text is `[native code]` in every bundle.
+
+**Rejected.**
+
+- **Redis, KV or Edge Config:** a new service for one timestamp.
+- **Slowing the pinger:** it would delay every hold's hand-over, not just the idle runs.
+- **An in-process timer:** serverless has no process for one.
+
+**Specs.** BR-REQ-090-03 criteria 3 and 4 are amended to separate real runs from pings. Criteria 9–12 and BR-REQ-090-07 criterion 7 are added.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 335. Decided — the Neon plan and its brakes come from Neon first, a monthly compute-time limit is Costuri's to set, and a public /api/health names only the status and the share spent
+
+The owner, with `/admin/tasks` open on 2026-09-23: "Neon is already on Launch at $0.106/CU-hour, and here it shows Free." The account had moved to Launch the day before; every page still trusted `platform_settings.neonPlan`, Free when unset, on the premise that Neon's API never names the plan. It does — the project row already fetched for the consumption carries `owner.subscription_type` ("launch_v3") — so `readNeonConsumption` returns it as `reportedPlan`, and `effectiveNeonPlan()` prefers it over the stored setting, which stays as the fallback for an environment with no key or one Neon does not answer. The panel, the cost row, the verdict and `/devs` all follow it and say where the figure came from.
+
+The same evening, after $1.09 in two days of Launch: "I want toggles in my admin area, so I can throttle myself when needed." Two brakes, held by Neon itself rather than a setting in this application: the read-write compute's maximum autoscaling size and the billing period's compute-time quota (zero, to Neon, meaning "none"). A size ceiling bounds a spike — a runaway query at 8 CU costs 32 times what it costs at 0.25 — while the quota is Neon's only hard cap, and reaching it suspends the whole project until the next billing period; setting one on production therefore asks for a ticked confirmation, and the Costuri panel itself recommends none there, Neon's own spending alert instead. Every save reads Neon fresh rather than trusting the figures the page rendered a minute ago, and a key that can read the project but not write it (the read-only one `SETUP.md` §33 already hands out) is named exactly when it meets a write it may not make.
+
+Because reaching 100% of a quota is a total outage, `/api/health` now carries the club's own early warning: `checkNeonQuotaHealth` reads the same project row — cached fifteen minutes in Next's Data Cache, never `no-store`, and never a query against the database itself — and degrades health at 80% of the stated quota, the one channel a cron-job.org monitor still reads once email is among what has stopped. This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the quota case only; the plan half of that criterion is unchanged, and SPECS.md itself has not been updated to say so yet.
+
+Reviewing this branch found the endpoint publishing the exact quota and this period's CU-hours — the club's own billing figures — on a public, unauthenticated route; the body now carries only `{ status, percent }`, with the full numbers staying on `/admin/tasks` and `/devs`. The review also found `/admin/tasks`'s own `neonLimits` row staying `open` forever on production with no quota set, in tension with the Costuri panel's own recommendation to leave production without one; production with no quota now reads `done`, with its own sentence naming the recommendation, while every other environment stays `open` since a limit is still worth setting there. `checkNeonQuotaHealth` and `readNeonConsumption` had drifted into two copies of the same Neon request and the same quota arithmetic differing only in cache mode; they now share one request function and one arithmetic helper, so they cannot silently diverge. Finally, the review's end-to-end spec assumed no `NEON_API_KEY` would ever be present at handover, which is false on the owner's own machine; `env.ts`'s `E2E_DISABLE_NEON`, set only by `playwright.config.ts`'s `webServer`, blanks both Neon variables in the schema itself for that one process, so the suite — and every panel it opens — never reaches the real Neon API regardless of what `.env.local` holds.
+
+This branch predates batch/2026-09-24 (merge-base 5b04fae; qa is now on baseline BR-V1.69 with DECISIONS.md past §332) and needs rebasing before this entry is actually added; the real section number, and the sweep of the 41 "§335" placeholders this feature's comments and test names carry, both wait on that.
+
+**Changed after review — production is capped, and the card says so.** The first version of the card recommended leaving production without a limit and relying on Neon's spending alert. It also let the task row read "done" on production with no quota, reasoning that a quota suspends the whole site. The owner had decided the opposite the same night (§327: "I want QA to be cheaper and also Prod to be capped, not ok to leave to unlimited"): production holds a 100 CU-hour monthly quota and QA 30 (`SETUP.md` §40). The card now gives the same advice on every environment: a limit with room plus the spending notification on Neon's Billing page. The figure is 100 CU-hours on production, which used about 4 CU-hours a day even on days of two people testing all day, and 30 elsewhere; it comes from `recommendedNeonQuotaCuHours`. The derived `neonLimits` row is open whenever this environment has no quota, production included, or Neon could not be read. It turns red at 80% of the quota and reads done otherwise. The production confirmation stays, as a guard on the click (reaching the limit suspends the site until the next period), not as advice against the limit.
+
+**A limit already in force is not a new one.** Two rules apply only to a new or changed quota: a limit must be above this period's spend plus 5 CU-hours, and on production it needs the ticked confirmation. The quota box shows the limit Neon holds to four decimals at most (`quotaBoxValue`), which converts back to exactly the seconds Neon holds. So a save that changes only the size sends no quota at all, needs no confirmation, and is not refused late in a busy month, which is exactly when somebody would reach for the size. Rejected: a hidden "unchanged" field posted beside the box. Four decimals keep the exact seconds without a second field or an exception to the strict form schema.
+
+**The key.** Neon's key documentation (manage/api-keys and the organizations page, checked 2026-09-24):
+- a project-scoped key has Editor access to its project: it can read and modify the project, but not delete it or manage who has access;
+- an organization key has admin access;
+- a personal key has its owner's own access.
+So a key already set for `/devs` should also be able to write the limits if it is project-scoped (as CLAUDE.md records), or if it is the personal key of an org Admin or a project Editor. No second key is needed in either case. A write refused while reads work most likely means a personal key whose owner can only view the project. The refusal sentence (`NEON_KEY_FORBIDDEN`) names the fix: a project-scoped key for this environment's project, which only an organization Admin can create, or the personal key of an organization Admin or a project Editor. The corrected `SETUP.md` §33 procedure is returned as text rather than edited in.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 336. Backoffice folds start closed, and say why when they open themselves
+
+Reverses §269's "a panel that holds a form starts open" (the owner, 2026-09-23: "I would like the accordions to be closed by default", and on `/admin/emails`, "'Emailurile trimise participanților' should be a master card with smaller cards within"). §269's reason was a heading nobody could find inside a `<summary>` that carried no heading role; the heading is a real `h2` **inside** the summary now, which stays in the accessibility tree and in a screen reader's heading list while the fold is shut, so the fold itself no longer has to start open to be found.
+
+A fold starts closed and opens on arrival only for a reason the call site names (`shared/ui/fold.ts`'s `FoldOpenWhen`): **refused** — the fold's own form came back with a refusal (`?error=`), including a kept form's refusal (§315), which arrives as form state a server render cannot see, so `ActionForm` opens the folds around the summary it focuses, and `BOXED_DISCLOSURE_SX` shows a refusal's box regardless of `[open]` for the no-JavaScript case; **saved** — the fold's own save just landed (`?saved=`); **attention** — something inside asks for action (bibs unprinted, messages waiting, an allowance spent); **inUse** — the reader is shaping the page right now (a filter narrowing a list, the language previews are shown in). A `#fragment` opens a fold too, everywhere in the backoffice at once: `OpenFoldFromHash`, mounted once in `BackofficeShell`, runs `openFoldsAround` (the ancestor-details algorithm the browser only runs for a fragment naming something *inside* a closed fold, never the fold itself, and never on a client-side navigation) on arrival, on every backoffice navigation and on `hashchange`.
+
+`/admin/emails` is rebuilt on this: the eighteen message previews and their RO/EN switch were a heading and a flat run of folds on the page; they are one `ParticipantEmailsPanel` now — a closed master fold (`#participant-emails`) holding one card per message type, each a level-3 fold of its own, with the language switch first inside it under a line saying what it switches. The Mailgun plan, the club's copies, the contact recipients and the staff invite form (`/admin/staff`) are each their own closed-by-default fold the same way.
+
+The registrations list's filters fold is one more case of the rule this section names, not an exception: nobody has to touch a query parameter to narrow the list — `defaultEventFilter` scopes it to the club's featured event with nothing in the address bar — and a fold that judged "in use" by the URL alone would arrive closed with a silent summary over a list that is, in fact, narrowed. That is the shape §277 already named for the summary panel on the same screen ("the control that would have explained it, the event filter, was inside a fold §269 had closed"); the filters fold now opens, and its summary names the featured event, on that automatic scope too, not only when a URL parameter is present.
+
+`tests/e2e/support/fold.ts`'s `openFold` had to move from a mouse click on the `<summary>` to a keyboard `press("Enter")`: the site's sticky footer (§157) can end up drawn over a short page's last fold once a fold this small can be the last thing on the page, and a coordinate-based click lands on the footer instead. No production code changed for that; it is the same symptom, handled the same way, as the declaration page's button pushed clear of the same footer.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 337. The telephone becomes one box: a flag, a mask, and a live verdict — not two boxes and a submit-time refusal
+
+**2026-09-24.** The owner, of another site's phone field: "I like the phone input with the mask." The country and the number used to be two controls; now they are one outlined box — a real flag and caret drawn at its start, the digits grouped as they are typed after it — with the country still chosen through a native `<select>`, invisible and laid over the flag, because a native select is the one control that works before hydration and is what a phone already knows how to open.
+
+The mask (`phone-format.ts`) reads a typed value exactly the way `composePhone` (`phone.ts`) will — a leading `+` is the international form, `00` the international prefix, a trunk zero dropped except where a country keeps it — so it only ever adds the spaces `composePhone` already strips, and a unit test proves the equality for every country in its table. E.164 is fifteen digits including the country code, so the box is capped at the keystroke to what the chosen country still leaves room to store (`phoneDigitCap`), never at the browser's `maxLength` alone. The field keeps `defaultValue`/uncontrolled inputs throughout (§211): state exists only to compare against what the DOM already holds, never to drive it, so nothing typed before hydration is ever silently replaced.
+
+Three review follow-ups on that design, all fixed in this pass:
+
+**A restored or pre-hydration country is no longer lost.** The select's `onChange` was the only path that ever synchronized the island's `country` state — but a country the browser restores on reload (Firefox's own form-restore) or one picked in the instant before React attaches its listener sets the DOM property directly, firing no `change` event. The flag, the mask and the live "this number is valid" verdict would then all read `initialCountry` while the select itself posted something else, which is exactly the contradiction the component's own comment claims can never happen. A ref on the select plus a mount-only effect now reads its actual value once, right after mount, and catches state up to it the same way `onChange` would.
+
+**A refused draft is never cleaned into one that looks accepted.** `formatNationalNumber` used to keep only digits and a leading `+`, discarding everything else — correct for a keystroke, since the mask only ever adds spaces to a value it built itself, but wrong for a no-JS draft that never went through it: a submission `composePhone` refused for a stray letter, a misplaced `+`, or an untolerated separator came back from the server-side prefill looking clean and valid. `formatNationalNumber` now recognizes such a draft (`looksComposable`, mirroring `composePhone`'s own separator and prefix handling) and returns it untouched instead.
+
+**The pattern's upper bound is gone.** It used to follow `maxLength`, but a refused draft is deliberately brought back with every digit it had — uncapped — so a no-JS entrant who had typed past the cap got the browser's generic "match the requested format" instead of this field's own message. `minLength` and `maxLength` still bound ordinary typing and pasting, and `composePhone` on the server still has the final word either way.
+
+**Tests.** Unit (`tests/unit/registrations/phone-format.test.ts`): the per-country mask table, idempotency, the international/`00`/trunk-zero forms, the digit cap and `maxLength`, the caret-tracking keystroke reducer, and — new in this pass — that a draft `composePhone` refuses (a letter, `/`, a second `+`) comes back from `formatNationalNumber` and from `PhoneField`'s own server render exactly as typed. E2e (`tests/e2e/registration-form.spec.ts`, `BR-REQ-031-04 criterion 16`): the mask as digits are typed, the Backspace-before-a-space trap, switching country without losing digits, the no-JS fallback to the select itself — and, new in this pass, that a country set on the select's DOM value before hydration runs (standing in for a browser's own form restoration) is picked up by the flag, the mask and the composed verdict rather than left behind.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 338. Decided — a bib is a true A5 sheet, both renderers reading one geometry; the "one per page" option stays centred with no cut (2026-09-24)
+
+**Status:** Decided and built. BR-REQ-038-01 criterion 5; `bib-geometry.ts` (new), `bibs-pdf.ts`, `bib-image.tsx`, `bib-design.ts`.
+
+**A bib is now a true A5 sheet.** The owner, 2026-09-23: "they will be printed on an A4 page so we gonna have 2 per page, basically their format is A5." Each bib was a 539.28 × 384.945-point card squashed to fit an A4 page's margins; it is now 595.28 × 420.945 points, A5 landscape, 1:√2, exactly half of the A4 portrait page. `bib-geometry.ts` is the one place both renderers — `bibs-pdf.ts`'s pdfkit sheet and `bib-image.tsx`'s `next/og` preview — read every box from (the margin, the band, the lockup, the number, the name, the sponsors' strip, the footer), through one pixels-per-point factor, `BIB_IMAGE_SCALE`; the preview is 990×700 (was 900×600, 1.5:1 over a 1.40:1 card), the paper's own proportion.
+
+**§79's "one per page" option is unchanged by this.** The same A5 bib, centred on its own A4 page, no cut line, for a printer that will not take a cut or a club that pins the whole page. A mid-flight draft of this rework had it drift to an upper-half bib with a cut line under it; that was caught in review and reverted before merge, since it contradicted BR-REQ-038-01 criterion 5 and this section without either being asked to change.
+
+**The band's title and date sit at a fixed point from the card's top on both renderers**, not centred as a group — `bib-geometry.ts`'s `titleTop`/`dateTop`/`dateTopAlone` — which is what keeps the preview a picture of the paper rather than a card sized by eye.
+
+**The per-page "Page n of N" label is gone from the sheet**, with the `Admin.bibs.page` catalogue key: a GET had no reason left to carry it once the sheet was reworked, and nothing on `/admin` reads it.
+
+**Both locales' bibs-panel help text now names the A5 size and the cut line**, since "two per A4 page" no longer said enough once the size became a deliberate paper format rather than an arbitrary card.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 339. Changed — the place's boxes hide while the place is to be announced (2026-09-24)
+
+The owner, 2026-09-24, looking at the editor with "Locația se anunță mai târziu" switched on and the meeting point and its map link still showing: "if the location is announced later, we should hide these fields."
+
+**Decided.** While the switch is on, `PlaceToBeAnnounced` hides the meeting point and the map link (`hidden`, so they leave the accessibility tree as well as the screen). They stay mounted: a venue typed before the switch went on is still posted and saved, never published (§328), and back in its box the moment the switch goes off — one save announces it. Nothing is required while it is hidden.
+
+The editor's re-layout hides each language's own place name with them, so every place field disappears together.
+
+Baseline `BR-V1.70-2026-09-24`.
+
+## 340. Decided — the 2026-09-24 second batch lands as one: public pages from cache, job pings that sleep, Neon brakes from Costuri, folds closed, the telephone in one box, A5 bibs — integrated, reviewed and run end to end together (2026-09-24)
+
+Six branches were built and reviewed on their own, and each has its own section: public pages from cache, the job pings that sleep when nothing is due, the Neon limits on Costuri, backoffice folds that start closed, the telephone as one box with a mask, and the bib as an A5 sheet. This section records what changed when they landed together on a `qa` that batch 1 (§322–§332) had already moved.
+
+**The merges kept both sides.** Retention keeps §322's one transaction per step and §324's audit scrub, and tells the public cache "places" after each step commits. The legal repository keeps §330's helpers and the cache's `listEffectiveDates`. The registrations admin service keeps `canReadRegistrations` and the erase revalidation. The event service calls both `revalidatePublicContent("events")` and `wakeJobs` at every site where the two branches met. The task board keeps both actions, both audit actions and all three banners. `/admin/emails` keeps §331's ordering and "nu se mai trimite" inside the new card of cards.
+
+**What the integration had to fix, because no single branch could see it:**
+- (a) Batch 1's writes expire the public cache: both retention steps, the whole event save (place to be announced §328, links §332, minimum age §329), cancellation, and the declaration approval §330 gates. The language switch is keyed by the path, never the query string.
+- (b) `/api/health` is `force-dynamic`, and its `select 1` runs on every call. Only the Neon quota reading is cached (15 minutes). The three data-cache users (public rows, job slots, the quota fetch) have disjoint keys and tags, and a test pins that.
+- (c) The participant-emails card covers all twenty message types, including §331's `EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED`, each with a short "when". The e2e counts twenty cards.
+- (d) The two folds that are newly closed and had nothing to say (inviting a colleague; the registrations filters when nothing is filtered) now say one line in their summary.
+- (e) The throttle card's unconditional line no longer claims email is untouched. A second sentence follows the delivery timing in force (§221).
+- (f) On production, removing the Neon limit asks for the same ticked box as setting one, and is refused with `NEON_QUOTA_REMOVAL_UNCONFIRMED` without it. `E2E_DISABLE_NEON` is ignored on production, with one startup warning: there it would silently switch off the 80% quota alarm.
+- (g) The phone's restored-country e2e holds the page's scripts at the network, so it proves the restore on every run instead of by timing.
+- (h) With cut marks on, `layout=one` draws the trim guide (short solid rules at the ends of the bib's top and foot), still with no dashed cut and no frame (§79). With cut marks off it draws nothing. The picture draws the paper's 2 px edge itself, so no preview frames it again: not the editor, the desk row, or the bibs gallery.
+- (i) The maintenance job's next-work reads scheduled events only, as the job does. A cancelled event's queue is left as it stood (§331), and its instants would otherwise wake Neon to do nothing.
+
+**One guard added in review.** The three by-slug public reads (event, standing page, album) put the visitor's slug into the cache key, and a miss stands for the day's ceiling. A slug over 200 characters, or not lowercase words joined by single hyphens, can name no saved row, so it is read live and filed nowhere. This matches the switch's 300-character guard.
+
+**Proven on the integrated tree, not only on the branches.** A production build ran the whole Playwright suite on both projects against a fresh database: with one worker, as CI runs it, 289 passed and none failed. A three-worker run met only the featured-event interleaving §212 describes, and those specs passed again when run serially.
+
+Baseline `BR-V1.70-2026-09-24`.

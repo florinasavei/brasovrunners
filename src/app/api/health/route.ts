@@ -4,7 +4,9 @@ import { getDb } from "@/db/client";
 import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
+import { checkNeonQuotaHealth } from "@/modules/diagnostics/neon";
 import { buildInfo } from "@/shared/config/build-info";
+import { env } from "@/shared/config/env";
 
 /**
  * `/api/health` (deployment readiness). Reports the database, its schema version, and the two
@@ -29,6 +31,13 @@ import { buildInfo } from "@/shared/config/build-info";
  * pages are already returning 500. Until this check existed, that state reported
  * `database: ok` — `select 1` succeeds perfectly well against a stale schema — and the only
  * symptom was a broken landing page with nothing to point at (`DECISIONS.md` §31).
+ *
+ * It also carries the Neon project's own early warning (§335): once this billing period's
+ * compute reaches 80% of the monthly quota the club set on itself, this answers `degraded` before
+ * Neon suspends the database at 100% — a suspension that is total, and the one the club cannot
+ * be emailed about once it has happened. `checkNeonQuotaHealth` is cached for fifteen minutes and
+ * never fails this endpoint on its own account, so a missing key or an unreachable Neon reads as
+ * nothing having been asked, never as the site being down.
  */
 /**
  * Everything this endpoint asks the database, once the connection itself has answered.
@@ -66,6 +75,20 @@ async function askTheDatabase(
 
 const JOB_NAMES = ["registration-maintenance", "email-outbox"] as const;
 
+/**
+ * Asked afresh on every call, whatever else in the application is cached.
+ *
+ * Three branches of one batch put Next's data cache to work — the public pages' rows (§333,
+ * public pages from cache), the jobs' "nothing due until" slots (§334, jobs sleep when nothing is
+ * due), and this route's own fifteen-minute reading of the Neon quota (§335, Neon limits). None of
+ * that may reach the answer itself: a monitor that is told `ok` from a cached response while the
+ * database is down is the one failure this endpoint exists to prevent (§98). Route handlers are
+ * dynamic by default in this Next, and a `fetch` with `next.revalidate` inside one caches that
+ * fetch, not the route; saying it here means nobody has to know that to read this file, and a
+ * future default cannot turn the probe below into a prerendered constant.
+ */
+export const dynamic = "force-dynamic";
+
 type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
 type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
 
@@ -73,12 +96,16 @@ export async function GET(): Promise<Response> {
   const db = getDb();
   const now = new Date();
 
-  let reachable = true;
-  try {
-    await db.execute(sql`select 1`);
-  } catch {
-    reachable = false;
-  }
+  // The quota reading is independent of this connection — Neon's console API, never a query —
+  // so it runs beside the probe rather than after it, and answers the same whether the probe
+  // below succeeds or not.
+  const [reachable, neonQuota] = await Promise.all([
+    db.execute(sql`select 1`).then(
+      () => true,
+      () => false,
+    ),
+    checkNeonQuotaHealth(env),
+  ]);
 
   // Nothing else is asked once the probe has failed: every check below needs the connection the
   // probe just proved is not there.
@@ -107,7 +134,7 @@ export async function GET(): Promise<Response> {
   const status =
     database === "down" || schemaDown
       ? "down"
-      : anyJobStale || schemaDegraded || email?.status === "stalled"
+      : anyJobStale || schemaDegraded || email?.status === "stalled" || neonQuota.status === "near-limit"
         ? "degraded"
         : "ok";
 
@@ -125,6 +152,13 @@ export async function GET(): Promise<Response> {
       schema,
       jobs,
       email,
+      // The monthly compute quota's early warning (§335): `percent: null` means nothing was
+      // asked (no key, or Neon did not answer within the timeout) rather than "there is no
+      // quota". The figures themselves — the exact quota and this period's CU-hours — are the
+      // club's own billing numbers; this endpoint is public and unauthenticated, so only what
+      // the 503 and a monitor need (the status and the share of the quota spent) is published
+      // here. `/admin/tasks` and `/devs` are where the full figures belong.
+      neon: { status: neonQuota.status, percent: neonQuota.percent },
       checkedAt: now.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },

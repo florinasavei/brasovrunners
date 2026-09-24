@@ -192,9 +192,9 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
   const text = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
 
   let outcome: string;
+  const messageType = text("messageType") as EmailMessageType;
   try {
     const actor = await requireStaff();
-    const messageType = text("messageType") as EmailMessageType;
     if (!(emailMessageType.enumValues as readonly string[]).includes(messageType)) {
       throw new DomainError("VALIDATION_ERROR", `unknown message type ${messageType}`);
     }
@@ -217,5 +217,7 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
     return refused(error, form, { never: ["reset"] });
   }
   revalidatePath(path);
-  redirect(`${back}&${outcome}#admin-alert`);
+  // The message is named on the way back (§336), so its card opens with the preview that just
+  // changed. Only a real type reaches this line — anything else was refused above.
+  redirect(`${back}&${outcome}&message=${messageType}#admin-alert`);
 }

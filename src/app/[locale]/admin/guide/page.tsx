@@ -48,9 +48,12 @@ export default async function GuidePage({ params }: Props) {
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
         {t("guide.yours", { role: STAFF_ROLE_LABEL[staffUser.role] })}
       </Typography>
-      {/* What participants receive, message by message (§91). */}
+      {/*
+        What participants receive, message by message (§91) — straight into the fold that holds
+        the previews, or the link lands on five closed summaries and explains nothing.
+      */}
       <Typography variant="body2">
-        <Link href="/admin/emails">{t("emails.link")}</Link>
+        <Link href={{ pathname: "/admin/emails", hash: "participant-emails" }}>{t("emails.link")}</Link>
       </Typography>
       {sections.map((section, index) => (
         <Box key={index} component="details" open={index < Math.max(1, mine.length)} sx={BOXED_DISCLOSURE_SX}>

@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { bibPreviewUrl, isBibDesignInput, readBibDesignForm } from "@/modules/registrations/bib-design-query";
+import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 
 /** How long the boxes may keep changing before the picture is asked for again. */
 const SETTLE_MS = 300;
@@ -79,17 +80,20 @@ export default function BibDesignPreview({
 
   return (
     <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-design-preview">
-      {/* The card's own proportion (900×600) is declared, so the box keeps its height while a
-          fresh picture is on its way and the panel below does not jump. */}
+      {/* The paper's own proportion (A5, 990×700, §338) is declared, so the box keeps its height
+          while a fresh picture is on its way and the panel below does not jump. No border and no
+          rounded corner of its own: the picture draws the paper's edge itself (`bib-image.tsx`,
+          A5 bibs §338), and a second frame round it read as a double line with its corners
+          clipped. */}
       <Box
         component="img"
         src={src}
         alt={labels.alt}
-        width={900}
-        height={600}
+        width={BIB_IMAGE.width}
+        height={BIB_IMAGE.height}
         loading="lazy"
         decoding="async"
-        sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1, border: 1, borderColor: "divider" }}
+        sx={{ display: "block", width: "100%", height: "auto" }}
       />
       <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
         {labels.caption}

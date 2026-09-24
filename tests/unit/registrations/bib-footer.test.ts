@@ -15,6 +15,7 @@ import {
   bibFooterWidth,
   bibWebsiteHost,
 } from "@/modules/registrations/bib-footer";
+import { BIB_FOOTER_LINE, BIB_IMAGE_SCALE } from "@/modules/registrations/bib-geometry";
 import { BIB_IMAGE_FOOTER, bibImageFooterLines } from "@/modules/registrations/bib-image";
 import { BIB_SHEET_FOOTER, bibSheetFooterLines } from "@/modules/registrations/bibs-pdf";
 
@@ -328,9 +329,9 @@ describe("§317 the picture and the paper break the footer in the same places", 
   it("measures both footers in the same ems", () => {
     expect(BIB_SHEET_FOOTER.width / BIB_SHEET_FOOTER.size).toBeCloseTo(BIB_FOOTER_EMS, 2);
     expect(BIB_IMAGE_FOOTER.width / BIB_IMAGE_FOOTER.size).toBeCloseTo(BIB_FOOTER_EMS, 6);
-    // The picture's line is inside the card's 2-pixel border as well as its 30-pixel padding:
-    // Satori sizes boxes border-box, so 900 less both of each.
-    expect(BIB_IMAGE_FOOTER.width).toBe(900 - 2 * 2 - 2 * 30);
+    // The picture's line is the sheet's own 523.28-point line, times the one factor that takes
+    // every length on the paper to a pixel (`bib-geometry.ts`).
+    expect(BIB_IMAGE_FOOTER.width).toBeCloseTo(BIB_FOOTER_LINE.width * BIB_IMAGE_SCALE, 6);
   });
 
   it("lays out the same lines for the same design and facts — which parts show, and where it breaks", () => {

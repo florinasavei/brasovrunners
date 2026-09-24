@@ -7,22 +7,22 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { notFound } from "next/navigation";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { findPublishedAlbumBySlug } from "@/modules/content/gallery/repository";
 import ContactLink from "@/shared/ui/ContactLink";
+import { cachedPublishedAlbumBySlug } from "@/modules/public-cache/reads";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
+/** Rendered per request, from rows the public cache keeps and an album save expires (§333). */
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
-  const album = await findPublishedAlbumBySlug(getDb(), locale, slug);
+  const album = await cachedPublishedAlbumBySlug(locale, slug);
   if (!album) return {};
   return {
     title: album.title,
@@ -45,9 +45,7 @@ export default async function AlbumPage({ params }: Props) {
 
   // `notFound()` on the result rather than inside the loader: thrown in there it would be
   // caught and answered with the previous visitor's album (§281).
-  const read = await readWithLastGood(`album:${locale}:${slug}`, () =>
-    findPublishedAlbumBySlug(getDb(), locale, slug),
-  );
+  const read = await readWithLastGood(`album:${locale}:${slug}`, () => cachedPublishedAlbumBySlug(locale, slug));
   const album = read.value;
   if (!album) notFound();
 

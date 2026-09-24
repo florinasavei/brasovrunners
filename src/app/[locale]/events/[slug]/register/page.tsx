@@ -24,7 +24,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
-import { phoneCountryOrder } from "@/modules/registrations/phone";
+import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { SECOND_ATTEMPT_FIELD, UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ageRuleVariant, dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
@@ -216,9 +216,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
-  // The phone prefixes' order, sorted here and only drawn in the browser (§324): the two
-  // runtimes' ICU data name countries differently, and a second sort there broke hydration.
+  // The phone prefixes' order and names, sorted and named here and only drawn in the browser
+  // (§324): the two runtimes' ICU data name countries differently, and computing either again
+  // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
+  const phoneNames = phoneCountryLabels(locale);
 
   /**
    * The props every text field shares: its anchor, its name, whether it was rejected, and the
@@ -691,6 +693,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 label={t("phone")}
                 countryLabel={t("phoneCountry")}
                 countryOrder={phoneOrder}
+                countryNames={phoneNames}
                 required
                 autoComplete="tel-national"
                 error={invalid.has("phone")}
@@ -722,6 +725,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   label={t("emergencyContactPhone")}
                   countryLabel={t("phoneCountry")}
                   countryOrder={phoneOrder}
+                  countryNames={phoneNames}
                   required
                   autoComplete="off"
                   /* The contact must be somebody else (§228), said as it is typed and refused

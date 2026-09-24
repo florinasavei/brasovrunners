@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { getDb } from "@/db/client";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { env } from "@/shared/config/env";
 
 /**
@@ -30,10 +31,11 @@ export function drainOutboxAfterResponse(): void {
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { renderOutboxMessage }, { readDeliveryTiming }] = await Promise.all([
+        const [{ processOutboxBatch }, { renderOutboxMessage }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
           import("./outbox"),
           import("./render"),
           import("./delivery-timing"),
+          import("@/modules/jobs/next-work"),
         ]);
         const db = getDb();
 
@@ -51,12 +53,26 @@ export function drainOutboxAfterResponse(): void {
           whoever gets there first claims it under `FOR UPDATE SKIP LOCKED`.
         */
         const { timing } = await readDeliveryTiming(db);
-        if (timing === "scheduled") return;
+        // The pinger sends, so the pinger has to look (§334): the outbox job's cached "nothing
+        // due" was written before this row existed.
+        if (timing === "scheduled") {
+          wakeJobs("email-outbox");
+          return;
+        }
 
         const { sender } = createEmailSenderForEnvironment(env);
         await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: new Date() });
+        /*
+          Whatever the drain could not send — a retry after a transient failure, a row deferred to
+          the allowance reset, a batch longer than twenty — is the outbox job's again, and the job
+          may be answering "nothing due" from the cache (§334). Told only when it is sooner than a
+          real run would find it on its own; a queue the drain emptied tells it nothing.
+        */
+        const left = await nextOutboxWork(db);
+        if (left) wakeJobs("email-outbox", left);
       } catch (error) {
         console.error("[email-outbox] drain after response failed", error);
+        wakeJobs("email-outbox");
       }
     });
   } catch {

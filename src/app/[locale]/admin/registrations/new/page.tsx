@@ -17,7 +17,7 @@ import {
   StaffGuardian,
 } from "@/modules/registrations/ui/StaffEventBirthDate";
 import { dayIn } from "@/modules/registrations/domain/age";
-import { phoneCountryOrder } from "@/modules/registrations/phone";
+import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
@@ -79,8 +79,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const earliestBirthDate = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()))
     .toISOString()
     .slice(0, 10);
-  // The phone prefixes' order, sorted here and only drawn in the browser (§324).
+  // The phone prefixes' order and names, sorted and named here and only drawn in the browser (§324).
   const phoneOrder = phoneCountryOrder(locale);
+  const phoneNames = phoneCountryLabels(locale);
 
   return (
     <Stack spacing={3}>
@@ -176,13 +177,14 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             />
           </StaffGuardian>
           <RecallField name="city" label={rt("city")} {...textFieldConstraints(staffRegistrationConstraints("city"))} />
-          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} countryOrder={phoneOrder} countryNames={phoneNames} />
           <RecallField name="emergencyContactName" label={rt("emergencyContactName")} {...textFieldConstraints(staffRegistrationConstraints("emergencyContactName"))} />
           <PhoneField
             name="emergencyContactPhone"
             label={rt("emergencyContactPhone")}
             countryLabel={rt("phoneCountry")}
             countryOrder={phoneOrder}
+            countryNames={phoneNames}
           />
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the

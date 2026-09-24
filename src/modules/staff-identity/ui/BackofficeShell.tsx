@@ -14,6 +14,7 @@ import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 
 /**
  * The backoffice's chrome — the title, who is signed in, sign out, and the tabs — around every
@@ -130,6 +131,10 @@ export default async function BackofficeShell({
       {notice}
 
       {children}
+
+      {/* A `#fragment` naming a closed panel opens it (§336): the one part of the fold rule a
+          server cannot see. Draws nothing. */}
+      <OpenFoldFromHash />
     </Container>
   );
 }

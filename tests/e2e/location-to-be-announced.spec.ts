@@ -36,12 +36,15 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
 
     // The browser asks for a meeting point until the switch says it is to be announced (§315).
     await expect(field("event.locationName")).toHaveAttribute("required", "");
+    // A venue written down the moment it is known — then the switch hides it, kept and not shown
+    // (the owner: "if the location is announced later, we should hide these fields").
+    await field("event.locationName").fill(secret);
     const toggle = page.getByRole("switch", { name: "Locația se anunță mai târziu" });
     await toggle.check();
     await expect(field("event.locationName")).not.toHaveAttribute("required", "");
-    await expect(page.getByText("Nepublicat cât timp locația se anunță mai târziu.")).toBeVisible();
-    // A venue written down the moment it is known, kept and not shown.
-    await field("event.locationName").fill(secret);
+    await expect(field("event.locationName")).toBeHidden();
+    await expect(field("event.mapUrl")).toBeHidden();
+    await expect(field("event.locationName")).toHaveValue(secret);
 
     await field("translations.ro.title").fill(`Locație neanunțată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -75,8 +78,10 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.goto(editorUrl);
     await hydrated(page);
     await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
+    await expect(field("event.locationName")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
     await page.getByRole("switch", { name: "Locația se anunță mai târziu" }).uncheck();
+    await expect(field("event.locationName")).toBeVisible();
     await expect(field("event.locationName")).toHaveAttribute("required", "");
     // The event is live, so the save carries the live-edit acknowledgement, as every such save does.
     await page.locator('[name="acknowledgeLiveEdit"]').check();

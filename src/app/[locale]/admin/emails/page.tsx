@@ -1,14 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import SubNav from "@/shared/ui/SubNav";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { getDb } from "@/db/client";
@@ -26,13 +24,16 @@ import EmailCopyEditor from "@/modules/notifications/ui/EmailCopyEditor";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
+import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string }> };
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string; message?: string }>;
+};
 
 /** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
@@ -61,8 +62,22 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const staff = await requireStaff();
-  const { lang, saved, error, sent } = await searchParams;
+  const { lang, saved, error, sent, message } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
+  /*
+    Every type, as it would go out — and the three that nothing queues any more said to be so and
+    listed last, rather than left looking like mail somebody receives (§331; the owner: "I want to
+    know exactly when and if participants get email alerts"). They stay in the catalogue because
+    the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
+    renders through them.
+  */
+  const types = [
+    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !NEVER_QUEUED.has(type)),
+    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
+  ];
+  // Which message's words were just saved (§336): the save names it, and only a real type counts.
+  const copySaved = saved === "emailCopy" || saved === "emailCopyReset";
+  const savedMessage = types.find((candidate) => candidate === message);
 
   // The plan and the counts (§100), above the messages: what can still go out is the first
   // thing anybody opening this page on race day wants to know.
@@ -140,18 +155,6 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 
-  /*
-    Every type, as it would go out — and the three that nothing queues any more said to be so and
-    listed last, rather than left looking like mail somebody receives (§331; the owner: "I want to
-    know exactly when and if participants get email alerts"). They stay in the catalogue because
-    the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
-    renders through them.
-  */
-  const types = [
-    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !NEVER_QUEUED.has(type)),
-    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
-  ];
-
   return (
     <Stack spacing={3}>
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
@@ -164,10 +167,25 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
       </Box>
 
-      <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} />
+      {/*
+        Every panel below is a fold, closed (§336), and opens by itself for what the reader must
+        see: its own save, "send now"'s answer, something waiting. A kept form's refusal (§315)
+        is not in this list because it never reaches the page as a parameter — `shared/ui/fold.ts`
+        says how it stays in view.
+      */}
+      <EmailPlanPanel locale={locale} plan={plan} volume={volume} mayEdit={mayEditEmail} openWhen={{ saved: saved === "emailPlan" }} />
 
-      {/* What is actually queued, and the button that sends it (§243). */}
-      {queue && <OutboxQueuePanel locale={locale} queue={queue} volume={volume} mayEdit={mayEditEmail} />}
+      {/* What is actually queued, and the button that sends it (§243). "Send now" is the one
+          form on this page that answers through `?error=`, so an error here is its own. */}
+      {queue && (
+        <OutboxQueuePanel
+          locale={locale}
+          queue={queue}
+          volume={volume}
+          mayEdit={mayEditEmail}
+          openWhen={{ saved: saved === "outboxSent", refused: Boolean(error) }}
+        />
+      )}
 
       {/* The club's own copies (§244, §245), beside the contact recipients they mirror. */}
       {notices && (
@@ -176,70 +194,57 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           notices={notices}
           declarations={resolveDeclarationCopies(notices, env.DECLARATIONS_ARCHIVE_TO)}
           mayEdit={mayEditEmail}
+          openWhen={{ saved: saved === "clubNotices" }}
         />
       )}
 
-      <ContactRecipientsPanel locale={locale} recipients={recipients} resolved={resolvedRecipients} mayEdit={mayEditEmail} />
+      <ContactRecipientsPanel
+        locale={locale}
+        recipients={recipients}
+        resolved={resolvedRecipients}
+        mayEdit={mayEditEmail}
+        openWhen={{ saved: saved === "contactRecipients" }}
+      />
 
-      <Box>
-        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-          {t("emails.title")}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-          {t("emails.intro")}
-        </Typography>
-        {/*
-          Which language is previewed, as sub-tabs rather than two links (the owner, 2026-09-22:
-          "these need to be tabs"). Two underlined words in a row read as prose — "Română
-          English" — and the one that was current was distinguished by weight alone, which is
-          the signal BR-REQ-041-01 says may not stand on its own. `SubNav` is the row §265
-          already uses for a panel switch inside a section, so this is the same control the
-          configuration screens carry, and it stays a plain anchor rendered on the server.
-        */}
-        <Box sx={{ mt: 1.5 }}>
-          <SubNav
-            items={routing.locales.map((candidate) => ({
-              href: `${emailsPath}?lang=${candidate}`,
-              label: t(`emails.lang.${candidate}`),
-              active: candidate === emailLocale,
-            }))}
-          />
-        </Box>
-      </Box>
-
-      {types.map((messageType) => {
-        // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
-        // and through the club's own words where it has written some (§247), so the preview is
-        // what a participant will actually receive rather than what the platform ships.
-        const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
-        const { html } = content;
-        // The platform's own text for this message, as the editor's starting point.
-        const shipped = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
-        return (
-          <Box key={messageType} component="details" sx={BOXED_DISCLOSURE_SX}>
-            <Typography component="summary" variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {t(`emails.types.${messageType}`)}
-              {NEVER_QUEUED.has(messageType) && (
-                <Typography component="span" variant="body2" color="warning.main" sx={{ ml: 1, fontWeight: 600 }}>
-                  {t("emails.neverSent")}
-                </Typography>
-              )}
-              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                {t("emails.subject")}: {content.subject}
-              </Typography>
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {t(`emails.when.${messageType}`)}
-            </Typography>
-            <Box
-              component="iframe"
-              srcDoc={html}
-              sandbox=""
-              title={t(`emails.types.${messageType}`)}
-              sx={{ width: "100%", height: 620, border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}
-            />
-            {/* The words, for whoever writes them (§103, §247). Under the preview it changes. */}
-            {canEditTexts(staff.role) && (
+      <ParticipantEmailsPanel
+        title={t("emails.title")}
+        intro={t("emails.intro")}
+        aside={t("emails.aside", { count: types.length, language: t(`emails.lang.${emailLocale}`) })}
+        languageLabel={t("emails.langLabel")}
+        /*
+          Which language is previewed, as sub-tabs rather than two links (§268; the owner,
+          2026-09-22: "these need to be tabs") — inside the card since §336, because it switches
+          the previews and the words being edited and nothing else on this page. Plain anchors
+          rendered on the server; the fragment lands the reader back on the card, and the card
+          opens because a language was chosen (`inUse` below).
+        */
+        languages={routing.locales.map((candidate) => ({
+          href: `${emailsPath}?lang=${candidate}#participant-emails`,
+          label: t(`emails.lang.${candidate}`),
+          active: candidate === emailLocale,
+        }))}
+        openWhen={{ saved: copySaved, inUse: lang !== undefined }}
+        messages={types.map((messageType) => {
+          // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
+          // and through the club's own words where it has written some (§247), so the preview is
+          // what a participant will actually receive rather than what the platform ships.
+          const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
+          // The platform's own text for this message, as the editor's starting point.
+          const shipped = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
+          return {
+            type: messageType,
+            name: t(`emails.types.${messageType}`),
+            whenShort: t(`emails.whenShort.${messageType}`),
+            // The three types nothing queues any more are said to be so on the closed card (§331).
+            ...(NEVER_QUEUED.has(messageType) ? { neverSent: t("emails.neverSent") } : {}),
+            when: t(`emails.when.${messageType}`),
+            subjectLine: `${t("emails.subject")}: ${content.subject}`,
+            html: content.html,
+            // The card whose words were just saved opens with the card around it, so the preview
+            // that changed is the first thing in view (§336).
+            justSaved: copySaved && savedMessage === messageType,
+            // The words, for whoever writes them (§103, §247). Under the preview it changes.
+            editor: canEditTexts(staff.role) ? (
               <EmailCopyEditor
                 locale={locale}
                 emailLocale={emailLocale}
@@ -248,15 +253,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                 /* The platform's own text is plain sentences — the rich parts in this list only ever
                  come from something the club wrote, and this is the fallback for when it has
                  not (§270). */
-              shipped={{
-                subject: shipped.subject,
-                paragraphs: shipped.paragraphs.filter((part): part is string => typeof part === "string"),
-              }}
+                shipped={{
+                  subject: shipped.subject,
+                  paragraphs: shipped.paragraphs.filter((part): part is string => typeof part === "string"),
+                }}
               />
-            )}
-          </Box>
-        );
-      })}
+            ) : undefined,
+          };
+        })}
+      />
     </Stack>
   );
 }

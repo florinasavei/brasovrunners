@@ -10,6 +10,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 
 /**
  * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
@@ -350,6 +351,11 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.unconfirmedRegistrations = deleted.length;
     if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
   });
+  // The public cache (§333, public pages from cache) is told after the step commits, as for the
+  // three-year delete below. A lapsed row held no place and never reached the start list, so no
+  // page changes in fact; the rule is simply that a sweep deleting registrations says so, and
+  // every such sweep is one more thing a count on a public page is made of.
+  if (counts.unconfirmedRegistrations > 0) revalidatePublicContent("places");
 
   /**
    * Registrations of events that started more than the retention period ago, with their
@@ -372,6 +378,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.registrations = deleted.length;
     if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
   });
+  // An old race's page still shows its start list, from the public cache (§333): the names that
+  // retention has just removed must leave it too. After the step's commit.
+  if (counts.registrations > 0) revalidatePublicContent("places");
 
   await step("audit-log", async (tx) => {
     const deleted = await tx

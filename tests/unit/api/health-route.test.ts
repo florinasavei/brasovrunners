@@ -19,12 +19,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const checkSchemaVersion = vi.fn();
 const checkJobHealth = vi.fn();
 const checkEmailHealth = vi.fn();
+const checkNeonQuotaHealth = vi.fn();
 const execute = vi.fn();
 
 vi.mock("@/db/client", () => ({ getDb: () => ({ execute }) }));
 vi.mock("@/db/schema-version", () => ({ checkSchemaVersion: (...args: unknown[]) => checkSchemaVersion(...args) }));
 vi.mock("@/modules/jobs/health", () => ({ checkJobHealth: (...args: unknown[]) => checkJobHealth(...args) }));
 vi.mock("@/modules/notifications/health", () => ({ checkEmailHealth: (...args: unknown[]) => checkEmailHealth(...args) }));
+vi.mock("@/modules/diagnostics/neon", () => ({ checkNeonQuotaHealth: (...args: unknown[]) => checkNeonQuotaHealth(...args) }));
 vi.mock("@/shared/config/build-info", () => ({
   buildInfo: { baseline: "BR-V1.43-2026-09-21", commit: "7c6ca38", committedAt: "2026-09-22T10:00:00.000Z" },
 }));
@@ -45,6 +47,7 @@ function healthy(): void {
     lastFinishedAt: "2026-09-22T09:50:00.000Z",
   }));
   checkEmailHealth.mockResolvedValue({ status: "ok" });
+  checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
 }
 
 beforeEach(() => {
@@ -163,5 +166,112 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
     const behind = await GET();
     expect(behind.status).toBe(503);
     expect((await behind.json()).status).toBe("down");
+  });
+});
+
+/**
+ * The Neon project's monthly compute-time quota (§335): once this period's spend reaches 80%
+ * of it, health degrades before Neon suspends the database at 100% — the club's one warning
+ * through a channel that still works once email is among what has stopped.
+ *
+ * `checkNeonQuotaHealth` is mocked here (it is unit-tested on its own account against a fake
+ * Neon in `diagnostics/neon.test.ts`), so these assert only what the route does with its answer.
+ */
+describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early warning for the Neon quota", () => {
+  it("carries the reading in a `neon` block and stays ok under the warning", async () => {
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    // Status and percent only — this endpoint is public and unauthenticated, and the exact
+    // quota and this period's CU-hours are the club's own billing figures (§335); the full
+    // reading is `/admin/tasks` and `/devs`'s to show.
+    expect(body.neon).toEqual({ status: "ok", percent: 12 });
+  });
+
+  it("degrades to a 503 once the reading turns near-limit", async () => {
+    checkNeonQuotaHealth.mockResolvedValue({ status: "near-limit", quotaCuHours: 100, usedCuHours: 82, percent: 82 });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.status).toBe("degraded");
+    expect(body.database).toBe("ok");
+    expect(body.neon).toEqual({ status: "near-limit", percent: 82 });
+  });
+
+  it("stays ok when Neon could not be read at all — an unconfigured key is not a health failure", async () => {
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    expect(body.neon).toEqual({ status: "ok", percent: null });
+  });
+
+  it("is asked beside the connection probe, whether or not the database answers", async () => {
+    execute.mockRejectedValue(new Error("connect ECONNREFUSED"));
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+
+    const response = await GET();
+    const body = await response.json();
+
+    // Down for the database, but the quota reading — a console API request, never a query —
+    // was still asked and still answers, because nothing about it needs this connection.
+    expect(response.status).toBe(503);
+    expect(body.database).toBe("down");
+    expect(checkNeonQuotaHealth).toHaveBeenCalledTimes(1);
+    expect(body.neon).toEqual({ status: "ok", percent: null });
+  });
+
+  it("never publishes the exact quota or this period's CU-hours — a monitor and a 503 need only the status and the share spent", async () => {
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.neon).not.toHaveProperty("quotaCuHours");
+    expect(body.neon).not.toHaveProperty("usedCuHours");
+  });
+});
+
+/**
+ * §340 (the batch that caches: public pages, job pings, the Neon quota) — whatever else is
+ * cached, the answer is not. A monitor told `ok` from a stored response while the database is
+ * away is the one failure this endpoint exists to prevent (§98).
+ */
+describe("DECISIONS.md §98, §340 /api/health asks the database on every call", () => {
+  it("is a dynamic route, never a prerendered or cached one", async () => {
+    const route = await import("@/app/api/health/route");
+    expect(route.dynamic).toBe("force-dynamic");
+    expect(route).not.toHaveProperty("revalidate");
+  });
+
+  it("probes the database and reads both jobs again on each request", async () => {
+    await GET();
+    await GET();
+    await GET();
+
+    expect(execute).toHaveBeenCalledTimes(3);
+    expect(checkSchemaVersion).toHaveBeenCalledTimes(3);
+    expect(checkJobHealth).toHaveBeenCalledTimes(6);
+    expect(checkEmailHealth).toHaveBeenCalledTimes(3);
+  });
+
+  it("turns down the moment the database does, with no answer carried over from the last call", async () => {
+    expect((await GET()).status).toBe(200);
+
+    execute.mockRejectedValue(new Error("connect ECONNREFUSED"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect((await response.json()).database).toBe("down");
   });
 });
