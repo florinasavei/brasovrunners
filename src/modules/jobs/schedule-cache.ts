@@ -17,7 +17,7 @@ import {
 
 /**
  * Where a job's "nothing due until" lives between two serverless invocations without the
- * database: Next's data cache (§NNN). No new service — no Redis, no KV, no Edge Config — and on
+ * database: Next's data cache (§334). No new service — no Redis, no KV, no Edge Config — and on
  * Vercel the cache is the platform's own, shared by every function of the deployment's
  * environment and kept across deployments until invalidated or evicted. On `next start` it is
  * the build's file cache. Evicted or empty, a slot reads as missing and the ping runs for real:
@@ -119,7 +119,7 @@ export function insideJobRun<T>(job: JobName, work: () => Promise<T>): Promise<T
 
 /**
  * "This change may have given a job something to do sooner than it expects" — the one call every
- * write path makes (§NNN), after its transaction, from the service layer.
+ * write path makes (§334), after its transaction, from the service layer.
  *
  * `dueAt` is the earliest instant the change can matter (`maintenanceDueFor`). Work due further
  * away than the longest quiet any run can promise (`MAX_QUIET_MINUTES`) needs no invalidation:

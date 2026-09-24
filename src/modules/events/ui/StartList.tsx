@@ -43,7 +43,7 @@ export default async function StartList({
 
   const t = await getTranslations("Event");
   // Two counts first, so one page of fifty never fetches four hundred rows (§250). Both, and the
-  // page, from the public cache (§NNN): a confirmation, a cancellation, an erasure or somebody
+  // page, from the public cache (§333): a confirmation, a cancellation, an erasure or somebody
   // leaving the list expires them, so a name is never shown after its owner withdrew it.
   const { named, anonymous } = await cachedStartListCounts(event.id);
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE);

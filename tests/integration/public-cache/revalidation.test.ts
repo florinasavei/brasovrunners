@@ -13,7 +13,7 @@ import { confirmEmail, type EventForRegistration, submitRegistration } from "@/m
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the writes that change a public page expire the public cache they are read from.
+ * §333 — the writes that change a public page expire the public cache they are read from.
  *
  * The public pages read their rows from Next's data cache so a visitor does not wake the
  * database; what keeps them right is every write saying what it changed. These are the paths that
@@ -30,7 +30,7 @@ const { revalidateTag } = await import("next/cache");
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 const expired = (kind: string) => [`public:${kind}`, { expire: 0 }];
 
-describe("§NNN writes expire the public cache", () => {
+describe("§333 writes expire the public cache", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

@@ -67,7 +67,7 @@ describe("BR-REQ-090-07 the database's consumption", () => {
     expect(down).toEqual({ ok: false, reason: "TypeError" });
   });
 
-  // §NNN: the same project row the quota card reads carries the monthly limit too, so
+  // §335: the same project row the quota card reads carries the monthly limit too, so
   // `/api/health`'s early warning and the Costuri panel never see two different numbers.
   it("reads the project's own compute-time quota, in CU-hours, or null without one", async () => {
     const withQuota = await readNeonConsumption({ NEON_API_KEY: "k", NEON_PROJECT_ID: "p" }, async () =>
@@ -102,14 +102,14 @@ describe("BR-REQ-090-07 the database's consumption", () => {
 });
 
 /**
- * `/api/health`'s early warning for the monthly compute quota (§NNN): once this period's spend
+ * `/api/health`'s early warning for the monthly compute quota (§335): once this period's spend
  * reaches 80% of it, health degrades before Neon suspends the database at 100% — a suspension
  * that is total, and the one thing the club cannot be emailed about once it has happened.
  *
  * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the
- * quota case only (`DECISIONS.md` §NNN); the plan half of that criterion is unchanged.
+ * quota case only (`DECISIONS.md` §335); the plan half of that criterion is unchanged.
  */
-describe("BR-REQ-090-07 criterion 10 (§NNN) — /api/health's early warning for the monthly compute quota", () => {
+describe("BR-REQ-090-07 criterion 11 (§335) — /api/health's early warning for the monthly compute quota", () => {
   it("reads ok with no figures without the two variables, and calls nothing", async () => {
     const result = await checkNeonQuotaHealth({ NEON_API_KEY: undefined, NEON_PROJECT_ID: "p" }, () => {
       throw new Error("must not be called");

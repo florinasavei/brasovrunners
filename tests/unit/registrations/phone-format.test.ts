@@ -17,13 +17,13 @@ import {
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 
 /**
- * BR-REQ-031-04 criterion 16, `DECISIONS.md` §NNN — the telephone box groups the digits as they
+ * BR-REQ-031-04 criterion 16, `DECISIONS.md` §337 — the telephone box groups the digits as they
  * are typed, and nothing about what is stored or refused moves.
  */
 
 const TABLE = Object.keys(PHONE_MASKS);
 
-describe("§NNN the mask, per country", () => {
+describe("§337 the mask, per country", () => {
   it("groups each table country the way its own people write a mobile number", () => {
     const cases: Array<[string, string, string]> = [
       ["RO", "0752189098", "0752 189 098"],
@@ -78,14 +78,14 @@ describe("§NNN the mask, per country", () => {
     expect(formatNationalNumber("RO", "+407")).toBe("+40 7");
     // The same plus `composePhone` sees: after the separators it tolerates, and nowhere else.
     expect(formatNationalNumber("RO", " (+40) 752")).toBe("+40 752");
-    // A `+` anywhere but the front is exactly what `composePhone` refuses (§NNN) — formatting
+    // A `+` anywhere but the front is exactly what `composePhone` refuses (§337) — formatting
     // it into something that looks clean would be the one thing a refused draft must never
     // become, so it comes back untouched instead.
     expect(composePhone("RO", "0752+189")).toBeNull();
     expect(formatNationalNumber("RO", "0752+189")).toBe("0752+189");
   });
 
-  it("leaves a draft composePhone would refuse exactly as it was typed, never cleaned into one that would pass (§NNN)", () => {
+  it("leaves a draft composePhone would refuse exactly as it was typed, never cleaned into one that would pass (§337)", () => {
     for (const typed of ["0752a189098", "0752/189/098", "07521+89+098", "b"]) {
       expect(composePhone("RO", typed), typed).toBeNull();
       expect(formatNationalNumber("RO", typed), typed).toBe(typed);
@@ -130,7 +130,7 @@ describe("§NNN the mask, per country", () => {
   });
 });
 
-describe("§NNN the mask changes nothing composePhone decides (§84, §231, §283)", () => {
+describe("§337 the mask changes nothing composePhone decides (§84, §231, §283)", () => {
   /*
     Only what the box can hold: digits, the separators `composePhone` tolerates, a leading plus.
     (A letter is stripped as it is typed since §223 — that is the filter's behaviour, not the mask's.)
@@ -174,7 +174,7 @@ describe("§NNN the mask changes nothing composePhone decides (§84, §231, §28
   });
 });
 
-describe("§NNN the cap counts digits, never characters (§283)", () => {
+describe("§337 the cap counts digits, never characters (§283)", () => {
   it("leaves the stored number at fifteen digits in every form composePhone reads", () => {
     expect(phoneDigitCap("RO", "712")).toBe(13);
     // A trunk zero is dropped before storing, so it is not charged against the ceiling.
@@ -213,7 +213,7 @@ describe("§NNN the cap counts digits, never characters (§283)", () => {
   });
 });
 
-describe("§NNN the caret stays with its digit", () => {
+describe("§337 the caret stays with its digit", () => {
   it("maps a count of digits to a place in the formatted value", () => {
     expect(caretAfter("0752 189 098", 0)).toBe(0);
     expect(caretAfter("0752 189 098", 4)).toBe(4);
@@ -285,7 +285,7 @@ describe("§NNN the caret stays with its digit", () => {
   });
 });
 
-describe("§NNN one box, rendered on the server", () => {
+describe("§337 one box, rendered on the server", () => {
   const countryOrder = phoneCountryOrder("ro");
   const countryNames = phoneCountryLabels("ro");
   const render = (props: Partial<Parameters<typeof PhoneField>[0]>) =>
@@ -316,7 +316,7 @@ describe("§NNN one box, rendered on the server", () => {
     expect(render({ draft: { country: "RO", national: "12" } })).toContain('value="12"');
   });
 
-  it("brings a no-JS draft composePhone refused back exactly as typed, not cleaned into a number that would pass (§NNN)", () => {
+  it("brings a no-JS draft composePhone refused back exactly as typed, not cleaned into a number that would pass (§337)", () => {
     expect(composePhone("RO", "0752+189 098")).toBeNull();
     expect(render({ draft: { country: "RO", national: "0752+189 098" } })).toContain('value="0752+189 098"');
   });

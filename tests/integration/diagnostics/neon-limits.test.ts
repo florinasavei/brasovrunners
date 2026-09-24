@@ -7,7 +7,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNeon, instantSleep, NEON_ENV, productionLikeState } from "../../helpers/fake-neon";
 
 /**
- * BR-REQ-090-07 criterion 9 (§NNN) — the database's brakes are the Administrator's, asserted in
+ * BR-REQ-090-07 criterion 10 (§335) — the database's brakes are the Administrator's, asserted in
  * the service; checked against a fresh read of Neon; audited from and to as Neon states them
  * before and after, never as requested. Neon is the in-memory fake: nothing here reaches it.
  */

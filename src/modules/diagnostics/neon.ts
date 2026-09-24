@@ -41,7 +41,7 @@ export type NeonConsumption = {
   periodEnd: Date;
   /** The plan Neon reports for the owning account, or null when it names one this code does not know. */
   reportedPlan: NeonPlanId | null;
-  /** The period's compute-time limit in CU-hours (§NNN), or null when there is none (absent or zero). */
+  /** The period's compute-time limit in CU-hours (§335), or null when there is none (absent or zero). */
   quotaCuHours: number | null;
 };
 
@@ -58,7 +58,7 @@ type NeonProjectRow = {
   settings?: { quota?: { compute_time_seconds?: number } };
 };
 
-/** The quota and this period's spend, read off the row the same one way everywhere (§NNN). */
+/** The quota and this period's spend, read off the row the same one way everywhere (§335). */
 function neonQuotaReading(project: NeonProjectRow): { quotaCuHours: number | null; usedCuHours: number } {
   return {
     quotaCuHours: secondsToCuHours(project.settings?.quota?.compute_time_seconds),
@@ -120,14 +120,14 @@ export async function readNeonConsumption(
 const NEON_HEALTH_CACHE_SECONDS = 900;
 
 /**
- * `/api/health`'s early warning for a project's monthly compute-time quota (§NNN): once this
+ * `/api/health`'s early warning for a project's monthly compute-time quota (§335): once this
  * period's spend reaches 80% of it (`NEON_QUOTA_WARNING_RATIO`), health degrades before Neon
  * suspends the database at 100% — a suspension is total, every page down until the next billing
  * period, and the 503 is the one channel a monitor still reads once email is among what stopped.
  *
  * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the quota
  * case only: that line was about the *plan*, which is a setting nobody would notice go stale;
- * a quota is a suspension the owner asked to be warned of before it lands (`DECISIONS.md` §NNN).
+ * a quota is a suspension the owner asked to be warned of before it lands (`DECISIONS.md` §335).
  *
  * Cached for fifteen minutes in Next's Data Cache (`next: { revalidate }`) rather than the
  * admin panel's `no-store`. The health monitors ask hourly on production and every six hours on
@@ -173,7 +173,7 @@ export async function checkNeonQuotaHealth(
 
 /**
  * Why a request to Neon gave nothing this code can use — each kind is one sentence on the card
- * and one refusal code on the form (§NNN), never a stack or Neon's own error text.
+ * and one refusal code on the form (§335), never a stack or Neon's own error text.
  *
  * `forbidden` is the one worth its own word: a key that reads the figures and may not change
  * them answers 401 or 403 to the write while every read above it worked, and the sentence has to
@@ -300,7 +300,7 @@ export type NeonLimitsSnapshot = {
 };
 
 /**
- * The project's brakes as Neon holds them (§NNN): the read-write computes' autoscaling range
+ * The project's brakes as Neon holds them (§335): the read-write computes' autoscaling range
  * (`GET /projects/{id}/endpoints`), the project's defaults for a compute created again and its
  * compute-time quota, with this period's consumption (`GET /projects/{id}`). Two requests, side
  * by side, each bounded like the consumption read.
@@ -351,7 +351,7 @@ export async function readNeonLimits(
 }
 
 /**
- * Sets the brakes (§NNN): the project first — its defaults, so a compute created again inherits
+ * Sets the brakes (§335): the project first — its defaults, so a compute created again inherits
  * the ceiling, and its quota, zero meaning none (Neon's own word for "no limit") — then every
  * read-write compute that is not already where it is asked to be. Nothing is sent that would not
  * change anything, so a save that changes only the limit starts no compute operation at all.

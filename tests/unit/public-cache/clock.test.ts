@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { clockWindow } from "@/modules/public-cache/clock";
 
 /**
- * §NNN — the clock as part of a public cache key. The stretch of time `now` is in must change
+ * §333 — the clock as part of a public cache key. The stretch of time `now` is in must change
  * exactly when the SQL comparison behind the cached read changes its answer, on the right side
  * of the boundary millisecond, and never in between.
  */
 const at = (iso: string) => new Date(iso);
 
-describe("§NNN clockWindow", () => {
+describe("§333 clockWindow", () => {
   const endings = [at("2026-10-01T10:00:00.000Z"), at("2026-10-08T10:00:00.000Z"), at("2026-10-15T10:00:00.000Z")];
 
   it("names the stretch by the next instant ahead, and keeps the name until that instant", () => {

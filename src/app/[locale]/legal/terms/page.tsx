@@ -13,7 +13,7 @@ import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
-/** Per request, from the public cache — the privacy notice's arrangement, for the same reasons (§NNN). */
+/** Per request, from the public cache — the privacy notice's arrangement, for the same reasons (§333). */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {

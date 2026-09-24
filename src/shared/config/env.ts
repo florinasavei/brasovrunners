@@ -93,7 +93,7 @@ export const envSchema = z
 
     // Reads the database's CU-hours, plan and quota for `/devs`, `/admin/tasks` and `/api/health`
     // (SETUP.md §33), and writes the size ceiling and the quota from `/admin/tasks` → Costuri
-    // (§NNN). A project-scoped key has Editor access to its one project, which covers both.
+    // (§335). A project-scoped key has Editor access to its one project, which covers both.
     NEON_API_KEY: z.string().min(1).optional(),
     NEON_PROJECT_ID: z.string().min(1).optional(),
     /**
@@ -461,7 +461,7 @@ export const envSchema = z
   });
 
 /**
- * Whether `E2E_DISABLE_NEON` takes effect — everywhere but production (§NNN, Neon limits).
+ * Whether `E2E_DISABLE_NEON` takes effect — everywhere but production (§335, Neon limits).
  *
  * The flag exists for the end-to-end suite's own server, so it never calls the real Neon API.
  * On production it would switch off exactly what the owner asked to keep: the 80% quota warning

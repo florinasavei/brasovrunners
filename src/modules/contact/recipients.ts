@@ -113,7 +113,7 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
     });
   });
   // The header's "Contact" entry and the contact page ask the public cache whether anybody is
-  // named (§NNN); this is the write that changes the answer.
+  // named (§333); this is the write that changes the answer.
   revalidatePublicContent("settings");
   return { ...next, updatedAt: now };
 }

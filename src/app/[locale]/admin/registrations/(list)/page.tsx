@@ -713,7 +713,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
           collapsible
           // Open while a bib waits for the printer or a printed one waits to be pulled (§311),
-          // and after a batch was marked — the undo is in here (§NNN).
+          // and after a batch was marked — the undo is in here (§336).
           openWhen={{
             attention: bibs.unprinted > 0 || voidBibs.length > 0,
             saved: saved === "bibsPrinted" || saved === "bibsUnprinted",
@@ -941,14 +941,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ? t("registrations.filtersInUse")
             : autoScopedToFeatured && featuredEvent
               ? t("registrations.filterAutoFeatured", { event: featuredEvent.title ?? featuredEvent.id })
-              : // Closed and unfiltered (§NNN, folds start closed): the summary still says the list is whole.
+              : // Closed and unfiltered (§336, folds start closed): the summary still says the list is whole.
                 t("registrations.filtersNone")
         }
         collapsible
         // Open while the list is narrowed, so nobody loses a filter behind a fold (§269) —
         // including the automatic featured-event scope nobody chose in the address bar, which is
         // the exact shape §277 named and fixed elsewhere on this same screen; closed otherwise
-        // (§NNN) — the list is what the screen is for.
+        // (§336) — the list is what the screen is for.
         openWhen={{ inUse: hasFilters || autoScopedToFeatured }}
         id="registrations-filters"
         data-testid="registrations-filters"

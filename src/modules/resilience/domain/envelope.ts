@@ -11,7 +11,7 @@
  * mid-flight — takes the whole site's content with it, and a stranger meets an error page on the
  * week they were deciding whether to enter a race.
  *
- * Since §NNN the rows come through the public cache first (`modules/public-cache/`), which every
+ * Since §333 the rows come through the public cache first (`modules/public-cache/`), which every
  * write expires; an outage then costs nothing while the cache holds the answer, and this copy is
  * what stands behind a cache miss that finds the database away.
  *
@@ -47,7 +47,7 @@ export type StoredEnvelope = { takenAt: string; value: unknown };
 const DATE_KEY = "__date";
 
 /**
- * Exported for the public cache (`modules/public-cache/cache.ts`, §NNN), which stores the same
+ * Exported for the public cache (`modules/public-cache/cache.ts`, §333), which stores the same
  * rows as JSON for the same reason and must hand back a `Date` wherever the database did.
  */
 export function tagDates(value: unknown): unknown {

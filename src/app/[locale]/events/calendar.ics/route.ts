@@ -11,7 +11,7 @@ import { env } from "@/shared/config/env";
  * to and refresh on their own. Public. Never cached by the CDN (§129): the CDN's hour of cache
  * served a time the organizer had changed, and a stale copy is a runner at the wrong hour.
  *
- * The rows behind it are cached (§NNN), which is not the same thing: the public cache is expired
+ * The rows behind it are cached (§333), which is not the same thing: the public cache is expired
  * by the very save that changes a time, so a subscriber's app asking a few times a day reads the
  * organizer's latest words without waking the database for each ask.
  */

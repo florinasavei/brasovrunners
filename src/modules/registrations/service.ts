@@ -202,7 +202,7 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
 }
 
 /**
- * Tell the maintenance job this change may have given it work sooner than it expects (§NNN).
+ * Tell the maintenance job this change may have given it work sooner than it expects (§334).
  *
  * The one call every write path below makes once its transaction has committed. `deadlines` are
  * the holds and offers the change itself created; `maintenanceDueFor` adds the event's own
@@ -940,7 +940,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
   };
 
-  /** The deadlines this submission created, for the maintenance job (§NNN); none on a resend. */
+  /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */
   let createdDeadlines = undefined as (Date | null)[] | undefined;
 
   await db.transaction(async (tx) => {
@@ -1158,7 +1158,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     createdDeadlines = [emailLinkLapses(now)];
   });
 
-  // A resend creates nothing; anything else may, and the job is told when it matters (§NNN).
+  // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   if (createdDeadlines !== undefined) wakeMaintenance(event, now, ...createdDeadlines);
 
   return { ok: true };
@@ -1421,7 +1421,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     return { registration: confirmed, offered };
   });
   // A confirmation is a reminder two days out; a re-allocation onto the waiting list may have
-  // made an offer, and so may a released hold (§NNN).
+  // made an offer, and so may a released hold (§334).
   wakeMaintenance(event, now, signed.registration.holdExpiresAt, signed.offered > 0 ? offerDeadline(event, now) : null);
   return signed.registration;
 }

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN (public pages from cache) — the language switch is cached per *path*, never per query.
+ * §333 (public pages from cache) — the language switch is cached per *path*, never per query.
  *
  * `resolveLocaleSwitch` ignores the query string (`parseLocalizedPath` drops it and the answer
  * never carries it), so keying the cached answer on the whole `from` made one entry per
@@ -44,7 +44,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN cachedLocaleSwitch", () => {
+describe("§333 cachedLocaleSwitch", () => {
   it("answers every query variant of one event page from one entry, keyed by the path", async () => {
     const answers: string[] = [];
     for (const from of [

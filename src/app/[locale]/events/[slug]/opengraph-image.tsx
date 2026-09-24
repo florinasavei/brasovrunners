@@ -9,7 +9,7 @@ import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
  * file; the picture itself is drawn in `modules/events/share-image.tsx`, shared with the
  * square one for Instagram.
  *
- * Drawn per request from the cached row (§NNN): every link preview a crawler fetches is a
+ * Drawn per request from the cached row (§333): every link preview a crawler fetches is a
  * visitor that must not wake the database, and an event save expires the row.
  */
 export const size = SHARE_SHAPES.og;

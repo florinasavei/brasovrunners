@@ -75,7 +75,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !NEVER_QUEUED.has(type)),
     ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
   ];
-  // Which message's words were just saved (§NNN): the save names it, and only a real type counts.
+  // Which message's words were just saved (§336): the save names it, and only a real type counts.
   const copySaved = saved === "emailCopy" || saved === "emailCopyReset";
   const savedMessage = types.find((candidate) => candidate === message);
 
@@ -168,7 +168,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       </Box>
 
       {/*
-        Every panel below is a fold, closed (§NNN), and opens by itself for what the reader must
+        Every panel below is a fold, closed (§336), and opens by itself for what the reader must
         see: its own save, "send now"'s answer, something waiting. A kept form's refusal (§315)
         is not in this list because it never reaches the page as a parameter — `shared/ui/fold.ts`
         says how it stays in view.
@@ -213,7 +213,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         languageLabel={t("emails.langLabel")}
         /*
           Which language is previewed, as sub-tabs rather than two links (§268; the owner,
-          2026-09-22: "these need to be tabs") — inside the card since §NNN, because it switches
+          2026-09-22: "these need to be tabs") — inside the card since §336, because it switches
           the previews and the words being edited and nothing else on this page. Plain anchors
           rendered on the server; the fragment lands the reader back on the card, and the card
           opens because a language was chosen (`inUse` below).
@@ -241,7 +241,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,
             // The card whose words were just saved opens with the card around it, so the preview
-            // that changed is the first thing in view (§NNN).
+            // that changed is the first thing in view (§336).
             justSaved: copySaved && savedMessage === messageType,
             // The words, for whoever writes them (§103, §247). Under the preview it changes.
             editor: canEditTexts(staff.role) ? (

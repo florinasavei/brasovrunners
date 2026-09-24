@@ -5,7 +5,7 @@ import { buildInfo } from "@/shared/config/build-info";
 
 /**
  * The public site's reads, answered from Next's data cache so that a visitor does not wake the
- * database (`DECISIONS.md` §NNN).
+ * database (`DECISIONS.md` §333).
  *
  * ## Why this exists
  *

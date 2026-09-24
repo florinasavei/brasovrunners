@@ -235,7 +235,7 @@ export default async function DeskRow({
               <Typography component="summary" variant="body2" color="text.secondary">
                 {t("desk.showBib")}
               </Typography>
-              {/* The picture draws the paper's edge itself (A5 bibs, §NNN): no second frame round it. */}
+              {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
                 src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}

@@ -38,7 +38,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
-    // The event page's count, read first — and so cached (§NNN): what follows proves the hold
+    // The event page's count, read first — and so cached (§333): what follows proves the hold
     // taken below expires it, rather than a cold read that would have been right anyway.
     await page.goto(`/ro/evenimente/${FEATURED.slug}`);
     const placesOnPage = await freePlaces(page.locator("#main"));
@@ -127,7 +127,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     expect(backBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
     /*
-      BR-REQ-034-01 with the public cache in front of it (§NNN): the count both pages showed
+      BR-REQ-034-01 with the public cache in front of it (§333): the count both pages showed
       came from the cache, and the email link below takes a place (the hold). The next visitor
       must see one place fewer — which is the allocator's number, not the cached one, only if the
       hold expired the cache. "Fewer", not "one fewer": the other viewport's run registers against

@@ -12,7 +12,7 @@ import { bibFooterText } from "./bib-footer";
  * drawing instruction lives here so the two cannot drift: which colour the header band is when
  * the event names none, and what the club chose to print. What the footer says and how it breaks
  * into lines is `bib-footer.ts`, the same kind of decision with a font table of its own (§317);
- * where everything sits on the A5 paper is `bib-geometry.ts` (§NNN).
+ * where everything sits on the A5 paper is `bib-geometry.ts` (§338).
  *
  * Pure, and importing nothing but the palette and the two pure modules beside it
  * (`bib-design-query.ts`, `bib-footer.ts`): no `node:` builtin, no pdfkit, no React. That
@@ -59,7 +59,7 @@ export function bibBandColour(colour: string | null | undefined): string {
  * `bibs-pdf.ts` measures in points and `bib-image.tsx` in pixels, so a font size cannot be
  * shared. A *factor* can: each renderer keeps its own base size and multiplies. That is what
  * `numberScaleFactor` is, and it is why the preview on the screen is the paper. Since the bib
- * became an A5 sheet (§NNN) the picture's base sizes are the sheet's, in points, times
+ * became an A5 sheet (§338) the picture's base sizes are the sheet's, in points, times
  * `BIB_IMAGE_SCALE` (`bib-geometry.ts`), so the two multiply the same numbers.
  */
 

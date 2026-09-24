@@ -264,7 +264,7 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
 
 /**
  * Every instant at which a published event in this locale stops being upcoming — the one thing
- * the clock changes about the listing (`DECISIONS.md` §NNN).
+ * the clock changes about the listing (`DECISIONS.md` §333).
  *
  * `listUpcomingEvents`, `listPastEvents` and `findLatestPastEvent` compare `now` against exactly
  * this expression and nothing else, so between two of these instants their answers cannot

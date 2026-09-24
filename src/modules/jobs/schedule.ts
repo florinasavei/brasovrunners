@@ -1,6 +1,6 @@
 /**
  * When a job has to look at the database again — the arithmetic of "a ping with nothing to do
- * does not wake PostgreSQL" (§NNN), pure, so every rule below is a test rather than a hope.
+ * does not wake PostgreSQL" (§334), pure, so every rule below is a test rather than a hope.
  *
  * The owner, 2026-09-23: "I've spent 1 dollar in Neon in 2 days, I think I need to throttle".
  * Neon Launch bills a compute from the first query until five idle minutes later, and the

@@ -49,7 +49,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * The failures the very next run could repair — an event's queue work, a reminder, a
    * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
    * series). Above zero, the run promises the pings no quiet, so the next ping tries again rather
-   * than the next hour (§NNN). Retention is here since §322 made it loud: `failing` is two failed
+   * than the next hour (§334). Retention is here since §322 made it loud: `failing` is two failed
    * runs in a row, and a retry an hour away would make that alarm an hour late.
    */
   retryableErrorCount: number;
@@ -220,7 +220,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
    * with it, and `/api/health` says `failing` and answers 503, which is what the monitor emails
    * on.
    *
-   * Every failed step is also *retryable* (§NNN): the run then promises the pings no quiet, so
+   * Every failed step is also *retryable* (§334): the run then promises the pings no quiet, so
    * the second run that confirms or clears the failure is the next ping, not the next hour, and
    * the alarm is as prompt as §322 meant it to be.
    */

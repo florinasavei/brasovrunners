@@ -119,7 +119,7 @@ export const BOXED_DISCLOSURE_SX = {
   },
   "&[open]": { pb: 1.5 },
   /*
-    A refusal is never folded away (§NNN). Backoffice folds start closed, and a kept form's
+    A refusal is never folded away (§336). Backoffice folds start closed, and a kept form's
     refusal (§315) comes back as the form's state, which the server rendering the fold around it
     cannot see. With JavaScript on nothing re-renders the fold the person opened to press, and
     `ActionForm` opens the folds around its summary anyway; with JavaScript off the refused POST

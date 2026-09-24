@@ -14,7 +14,7 @@ import { env } from "@/shared/config/env";
  * Participant action pages, the backoffice and runner profiles are never listed
  * (AGENTS.md §9.2).
  *
- * Per request, from the public cache (§NNN): a crawler is exactly the visitor that should not
+ * Per request, from the public cache (§333): a crawler is exactly the visitor that should not
  * wake the database, and the rows here change only when an event, a page or an album is saved —
  * each of which expires them.
  */

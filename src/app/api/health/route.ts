@@ -32,7 +32,7 @@ import { env } from "@/shared/config/env";
  * `database: ok` — `select 1` succeeds perfectly well against a stale schema — and the only
  * symptom was a broken landing page with nothing to point at (`DECISIONS.md` §31).
  *
- * It also carries the Neon project's own early warning (§NNN): once this billing period's
+ * It also carries the Neon project's own early warning (§335): once this billing period's
  * compute reaches 80% of the monthly quota the club set on itself, this answers `degraded` before
  * Neon suspends the database at 100% — a suspension that is total, and the one the club cannot
  * be emailed about once it has happened. `checkNeonQuotaHealth` is cached for fifteen minutes and
@@ -78,9 +78,9 @@ const JOB_NAMES = ["registration-maintenance", "email-outbox"] as const;
 /**
  * Asked afresh on every call, whatever else in the application is cached.
  *
- * Three branches of one batch put Next's data cache to work — the public pages' rows (§NNN,
- * public pages from cache), the jobs' "nothing due until" slots (§NNN, jobs sleep when nothing is
- * due), and this route's own fifteen-minute reading of the Neon quota (§NNN, Neon limits). None of
+ * Three branches of one batch put Next's data cache to work — the public pages' rows (§333,
+ * public pages from cache), the jobs' "nothing due until" slots (§334, jobs sleep when nothing is
+ * due), and this route's own fifteen-minute reading of the Neon quota (§335, Neon limits). None of
  * that may reach the answer itself: a monitor that is told `ok` from a cached response while the
  * database is down is the one failure this endpoint exists to prevent (§98). Route handlers are
  * dynamic by default in this Next, and a `fetch` with `next.revalidate` inside one caches that
@@ -152,7 +152,7 @@ export async function GET(): Promise<Response> {
       schema,
       jobs,
       email,
-      // The monthly compute quota's early warning (§NNN): `percent: null` means nothing was
+      // The monthly compute quota's early warning (§335): `percent: null` means nothing was
       // asked (no key, or Neon did not answer within the timeout) rather than "there is no
       // quota". The figures themselves — the exact quota and this period's CU-hours — are the
       // club's own billing numbers; this endpoint is public and unauthenticated, so only what

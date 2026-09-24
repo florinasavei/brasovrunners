@@ -15,7 +15,7 @@ type Props = { params: Promise<{ locale: string }> };
 
 // The current approved version can change without a deploy (a new version becoming
 // effective), so this renders per request rather than at build time. The text comes from the
-// public cache (§NNN), which an approval expires and whose key is the stretch between effective
+// public cache (§333), which an approval expires and whose key is the stretch between effective
 // dates — so a version approved ahead of time takes over on its day with nobody saving anything.
 export const dynamic = "force-dynamic";
 

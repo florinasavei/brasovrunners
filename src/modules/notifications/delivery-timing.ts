@@ -83,7 +83,7 @@ export async function updateDeliveryTiming<T extends Record<string, unknown>>(
     });
   });
   // Rows the drain was leaving to the pinger, or the pinger to the drain: the outbox job looks
-  // again at its next ping rather than at the end of the quiet it last promised (§NNN).
+  // again at its next ping rather than at the end of the quiet it last promised (§334).
   wakeJobs("email-outbox");
   return { ...next, updatedAt: now };
 }

@@ -390,7 +390,7 @@ export async function approveVersion<T extends Record<string, unknown>>(
     throw new DomainError("CONFLICT", "this version changed while it was being approved");
   }
   // In force from now, on `/termeni` and `/confidentialitate` — which read the text through the
-  // public cache (§NNN) and must show it on the next visit, not the next day.
+  // public cache (§333) and must show it on the next visit, not the next day.
   revalidatePublicContent("legal");
 }
 
@@ -560,7 +560,7 @@ export async function withdrawApprovedVersion<T extends Record<string, unknown>>
     }
   });
   // Never the version in force — but one dated ahead of it, which the public cache has already
-  // filed as the text of the coming stretch (`public-cache/clock.ts`, §NNN).
+  // filed as the text of the coming stretch (`public-cache/clock.ts`, §333).
   revalidatePublicContent("legal");
 }
 

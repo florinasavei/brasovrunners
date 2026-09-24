@@ -34,7 +34,7 @@ import { type PublicContent, publicRead } from "./cache";
 import { clockWindow } from "./clock";
 
 /**
- * Every read a public page makes, through the data cache (`DECISIONS.md` §NNN).
+ * Every read a public page makes, through the data cache (`DECISIONS.md` §333).
  *
  * One file on purpose. The cache tells two reads apart by their key alone, so the keys have to be
  * unique across the application, and the only way to keep them unique is to keep them together.

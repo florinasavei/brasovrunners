@@ -81,7 +81,7 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * "Cât de des verifică platforma" (§NNN), from the costs panel beside the Neon plan: the minimum
+ * "Cât de des verifică platforma" (§334), from the costs panel beside the Neon plan: the minimum
  * minutes between two real runs of each scheduled job. The same gate and the same shape as the
  * Neon plan — Administrator at the door, the service asserting the role again, writing the audit
  * row and forgetting every cached schedule — and a refusal handed back as the form's state (§315).
@@ -104,7 +104,7 @@ export async function updateJobCadenceAction(_previous: FormOutcome | null, form
 }
 
 /**
- * The database's brakes (§NNN), from the card beside the Neon plan: the compute's size ceiling
+ * The database's brakes (§335), from the card beside the Neon plan: the compute's size ceiling
  * and the period's CU-hour limit, written to Neon itself. Administrator at the door, the service
  * asserting the role again, reading Neon fresh, checking the rules against that reading, writing,
  * reading back and auditing what Neon then says.

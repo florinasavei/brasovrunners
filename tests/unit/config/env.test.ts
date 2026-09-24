@@ -166,7 +166,7 @@ describe("EMAIL_ALLOWLIST accepts the star", () => {
 });
 
 /**
- * §NNN (Neon limits) — `E2E_DISABLE_NEON` keeps the end-to-end suite's server off the real Neon
+ * §335 (Neon limits) — `E2E_DISABLE_NEON` keeps the end-to-end suite's server off the real Neon
  * API, and nothing else: on production it would switch off the 80% quota warning the owner kept
  * production capped for (§327), so a production process ignores it and says so in the log.
  */

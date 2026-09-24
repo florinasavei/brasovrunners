@@ -144,7 +144,7 @@ export async function saveAlbum<T extends Record<string, unknown>>(
     }
     return album;
   });
-  // The gallery pages read albums from the public cache (§NNN); every write below says so.
+  // The gallery pages read albums from the public cache (§333); every write below says so.
   revalidatePublicContent("gallery");
   return saved;
 }

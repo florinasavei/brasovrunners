@@ -75,7 +75,7 @@ export function phoneCountryOrder(locale: string): string[] {
 
 /**
  * The reader's own name for every prefix, keyed by code — for the option text now that the box
- * shows a flag rather than the select itself (`DECISIONS.md` §NNN): "🇷🇴 România (+40)".
+ * shows a flag rather than the select itself (`DECISIONS.md` §337): "🇷🇴 România (+40)".
  *
  * Computed on the server beside `phoneCountryOrder`, for the same reason: the name is drawn as
  * plain data too, never recomputed from the browser's own ICU, which is what disagreed with

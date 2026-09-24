@@ -16,7 +16,7 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
 
 /**
  * A page's text changes when the club saves it, with no deploy in between — and the save expires
- * the public cache the text is read from (§NNN), so the next visitor gets the new words.
+ * the public cache the text is read from (§333), so the next visitor gets the new words.
  */
 export const dynamic = "force-dynamic";
 

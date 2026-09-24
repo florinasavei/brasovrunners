@@ -281,7 +281,7 @@ describe("the invitation key row (§288)", () => {
 });
 
 /**
- * The database's monthly compute-time limit (§NNN; the owner, 2026-09-23, after $1.09 in two
+ * The database's monthly compute-time limit (§335; the owner, 2026-09-23, after $1.09 in two
  * days of Launch: "I want toggles in my admin area, so I can throttle myself when needed").
  *
  * `owner-tasks.ts`'s one rule is that nothing here is ticked by hand, so the three states this
@@ -289,7 +289,7 @@ describe("the invitation key row (§288)", () => {
  * Costuri panel — never a second request, and never a setting an Administrator could tick
  * without a quota actually existing on Neon.
  */
-describe("BR-REQ-090-07 criterion 11 — the database limit row (§NNN)", () => {
+describe("BR-REQ-090-07 criterion 12 — the database limit row (§335)", () => {
   const limitsRow = (neonQuota: OwnerTaskInputs["neonQuota"], appEnv: OwnerTaskInputs["appEnv"] = LAUNCHED.appEnv) =>
     ownerTasks({ ...LAUNCHED, appEnv, neonQuota }).find((task) => task.id === "neonLimits");
 
@@ -405,7 +405,7 @@ describe("the counter and the filters", () => {
     expect(clubOpen.map((task) => task.state)).toEqual(sortTasks(clubOpen).map((task) => task.state));
 
     // The counter follows the filter: it counts the rows shown, not the board — three
-    // decision-kind rows now that neonLimits is one (§NNN), and MIXED leaves it inherited "done".
+    // decision-kind rows now that neonLimits is one (§335), and MIXED leaves it inherited "done".
     expect(countTasks(filterTasks(tasks, { kind: "decision" }))).toEqual({ pending: 1, done: 2 });
   });
 

@@ -11,7 +11,7 @@ import { confirmEmail, type EventForRegistration, readPublicAvailability, submit
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criteria 1 and 2 — the premise §NNN rests on, proven before a single maintenance
+ * BR-REQ-090-03 criteria 1 and 2 — the premise §334 rests on, proven before a single maintenance
  * run is skipped: expiry is evaluated at read time, so a run that does not happen can delay a
  * message or a hand-over to the waiting list, and cannot give a place twice or keep one from the
  * queue (AGENTS.md §10.6 outranks the saving).

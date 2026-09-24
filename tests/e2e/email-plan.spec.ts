@@ -22,7 +22,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
 
     const plan = main.getByTestId("email-plan");
     await expect(main.getByRole("heading", { name: "Planul Mailgun și cât mai putem trimite" })).toBeVisible();
-    // A fold since §NNN, closed on arrival, and its summary already says the plan and the day's
+    // A fold since §336, closed on arrival, and its summary already says the plan and the day's
     // figure — the thing race morning opens this page for.
     await expect(plan).not.toHaveAttribute("open");
     await expect(plan.locator(":scope > summary")).toContainText(/Planul Free · \d+ din 100 azi/);
@@ -37,7 +37,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     await main.getByRole("button", { name: "Salvează planul" }).click();
 
     await expect(main.getByText("Planul a fost salvat", { exact: false })).toBeVisible();
-    // Its own save opens it by itself (§NNN), so what was saved is in view.
+    // Its own save opens it by itself (§336), so what was saved is in view.
     await expect(plan).toHaveAttribute("open", "");
     await expect(main.getByText(/Planul Basic: \d+ din 10\.000 mesaje trimise luna aceasta/)).toBeVisible();
     await expect(main.getByText(/Notă: Basic pentru cursa din octombrie/)).toBeVisible();
@@ -61,7 +61,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     await page.goto("/ro/admin/emails");
     const main = page.locator("#main");
 
-    // Every panel is a closed fold (§NNN). Opened here before anything is counted, because a
+    // Every panel is a closed fold (§336). Opened here before anything is counted, because a
     // control inside a closed fold is not in the accessibility tree — "no Save button" would be
     // true of a hidden one.
     for (const id of ["email-plan", "outbox-queue", "club-notices", "contact-recipients"]) {
@@ -138,7 +138,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
 
     const contacts = main.getByTestId("contact-recipients");
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
-    // Closed by default (§NNN; the owner: "should be closed by default"), saying in its summary
+    // Closed by default (§336; the owner: "should be closed by default"), saying in its summary
     // where the messages go right now.
     await expect(contacts).not.toHaveAttribute("open");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
@@ -152,7 +152,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
 
     await expect(main.getByText("Destinatarii formularului de contact au fost salvați.")).toBeVisible();
-    // Its own save opens it (§NNN), and the closed summary would now say the new address.
+    // Its own save opens it (§336), and the closed summary would now say the new address.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: club@example.com");
     await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: amalia@example\.org\. Copie ascunsă: arhiva@example\.org/)).toBeVisible();
@@ -167,7 +167,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await expect(main.getByTestId("contact-recipients-form").getByTestId("form-refusal")).toBeVisible();
     // The fold the Administrator opened to press is still open: a kept form's refusal re-renders
-    // nothing around it (§NNN, §315).
+    // nothing around it (§336, §315).
     await expect(contacts).toHaveAttribute("open", "");
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("nope");
     await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("amalia@example.org");
@@ -186,7 +186,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   });
 
   /*
-    `DECISIONS.md` §NNN: folds start closed, and a refusal is never folded away. A kept form's
+    `DECISIONS.md` §336: folds start closed, and a refusal is never folded away. A kept form's
     refusal (§315) is the form's state, which the server drawing the fold cannot see — so this is
     the case the fold rule has to answer without a page parameter. Nothing is saved by a refused
     list, so the shared row is untouched.
@@ -231,11 +231,11 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
 });
 
 /**
- * `DECISIONS.md` §NNN — "Emailurile trimise participanților" is one card holding one card per
+ * `DECISIONS.md` §336 — "Emailurile trimise participanților" is one card holding one card per
  * message (the owner: "should be a master card with smaller cards within"), the language switch
  * inside it, and a `#fragment` opens the fold it names. Read-only, so both projects run it.
  */
-test.describe("§NNN the emails participants receive, as a card of cards", () => {
+test.describe("§336 the emails participants receive, as a card of cards", () => {
   test("closed on arrival; the language switch is inside it; each message is a closed card of its own", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");
@@ -313,7 +313,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     const panel = main.getByTestId("club-notices");
     const forecast = main.getByTestId("email-forecast");
     const box = panel.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)");
-    // Both folds closed on arrival (§NNN): the plan holds the forecast, the copies the box. The
+    // Both folds closed on arrival (§336): the plan holds the forecast, the copies the box. The
     // copies' summary counts the mailboxes it names.
     await expect(panel.locator(":scope > summary")).toContainText(/Adrese care primesc copii: \d+/);
     await openFold(main.getByTestId("email-plan"));

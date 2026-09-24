@@ -94,7 +94,7 @@ export default function ActionForm({
   const summary = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!state?.error) return;
-    // The folds around the form first (§NNN): backoffice folds start closed, and an element in
+    // The folds around the form first (§336): backoffice folds start closed, and an element in
     // a closed `<details>` cannot take focus. Normally the person opened it to press and it is
     // still open; this is for whatever closed it in between.
     openFoldsAround(summary.current);

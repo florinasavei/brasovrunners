@@ -126,7 +126,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     // repeat help, the type help; the registrations screen's batch verbs and the erase panel;
     // the guide; the desk's how-to and its bib picture; the tasks' steps; the series dates on
     // the events list; and `Panel` itself. The email previews were a fold the page drew by hand
-    // until §NNN made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
+    // until §336 made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
     expect(folds.length).toBeGreaterThanOrEqual(14);
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");

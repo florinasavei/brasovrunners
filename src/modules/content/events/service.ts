@@ -604,7 +604,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     eventType: record.event.type,
     now,
   });
-  // The public pages read events from a cache (§NNN); every write below says so the same way.
+  // The public pages read events from a cache (§333); every write below says so the same way.
   revalidatePublicContent("events");
   return saved;
 }
@@ -725,7 +725,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   // Published, unpublished, archived: the listing, the page, the calendar and the feeds change.
   revalidatePublicContent("events");
   // And the announcements of §146 wait on publication, so the maintenance job looks again at its
-  // next ping (§NNN).
+  // next ping (§334).
   wakeJobs("registration-maintenance");
   return moved;
 }
@@ -1028,7 +1028,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   // Every column here is on a public page, the capacity included (the free places are expired
   // with the events: `public-cache/reads.ts` files them under both).
   revalidatePublicContent("events");
-  // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§NNN).
+  // As in `saveEventAndTranslations`: the event's instants are the maintenance job's (§334).
   wakeJobs("registration-maintenance");
   return saved;
 }
@@ -1492,11 +1492,11 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     return notice ? { appliedTo, offered, placeAnnounced, notice } : { appliedTo, offered, placeAnnounced };
   });
   // The one save of the whole event (§36), cancelling included: a cancelled event must never read
-  // as scheduled, so the cached rows go the moment it commits (§28, §NNN).
+  // as scheduled, so the cached rows go the moment it commits (§28, §333).
   revalidatePublicContent("events");
   /*
     The date, the close, the participation window, the status, the capacity: any of them moves
-    what the maintenance job has to do and when (§NNN). Only when the event row itself was saved
+    what the maintenance job has to do and when (§334). Only when the event row itself was saved
     — a translation's words move nothing the job acts on.
   */
   if (parsedEventFields) wakeJobs("registration-maintenance");
@@ -1884,7 +1884,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   // so it leaves the listing's past events (§275).
   revalidatePublicContent("events");
   // A new standing rule is the maintenance job's to keep extending (§122); it looks at its next
-  // ping rather than at the end of the quiet it last promised (§NNN).
+  // ping rather than at the end of the quiet it last promised (§334).
   wakeJobs("registration-maintenance");
   return { created, published: publish };
 }

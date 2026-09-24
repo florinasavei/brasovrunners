@@ -1,5 +1,5 @@
 /**
- * Next's data cache, in memory, for the tests of §NNN — the jobs that answer "nothing due" from
+ * Next's data cache, in memory, for the tests of §334 — the jobs that answer "nothing due" from
  * `unstable_cache` without waking PostgreSQL.
  *
  * Outside a Next request the real `unstable_cache` has no incremental cache to use and throws,

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
- * A5 bibs (§NNN) — the bib's picture draws the paper's edge itself, 2 pixels in the line colour,
+ * A5 bibs (§338) — the bib's picture draws the paper's edge itself, 2 pixels in the line colour,
  * because a white A5 on a white page would otherwise not show where it ends. The screens that show
  * the picture must not frame it again: the editor's live preview and the desk's "show the bib" both
  * did, and read as a double line with its corners clipped by a rounded frame. One edge, the
@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  */
 const read = (file: string) => readFileSync(file, "utf8");
 
-describe("§NNN one edge round a bib's picture", () => {
+describe("§338 one edge round a bib's picture", () => {
   it("is drawn by the picture", () => {
     const picture = read("src/modules/registrations/bib-image.tsx");
     expect(picture).toMatch(/const PAPER_EDGE = 2;/);

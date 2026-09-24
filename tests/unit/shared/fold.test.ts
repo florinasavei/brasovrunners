@@ -8,7 +8,7 @@ import { type FoldNode, type FoldOpenWhen, fragmentId, openFoldsAround, opensByI
 import Panel from "@/shared/ui/Panel";
 
 /**
- * `DECISIONS.md` §NNN — a backoffice fold starts closed and opens by itself only for what the
+ * `DECISIONS.md` §336 — a backoffice fold starts closed and opens by itself only for what the
  * reader must see (the owner, 2026-09-23: "I would like the accordions to be closed by
  * default").
  *
@@ -38,7 +38,7 @@ function panel(props: { collapsible?: boolean; openWhen?: FoldOpenWhen; level?: 
 /** Whether the rendered `<details>` opening tag carries the `open` attribute. */
 const isOpen = (html: string): boolean => /<details[^>]*\sopen(=""|\s|>)/.test(html);
 
-describe("§NNN the open rule", () => {
+describe("§336 the open rule", () => {
   it("is closed with no reason, and with every reason false", () => {
     expect(opensByItself(undefined)).toBe(false);
     expect(opensByItself({})).toBe(false);
@@ -53,7 +53,7 @@ describe("§NNN the open rule", () => {
   });
 });
 
-describe("§NNN a collapsible Panel as the server renders it", () => {
+describe("§336 a collapsible Panel as the server renders it", () => {
   it("is a closed <details> by default — the heading and the aside in the summary, the body out of sight", () => {
     const html = panel({ collapsible: true });
     expect(html).toMatch(/^<details/);
@@ -99,7 +99,7 @@ function node(tagName: string, parentElement: FoldNode | null, open?: boolean): 
   return { tagName, parentElement, open };
 }
 
-describe("§NNN a #fragment opens the fold it names", () => {
+describe("§336 a #fragment opens the fold it names", () => {
   it("opens the fold the fragment names, and every fold it sits inside", () => {
     // `#email-EVENT_REMINDER`: the message's card, inside the closed card of all the messages.
     const master = node("DETAILS", node("MAIN", null), false);
@@ -147,7 +147,7 @@ describe("§NNN a #fragment opens the fold it names", () => {
   });
 });
 
-describe("§NNN a kept form's refusal is never folded away", () => {
+describe("§336 a kept form's refusal is never folded away", () => {
   it("opens the folds around the summary before focusing it, with JavaScript on", () => {
     const form = read("src/shared/forms/ActionForm.tsx");
     const effect = form.slice(form.indexOf("useEffect(() => {"), form.indexOf("}, [state]);"));
@@ -168,7 +168,7 @@ const tsxUnder = (relative: string): string[] =>
     .filter((entry) => entry.isFile() && entry.name.endsWith(".tsx"))
     .map((entry) => path.relative(ROOT, path.join(entry.parentPath, entry.name)).split(path.sep).join("/"));
 
-describe("§NNN the rule is written once", () => {
+describe("§336 the rule is written once", () => {
   it("leaves no panel deciding its own open state", () => {
     // `defaultOpen` was the per-page boolean the rule replaced; a panel that wants to open says
     // why through `openWhen`, and `Panel` is the one place that turns reasons into `open`.
@@ -184,7 +184,7 @@ describe("§NNN the rule is written once", () => {
  * this change closed that had no aside — adding a colleague, and the registrations' search and
  * filters when nothing is filtered — say one line in their summary like the others.
  */
-describe("§NNN a closed fold says what is inside it", () => {
+describe("§336 a closed fold says what is inside it", () => {
   it("the staff invite says what 'Add' does, with the Zitadel key and without it", () => {
     const page = read("src/app/[locale]/admin/staff/page.tsx");
     expect(page).toMatch(

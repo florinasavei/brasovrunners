@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN (public pages from cache) — a slug from the address names a cache entry only when it could
+ * §333 (public pages from cache) — a slug from the address names a cache entry only when it could
  * be a real one.
  *
  * The three by-slug reads (event, standing page, album) key their answer on the visitor's slug,
@@ -66,7 +66,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN the by-slug reads", () => {
+describe("§333 the by-slug reads", () => {
   for (const { name, read, load } of READS) {
     it(`caches the ${name} under a slug of the saved shape, a miss included`, async () => {
       await read("ro", "crosul-aniversar-2026");

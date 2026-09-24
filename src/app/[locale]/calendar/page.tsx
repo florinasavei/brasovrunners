@@ -70,7 +70,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
   const events = readWithLastGood(
     key,
-    // From the public cache (§NNN): the range is the key, and an event save expires it.
+    // From the public cache (§333): the range is the key, and an event save expires it.
     () =>
       cachedPublishedEventsBetween(locale, range.from, range.to).then((rows) =>
         rows.filter((event) => !type || event.type === type),

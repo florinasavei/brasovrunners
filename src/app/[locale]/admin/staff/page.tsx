@@ -179,7 +179,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       {/*
         Adding a colleague is a nine-field form and a rare act — twice a season — above the list
-        that is read every time. It is a panel of its own (§269), and since §NNN it starts closed
+        that is read every time. It is a panel of its own (§269), and since §336 it starts closed
         like every backoffice fold: its heading is a real `h2` in the summary, which a screen
         reader finds while the fold is shut. A refused add keeps the fold the person opened
         (§315); a successful one is shown in the list below and in the banner, so it does not
@@ -187,7 +187,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
       */}
       <Panel
         title={t("staff.inviteTitle")}
-        // What "Add" does, readable while the fold is shut, like every other fold's aside (§NNN,
+        // What "Add" does, readable while the fold is shut, like every other fold's aside (§336,
         // folds start closed): the account too when the Zitadel key can make it (§123).
         aside={invitesSend ? t("staff.inviteAsideSends") : t("staff.inviteAsideManual")}
         collapsible

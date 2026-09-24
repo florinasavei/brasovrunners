@@ -132,7 +132,7 @@ export default async function BackofficeShell({
 
       {children}
 
-      {/* A `#fragment` naming a closed panel opens it (§NNN): the one part of the fold rule a
+      {/* A `#fragment` naming a closed panel opens it (§336): the one part of the fold rule a
           server cannot see. Draws nothing. */}
       <OpenFoldFromHash />
     </Container>

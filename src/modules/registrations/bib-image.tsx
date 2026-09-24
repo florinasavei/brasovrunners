@@ -32,7 +32,7 @@ import {
  * club looks at this before sending anything to a printer, so a preview that arranged the same
  * facts differently would be a preview of nothing. Both read `bib-design.ts` and `bib-footer.ts`
  * for the decisions that could drift — which colour the band is when the event names none, what
- * the footer says and where it breaks (§317) — and since the bib became an A5 sheet (§NNN) both
+ * the footer says and where it breaks (§317) — and since the bib became an A5 sheet (§338) both
  * read `bib-geometry.ts` for where everything sits: this picture is 990×700, the A5 paper's own
  * proportion (√2), and every length in it is the sheet's length in points times
  * `BIB_IMAGE_SCALE` — the margin, the band, the lockup, the number, the name, the sponsors'
@@ -50,7 +50,7 @@ const px = (points: number) => points * BIB_IMAGE_SCALE;
 
 /**
  * The paper's edge, drawn on the screen only — the printed bib has no frame, its edge is the
- * paper's (§NNN) — so that a white A5 on a white page still shows where it ends. It sits inside
+ * paper's (§338) — so that a white A5 on a white page still shows where it ends. It sits inside
  * the margin: Satori sizes boxes border-box, so the padding is the margin less the border, and
  * everything inside starts exactly where the card starts on the paper.
  */

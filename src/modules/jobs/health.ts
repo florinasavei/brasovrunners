@@ -14,7 +14,7 @@ import { readLastPing } from "./schedule-cache";
  * (`quiet-hours.ts`, `DECISIONS.md` §68) — as twice the cadence plus a run, so one slow run
  * never flips the check before the next has had a chance. Both jobs share it.
  *
- * Since §NNN a ping with nothing to do answers from the cache and writes no `job_runs` row, so
+ * Since §334 a ping with nothing to do answers from the cache and writes no `job_runs` row, so
  * "alive" is two questions, and the check must not cry wolf on either:
  *
  * - **Is the pinger still calling?** Measured against the last *ping*, skipped or real — read
@@ -29,7 +29,7 @@ import { readLastPing } from "./schedule-cache";
  *
  * When the cache answers nothing for the pings — a caller outside a request, a cache this
  * function cannot reach, or ping slots evicted on their own — the last real run stands in for the
- * last ping. That is not the check as it was before §NNN: real runs are now up to an hour apart
+ * last ping. That is not the check as it was before §334: real runs are now up to an hour apart
  * by day, so a run fifty minutes old against the day's 35-minute threshold reads `stale` although
  * the pinger may be calling every quarter of an hour. It is left that way on purpose. Trusting
  * some other slot instead — "the plan is still cached, so the scheduler must be alive" — would
@@ -47,7 +47,7 @@ import { readLastPing } from "./schedule-cache";
  * is what the monitor emails on. Two, not one: a single lock timeout on a busy minute is
  * retried by the next run, and an alarm for it would be an alarm people learn to ignore.
  *
- * "The next run" is the next *ping* since §NNN, not the next hour: a retention failure is
+ * "The next run" is the next *ping* since §334, not the next hour: a retention failure is
  * counted as retryable (`retryableErrorCount`, `maintenance.ts`), so the run that hit it promises
  * the pings no quiet and the next one — fifteen minutes later by day, an hour at night — runs for
  * real. Only the Administrator's minimum interval, when one is set, holds that retry back, and

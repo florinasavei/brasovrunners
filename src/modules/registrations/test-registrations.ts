@@ -302,7 +302,7 @@ export async function removeTestRegistrations<T extends Record<string, unknown>>
     return { registrationsRemoved: rows.length, participantsRemoved: orphaned.length };
   });
   // A test row occupies a place like a real one (§30), so taking them away frees places on the
-  // public page — whose count is cached (§NNN).
+  // public page — whose count is cached (§333).
   if (removed.registrationsRemoved > 0) revalidatePublicContent("places");
   return removed;
 }

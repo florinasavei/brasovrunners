@@ -20,7 +20,7 @@ test.describe("§315 a refused form keeps what was typed", () => {
     await hydrated(page);
 
     const panel = page.getByTestId("staff-invite");
-    // A fold, closed on arrival like every backoffice fold (§NNN); opened the way a person does.
+    // A fold, closed on arrival like every backoffice fold (§336); opened the way a person does.
     await openFold(panel);
     await panel.getByLabel(/Adresă de email/).fill("amalia@club");
     await panel.getByLabel(/^Nume/).fill("Amalia Probă");
@@ -28,7 +28,7 @@ test.describe("§315 a refused form keeps what was typed", () => {
 
     const refusal = panel.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    // In the fold it was pressed in, which is still open: nothing re-rendered it (§NNN).
+    // In the fold it was pressed in, which is still open: nothing re-rendered it (§336).
     await expect(panel).toHaveAttribute("open", "");
     // The summary names the box and links to it (§47); the box says so where it is.
     await expect(refusal.getByRole("link", { name: "Adresă de email" })).toHaveAttribute("href", "#field-email");

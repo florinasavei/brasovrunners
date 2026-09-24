@@ -53,7 +53,7 @@ export function drainOutboxAfterResponse(): void {
           whoever gets there first claims it under `FOR UPDATE SKIP LOCKED`.
         */
         const { timing } = await readDeliveryTiming(db);
-        // The pinger sends, so the pinger has to look (§NNN): the outbox job's cached "nothing
+        // The pinger sends, so the pinger has to look (§334): the outbox job's cached "nothing
         // due" was written before this row existed.
         if (timing === "scheduled") {
           wakeJobs("email-outbox");
@@ -65,7 +65,7 @@ export function drainOutboxAfterResponse(): void {
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job
-          may be answering "nothing due" from the cache (§NNN). Told only when it is sooner than a
+          may be answering "nothing due" from the cache (§334). Told only when it is sooner than a
           real run would find it on its own; a queue the drain emptied tells it nothing.
         */
         const left = await nextOutboxWork(db);

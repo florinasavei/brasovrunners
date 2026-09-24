@@ -50,7 +50,7 @@ type Props = {
  * snapshot would show a run as scheduled after it was called off. It also keeps the database
  * out of the build, which is what lets CI build without one.
  *
- * Per request is not per query any more (§NNN): the rows come from the public cache, which every
+ * Per request is not per query any more (§333): the rows come from the public cache, which every
  * event save expires and which is keyed by the moment the next event ends — so the page reads the
  * address and the clock afresh on every visit, and the database only when something changed.
  */

@@ -4,7 +4,7 @@ import { answerJobPing } from "@/modules/jobs/ping";
  * The registration maintenance job (AGENTS.md §16.2), posted by the external pinger every
  * fifteen minutes by day and hourly at night, and by the GitHub backstop.
  *
- * Most pings find nothing to do, and since §NNN they say so from Next's data cache without
+ * Most pings find nothing to do, and since §334 they say so from Next's data cache without
  * waking the database: the last real run left "nothing due until" — its soonest hold or offer
  * deadline, reminder, window or close, never more than an hour ahead — and a ping before that
  * instant answers with it (`modules/jobs/ping.ts`). Skipping is safe because a lapsed hold or

@@ -1,5 +1,5 @@
 /**
- * The race number's geometry, in points, decided once for both renderers (§NNN; the owner,
+ * The race number's geometry, in points, decided once for both renderers (§338; the owner,
  * 2026-09-23: "they will be printed on an A4 page so we gonna have 2 per page, basically their
  * format is A5").
  *

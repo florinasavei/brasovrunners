@@ -190,7 +190,7 @@ export async function savePage<T extends Record<string, unknown>>(
 
     return page;
   });
-  // A live page's words and its place in the navigation are read from the public cache (§NNN).
+  // A live page's words and its place in the navigation are read from the public cache (§333).
   revalidatePublicContent("pages");
   return saved;
 }
@@ -358,7 +358,7 @@ export async function movePageInNav<T extends Record<string, unknown>>(
         .where(eq(pages.id, row.id));
     }
   });
-  // The navigation every public page carries, in its new order (§NNN).
+  // The navigation every public page carries, in its new order (§333).
   revalidatePublicContent("pages");
 }
 

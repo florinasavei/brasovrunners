@@ -169,7 +169,7 @@ export async function updateBotCheck<T extends Record<string, unknown>>(
     });
   });
   forgetCachedBotCheck();
-  // The contact page draws its widget from the public cache (§NNN), not from the memo above.
+  // The contact page draws its widget from the public cache (§333), not from the memo above.
   revalidatePublicContent("settings");
   return { enabled, honeypot, updatedAt: now };
 }

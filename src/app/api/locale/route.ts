@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     ? (requested as (typeof routing.locales)[number])
     : routing.defaultLocale;
 
-  // The pair of slugs from the public cache (§NNN), which publishing expires — the switch is a
+  // The pair of slugs from the public cache (§333), which publishing expires — the switch is a
   // click every visitor may make, and it should not be the one that wakes the database.
   const destination = await cachedLocaleSwitch(isSafePath(from) ? from : "/", target);
 

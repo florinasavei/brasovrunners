@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the public cache: what a public read does inside and outside a Next server, that dates
+ * §333 — the public cache: what a public read does inside and outside a Next server, that dates
  * survive the round trip through the data cache, and that a write expires every answer of its
  * kind at once.
  *
@@ -44,7 +44,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN publicRead", () => {
+describe("§333 publicRead", () => {
   it("reads straight through outside a Next server: a test, a script, a seed", async () => {
     const load = vi.fn(async () => ["row"]);
     expect(await publicRead(["x"], ["events"], load)).toEqual(["row"]);
@@ -128,7 +128,7 @@ describe("§NNN publicRead", () => {
   });
 });
 
-describe("§NNN revalidatePublicContent", () => {
+describe("§333 revalidatePublicContent", () => {
   it("is nothing to do outside a Next server", () => {
     revalidatePublicContent("events");
     expect(revalidateTag).not.toHaveBeenCalled();
@@ -154,7 +154,7 @@ describe("§NNN revalidatePublicContent", () => {
   });
 });
 
-describe("§NNN the public reads", () => {
+describe("§333 the public reads", () => {
   const reads = readFileSync("src/modules/public-cache/reads.ts", "utf8");
 
   it("give every answer a key of its own — one wrapper serves them all, so the key is all that tells them apart", () => {

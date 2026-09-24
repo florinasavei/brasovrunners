@@ -21,7 +21,7 @@ type Props = {
   declarations: DeclarationCopies;
   /** Who may change these lists (§291): the Administrator; `updateClubNotices` refuses anybody else. */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§NNN). */
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -43,7 +43,7 @@ type Props = {
 export default async function ClubNoticesPanel({ locale, notices, declarations, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
   /*
-    How many mailboxes receive anything from these lists, for the closed fold's summary (§NNN):
+    How many mailboxes receive anything from these lists, for the closed fold's summary (§336):
     the declaration copy as it resolves (the setting, or `DECLARATIONS_ARCHIVE_TO`), the
     confirmation notices and the hidden copies of the participants' messages. A mailbox on two
     lists is one mailbox, compared without case the way the lists themselves drop a repeat.

@@ -13,7 +13,7 @@ import {
 } from "@/modules/jobs/schedule";
 
 /**
- * §NNN — a job ping with nothing to do does not wake the database. The arithmetic of the plan a
+ * §334 — a job ping with nothing to do does not wake the database. The arithmetic of the plan a
  * real run leaves behind, and of the verdict a ping reads from it; the database half is
  * `tests/integration/jobs/next-work.test.ts`, the cache half `job-sleep.test.ts`.
  */
@@ -22,7 +22,7 @@ const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);
 /** Where a cap or an interval of `n` minutes ends: `PLAN_GRACE_MINUTES` early. */
 const ends = (n: number) => minutes(n - PLAN_GRACE_MINUTES);
 
-describe("§NNN the quiet a real run may promise", () => {
+describe("§334 the quiet a real run may promise", () => {
   it("promises quiet until the soonest work", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: minutes(20), cadenceMinutes: 0, failed: false });
     expect(plan.quietUntil).toEqual(minutes(20));
@@ -82,7 +82,7 @@ describe("§NNN the quiet a real run may promise", () => {
  * lands on — or a sixty-minute interval under the hourly night pinger becomes sixty or a hundred
  * and twenty at random, and an outbox retry waits long enough for `/api/health` to cry stalled.
  */
-describe("§NNN the pinger's next call runs, early or late by its latency", () => {
+describe("§334 the pinger's next call runs, early or late by its latency", () => {
   const halfSecondBefore = (n: number) => new Date(minutes(n).getTime() - 500);
 
   /** The verdict a ping at `now` reads from the slots `plan` wrote; `woken` drops the due slot, as `wakeJobs` does. */
@@ -115,7 +115,7 @@ describe("§NNN the pinger's next call runs, early or late by its latency", () =
   });
 });
 
-describe("§NNN a ping's verdict", () => {
+describe("§334 a ping's verdict", () => {
   const due = { quietUntil: minutes(40).toISOString(), ranAt: RAN.toISOString(), cadenceMinutes: 0 };
   const floor = { until: minutes(30).toISOString(), ranAt: RAN.toISOString(), cadenceMinutes: 30 };
 
@@ -137,7 +137,7 @@ describe("§NNN a ping's verdict", () => {
   });
 });
 
-describe("§NNN the five-minute slots", () => {
+describe("§334 the five-minute slots", () => {
   it("names each slot by its start", () => {
     expect(slotStart(new Date("2026-10-01T10:07:31.000Z"))).toEqual(new Date("2026-10-01T10:05:00.000Z"));
   });
@@ -162,7 +162,7 @@ describe("§NNN the five-minute slots", () => {
   });
 });
 
-describe("§NNN when a registration change can matter to the maintenance job", () => {
+describe("§334 when a registration change can matter to the maintenance job", () => {
   const day = 24 * 60 * 60_000;
   const race = { startsAt: new Date(RAN.getTime() + 30 * day), registrationClosesAt: null };
 

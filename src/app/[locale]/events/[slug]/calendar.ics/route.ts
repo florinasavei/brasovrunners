@@ -9,7 +9,7 @@ import { env } from "@/shared/config/env";
  * "Add to my calendar" (`DECISIONS.md` §107): this event as an `.ics` file — Apple Calendar,
  * Outlook and the phone's own app open it; Google gets a direct link from the page instead.
  * Public, like the event; the file says nothing the page does not — and reads the same cached
- * row the page does (§NNN).
+ * row the page does (§333).
  */
 export const dynamic = "force-dynamic";
 
