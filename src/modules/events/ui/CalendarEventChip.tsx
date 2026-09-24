@@ -9,9 +9,10 @@ import PartnerMark from "./PartnerMark";
 
 /**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
- * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then its partner when it is
- * held with one ("În parteneriat cu …"). The grid's tooltip shows them as lines; the link's
- * accessible name reads them as sentences, each ended so a screen reader pauses between them.
+ * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then the generic
+ * "Eveniment în parteneriat" marker when it is held with one. The grid's tooltip shows them as
+ * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
+ * between them.
  */
 function calendarEntryLines({ time, title, note, partner }: { time: string; title: string; note: EditionNote | null; partner: string | null }): string[] {
   return [`${time} ${title}`, ...(note ? [note.text] : []), ...(partner ? [partner] : [])];
@@ -66,7 +67,7 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "În parteneriat cu …" (§367), made on the server — or null for an event with no partner. */
+  /** The generic "Eveniment în parteneriat" marker (§367), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
@@ -151,7 +152,7 @@ export default function CalendarEventChip({
   );
 }
 
-/** The handshake with no tooltip of its own, inside the grid chip whose tooltip names the partner. */
+/** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Eveniment în parteneriat" / "Partnered event". */
 function PartnerGlyph({ size }: { size: number }) {
   const Icon = GLYPHS.partner;
   return <Icon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />;

@@ -47,24 +47,19 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
- * The partner marker's words (§367; the owner: "a special marker with this partnered event, so
- * that people know this is not a regular Brașov Runners group run"): "În parteneriat cu Brașov
- * Running Festival" / "With Brașov Running Festival" — on the listing card's chip, in the
- * calendar entry's tooltip and accessible name, and on the event page's overline.
+ * The partner marker's words (§367, amended §NNN — the owner, 2026-09-24: "For the partnership,
+ * I just need 1 icon, I do not need to show the full partners list, there might be multiple
+ * partners"): "Eveniment în parteneriat" / "Partnered event" — the same generic label everywhere
+ * the marker appears: the listing card's chip, the calendar entry's tooltip and accessible name,
+ * and the event page's overline.
  *
- * One partner by name, two by name ("… cu A și B"), and from three the first by name and the rest
- * counted ("… cu A și încă 2 parteneri"): a chip on a 320-pixel card has room for a name and a
- * number, not a list — the whole list is the event page's partner cards (§344). Names in the
- * order the club listed them (`readCoHosts`). Null when the event has no partner: no marker.
+ * It never names a partner and never counts them: the marker says only that the event is held with
+ * one or more partners — there may be several, and a card is a summary. The full list — each
+ * partner by name, with its links — is the event page's partner cards (§344), which this never replaces.
  *
- * The count picks a plain key (`countForm`), never an ICU plural: "și încă 2 parteneri", "și încă
- * 20 de parteneri". `more.one` is there because every counted phrase has the three keys, though
- * "the first and one more" is two partners, which the `two` wording names.
+ * `hasPartner` is whether `readCoHosts(event)` found any; null when it did not, so nothing
+ * renders where there is no partner to mark.
  */
-export function partnerPhrase(say: Say, locale: string, names: readonly string[]): string | null {
-  if (names.length === 0) return null;
-  if (names.length === 1) return say("partner.one", { partner: names[0] });
-  if (names.length === 2) return say("partner.two", { first: names[0], second: names[1] });
-  const others = names.length - 1;
-  return say(`partner.more.${countForm(others, locale)}`, { first: names[0], count: others });
+export function partnerPhrase(say: Say, hasPartner: boolean): string | null {
+  return hasPartner ? say("partner.marker") : null;
 }

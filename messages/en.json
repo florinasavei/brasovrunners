@@ -157,13 +157,7 @@
     "coHost": "Together with",
     "special": "Special edition",
     "partner": {
-      "one": "With {partner}",
-      "two": "With {first} and {second}",
-      "more": {
-        "one": "With {first} and {count} more partner",
-        "few": "With {first} and {count} more partners",
-        "other": "With {first} and {count} more partners"
-      }
+      "marker": "Partnered event"
     },
     "surface": {
       "ASPHALT": "Asphalt",
