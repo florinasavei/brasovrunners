@@ -1,7 +1,5 @@
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { toWallTimeInput } from "./zoned-time";
-
-/** The last days before an event, during which the homepage counts down (`DECISIONS.md` §78). */
-export const RACE_WEEK_DAYS = 7;
 
 /**
  * Whole calendar days from `now` to the event, counted on the event's own wall clock.
@@ -21,15 +19,17 @@ export function daysUntilOnWallClock(startsAt: Date, now: Date, timeZone: string
 }
 
 /**
- * Whether the event is within race week: still ahead, and starting within `RACE_WEEK_DAYS`
- * calendar days. Null otherwise — an event that has started is the desk's business, and one
- * further out is an ordinary listing.
+ * Whether the event is within race week — the last days before it, during which the homepage
+ * counts down (`DECISIONS.md` §78): still ahead, and starting within the club's number of calendar
+ * days (seven unless changed, §NNN). Null otherwise — an event that has started is the desk's
+ * business, and one further out is an ordinary listing.
  */
 export function raceWeek(
   event: { startsAt: Date; timezone: string },
   now: Date,
+  deadlines: Pick<Deadlines, "raceWeekDays">,
 ): { days: number } | null {
   if (event.startsAt.getTime() <= now.getTime()) return null;
   const days = daysUntilOnWallClock(event.startsAt, now, event.timezone);
-  return days <= RACE_WEEK_DAYS ? { days } : null;
+  return days <= deadlines.raceWeekDays ? { days } : null;
 }

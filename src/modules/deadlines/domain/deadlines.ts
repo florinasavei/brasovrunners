@@ -89,9 +89,17 @@ export const EVENT_REMINDER_MAX_HOURS = DEADLINE_RULES.reminderHours.max;
 /** The editor's choices for one event (§NNN), besides "as usual" (null) and "no reminder" (0). */
 export const EVENT_REMINDER_CHOICES = [24, 48, 72] as const;
 
+/**
+ * One deadline as a save may post it: a number, or the digits a form box posts. An empty box is
+ * refused rather than read as zero — `z.coerce` would turn "" into 0, and 0 is "no reminder", a
+ * choice nobody makes by clearing a box.
+ */
 function bounded(key: DeadlineKey) {
   const rule = DEADLINE_RULES[key];
-  return z.coerce.number().int().min(rule.min).max(rule.max);
+  return z.preprocess(
+    (value) => (typeof value === "string" ? (/^\s*\d+\s*$/.test(value) ? Number(value) : Number.NaN) : value),
+    z.number().int().min(rule.min).max(rule.max),
+  );
 }
 
 /** What a save must be: every deadline, a whole number inside its bounds, and nothing else. */

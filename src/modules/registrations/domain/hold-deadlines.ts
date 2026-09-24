@@ -1,14 +1,17 @@
+import { declarationHoldEndsAt, type Deadlines, offerEndsAt } from "@/modules/deadlines/domain/deadlines";
+
 /**
  * Hold deadlines (AGENTS.md §10.5, §15.1-§15.3; BR-REQ-033-01 criterion 4, BR-REQ-035-02
  * criterion 3): a hold's natural length, capped at the earlier of registration close or event
  * start — never handed out for longer than registration itself remains meaningful.
+ *
+ * The natural lengths are the club's (§NNN, "Termene" on `/admin/emails`): a declaration hold
+ * thirty minutes and a waiting-list offer twenty-four hours until an Administrator says
+ * otherwise (BR-REQ-033-01 criterion 1, BR-REQ-035-02 criterion 2). Every caller hands in the
+ * setting it read; nothing here has a number of its own, so a hold cannot be given a length the
+ * club did not choose. The deadline is computed once, when the hold is created, and stored on the
+ * row — a later change of the setting never moves it.
  */
-
-/** BR-REQ-033-01 criterion 1: a declaration hold lasts 30 minutes. */
-export const DECLARATION_HOLD_MINUTES = 30;
-
-/** BR-REQ-035-02 criterion 2: a waiting-list offer's default deadline is 24 hours. */
-export const WAITLIST_OFFER_HOLD_HOURS = 24;
 
 export function capHoldExpiry(params: {
   naiveExpiresAt: Date;
@@ -47,37 +50,41 @@ export function confirmationWindow(event: {
 /**
  * When a hold on a place lapses unsigned.
  *
- * Thirty minutes, as in the pilot — unless the event has a participation window that has not
- * opened yet (§104): then the place is the runner's until the window's deadline, and the
- * signature is the confirmation asked a week before. Inside the window, and on an event
- * without one, the thirty minutes stand: the place is scarce now and the person is present.
- * The deadline is not capped by the registration close: registration may close ten days
- * before while the confirmation is owed two days before, and that is the point of the window.
+ * The club's declaration hold — thirty minutes unless changed (§NNN) — unless the event has a
+ * participation window that has not opened yet (§104): then the place is the runner's until the
+ * window's deadline, and the signature is the confirmation asked a week before. Inside the
+ * window, and on an event without one, the club's minutes stand: the place is scarce now and the
+ * person is present. The deadline is not capped by the registration close: registration may
+ * close ten days before while the confirmation is owed two days before, and that is the point of
+ * the window.
  */
 export function computeDeclarationHoldExpiry(params: {
   now: Date;
   registrationClosesAt: Date | null;
   eventStartsAt: Date;
   window?: { opensAt: Date; deadline: Date } | null;
+  deadlines: Pick<Deadlines, "holdMinutes">;
 }): Date {
   const window = params.window ?? null;
   if (window && params.now.getTime() < window.opensAt.getTime()) {
     return new Date(Math.min(window.deadline.getTime(), params.eventStartsAt.getTime()));
   }
   return capHoldExpiry({
-    naiveExpiresAt: new Date(params.now.getTime() + DECLARATION_HOLD_MINUTES * 60_000),
+    naiveExpiresAt: declarationHoldEndsAt(params.now, params.deadlines),
     registrationClosesAt: params.registrationClosesAt,
     eventStartsAt: params.eventStartsAt,
   });
 }
 
+/** When a waiting-list offer made now lapses: the club's offer window, capped by the close and the start. */
 export function computeWaitlistOfferExpiry(params: {
   now: Date;
   registrationClosesAt: Date | null;
   eventStartsAt: Date;
+  deadlines: Pick<Deadlines, "offerHours">;
 }): Date {
   return capHoldExpiry({
-    naiveExpiresAt: new Date(params.now.getTime() + WAITLIST_OFFER_HOLD_HOURS * 60 * 60_000),
+    naiveExpiresAt: offerEndsAt(params.now, params.deadlines),
     registrationClosesAt: params.registrationClosesAt,
     eventStartsAt: params.eventStartsAt,
   });

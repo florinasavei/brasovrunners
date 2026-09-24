@@ -6,6 +6,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
+import { fillIn } from "@/shared/forms/fill-in";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -38,6 +41,12 @@ export default async function GuidePage({ params }: Props) {
   const mine = all.filter((section) => section.roles.includes(staffUser.role));
   const others = all.filter((section) => !section.roles.includes(staffUser.role));
   const sections = [...mine, ...others];
+  /*
+    The deadlines the steps name — "{hold}", "{offer}", "{checkin}" — are the club's (§NNN), filled
+    into the catalogue's raw lines here, since `t.raw` hands the sentences over unformatted.
+  */
+  const words = deadlineWords(locale, await deadlinesForThisRequest());
+  const values = { confirmation: words.confirmation, hold: words.hold, offer: words.offer, checkin: words.checkin, horizon: words.horizon };
 
   return (
     <Stack spacing={3}>
@@ -66,7 +75,7 @@ export default async function GuidePage({ params }: Props) {
           <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
             {section.steps.map((step, stepIndex) => (
               <Typography component="li" variant="body1" key={stepIndex}>
-                {step}
+                {fillIn(step, values)}
               </Typography>
             ))}
           </Box>

@@ -23,6 +23,8 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
@@ -440,6 +442,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     // Who may enter, counted on the event's day at every door (§329).
     minAge: fields.minAge,
+    // The event's own reminder lead (§NNN), by the partners' discipline: a caller that did not post
+    // the select writes nothing, so a save that never mentioned it keeps what the organizer chose.
+    ...(fields.reminderHoursBefore === undefined ? {} : { reminderHoursBefore: fields.reminderHoursBefore }),
     registrationOpensAt: times.registrationOpensAt,
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
@@ -1279,6 +1284,8 @@ const SERIES_COLUMNS = [
   "confirmationDeadlineDaysBefore",
   // One race, one age rule: every date of a series takes the same people (§329).
   "minAge",
+  // One reminder rule, like the confirmation window beside it (§NNN): "as usual", a lead, or none.
+  "reminderHoursBefore",
   "declarationDocumentId",
   "participantListVisibility",
   "externalProvider",
@@ -1980,6 +1987,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
     // of a series keep the source's minimum age, like its capacity.
     minAge: source.minAge,
+    // And its reminder rule (§NNN), like the confirmation window it sits beside.
+    reminderHoursBefore: source.reminderHoursBefore,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
     registrationClosesAt: source.registrationClosesAt,
@@ -2092,7 +2101,8 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   }
 
   await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
-  const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now);
+  // As far ahead as the club keeps its series (§NNN), read as the job reads it.
+  const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now, await currentDeadlines(db));
   // Even with every date a draft, the source's rule is public: a date of a series is not history,
   // so it leaves the listing's past events (§275).
   revalidatePublicContent("events");
@@ -2103,8 +2113,10 @@ export async function repeatEvent<T extends Record<string, unknown>>(
 }
 
 /**
- * The occurrences a source's rule still owes inside the horizon — from the latest one that
- * exists (or the source itself) up to `horizonEnd` — created in one transaction. Idempotent:
+ * The occurrences a source's rule still owes inside the club's horizon (§NNN) — from the latest
+ * one that exists (or the source itself) up to `horizonEnd` — created in one transaction. A horizon
+ * shortened later deletes nothing: the dates already created stay, and the next ones wait until
+ * they come inside it. Idempotent:
  * every occurrence is a whole number of periods from the source, and a date whose address
  * already exists is skipped, never duplicated. Two indexed reads and usually no write, which
  * is what lets the job run it every quarter hour.
@@ -2115,13 +2127,14 @@ async function materializeSeries<T extends Record<string, unknown>>(
   rule: RepeatRule,
   actor: Actor | null,
   now: Date,
+  deadlines: Pick<Deadlines, "seriesHorizonDays">,
 ): Promise<number> {
   const [latest] = await db
     .select({ startsAt: sql<Date | null>`max(${events.startsAt})` })
     .from(events)
     .where(eq(events.repeatOf, source.id));
   const after = latest?.startsAt ? new Date(Math.max(new Date(latest.startsAt).getTime(), source.startsAt.getTime())) : source.startsAt;
-  const before = horizonEnd(rule, source.timezone, now);
+  const before = horizonEnd(rule, source.timezone, now, deadlines);
   const dates = occurrencesBetween(source, rule, after, before);
   if (dates.length === 0) return 0;
 
@@ -2210,13 +2223,15 @@ async function materializeSeries<T extends Record<string, unknown>>(
 export async function materializeStandingRepeats<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  /** The club's deadlines, read once by the maintenance run (§NNN). */
+  deadlines: Pick<Deadlines, "seriesHorizonDays">,
 ): Promise<{ sources: number; created: number }> {
   const sources = await db.select().from(events).where(sql`${events.repeatRule} IS NOT NULL`);
   let created = 0;
   for (const source of sources) {
     const rule = readRepeatRule(source.repeatRule);
     if (!rule) continue;
-    created += await materializeSeries(db, source, rule, null, now);
+    created += await materializeSeries(db, source, rule, null, now, deadlines);
   }
   return { sources: sources.length, created };
 }

@@ -400,7 +400,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           this says the whole of it (`DECISIONS.md` §91). */}
       {!submitted && (
         <Box sx={{ mb: 3 }}>
-          <RegistrationSteps folded window={stepsWindow} />
+          <RegistrationSteps folded window={stepsWindow} reminderHoursBefore={event.reminderHoursBefore} />
         </Box>
       )}
 

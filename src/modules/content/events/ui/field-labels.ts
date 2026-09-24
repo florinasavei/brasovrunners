@@ -47,6 +47,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.registrationClosesAtTime": inBox("registrationWindow", t("editor.registrationClosesAt")),
     "event.confirmationOpensDaysBefore": inBox("confirmation", t("editor.confirmationOpensDaysBefore")),
     "event.confirmationDeadlineDaysBefore": inBox("confirmation", t("editor.confirmationDeadlineDaysBefore")),
+    // The event's own reminder lead (§NNN): "as usual", 24, 48, 72 hours or none.
+    "event.reminderHoursBefore": inBox("reminder", t("editor.reminder.label")),
     "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),

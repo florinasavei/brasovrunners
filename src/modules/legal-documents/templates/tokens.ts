@@ -16,6 +16,9 @@
  * substitution in `signed-declaration.ts`, not a translation: a token added there and not here
  * would be a token nobody is told about. `example` is what one signature actually produced.
  */
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { deadlineMergeValues } from "../domain/merge-fields";
+
 export type DeclarationToken = {
   /** The token as it is typed into the text, braces and all. */
   token: string;
@@ -37,6 +40,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
   { token: "{{eventDate}}", messageKey: "eventDate", example: "sâmbătă, 21 nov. 2026" },
   { token: "{{eventLocation}}", messageKey: "eventLocation", example: "Parcul Nicolae Titulescu" },
   { token: "{{signedAt}}", messageKey: "signedAt", example: "duminică, 20 sept. 2026, 19:42" },
+  // The club's deadlines (§NNN), in any of the three texts, filled from "Termene" when the text is
+  // shown — the examples are what an unset setting fills in, in the words it is filled with.
+  ...(Object.entries(deadlineMergeValues("ro", DEFAULT_DEADLINES)) as [string, string][]).map(([field, example]) => ({
+    token: `{{${field}}}`,
+    messageKey: field,
+    example,
+  })),
 ];
 
 /** Which tokens a body already uses — what the legend marks as "in this text". */

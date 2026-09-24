@@ -112,6 +112,7 @@ export default async function PreviewEventPage({ params }: Props) {
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
     minAge: event.minAge,
+    reminderHoursBefore: event.reminderHoursBefore,
     updatedAt: event.updatedAt,
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,

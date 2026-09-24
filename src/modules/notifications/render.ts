@@ -22,6 +22,9 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { readEmailCopyForSending } from "./email-copy";
+import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
@@ -73,8 +76,6 @@ const ROUTE_BY_PURPOSE: Record<
   LIST_CONSENT: "/registrations/list/[token]",
 };
 
-/** A sensible default when the triggering registration has no deadline of its own to borrow. */
-const DEFAULT_TOKEN_HOURS = 14 * 24;
 
 export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now) => {
   const locale = row.locale as Locale;
@@ -145,6 +146,21 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     */
     eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
+  };
+  /*
+    The deadlines the words state (§NNN), as numbers — the club's "Termene" in force now, this
+    event's own reminder lead, its window's opening and the link's lifetime — so a message never
+    promises "48 de ore" when the club chose otherwise. From the instance's minute-long memo: a
+    batch of twenty rows reads the setting once, not twenty times.
+  */
+  const settings = await currentDeadlines(db);
+  data.timings = {
+    confirmationHours: settings.confirmationHours,
+    holdMinutes: settings.holdMinutes,
+    offerHours: settings.offerHours,
+    reminderHours: reminderHoursFor({ reminderHoursBefore: eventDetails?.reminderHoursBefore ?? null }, settings),
+    ...(eventDetails ? { confirmationOpensDays: eventDetails.confirmationOpensDaysBefore } : {}),
+    linkDays: DEFAULT_TOKEN_HOURS / 24,
   };
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;

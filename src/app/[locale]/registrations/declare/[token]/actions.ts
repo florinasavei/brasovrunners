@@ -2,8 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { findEventForRegistrationById } from "@/modules/events/repository";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
@@ -49,7 +53,14 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     if (!result.ok) redirect(`${path}?invalid=1`);
     // Signed: a draft kept by an earlier refused press has nothing left to fill in.
     await clearFormDraft(path);
-    redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}`);
+    /*
+      "What is next" says when the reminder comes (§NNN): this event's own lead, or the club's, as
+      whole hours in the address — the page has spent its token and reads nothing else. Only words
+      on the runner's own page depend on it; the page bounds it and falls back to the club's number.
+    */
+    const event = await findEventForRegistrationById(getDb(), result.registration.eventId);
+    const reminder = event ? reminderHoursFor(event, await currentDeadlines(getDb())) : null;
+    redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}${reminder === null ? "" : `&reminder=${reminder}`}`);
   } catch (error) {
     /*
       The hold had lapsed at the press, its place went on down the waiting list, and the list is

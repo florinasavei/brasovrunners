@@ -1,4 +1,5 @@
 import { countForm, type CountForm } from "@/i18n/count-form";
+import type { Deadlines } from "./deadlines";
 
 /**
  * A number of minutes, hours, days or weeks as words, in both languages (§NNN) — so that every
@@ -78,4 +79,35 @@ export function leadPhrase(locale: string, hours: number): string {
 /** A span of days, in weeks once it is a whole number of them: "8 săptămâni", "10 zile", "o săptămână". */
 export function daysPhrase(locale: string, days: number): string {
   return days >= 7 && days % 7 === 0 ? durationPhrase(locale, days / 7, "weeks") : durationPhrase(locale, days, "days");
+}
+
+/**
+ * The club's deadlines as the phrases the catalogues' sentences take (§NNN) — one call per page,
+ * the same placeholder names everywhere: `{confirmation}` "48 de ore", `{hold}` "30 de minute",
+ * `{offer}` "24 de ore", `{reminder}` "2 zile", `{checkin}` "o zi", `{horizon}` "8 săptămâni".
+ *
+ * `reminder` is null when the club sends none by default: "cu 0 ore înainte" is not a sentence,
+ * so a page that states the reminder picks its words for "none" instead.
+ */
+export type DeadlineWords = {
+  confirmation: string;
+  hold: string;
+  offer: string;
+  reminder: string | null;
+  checkin: string;
+  horizon: string;
+};
+
+export function deadlineWords(
+  locale: string,
+  deadlines: Pick<Deadlines, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours" | "selfCheckinHours" | "seriesHorizonDays">,
+): DeadlineWords {
+  return {
+    confirmation: hoursPhrase(locale, deadlines.confirmationHours),
+    hold: minutesPhrase(locale, deadlines.holdMinutes),
+    offer: hoursPhrase(locale, deadlines.offerHours),
+    reminder: deadlines.reminderHours > 0 ? leadPhrase(locale, deadlines.reminderHours) : null,
+    checkin: leadPhrase(locale, deadlines.selfCheckinHours),
+    horizon: daysPhrase(locale, deadlines.seriesHorizonDays),
+  };
 }

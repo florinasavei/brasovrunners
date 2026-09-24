@@ -6,26 +6,44 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { DomainError } from "@/shared/errors/domain-error";
 import { enqueueEmail } from "./outbox";
 
 /**
  * The two messages that are about the event rather than about a change of state
- * (`DECISIONS.md` §81, §82): the reminder two days before, and the thank-you afterwards.
+ * (`DECISIONS.md` §81, §82): the reminder before the start, and the thank-you afterwards.
  *
  * Neither moves a registration. Both go through the outbox with the idempotency discipline of
  * §16.1 — one key per registration per message — so a job that runs twice, or an organizer who
  * presses twice, produces one email.
  */
 
-/** How long before the start the reminder goes: two days, measured on the event's own instant. */
-export const REMINDER_HOURS_BEFORE = 48;
+/**
+ * The reminder lead of each event, in SQL (§NNN): the event's own hours
+ * (`events.reminder_hours_before`) or, when the organizer left it "as usual", the club's — zero
+ * from either is no reminder. Measured on the event's own instant.
+ */
+function reminderLeadSql(clubHours: number) {
+  return sql<number>`coalesce(${events.reminderHoursBefore}, ${clubHours})`;
+}
+
+/** The event starts inside its own reminder window, and has one at all. */
+function insideReminderWindow(now: Date, clubHours: number) {
+  const lead = reminderLeadSql(clubHours);
+  return and(
+    sql`${lead} > 0`,
+    sql`${events.startsAt} <= ${now.toISOString()}::timestamptz + make_interval(hours => ${lead})`,
+  );
+}
 
 /**
- * Queue the reminder for every confirmed participant of every event that starts within the
- * next two days (`DECISIONS.md` §81). Called by the maintenance job, so the window is wide
- * open — "starts in the next 48 hours, has not started" — and the idempotency key is what
- * keeps a registration to one reminder across the runs that see it in that window.
+ * Queue the reminder for every confirmed participant of every event that starts within its
+ * reminder lead — two days unless the club or the organizer says otherwise (`DECISIONS.md` §81,
+ * §NNN). Called by the maintenance job, so the window is wide open — "starts within the lead, has
+ * not started" — and the idempotency key is what keeps a registration to one reminder across the
+ * runs that see it in that window. A lead changed after the reminder went sends no second one; a
+ * lead lengthened reaches the events newly inside it at the next run.
  *
  * Confirmed only: a waiting-list entry has nothing to be reminded of, and a registration that
  * still owes its declaration gets its own email from `queueDeclarationReminders` below, in
@@ -95,8 +113,9 @@ export async function queueParticipationConfirmations<T extends Record<string, u
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
+  /** The club's deadlines, read once by the run (§NNN): the reminder lead of an event left "as usual". */
+  deadlines: Pick<Deadlines, "reminderHours">,
 ): Promise<number> {
-  const horizon = new Date(now.getTime() + REMINDER_HOURS_BEFORE * 60 * 60_000);
   const rows = await db
     .select({
       registrationId: registrations.id,
@@ -113,7 +132,7 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
         eq(events.eventStatus, "SCHEDULED"),
         eq(events.registrationMode, "INTERNAL"),
         gt(events.startsAt, now),
-        lte(events.startsAt, horizon),
+        insideReminderWindow(now, deadlines.reminderHours),
         // Not to somebody confirmed in the last day (§126): the confirmation they just got
         // carries the same facts, the QR and the number; a second copy is the mail people
         // learn to ignore. Never confirmed on the row (older rows) counts as long ago.
@@ -138,16 +157,17 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
       if (inserted) queued += 1;
     }
   });
-  return queued + (await queueDeclarationReminders(db, now, horizon));
+  return queued + (await queueDeclarationReminders(db, now, deadlines));
 }
 
 /**
- * The last call to sign, inside the same two days (`DECISIONS.md` §160).
+ * The last call to sign, inside the same reminder window (`DECISIONS.md` §160, §NNN) — and, like
+ * the reminder, none for an event that sends no reminder.
  *
  * §160 keeps the place of somebody who forgot — and the population it keeps it for is the one
  * population that then hears nothing more: the reminder above is for the confirmed, and the
  * participation confirmation of §104 stops once the deadline is behind. So the declaration
- * email goes once more, two days out, to every registration that still owes a signature. Not
+ * email goes once more, a reminder lead out, to every registration that still owes a signature. Not
  * a new message type: it is the same `COMPLETE_DECLARATION`, whose words already say the
  * registration is complete only with the declaration and that it can be signed on paper at
  * the desk on race day — and whose deadline line the renderer drops once the deadline is
@@ -159,7 +179,7 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
 async function queueDeclarationReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-  horizon: Date,
+  deadlines: Pick<Deadlines, "reminderHours">,
 ): Promise<number> {
   const rows = await db
     .select({
@@ -177,7 +197,7 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
         eq(events.eventStatus, "SCHEDULED"),
         eq(events.registrationMode, "INTERNAL"),
         gt(events.startsAt, now),
-        lte(events.startsAt, horizon),
+        insideReminderWindow(now, deadlines.reminderHours),
       ),
     );
   if (rows.length === 0) return 0;

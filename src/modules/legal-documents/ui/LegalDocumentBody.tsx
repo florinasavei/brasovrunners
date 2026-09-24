@@ -19,8 +19,15 @@ export default function LegalDocumentBody({
   body,
   values,
   anchorPrefix = "s",
+  emphasizeFilled = true,
 }: {
   body: unknown;
+  /**
+   * Whether the filled-in parts are bold (§225). A declaration's are — they are what the signer
+   * checks. The terms and the privacy notice fill in only the club's deadlines (§NNN), which are
+   * part of the sentence like any other word, so their pages turn it off.
+   */
+  emphasizeFilled?: boolean;
   /**
    * What each heading's id starts with (§323): `s1`, `s2`… on a public legal page, so a link can
    * name a section. A page showing two bodies — the backoffice's RO and EN side by side — gives
@@ -55,7 +62,7 @@ export default function LegalDocumentBody({
    */
   const inline = (text: string, keyPrefix: string) =>
     (values ? mergeTextSegments(text, values) : [{ text, filled: false }]).map((segment, index) =>
-      segment.filled ? (
+      segment.filled && emphasizeFilled ? (
         <Box key={`${keyPrefix}-${index}`} component="strong" sx={{ fontWeight: 700 }}>
           {segment.text}
         </Box>

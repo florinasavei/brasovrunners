@@ -5,9 +5,10 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "@/modules/notifications/domain/retry";
-import { REMINDER_HOURS_BEFORE } from "@/modules/notifications/event-mail";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { reminderHoursFor, reminderOpensAt } from "@/modules/deadlines/domain/deadlines";
 import { PLACE_HOLDING_STATUSES } from "@/modules/registrations/domain/state-machine";
-import { EMAIL_CONFIRMATION_HOLD_HOURS } from "@/modules/registrations/repository";
+import { emailLinkLapseSql } from "@/modules/registrations/repository";
 import type { JobName } from "./schedule";
 
 /**
@@ -34,6 +35,13 @@ function toDate(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** A nullable integer column as the driver hands it back: a number, a numeric string, or null. */
+function toCount(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  const count = Number(value);
+  return Number.isFinite(count) ? count : null;
+}
+
 function earliest(instants: (Date | null)[]): Date | null {
   let best: Date | null = null;
   for (const instant of instants) if (instant && (!best || instant.getTime() < best.getTime())) best = instant;
@@ -52,19 +60,21 @@ function earliest(instants: (Date | null)[]): Date | null {
 export async function nextMaintenanceWork<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<Date | null> {
   const any = db as unknown as AnyDb;
   const nowIso = now.toISOString();
+  /*
+    The club's deadlines (§NNN): the ones the run that calls this has just read fresh at its start
+    (`readDeadlinesForRun`), from the memo — the plan and the work agree on one value, and the
+    setting costs no second query in the run.
+  */
+  const settings = await currentDeadlines(db);
 
-  // `expireStalePendingEmailConfirmations`: the link lapses 48 hours after the submission.
+  // `expireStalePendingEmailConfirmations`: the link lapses when the row says (§NNN), or the club's
+  // hours after the submission for a row older than the column — the sweep's own expression.
+  const lapse = emailLinkLapseSql(settings.confirmationHours);
   const [pendingEmail] = await any
-    .select({ oldest: sql<unknown>`min(${registrations.submittedAt})` })
+    .select({ next: sql<unknown>`min(${lapse})` })
     .from(registrations)
-    .where(
-      and(
-        eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
-        gt(registrations.submittedAt, new Date(now.getTime() - EMAIL_CONFIRMATION_HOLD_HOURS * HOUR)),
-      ),
-    );
-  const oldestPending = toDate(pendingEmail?.oldest);
-  const emailLapses = oldestPending ? new Date(oldestPending.getTime() + EMAIL_CONFIRMATION_HOLD_HOURS * HOUR) : null;
+    .where(and(eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"), sql`${lapse} > ${nowIso}::timestamptz`));
+  const emailLapses = toDate(pendingEmail?.next);
 
   /*
     `expireStaleHolds`: an offer at its deadline, a declaration hold at its own. Every hold ahead,
@@ -92,8 +102,9 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   /*
     The instants of each event still ahead that has anybody on it: its start (holds end, the
     waiting list closes — `closeWaitlistForStartedEvent`), its registration close (the numbers
-    settle, §214), two days before the start (the reminders, §81, and the last call to sign,
-    §160), and the participation window's opening (the confirmation asked again, §104).
+    settle, §214), the reminder lead before the start — the event's own or the club's, none when
+    it is zero (the reminders, §81, and the last call to sign, §160; §NNN) — and the participation
+    window's opening (the confirmation asked again, §104).
   */
   const perEvent = await any
     .select({
@@ -104,6 +115,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       bibsSettledAt: events.bibsSettledAt,
       opensDays: events.confirmationOpensDaysBefore,
       deadlineDays: events.confirmationDeadlineDaysBefore,
+      reminderHoursBefore: events.reminderHoursBefore,
       waitingOrPending: sql<boolean>`bool_or(${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED'))`,
       pendingDeclaration: sql<boolean>`bool_or(${registrations.status} = 'PENDING_DECLARATION')`,
       confirmed: sql<boolean>`bool_or(${registrations.status} = 'CONFIRMED')`,
@@ -129,6 +141,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       events.bibsSettledAt,
       events.confirmationOpensDaysBefore,
       events.confirmationDeadlineDaysBefore,
+      events.reminderHoursBefore,
     );
 
   const eventInstants: (Date | null)[] = [];
@@ -142,8 +155,9 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       eventInstants.push(ahead((toDate(event.registrationClosesAt) ?? startsAt).getTime()));
     }
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
-    if (mailed && (event.confirmed || event.pendingDeclaration)) {
-      eventInstants.push(ahead(start - REMINDER_HOURS_BEFORE * HOUR));
+    const reminderAt = reminderOpensAt(startsAt, reminderHoursFor({ reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings));
+    if (mailed && reminderAt && (event.confirmed || event.pendingDeclaration)) {
+      eventInstants.push(ahead(reminderAt.getTime()));
     }
     const opens = Number(event.opensDays ?? 0);
     const deadline = Number(event.deadlineDays ?? 0);
@@ -158,7 +172,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     the registration rather than to the event.
   */
   const recentlyConfirmed = await any
-    .select({ confirmedAt: registrations.confirmedAt, startsAt: events.startsAt })
+    .select({ confirmedAt: registrations.confirmedAt, startsAt: events.startsAt, reminderHoursBefore: events.reminderHoursBefore })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
@@ -174,7 +188,10 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     const confirmedAt = toDate(row.confirmedAt);
     const startsAt = toDate(row.startsAt);
     if (!confirmedAt || !startsAt) return null;
-    const at = Math.max(startsAt.getTime() - REMINDER_HOURS_BEFORE * HOUR, confirmedAt.getTime() + DAY);
+    // No reminder at all for an event that sends none (§NNN).
+    const opensAt = reminderOpensAt(startsAt, reminderHoursFor({ reminderHoursBefore: toCount(row.reminderHoursBefore) }, settings));
+    if (!opensAt) return null;
+    const at = Math.max(opensAt.getTime(), confirmedAt.getTime() + DAY);
     return at > now.getTime() && at < startsAt.getTime() ? new Date(at) : null;
   });
 

@@ -1,4 +1,32 @@
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
+
+/**
+ * The club's deadlines as merge fields (§NNN), for any of the three texts — unlike the fields
+ * below, which only a declaration signed by one person for one event can fill. The platform's
+ * templates of the terms and the privacy notice state the email link, the hold, the offer and the
+ * reminder through these, so the words follow "Termene" instead of freezing today's numbers into
+ * an approved text. They merge when the text is shown (`deadlineMergeValues`); the approved
+ * template and its hash are untouched, as for every field (§12.5).
+ */
+export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderHours"] as const;
+
+/**
+ * The four deadline fields' values in one language: the same words the emails and the pages use
+ * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", "2 zile".
+ */
+export function deadlineMergeValues(
+  locale: string,
+  deadlines: Pick<Deadlines, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">,
+): Record<(typeof DEADLINE_MERGE_FIELDS)[number], string> {
+  return {
+    confirmationHours: hoursPhrase(locale, deadlines.confirmationHours),
+    holdMinutes: minutesPhrase(locale, deadlines.holdMinutes),
+    offerHours: hoursPhrase(locale, deadlines.offerHours),
+    reminderHours: leadPhrase(locale, deadlines.reminderHours),
+  };
+}
 
 /**
  * The blanks in a declaration (`DECISIONS.md` §95).
@@ -34,6 +62,7 @@ export const MERGE_FIELDS = [
   "eventDate",
   "eventLocation",
   "signedAt",
+  ...DEADLINE_MERGE_FIELDS,
 ] as const;
 
 /**

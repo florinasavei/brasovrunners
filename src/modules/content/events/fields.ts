@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { isYoutubeLink } from "@/modules/events/domain/video";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
@@ -695,6 +696,15 @@ export const eventFieldsSchema = z
      * database's CHECK, said again here so the box carries them (§315).
      */
     minAge: wholeNumberWithDefault(MIN_PARTICIPANT_AGE, { min: 0, max: 99 }),
+    /**
+     * How many hours before the start this event's reminder goes (§81, §NNN): empty is "as usual"
+     * — the club's number from "Termene", stored as null — zero is no reminder, anything else this
+     * event's own, within the column's CHECK. The editor offers four choices (24, 48, 72, none)
+     * beside "as usual"; any whole number in the bounds is accepted, so a value a script stored is
+     * kept by a save rather than refused. Optional, and absent means "this caller is not editing
+     * it": the service then writes nothing, the discipline `waitlistCapacity` follows.
+     */
+    reminderHoursBefore: optionalWholeNumber({ min: 0, max: EVENT_REMINDER_MAX_HOURS }).optional(),
     registrationOpensAtWallTime: z.string().trim(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,

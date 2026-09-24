@@ -2,9 +2,12 @@ import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter"
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 
@@ -343,8 +346,39 @@ export type TemplateData = {
   holdExpiresAtFormatted?: string;
   /** The same deadline in the other language's words, for the second half (§349). */
   holdExpiresAtFormattedOther?: string;
-  /** True when the hold is the participation window's (§104), not the thirty minutes. */
+  /** True when the hold is the participation window's (§104), not the club's minutes. */
   confirmLater?: boolean;
+  /**
+   * The deadlines this message states, as numbers (§NNN): the club's "Termene" in force when it is
+   * rendered, this event's own reminder lead, its participation window's opening, and how long a
+   * link with no deadline of its own lives. Each half of a bilingual message words them in its own
+   * language (`buildTemplateContent`), so the English half never carries "48 de ore".
+   */
+  timings?: {
+    confirmationHours: number;
+    holdMinutes: number;
+    offerHours: number;
+    /** This event's lead — its own, or the club's (`reminderHoursFor`); zero is none. */
+    reminderHours: number;
+    /** `events.confirmation_opens_days_before`, when the message is about an event. */
+    confirmationOpensDays?: number;
+    /** How long the "my registrations" link lives, in days (`render.ts`, `DEFAULT_TOKEN_HOURS`). */
+    linkDays?: number;
+  };
+  /**
+   * The same deadlines as words, in this half's language — "48 de ore", "30 de minute", "24 de
+   * ore", "2 zile" — set by `buildTemplateContent` from `timings`, whatever a caller put here.
+   * They are what `{confirmationHours}`, `{holdMinutes}`, `{offerHours}` and `{reminderHours}`
+   * fill in the club's own words (§247), number and noun together so the Romanian agrees for any
+   * value; `reminderHours` is empty when the event sends no reminder.
+   */
+  confirmationHours?: string;
+  holdMinutes?: string;
+  offerHours?: string;
+  reminderHours?: string;
+  /** The participation window's opening in words ("o săptămână"), and the link's lifetime ("14 zile"). */
+  confirmationOpens?: string;
+  linkLifetime?: string;
   manageUrl?: string;
   /**
    * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
@@ -472,7 +506,7 @@ const T = {
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`
+          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
         `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
       ],
@@ -524,7 +558,7 @@ const T = {
       subject: "Ne vedem în curând — detaliile pentru ziua cursei",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
+        d.reminderHours ? `${d.eventTitle ?? "Evenimentul"} este peste ${d.reminderHours}. Iată ce ai nevoie.` : `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
@@ -637,9 +671,9 @@ const T = {
     },
     profileManageLink: {
       subject: "Înscrierile tale la Brașov Runners",
-      body: () => [
+      body: (d: TemplateData) => [
         "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
-        "Linkul este valabil 14 zile și doar pentru tine.",
+        `Linkul este valabil ${d.linkLifetime ?? ""} și doar pentru tine.`,
       ],
       action: "Vezi înscrierile mele",
     },
@@ -734,7 +768,7 @@ const T = {
           : "A place is waiting — sign the declaration",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you a week before the start.`
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`
           : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
         `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
       ],
@@ -758,7 +792,7 @@ const T = {
       subject: "See you soon — the details for race day",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
+        d.reminderHours ? `${d.eventTitle ?? "The event"} is ${d.reminderHours} away. Here is what you need.` : `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
         ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
@@ -891,9 +925,9 @@ const T = {
     },
     profileManageLink: {
       subject: "Your registrations at Brașov Runners",
-      body: () => [
+      body: (d: TemplateData) => [
         "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
-        "The link is valid for 14 days and only for you.",
+        `The link is valid for ${d.linkLifetime ?? ""} and only for you.`,
       ],
       action: "See my registrations",
     },
@@ -1013,7 +1047,7 @@ export function buildTemplateContent(
 ): TemplateContent {
   // The notice in this half's own language (§323): the Romanian half links /ro/…, the English /en/….
   const privacyUrl = privacyNoticeUrl(locale);
-  let data: TemplateData = { ...given, privacyUrl };
+  let data: TemplateData = { ...given, privacyUrl, ...timingWords(locale, given.timings) };
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
   /*
@@ -1131,6 +1165,26 @@ export function buildTemplateContent(
           text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
           url: privacyUrl,
         },
+  };
+}
+
+/**
+ * The deadlines a message states, as words in one half's language (§NNN).
+ *
+ * The renderer and the preview always hand the numbers over; a caller that does not — a test, a
+ * fixture — reads the club's defaults, which are exactly the numbers an unset setting has, so a
+ * message never goes out with a blank where a duration belongs.
+ */
+function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Partial<TemplateData> {
+  const numbers = timings ?? { ...DEFAULT_DEADLINES };
+  return {
+    confirmationHours: hoursPhrase(locale, numbers.confirmationHours),
+    holdMinutes: minutesPhrase(locale, numbers.holdMinutes),
+    offerHours: hoursPhrase(locale, numbers.offerHours),
+    reminderHours: numbers.reminderHours > 0 ? leadPhrase(locale, numbers.reminderHours) : "",
+    confirmationOpens: timings?.confirmationOpensDays ? daysPhrase(locale, timings.confirmationOpensDays) : undefined,
+    // The link's own lifetime (`domain/token-lifetime.ts`), the constant the token is minted with.
+    linkLifetime: durationPhrase(locale, timings?.linkDays ?? DEFAULT_TOKEN_HOURS / 24, "days"),
   };
 }
 

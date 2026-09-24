@@ -32,7 +32,7 @@ import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
 import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
-import { cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
@@ -212,6 +212,8 @@ async function ListingLead({
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
   const { featured } = listingSections(events, type, hasUpcoming);
+  // The countdown's days are the club's (§NNN), from the data cache like the rows: no wake for a visitor.
+  const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
   // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
   // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
   const presentTypes = presentEventTypes(events, type);
@@ -224,7 +226,7 @@ async function ListingLead({
         </Alert>
       )}
 
-      {featured && <FeaturedEventHero event={featured} now={now} />}
+      {featured && raceWeekDays !== null && <FeaturedEventHero event={featured} now={now} raceWeekDays={raceWeekDays} />}
 
       {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133).
           Fewer than two kinds is nothing to filter. */}

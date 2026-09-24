@@ -3,6 +3,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { REPEAT_CADENCES } from "@/modules/events/domain/repeat";
 import { calendarDayWords } from "@/i18n/dates";
 import { weekdayNames } from "@/modules/events/ui/series-sentence";
+import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./RepeatRuleFields";
@@ -51,7 +53,8 @@ export default async function RepeatFields({
     atTime: tEvent.raw("series.atTime") as string,
     forever: t.raw("editor.repeatRuleLiveForever") as string,
     until: t.raw("editor.repeatRuleLiveUntil") as string,
-    horizon: t("editor.repeatRuleLiveHorizon"),
+    // How far ahead the dates are created at once — the club's number (§NNN), in words.
+    horizon: t("editor.repeatRuleLiveHorizon", { horizon: daysPhrase(locale, (await deadlinesForThisRequest()).seriesHorizonDays) }),
     weekdayNames: weekdayNames(locale),
     untilDay: calendarDayWords(locale),
   };

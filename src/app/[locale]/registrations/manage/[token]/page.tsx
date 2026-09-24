@@ -12,6 +12,7 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { formatDay } from "@/i18n/dates";
+import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
@@ -133,7 +134,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       {t("manage.selfCheckIn")}
                     </Button>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {t("manage.selfCheckInHelp")}
+                      {t("manage.selfCheckInHelp", { checkin: leadPhrase(locale, confirmed.selfCheckinHours) })}
                     </Typography>
                   </form>
                 ) : (

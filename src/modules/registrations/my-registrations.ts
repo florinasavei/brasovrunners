@@ -14,7 +14,8 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
 import { checkIn, type EventForRegistration, unregister } from "./service";
-import { SELF_CHECKIN_OPENS_HOURS } from "./token-actions";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 
 /**
  * "My registrations" — one link, every active registration for an address (BR-REQ-036-04;
@@ -135,14 +136,17 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
     )
     .orderBy(asc(events.startsAt), asc(registrations.id));
 
+  // "I am here" opens the club's hours before the start (§NNN), read once for the whole list.
+  const deadlines = rows.length > 0 ? await currentDeadlines(db) : null;
   return rows.map(({ listOptOut, eventStatus, ...row }) => ({
     ...row,
     listed: !listOptOut,
     eventCancelled: eventStatus === "CANCELLED",
     selfCheckinOpen:
+      deadlines !== null &&
       row.status === "CONFIRMED" &&
       eventStatus !== "CANCELLED" &&
-      now.getTime() >= row.eventStartsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000,
+      now.getTime() >= selfCheckinOpensAt(row.eventStartsAt, deadlines).getTime(),
   }));
 }
 

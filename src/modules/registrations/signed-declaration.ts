@@ -8,7 +8,8 @@ import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
-import { asksForMinorSignature, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { currentDeadlines } from "@/modules/deadlines/deadlines";
+import { asksForMinorSignature, deadlineMergeValues, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
@@ -188,6 +189,9 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
+      // The club's deadlines, should the declaration name one (§NNN): read when the PDF is drawn,
+      // like the event's facts above — from the instance's memo, once per batch of PDFs.
+      ...deadlineMergeValues(locale, await currentDeadlines(db)),
     },
     title: event.title,
     timezone: event.timezone,

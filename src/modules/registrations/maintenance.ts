@@ -2,6 +2,7 @@ import type { Database } from "@/db/types";
 import { failureKind, pruneExpiredRows, retentionErrorSummary, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { materializeStandingRepeats } from "@/modules/content/events/service";
+import { readDeadlinesForRun } from "@/modules/deadlines/deadlines";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import { registrationHasClosed } from "@/modules/events/domain/registration-window";
@@ -16,8 +17,8 @@ import { fillAvailableSpots } from "./service";
  * events that have started, and offer released or newly free places to whoever is next — on
  * scheduled events only. A cancelled event is skipped like a completed one (§331): nothing
  * about its queue must still run, and every automatic message below asks for `SCHEDULED` too.
- * What still runs for everybody is event-blind: the 48-hour lapse of unconfirmed addresses,
- * the retention sweep, the picture sweep and the series horizon.
+ * What still runs for everybody is event-blind: the lapse of unconfirmed addresses (the club's
+ * hours, §NNN), the retention sweep, the picture sweep and the series horizon.
  *
  * A delivery and liveness mechanism, never a correctness one — §10.6 and §16.2 are both
  * explicit that capacity and queue correctness come from every read and every
@@ -56,7 +57,15 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
-  const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now);
+  /*
+    The club's deadlines (§NNN), read once for the whole run and fresh — not from an instance's
+    memo, which could be a minute old — and left in the memo, so the offers this run makes, the
+    reminders it queues, the series it extends and the plan it writes afterwards (`next-work.ts`)
+    all work from the same numbers.
+  */
+  const settings = await readDeadlinesForRun(db);
+
+  const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now, settings);
 
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
   let errorCount = 0;
@@ -106,6 +115,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
             publishedAt: null,
           },
           now,
+          settings,
         );
 
         /*
@@ -173,14 +183,14 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * The reminders (§81), after the queue work and in their own try/catch: two days before an
-   * event every confirmed participant gets one, once — the idempotency key holds across every
-   * run that sees the event inside the window. A failure here is a late reminder, not a
-   * failed run.
+   * The reminders (§81), after the queue work and in their own try/catch: the reminder lead
+   * before an event — the event's own, or the club's (§NNN) — every confirmed participant gets
+   * one, once; the idempotency key holds across every run that sees the event inside the window.
+   * A failure here is a late reminder, not a failed run.
    */
   let remindersQueued = 0;
   try {
-    remindersQueued = await queueEventReminders(db, now);
+    remindersQueued = await queueEventReminders(db, now, settings);
   } catch {
     errorCount += 1;
     retryableErrorCount += 1;
@@ -257,14 +267,14 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * The standing series (§122): every source with a rule is brought up to eight weeks ahead.
-   * One indexed read for the sources, two per source, and on most runs no write; caught on
-   * its own — a series that cannot be extended is a date missing from the list next month,
-   * not a hold that never expires.
+   * The standing series (§122): every source with a rule is brought up to the club's horizon —
+   * eight weeks unless changed (§NNN). One indexed read for the sources, two per source, and on
+   * most runs no write; caught on its own — a series that cannot be extended is a date missing
+   * from the list next month, not a hold that never expires.
    */
   let occurrencesCreated = 0;
   try {
-    occurrencesCreated = (await materializeStandingRepeats(db, now)).created;
+    occurrencesCreated = (await materializeStandingRepeats(db, now, settings)).created;
   } catch {
     errorCount += 1;
   }

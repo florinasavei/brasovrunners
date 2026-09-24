@@ -13,6 +13,9 @@ import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modu
 import { getDb } from "@/db/client";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
+import { readDeadlines } from "@/modules/deadlines/deadlines";
+import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
+import DeadlinesPanel from "@/modules/deadlines/ui/DeadlinesPanel";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -104,7 +107,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   */
   const maySeeQueue = canReadRegistrations(staff.role);
   const mayEditEmail = canManageRegistrations(staff.role);
-  const [plan, volume, recipients, queue, notices, written] = await Promise.all([
+  const [plan, volume, recipients, queue, notices, written, deadlines] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
@@ -119,10 +122,35 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       preview, and showing them what they saved thirty seconds ago would read as a lost edit.
     */
     readEmailCopy(db),
+    // The club's deadlines (§NNN), straight through like the words: the panel that sets them, the
+    // when-lines that state them and the previews that print them, as they now stand.
+    readDeadlines(db),
   ]);
+  const t = await getTranslations("Admin");
+  // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
+  const pageWords = deadlineWords(locale, deadlines.deadlines);
+  const whenValues = {
+    confirmation: pageWords.confirmation,
+    hold: pageWords.hold,
+    offer: pageWords.offer,
+    reminder: pageWords.reminder ?? "",
+  };
+  /*
+    When each message goes, in the club's numbers (§NNN). The reminder's lines say "off by default"
+    when the club sends none — an event may still choose one — and the declaration's last call is a
+    sentence of its own after its when-line, for the same reason.
+  */
+  const reminderOff = pageWords.reminder === null;
+  const whenOf = (type: EmailMessageType): string => {
+    if (type === "EVENT_REMINDER" && reminderOff) return t("emails.reminderOff.when");
+    const line = t(`emails.when.${type}`, whenValues);
+    if (type !== "COMPLETE_DECLARATION") return line;
+    return `${line} ${reminderOff ? t("emails.lastCallOff") : t("emails.lastCall", whenValues)}`;
+  };
+  const whenShortOf = (type: EmailMessageType): string =>
+    type === "EVENT_REMINDER" && reminderOff ? t("emails.reminderOff.whenShort") : t(`emails.whenShort.${type}`, whenValues);
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
-  const t = await getTranslations("Admin");
   const emailsPath = getPathname({ locale, href: "/admin/emails" });
   const tRo = emailLocale === "ro";
   const sample: TemplateData = {
@@ -160,6 +188,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     updateChanges: ["place", "time"],
     organizerNote: tRo ? "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta." : "We meet at the Livada Poștei entrance, by the map board.",
     cancellationReason: tRo ? "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur." : "An orange weather warning for Tâmpa: the route is not safe.",
+    // The club's deadlines (§NNN), as the outbox gives every message: the numbers the words say.
+    timings: {
+      confirmationHours: deadlines.deadlines.confirmationHours,
+      holdMinutes: deadlines.deadlines.holdMinutes,
+      offerHours: deadlines.deadlines.offerHours,
+      reminderHours: deadlines.deadlines.reminderHours,
+      confirmationOpensDays: 7,
+    },
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 
@@ -173,6 +209,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
+        {saved === "deadlines" && <Alert severity="success">{t("emails.deadlines.saved")}</Alert>}
       </Box>
 
       {/*
@@ -214,6 +251,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         openWhen={{ saved: saved === "contactRecipients" }}
       />
 
+      {/* "Termene" (§NNN): the numbers the messages below state, right above them, so a change is read back in the next card. */}
+      <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
+
       <ParticipantEmailsPanel
         title={t("emails.title")}
         intro={t("emails.intro")}
@@ -242,10 +282,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           return {
             type: messageType,
             name: t(`emails.types.${messageType}`),
-            whenShort: t(`emails.whenShort.${messageType}`),
+            whenShort: whenShortOf(messageType),
             // The three types nothing queues any more are said to be so on the closed card (§331).
             ...(NEVER_QUEUED.has(messageType) ? { neverSent: t("emails.neverSent") } : {}),
-            when: t(`emails.when.${messageType}`),
+            when: whenOf(messageType),
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,
             // The card whose words were just saved opens with the card around it, so the preview

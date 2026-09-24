@@ -20,7 +20,11 @@ import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
+import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
+import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { fillIn } from "@/shared/forms/fill-in";
+import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
@@ -38,8 +42,28 @@ import { signDeclarationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string }>;
 };
+
+/**
+ * The reminder lead the signature's redirect named (§NNN) — this event's own, or the club's — as
+ * whole hours inside the column's bounds; anything else in the address is the club's number. Only
+ * words on this page depend on it.
+ */
+function reminderHours(param: string | undefined, deadlines: Deadlines): number {
+  const hours = /^\d{1,3}$/.test(param ?? "") ? Number(param) : Number.NaN;
+  return Number.isInteger(hours) && hours >= 0 && hours <= DEADLINE_RULES.reminderHours.max ? hours : deadlines.reminderHours;
+}
+
+/**
+ * "What is next", with the reminder's lead in words (§NNN): the line that names it is filled in,
+ * and dropped when the event sends no reminder — a promise nobody keeps is worse than none.
+ */
+function nextLines(lines: readonly string[], locale: string, hours: number): string[] {
+  return lines.flatMap((line) =>
+    line.includes("{reminder}") ? (hours > 0 ? [fillIn(line, { reminder: leadPhrase(locale, hours) })] : []) : [line],
+  );
+}
 
 /*
   The signature boxes' ids are the names they post (`typedName`, and `minorTypedName` on a minor's
@@ -138,7 +162,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, changed, full } = await searchParams;
+  const { done, invalid, changed, full, reminder } = await searchParams;
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
@@ -176,7 +200,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {t("declare.nextTitle")}
         </Typography>
         <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
-          {(t.raw(done === "waitlisted" ? "declare.nextWaitlisted" : "declare.nextConfirmed") as string[]).map((line, index) => (
+          {nextLines(t.raw(done === "waitlisted" ? "declare.nextWaitlisted" : "declare.nextConfirmed") as string[], locale, reminderHours(reminder, await cachedDeadlines())).map((line, index) => (
             <Typography component="li" key={index}>
               {line}
             </Typography>
@@ -425,6 +449,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
+              // The club's deadlines, should the declaration name one (§NNN) — as the PDF fills them.
+              ...deadlineMergeValues(locale, await cachedDeadlines()),
             }}
           />
 
