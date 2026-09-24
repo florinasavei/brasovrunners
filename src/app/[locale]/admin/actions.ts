@@ -706,11 +706,18 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
  * date to the series' source and asserts the role (switching it on asks for the role that
  * publishes); a draft source is not refused — the switch is stored and waits until the source is
  * live (`setRepeatPublish`).
+ *
+ * Also posted from the events list's draft line, "Publică automat de acum" (§NNN), which aims it
+ * at the source with `publish=on` and `returnTo=list`: that press lands back on the list, where
+ * the line it came from still shows the dates already created. Only the word `list` is read,
+ * never an address, so nothing posted can choose where the redirect goes — anything else is the
+ * editor, as before.
  */
 export async function setRepeatPublishAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const publish = text(form, "publish") === "on";
+  const back = text(form, "returnTo") === "list" ? getPathname({ locale, href: "/admin" }) : editorPath(locale, eventId);
   let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
@@ -719,7 +726,7 @@ export async function setRepeatPublishAction(form: FormData): Promise<void> {
   } catch (error) {
     outcome = outcomeOf(error);
   }
-  backTo(editorPath(locale, eventId), outcome);
+  backTo(back, outcome);
 }
 
 /**

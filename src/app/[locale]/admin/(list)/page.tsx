@@ -25,6 +25,7 @@ import {
   canReadContent,
   canHardDeleteEvent,
   canReadRegistrations,
+  canTransition,
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
@@ -36,7 +37,7 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
 import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
-import { draftExplanation, seriesDrafts } from "@/modules/events/domain/series-drafts";
+import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
 import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
@@ -55,6 +56,7 @@ import {
   bulkPublishEventsAction,
   deleteEventAction,
   duplicateEventAction,
+  setRepeatPublishAction,
 } from "../actions";
 
 type Props = {
@@ -200,6 +202,30 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // reads "NaN date" (the editor page's own `datesWords` guards the same param the same way).
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
 
+  /*
+    The draft line's opening words (§NNN), by why the dates are drafts — the owner: "practic asta
+    e data din aia de viitor generată automat?". A date the series made by itself says so: "1 dată
+    nouă, creată automat, nu e pe site:"; the adjective and the verb agree with the count, so each
+    count form is its own key (no ICU plurals, `docs/VIBECODING.md`).
+  */
+  const newDatesWords = (count: number) => t(`events.seriesNewDates.${countForm(count, locale)}`, { count });
+  const draftLineText = (reason: DraftReason | null, count: number) => {
+    if (reason === "autoPublishOff") {
+      const dates = newDatesWords(count);
+      return count === 1 ? t("events.seriesDraftsNewOne", { dates }) : t("events.seriesDraftsNewMany", { dates });
+    }
+    const dates = datesWords(count);
+    if (reason === "sourceNotPublished") {
+      return count === 1 ? t("events.seriesDraftsSourceOne", { dates }) : t("events.seriesDraftsSourceMany", { dates });
+    }
+    return count === 1 ? t("events.seriesDraftsOne", { dates }) : t("events.seriesDraftsMany", { dates });
+  };
+  // Who may use the line's fixes, asked as the server asks it (BR-REQ-060-01): publishing is the
+  // Administrator's crossing into public view (§201), and the series' switch is `canCreateEvent`,
+  // as in the Recurență box — switching it *on* asks for publishing too (`setRepeatPublish`).
+  const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);
+  const maySwitchSeries = canCreateEvent(staffUser.role) && mayPublish;
+
   const columns: readonly AdminColumn<ListRow>[] = [
     {
       key: "title",
@@ -315,10 +341,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           A series' drafts are a line of their own, not a chip (§341; the owner, of "Ciornă ·
           1 date": "ce înseamnă această 1 ciornă?"). A draft date is a date the site does not
           show, and the chip said neither that nor which date nor why: the line names the dates,
-          each a link to where it is published, and its "?" says why this series makes drafts —
-          the rule's switch is off, or its source is not published — when the rule can tell.
+          each a link to its editor, says what they are — created by the series itself, or
+          waiting on a source that is not published — and carries the fix (§NNN): "Publică" for
+          exactly these dates, "Publică automat de acum" for the rule, or "Deschide seria".
         */
-        const { drafts, reason } = isSeries ? seriesDrafts(members.map((member) => member.event), now) : { drafts: [], reason: null };
+        const { drafts, reason, source } = isSeries
+          ? seriesDrafts(members.map((member) => member.event), now)
+          : { drafts: [], reason: null, source: null };
+        const remedies = draftRemedies(reason);
         const DRAFT_LINKS = 6;
         return (
           <Stack spacing={0.75}>
@@ -344,32 +374,57 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             </Stack>
             {drafts.length > 0 && (
               <SeriesDraftLine
-                // The verb agrees with the count in Romanian: "nu apare" for one, "nu apar" for more.
-                text={
-                  drafts.length === 1
-                    ? t("events.seriesDraftsOne", { dates: datesWords(1) })
-                    : t("events.seriesDraftsMany", { dates: datesWords(drafts.length) })
-                }
+                uiLocale={locale}
+                text={draftLineText(reason, drafts.length)}
                 dates={drafts.slice(0, DRAFT_LINKS).map((draft) => ({
                   id: draft.id,
                   label: formatDay(draft.startsAt, { locale, timeZone: draft.timezone, style: "short" }),
                   href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: draft.id } } }),
                 }))}
                 more={drafts.length > DRAFT_LINKS ? t("events.seriesDraftsMore", { count: drafts.length - DRAFT_LINKS }) : null}
-                explanation={draftExplanation(reason, {
-                  // The words of the real controls, read from the catalogue rather than retyped,
-                  // so the hint names exactly the button and the heading the reader will find:
-                  // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
-                  // in the source's "Recurență" box — its tick and its own save (§341 hints,
-                  // moved by the editor's boxes, §350).
-                  always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
-                  autoPublishOff: t("events.seriesDraftsWhyOff", {
-                    section: t("editor.boxes.recurrence.title"),
-                    tick: t("editor.repeatPublishAuto"),
-                    button: t("editor.repeatPublishSave"),
-                  }),
-                  sourceNotPublished: t("events.seriesDraftsWhySource"),
-                })}
+                // One short sentence where the words leave a question, none where they do not.
+                hint={
+                  reason === "autoPublishOff"
+                    ? t("events.seriesDraftsHintNew", { weeks: HORIZON_DAYS / 7 })
+                    : reason === "sourceNotPublished"
+                      ? t("events.seriesDraftsHintSource")
+                      : null
+                }
+                // Every draft the line counts, not only the linked ones, with the version each
+                // was loaded with, so a colleague's edit still wins a CONFLICT (§11.5).
+                publish={
+                  remedies.publish && mayPublish
+                    ? {
+                        action: bulkPublishEventsAction,
+                        refs: drafts.map((draft) => refOf(draft)),
+                        label: t("events.seriesDraftsPublish"),
+                        confirmTitle: t("events.seriesDraftsPublishTitle", { dates: datesWords(drafts.length) }),
+                        confirmBody: t("events.seriesDraftsPublishBody"),
+                        confirmLabel: t("events.seriesDraftsPublish"),
+                      }
+                    : null
+                }
+                autoPublish={
+                  remedies.autoPublish && source && maySwitchSeries
+                    ? {
+                        action: setRepeatPublishAction,
+                        sourceId: source.id,
+                        label: t("events.seriesDraftsAutoPublish"),
+                        confirmTitle: t("events.seriesDraftsAutoPublishTitle"),
+                        confirmBody: t("events.seriesDraftsAutoPublishBody", { button: t("events.seriesDraftsPublish") }),
+                        confirmLabel: t("events.seriesDraftsAutoPublishConfirm"),
+                      }
+                    : null
+                }
+                openSource={
+                  remedies.openSource && source && mayPublish
+                    ? {
+                        href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: source.id } } }),
+                        label: t("events.seriesDraftsOpenSource"),
+                      }
+                    : null
+                }
+                cancelLabel={t("confirm.cancel")}
               />
             )}
           </Stack>
@@ -451,6 +506,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {saved === "eventErased" && (
           <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
         )}
+        {/* The draft line's "Publică automat de acum" lands here (§NNN): the dates already made
+            are still listed below, and this says why and what they need. */}
+        {saved === "repeatPublishOn" && (
+          <Alert severity="success">{t("events.seriesAutoPublishStarted", { button: t("events.seriesDraftsPublish") })}</Alert>
+        )}
         {/* An event erased with everyone on it leaves the same copies outside the database as
             one erased registration (§322): the same list, by hand. */}
         {saved === "eventErased" && Number(erased) > 0 && (
@@ -459,7 +519,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved &&
-          !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased"].includes(saved) && (
+          !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased", "repeatPublishOn"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
