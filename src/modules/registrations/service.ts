@@ -30,7 +30,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
-import { waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
+import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
@@ -255,16 +255,30 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   await fillAvailableSpots(db, event, now);
 
   const counts = await repo.countOccupied(db, event.id, now);
-  const occupied = computeOccupied(counts);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
-  const direct = hasDirectAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted });
+  let direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted });
 
   // No place: this registration would join the line, and the line may be full (§NNN).
   if (
     !direct &&
     !waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds })
   ) {
-    throw waitlistFullError(event.waitlistCapacity);
+    /*
+      The line cannot take this registration, so this registration is itself somebody wanting a
+      place who is not in the line (§160): one lapsed declaration hold goes for it, the oldest
+      deadline first, under the same lock, and the place is its own — there is nobody `WAITLISTED`
+      left to offer it to, or the expiry above would already have released that hold for them.
+      Without it, on an event with no waiting list nobody could ever want a kept place, and a
+      runner who never signed would hold it until the race while every newcomer was refused.
+      With no lapsed hold there is nothing to release and the refusal stands; a refusal after a
+      release takes the release back with it, like everything else in the transaction.
+    */
+    if (counts.lapsedDeclarationHolds > 0) {
+      await repo.expireStaleHolds(db, event, now, { wanting: 1 });
+      const after = await repo.countOccupied(db, event.id, now);
+      direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
+    }
+    if (!direct) throw waitlistFullError(event.waitlistCapacity);
   }
 
   const updated = direct
@@ -456,6 +470,11 @@ export type PublicPlaces = {
  * The same read, with the same guarantees and the same absence of a lock: nothing is decided
  * here. A "Mai sunt 3 locuri pe lista de așteptare" can be one slot stale the instant it renders;
  * the allocator counts again, under the lock, when somebody actually joins.
+ *
+ * When the line has no room, a declaration hold past its deadline is counted as the free place
+ * it is for the next newcomer (`occupiedForNewcomer`, §160): the allocator releases one for them
+ * rather than refusing, so the page offers the button rather than "full". Where the line has
+ * room — and always without a limit — the count is exactly `readPublicAvailability`'s.
  */
 export async function readPublicPlaces<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -466,13 +485,14 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
+  const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
   return {
-    availablePlaces: computePublicAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }),
-    waitlistRoom: waitlistRoom({
-      waitlistCapacity: event.waitlistCapacity,
-      waitlisted: eligibleWaitlisted,
-      openOffers: counts.unexpiredWaitlistOfferedHolds,
+    availablePlaces: computePublicAvailability({
+      capacity: event.capacity,
+      occupied: occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds }),
+      eligibleWaitlisted,
     }),
+    waitlistRoom: waitlistRoom(line),
   };
 }
 
@@ -491,6 +511,9 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
  * the answer depends on the event alone, so it cannot say whether an address is registered
  * already (the oracle `AGENTS.md` §19.4 refuses). Two cheap reads when the event has a limit;
  * one, and nothing counted, when it has none.
+ *
+ * A lapsed declaration hold is a place here when the line is full (`occupiedForNewcomer`, §160),
+ * because the allocator gives it to the newcomer rather than refusing them.
  */
 async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -501,8 +524,10 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   if (!row || row.capacity === null || row.waitlistCapacity === null) return;
   const counts = await repo.countOccupied(db, eventId, now);
   const waitlisted = await repo.countEligibleWaitlisted(db, eventId);
-  if (hasDirectAvailability({ capacity: row.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waitlisted })) return;
-  if (waitlistHasRoom({ waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds })) return;
+  const line = { waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  if (waitlistHasRoom(line)) return;
+  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
+  if (hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
   throw waitlistFullError(row.waitlistCapacity);
 }
 

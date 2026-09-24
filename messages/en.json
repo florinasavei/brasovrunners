@@ -652,7 +652,8 @@
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
-      "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed."
+      "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
+      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1072,7 +1073,7 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place or the event starts. Free = places − confirmed − held, exactly the formula the public sees.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place, when somebody registers whom the waiting list has no room for, or when the event starts. Free = places − confirmed − held, exactly the formula the public sees; while the waiting list is full, the public also sees the place of a lapsed hold as free, because the next person to register gets it.",
       "lineTitle": "Waiting list ({count})",
       "lineTitleLimited": "Waiting list ({count} of {limit})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
@@ -1094,7 +1095,11 @@
       "count": "How many",
       "add": "Add test registrations",
       "remove": "Remove all test registrations",
-      "stoppedAtLimit": "{created} test registrations added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be."
+      "stoppedAtLimit": {
+        "one": "{created} test registration added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be.",
+        "few": "{created} test registrations added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be.",
+        "other": "{created} test registrations added; the rest were refused because the places and the waiting list filled up — exactly as a real registration would be."
+      }
     },
     "legal": {
       "title": "Legal documents",
@@ -2587,8 +2592,8 @@
       "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
       "changed": "The declaration was updated while you were reading it. Nothing was recorded. Below is the current text — please read it and sign again.",
-      "waitlistFull": "The deadline to sign had passed and your place went on down the waiting list. We could not put you back on the list, because it is full too, so the signature was not recorded.",
-      "noWaitlist": "The deadline to sign had passed and your place went to somebody else. The event has no waiting list and no free places left, so the signature was not recorded.",
+      "waitlistFull": "The deadline to sign had passed and your place goes to somebody on the waiting list. We could not put you back on the list, because it is full too, so the signature was not recorded.",
+      "noWaitlist": "The deadline to sign had passed and your place goes to somebody who was waiting for it. The event has no waiting list and no free places left, so the signature was not recorded.",
       "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",

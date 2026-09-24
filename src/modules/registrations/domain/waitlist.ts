@@ -53,6 +53,23 @@ export function waitlistHasRoom(input: WaitlistInput): boolean {
 }
 
 /**
+ * The occupied count a newcomer is measured against — `computeOccupied`'s, less the lapsed
+ * declaration holds when the waiting list has no room for them (§160, §NNN).
+ *
+ * §160 keeps a hold past its deadline until somebody wants the place, and "somebody" used to be
+ * only a person in the line. Where the line has room that is still how it goes: the count says
+ * full, the newcomer joins the line, and the kept hold is released and offered to them at once.
+ * Where it has none — a limit reached, or a limit of 0 — the newcomer can never be in the line,
+ * so the newcomer is the one who wants the place: the allocator releases one lapsed hold for them,
+ * the oldest deadline first (`expireStaleHolds`' `wanting`), and gives them the place directly.
+ * This is what the door and the event page count with, so they say "a place" exactly when the
+ * allocator would give one; the formula itself (`capacity.ts`) is untouched.
+ */
+export function occupiedForNewcomer(input: WaitlistInput & { occupied: number; lapsedDeclarationHolds: number }): number {
+  return waitlistHasRoom(input) ? input.occupied : input.occupied - input.lapsedDeclarationHolds;
+}
+
+/**
  * The marker a refusal carries when the places are gone and the waiting list is full too — the
  * public form's "Locurile și lista de așteptare sunt pline." Not a field of any form: a rule
  * about the event, like the throttle's marker, read by the page from the refusal's field list.
@@ -66,6 +83,14 @@ export const WAITLIST_FULL = "waitlistFull";
 export const NO_WAITLIST = "noWaitlist";
 
 export type WaitlistRefusal = typeof WAITLIST_FULL | typeof NO_WAITLIST;
+
+/**
+ * The marker on the desk walk-in's refusal when the row was entered but its confirmation, a
+ * moment later and in a transaction of its own, found the last place and the last slot in the
+ * line gone (§NNN). Unlike the two above, something *was* written — an unconfirmed row, and the
+ * audit entry that says who entered it — so the desk is told that, not "nothing changed".
+ */
+export const WALK_IN_LEFT_UNCONFIRMED = "walkInLeftUnconfirmed";
 
 /**
  * The one refusal every door gives when a registration would join a full waiting list: the
@@ -95,11 +120,24 @@ export function waitlistRefusalOf(error: unknown): WaitlistRefusal | null {
 }
 
 /**
- * The backoffice's word for each refusal — `Admin.errors.WAITLIST_FULL` / `NO_WAITLIST` — so a
- * volunteer at the desk reads why, rather than the generic "check what you entered" about a
- * form that is correct. Null for any other error, which keeps its own code.
+ * The walk-in's refusal when its row was entered and its confirmation was refused
+ * (`WALK_IN_LEFT_UNCONFIRMED`). Not one of the two public refusals — `waitlistRefusalOf` answers
+ * null for it — because no public door enters a row and then confirms it in two steps.
  */
-export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITLIST" | null {
+export function walkInLeftUnconfirmedError(refused: DomainError): DomainError {
+  return new DomainError("VALIDATION_ERROR", `${refused.message} (the walk-in was entered and left unconfirmed)`, [WALK_IN_LEFT_UNCONFIRMED]);
+}
+
+/**
+ * The backoffice's word for each refusal — `Admin.errors.WAITLIST_FULL` / `NO_WAITLIST`, and
+ * `WALK_IN_LEFT_UNCONFIRMED` for the walk-in above — so a volunteer at the desk reads why, rather
+ * than the generic "check what you entered" about a form that is correct. Null for any other
+ * error, which keeps its own code.
+ */
+export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITLIST" | "WALK_IN_LEFT_UNCONFIRMED" | null {
+  if (error instanceof DomainError && error.code === "VALIDATION_ERROR" && error.fields.includes(WALK_IN_LEFT_UNCONFIRMED)) {
+    return "WALK_IN_LEFT_UNCONFIRMED";
+  }
   const refusal = waitlistRefusalOf(error);
   return refusal === null ? null : refusal === NO_WAITLIST ? "NO_WAITLIST" : "WAITLIST_FULL";
 }

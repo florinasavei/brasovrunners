@@ -11,6 +11,7 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
+import { numberForm } from "@/i18n/number-form";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, listSeriesDates } from "@/modules/content/events/repository";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -129,6 +130,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
   const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
+  // How many test rows went in before the waiting list's limit stopped the batch (§NNN).
+  const stoppedCount = /^\d+$/.test(created ?? "") ? Number(created) : 0;
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
   const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
@@ -379,9 +382,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
         {/* A batch of test rows that met the waiting list's limit part-way (§NNN): how many went in,
-            and that the rest were refused as a real registration would be. */}
+            and that the rest were refused as a real registration would be. A counted phrase —
+            "1 înscriere", "19 înscrieri", "20 de înscrieri" — so the wording follows the number. */}
         {saved === "testRegistrationsStopped" && (
-          <Alert severity="info">{t("testRegistrations.stoppedAtLimit", { created: /^\d+$/.test(created ?? "") ? (created as string) : "0" })}</Alert>
+          <Alert severity="info">
+            {t(`testRegistrations.stoppedAtLimit.${numberForm(locale, stoppedCount)}`, { created: stoppedCount })}
+          </Alert>
         )}
         {/* What the save told the participants (§331), under whichever banner the save gave. */}
         {noticeOutcome && (
@@ -389,7 +395,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t(`editor.notice.outcome.${noticeOutcome}`, { queued: queuedCount })}
           </Alert>
         )}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped"].includes(saved) &&!(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
         {/* The save that announced the place (§328): public from now on, and nobody was told —

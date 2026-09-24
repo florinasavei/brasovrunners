@@ -24,7 +24,7 @@ import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-che
 import {
   countAnonymousStartListEntries,
   countPublicStartList,
-  listOfferExpiries,
+  listPlaceCountInstants,
   listPublicStartList,
 } from "@/modules/registrations/repository";
 import { readPublicPlaces } from "@/modules/registrations/service";
@@ -115,7 +115,8 @@ export async function cachedSitemapEvents(locale: Locale) {
  *
  * Not a copy of the count and not a recent one: every registration that moves expires it
  * (`repository.ts#transitionRegistration` and the few writes beside it), an event save expires
- * it, and the one input that changes with the clock — a waiting-list offer lapsing — is in the
+ * it, and the inputs that change with the clock — a waiting-list offer lapsing, and on an event
+ * whose line has a limit a declaration hold lapsing (`listPlaceCountInstants`) — are in the
  * key. So the number served is the number the formula gives for this instant. It is still a
  * page render and not a decision: the form and the allocator count again, under the lock.
  *
@@ -127,10 +128,10 @@ export async function cachedSitemapEvents(locale: Locale) {
  * frees a slot in the line exactly when it frees a place.
  */
 export async function cachedPublicAvailability(eventId: string, now: Date): Promise<CachedPublicPlaces> {
-  const expiries = await publicRead(["places.offer-expiries", eventId], ["places", "events"], () =>
-    listOfferExpiries(getDb(), eventId),
+  const instants = await publicRead(["places.count-instants", eventId], ["places", "events"], () =>
+    listPlaceCountInstants(getDb(), eventId),
   );
-  const window = clockWindow(expiries, now, "reached");
+  const window = clockWindow(instants, now, "reached");
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);

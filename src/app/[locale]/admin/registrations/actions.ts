@@ -263,6 +263,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
       No place and the waiting list full (§NNN), for a staff entry and the desk's walk-in alike: no
       bypass (`AGENTS.md` §15.11), and a sentence that says so rather than "check what you entered"
       — the form is correct, the line is full. The marker names no box; every box stays filled.
+      A walk-in whose row went in and whose confirmation, a moment later, found the line full has
+      its own sentence (`WALK_IN_LEFT_UNCONFIRMED`): the row exists, unconfirmed.
     */
     const full = waitlistRefusalCode(error);
     if (full) return { ...refusal, error: full, fields: [] };

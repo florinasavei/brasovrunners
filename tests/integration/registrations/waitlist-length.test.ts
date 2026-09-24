@@ -14,6 +14,7 @@ import {
   promoteRegistrationByStaff,
 } from "@/modules/registrations/admin-service";
 import { NO_WAITLIST, WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
+import { listPlaceCountInstants } from "@/modules/registrations/repository";
 import {
   confirmEmail,
   type EventForRegistration,
@@ -312,6 +313,93 @@ describe("BR-REQ-035-01 a waiting list with a limit (§NNN)", () => {
 
     const after = await confirmEmail(db, { ...event, eventStatus: "CANCELLED" }, pending.id, NOW);
     expect(after.status).toBe("PENDING_EMAIL_CONFIRMATION");
+  });
+});
+
+/**
+ * §160 keeps a declaration hold past its deadline until somebody wants the place. With a limit, a
+ * newcomer the line has no room for is that somebody: one lapsed hold goes for them, the oldest
+ * deadline first, and they get the place directly — rather than a runner who never signed keeping
+ * it until the race while every newcomer is turned away, which on an event with no waiting list
+ * nothing else would ever end.
+ */
+describe("§160, §NNN a lapsed declaration hold goes to the newcomer the line cannot take", () => {
+  const afterHold = new Date(NOW.getTime() + 31 * 60_000);
+
+  it("with a limit of 0: the hold lapses and the newcomer gets the place — the page and the form say so first", async () => {
+    const event = await createInternalEvent(1, 0);
+    const lapsing = await registerAndConfirm(event, "never-signs@example.test");
+    expect(lapsing.status).toBe("PENDING_DECLARATION");
+
+    // Inside the hold: full, and closed as full, since there is no line to join.
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, NOW)).toEqual({ availablePlaces: 0, waitlistRoom: 0 });
+    expect(await refusalOf(submitRegistration(db, event, submission("early@example.test", NOW), NOW))).toBe(NO_WAITLIST);
+
+    // Past it: the kept place is the next newcomer's — on the page, at the form, and in the allocator.
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toEqual({ availablePlaces: 1, waitlistRoom: 0 });
+    const newcomer = await registerAndConfirm(event, "newcomer@example.test", "REAL", afterHold);
+    expect(newcomer.status).toBe("PENDING_DECLARATION");
+
+    const [released] = await db.select().from(registrations).where(eq(registrations.id, lapsing.id));
+    expect(released.status).toBe("EXPIRED");
+    expect(released.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+    // One newcomer, one hold: full again, and the next one is refused.
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toEqual({ availablePlaces: 0, waitlistRoom: 0 });
+    expect(await refusalOf(submitRegistration(db, event, submission("next@example.test", afterHold), afterHold))).toBe(NO_WAITLIST);
+  });
+
+  it("releases one hold per newcomer, the oldest deadline first, and the other can still sign", async () => {
+    const event = await createInternalEvent(2, 0);
+    const first = await registerAndConfirm(event, "first@example.test");
+    const secondAt = new Date(NOW.getTime() + 5 * 60_000);
+    const second = await registerAndConfirm(event, "second@example.test", "REAL", secondAt);
+    const bothLapsed = new Date(NOW.getTime() + 40 * 60_000);
+
+    expect((await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, bothLapsed)).availablePlaces).toBe(2);
+    expect((await registerAndConfirm(event, "newcomer@example.test", "REAL", bothLapsed)).status).toBe("PENDING_DECLARATION");
+
+    const [firstAfter] = await db.select().from(registrations).where(eq(registrations.id, first.id));
+    const [secondAfter] = await db.select().from(registrations).where(eq(registrations.id, second.id));
+    expect(firstAfter.status).toBe("EXPIRED");
+    expect(secondAfter.status).toBe("PENDING_DECLARATION");
+
+    // Nobody wants the second place yet, so the late signature is taken as §160 promises.
+    const signed = await signDeclaration(db, event, second.id, await signingInput(db, bothLapsed), bothLapsed);
+    expect(signed.status).toBe("CONFIRMED");
+  });
+
+  it("with a line at its limit: a lapsed hold's place goes to the newcomer instead of the refusal", async () => {
+    const event = await createInternalEvent(2, 1);
+    const leaving = await registerAndConfirm(event, "leaving@example.test");
+    const lapsing = await registerAndConfirm(event, "lapsing@example.test");
+    const queued = await registerAndConfirm(event, "queued@example.test");
+    expect(queued.status).toBe("WAITLISTED");
+
+    // A place given up: the one in line is offered it and still stands in the line, which is full.
+    await unregister(db, event, leaving.id, "PARTICIPANT", NOW);
+    const [offered] = await db.select().from(registrations).where(eq(registrations.id, queued.id));
+    expect(offered.status).toBe("WAITLIST_OFFERED");
+    expect(await refusalOf(submitRegistration(db, event, submission("early@example.test", NOW), NOW))).toBe(WAITLIST_FULL);
+
+    // The other hold lapses. An offer is not somebody waiting, so it was kept — until a newcomer
+    // the line cannot take arrives.
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 1 }, afterHold)).toEqual({ availablePlaces: 1, waitlistRoom: 0 });
+    expect((await registerAndConfirm(event, "newcomer@example.test", "REAL", afterHold)).status).toBe("PENDING_DECLARATION");
+
+    const [lapsingAfter] = await db.select().from(registrations).where(eq(registrations.id, lapsing.id));
+    const [queuedAfter] = await db.select().from(registrations).where(eq(registrations.id, queued.id));
+    expect(lapsingAfter.status).toBe("EXPIRED");
+    expect(queuedAfter.status).toBe("WAITLIST_OFFERED");
+  });
+
+  it("tells the public cache when a lapsing hold changes the count: on a limited line, and only there", async () => {
+    const limited = await createInternalEvent(1, 0);
+    const held = await registerAndConfirm(limited, "held@example.test");
+    expect(await listPlaceCountInstants(db, limited.id)).toEqual([held.holdExpiresAt]);
+
+    const unlimited = await createInternalEvent(1, null);
+    await registerAndConfirm(unlimited, "other@example.test");
+    expect(await listPlaceCountInstants(db, unlimited.id)).toEqual([]);
   });
 });
 
