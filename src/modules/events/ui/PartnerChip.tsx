@@ -23,7 +23,7 @@ const PARTNER_CHIP_SX = {
  * it reads as one more fact about the event rather than a badge that competes with "Ediție
  * specială".
  *
- * Never a partner's name: there may be several, and the chip is a marker, not a list — the whole
+ * It never names a partner: there may be several, and the chip is a marker, not a list — the whole
  * list is the event page's partner cards (§344). Nothing for an event with no partner. The words
  * are `partnerPhrase`'s; the glyph crosses to `GlyphChip` by its name (§112).
  */

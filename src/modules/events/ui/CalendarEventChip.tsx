@@ -152,7 +152,7 @@ export default function CalendarEventChip({
   );
 }
 
-/** The handshake with no tooltip of its own, inside the grid chip whose tooltip names the partner. */
+/** The handshake with no tooltip of its own, inside the grid chip whose tooltip says "Eveniment în parteneriat" / "Partnered event". */
 function PartnerGlyph({ size }: { size: number }) {
   const Icon = GLYPHS.partner;
   return <Icon aria-hidden="true" sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />;

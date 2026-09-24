@@ -9,7 +9,7 @@ import { GLYPHS } from "./glyphs";
  * "For the partnership, I just need 1 icon, I do not need to show the full partners list, there
  * might be multiple partners"): after the type and the surface, a "·", the handshake and a
  * generic "Eveniment în parteneriat" — the words the listing card's chip and the calendar entry
- * say, from the one phrase (`partnerPhrase`). Never a partner's name: the event page's own
+ * say, from the one phrase (`partnerPhrase`). It never names a partner: the event page's own
  * partner cards (§344) are where the full list lives.
  *
  * The glyph is the overline's own size, 18 pixels, like the type's and the surface's before it,

@@ -53,9 +53,9 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
  * the marker appears: the listing card's chip, the calendar entry's tooltip and accessible name,
  * and the event page's overline.
  *
- * Never a partner's name, and never a count: the marker says only that the event is held with
- * one or more partners — there may be several, and a card is a summary. The full list, with every
- * partner's name and links, is the event page's partner cards (§344), which this never replaces.
+ * It never names a partner and never counts them: the marker says only that the event is held with
+ * one or more partners — there may be several, and a card is a summary. The full list — each
+ * partner by name, with its links — is the event page's partner cards (§344), which this never replaces.
  *
  * `hasPartner` is whether `readCoHosts(event)` found any; null when it did not, so nothing
  * renders where there is no partner to mark.

@@ -54,15 +54,26 @@ const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-
 /**
  * A series card's «Următoarea:» / «Next:» lead, on the date's own line (§366, amended §NNN — a
  * review, 2026-09-24, of the row hiding the lead below 600 pixels: "every phone loses the lead,
- * not only the 320-px ones; the owner's row keeps the lead where it fits"). Measured: the lead
- * next to the date (year already dropped), the clock and the time needs about 245 pixels; a
- * 320-pixel phone's card gives the row about 226, a 360-pixel one about 266 — so the lead fits
- * from 345 pixels up, not from `sm` (600) down. Below that the lead is visually hidden (clipped,
- * never `display: none`) rather than removed, so a screen reader still reads it — the same trick
- * `date` already plays with the year.
+ * not only the 320-px ones; the owner's row keeps the lead where it fits"). When the row is
+ * short of room, the lead gives way, never the time.
+ *
+ * The breakpoint is the widest case, measured in headless Chromium on the built listing (Roboto,
+ * 14 pixels, the date bold; 2026-09-25): every day of a year, the date as the card prints it on a
+ * phone (the year dropped), the lead, the separator, the clock and the time. Widest in Romanian:
+ * "Următoarea: Duminică, 27 sept. · [clock] 18:30", 274 pixels; in English: "Next: Wednesday,
+ * 30 Sept · [clock] 18:30", 240. What the page and the card take around the row — the gutters,
+ * the card's padding, the row's own calendar glyph — is 94 pixels at every phone width (a
+ * 320-pixel viewport leaves the row 226, a 360-pixel one 266). So the lead fits every weekday and
+ * every month from 368 pixels up; the breakpoint is 376, eight pixels over, so a font rendered a
+ * hair wider elsewhere (Linux against Windows, a system's own hinting) does not push the time
+ * off the row. One number for both languages: the Romanian lead is the wider.
+ *
+ * Below it the lead is clipped visually (a one-pixel box, never `display: none`), so a screen
+ * reader still reads it at every width. The date does something else with its year: it swaps two
+ * renderings with `display` (`date`, below), each whole where it shows.
  */
-const WHEN_LEAD_HIDDEN_BELOW_345 = {
-  "@media (max-width: 344.95px)": {
+const WHEN_LEAD_HIDDEN_BELOW_376 = {
+  "@media (max-width: 375.95px)": {
     position: "absolute",
     width: "1px",
     height: "1px",
@@ -166,20 +177,20 @@ export default async function EventFacts({
    * phone's width once the calendar glyph, the clock and the time share it. When the date falls
    * within the coming twelve months a phone drops the year — the weekday and the day-month stay
    * (§349) — through `formatDay`'s own `year: false`, the smallest change that fits: never a
-   * second date format, only the one option this helper already carries. `sm` and up, and any
-   * date further out, keep the year; nothing is lost where there is room to read it.
+   * second date format, only the one option this helper already carries. `sm` and up, a date
+   * further out and a date already past keep the year; nothing is lost where there is room to
+   * read it.
+   *
+   * A card that keeps its year on a phone — no `dateShort` — is the other case the row must not
+   * clip (a review, 2026-09-24): "Duminică, 27 sept. 2026 · [clock] 18:30" is 227 pixels against
+   * the 226 a 320-pixel card leaves the row, and a series card's lead in front of a past date
+   * ("Următoarea: Duminică, 27 sept. 2026 …", 310) runs past a 360-pixel card's 266. Such a row
+   * wraps between whole pieces (`wrap` below, `flow`'s `card.wrap`), the way a race's two named
+   * times do. Flex wrapping breaks the line only when the row does not fit, so a year-carrying
+   * card that fits — a desktop's, a short weekday's — stays one line.
    */
   const dateWithinYear = compact && event.startsAt.getTime() - now.getTime() >= 0 && event.startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
   const dateShort = dateWithinYear ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
-  /**
-   * A card more than a year ahead keeps its year — «Sâmbătă, 26 sept. 2027 · 08:00» — longer than
-   * `nowrap` fits at 320 pixels too (a review, 2026-09-24, found one clipped by the card's own
-   * `overflow: hidden`). A date already past (also `dateShort === null`, the same boolean the year
-   * drops on) is not this case — its printed date is the same length a within-year card's full
-   * rendering is, and forcing it to wrap would cost it a line it does not need — so this checks
-   * the distance itself, not merely whether the short rendering exists.
-   */
-  const dateMoreThanYearOut = compact && event.startsAt.getTime() - now.getTime() >= 365 * 24 * 60 * 60 * 1000;
   const date: ReactNode = dateShort ? (
     <>
       <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
@@ -290,7 +301,7 @@ export default async function EventFacts({
    * only when the club wrote it in both (`coHostDescription`): never the Romanian sentence on the
    * English page, and never a partnership described on one page and silent on the other. Where to
    * register with the partner comes first among its links and, with no label of the club's, says
-   * so with the partner's name ("Înscriere la Brașov Running Festival") — the one call to action on
+   * so, naming the partner ("Înscriere la Brașov Running Festival") — the one call to action on
    * the card, written as a link in the weight of a heading, never a second button competing with
    * the club's own registration beneath these facts (`RegistrationCta`).
    *
@@ -378,26 +389,28 @@ export default async function EventFacts({
 
     The card's form (§366, amended §NNN — the owner, 2026-09-24, of the row whose clock and time had
     wrapped to a second line: "This should be on a single line on a phone") is `nowrap` on the row,
-    every piece kept whole — except a race's two named times (`card.wrap`, below), which still break
-    between whole pieces exactly as the page does: at 320 pixels "[calendar] Sâmbătă … · [clock]
-    întâlnire la 09:00 · start la 10:00" is about 390 pixels against the card's 226, and `nowrap`
-    would have the card's own `overflow: hidden` clip the start time silently rather than stop the
-    line wrapping, which loses the one time a runner must not miss.
+    every piece kept whole — except where `card.wrap` says the row may need a second line, and there
+    it breaks between whole pieces exactly as the page does. Two cases set it: a race's two named
+    times — at 320 pixels "[calendar] Sâmbătă … · [clock] întâlnire la 09:00 · start la 10:00" is
+    about 390 pixels against the card's 226, and `nowrap` would have the card's own
+    `overflow: hidden` clip the start time silently, the one time a runner must not miss — and a
+    date that keeps its year on a phone (`dateShort` absent: a past date, or one more than a year
+    out; measured above). Flex wrapping breaks only a row that does not fit.
 
     A series card's own lead ("Următoarea:") is the other width the amendment measured: with the
-    year already dropped (`date`, above) the lead still does not fit next to the date, the clock
-    and the time at 320 pixels ("Următoarea: Luni, 28 sept. · [clock] 18:30" is about 245 pixels
-    against 226; a 360-pixel card gives it about 266, which fits). A review, 2026-09-24, amended
-    §NNN once more: MUI's `sm` (600 pixels) hid the lead on every phone, not only the ones too
-    narrow for it. `WHEN_LEAD_HIDDEN_BELOW_345`, above, is the row's own breakpoint instead — 345
-    pixels, from the measurement — and the lead is visually hidden below it (clipped, never
-    `display: none`), so a screen reader still reads it, the same trick `date` already plays with
-    the year.
+    year already dropped (`date`, above) the lead does not fit next to the widest date, the clock
+    and the time below 368 pixels. A review, 2026-09-24, amended §NNN once more: MUI's `sm` (600
+    pixels) hid the lead on every phone, not only the ones too narrow for it; a second review
+    found the first measured breakpoint (345, from one Monday) too narrow for a Sunday.
+    `WHEN_LEAD_HIDDEN_BELOW_376`, above, carries the measurement of every weekday and month. The
+    lead gives way, never the time: below the breakpoint it is clipped visually, so a screen
+    reader still reads it; the date's year is swapped with `display` instead, two renderings of
+    which one shows.
   */
   const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean }) => (
     <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
       {card?.lead && (
-        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_345 }}>
+        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_376 }}>
           {card.lead}
         </Box>
       )}
@@ -536,9 +549,10 @@ export default async function EventFacts({
     return (
       <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
-            a race's gathering and start time, or a date more than a year out (`dateMoreThanYearOut`,
-            above), may still wrap between whole pieces rather than be clipped (§366, amended §NNN). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || dateMoreThanYearOut }))}
+            a race's gathering and start time, or a date that keeps its year on a phone (no
+            `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
+            than be clipped (§366, amended §NNN). */}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (

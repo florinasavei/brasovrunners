@@ -93,7 +93,10 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
 
   test("the listing card carries one chip with the handshake and the generic label, never the partner's name", async ({ page }) => {
     await page.goto("/ro/evenimente");
-    // Every fold open, so a card in "other events" is measured as a reader who opened it sees it.
+    // Every fold open, so a card in "other events" is measured as a reader who opened it sees it —
+    // once the list has streamed in after the shell (§166): opened before it, a phone listing folded
+    // by more than four cards (§78, another spec's fixtures among them) stays closed over this card.
+    await expect(page.locator("#main ul > li h2").first()).toBeAttached();
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const card = page.locator("li").filter({ has: page.getByRole("heading", { name: title }) });
     const chip = card.locator(".MuiChip-root").filter({ hasText: "Eveniment în parteneriat" });
@@ -106,6 +109,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
 
     // The English listing says it in English, and never in Romanian.
     await page.goto("/en/events");
+    await expect(page.locator("#main ul > li h2").first()).toBeAttached();
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const englishCard = page.locator("li").filter({ has: page.getByRole("heading", { name: englishTitle }) });
     await expect(englishCard.locator(".MuiChip-root").filter({ hasText: "Partnered event" })).toHaveCount(1);

@@ -324,8 +324,8 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("wraps the when line rather than clip it, for a date more than a year out that keeps its year (a review, 2026-09-24)", async () => {
     // More than 365 days ahead of `NOW`: the card keeps the year («Sâmbătă, 26 sept. 2027 · 08:00»)
     // and, kept whole under `nowrap`, would run past the card's width and be cut by its own
-    // `overflow: hidden`. `wrap: !!event.raceStartsAt || dateMoreThanYearOut` catches it too, not
-    // only a race's two named times.
+    // `overflow: hidden`. `wrap: !!event.raceStartsAt || (compact && !dateShort)` catches it too,
+    // not only a race's two named times.
     const html = await single({ startsAt: new Date("2027-09-26T05:00:00Z") });
     const when = fact(html, "when");
     expect(text(when)).toContain("2027");
@@ -337,16 +337,21 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(rulesFor(html, rowClass!)).not.toContain("flex-wrap:nowrap");
   });
 
-  it("does not wrap a past event's when line: its full date (also with no short rendering) is no longer than a within-year card's, and does not need the room", async () => {
+  it("wraps a past event's when line too: a past date keeps its year, and «Duminică, 20 sept. 2026 · 07:00» does not fit a 320-pixel card (a review, 2026-09-24)", async () => {
     // A date before `NOW` also carries its year (`dateWithinYear` requires a non-negative
-    // difference), but it is not the case the review found clipped — only a date more than a
-    // year *ahead* is. A first version that treated every year-carrying date alike (`!dateShort`)
-    // wrapped this one too, costing it a line it did not need.
-    const html = await single({ startsAt: new Date("2026-09-20T05:00:00Z") });
+    // difference). Measured in Chromium: "Duminică, 27 sept. 2026 · [clock] 18:30" is 227 pixels
+    // against the 226 a 320-pixel card leaves the row, and with a series' lead in front 310
+    // against a 360-pixel card's 266 — so every year-carrying card may wrap between whole pieces.
+    // Flex wrapping breaks the line only when the row does not fit, so one that fits stays one line.
+    const html = await single({ startsAt: new Date("2026-08-30T05:00:00Z") });
     const when = fact(html, "when");
+    expect(text(when)).toContain("Duminică, 30 aug. 2026");
+    // One rendering only: no year-less copy for a past date.
+    expect([...when.matchAll(/Duminică, 30 aug\./g)]).toHaveLength(1);
     const rowClass = [...when.matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
     expect(rowClass, "the flow row's own emotion class").toBeTruthy();
-    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:nowrap");
+    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:wrap");
+    expect(rulesFor(html, rowClass!)).not.toContain("flex-wrap:nowrap");
   });
 
   it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {

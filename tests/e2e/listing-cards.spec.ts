@@ -37,19 +37,47 @@ async function cards(page: Page, locale: "ro" | "en" = "ro"): Promise<Locator> {
   return main.locator("ul > li").filter({ has: page.locator("h2") });
 }
 
+const DAY = 86_400_000;
+
+/** A calendar day as the backoffice's date field takes it, "YYYY-MM-DD". */
+const ymd = (date: Date) => date.toISOString().slice(0, 10);
+
 /**
- * A weekly series of three published dates, the first eight days out, with a map link and a
- * summary in both languages — made in the backoffice, the way the club makes one, then signed out
- * of, so the listing is read as a visitor reads it. Returns the series' title in both languages.
+ * The first calendar day from `from` (inclusive), walking `step` days at a time (+1 forward, -1
+ * back), that falls on `weekday` (0 Sunday … 6 Saturday) and has a two-digit day of the month —
+ * the widest date a card prints for that weekday: "Duminică, 27 sept.", "Wednesday, 30 Sept".
+ * Calendar arithmetic at noon UTC, so no zone moves the day; the event's own zone reads it as the
+ * same day.
+ */
+function widestDay(from: Date, weekday: number, step: 1 | -1): Date {
+  let day = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 12));
+  while (day.getUTCDay() !== weekday || day.getUTCDate() < 10) day = new Date(day.getTime() + step * DAY);
+  return day;
+}
+
+/**
+ * What a spec published, by its Romanian title and how many dates it has, so its `finally` removes
+ * exactly that and nothing it did not get to make. Each publisher records its title the moment the
+ * backoffice has saved the event, and a series its two further dates once they exist — so a failure
+ * halfway still leaves nothing behind.
+ */
+type Created = Array<{ title: string; dates: number }>;
+
+/**
+ * A weekly series of three published dates, with a map link and a summary in both languages —
+ * made in the backoffice, the way the club makes one, then signed out of, so the listing is read
+ * as a visitor reads it. Returns the series' title in both languages. `first` is its first date:
+ * eight days out unless a spec needs a particular weekday (the longest one, to measure the widest
+ * row a card prints).
  *
  * Through the backoffice and not straight into the database (as `waitlist-length.spec.ts` seeds its
  * events), because the listing reads its rows through the public cache (§333), which only a write
  * through the application expires: rows inserted behind the server's back would never reach a
  * listing this server had already read, and the other specs read it first. Removed the same way
- * (`removeSeries`), for the same reason and one more: a phone folds the listing once it has more
+ * (`removeEvents`), for the same reason and one more: a phone folds the listing once it has more
  * than four cards (§78), and a series left behind would fold it for every spec after this one.
  */
-async function publishSeries(page: Page): Promise<{ ro: string; en: string }> {
+async function publishSeries(page: Page, created: Created, first?: Date): Promise<{ ro: string; en: string }> {
   const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
   const title = `Tură de probă ${suffix}`;
   const titleEn = `Trial run ${suffix}`;
@@ -62,16 +90,16 @@ async function publishSeries(page: Page): Promise<{ ro: string; en: string }> {
     await page.keyboard.type(words);
   };
   // Inside the eight weeks a series creates into at once (§122), as `series-drafts.spec.ts` does.
-  const DAY = 86_400_000;
   const today = new Date();
-  const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 8, 9));
-  const ymd = (date: Date) => date.toISOString().slice(0, 10);
+  const start = first ?? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 8, 9));
 
   await signIn(page, "Dev Administrator");
   await page.goto("/ro/admin/events/new");
   await hydrated(page);
-  await fillDateField(page, "Începutul evenimentului", ymd(first));
-  await fillTimeField(page, "Ora", "09:00");
+  await fillDateField(page, "Începutul evenimentului", ymd(start));
+  // Two digits either side of the colon, like every time: Roboto's figures are one width, so
+  // any time is as wide as the widest.
+  await fillTimeField(page, "Ora", "18:30");
   await field("event.locationName").fill("Parcul Tractorul");
   // The place in both languages since §362.
   await field("event.locationNameEn").fill("Tractorul Park");
@@ -86,75 +114,98 @@ async function publishSeries(page: Page): Promise<{ ro: string; en: string }> {
   await summary("en", "A trial run, for the series card.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  const record = { title, dates: 1 };
+  created.push(record);
   await hydrated(page);
 
   // Weekly, until two weeks on: two more dates, published with the source (the tick's default, §350).
   const recurrence = await openEditorBox(page, "Recurență");
   await recurrence.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
-  await fillDateField(page, "Până la (opțional)", ymd(new Date(first.getTime() + 14 * DAY)));
+  await fillDateField(page, "Până la (opțional)", ymd(new Date(start.getTime() + 14 * DAY)));
   await expect(recurrence.getByRole("checkbox", { name: "Publică datele noi automat" })).toBeChecked();
   await recurrence.getByRole("button", { name: "Creează datele" }).click();
   await page.getByRole("dialog", { name: "Creezi datele?" }).getByRole("button", { name: "Creează datele" }).click();
   await expect(page.locator("#admin-alert")).toContainText("2 date create acum", { timeout: 15_000 });
+  record.dates = 3;
 
   await page.context().clearCookies();
   return { ro: title, en: titleEn };
 }
 
 /**
- * A one-off race, not featured, with two named times — a meeting time and its own gun time
- * (`raceStartsAt`) — the case BR-REQ-041-01's amendment named: at 320 pixels the card's "when"
- * row cannot fit both without wrapping between them, and must not clip the start time. The seed
- * publishes no such card (its only race with `raceStartsAt` is `featured: true`, the hero, not a
- * card), so this makes one through the backoffice, the way an organizer does.
+ * A one-off event, not featured, published through the backoffice the way an organizer makes one,
+ * then signed out of. Returns its title in both languages. Three kinds, each a width the card's
+ * "when" row must survive at a phone's width:
+ *
+ * - `race` — a race with two named times, a meeting time and its own gun time (`raceStartsAt`),
+ *   the case BR-REQ-041-01's amendment named: at 320 pixels the row cannot fit both without
+ *   wrapping between them, and must not clip the start time. The seed publishes no such card (its
+ *   only race with `raceStartsAt` is `featured: true`, the hero, not a card);
+ * - `yearOut` — a run more than a year ahead, whose card keeps the year on a phone ("Duminică,
+ *   27 sept. 2027 · 18:30", 227 pixels against the 226 a 320-pixel card leaves the row);
+ * - `past` — a run already held, on the listing's "past events" fold (§267), whose card keeps its
+ *   year too. The seed's own past run moves with the week and another spec unpublishes it, so
+ *   this one is made here, where the spec can name it.
  */
-async function publishRace(page: Page): Promise<{ ro: string; en: string }> {
+async function publishOneOff(page: Page, created: Created, kind: "race" | "yearOut" | "past", day: Date): Promise<{ ro: string; en: string }> {
   const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
-  const title = `Cursă de probă ${suffix}`;
-  const titleEn = `Trial race ${suffix}`;
+  const words = {
+    race: { ro: "Cursă de probă", en: "Trial race", slugRo: "cursa-de-proba", slugEn: "trial-race" },
+    yearOut: { ro: "Tură de peste un an", en: "Run a year out", slugRo: "tura-peste-un-an", slugEn: "run-a-year-out" },
+    past: { ro: "Tură trecută", en: "Past run", slugRo: "tura-trecuta", slugEn: "past-run" },
+  }[kind];
+  const title = `${words.ro} ${suffix}`;
+  const titleEn = `${words.en} ${suffix}`;
   const field = (name: string) => page.locator(`[name="${name}"]`);
-  const summary = async (locale: "ro" | "en", words: string) => {
+  const summary = async (locale: "ro" | "en", text: string) => {
     const panel = languagePanel(page, "title", locale);
     await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
     await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
-    await page.keyboard.type(words);
+    await page.keyboard.type(text);
   };
-  const day = new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10);
 
   await signIn(page, "Dev Administrator");
   await page.goto("/ro/admin/events/new");
   await hydrated(page);
-  await page.getByRole("combobox", { name: "Tip eveniment" }).click();
-  await page.getByRole("option", { name: "Concurs" }).click();
-  await fillDateField(page, "Începutul evenimentului", day);
-  await fillTimeField(page, "Ora", "08:00");
-  // `raceStartsAt`'s own date and time (`WhenBox`, only for a race): the date's label is
-  // unique on the page, but its time shares "Ora" with `startsAt`'s — the second one, in
-  // source order.
-  await fillDateField(page, "Startul cursei", day);
-  const raceTime = page.getByRole("group", { name: "Ora", exact: true }).nth(1);
-  await raceTime.getByRole("spinbutton").first().click();
-  await page.keyboard.type("0900");
+  if (kind === "race") {
+    await page.getByRole("combobox", { name: "Tip eveniment" }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+  }
+  await fillDateField(page, "Începutul evenimentului", ymd(day));
+  await fillTimeField(page, "Ora", kind === "race" ? "08:00" : "18:30");
+  if (kind === "race") {
+    // `raceStartsAt`'s own date and time (`WhenBox`, only for a race): the date's label is
+    // unique on the page, but its time shares "Ora" with `startsAt`'s — the second one, in
+    // source order.
+    await fillDateField(page, "Startul cursei", ymd(day));
+    const raceTime = page.getByRole("group", { name: "Ora", exact: true }).nth(1);
+    await raceTime.getByRole("spinbutton").first().click();
+    await page.keyboard.type("0900");
+  }
   await field("event.locationName").fill("Stadionul Tineretului");
   await field("event.locationNameEn").fill("Youth Stadium");
   await field("translations.ro.title").fill(title);
-  await field("translations.ro.slug").fill(`cursa-de-proba-${suffix}`);
-  await summary("ro", "O cursă de probă, pentru cardul cu două ore.");
+  await field("translations.ro.slug").fill(`${words.slugRo}-${suffix}`);
+  await summary("ro", "Un eveniment de probă, pentru rândul datei de pe card.");
   await languageTab(page, "title", "en").click();
   await field("translations.en.title").fill(titleEn);
   await languageTab(page, "address", "en").click();
-  await field("translations.en.slug").fill(`trial-race-${suffix}`);
-  await summary("en", "A trial race, for the card with two times.");
+  await field("translations.en.slug").fill(`${words.slugEn}-${suffix}`);
+  await summary("en", "A trial event, for the card's date row.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
+  created.push({ title, dates: 1 });
   await hydrated(page);
 
   await page.context().clearCookies();
   return { ro: title, en: titleEn };
 }
 
-/** The series `publishSeries` made, deleted from the backoffice's list — one row, its three dates (§113, §114). */
-async function removeSeries(page: Page, title: string): Promise<void> {
+/**
+ * An event a spec published, deleted from the backoffice's list — one row, whether it is a series'
+ * dates (§113, §114) or a single one; `dates` is how many the alert must say were deleted.
+ */
+async function removeEvents(page: Page, title: string, dates: number): Promise<void> {
   await signIn(page, "Dev Administrator");
   await page.goto("/ro/admin");
   // The row's checkbox is MUI's: a tick before hydration is reverted when React takes over.
@@ -164,22 +215,26 @@ async function removeSeries(page: Page, title: string): Promise<void> {
   await row.getByRole("checkbox", { name: `Selectează „${title}”` }).check();
   await main.getByRole("button", { name: "Șterge cele bifate" }).click();
   await page.getByRole("dialog", { name: "Ștergi evenimentele bifate?" }).getByRole("button", { name: "Șterge cele bifate" }).click();
-  await expect(page.locator("#admin-alert")).toContainText("3 evenimente șterse", { timeout: 15_000 });
+  await expect(page.locator("#admin-alert")).toContainText(dates === 1 ? "1 eveniment șters" : `${dates} evenimente șterse`, { timeout: 15_000 });
   await page.context().clearCookies();
 }
 
-/** The one-off race `publishRace` made, deleted the same way — one row, one date. */
-async function removeEvent(page: Page, title: string): Promise<void> {
-  await signIn(page, "Dev Administrator");
-  await page.goto("/ro/admin");
-  await hydrated(page);
-  const main = page.locator("#main");
-  const row = main.locator("tr, li").filter({ visible: true }).filter({ has: page.getByRole("link", { name: title, exact: true }) });
-  await row.getByRole("checkbox", { name: `Selectează „${title}”` }).check();
-  await main.getByRole("button", { name: "Șterge cele bifate" }).click();
-  await page.getByRole("dialog", { name: "Ștergi evenimentele bifate?" }).getByRole("button", { name: "Șterge cele bifate" }).click();
-  await expect(page.locator("#admin-alert")).toContainText("1 eveniment șters", { timeout: 15_000 });
-  await page.context().clearCookies();
+/**
+ * Removes everything `created` names — each one on its own, so one refusal does not leave the
+ * rest behind — and throws the first failure only after trying them all. Called from `finally`:
+ * when the test itself failed, its own error is the one worth reading, so `quiet` swallows these.
+ */
+async function removeCreated(page: Page, created: Created, quiet: boolean): Promise<void> {
+  const failures: unknown[] = [];
+  for (const { title, dates } of created) {
+    try {
+      await removeEvents(page, title, dates);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  created.length = 0;
+  if (failures.length > 0 && !quiet) throw failures[0];
 }
 
 test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
@@ -245,7 +300,9 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       const map = where.locator("a");
       if ((await map.count()) > 0) {
         await expect(map).toHaveAttribute("target", "_blank");
-        expect((await map.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        // To a tenth of a pixel, as the tap-target check below: layout counts in sixty-fourths, and
+        // a 44-pixel link at a fractional offset measures 43.99994.
+        expect(Math.round(((await map.boundingBox())?.height ?? 0) * 10) / 10).toBeGreaterThanOrEqual(44);
       }
     }
   });
@@ -261,8 +318,10 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       line right under it and whose dates are links.
     */
     test.setTimeout(150_000);
-    const title = await publishSeries(page);
+    const created: Created = [];
+    let passed = false;
     try {
+      const title = await publishSeries(page, created);
       const list = await cards(page);
       // One card for the three dates: the title, the map, the fold with the three dates, the door.
       const series = list.filter({ has: page.getByRole("link", { name: title.ro, exact: true }) });
@@ -308,8 +367,9 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
         }
       }
       expect(pressed).toBeGreaterThan(0);
+      passed = true;
     } finally {
-      await removeSeries(page, title.ro);
+      await removeCreated(page, created, !passed);
     }
   });
 
@@ -440,80 +500,128 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
    * 2026 · 18:30" whose clock and time had wrapped to a second line: "This should be on a single
    * line on a phone." Within the coming twelve months a phone reads the date with no year (§349
    * keeps the weekday), and the row stays whole between pieces — never breaking a piece's own
-   * words — for every card. Measured on the two cases the seed cannot: a series card, whose own
-   * lead ("Următoarea:") does not fit next to the date, the clock and the time even with the
-   * year already dropped at 320 pixels, but does at 360; and a race with its own two named times,
-   * whose row is allowed to wrap between them rather than have the card's `overflow: hidden` clip
-   * the start time (the seed's only race with two times is the featured hero, not a card). Both
-   * fixtures are made through the backoffice, the way an organizer would, and removed after.
+   * words — and never runs past the card, whose own `overflow: hidden` would cut the time off
+   * without a word.
    *
-   * A review, 2026-09-24, of the first round's fix — `display: { xs: "none", sm: "inline" }` —
-   * found it hiding the lead on every phone, not only the 320-pixel ones the row was measured for:
-   * a 360- or 390-pixel phone has the room and lost the lead anyway, since `sm` is 600. The row's
-   * own breakpoint (345 pixels, `EventFacts.tsx`'s `WHEN_LEAD_HIDDEN_BELOW_345`) is checked at all
-   * three widths — 320 (hidden), 360 and 390 (visible) — each still one line, in both languages.
+   * Measured on fixtures the seed cannot give, made through the backoffice the way an organizer
+   * would and removed after (`removeCreated`, whatever of them was made):
+   *
+   * - two series on the longest weekdays with a two-digit day — a Sunday ("Următoarea: Duminică,
+   *   27 sept.", the widest row in Romanian) and a Wednesday ("Next: Wednesday, 30 Sept", the
+   *   widest in English). Their lead gives way, never the time: clipped to a pixel below
+   *   `EventFacts.tsx`'s `WHEN_LEAD_HIDDEN_BELOW_376`, shown from it up, and the row one line at
+   *   every width. The breakpoint was 345 once, from one Monday; a review, 2026-09-24, found a
+   *   Sunday's row clipped between 345 and 368;
+   * - a race with its own two named times, whose row may wrap between them;
+   * - a run more than a year out and a run already past, whose cards keep the year on a phone
+   *   ("Duminică, 27 sept. 2026 · 18:30" is 227 pixels against the 226 a 320-pixel card leaves the
+   *   row): they may wrap between whole pieces, and must not overflow.
+   *
+   * At 320 (the mobile project's width), 360, 390 and 412 pixels, in both languages; every other
+   * card on the listing is measured too.
    */
-  test("keeps the «when» row to one line at 320, 360 and 390 pixels, showing the series lead only where it fits, in both languages — except a race's own two times, which wrap between whole pieces instead of being clipped", async ({
+  test("keeps the «when» row whole at 320, 360, 390 and 412 pixels: one line with the series lead only where it fits, and a wrap between whole pieces — never a clipped time — for a race's two times or a date that keeps its year", async ({
     page,
   }) => {
     test.skip(test.info().project.name !== "mobile", "the widths below are only meaningful under the mobile project's phone viewport");
-    test.setTimeout(240_000);
-    const seriesTitle = await publishSeries(page);
-    const raceTitle = await publishRace(page);
+    test.setTimeout(480_000);
+    const created: Created = [];
+    let passed = false;
+    const today = new Date();
     try {
-      for (const width of [320, 360, 390] as const) {
+      const sunday = await publishSeries(page, created, widestDay(new Date(today.getTime() + DAY), 0, 1));
+      const wednesday = await publishSeries(page, created, widestDay(new Date(today.getTime() + DAY), 3, 1));
+      const race = await publishOneOff(page, created, "race", new Date(today.getTime() + 9 * DAY));
+      const yearOutDay = widestDay(new Date(today.getTime() + 380 * DAY), 0, 1);
+      const yearOut = await publishOneOff(page, created, "yearOut", yearOutDay);
+      const pastDay = widestDay(new Date(today.getTime() - 2 * DAY), 0, -1);
+      const past = await publishOneOff(page, created, "past", pastDay);
+      const LEAD_BREAKPOINT = 376;
+      // Half a pixel, no more: a fitting row measures 0, and the defect this guards measured 1.2 at
+      // its smallest (the seed's past Sunday under the old `nowrap`, at 320 pixels).
+      const TOLERANCE = 0.5;
+
+      for (const width of [320, 360, 390, 412] as const) {
         await page.setViewportSize({ width, height: 720 });
         for (const locale of ["ro", "en"] as const) {
           const list = await cards(page, locale);
           const count = await list.count();
           expect(count).toBeGreaterThan(0);
+          const byTitle = (title: { ro: string; en: string }) => list.filter({ has: page.getByRole("link", { name: title[locale], exact: true }) });
 
-          const seriesTitleForLocale = locale === "ro" ? seriesTitle.ro : seriesTitle.en;
-          const raceTitleForLocale = locale === "ro" ? raceTitle.ro : raceTitle.en;
-          const series = list.filter({ has: page.getByRole("link", { name: seriesTitleForLocale, exact: true }) });
-          const race = list.filter({ has: page.getByRole("link", { name: raceTitleForLocale, exact: true }) });
-          await expect(series, `series card present (${width}px, ${locale})`).toHaveCount(1);
-          await expect(race, `race card present (${width}px, ${locale})`).toHaveCount(1);
-          // The one case a phone still shows two lines: a race's gathering and start time.
-          await expect(race.locator('[data-fact="when"]')).toContainText(/08:00/);
-          await expect(race.locator('[data-fact="when"]')).toContainText(/09:00/);
+          /** The row as a reader sees it: its height in lines, how far its pieces run past it, its visible words. */
+          const measure = (card: Locator) =>
+            card.locator('[data-fact="when"]').evaluate((line) => {
+              const style = getComputedStyle(line);
+              const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.4;
+              const box = line.getBoundingClientRect();
+              // `flow`'s own row, inside `cardLine`'s wrapper: every piece that shows — the lead is
+              // left out where it is clipped to a pixel, since its words run past its box by design.
+              const row = line.querySelector(":scope > div > div")!;
+              const pieces = [...row.children].filter((piece) => getComputedStyle(piece).position !== "absolute");
+              const right = Math.max(...pieces.map((piece) => piece.getBoundingClientRect().right));
+              return {
+                lines: box.height / lineHeight,
+                overflow: Math.max(line.scrollWidth - line.clientWidth, right - box.right),
+                // `innerText` leaves out the rendering `display: none` hides: the date as shown.
+                shown: (line as HTMLElement).innerText,
+              };
+            });
+          const at = `${width}px, ${locale}`;
 
-          // The series' lead ("Următoarea:" / "Next:"): in the markup at every width (a screen
-          // reader always reads it), but visually a single clipped pixel below 345 and the words'
-          // own width from there up.
+          // The two series: one line, the lead clipped below the breakpoint and shown from it up.
           const leadWord = locale === "ro" ? "Următoarea:" : "Next:";
-          const leadBox = await series.locator('[data-fact="when"]').getByText(leadWord, { exact: true }).boundingBox();
-          expect(leadBox, `lead present (${width}px, ${locale})`).not.toBeNull();
-          if (width < 345) {
-            expect.soft(leadBox!.width, `lead clipped (${width}px, ${locale})`).toBeLessThanOrEqual(1);
-          } else {
-            expect.soft(leadBox!.width, `lead visible (${width}px, ${locale})`).toBeGreaterThan(1);
+          for (const [name, title] of [["Sunday series", sunday], ["Wednesday series", wednesday]] as const) {
+            const card = byTitle(title);
+            await expect(card, `${name} present (${at})`).toHaveCount(1);
+            const leadBox = await card.locator('[data-fact="when"]').getByText(leadWord, { exact: true }).boundingBox();
+            expect(leadBox, `${name}: lead in the markup (${at})`).not.toBeNull();
+            if (width < LEAD_BREAKPOINT) expect.soft(leadBox!.width, `${name}: lead clipped (${at})`).toBeLessThanOrEqual(1);
+            else expect.soft(leadBox!.width, `${name}: lead shown (${at})`).toBeGreaterThan(1);
+            const row = await measure(card);
+            expect.soft(row.shown, `${name}: no year on a phone (${at})`).not.toMatch(/\b20\d{2}\b/);
+            expect.soft(row.shown, `${name}: the time (${at})`).toContain("18:30");
+            expect.soft(row.lines, `${name}: one line (${at})`).toBeLessThanOrEqual(1.5);
+            expect.soft(row.overflow, `${name}: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
           }
 
+          // The race: both times whole, on two lines at most.
+          const raceCard = byTitle(race);
+          await expect(raceCard, `race present (${at})`).toHaveCount(1);
+          const raceRow = await measure(raceCard);
+          expect.soft(raceRow.shown, `race: its gathering time (${at})`).toContain("08:00");
+          expect.soft(raceRow.shown, `race: its start time (${at})`).toContain("09:00");
+          expect.soft(raceRow.lines, `race: two lines at most (${at})`).toBeLessThanOrEqual(2.5);
+          expect.soft(raceRow.overflow, `race: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
+
+          // A year out and a past date: the year kept, a wrap allowed, nothing past the card.
+          for (const [name, title, day] of [["a year out", yearOut, yearOutDay], ["past", past, pastDay]] as const) {
+            const card = byTitle(title);
+            await expect(card, `${name} present (${at})`).toHaveCount(1);
+            const row = await measure(card);
+            expect.soft(row.shown, `${name}: keeps its year (${at})`).toContain(String(day.getUTCFullYear()));
+            expect.soft(row.shown, `${name}: the time (${at})`).toContain("18:30");
+            expect.soft(row.lines, `${name}: two lines at most (${at})`).toBeLessThanOrEqual(2.5);
+            expect.soft(row.overflow, `${name}: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
+          }
+
+          // Every card on the listing: one line — two for a race's times or a date that keeps its
+          // year — and nothing past the card.
           for (let i = 0; i < count; i += 1) {
             const card = list.nth(i);
-            const isRace = (await card.getByRole("link", { name: raceTitleForLocale, exact: true }).count()) > 0;
-            const when = card.locator('[data-fact="when"]');
-            const measured = await when.evaluate((el) => {
-              const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.4;
-              const rect = el.getBoundingClientRect();
-              return { height: rect.height, lineHeight, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
-            });
-            // Every other card: one line, never two. The race: its own two times may wrap onto a
-            // second, but never more, and — wrapped or not — nothing inside the row overflows its box.
-            expect.soft(measured.height, `card ${i} (${width}px, ${locale}): when row height`).toBeLessThanOrEqual(measured.lineHeight * (isRace ? 2.5 : 1.5));
-            expect.soft(measured.scrollWidth - measured.clientWidth, `card ${i} (${width}px, ${locale}): when row overflow`).toBeLessThanOrEqual(1);
+            const row = await measure(card);
+            const twoTimes = /\d{2}:\d{2}[\s\S]*\d{2}:\d{2}/.test(row.shown);
+            const withYear = /\b20\d{2}\b/.test(row.shown);
+            expect.soft(row.lines, `card ${i} «${row.shown}» (${at}): lines`).toBeLessThanOrEqual(twoTimes || withYear ? 2.5 : 1.5);
+            expect.soft(row.overflow, `card ${i} «${row.shown}» (${at}): nothing past the card`).toBeLessThanOrEqual(TOLERANCE);
           }
-          // And the time itself is never cut off or hidden: still readable text on the row.
-          const times = list.locator('[data-fact="when"]');
-          await expect(times.first()).toContainText(/\d{2}:\d{2}/);
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
           expect(overflow).toBeLessThanOrEqual(0);
         }
       }
+      passed = true;
     } finally {
-      await removeEvent(page, raceTitle.ro);
-      await removeSeries(page, seriesTitle.ro);
+      await removeCreated(page, created, !passed);
     }
   });
 });
