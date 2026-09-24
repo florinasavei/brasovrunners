@@ -23,7 +23,7 @@ import GlyphChip from "./GlyphChip";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph, type GlyphName } from "./glyphs";
 
 /**
- * The leading glyph of every row on the event page's facts (§NNN): one size, one colour, one
+ * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
  * alignment, whichever question the row answers. The owner, 2026-09-24: "address with address
  * icons not consistent". One object, so a row cannot drift from the others; the unit test reads
  * the class Emotion gives it and finds the same one on every row.
@@ -31,7 +31,7 @@ import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph, type GlyphName } from "./glyp
 const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1 } as const;
 
 /**
- * A pill on the event page (§NNN) — the listing card's outlined chip (`EventKindChips`), so the
+ * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
  * page and the cards read alike. Its label wraps rather than ending in an ellipsis: MUI cuts a
  * chip's label to one line, and a club's own amount ("50 lei la înscriere, 70 lei în ziua
  * cursei", sixty characters at most) is a fact that must be read whole on a 320-pixel phone.
@@ -57,7 +57,7 @@ type Pill = { glyph: GlyphName; label: string };
  * - **the listing's featured hero** (the default): the `<dl>`, each row one line of short
  *   pieces separated by a middle dot — a summary above the fold, with a button to reach;
  * - **the event page and its preview** (`stacked`): the `<dl>` grouped again and restyled
- *   (§NNN) — "când" one line, the place with its address under it, the route as one row of
+ *   (§356) — "când" one line, the place with its address under it, the route as one row of
  *   pills, the cost its own row with its own pill, and every row's glyph the same.
  *
  * Registration is not a fact of the event but a state of the moment, and the button beneath
@@ -76,7 +76,7 @@ export default async function EventFacts({
   now: Date;
   variant?: "full" | "compact";
   /**
-   * The event page's own facts (§168, restyled by §NNN), which the page and the staff preview
+   * The event page's own facts (§168, restyled by §356), which the page and the staff preview
    * ask for and nothing else does.
    *
    * §168 put each piece on its own bulleted line; the owner, 2026-09-24, of that list: "This
@@ -115,7 +115,7 @@ export default async function EventFacts({
   // learning which page sent the visitor (`DECISIONS.md` §61 on the Strava mark: the mark
   // decorates, the words are the link, and never Strava's script).
   //
-  // `tight` (the event page, §NNN) keeps the 44 pixels and gives back the twenty the line did not
+  // `tight` (the event page, §356) keeps the 44 pixels and gives back the twenty the line did not
   // need, as a negative margin above and below: the box a thumb hits is as tall as ever, but the
   // line it sits on is as tall as its text, so the place's name sits right above its address and a
   // payment link beside its pill. Only for a link whose neighbours above and below are words —
@@ -144,7 +144,7 @@ export default async function EventFacts({
   /* When: the date, then the times — a race has two, each named; anything else has one, bare,
      right after the date on the same line, where the middle dot binds the two. §169 named the
      lone time ("începe la 09:00") only because the page had put it on a bullet of its own; the
-     page's "când" is one line again (§NNN), so the name went with the bullet. */
+     page's "când" is one line again (§356), so the name went with the bullet. */
   const when: ReactNode[] = [<strong key="date">{date}</strong>];
   if (event.raceStartsAt) {
     when.push(t("gatheringAt", { time: time(event.startsAt) }), t("raceStartAt", { time: time(event.raceStartsAt) }));
@@ -167,7 +167,7 @@ export default async function EventFacts({
 
   /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
      cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
-     This is the card's and the hero's line; the event page draws its own below (§NNN). */
+     This is the card's and the hero's line; the event page draws its own below (§356). */
   const route: ReactNode[] = [];
   if (distance !== null) {
     // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
@@ -386,7 +386,7 @@ export default async function EventFacts({
       The listing's featured hero: one line per question, the pieces separated by middle dots,
       and its partners as the cards' one sentence (`coHostSentence`, above) — a summary above
       the fold with a button to reach, so neither a column of every partner's links nor the
-      page's pills (§169, §NNN).
+      page's pills (§169, §356).
     */
     const lines: Array<{ label: string; icon: Glyph; value: ReactNode[] }> = [{ label: t("when"), icon: CalendarMonthIcon, value: when }];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
@@ -425,7 +425,7 @@ export default async function EventFacts({
     );
   }
 
-  /* ---- The event page, and the staff preview that draws exactly what it will (§NNN). ---- */
+  /* ---- The event page, and the staff preview that draws exactly what it will (§356). ---- */
 
   /*
     One wrapping line of short pieces: "Sâmbătă, 26 sept. 2026 · 08:00". The middle dot is hidden
@@ -448,7 +448,7 @@ export default async function EventFacts({
     </Box>
   );
 
-  // A row of pills (§NNN): the card's outlined chip, its glyph by name, no bullets between them.
+  // A row of pills (§356): the card's outlined chip, its glyph by name, no bullets between them.
   const pillRow = (items: Pill[]) => (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {items.map((item) => (

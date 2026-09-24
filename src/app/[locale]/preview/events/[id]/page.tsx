@@ -193,7 +193,7 @@ export default async function PreviewEventPage({ params }: Props) {
         </Box>
       )}
 
-      {/* The address is the second line of "Unde" in the facts above (§NNN), as on the public page. */}
+      {/* The address is the second line of "Unde" in the facts above (§356), as on the public page. */}
     </Container>
   );
 }

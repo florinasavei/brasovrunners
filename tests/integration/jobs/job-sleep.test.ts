@@ -249,14 +249,14 @@ describe("BR-REQ-090-07 criterion 7 the Administrator's minimum interval", () =>
   });
 
   it("replaces the hour-long cap when it is longer", async () => {
-    // NOW is 13:00 in Brașov; a run an hour later is on an even hour, which two hours keep (§NNN).
+    // NOW is 13:00 in Brașov; a run an hour later is on an even hour, which two hours keep (§355).
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
     expect((await pingAt(60)).body).toMatchObject({ ran: true, nextCheckAt: ends(180).toISOString(), notBefore: ends(180).toISOString() });
     expect((await pingAt(135, { database: false })).body.ran).toBe(false);
     expect((await pingAt(justBefore(180))).body.ran).toBe(true);
   });
 
-  it("moves a two-hour interval that started on an odd hour onto the even hours, never sooner than two hours (§NNN)", async () => {
+  it("moves a two-hour interval that started on an odd hour onto the even hours, never sooner than two hours (§355)", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
     // 13:00 in Brașov: 16:00 would be three hours on, so this run goes a quarter of an hour past the two, to 15:15.
     expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: ends(135).toISOString(), notBefore: ends(135).toISOString() });

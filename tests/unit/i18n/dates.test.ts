@@ -167,7 +167,7 @@ describe("no date is formatted outside the helper", () => {
     "src/i18n/dates.ts", // the helper itself
     "src/modules/events/ui/series-sentence.ts", // weekday names in "every Monday and Wednesday"
     "src/modules/jobs/quiet-hours.ts", // the hour of the day, read by a job, never shown
-    "src/modules/jobs/schedule.ts", // the minute of the day the pinger's slots fall on (§NNN), never shown
+    "src/modules/jobs/schedule.ts", // the minute of the day the pinger's slots fall on (§355), never shown
     "src/db/seeds/sample-dates.ts", // arithmetic for the sample data
   ];
 

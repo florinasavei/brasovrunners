@@ -119,7 +119,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
 
     // Its own labelled fact, not folded into the meeting point (`DECISIONS.md` §49).
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);
-    // With a route to show, the surface completes the row as its pill, beside the link (§NNN).
+    // With a route to show, the surface completes the row as its pill, beside the link (§356).
     const routeRow = page.locator("dt").filter({ hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
     await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail"]);
 
@@ -200,7 +200,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The label is matched exactly: the seeded descriptions use the word "traseu" in prose.
     await expect(page.getByRole("link", { name: "Vezi traseul" })).toHaveCount(0);
     // The event is still on trail, and the overline still says so — but the surface alone makes no
-    // "Traseu" row (§NNN): it completes a route, it is not one.
+    // "Traseu" row (§356): it completes a route, it is not one.
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(0);
     // And no "Linkuri și fișiere" once the event has none: no heading, no `#links` anchor.
     await expect(page.locator("#links")).toHaveCount(0);

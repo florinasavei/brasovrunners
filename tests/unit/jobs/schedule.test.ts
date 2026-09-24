@@ -20,7 +20,7 @@ import {
 /*
   Noon in Brașov (UTC+3 on 1 October): on every boundary the pinger has — a quarter-hour, a
   half-hour, an hour, an even hour — so the plan's ends below are §334's whole minutes after the
-  run, and the alignment of §NNN, tested further down, moves none of them.
+  run, and the alignment of §355, tested further down, moves none of them.
 */
 const RAN = new Date("2026-10-01T09:00:00.000Z");
 const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);

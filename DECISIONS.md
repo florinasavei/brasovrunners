@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.75-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.76-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.75-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.76-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14370,3 +14370,84 @@ Tests:
 - e2e: `event-notices.spec.ts`, `identical-languages.spec.ts`, `gallery.spec.ts`.
 
 Baseline `BR-V1.75-2026-09-24`.
+
+## 355. The safety look lands on the pinger's hour, and a minimum interval on its own marks on the clock
+
+**2026-09-24.** The owner sent the Neon bill: $1.54 for 14.7 CU-hours in 2.3 days on Launch, where every separate wake is billed as at least five minutes. After §334 (a ping with nothing to do answers from the cache), production's operations log still showed wakes at 10:00, 10:15, 11:02, 12:02, 12:15, 13:02, 13:15 and 14:15. The hour-long safety cap and the Administrator's minimum interval were measured from the previous real run, so each job's forced run drifted to wherever its last run had happened: maintenance at :15 after a woken run, the outbox at :00. The health monitor's check just after the hour then woke the database a third time.
+
+**Decision.** Both limits now end on the pinger's own slots in the club's clock (`CLUB_TIME_ZONE`), not a fixed number of minutes after the run (`src/modules/jobs/schedule.ts`):
+
+- **The cap** (`safetyCapEnd`) ends two minutes before the latest top of the hour that is at most sixty minutes after the run. A run at 10:15 looks again at the 11:00 call. The end is the minimum of this and §334's `ranAt + 60 − grace`, so it is never later than before, and every threshold measured against the cap holds as it was. The hour is searched up to the grace past sixty minutes, so a :00 call that landed a few hundred milliseconds early still counts as that hour's run.
+- **A minimum interval** (`minimumIntervalEnd`) ends on the first boundary of its own length at least the interval after the run: quarter-hours for 15, :00/:30 for 30, the hour for 60, even hours for 120. A minimum stays a minimum, so alignment only ever moves the end later. When the boundary is more than `ALIGN_STRETCH_MINUTES` (plus the grace) past the interval, the run goes to the latest pinger slot within that stretch, and later runs reach the boundary. Even hours are on the club's clock, so they stay even through daylight saving.
+- **A deadline the work itself has** (`nextWorkAt`: a hold or offer lapse, a reminder window) is never aligned. Before it there is nothing to do, and after it the next call runs, exactly as before.
+
+**The stretch is one pinger period, fifteen minutes, not thirty.** The tightest health threshold is production's by day: max(cap, interval) + 2 × 15 + 5. `health.ts` promises that one slow run never flips it. Stretch + one missed call + grace = 32 of the 35 minutes. Thirty would have left five minutes, so a stretched run followed by one missed call would read `stale` and could page the owner once production picked 60 or 120. The cost is slower convergence: from a run on the pinger's grid, up to three runs under 60 and seven under 120, each at most fifteen minutes late; one more from a run off the grid. Two missed calls in a row right after a stretched run go past the promise (before alignment the limit was three in a row). No health threshold moved. The email health's night worst case is again the interval plus about an hour, inside ninety plus the interval.
+
+**Effect.** In an idle hour, both jobs' safety runs and the health monitor's check share the :00 wake: one wake an hour instead of up to three. QA's two-hour interval under its hourly pinger lands on even hours, so its 00/06/12/18 health checks ride those wakes. An hour with a real deadline still wakes when the deadline says. Slots, `MAX_QUIET_MINUTES` and `wakeJobs` are unchanged: an interval at least as long as the cap ends the quiet exactly where its floor ends, and a wake forgets the quiet but never the floor. The Costuri card on `/admin/tasks` says, in both languages, that the safety check is on the hour with the health monitor, that an idle hour costs at most one wake, and that getting onto an interval's marks may make some checks up to a quarter of an hour late each.
+
+**Verification:** unit `jobs/schedule-alignment.test.ts`: on the hour after any run moment, both jobs sharing one :00, a day of simulated runs by day and night on both pingers against the job and email thresholds, any single dropped call, the reviewer's double-miss scenario, and daylight saving in both directions. Also unit `jobs/schedule.test.ts` and `jobs/job-cadence-panel.test.ts`, and integration `jobs/job-sleep.test.ts`.
+
+Baseline `BR-V1.76-2026-09-24`.
+
+## 356. The event page's facts, grouped by question: one line for when, the address under the place, the route and the cost as pills
+
+**Asked by the owner, 2026-09-24**, looking at a public event page's facts block ("Când / Unde / Traseu", `EventFacts`, shared by the staff preview): "This info needs to be better grouped, address with address icons not consistent, distance, difficulty, elevation should be on the same line, better styled". Then, with a screenshot of "Traseu • 10 km / • ı Ușor / • $̸ Gratuit", each on its own bulleted line and only some with a glyph: "same here, these need to be pills". Measured on QA's `test-bvr`: "Când • Sâmbătă, 26 sept. 2026 • începe la 08:00", "Traseu • 10 km • 300 m diferență de nivel • [icon] Ușor • [icon] Gratuit".
+
+**Decided: the page groups its facts by question and draws each group in the shape its facts have.** This covers the event page and its preview, the `stacked` form of §168. §168's one bullet per piece is replaced.
+
+- **Când** is one line: the date with its weekday (§349), a hidden middle dot, then the time. For example, "Sâmbătă, 26 sept. 2026 · 08:00". A race's two times keep their names ("întâlnire la 09:00 · start la 10:00") on the same flowing line, which may wrap between pieces on a phone. The dot ends the piece before it, so a wrapped line never starts with one. §169 named the lone time ("începe la 09:00") only because it stood on a bullet of its own. With the bullet gone, the name goes too, and `Event.startAt` is removed from both catalogues.
+- **Unde** is the place's name, which is the map link when the organizer pasted one, with the address on the line under it in the smaller grey type of a second line. Before, the address stood on its own further down the page and the preview, under "Adresă", with no glyph and a second link to the same map. That was the owner's "address icons not consistent". Now the map is offered once. While the place is to be announced (§328) this row holds only the sentence, and the flag is read before the name or the address.
+- **Traseu** is one wrapping row of pills: distance, climb, difficulty, surface, in that order.
+  - Each pill is the small outlined `GlyphChip` the listing cards already wear (`EventKindChips`), so the page and the cards read alike. Each glyph crosses the Server–client boundary by name (§112).
+  - There is a pill only for what the club stated. There is no empty item and no pill for a missing climb.
+  - The climb is short on a pill: "300 m D+" in Romanian, the trail runners' notation, and "300 m climb" in English, the fell runners' word.
+  - Distance and climb get glyphs of their own (a ruler; a rising line, as the calendar entry's "↗"). A pill without a glyph beside three with one was exactly "some with a glyph, some without".
+  - A pill's words wrap instead of ending in MUI's ellipsis. A club's amount can be sixty characters, and it must be read whole at 320 pixels.
+  - The route's links (the route, the Strava event, the Facebook event) sit on a line under the pills.
+- **Cost** is not a fact of the route, so it has its own row, labelled "Cost" (the key existed), with one pill:
+  - "Gratuit";
+  - the club's own amount ("50 lei"; the label already says it is a cost, so not "Taxă: 50 lei");
+  - "Cu taxă" when no amount was stated;
+  - "Donație".
+  After the pill come words and links rather than pills: "plata pe {host}", or "Donează pe {host}" (new key `costDonateOn`) and then "sugerat {amount}". A pill is a fact; a link is a link. Nothing at all when the club has not said: null is unstated, not free.
+- **Order:** when, where, the route, the cost, the age (§329), "no registration needed" where it applies (§111), and the partners last (§344, §352). A partner's card is the tallest thing in the block, and the short facts are what a runner scans first. Several partners are spaced one under another, never bulleted.
+
+**One row glyph.** Every row's glyph (Când, Unde, Traseu, Cost, Vârstă, Înscriere, Împreună cu) comes from one style object: 20 pixels, `text.secondary`, `vertical-align: middle` on the label's line. A row cannot drift from the others.
+
+**On a phone the question sits over its answer.** Below `sm`, the label and its glyph are one line and the answer is under it, indented to the label's first letter. From `sm` up, the label column returns, as wide as its longest label, with the answer baseline-aligned to it. At 320 pixels a label column costs the answer a quarter of the width ("Împreună cu" alone is about a hundred pixels). The answers are what need the width now: a row of pills, and a date and time that should fit on one line. This reverses, for the page only, the "on a phone the pair still shares one line" that §73 and §168 kept. The block is about 40–65 px taller on a 320 phone and about a third shorter on a desktop.
+
+**A link keeps its 44 pixels without making its line 44 pixels tall.** The place's map link and the cost's links take `my: -10px` beside their `minHeight: 44`. The box a thumb hits is unchanged, as BR-REQ-041-01 criterion 6 measures it, but the line is as tall as its text, so the address sits right under the name. This applies only to a link whose neighbours are words. The route's links, which wrap into each other on a phone, keep their full height so two targets never overlap.
+
+**Unchanged:** the listing's featured hero (one line of pieces per question, middle dots, the cost among the route's pieces as "Taxă: 50 lei" / "Donație: pe {host}") and the listing and series cards (two plain lines). They are summaries above the fold (§169). The overline still carries the type and the surface (BR-REQ-010-01 criterion 1). The words of every other fact are unchanged.
+
+**Cost on its own row, not "Participare".** Grouping cost, age and registration under one "Participare" label was considered and not chosen. Each row's label is the question it answers, and "Cost" is the one a runner asks. A "Participare" row would hold a pill, a sentence and a state in one answer, which is the mixed bag the owner asked to separate.
+
+**Refused:**
+- **The surface as a route row on its own.** It would repeat the overline under another label. It completes a route row instead.
+- **The donation pill as the link itself.** A clickable 24-pixel chip fails the 44-pixel rule. Enlarging only that pill would make it the odd one.
+- **"Donație" pill followed by "Donație: pe {host}".** The same word twice.
+- **The address as a second map link.** The same destination twice.
+- **A `<ul>` for the pills.** They are short facts, the bullets were what the owner objected to, and the §169 WebKit workaround would come back with them.
+- **Stacking or pilling the hero.** It would push the button the hero exists for off a phone.
+
+**Tests:**
+- Unit `events/event-facts-pills.test.ts` checks:
+  - rows in order;
+  - no `ul`/`li`/"•";
+  - pills in order, each small, outlined and with its glyph, in both languages;
+  - no pill for an unstated climb or difficulty;
+  - no route row from the surface alone;
+  - the cost in its own row for each kind;
+  - Când one line with the weekday, no "începe la";
+  - the address under the place with one map link, and none while TBA;
+  - one class for every row glyph (20 px, secondary colour, middle);
+  - 44-pixel links;
+  - no address block left on the page and the preview;
+  - the hero and the card unchanged.
+- `events/event-cost-facts.test.ts` checks the page's pill and the hero's unchanged phrases.
+- The partner, TBA and weekday suites have their fixtures fixed: `surface: "ROAD"` was never an enum value.
+- E2e: `event-pages.spec.ts` (four pills in order, Cost's pill, Când on one line at 320 px, every row glyph 20 px, no overflow), `event-route.spec.ts` (the surface pill beside the route link; no Traseu row from the surface alone), `event-cost-donation.spec.ts` (the Cost row's pill, "Donează pe …", 44 px).
+
+**Consequences:** `events/ui/EventFacts.tsx`, `events/ui/glyphs.ts` (`distance`, `elevation`), the event page and the preview (address block removed), `Event.elevationShort` and `Event.costDonateOn` in both catalogues, `Event.startAt` removed from both. BR-REQ-041-01 criterion 15 is superseded; BR-REQ-011-01 criterion 7 and BR-REQ-020-01 criterion 8 are amended.
+
+Baseline `BR-V1.76-2026-09-24`.

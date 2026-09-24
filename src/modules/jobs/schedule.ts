@@ -26,7 +26,7 @@
  * minimum longer than the cap wins over the cap — the owner asked for a throttle, and a
  * throttle the platform overrides every hour is not one.
  *
- * ## On the pinger's hour, not an hour after the last run (§NNN)
+ * ## On the pinger's hour, not an hour after the last run (§355)
  *
  * The owner, 2026-09-24, with Neon at $1.54 for 14.7 CU-hours in 2.3 days. After the release
  * above the operations log still showed production waking at 10:00, 10:15, 11:02, 12:02, 12:15,
@@ -70,7 +70,7 @@ export const JOB_CADENCE_CHOICES = [0, 15, 30, 60, 120] as const;
 export type JobCadenceMinutes = (typeof JOB_CADENCE_CHOICES)[number];
 
 /**
- * How much later than the owner's minimum interval its aligned end may come (§NNN), so that a
+ * How much later than the owner's minimum interval its aligned end may come (§355), so that a
  * run off the interval's boundary moves toward it without ever tripping a health threshold. The
  * tightest one is production's by day, twice the fifteen-minute pinger plus five minutes past
  * max(cap, interval) (`quiet-hours.ts`, `health.ts`), and its promise is that one slow run never
@@ -86,7 +86,7 @@ export const ALIGN_STRETCH_MINUTES = 15;
  * it: the cap, or the longest minimum interval when that is longer. `wakeJobs` leans on it — work
  * due further away than this is found by a real run before it is due, with no invalidation needed.
  *
- * An interval's alignment may end its quiet up to `ALIGN_STRETCH_MINUTES` later (§NNN), and that
+ * An interval's alignment may end its quiet up to `ALIGN_STRETCH_MINUTES` later (§355), and that
  * is still covered: an interval at least as long as the cap ends the quiet exactly where its floor
  * ends, and a wake forgets the quiet but never the floor, so work due in those extra minutes waits
  * for the owner's interval whether or not anything was invalidated.
@@ -104,7 +104,7 @@ const MINUTE = 60_000;
 
 /**
  * How much earlier than their boundary the cap and the minimum interval end — a whole number of
- * minutes after the run under §334, the pinger's slot since §NNN — so the pinger's call on the
+ * minutes after the run under §334, the pinger's slot since §355 — so the pinger's call on the
  * boundary runs rather than skipping.
  *
  * `ranAt` is taken when the handler starts, after whatever cold start that invocation paid, and
@@ -121,7 +121,7 @@ export const PLAN_GRACE_MINUTES = 2;
 const GRACE_MS = PLAN_GRACE_MINUTES * MINUTE;
 
 /**
- * The pinger's grid (§NNN): it calls both endpoints on the quarter-hours of the club's clock by
+ * The pinger's grid (§355): it calls both endpoints on the quarter-hours of the club's clock by
  * day and on the hour at night (§68, §280). Every boundary an alignment aims at is one of these
  * instants, which in the club's zone — two or three hours from UTC — are UTC's quarter-hours too.
  */
@@ -182,7 +182,7 @@ export function lastClubBoundary(at: Date, lengthMinutes: number): Date | null {
 }
 
 /**
- * Where the safety cap ends after a run at `ranAt` (§NNN): two minutes before the latest top of
+ * Where the safety cap ends after a run at `ranAt` (§355): two minutes before the latest top of
  * the hour on the club's clock that is at most sixty minutes after the run — the pinger's :00
  * call, whose wake the health monitor's :02 check shares. A run at 10:15 looks again at 11:00
  * (45 minutes), a run at 10:00:20 at 11:00.
@@ -205,7 +205,7 @@ export function safetyCapEnd(ranAt: Date): Date {
 }
 
 /**
- * Where the Administrator's minimum interval of `minutes` ends after a run at `ranAt` (§NNN). The
+ * Where the Administrator's minimum interval of `minutes` ends after a run at `ranAt` (§355). The
  * exact rule:
  *
  * 1. `earliest` is §334's end, `ranAt + minutes − grace`, and the soonest it may ever be: a
@@ -269,7 +269,7 @@ export type QuietPlan = {
  * The quiet a finished run may promise.
  *
  * - `nextWorkAt` is the earliest instant the job will have something to do, from the database
- *   (`next-work.ts`); null when nothing at all is waiting. It is never aligned (§NNN): before it
+ *   (`next-work.ts`); null when nothing at all is waiting. It is never aligned (§355): before it
  *   there is nothing to do, and after it the next ping runs.
  * - The cap ends on the pinger's top of the hour, at most an hour after the run
  *   (`safetyCapEnd`) — or where the minimum interval ends, when the Administrator chose one at

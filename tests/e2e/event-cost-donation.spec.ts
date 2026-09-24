@@ -78,7 +78,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     const editorUrl = page.url();
 
     await page.goto(`/ro/evenimente/${slug}`);
-    // The cost is its own row since §NNN: a «Donație» pill under «Cost», then where to give.
+    // The cost is its own row since §356: a «Donație» pill under «Cost», then where to give.
     const cost = page.locator("dt", { hasText: /^Cost$/ }).locator("xpath=following-sibling::dd[1]");
     await expect(cost).toBeVisible();
     await expect(cost.locator(".MuiChip-root")).toHaveText("Donație");

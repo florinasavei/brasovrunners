@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §NNN) — the event page's facts, grouped by the question they
+ * BR-REQ-041-01 (`DECISIONS.md` §356) — the event page's facts, grouped by the question they
  * answer and drawn in the shape their facts have. The owner, 2026-09-24, of the bulleted list
  * §168 had made of them: "This info needs to be better grouped, address with address icons not
  * consistent, distance, difficulty, elevation should be on the same line, better styled", and of
@@ -107,7 +107,7 @@ function chips(fragment: string) {
   }));
 }
 
-describe("BR-REQ-041-01 the event page's facts are grouped by question (§NNN)", () => {
+describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)", () => {
   it("in this order: when, where, the route, the cost, the age, the partners — each once", async () => {
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });
     expect(rows(html).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vârstă", "Împreună cu"]);
@@ -126,7 +126,7 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§NNN)",
   });
 });
 
-describe("BR-REQ-041-01 the route is one row of pills (§NNN)", () => {
+describe("BR-REQ-041-01 the route is one row of pills (§356)", () => {
   it("distance, climb, difficulty, surface — in that order, each a small outlined chip with its glyph", async () => {
     const html = await page();
     const route = row(html, "Traseu");
@@ -183,7 +183,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-041-01 the cost is its own row, with its own pill (§NNN, §343)", () => {
+describe("BR-REQ-041-01 the cost is its own row, with its own pill (§356, §343)", () => {
   it("«Gratuit» under «Cost», never inside the route", async () => {
     const html = await page();
     expect(chips(row(html, "Cost").dd).map((pill) => pill.label)).toEqual(["Gratuit"]);
@@ -213,7 +213,7 @@ describe("BR-REQ-041-01 the cost is its own row, with its own pill (§NNN, §343
   });
 });
 
-describe("BR-REQ-041-01 «când» is one line with its weekday (§NNN, §349)", () => {
+describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", () => {
   it("the date and the time, a hidden middle dot between them, and no «începe la»", async () => {
     const when = row(await page(), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·08:00");
@@ -233,7 +233,7 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§NNN, §349)", 
   });
 });
 
-describe("BR-REQ-041-01 «unde» carries its address, and every row the same glyph (§NNN)", () => {
+describe("BR-REQ-041-01 «unde» carries its address, and every row the same glyph (§356)", () => {
   it("the place as the one link to the map, the address on the line under it", async () => {
     const where = row(await page(), "Unde").dd;
     expect([...where.matchAll(/<a\b/g)]).toHaveLength(1);
@@ -286,7 +286,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 });
 
-describe("BR-REQ-041-01 the hero and the cards keep their one-line forms (§169, §NNN)", () => {
+describe("BR-REQ-041-01 the hero and the cards keep their one-line forms (§169, §356)", () => {
   it("the featured hero: one line of pieces under «Traseu», middle dots, no pills, the cost in the route", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei" }), now: NOW }));
     expect(html).not.toContain("MuiChip-root");

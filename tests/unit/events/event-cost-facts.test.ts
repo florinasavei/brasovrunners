@@ -66,10 +66,10 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-/** A chip's words, in order, wherever they are in the markup (§NNN: the page's cost is a pill). */
+/** A chip's words, in order, wherever they are in the markup (§356: the page's cost is a pill). */
 const pillLabels = (html: string) => [...html.matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
 
-describe("the cost facts, full page (§343; its own row and pill since §NNN)", () => {
+describe("the cost facts, full page (§343; its own row and pill since §356)", () => {
   it("says «Gratuit» for a free event, with no amount and no link", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "FREE" }), now: NOW, stacked: true }));
     expect(pillLabels(html)).toContain("Gratuit");
@@ -143,7 +143,7 @@ describe("the cost facts, full page (§343; its own row and pill since §NNN)", 
   });
 });
 
-describe("the cost facts, featured hero (§343, unchanged by §NNN)", () => {
+describe("the cost facts, featured hero (§343, unchanged by §356)", () => {
   it("keeps «Taxă: 50 lei» and «plata pe {host}» among the route's pieces", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }), now: NOW }),
@@ -195,7 +195,7 @@ describe("the cost phrases exist in both catalogues, with the club's tokens (§3
     expect(t("en", "costPaidWhere", { host: "revolut.me" })).toBe("payment on revolut.me");
     expect(t("ro", "costDonation", { host: "wingsforlifeworldrun.com" })).toBe("Donație: pe wingsforlifeworldrun.com");
     expect(t("en", "costDonation", { host: "wingsforlifeworldrun.com" })).toBe("Donation: on wingsforlifeworldrun.com");
-    // The page's link after the «Donație» pill (§NNN).
+    // The page's link after the «Donație» pill (§356).
     expect(t("ro", "costDonateOn", { host: "wingsforlifeworldrun.com" })).toBe("Donează pe wingsforlifeworldrun.com");
     expect(t("en", "costDonateOn", { host: "wingsforlifeworldrun.com" })).toBe("Donate on wingsforlifeworldrun.com");
   });

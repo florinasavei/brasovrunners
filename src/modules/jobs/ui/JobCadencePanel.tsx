@@ -62,7 +62,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.jobCadence.safe")}
       </Typography>
-      {/* §NNN: why an idle hour costs one wake — the safety look shares the :00 call and the
+      {/* §355: why an idle hour costs one wake — the safety look shares the :00 call and the
           health monitor's check, whichever interval is chosen. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-on-the-hour">
         {t("tasks.jobCadence.onTheHour")}

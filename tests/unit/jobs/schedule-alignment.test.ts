@@ -18,7 +18,7 @@ import {
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 
 /**
- * BR-REQ-090-03 criterion 14 (§NNN) — the safety look and the owner's minimum interval end on the
+ * BR-REQ-090-03 criterion 14 (§355) — the safety look and the owner's minimum interval end on the
  * pinger's own slots in the club's clock, not a fixed number of minutes after the last real run.
  *
  * The owner, 2026-09-24, with Neon at $1.54 for 14.7 CU-hours in 2.3 days. Production's operations
@@ -121,7 +121,7 @@ function wakes(queries: Date[]): Date[] {
 const onTheHour = (at: Date) => clubMinuteOfDay(at) % 60 === 0;
 const onEvenHour = (at: Date) => clubMinuteOfDay(at) % 120 === 0;
 
-describe("BR-REQ-090-03 criterion 14 (§NNN) the safety look lands on the pinger's hour", () => {
+describe("BR-REQ-090-03 criterion 14 (§355) the safety look lands on the pinger's hour", () => {
   it("looks again at the 11:00 call after a run at 10:15, not at 11:15", () => {
     const plan = idle(club("10:15"));
     expect(plan.quietUntil).toEqual(club("10:58"));
@@ -208,7 +208,7 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) the safety look lands on the pinger
   });
 });
 
-describe("BR-REQ-090-03 criterion 14 (§NNN) a minimum interval ends on a boundary of its own length, never sooner", () => {
+describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a boundary of its own length, never sooner", () => {
   it("ends on its own boundary after a run that is already on it", () => {
     const noon = club("12:00:00.300");
     for (const cadence of [15, 30, 60, 120] as const) {
@@ -294,7 +294,7 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) a minimum interval ends on a bounda
   });
 });
 
-describe("BR-REQ-090-03 criterion 14 (§NNN) daylight saving, Europe/Bucharest", () => {
+describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest", () => {
   it("keeps the safety look on the hour across the autumn change", () => {
     // 25 October 2026: at 01:00Z the clocks go from 04:00 EEST back to 03:00 EET.
     const plan = idle(new Date("2026-10-25T00:15:00.000Z")); // 03:15 EEST
@@ -342,7 +342,7 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) daylight saving, Europe/Bucharest",
   });
 });
 
-describe("BR-REQ-090-03 criterion 14 (§NNN) no health threshold is ever crossed", () => {
+describe("BR-REQ-090-03 criterion 14 (§355) no health threshold is ever crossed", () => {
   const CADENCES = [0, 15, 30, 60, 120] as const;
 
   /**

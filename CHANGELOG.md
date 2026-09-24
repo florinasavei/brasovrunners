@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.76-2026-09-24
+
+- **The scheduled jobs now wake the database together with the health check, on the hour.** The hourly safety check lands on the pinger's :00 call instead of an hour after the last run, and a minimum interval lands on its own marks on the clock (:00/:30, the hour, even hours). An idle hour now costs Neon one wake instead of up to three; moving onto those marks may make some checks up to a quarter of an hour late. No health threshold moved. §355.
+- **The event page's facts, grouped and in pills.** On an event's page and its preview, "Când" is one line with its weekday, "Unde" shows the address under the place, the route is one row of pills (distance, climb, difficulty, surface, each with its glyph), and the cost has its own row and pill. Every row's icon is the same size and colour, and the bullets are gone. The listing's hero and cards are unchanged. §356.
 ## BR-V1.75-2026-09-24
 
 - **Lighter public pages, and a real redirect at the root.** A public page no longer carries the whole message catalogue, the backoffice's included, in its payload, only the few words its buttons translate in the browser. The listing drops from 119 KB to 39 KB gzipped and an event page from 113 KB to 31 KB. `/ro` and `/en` now answer with a real 308 to the listing instead of a 200 and a 300 KB error page. Locally and in tests, a missing translation now breaks the page, where it used to show its key. §353.

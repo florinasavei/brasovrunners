@@ -180,7 +180,7 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
   });
 
   /**
-   * `DECISIONS.md` §NNN — the owner, of the bulleted facts §168 had made: "better grouped …
+   * `DECISIONS.md` §356 — the owner, of the bulleted facts §168 had made: "better grouped …
    * distance, difficulty, elevation should be on the same line", and "these need to be pills".
    * Read on both projects: 320 pixels, where the question sits over its answer, and a desktop.
    */

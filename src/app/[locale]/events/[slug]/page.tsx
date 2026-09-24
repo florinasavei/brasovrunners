@@ -227,7 +227,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <Divider sx={{ my: 3 }} />
-      {/* The page's own facts (§168, §NNN): grouped by question, the route and the cost as pills,
+      {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
       <EventFacts event={event} now={now} stacked />
 
@@ -279,7 +279,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       </Box>
 
       {/* The address is not repeated here: it is the second line of "Unde" in the facts above
-          (§NNN), under the place's name, which is the one link to the map. */}
+          (§356), under the place's name, which is the one link to the map. */}
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.

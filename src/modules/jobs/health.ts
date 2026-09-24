@@ -27,7 +27,7 @@ import { readLastPing } from "./schedule-cache";
  *   hours sees a real run every two hours and reads `ok`, rather than being paged by its own
  *   throttle.
  *
- * Since §NNN both end on the pinger's slots rather than a fixed time after the run, and neither
+ * Since §355 both end on the pinger's slots rather than a fixed time after the run, and neither
  * threshold moved. The cap ends on the latest top of the hour within sixty minutes of the run —
  * never later than before. A minimum interval ends on a boundary of its own length, up to
  * `ALIGN_STRETCH_MINUTES` — one pinger period — past the interval while it gets there, so the

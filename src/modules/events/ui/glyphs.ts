@@ -73,7 +73,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
  * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star,
  * `special` for an edition apart (§168), `series` for a repeated event's count (§113), and
- * `distance` and `elevation` for the two numbers of a route (§NNN).
+ * `distance` and `elevation` for the two numbers of a route (§356).
  *
  * The star is taken: it is the one event the site leads with. A special edition is the
  * sparkle beside it — "this one is not an ordinary Wednesday" — which is a different claim
@@ -81,7 +81,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  *
  * The two numbers are metaphors too, written down like the rest: the distance is a ruler, the
  * climb a line that rises — the calendar entry writes the same climb with "↗" (`ical.ts`). They
- * exist because the event page's route became a row of pills (§NNN), and a pill with no glyph
+ * exist because the event page's route became a row of pills (§356), and a pill with no glyph
  * beside three that have one was exactly the "some with a glyph, some without" the owner
  * pointed at.
  */
