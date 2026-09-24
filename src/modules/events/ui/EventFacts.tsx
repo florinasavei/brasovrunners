@@ -9,6 +9,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
+import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { readCoHosts } from "../domain/co-hosts";
@@ -63,6 +64,7 @@ export default async function EventFacts({
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
+  const locale = await getLocale();
   const compact = variant === "compact";
 
   const distance = distanceInKm(event.distanceMeters);
@@ -70,15 +72,9 @@ export default async function EventFacts({
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
-  const time = (at: Date) =>
-    format.dateTime(at, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const date = format.dateTime(event.startsAt, {
-    timeZone: event.timezone,
-    weekday: "long",
-    day: "numeric",
-    month: compact ? "short" : "long",
-    year: "numeric",
-  });
+  // The date starts its line, so it takes a capital (§NNN): "Sâmbătă, 21 nov. 2026".
+  const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
+  const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
 
   // A 44px target, like every other link on a phone (BR-REQ-041-01 criterion 6). `noopener`
   // and `noreferrer` stop the opened page reaching back through `window.opener` and stop it
@@ -233,8 +229,9 @@ export default async function EventFacts({
     // the instant the button goes away.
     const opensAt = upcomingRegistrationOpening(event, now);
     const closesAt = openRegistrationClosing(event, now);
+    // Inside "Înscrierile se deschid pe {date}": the weekday keeps its lower case (§NNN).
     const shortDate = (date: Date) =>
-      format.dateTime(date, { timeZone: event.timezone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+      formatDay(date, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
     const registrationPiece = opensAt
       ? t("cta.opensOnShort", { date: shortDate(opensAt) })
       : closesAt
@@ -291,7 +288,6 @@ export default async function EventFacts({
   */
   if (stacked && hasAgeRule(event)) {
     const rt = await getTranslations("Registration");
-    const locale = await getLocale();
     lines.push({
       label: t("age"),
       icon: CakeIcon,

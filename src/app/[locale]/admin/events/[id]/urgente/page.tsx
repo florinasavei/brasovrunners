@@ -12,6 +12,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEmergencySheet } from "@/modules/registrations/admin-service";
@@ -63,7 +64,7 @@ export default async function EmergencySheetPage({ params }: Props) {
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");
   const when = event
-    ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: event.timezone }).format(event.startsAt)
+    ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })
     : "";
 
   return (

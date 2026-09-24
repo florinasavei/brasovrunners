@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { checkSchemaVersion } from "@/db/schema-version";
@@ -231,7 +232,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                       {message.subject}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-                      {message.to} · {format.dateTime(message.capturedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" })}
+                      {message.to} · {formatDay(message.capturedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
                     </Typography>
                     <Stack spacing={0.25}>
                       {[...new Set(message.text.match(/https?:\/\/\S+/g) ?? [])].map((link) => (
@@ -258,7 +259,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                       {message.to.join(", ")} · Reply-To {message.replyTo.address} ·{" "}
-                      {format.dateTime(message.capturedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" })}
+                      {formatDay(message.capturedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
                     </Typography>
                   </Box>
                 ))}
@@ -515,7 +516,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             {t("neon.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {neonBlock.plan === "LAUNCH" ? t("neon.introLaunch", { checkedOn: NEON_PLANS_CHECKED_ON }) : t("neon.intro", { of: NEON_PLANS.FREE.cuHoursPerMonth ?? 0 })}
+            {neonBlock.plan === "LAUNCH" ? t("neon.introLaunch", { checkedOn: formatCalendarDay(NEON_PLANS_CHECKED_ON, { locale, style: "long", position: "inline" }) }) : t("neon.intro", { of: NEON_PLANS.FREE.cuHoursPerMonth ?? 0 })}
           </Typography>
           {/* Which plan the figures are read against, and where it is set: a link for a reader who may open that screen, a sentence for the rest. */}
           <Typography variant="body2" sx={{ mb: 2 }} data-testid="neon-plan-sentence">
@@ -578,7 +579,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                 })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t("neon.period", { date: format.dateTime(neonBlock.compute.periodEnd, { dateStyle: "long" }) })}
+                {t("neon.period", { date: formatDay(neonBlock.compute.periodEnd, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }) })}
               </Typography>
               {neonBlock.plan === "LAUNCH" && (
                 <Typography variant="body2" color="text.secondary">
@@ -753,10 +754,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               <Typography variant="body2" key={job.jobName}>
                 {job.jobName}: <strong>{t(`jobStatus.${job.status}`)}</strong>
                 {job.lastFinishedAt
-                  ? ` · ${format.dateTime(new Date(job.lastFinishedAt), {
-                      dateStyle: "medium",
-                      timeStyle: "short", hourCycle: "h23",
-                    })}`
+                  ? ` · ${formatDay(new Date(job.lastFinishedAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}`
                   : ""}
               </Typography>
             ))}

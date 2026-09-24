@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { updateNeonPlanAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { NEON_PLAN_IDS, NEON_PLANS, NEON_PLANS_CHECKED_ON, type NeonBlockModel } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonPlanState } from "@/modules/diagnostics/neon-plan";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -86,12 +87,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
           {t("tasks.neonPlan.updatedAt", {
-            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-              dateStyle: "medium",
-              timeStyle: "short",
-              hourCycle: "h23",
-              timeZone: "Europe/Bucharest",
-            }).format(plan.updatedAt),
+            when: formatDay(plan.updatedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
             note: plan.note || "—",
           })}
         </Typography>
@@ -118,7 +114,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
               defaultValue={plan.plan}
               size="small"
               slotProps={{ select: { native: true } }}
-              helperText={t("tasks.neonPlan.fieldHelp", { checkedOn: NEON_PLANS_CHECKED_ON })}
+              helperText={t("tasks.neonPlan.fieldHelp", { checkedOn: formatCalendarDay(NEON_PLANS_CHECKED_ON, { locale, style: "long", position: "inline" }) })}
             >
               {NEON_PLAN_IDS.map((id) => {
                 const entry = NEON_PLANS[id];

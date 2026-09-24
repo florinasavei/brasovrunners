@@ -1,3 +1,4 @@
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { DeclarationLabels } from "./signed-declaration";
 
@@ -50,11 +51,8 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
 
 export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   const words = WORDS[locale];
-  const generated = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "long",
-    timeStyle: "short", hourCycle: "h23",
-    timeZone: "Europe/Bucharest",
-  }).format(now);
+  // "Generat pe joi, 24 sept. 2026, 18:05" (§NNN).
+  const generated = formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
   return {
     organization: words.organization,
     whereupon: words.whereupon,

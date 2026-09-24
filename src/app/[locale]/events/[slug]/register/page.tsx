@@ -15,6 +15,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
@@ -250,11 +251,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // What they are signing up for, on the form itself (§102): the date, the place, and the
   // event's page, its rules and the two legal texts as links — the owner: "show the race date,
   // details and TOS on the sign-up form as links". Formatted in the event's own zone.
-  const whenLabel = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short", hourCycle: "h23",
-    timeZone: event.timezone,
-  }).format(event.startsAt);
+  // The long form with the time (§NNN): capitalised where it starts the line, and in lower case
+  // inside the sentence of the screen after the form ("…locul la Crosul, sâmbătă, 21 nov.").
+  const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
+  const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
   // The third step of the wizard (§104): "confirm a week before" only while that week is ahead.
   const window = confirmationWindow(event);
@@ -342,7 +342,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         */
         <CheckYourEmail
           eventTitle={event.title}
-          whenLabel={whenLabel}
+          whenLabel={whenInSentence}
           eventHref={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}
           slug={slug}
           facts={submittedFacts}

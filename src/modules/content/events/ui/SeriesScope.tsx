@@ -150,7 +150,7 @@ export function SeriesScopeChips() {
             label={date.label}
             onClick={current ? undefined : () => toggle(date.id)}
             onDelete={current ? undefined : () => router.push(date.href)}
-            deleteIcon={<OpenInNewIcon aria-label={t("editor.scope.open", { date: date.label })} />}
+            deleteIcon={<OpenInNewIcon aria-label={t("editor.scope.open", { date: date.labelInline ?? date.label })} />}
             size="small"
             sx={{
               ...(date.note?.kind === "cancelled" && !on ? { textDecoration: "line-through", color: "text.secondary" } : {}),

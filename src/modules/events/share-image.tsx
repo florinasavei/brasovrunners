@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
+import { formatDay, formatTime } from "@/i18n/dates";
 import { distanceInKm } from "./domain/event-type";
 import type { PublicEvent } from "./repository";
 
@@ -58,18 +59,9 @@ export async function eventShareImage(
   const { width, height } = SHARE_SHAPES[shape];
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
-  const formatted = new Intl.DateTimeFormat(intl, {
-    timeZone: event.timezone,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(event.startsAt);
-  // "Duminică, 11 octombrie": the weekday capitalised, the month left as the language writes it.
-  const date = formatted.charAt(0).toUpperCase() + formatted.slice(1);
-  const time = new Intl.DateTimeFormat(intl, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
-    event.raceStartsAt ?? event.startsAt,
-  );
+  // "Duminică, 11 oct. 2026": the long form, starting its line (§NNN), in the picture's language.
+  const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  const time = formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone });
   const km = distanceInKm(event.distanceMeters);
   const route = [
     km !== null ? labels.distanceKm(new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km)) : null,

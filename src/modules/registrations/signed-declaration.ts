@@ -4,6 +4,7 @@ import { legalDocuments, legalDocumentTranslations } from "@/db/schema/legal-doc
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
@@ -169,13 +170,6 @@ export type DeclarationLabels = DeclarationPdfInput["labels"] & {
   attesterRemoved: string;
 };
 
-function dateFormatter(locale: Locale, timeZone: string, withTime: boolean) {
-  return new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "long",
-    ...(withTime ? { timeStyle: "short", hourCycle: "h23" } : {}),
-    timeZone,
-  });
-}
 
 /** The event's facts as the declaration's fill-ins, formatted for its locale. */
 export async function eventMergeValues<T extends Record<string, unknown>>(
@@ -188,7 +182,9 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
   return {
     values: {
       event: event.title,
-      eventDate: dateFormatter(locale, event.timezone, false).format(event.startsAt),
+      // "…care va avea loc în data de sâmbătă, 21 nov. 2026": inside the sentence, in the
+      // declaration's own language and the event's zone (§NNN).
+      eventDate: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", position: "inline" }),
       // The city while the place is to be announced (§328), never the typed place: a signed PDF
       // is a copy the runner keeps and forwards, and "în locația Brașov" is a sentence one signs.
       eventLocation: event.locationToBeAnnounced ? CLUB_LOCALITY : event.locationName,
@@ -216,7 +212,10 @@ function signedEntry(
   audience: DeclarationAudience,
 ): DeclarationEntry | undefined {
   if (!event) return undefined;
-  const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
+  // Inside a sentence ("Semnat electronic pe sâmbătă, …") and under the "Data" label, where it
+  // starts the value and takes a capital (§NNN) — both in the declaration's language.
+  const when = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+  const whenStart = formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true });
   /*
     Masked once, here, so the text's blanks and the signature lines cannot disagree (§320) — both
     documents of a minor's declaration (§330), the parent's and the child's, each wherever the
@@ -248,7 +247,7 @@ function signedEntry(
       typedName: signed.typedName,
       idDocument,
       minor,
-      signedAt: when,
+      signedAt: whenStart,
       method:
         signed.method === "PAPER"
           ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)

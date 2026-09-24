@@ -13,6 +13,7 @@ import {
   listSignedDeclarations,
   renderBlankDeclarationPdf,
   renderEventDeclarationsPdf,
+  eventMergeValues,
   renderSignedDeclarationPdf,
   signedDeclarationEntry,
 } from "@/modules/registrations/signed-declaration";
@@ -160,9 +161,13 @@ describe("the club's declaration (§95)", () => {
     const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
     // The blanks are filled: the person, the document, the event, its date and its place.
     expect(text).toContain("Subsemnatul/a Ana Popescu, posesor/posesoare al actului de identitate bv 123456");
-    expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de 11 octombrie 2026, în locația Parcul Tractorul");
+    expect(text).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
     expect(text).not.toContain("{{");
     expect(entry!.signature?.idDocument).toBe("bv 123456");
+    // Under the "Data" label the signing instant starts the value, with its weekday (§NNN).
+    expect(entry!.signature?.signedAt).toBe("Vineri, 4 sept. 2026, 13:00");
+    // An English declaration writes the event's date in English — the declaration's language.
+    expect((await eventMergeValues(db, event.id, "en"))?.values.eventDate).toBe("Sunday, 11 Oct 2026");
 
     const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "participant");
     const raw = pdf!.toString("latin1");

@@ -1,5 +1,6 @@
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
@@ -72,7 +73,6 @@ export async function GET(
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const t = await getTranslations({ locale, namespace: "Admin" });
-  const format = await getFormatter({ locale });
   const now = new Date();
   const rows = await listBibs(db, id, { from, to, only });
 
@@ -104,7 +104,7 @@ export async function GET(
   const pdf = await renderBibSheet({
     rows,
     eventTitle: event.title,
-    eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
+    eventDate: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" }),
     // The band in the event's own colour, and the facts the foot is composed from — the
     // partners, the club's mailbox, the site (§180, §317) — the same the preview draws from.
     bandColour: event.bibColour,

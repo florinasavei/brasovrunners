@@ -20,6 +20,7 @@ import {
   stepForSpentLink,
 } from "./domain/link-status";
 import { checkIn, confirmEmail, type EventForRegistration, signDeclaration, unregister } from "./service";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { findRegistrationById } from "./repository";
 
 /**
@@ -57,6 +58,8 @@ async function loadEventForRegistration(
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: null,
+    // The zone the participant's own page reads the event's instants in (§NNN).
+    timezone: event.timezone,
   };
 }
 
@@ -256,6 +259,8 @@ export async function readRaceDayContext(secret: string, now: Date) {
     eventCancelled,
     selfCheckinOpen: registration.status === "CONFIRMED" && !eventCancelled && now >= opensAt,
     selfCheckinOpensAt: opensAt,
+    /** The zone that instant is read in on the page — the event's own. */
+    eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
   };
 }
 

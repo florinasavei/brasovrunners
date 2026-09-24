@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -57,7 +58,6 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
 
   const { error } = await searchParams;
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
 
   /**
    * The title the organizer is asked to type: the one in the language they are reading the
@@ -93,14 +93,7 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
           <Typography variant="body2">
             {t("erase.whatGoes", {
               event: expected,
-              date: format.dateTime(plan.startsAt, {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                hourCycle: "h23",
-              }),
+              date: formatDay(plan.startsAt, { locale, timeZone: plan.timezone, style: "long", withTime: true, position: "inline" }),
               count: plan.total,
             })}
           </Typography>

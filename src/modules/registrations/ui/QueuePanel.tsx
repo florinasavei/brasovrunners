@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Database } from "@/db/types";
 import { computeOccupied } from "../domain/capacity";
 import { countOccupied } from "../repository";
@@ -32,7 +33,9 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   now: Date;
 }) {
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
+  const locale = await getLocale();
+  // Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§NNN).
+  const when = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const counts = await countOccupied(db, event.id, now);
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id);
@@ -91,12 +94,12 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                 <Chip
                   size="small"
                   color="warning"
-                  label={t("queue.offered", { until: format.dateTime(row.holdExpiresAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" }) })}
+                  label={t("queue.offered", { until: when(row.holdExpiresAt) })}
                 />
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   {row.waitlistedAt
-                    ? t("queue.since", { when: format.dateTime(row.waitlistedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" }) })
+                    ? t("queue.since", { when: when(row.waitlistedAt) })
                     : ""}
                 </Typography>
               )}

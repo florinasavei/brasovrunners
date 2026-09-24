@@ -5,7 +5,15 @@ import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import EditionMark, { type EditionNote } from "./EditionMark";
 
-export type SeriesDate = { id: string; href: string; label: string; note: EditionNote | null };
+export type SeriesDate = {
+  id: string;
+  href: string;
+  /** The chip's words: the short date, capitalised (§NNN). */
+  label: string;
+  /** The same date inside a sentence ("Deschide data de mie., 30 sept. 2026"), when one is built. */
+  labelInline?: string;
+  note: EditionNote | null;
+};
 
 /**
  * The coming dates of a series as chips (§113), each its own page; a date that is not like the

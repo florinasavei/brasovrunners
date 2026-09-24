@@ -4,6 +4,7 @@ import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/emai
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
+import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 
@@ -255,6 +256,9 @@ export function renderBilingual(
   const otherData: TemplateData = {
     ...data,
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
+    // Every date of the second half in its own language (§NNN), not only the event's.
+    ...(data.holdExpiresAtFormattedOther ? { holdExpiresAtFormatted: data.holdExpiresAtFormattedOther } : {}),
+    ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
   };
@@ -319,6 +323,8 @@ export type TemplateData = {
   declarationPdfUrl?: string;
   /** When it was signed, formatted for the locale — on the declaration's own message. */
   signedAtFormatted?: string;
+  /** The same instant in the other language's words, for the bilingual message's second half (§NNN). */
+  signedAtFormattedOther?: string;
   /** The event's public page, and the manage page (§96): the deep links under the action. */
   eventUrl?: string;
   /** The rules on that page, when the organizer wrote some (§96). */
@@ -335,6 +341,8 @@ export type TemplateData = {
    * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
    */
   holdExpiresAtFormatted?: string;
+  /** The same deadline in the other language's words, for the second half (§NNN). */
+  holdExpiresAtFormattedOther?: string;
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
   manageUrl?: string;
@@ -394,7 +402,10 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
 function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
-  const line = [d.eventStartsAtFormatted, d.eventLocationName].filter(Boolean).join(" · ");
+  // The date starts this line, so it takes its capital here (§NNN); every sentence keeps the
+  // language's own lower case. `capitalizeFirst` is the same in both languages' rules for the
+  // letters a weekday starts with.
+  const line = [d.eventStartsAtFormatted ? capitalizeFirst(d.eventStartsAtFormatted, "ro") : undefined, d.eventLocationName].filter(Boolean).join(" · ");
   if (!line) return undefined;
   const links = [
     ...(d.eventMapUrl ? [{ label: labels.map, url: d.eventMapUrl }] : []),
@@ -543,7 +554,7 @@ const T = {
     declarationSigned: {
       subject: "Declarația ta semnată",
       body: (d: TemplateData) => [
-        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, la ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
         "Kitul de participare se ridică personal, pe baza actului de identitate scris în declarație.",
         "Dacă nu vezi atașamentul, același document este la linkul de mai jos.",
       ],
@@ -569,7 +580,7 @@ const T = {
       subject: (d: TemplateData) => `Declarație semnată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
-        `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, la ${d.signedAtFormatted}` : ""}.`,
+        `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
         // The PDF attached masks the identity document (§320); the sentence says where the whole one is, and until when.
         "Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Se păstrează trei ani după eveniment, ca în nota de confidențialitate; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la șapte zile după eveniment.",
       ],

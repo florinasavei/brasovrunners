@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
@@ -80,7 +81,6 @@ export default async function DeskRow({
   minorSigns: Readonly<Record<Locale, boolean>>;
 }) {
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const canConfirm =
     row.status === "PENDING_EMAIL_CONFIRMATION" ||
     row.status === "PENDING_DECLARATION" ||
@@ -136,7 +136,7 @@ export default async function DeskRow({
         <Alert severity="error" data-testid="desk-void" sx={{ mb: 1.5 }}>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {t(row.status === "CANCELLED" ? "desk.voidCancelled" : "desk.voidExpired", {
-              date: voidedAt ? format.dateTime(voidedAt, { dateStyle: "long" }) : "—",
+              date: voidedAt ? formatDay(voidedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }) : "—",
             })}
           </Typography>
           {printedVoid && (
@@ -205,7 +205,7 @@ export default async function DeskRow({
                 color="success"
                 variant="outlined"
                 label={t("desk.checkedInAt", {
-                  time: format.dateTime(row.checkedInAt, { timeStyle: "short", hourCycle: "h23" }),
+                  time: formatTime(row.checkedInAt, { locale, timeZone: row.eventTimezone }),
                   who: row.checkedInByName ?? t("desk.bySelf"),
                 })}
               />
@@ -214,7 +214,7 @@ export default async function DeskRow({
           {showEvent && (
             <Typography variant="body2" color="text.secondary">
               {row.eventTitle ?? row.eventId} ·{" "}
-              {format.dateTime(row.eventStartsAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" })}
+              {formatDay(row.eventStartsAt, { locale, timeZone: row.eventTimezone, style: "short", withTime: true })}
             </Typography>
           )}
           {/*

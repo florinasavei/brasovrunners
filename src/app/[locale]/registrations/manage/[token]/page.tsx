@@ -11,7 +11,7 @@ import ContactLink from "@/shared/ui/ContactLink";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import { getFormatter } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
@@ -51,7 +51,6 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
   const { done, invalid, started, here, list, withdrawn } = await searchParams;
   const t = await getTranslations("Registrations");
-  const format = await getFormatter();
 
   if (done) {
     return (
@@ -140,7 +139,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     {t("manage.selfCheckInClosed", {
-                      date: format.dateTime(confirmed.selfCheckinOpensAt, { dateStyle: "long" }),
+                      // It opens at an hour, the day before, in the event's zone (§NNN).
+                      date: formatDay(confirmed.selfCheckinOpensAt, { locale, timeZone: confirmed.eventTimezone, style: "long", withTime: true, position: "inline" }),
                     })}
                   </Typography>
                 )}

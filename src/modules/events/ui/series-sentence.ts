@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { readRepeatRule, type RepeatRule } from "../domain/repeat";
 import { type EditionDifference, recurrenceOf } from "../domain/series";
 import type { EditionNote } from "./EditionMark";
@@ -56,7 +57,8 @@ export async function recurrenceSentence(
   if (recurrence.kind === "dates") {
     return t("series.dates", {
       count: members.length,
-      last: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone }).format(last.startsAt),
+      // "12 date, până pe duminică, 14 dec. 2026": inside the sentence, lower case (§NNN).
+      last: formatDay(last.startsAt, { locale, timeZone, style: "long", position: "inline" }),
     });
   }
 

@@ -7,7 +7,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -57,7 +58,6 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
   const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
   const t = await getTranslations("Registrations");
-  const format = await getFormatter();
 
   if (done) {
     return (
@@ -130,11 +130,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {item.eventCancelled && <Chip size="small" color="error" label={t("mine.eventCancelledChip")} />}
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                {format.dateTime(item.eventStartsAt, {
-                  timeZone: item.eventTimezone,
-                  dateStyle: "full",
-                  timeStyle: "short", hourCycle: "h23",
-                })}
+                {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
               {item.eventCancelled && (
                 <Alert severity="info" sx={{ mb: 1.5 }}>
@@ -322,7 +318,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   <Chip size="small" label={t(`mine.status.${item.status}`)} />
                 </Stack>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {format.dateTime(item.eventStartsAt, { timeZone: item.eventTimezone, dateStyle: "long" })}
+                  {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long" })}
                 </Typography>
                 {withdrawn === item.id && (
                   <Alert severity="success" sx={{ py: 0, mb: 1 }}>

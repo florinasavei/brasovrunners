@@ -7,7 +7,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -146,7 +147,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const now = new Date();
   /*
     The minor's paper form (§330) only where the declaration in effect, in the language the form
@@ -281,15 +281,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     seriesDates.map(async (member) => ({
       id: member.id,
       href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: member.id } } }),
-      label: format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" }),
+      label: formatDay(member.startsAt, { locale, timeZone: member.timezone, style: "short" }),
+      labelInline: formatDay(member.startsAt, { locale, timeZone: member.timezone, style: "short", position: "inline" }),
       note: await editionNote(editionDifference(member, usual)),
     })),
   );
   const position = seriesDates.findIndex((member) => member.id === event.id);
   const previousDate = position > 0 ? seriesDates[position - 1] : null;
   const nextDate = position >= 0 && position < seriesDates.length - 1 ? seriesDates[position + 1] : null;
+  // "Editezi data de miercuri, 30 sept. 2026, 18:30": inside the sentence (§NNN).
   const dateWords = (member: { startsAt: Date; timezone: string }) =>
-    format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+    formatDay(member.startsAt, { locale, timeZone: member.timezone, style: "long", withTime: true, position: "inline" });
 
   /**
    * What "not ready to publish" names, in the words on the screen (§170) — read once, because
@@ -365,7 +367,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Alert severity="success">
             {t("events.eventsRepeated", {
               created: created ?? "0",
-              until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
+              until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: event.timezone, style: "long", position: "inline" }),
             })}
           </Alert>
         )}
@@ -669,7 +671,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {repeatRule.until
               ? t(ruleEnded ? "editor.repeatRuleEnded" : "editor.repeatRuleUntil", {
                   sentence: ruleWords,
-                  until: format.dateTime(new Date(`${repeatRule.until}T12:00:00Z`), { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }),
+                  until: formatCalendarDay(repeatRule.until, { locale, style: "long", position: "inline" }),
                 })
               : t("editor.repeatRuleForever", { sentence: ruleWords })}
           </Typography>
@@ -917,7 +919,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Typography>
             {event.thanksSentAt ? (
               <Typography variant="body2" color="text.secondary">
-                {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short", hourCycle: "h23" }) })}
+                {t("thanks.sentOn", { date: formatDay(event.thanksSentAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }) })}
               </Typography>
             ) : (
               // A refused link comes back in its box (§315).

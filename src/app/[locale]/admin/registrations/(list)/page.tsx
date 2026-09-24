@@ -7,7 +7,8 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -194,10 +195,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, t, format, minorSigns] = await Promise.all([
+  const [resubmissions, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
     getTranslations("Admin"),
-    getFormatter(),
     /*
       Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
       declaration in effect, per language, looked up by each row's own. Only when a minor is on
@@ -322,11 +322,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 data-testid="resubmitted-chip"
                 label={t("registrations.resubmittedChip", {
                   count: mark.count,
-                  date: format.dateTime(mark.lastAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+                  date: formatDay(mark.lastAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
                 })}
                 title={t("registrations.resubmittedHint", {
                   count: mark.count,
-                  date: format.dateTime(mark.lastAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+                  date: formatDay(mark.lastAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
                 })}
               />
             );
@@ -414,7 +414,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Box
                 component="span"
                 title={t("registrations.bibPrintedOn", {
-                  date: format.dateTime(row.bibPrintedAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+                  date: formatDay(row.bibPrintedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
                 })}
                 sx={{ ml: 0.5, color: "success.main", fontWeight: 700 }}
                 aria-label={t("registrations.bibPrinted")}
@@ -449,7 +449,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       sortable: true,
       initialDir: "desc",
       hideBelow: "lg",
-      render: (row) => format.dateTime(row.submittedAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+      render: (row) => formatDay(row.submittedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }),
     },
   ];
 
@@ -728,7 +728,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     {t(bib.status === "CANCELLED" ? "registrations.bibsVoidCancelled" : "registrations.bibsVoidExpired", {
                       number: bib.bibNumber,
                       name: bib.registeredName,
-                      date: format.dateTime(bib.voidedAt, { dateStyle: "medium" }),
+                      date: formatDay(bib.voidedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
                     })}
                   </Link>
                 </Box>

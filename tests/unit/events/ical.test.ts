@@ -157,7 +157,7 @@ describe("the calendar file", () => {
     // The briefing has no place of its own, so it is at the event's.
     expect(unfolded).toContain("SUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Briefing\r\nDESCRIPTION:https://example.test/ro/evenimente/crosul-aniversar\r\nURL:https://example.test/ro/evenimente/crosul-aniversar\r\nLOCATION:Parcul Tractorul\\, intrarea principală");
     // The event's own description lists the rows before the text, with the day since they span two, under the page's heading.
-    expect(unfolded).toContain("Event programme:\\nSat 10 Oct 16:00–19:00 — Kit pickup (Start tent)\\nSun 11 Oct 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
+    expect(unfolded).toContain("Event programme:\\nSat\\, 10 Oct 2026\\, 16:00–19:00 — Kit pickup (Start tent)\\nSun\\, 11 Oct 2026\\, 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
   });
 
   const full: CalendarEvent = {
@@ -284,7 +284,7 @@ describe("the calendar file", () => {
     expect(at({ kind: "OPEN", url: register })).toContain(`\n\nÎnscrierile sunt deschise — ${register}\n\n`);
     // The opening date in the event's zone, the page's own sentence, and the door after it.
     expect(at({ kind: "NOT_YET_OPEN", opensAt: new Date("2026-10-01T15:00:00.000Z"), url: register })).toContain(
-      `\n\nÎnscrierile se deschid pe 1 octombrie 2026 la 18:00 — ${register}\n\n`,
+      `\n\nÎnscrierile se deschid pe joi, 1 oct. 2026, 18:00 — ${register}\n\n`,
     );
     expect(at({ kind: "CLOSED" })).toContain("\n\nÎnscrierile s-au închis\n\n");
     expect(at({ kind: "EXTERNAL", url: "https://organizer.example.test/entries" })).toContain("\n\nÎnscriere pe site-ul organizatorului — https://organizer.example.test/entries\n\n");
