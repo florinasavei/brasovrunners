@@ -58,6 +58,12 @@ export type DateFieldProps = {
  * the one shape the server reads, typed or picked; a second one (`dd.MM.yyyy` parsed on the
  * server) would be a parser to keep for a browser nobody on the club's staff uses.
  *
+ * That box is also what a normal page paints first, with JavaScript on: the picker takes over
+ * only once the island runs (`useIslandRunning`), so every visit briefly shows `2026-09-30` and
+ * the `YYYY-MM-DD` placeholder before the swap to `30.09.2026`. The picker is seeded from
+ * `initial`, not read back from the scriptless box's own DOM value, so anything typed into it in
+ * that brief window is lost at the swap rather than carried into the picker.
+ *
  * Needs `PickerProvider` above it — the backoffice's layout mounts it once.
  */
 export default function DateField({ name, label, defaultValue = "", value, required = false, helperText, size, sx, onValueChange, clearable }: DateFieldProps) {

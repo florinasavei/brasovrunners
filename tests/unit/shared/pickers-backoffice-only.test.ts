@@ -98,15 +98,23 @@ function reaching(start: string): Set<string> {
   return reached;
 }
 
-/** The backoffice's routes: `/admin`, and `/devs`, staff-only inside the same shell (§88). */
-const isBackofficeRoute = (file: string) => file.startsWith("src/app/[locale]/admin/") || file.startsWith("src/app/[locale]/devs/");
+/**
+ * The one route this suite lets a picker reach: `/admin`, whose layout is the only place
+ * `PickerProvider` is mounted (the last test below). `/devs` wears the same chrome (§119), but
+ * its own layout mounts no `PickerProvider`, so a picker dropped onto a `/devs` page would pass
+ * a check that allowed `/devs/` too and then throw at runtime for want of the localization
+ * context. This copies `action-icons.test.ts`'s own `isBackofficeRoute`, which rightly allows
+ * both — an icon needs no provider, so it really does reach either route safely — and that
+ * shape of check does not carry over to a component a provider has to be mounted for (§NNN).
+ */
+const isBackofficeRoute = (file: string) => file.startsWith("src/app/[locale]/admin/");
 
 const PICKER_PROVIDER = "src/shared/forms/pickers/PickerProvider.tsx";
 const DATE_FIELD = "src/shared/forms/pickers/DateField.tsx";
 const TIME_FIELD = "src/shared/forms/pickers/TimeField.tsx";
 
 describe("the date and time pickers never reach a public page", () => {
-  it("PickerProvider reaches only /admin and /devs routes", () => {
+  it("PickerProvider reaches only /admin routes, where it is mounted", () => {
     const reached = reaching(PICKER_PROVIDER);
     const routes = [...reached].filter((file) => file.startsWith("src/app/"));
     expect(routes.filter((file) => !isBackofficeRoute(file))).toEqual([]);
@@ -115,7 +123,7 @@ describe("the date and time pickers never reach a public page", () => {
     expect(reached.has("src/app/[locale]/admin/layout.tsx"), "the backoffice's one mount point").toBe(true);
   });
 
-  it("DateField and TimeField reach only /admin and /devs routes", () => {
+  it("DateField and TimeField reach only /admin routes, where PickerProvider is mounted", () => {
     for (const start of [DATE_FIELD, TIME_FIELD]) {
       const reached = reaching(start);
       const routes = [...reached].filter((file) => file.startsWith("src/app/"));

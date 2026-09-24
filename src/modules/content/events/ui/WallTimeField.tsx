@@ -22,8 +22,10 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  * Both come back filled after a refused submit (§315), and without JavaScript each is a text box
  * with the shape as its `pattern`, posting under the same name.
  *
- * The time half has no clear button: emptying the date empties the pair (a time with no date is
- * no value), and the box stays 140 pixels wide.
+ * The time half has no clear button: a time with no date is dropped on save (`actions.ts`'s
+ * `wallTime` reads no value without a date), so the two boxes needed only one clear button, and
+ * the box stays 140 pixels wide. Clearing the date leaves whatever the time box holds on
+ * screen — it is the save that drops it, not the box.
  */
 export default function WallTimeField({
   name,

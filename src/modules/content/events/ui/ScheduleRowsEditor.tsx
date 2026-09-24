@@ -95,10 +95,20 @@ function ScheduleRowsEditorIsland({
 
   useEffect(() => {
     const input = findStartDateInput(root.current, startDateName);
-    if (!input) return;
-    lastStart.current = input.value;
-    const onChange = () => {
-      const next = input.value;
+    if (input) lastStart.current = input.value;
+    // Listen on the form, not the element `findStartDateInput` returns right now (§NNN): on a
+    // full page load the picker replaces the scriptless box during hydration, after this effect
+    // has already run (`useIslandRunning`'s `useSyncExternalStore` forces that re-render from
+    // its own passive effect, which lands after this one), so a listener on the element it
+    // returned here would be attached to a node about to be unmounted and would never hear the
+    // picker's own change again. The form (document as the fallback for a rows editor rendered
+    // outside one) outlives the swap, so one delegated listener, filtered to the start-date box
+    // by name, survives both that swap and any later remount.
+    const scope: Document | HTMLFormElement = root.current?.closest("form") ?? document;
+    const onChange = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== startDateName) return;
+      const next = target.value;
       if (!next || next === lastStart.current) return;
       const previous = lastStart.current;
       lastStart.current = next;
@@ -112,8 +122,8 @@ function ScheduleRowsEditorIsland({
         return current.map((row, index) => ({ key: row.key, value: shifted[index] }));
       });
     };
-    input.addEventListener("change", onChange);
-    return () => input.removeEventListener("change", onChange);
+    scope.addEventListener("change", onChange);
+    return () => scope.removeEventListener("change", onChange);
   }, [startDateName]);
 
   const add = () => {
