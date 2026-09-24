@@ -109,7 +109,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toContainText("bifează seria în listă");
     await expect(tooltip).toContainText("„Publică cele bifate”");
     await expect(tooltip).not.toContainText("setările seriei");
-    await expect(tooltip).toHaveCSS("white-space", "pre-line");
+    // The style sits on MUI's inner tooltip box, the slot `Hint` hands `TOOLTIP_TEXT_SX` to —
+    // the element carrying `role="tooltip"` is the popper around it, which keeps `normal`.
+    await expect(tooltip.locator(".MuiTooltip-tooltip")).toHaveCSS("white-space", "pre-line");
 
     // The link is real: it opens the draft's own editor, where it is a draft and nothing else.
     await firstDraftLink.click();
