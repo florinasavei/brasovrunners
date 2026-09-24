@@ -48,12 +48,17 @@ import { signatureNameMatches } from "../domain/signature-name";
  *
  * ## Who signs in this box
  *
- * `signer` picks the words (§NNN): `self` for an adult, who signs once; and for a minor's
- * declaration, which two people sign at one press, `minor` for the child's own box — their
- * registered name — and `guardian` for the parent's or guardian's, the declarant of §108. Each box
- * checks its own name with the same pure function, so either can be refused alone, and each has
- * its own way out when the name it wants is itself wrong: the club corrects a participant's name
- * (the adult's, the minor's), and no staff verb corrects a guardian's.
+ * `signer` picks the words (§NNN): `self` for an adult, who signs once; `guardian` for the parent's
+ * or guardian's box on a minor's declaration, the declarant of §108 — alone, as before §NNN, when
+ * the declaration in effect does not ask the minor to sign, or beside the minor's box when it
+ * does; and `minor` for the child's own box, their registered name. Each box checks its own name
+ * with the same pure function, so either can be refused alone, and each has its own way out when
+ * the name it wants is itself wrong: the club corrects a participant's name (the adult's, the
+ * minor's), and no staff verb corrects a guardian's.
+ *
+ * The box's `label` comes from the page, which names the same box with the same words in its
+ * refusal summary: the two cannot drift apart ("Semnătura părintelui sau tutorelui" beside the
+ * minor's box, the words an adult's box always had when the parent signs alone).
  */
 export type Signer = "self" | "minor" | "guardian";
 
@@ -61,6 +66,7 @@ export default function SignatureField({
   id,
   name,
   signer,
+  label,
   expectedName,
   participantName,
   contactHref,
@@ -73,6 +79,8 @@ export default function SignatureField({
   /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§NNN). */
   name: "typedName" | "minorTypedName";
   signer: Signer;
+  /** The box's label, as the page's refusal summary names it. */
+  label: string;
   /** The name this box must hold (`expectedSignatures`); null when there is none to compare with. */
   expectedName: string | null;
   /** The minor's own name, named in the parent's hint (§108); null in every other box. */
@@ -159,10 +167,6 @@ export default function SignatureField({
         : signer === "minor"
           ? t.rich("declare.minorTypedNameHelp", { name: expectedName, strong })
           : t.rich("declare.typedNameHelpWithName", { name: expectedName, strong });
-
-  // Each signer's box says whose signature it is (§NNN); an adult's keeps the words it always had.
-  const label =
-    signer === "guardian" ? t("declare.guardianTypedName") : signer === "minor" ? t("declare.minorTypedName") : t("declare.typedName");
 
   return (
     <TextField

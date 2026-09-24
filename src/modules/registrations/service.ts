@@ -15,7 +15,7 @@ import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
-import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -1161,6 +1161,23 @@ export async function confirmEmail<T extends Record<string, unknown>>(
 
 // --- §15.3 Declaration signing, and offer acceptance (the same act) ------------------------
 
+/**
+ * Bind the signature to the text that was read (BR-REQ-033-02 criterion 6, DECISIONS.md §57).
+ * The page posts the id and hash of the version it rendered; a newer version approved in
+ * between makes the two disagree, and recording the current one would stamp a text the
+ * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
+ * whole transaction, token spend included, so the same link re-renders the current text.
+ *
+ * Asked before anything else is read from the text (§NNN): who signs and which documents are
+ * asked come from it, and must come from the text the page showed.
+ */
+function declarationChanged(version: number): DomainError {
+  return new DomainError(
+    "CONFLICT",
+    `DECLARATION_CHANGED: the declaration that was read is not the current approved version ${version}; the participant must read the current text and sign again`,
+  );
+}
+
 export async function signDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForRegistration,
@@ -1219,13 +1236,32 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      * whether the signature is accepted, never what it says.
      */
     /*
-      A minor's declaration is signed twice at this one press (§NNN): by the parent, in
-      `typedName` as above, and by the minor, in `minorTypedName`, with the name they were
-      registered under. Both are compared here, together, so a press with both wrong is told
-      about both boxes at once — `mismatchedSignatures` is the function the page marks the boxes
-      with, so the refusal and the red boxes name the same ones.
+      The text this signature binds to: the version current for this registration's language,
+      read once, before anything is compared (§NNN). Who signs and which documents are asked are
+      read from it, so it has to be the text the page showed — and that is checked first: the
+      page posts the id and hash of the version it rendered, and a newer version approved in
+      between is refused here with CONFLICT (`declarationChanged`, BR-REQ-033-02 criterion 6,
+      §57) rather than as a refusal of a box the page never had, or a box the page had ignored.
+      Never a flag the page posts: the server reads the text itself.
     */
-    const expected = expectedSignatures(before);
+    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", before.locale, now);
+    if (document && (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256)) {
+      throw declarationChanged(document.version);
+    }
+
+    /*
+      A minor's declaration is signed twice at this one press (§NNN) — by the parent, in
+      `typedName` as above, and by the minor, in `minorTypedName`, with the name they were
+      registered under — when the text asks the minor to sign: when it names the minor's own
+      document, `{{participantIdDocument}}` (`asksForMinorSignature`). A text approved before that
+      (the parent declares, with the parent's document, §108) is signed as it always was: once, by
+      the parent, and the minor's boxes are neither asked nor kept, whatever was posted in them —
+      the privacy notice approved beside such a text says nothing of a minor's own identity
+      number. Both names are compared here, together, so a press with both wrong is told about
+      both boxes at once — `mismatchedSignatures` is the function the page marks the boxes with,
+      so the refusal and the red boxes name the same ones.
+    */
+    const expected = expectedSignatures(before, { minorSigns: document ? asksForMinorSignature(document.body) : false });
     const wrongSignatures = mismatchedSignatures(parsed.data, expected);
     if (wrongSignatures.length > 0) {
       throw new DomainError("VALIDATION_ERROR", `${wrongSignatures.join(", ")}: the signature is not the name expected`, wrongSignatures);
@@ -1234,13 +1270,10 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 
     /*
       The identity documents, asked for before anything moves too (§NNN), for the reason the names
-      are: a refusal must never reach the allocator. Which ones the text asks for is read from the
-      version current for this registration's language — the same read the version check below
-      makes, done once — and a text naming any of the three document fields (`asksForIdDocument`)
-      asks for the declarant's document, and for a minor's declaration the minor's as well. Each
-      missing one is named, so the page can say which box.
+      are: a refusal must never reach the allocator. A text naming any of the three document
+      fields (`asksForIdDocument`) asks for the declarant's document, and — when the minor signs
+      too — the minor's as well. Each missing one is named, so the page can say which box.
     */
-    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", before.locale, now);
     const needsIdDocument = document ? asksForIdDocument(document.body) : false;
     if (needsIdDocument) {
       const missing = [
@@ -1268,23 +1301,10 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     // Read above, before the hold was touched: the registration's language does not change under
-    // the expiry, so it is the version current for `current.locale` too.
+    // the expiry, so it is the version current for `current.locale` too — and it was bound to
+    // the version the page rendered there (`declarationChanged`).
     if (!document) {
       throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
-    }
-
-    /**
-     * Bind the signature to the text that was read (BR-REQ-033-02 criterion 6, DECISIONS.md §57).
-     * The page posts the id and hash of the version it rendered; a newer version approved in
-     * between makes the two disagree, and recording the current one would stamp a text the
-     * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
-     * whole transaction, token spend included, so the same link re-renders the current text.
-     */
-    if (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256) {
-      throw new DomainError(
-        "CONFLICT",
-        `DECLARATION_CHANGED: the declaration that was read is not the current approved version ${document.version}; the participant must read the current text and sign again`,
-      );
     }
 
     /*
@@ -1451,13 +1471,15 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   }
   /*
     Who signed the paper, as the row records it (§NNN). An adult's paper carries one signature:
-    the registered name. A minor's carries two, and the staff member who presses "Confirmă pe
-    hârtie" attests exactly that — the button says so on a minor's row — so the row names both
-    signers the way an online signature would: the parent as the declarant (`typed_name`, the
-    same person `expectedSignatures` wants online) and the minor beside them (`minor_typed_name`).
-    Nobody on staff signs anything; the documents stay on the paper, as they always have.
+    the registered name. A minor's carries the parent's, as the declarant (`typed_name`, the same
+    person `expectedSignatures` wants online) — and, when the declaration in effect asks the minor
+    to sign (`asksForMinorSignature`, the same gate as online), the minor's beside it
+    (`minor_typed_name`): the staff member who presses "Confirmă pe hârtie" attests exactly that,
+    and the button says so on a minor's row only then. Under a text that does not ask it the paper
+    is the one the parent signed alone, and the row records that and nothing more. Nobody on staff
+    signs anything; the documents stay on the paper, as they always have.
   */
-  const signers = expectedSignatures(current);
+  const signers = expectedSignatures(current, { minorSigns: asksForMinorSignature(document.body) });
   await repo.insertDeclarationAcceptance(tx, {
     registrationId: current.id,
     legalDocumentId: document.id,

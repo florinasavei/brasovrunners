@@ -61,6 +61,7 @@ export default async function DeskRow({
   q,
   showEvent = false,
   readOnly = false,
+  minorSigns,
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -71,6 +72,12 @@ export default async function DeskRow({
   showEvent?: boolean;
   /** A completed event (§82): the row reads, and offers no button. */
   readOnly?: boolean;
+  /**
+   * Whether the declaration in effect asks a minor to sign beside the parent, per language
+   * (`declarationAsksMinorToSignByLocale`, §NNN): read once by the page, looked up here by the
+   * row's own language — the translation "Confirmă pe hârtie" binds to.
+   */
+  minorSigns: Readonly<Record<Locale, boolean>>;
 }) {
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -281,12 +288,14 @@ export default async function DeskRow({
             </form>
           )}
           {/*
-            A minor's paper is signed by two (§NNN): the minor and the parent or guardian, each
-            with their own document. The press records exactly that — both names on the row, the
-            volunteer as the one who saw the paper — so the row says it before the press, and
-            offers the form with both lines for a runner who arrived without one.
+            A minor's paper is signed by two (§NNN) where the declaration in effect asks the minor
+            to sign: the minor and the parent or guardian, each with their own document. The press
+            records exactly that — both names on the row, the volunteer as the one who saw the
+            paper — so the row says it before the press, and offers the form with both lines for a
+            runner who arrived without one. Under an older text the parent signs alone, on the
+            ordinary form, and the row says nothing more than it always did.
           */}
-          {!readOnly && canConfirm && row.guardianName && (
+          {!readOnly && canConfirm && row.guardianName && minorSigns[row.locale] && (
             <>
               <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }}>
                 {t("desk.confirmMinorNote", { guardian: row.guardianName })}

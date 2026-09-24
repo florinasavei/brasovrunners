@@ -32,9 +32,10 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
         idDocument: idDocumentFrom(form, t, "idDocument"),
         /*
           A minor's own signature and document (§NNN), posted only by the page a minor's
-          registration renders. A box that was on the page and left empty is posted as the empty
-          string, which the service refuses on that box; a box that was never on the page is
-          absent, which an adult's declaration never asks for.
+          registration renders under a declaration that asks the minor to sign. A box that was on
+          the page and left empty is posted as the empty string, which the service refuses on that
+          box; a box that was never on the page is absent. Whether it was asked is not read from
+          here: the service reads the text itself.
         */
         minorTypedName: form.has("minorTypedName") ? String(form.get("minorTypedName") ?? "") : undefined,
         minorIdDocument: idDocumentFrom(form, t, "minorIdDocument"),

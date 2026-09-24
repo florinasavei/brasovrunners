@@ -47,6 +47,11 @@ export type RegistrationListRow = {
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
   /**
+   * The registration's language: which translation of the declaration it signs, and so whether
+   * a minor's paper carries the minor's signature too (`declarationAsksMinorToSign`, §NNN).
+   */
+  locale: Locale;
+  /**
    * "Keep my name off the public start list" (BR-REQ-039-01, §186). The club sees who is on
    * the list it published, because "is my name on the site" is a question people ask the
    * club and not the platform.
@@ -309,6 +314,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
+      locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
@@ -493,6 +499,8 @@ export type RegistrationDetail = {
   instagramHandle: string | null;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
+  /** The registration's language, as on the list row: the declaration translation it signs (§NNN). */
+  locale: Locale;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -575,6 +583,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
+      locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,
@@ -743,6 +752,12 @@ export type DeskRegistration = {
   registeredName: string;
   /** The parent or guardian of a minor (§108): who the kit goes to; null for an adult. */
   guardianName: string | null;
+  /**
+   * The registration's language: the declaration translation its paper confirmation binds to,
+   * and so whether a minor's paper carries the minor's signature too (§NNN). A language, never
+   * an address (`AGENTS.md` §15.11).
+   */
+  locale: Locale;
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
@@ -776,6 +791,7 @@ const DESK_COLUMNS = {
   kind: registrations.kind,
   registeredName: registrations.registeredName,
   guardianName: registrations.guardianName,
+  locale: registrations.locale,
   eventId: registrations.eventId,
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,

@@ -6,7 +6,11 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 import { confirmRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import {
+  declarationAsksMinorToSign,
+  declarationAsksMinorToSignByLocale,
+  insertLegalDocumentVersion,
+} from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { isMinorOn } from "@/modules/registrations/fields";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
@@ -48,6 +52,33 @@ const LABELS = {
   signedOnPaper: (who: string, when: string) => `Pe hârtie; ${who} ${when}`,
   attesterRemoved: "un membru al echipei",
 };
+
+/**
+ * The PDF labels, watched (§NNN): which of them the renderer read says which signature block it
+ * drew — `whereuponTogether` and `minorSignature` only for the two-signer one — where the
+ * compressed page itself cannot be read back.
+ */
+function trackedLabels() {
+  const read = new Set<string>();
+  const labels = new Proxy(LABELS, {
+    get(target, key, receiver) {
+      read.add(String(key));
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  return { labels, read };
+}
+
+/**
+ * A declaration approved before two signatures were asked (§NNN): the shape of the platform's text
+ * until then, and of production's approved one — the parent declares, with the parent's document,
+ * and nothing names the minor's own.
+ */
+const legacyBody = (text: string): LegalDocumentTranslationInput["body"] => ({ sections: [{ paragraphs: [text] }] });
+const LEGACY_DECLARATION: LegalDocumentTranslationInput[] = [
+  { locale: "ro", title: "Declarație", body: legacyBody("Subsemnatul/a {{declarant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar că particip la {{event}}.") },
+  { locale: "en", title: "Declaration", body: legacyBody("I, {{declarant}}, holder of identity document {{idDocument}}, take part in {{event}}.") },
+];
 
 async function approve(
   db: TestDatabase,
@@ -170,45 +201,92 @@ describe("a minor registered by a parent (§108)", () => {
   });
 
   /**
-   * §NNN — a text the club approved before two signatures were asked names `{{declarant}}` and
-   * `{{idDocument}}` and none of the newer fields. It must read exactly as it did — the parent
-   * declares, with the parent's document — while the minor's own signature and document are
-   * still asked (a minor's declaration is signed by two whatever the text says) and printed in
-   * the signature block beneath it.
+   * §NNN — the production gate. A text the club approved before two signatures were asked names
+   * `{{declarant}}` and `{{idDocument}}` and not `{{participantIdDocument}}` — production's
+   * approved declaration is one, and the privacy notice approved beside it says nothing of a
+   * minor's own identity number. Under it a minor's declaration is exactly what it was (§108,
+   * §314): signed once, by the parent, with one document, the parent's. The minor is not asked,
+   * and nothing of the minor's is kept even when a hand-made post carries it. It reads as it did,
+   * and prints one signature.
    */
-  it("reads a text approved before two signatures as it did, and still asks the minor for theirs", async () => {
-    const legacy = (text: string): LegalDocumentTranslationInput["body"] => ({ sections: [{ paragraphs: [text] }] });
-    await approve(db, [
-      { locale: "ro", title: "Declarație", body: legacy("Subsemnatul/a {{declarant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar că particip la {{event}}.") },
-      { locale: "en", title: "Declaration", body: legacy("I, {{declarant}}, holder of identity document {{idDocument}}, take part in {{event}}.") },
-    ]);
+  it("under a text approved before two signatures, asks the parent alone with one document and keeps nothing of the minor's", async () => {
+    await approve(db, LEGACY_DECLARATION);
     const event = await createEvent(db);
     await submitRegistration(db, event, submission({ guardianName: "Ion Popescu" }), NOW);
-    const [minor] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu", firstName: "Ioana", email: "ioana@example.ro" }), NOW);
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const minor = rows.find((row) => row.registeredName === "Maria Popescu")!;
+    const sister = rows.find((row) => row.registeredName === "Ioana Popescu")!;
     await confirmEmail(db, event, minor.id, NOW);
+    await confirmEmail(db, event, sister.id, NOW);
 
-    // The text names a document, so both are asked: the parent's and the minor's.
     const read = await signingInput(db, NOW, "Ion Popescu");
-    await expect(signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321", minorTypedName: "Maria Popescu" }, NOW)).rejects.toMatchObject({
+    // The one document the text names is the parent's, and it is still required — on its own field.
+    await expect(signDeclaration(db, event, minor.id, read, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["idDocument"] });
+    // The parent's box is checked as before: the child's name in it is refused, and only it (§314).
+    await expect(signDeclaration(db, event, minor.id, { ...read, typedName: "Maria Popescu", idDocument: "BV 654321" }, NOW)).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
-      fields: ["minorIdDocument"],
+      fields: ["typedName"],
     });
-    await signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321", minorTypedName: "Maria Popescu", minorIdDocument: "MP 123456" }, NOW);
+    expect(await db.select().from(declarationAcceptances)).toHaveLength(0);
+
+    // One signature, one document: signed — no minor's box is asked for.
+    expect((await signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321" }, NOW)).status).toBe("CONFIRMED");
+    // A hand-made post carrying the minor's boxes signs just the same, and they are not kept.
+    await signDeclaration(db, event, sister.id, { ...read, idDocument: "BV 654321", minorTypedName: "Ioana Popescu", minorIdDocument: "MP 123456" }, NOW);
+    const acceptances = await db.select().from(declarationAcceptances);
+    for (const id of [minor.id, sister.id]) {
+      expect(acceptances.find((row) => row.registrationId === id)).toMatchObject({
+        typedName: "Ion Popescu",
+        idDocument: "BV 654321",
+        minorTypedName: null,
+        minorIdDocument: null,
+      });
+    }
 
     const signed = await findSignedDeclaration(db, minor.id);
     const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant");
     const text = mergeLegalBody(entry!.body, entry!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
     expect(text).toBe("Subsemnatul/a Ion Popescu (părinte/tutore legal al minorului Maria Popescu), posesor/posesoare al actului de identitate BV 654321, declar că particip la Crosul copiilor.");
-    expect(entry!.signature?.minor).toEqual({ typedName: "Maria Popescu", idDocument: "MP 123456" });
-    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, LABELS, NOW, "participant");
+    // One signature, the parent's, with the parent's document — the PDF prints the one block.
+    expect(entry!.signature).toMatchObject({ typedName: "Ion Popescu", idDocument: "BV 654321", minor: null });
+    const drawn = trackedLabels();
+    const pdf = await renderSignedDeclarationPdf(db, signed!, event.id, drawn.labels, NOW, "participant");
     expect(pdf!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+    expect(drawn.read.has("whereupon")).toBe(true);
+    expect(drawn.read.has("minorSignature")).toBe(false);
+    expect(drawn.read.has("whereuponTogether")).toBe(false);
   });
 
   /**
-   * §67, §NNN — "Confirmă pe hârtie" for a minor. The paper at the desk carries both signatures,
-   * and what the press records is exactly that: the parent as the declarant and the minor beside
-   * them, the volunteer as the one who saw the paper. Nobody on staff signs; the documents stay on
-   * the paper, as they always did.
+   * §NNN — the same text, with the platform's template in effect: a minor must sign beside the
+   * parent, and a post without the minor's box or document — what the page asked before — is
+   * refused on that box alone, with nothing recorded.
+   */
+  it("under the platform's text, refuses a minor's declaration signed by the parent alone", async () => {
+    await approve(db);
+    const event = await createEvent(db);
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu" }), NOW);
+    const [minor] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await confirmEmail(db, event, minor.id, NOW);
+
+    const read = await signingInput(db, NOW, "Ion Popescu");
+    await expect(signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321" }, NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["minorTypedName"],
+    });
+    await expect(signDeclaration(db, event, minor.id, { ...read, idDocument: "BV 654321", minorTypedName: "Maria Popescu" }, NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["minorIdDocument"],
+    });
+    expect(await db.select().from(declarationAcceptances)).toHaveLength(0);
+  });
+
+  /**
+   * §67, §NNN — "Confirmă pe hârtie" for a minor, under the platform's text (it asks the minor to
+   * sign). The paper at the desk carries both signatures, and what the press records is exactly
+   * that: the parent as the declarant and the minor beside them, the volunteer as the one who saw
+   * the paper. Nobody on staff signs; the documents stay on the paper, as they always did.
    */
   it("records both signers when the desk confirms a minor on paper, and the staff member who saw it", async () => {
     await approve(db);
@@ -242,8 +320,62 @@ describe("a minor registered by a parent (§108)", () => {
     // The signed PDF of the paper acceptance prints both lines; the blank form for a minor, too.
     const signed = await findSignedDeclaration(db, minor.id);
     expect((await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant"))!.signature?.minor).toEqual({ typedName: "Maria Popescu", idDocument: null });
-    const blank = await renderBlankDeclarationPdf(db, event.id, "ro", LABELS, NOW, { forMinor: true });
+    const drawn = trackedLabels();
+    const blank = await renderBlankDeclarationPdf(db, event.id, "ro", drawn.labels, NOW, { forMinor: true });
     expect(blank!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+    // The minor's form: two signature lines under "we sign".
+    expect(drawn.read.has("whereuponTogether")).toBe(true);
+    expect(drawn.read.has("minorSignature")).toBe(true);
+  });
+
+  /**
+   * §67, §NNN — the same press under a text approved before two signatures. The paper is the one
+   * the parent signed alone, and the row records that and nothing more: the parent as the
+   * declarant, no minor's name. The minor's printable form is the one-signature form there,
+   * whatever was asked for, since the text does not ask the minor to sign.
+   */
+  it("records the parent alone when the desk confirms a minor on paper under an older text, and prints no minor's form", async () => {
+    await approve(db, LEGACY_DECLARATION);
+    const event = await createEvent(db);
+    const [volunteer] = await db.insert(staffUsers).values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" }).returning();
+    await submitRegistration(db, event, submission({ guardianName: "Ion Popescu" }), NOW);
+    const [minor] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+
+    expect((await confirmRegistrationByStaff(db, volunteer, minor.id, NOW)).status).toBe("CONFIRMED");
+    const [acceptance] = await db.select().from(declarationAcceptances);
+    expect(acceptance).toMatchObject({
+      registrationId: minor.id,
+      method: "PAPER",
+      attestedByStaffUserId: volunteer.id,
+      typedName: "Ion Popescu",
+      minorTypedName: null,
+      idDocument: null,
+      minorIdDocument: null,
+    });
+    const signed = await findSignedDeclaration(db, minor.id);
+    expect((await signedDeclarationEntry(db, signed!, event.id, LABELS, "participant"))!.signature?.minor).toBeNull();
+
+    const drawn = trackedLabels();
+    const blank = await renderBlankDeclarationPdf(db, event.id, "ro", drawn.labels, NOW, { forMinor: true });
+    expect(blank!.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+    expect(drawn.read.has("whereupon")).toBe(true);
+    expect(drawn.read.has("whereuponTogether")).toBe(false);
+    expect(drawn.read.has("minorSignature")).toBe(false);
+  });
+
+  /** §NNN — the gate the desk and the registration's page read before the press, per language. */
+  it("says per language whether the declaration in effect asks a minor to sign", async () => {
+    expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: false, en: false });
+    await approve(db, LEGACY_DECLARATION);
+    expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: false, en: false });
+    // The club approves a declaration made from the platform's text: on by itself, in both.
+    const current: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Declarație pe proprie răspundere", body: declarationRo },
+      { locale: "en", title: "Declaration", body: declarationEn },
+    ];
+    await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 2, effectiveAt: new Date("2026-02-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(current), translations: current, now: NOW });
+    expect(await declarationAsksMinorToSignByLocale(db, NOW)).toEqual({ ro: true, en: true });
+    expect(await declarationAsksMinorToSign(db, "en", NOW)).toBe(true);
   });
 
   /*

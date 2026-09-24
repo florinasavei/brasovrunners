@@ -29,7 +29,7 @@ import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
-import { listApprovedVersions } from "@/modules/legal-documents/repository";
+import { declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
@@ -148,6 +148,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const format = await getFormatter();
   const now = new Date();
+  /*
+    The minor's paper form (§NNN) only where the declaration in effect, in the language the form
+    prints in, asks the minor to sign: under an older text the parent signs a minor's paper alone,
+    on the one form there is. The route prints the one-signature form then anyway; the link is not
+    offered so nobody is told a paper needs two signatures when it needs one.
+  */
+  const minorFormOffered =
+    canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL"
+      ? await declarationAsksMinorToSign(db, locale, now)
+      : false;
   // The language endonyms are shared with the public switcher: "Română" is what a Romanian
   // speaker looks for in either interface, and two catalogues of the same two words would drift.
   const tSite = await getTranslations("Site");
@@ -783,10 +793,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
               {t("registrations.declarationForm")}
             </GlyphButton>
-            {/* A minor's paper form (§NNN): the minor and the parent each sign and write a document. */}
-            <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}&for=minor`} variant="text" size="small" sx={{ minHeight: 44 }}>
-              {t("registrations.declarationFormMinor")}
-            </GlyphButton>
+            {/* A minor's paper form (§NNN): the minor and the parent each sign and write a document —
+                where the declaration in effect asks the minor to sign (`minorFormOffered`). */}
+            {minorFormOffered && (
+              <GlyphButton icon="print" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}&for=minor`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                {t("registrations.declarationFormMinor")}
+              </GlyphButton>
+            )}
             {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
             <GlyphButton
               icon="desk"

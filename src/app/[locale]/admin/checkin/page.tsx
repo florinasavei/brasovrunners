@@ -18,6 +18,7 @@ import {
   listEventsAcceptingRegistrations,
   listEventsForDesk,
 } from "@/modules/registrations/admin-repository";
+import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
@@ -75,6 +76,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
   // The race is over (§82): the rows still read, the buttons are gone, and the service refuses
   // a check-in anyway.
   const closed = eventId ? await isEventCompleted(db, eventId) : false;
+  // Whether a minor's paper carries the minor's signature too (§NNN): the declaration in effect,
+  // per language, read once for every row rather than once per row.
+  const minorSigns = rows.length > 0 ? await declarationAsksMinorToSignByLocale(db, now) : { ro: false, en: false };
 
   const codeHrefTemplate = getPathname({
     locale,
@@ -206,6 +210,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
               q={q}
               showEvent={Boolean(byCode)}
               readOnly={closed}
+              minorSigns={minorSigns}
             />
           ))}
         </Stack>

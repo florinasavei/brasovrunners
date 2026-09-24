@@ -25,7 +25,8 @@ import { foldName } from "./name-fold";
  * Whose name the declarant's signature must be (§108): the parent or guardian's for a minor — the
  * parent signs, and the declaration names them as the declarant — and the participant's
  * otherwise. The same truthiness `declarantValues` uses, so the text and the rule never name two
- * people. Since §NNN a minor signs as well, in a box of their own (`expectedSignatures`).
+ * people. Since §NNN a minor signs as well, in a box of their own, where the declaration in effect
+ * asks for it (`expectedSignatures`).
  */
 export function expectedSignatureName(registration: {
   registeredName: string;
@@ -39,7 +40,7 @@ export function expectedSignatureName(registration: {
  *
  * `typedName` is the declarant's signature, as it has been since §314: the adult's own, or the
  * parent's or guardian's for a minor. `minorTypedName` is the minor's own signature, asked only
- * when a parent declares for them.
+ * when a parent declares for them and the declaration in effect asks the minor to sign.
  */
 export type SignatureBox = "typedName" | "minorTypedName";
 
@@ -48,19 +49,29 @@ export type SignatureBox = "typedName" | "minorTypedName";
  * signing must be a bit different … also 2 signatures!").
  *
  * An adult signs once, with the name they registered under. A minor's declaration is signed by
- * two people at one press: the parent or guardian, as the declarant (§108, §314), and the minor,
- * with the name they were registered under — the name the club can correct with "Corectează
- * numele", which is why the two boxes have different ways out when the name itself is wrong.
- * "A minor" is `guardianName` set, the same truthiness `expectedSignatureName` and
- * `declarantValues` use, so the page, the text and the rule never disagree about who signs.
+ * the parent or guardian, as the declarant (§108, §314) — and, when `minorSigns`, by the minor as
+ * well, at the same press, with the name they were registered under: the name the club can
+ * correct with "Corectează numele", which is why the two boxes have different ways out when the
+ * name itself is wrong. "A minor" is `guardianName` set, the same truthiness
+ * `expectedSignatureName` and `declarantValues` use, so the page, the text and the rule never
+ * disagree about who signs.
+ *
+ * `minorSigns` is the production gate of §NNN: whether the declaration in effect names the minor's
+ * own document (`asksForMinorSignature`). Required, never defaulted, so every caller says which
+ * text it read — the page the one it shows, the service the one it binds the signature to, the
+ * desk's paper confirmation the one on the paper. Without it a minor's declaration is signed as it
+ * was before §NNN: once, by the parent, and no minor's box is expected — so none is ever wrong.
  */
-export function expectedSignatures(registration: {
-  registeredName: string;
-  guardianName: string | null | undefined;
-}): { typedName: string; minorTypedName: string | null } {
+export function expectedSignatures(
+  registration: {
+    registeredName: string;
+    guardianName: string | null | undefined;
+  },
+  { minorSigns }: { minorSigns: boolean },
+): { typedName: string; minorTypedName: string | null } {
   return {
     typedName: expectedSignatureName(registration),
-    minorTypedName: registration.guardianName ? registration.registeredName : null,
+    minorTypedName: registration.guardianName && minorSigns ? registration.registeredName : null,
   };
 }
 
@@ -70,7 +81,8 @@ export function expectedSignatures(registration: {
  *
  * One function for the service, which refuses what it returns, and for the page, which marks
  * the same boxes after a refusal — so the two can never name a different box. A box that is not
- * expected (the minor's, for an adult) is never wrong, whatever was posted in it.
+ * expected (the minor's, for an adult or under a text that does not ask the minor to sign) is
+ * never wrong, whatever was posted in it.
  */
 export function mismatchedSignatures(
   typed: { typedName: string; minorTypedName?: string | null },

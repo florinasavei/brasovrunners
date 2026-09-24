@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { findRegistrationByCheckinCode } from "@/modules/registrations/admin-repository";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
@@ -38,7 +39,10 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const { saved, error } = await searchParams;
   const t = await getTranslations("Admin");
   const code = normalizeCheckinCode(raw);
-  const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(getDb(), code, locale) : undefined;
+  const db = getDb();
+  const row = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
+  // Whether a minor's paper carries the minor's signature too (§NNN), as on the desk's list.
+  const minorSigns = row ? await declarationAsksMinorToSignByLocale(db, new Date()) : { ro: false, en: false };
 
   return (
     <Stack spacing={3}>
@@ -54,7 +58,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
       </div>
       {row ? (
         <Stack component="ul" spacing={1} sx={{ m: 0, p: 0 }}>
-          <DeskRow row={row} locale={locale} back="code" showEvent />
+          <DeskRow row={row} locale={locale} back="code" showEvent minorSigns={minorSigns} />
         </Stack>
       ) : (
         <Alert severity="warning">{t("desk.unknownCode")}</Alert>

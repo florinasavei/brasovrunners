@@ -18,6 +18,7 @@ import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
+import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import {
   findRegistrationDetailForAdmin,
   listDeclarationAcceptances,
@@ -77,12 +78,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
+    /*
+      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§NNN): the
+      declaration in effect in this registration's language — the one the press binds to — asks
+      the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
+    */
+    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date()) : false,
   ]);
 
   const { resent, saved, error, health } = await searchParams;
@@ -359,8 +366,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
                   {tr("desk.fastTrackHelp")}
-                  {/* A minor's paper is signed by the minor and the parent, and the press attests both (§NNN). */}
-                  {registration.guardianName && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
+                  {/* A minor's paper is signed by the minor and the parent, and the press attests both
+                      (§NNN) — where the declaration in effect asks the minor to sign. */}
+                  {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
                 </Typography>
               </Stack>
             </form>

@@ -15,6 +15,8 @@ import { isDomainError } from "@/shared/errors/domain-error";
  *
  * `?for=minor` (§NNN) is the same form for a minor, who signs it with a parent or guardian: two
  * signature lines and two identity-document lines. Still nobody's name — the desk writes those.
+ * Only under a declaration that asks the minor to sign (`renderBlankDeclarationPdf` asks the text):
+ * under an older one the parent signs alone, and this prints the one-signature form.
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;

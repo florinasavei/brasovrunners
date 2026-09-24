@@ -7,7 +7,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
-import { type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForMinorSignature, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
@@ -304,6 +304,11 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
  * `forMinor` (§NNN) prints the form a minor signs with a parent or guardian: two signature lines
  * and two identity-document lines, the minor's and the parent's, under "DREPT PENTRU CARE SEMNĂM".
  * The text is the same approved one — it names nobody, so its blanks stay dotted either way.
+ *
+ * Only where that text asks the minor to sign (`asksForMinorSignature`, the production gate of
+ * §NNN): under a text approved before it the parent signs a minor's paper alone, and the form
+ * printed is the one-signature form whatever was asked for — the minor's identity number is not
+ * collected on paper either while the approved notice does not describe it.
  */
 export async function renderBlankDeclarationPdf<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -327,7 +332,7 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
         eventTitle: event.title,
         version: document.version,
         contentSha256: document.contentSha256,
-        forMinor,
+        forMinor: forMinor && asksForMinorSignature(document.body),
       },
     ],
     locale,

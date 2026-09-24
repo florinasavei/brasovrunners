@@ -11,6 +11,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
+import { asksForMinorSignature } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -84,6 +85,34 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
     .limit(1);
 
   return row ? { ...row, locale } : undefined;
+}
+
+/**
+ * Whether the declaration in effect in `locale` asks a minor to sign beside the parent, with the
+ * minor's own document (§NNN, `asksForMinorSignature`) — false while no declaration is approved,
+ * since then nothing is signed at all.
+ *
+ * For the screens that say what a minor's paper must carry before the press (the desk, the
+ * registration's page, the event's printable form): they ask the text in the registration's
+ * language, the one `signDeclaration` and the paper confirmation bind to, so the sentence and what
+ * the press records agree.
+ */
+export async function declarationAsksMinorToSign<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: Locale,
+  now: Date,
+): Promise<boolean> {
+  const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now);
+  return document ? asksForMinorSignature(document.body) : false;
+}
+
+/** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§NNN). */
+export async function declarationAsksMinorToSignByLocale<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<Record<Locale, boolean>> {
+  const [ro, en] = await Promise.all([declarationAsksMinorToSign(db, "ro", now), declarationAsksMinorToSign(db, "en", now)]);
+  return { ro, en };
 }
 
 /**

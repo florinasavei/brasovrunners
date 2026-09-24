@@ -19,7 +19,7 @@ import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
@@ -272,14 +272,33 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     (await countEligibleWaitlisted(db, registration.eventId)) === 0;
 
   /*
-    Who signs, and under which name (§314, §108, §NNN): an adult once, with their registered name;
-    a minor's declaration twice at one press — the minor with the name they were registered under,
-    and the parent or guardian with theirs, the declarant the text names. `minorName` is null for
-    an adult, and it is the one question every part of this page asks: one signer or two.
+    The text the signature binds to (§NNN): the version above, in the registration's language —
+    the translation `signDeclaration` reads to decide who signs and which documents it asks for.
+    The same translation as the one shown whenever the link is opened in the language it was sent
+    in, which is every email; read again only when somebody switched language on the page, so the
+    boxes here are always the boxes the server will ask for.
   */
-  const expected = registration ? expectedSignatures(registration) : null;
+  const signingText =
+    declaration && registration && registration.locale !== locale
+      ? await findCurrentApprovedDocument(db, "EVENT_DECLARATION", registration.locale, new Date())
+      : declaration;
+
+  /*
+    Who signs, and under which name (§314, §108, §NNN): an adult once, with their registered name;
+    a minor's declaration by the parent or guardian, the declarant the text names — and, when the
+    text asks the minor to sign (it names `{{participantIdDocument}}`, `asksForMinorSignature`),
+    by the minor as well at the same press, with the name they were registered under. Under a text
+    approved before that, the parent signs alone with one document, exactly as before §NNN: the
+    production gate, because the privacy notice approved beside such a text does not describe a
+    minor's own identity number. `minorName` is null for an adult and under such a text, and it is
+    the one question every part of this page asks: one signer or two. `signsForMinor` is the
+    minor's name whenever a parent signs, alone or beside them: the parent's box speaks of them.
+  */
+  const minorSigns = signingText ? asksForMinorSignature(signingText.body) : false;
+  const expected = registration ? expectedSignatures(registration, { minorSigns }) : null;
   const expectedName = expected?.typedName ?? null;
   const minorName = expected?.minorTypedName ?? null;
+  const signsForMinor = registration?.guardianName ? registration.registeredName : null;
   const contactHref = getPathname({ locale, href: "/contact" });
   /*
     Where a parent whose own name was mistyped goes (§314, found in review): "Înscrierile mele",
@@ -317,8 +336,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       ? mismatchedSignatures({ typedName: draft.typedName ?? "", minorTypedName: draft.minorTypedName ?? "" }, expected)
       : [];
   const refusedBoxes: SignatureBox[] = !nameRefused ? [] : judged.length > 0 ? judged : everyBox;
-  // Whether the text names an identity document, so the form asks for one — or two (§95, §NNN).
-  const needsDocuments = declaration ? asksForIdDocument(declaration.body) : false;
+  // Whether the text names an identity document, so the form asks for one — or two (§95, §NNN):
+  // of the text the server decides from, like the signers above.
+  const needsDocuments = signingText ? asksForIdDocument(signingText.body) : false;
   const boxLabel = (box: SignatureBox) =>
     box === "minorTypedName" ? t("declare.minorTypedName") : minorName !== null ? t("declare.guardianTypedName") : t("declare.typedName");
   /*
@@ -410,9 +430,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             the eye goes to retype it, and where it stays while the box is still wrong. Said here
             as well it was the same sentence twice, a screen apart (found in review).
 
-            A minor's declaration has two boxes (§NNN): a link to each one refused, and for each its
-            own way out — the club corrects the minor's registered name, and nobody corrects a
-            guardian's, so that one is cancel and register again.
+            A minor's declaration has two boxes when the text asks the minor to sign (§NNN): a link
+            to each one refused, and for each its own way out — the club corrects the minor's
+            registered name, and nobody corrects a guardian's, so that one is cancel and register
+            again, whether the parent signs beside the minor or alone.
           */}
           {nameRefused && (
             <Alert severity="error" id={DECLARATION_ERROR_SUMMARY_ID} role="alert" tabIndex={-1} sx={{ mb: 3 }}>
@@ -428,7 +449,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
               {refusedBoxes.includes("typedName") && (
                 <Box sx={{ mt: 0.5 }}>
-                  {minorName !== null
+                  {signsForMinor !== null
                     ? t.rich(canReply ? "declare.signatureNameWrongForMinorReply" : "declare.signatureNameWrongForMinor", { contact, mine })
                     : t.rich(canReply ? "declare.signatureNameWrongReply" : "declare.signatureNameWrong", { contact })}
                 </Box>
@@ -482,6 +503,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
                 The identity document the text names — asked only when it does (§95): any of
                 `{{idDocument}}`, `{{participantIdDocument}}`, `{{guardianIdDocument}}`.
+
+                One signer: an adult, or a parent signing alone for a minor under a text that does
+                not ask the minor to sign (§NNN) — the page a minor's declaration had before, with
+                the parent's hint in the box (§108) and one document, the declarant's.
               */}
               {minorName === null ? (
                 <>
@@ -490,7 +515,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       name="idDocument"
                       typeLabel={t("declare.idDocumentType")}
                       typeHelp={t("declare.idDocumentTypeHelp")}
-                      label={t("declare.idDocument")}
+                      label={documentLabel("idDocument")}
                       help={t("declare.idDocumentHelp")}
                       placeholder={t("declare.idDocumentPlaceholder")}
                       kinds={documentKinds}
@@ -502,9 +527,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   <SignatureField
                     id="typedName"
                     name="typedName"
-                    signer="self"
+                    signer={signsForMinor !== null ? "guardian" : "self"}
+                    label={boxLabel("typedName")}
                     expectedName={expectedName}
-                    participantName={null}
+                    participantName={signsForMinor}
                     contactHref={contactHref}
                     myRegistrationsHref={myRegistrationsHref}
                     canReply={canReply}
@@ -515,8 +541,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ) : (
                 <>
                   {/*
-                    A minor's declaration is signed by two people at one press (§NNN; the owner: "I
-                    wanna have the ID document of the minor and the parent, and also 2 signatures!"):
+                    A minor's declaration, under a text that asks the minor to sign, is signed by
+                    two people at one press (§NNN; the owner: "I wanna have the ID document of the
+                    minor and the parent, and also 2 signatures!"):
                     the minor, then the parent or guardian, each with their own document and their
                     own name, each box checked against its own name. Two headed groups rather than
                     four look-alike boxes in a row, so nobody types the child's number under the
@@ -544,6 +571,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     id="minorTypedName"
                     name="minorTypedName"
                     signer="minor"
+                    label={boxLabel("minorTypedName")}
                     expectedName={minorName}
                     participantName={null}
                     contactHref={contactHref}
@@ -573,6 +601,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     id="typedName"
                     name="typedName"
                     signer="guardian"
+                    label={boxLabel("typedName")}
                     expectedName={expectedName}
                     participantName={minorName}
                     contactHref={contactHref}

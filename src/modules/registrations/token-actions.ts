@@ -196,7 +196,11 @@ export async function consumeAndSignDeclaration(
     accepted: boolean;
     typedName: string;
     idDocument?: string;
-    /** A minor's own signature and document, beside the parent's (§NNN); absent for an adult. */
+    /**
+     * A minor's own signature and document, beside the parent's (§NNN): absent for an adult, and
+     * for a minor under a declaration that does not ask the minor to sign — `signDeclaration`
+     * decides which from the text it binds to, never from what was posted.
+     */
     minorTypedName?: string;
     minorIdDocument?: string;
     documentId: string;
