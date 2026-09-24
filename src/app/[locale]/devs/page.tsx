@@ -290,6 +290,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
         configuration question wherever the answer is kept.
       */}
       <SubNav
+        label={t("title")}
         items={[
           ...DEVS_PANELS.map((name) => ({
             href: name === "status" ? devsPath : `${devsPath}?panel=${name}`,

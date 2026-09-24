@@ -65,3 +65,72 @@ test.describe("§265 the configuration panels", () => {
     await expect(page).toHaveURL(/\/admin\/tasks\?panel=botCheck/);
   });
 });
+
+/**
+ * §NNN — every backoffice sub-navigation is one row of secondary tabs (the owner, 2026-09-24:
+ * "I do not like the subtabs/buttons of the configs and todos").
+ *
+ * They were pill buttons that wrapped into a second row of buttons at 320 pixels. What a unit
+ * test cannot see is the layout: one line whatever the width, scrolling sideways inside itself
+ * rather than widening the page, every entry still a 44-pixel target, and the current one
+ * underlined. The row is squeezed by hand to prove the scrolling, because at 320 pixels today's
+ * labels happen to fit — a longer label, or English, must scroll, never wrap.
+ */
+test.describe("§NNN the sub-tabs on a phone", () => {
+  test.skip(() => test.info().project.name !== "mobile", "the phone is the case this protects");
+
+  test("are one row of links that scrolls sideways instead of wrapping, with no page overflow", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    const main = page.locator("#main");
+
+    const rows = [
+      { url: "/ro/admin/tasks", nav: "Ce mai este de făcut", current: "De făcut" },
+      { url: "/ro/devs?panel=general", nav: "Configurația acestui mediu", current: "General" },
+      { url: "/ro/admin/gallery/pictures", nav: "Galerie foto", current: "Imagini" },
+    ];
+    for (const row of rows) {
+      await page.goto(row.url);
+      const nav = main.getByRole("navigation", { name: row.nav });
+      await expect(nav.getByRole("link", { name: row.current, exact: true })).toHaveAttribute("aria-current", "page");
+      // Links, not buttons: nothing here reads as an action.
+      await expect(nav.getByRole("button")).toHaveCount(0);
+
+      const facts = await nav.evaluate((element) => {
+        const links = [...element.querySelectorAll("a")];
+        const current = links.find((link) => link.getAttribute("aria-current") === "page") ?? links[0];
+        const others = links.filter((link) => link !== current);
+        const underlineOf = (link: Element) => getComputedStyle(link).borderBottomColor;
+        const tops = () => new Set(links.map((link) => Math.round(link.getBoundingClientRect().top))).size;
+        const measured = {
+          lines: tops(),
+          shortest: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
+          pageOverflows: document.documentElement.scrollWidth > window.innerWidth,
+          underline: getComputedStyle(current).borderBottomWidth,
+          underlineColour: underlineOf(current),
+          // Compared with the current one's colour rather than with transparent, so a pointer
+          // resting over an entry (its grey hover line) cannot make this flaky.
+          othersUnderlined: others.some((link) => underlineOf(link) === underlineOf(current)),
+          weight: getComputedStyle(current).fontWeight,
+        };
+        // Squeezed to less than its words — narrower than any one label — still one line, and it scrolls.
+        element.style.width = "60px";
+        const squeezed = { lines: tops(), overflows: element.scrollWidth > element.clientWidth };
+        element.scrollLeft = 10_000;
+        const scrolled = element.scrollLeft > 0;
+        element.style.width = "";
+        element.scrollLeft = 0;
+        return { ...measured, squeezed, scrolled };
+      });
+
+      expect(facts.lines, row.url).toBe(1);
+      expect(facts.shortest, row.url).toBeGreaterThanOrEqual(44);
+      expect(facts.pageOverflows, row.url).toBe(false);
+      expect(facts.underline, row.url).toBe("2px");
+      expect(facts.underlineColour, row.url).not.toBe("rgba(0, 0, 0, 0)");
+      expect(facts.othersUnderlined, row.url).toBe(false);
+      expect(facts.weight, row.url).toBe("600");
+      expect(facts.squeezed, row.url).toEqual({ lines: 1, overflows: true });
+      expect(facts.scrolled, row.url).toBe(true);
+    }
+  });
+});
