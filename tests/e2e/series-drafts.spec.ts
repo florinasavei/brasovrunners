@@ -159,7 +159,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const publishDialog = page.getByRole("dialog", { name: "Publici 2 date?" });
     await expect(publishDialog).toContainText("se deschid înscrierile");
     await publishDialog.getByRole("button", { name: "Publică", exact: true }).click();
-    await expect(page.locator("#admin-alert")).toContainText("2 evenimente publicate. 0 nu au putut fi publicate", { timeout: 15_000 });
+    await expect(page.locator("#admin-alert")).toContainText("2 evenimente publicate.", { timeout: 15_000 });
+    // Nothing was refused, so the banner says nothing about refusals (never "0 nu au putut fi publicate").
+    await expect(page.locator("#admin-alert")).not.toContainText("nu au putut");
     await hydrated(page);
     await expect(row.getByText("Publicat · 3 date", { exact: true })).toBeVisible();
     await expect(line).toHaveCount(0);

@@ -201,6 +201,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // A hand-edited query string is not a number; unguarded, `Number(raw)` is `NaN` and the banner
   // reads "NaN date" (the editor page's own `datesWords` guards the same param the same way).
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
+  // A bulk verb's banner: "1 eveniment publicat." — the count agrees (§341) — and the sentence
+  // about the ones refused only when there were any, never "0 nu au putut fi publicate".
+  const bulkOutcome = (done: string | undefined, key: "Archived" | "Deleted" | "Published", failedKey: "ArchiveFailed" | "DeleteFailed" | "PublishFailed") => {
+    const doneText = t(`events.events${key}Done.${countForm(countOf(done), locale)}`, { count: countOf(done) });
+    const refused = countOf(failed);
+    return refused > 0 ? `${doneText} ${t(`events.events${failedKey}.${countForm(refused, locale)}`, { count: refused })}` : doneText;
+  };
 
   /*
     The draft line's opening words (§NNN), by why the dates are drafts — the owner: "practic asta
@@ -481,7 +488,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "eventsArchived" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
-            {t("events.eventsArchived", { archived: archived ?? "0", failed: failed ?? "0" })}
+            {bulkOutcome(archived, "Archived", "ArchiveFailed")}
           </Alert>
         )}
         {saved === "eventsRepeated" && (
@@ -495,12 +502,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         )}
         {saved === "eventsPublished" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
-            {t("events.eventsPublished", { published: published ?? "0", failed: failed ?? "0" })}
+            {bulkOutcome(published, "Published", "PublishFailed")}
           </Alert>
         )}
         {saved === "eventsDeleted" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
-            {t("events.eventsDeleted", { deleted: deleted ?? "0", failed: failed ?? "0" })}
+            {bulkOutcome(deleted, "Deleted", "DeleteFailed")}
           </Alert>
         )}
         {saved === "eventErased" && (

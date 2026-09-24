@@ -631,7 +631,16 @@
       "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
-      "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
+      "eventsArchivedDone": {
+        "one": "{count} eveniment arhivat.",
+        "few": "{count} evenimente arhivate.",
+        "other": "{count} de evenimente arhivate."
+      },
+      "eventsArchiveFailed": {
+        "one": "{count} nu a putut fi arhivat.",
+        "few": "{count} nu au putut fi arhivate.",
+        "other": "{count} nu au putut fi arhivate."
+      },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
@@ -664,8 +673,26 @@
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "eventsDeletedDone": {
+        "one": "{count} eveniment șters.",
+        "few": "{count} evenimente șterse.",
+        "other": "{count} de evenimente șterse."
+      },
+      "eventsDeleteFailed": {
+        "one": "{count} nu s-a putut șterge — are înscriși. Arhivează-l, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "few": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "other": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile."
+      },
+      "eventsPublishedDone": {
+        "one": "{count} eveniment publicat.",
+        "few": "{count} evenimente publicate.",
+        "other": "{count} de evenimente publicate."
+      },
+      "eventsPublishFailed": {
+        "one": "{count} nu a putut fi publicat (o limbă incompletă, sau modificat între timp).",
+        "few": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp).",
+        "other": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp)."
+      },
       "hardDelete": "Ștergere definitivă…",
       "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },

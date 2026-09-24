@@ -631,7 +631,16 @@
       "bulkArchiveHelp": "Archiving takes an event off the site without deleting anything. An event somebody else has edited in the meantime is not archived, so their change is not lost.",
       "bulkArchiveAction": "Archive the ticked ones",
       "bulkArchivePending": "Archiving…",
-      "eventsArchived": "{archived} events archived. {failed} could not be archived.",
+      "eventsArchivedDone": {
+        "one": "{count} event archived.",
+        "few": "{count} events archived.",
+        "other": "{count} events archived."
+      },
+      "eventsArchiveFailed": {
+        "one": "{count} could not be archived.",
+        "few": "{count} could not be archived.",
+        "other": "{count} could not be archived."
+      },
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeatedOne": "The series is running: {dates} created now, up to {until} — the next eight weeks. The platform creates the rest by itself, always eight weeks ahead, until the chosen date or for ever; there is nothing more to press.",
@@ -664,8 +673,26 @@
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
-      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
-      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile).",
+      "eventsDeletedDone": {
+        "one": "{count} event deleted.",
+        "few": "{count} events deleted.",
+        "other": "{count} events deleted."
+      },
+      "eventsDeleteFailed": {
+        "one": "{count} could not be deleted — it has registrations. Archive it, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+        "few": "{count} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+        "other": "{count} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too."
+      },
+      "eventsPublishedDone": {
+        "one": "{count} event published.",
+        "few": "{count} events published.",
+        "other": "{count} events published."
+      },
+      "eventsPublishFailed": {
+        "one": "{count} could not be published (a language incomplete, or changed meanwhile).",
+        "few": "{count} could not be published (a language incomplete, or changed meanwhile).",
+        "other": "{count} could not be published (a language incomplete, or changed meanwhile)."
+      },
       "hardDelete": "Permanent deletion…",
       "eventErased": "Event permanently deleted, together with {erased} registrations."
     },
