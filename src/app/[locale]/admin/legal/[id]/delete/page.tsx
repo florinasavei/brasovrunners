@@ -23,6 +23,7 @@ import { listVersionsForBackoffice } from "@/modules/legal-documents/repository"
 import { readDeletionFacts } from "@/modules/legal-documents/service";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { isUuid } from "@/shared/ids";
 import { deleteApprovedLegalVersionAction } from "../../actions";
 
 type Props = {
@@ -65,6 +66,8 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   // The same gate as writing a version (`assertMayEdit`): the role that may publish the club's
   // word is the role that may unpublish it. Everyone else is not shown the screen at all.
   if (!canManageStaff(staffUser.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   const versions = await listVersionsForBackoffice(db);

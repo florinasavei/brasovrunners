@@ -8,6 +8,7 @@ import { renderEventDeclarationsPdf } from "@/modules/registrations/signed-decla
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 
 /**
  * Every signed declaration of one event in one PDF, oldest first (`DECISIONS.md` §95): what
@@ -27,6 +28,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!canReadRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const locale = new URL(request.url).searchParams.get("locale") ?? routing.defaultLocale;
   if (!hasLocale(routing.locales, locale)) return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
 

@@ -79,7 +79,8 @@ export type DayOptions = {
   withTime?: boolean;
   /**
    * False only where a header around the date already names the year — a month's calendar
-   * grid. Everywhere else a date carries its year.
+   * grid — or where the date is within the coming twelve months and the row is too narrow for
+   * the year: a listing card's phone width (§366). Everywhere else a date carries its year.
    */
   year?: boolean;
   /** "start" capitalises the first letter (the default); "inline" keeps Romanian's lower case. */

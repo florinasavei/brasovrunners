@@ -12,6 +12,7 @@ import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { isUuid } from "@/shared/ids";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -31,6 +32,8 @@ export default async function EventBibsPage({ params }: Props) {
   setRequestLocale(locale);
   const staffUser = await requireStaff();
   if (!canReadRegistrations(staffUser.role)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
