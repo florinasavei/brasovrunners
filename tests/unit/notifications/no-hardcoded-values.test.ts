@@ -67,4 +67,14 @@ describe("§NNN no hardcoded value in the emails' own sentences", () => {
     expect(render("STAFF_INVITATION", DATA).subject).toBe(`Ești în echipa ${CLUB_NAME} / You are on the ${CLUB_NAME} team`);
     expect(render("PROFILE_MANAGE_LINK", DATA).subject).toBe(`Înscrierile tale la ${CLUB_NAME} / Your registrations at ${CLUB_NAME}`);
   });
+
+  it("names the club through the constant in the email Zitadel sends for us and in the bib sheet's metadata", () => {
+    // Zitadel's invitation carries `applicationName` into its own email; the bib sheet's PDF
+    // carries its Author. Neither is one of our templates, and both still leave with the name.
+    for (const file of ["src/modules/staff-identity/zitadel-users.ts", "src/modules/registrations/bibs-pdf.ts"]) {
+      const source = readFileSync(path.join(process.cwd(), file), "utf8");
+      expect(source, file).not.toMatch(/Bra(?:ș|s)ov Runners/);
+      expect(source, file).toContain('from "@/theme/brand"');
+    }
+  });
 });

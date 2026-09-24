@@ -7,7 +7,7 @@ import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentBody, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
-import { renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
+import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import {
   findSignedDeclaration,
@@ -383,28 +383,40 @@ describe("the club's declaration (§95)", () => {
       expect(pages.length, name).toBe(2);
       expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(2);
       for (const [index, lines] of pages.entries()) {
-        const body = lines.filter(([, y]) => y > FOOTER_BASELINE + 1);
-        const footer = lines.filter(([, y]) => y <= FOOTER_BASELINE + 1);
-        // The footer: the club and the date, and the page count — nothing else down there.
-        expect(footer.length, `${name} page ${index + 1} footer`).toBe(2);
-        expect(footer.every(([, y]) => Math.abs(y - FOOTER_BASELINE) < 0.5), `${name} page ${index + 1} footer line`).toBe(true);
+        const page = `${name} page ${index + 1}`;
+        const body = lines.filter(([, y]) => y >= FOOTER_TOP);
+        const footer = lines.filter(([, y]) => y < FOOTER_TOP);
+        // The footer: the club and the date, and the page count — nothing else down there, both
+        // on one baseline under the footer's top and on the paper.
+        expect(footer.length, `${page} footer`).toBe(2);
+        expect(Math.abs(footer[0][1] - footer[1][1]), `${page} footer on one line`).toBeLessThan(0.01);
+        expect(footer[0][1], `${page} footer on the paper`).toBeGreaterThan(0);
         // Text on the page, all of it between the margins.
-        expect(body.length, `${name} page ${index + 1} has text`).toBeGreaterThan(5);
+        expect(body.length, `${page} has text`).toBeGreaterThan(5);
         for (const [x, y] of body) {
-          expect(y, `${name} page ${index + 1}: a line below the bottom margin`).toBeGreaterThanOrEqual(PDF_MARGIN.bottom - 6);
-          expect(y, `${name} page ${index + 1}: a line above the top margin`).toBeLessThanOrEqual(PDF_PAGE_HEIGHT - PDF_MARGIN.top);
-          expect(x, `${name} page ${index + 1}: a line left of the margin`).toBeGreaterThanOrEqual(PDF_MARGIN.left - 0.5);
+          expect(y, `${page}: a line below the bottom margin`).toBeGreaterThanOrEqual(DECLARATION_MARGIN.bottom);
+          expect(y, `${page}: a line above the top margin`).toBeLessThanOrEqual(DECLARATION_PAGE.height - DECLARATION_MARGIN.top);
+          expect(x, `${page}: a line left of the margin`).toBeGreaterThanOrEqual(DECLARATION_MARGIN.left - 0.5);
+          expect(x, `${page}: a line starting past the right margin`).toBeLessThan(DECLARATION_PAGE.width - DECLARATION_MARGIN.right);
         }
       }
     }
   });
 });
 
-/** The A4 page and margins `declaration-pdf.ts` draws on, in PDF points. */
-const PDF_PAGE_HEIGHT = 841.89;
-const PDF_MARGIN = { top: 48, bottom: 64, left: 56 } as const;
-/** Where the footer's one line sits, measured from the bottom: 22pt under the bottom margin, less the 8pt face's ascent. */
-const FOOTER_BASELINE = 34.578125;
+/**
+ * The page's geometry is `declaration-pdf.ts`'s own, imported, and the file's positions are in
+ * PDF's bottom-up points. The footer's line has its top `gap` under the bottom margin, so every
+ * run lower than that is the footer and every run above it is the text — without knowing the
+ * face's ascent, which only says how far under that top the baseline falls. A text run's
+ * position is its baseline, which lies above the bottom margin whenever the line fits above it.
+ *
+ * The right edge is held only as far as every run *starting* left of it: the end of a line is not
+ * in these positions (Roboto is drawn by glyph id, so a width would need the font's advances), and
+ * that no line runs past the right margin is pdfkit's wrapping at the text width, which this test
+ * does not measure.
+ */
+const FOOTER_TOP = DECLARATION_MARGIN.bottom - DECLARATION_FOOTER.gap;
 
 /**
  * Where each line of text starts, page by page, read out of the file (§NNN).

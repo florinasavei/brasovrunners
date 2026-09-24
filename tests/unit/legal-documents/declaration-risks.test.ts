@@ -12,7 +12,9 @@ import { declarationEn, declarationRo } from "@/modules/legal-documents/template
  * acceptance of a risk plus the runner's own obligations — the Civil Code does not let a text
  * remove liability for intent or gross fault, or for harm to the body or health except as the
  * law allows (art. 1355), and accepting a risk is not a waiver of damages — so the new bullets
- * promise nobody immunity, and the liability paragraph keeps its "to the extent the law allows".
+ * promise nobody immunity, and every sentence that says the organiser does not answer for
+ * something (the liability paragraph, the belongings bullet, the paragraph on minors) carries
+ * "to the extent the law allows".
  */
 const paragraphs = { ro: declarationRo.sections.flatMap((s) => s.paragraphs), en: declarationEn.sections.flatMap((s) => s.paragraphs) };
 const bullets = { ro: paragraphs.ro.filter((p) => p.startsWith("• ")), en: paragraphs.en.filter((p) => p.startsWith("• ")) };
@@ -36,6 +38,21 @@ const RISKS: ReadonlyArray<{ risk: string; ro: RegExp[]; en: RegExp[] }> = [
   { risk: "personal belongings", ro: [/Obiectele personale/, /pierderea sau deteriorarea/], en: [/personal belongings/, /loss or damage/] },
   { risk: "protected areas", ro: [/ariile naturale protejate/, /niciun deșeu/], en: [/protected natural areas/, /no waste/] },
 ];
+
+/** The law's own limit, as the text words it. */
+const LAW_LIMIT = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
+
+/** A sentence that says the organiser does not answer for something, qualified or not. */
+const DISCLAIMER = { ro: /nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
+
+/**
+ * A promise of immunity: liability excluded "in any way", a waiver, or the organiser "not
+ * responsible" without the law's limit straight after it — the one qualified form let through.
+ */
+const IMMUNITY = {
+  ro: new RegExp(`în niciun fel|nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|renunț|nu răspunde\\b(?!, ${LAW_LIMIT.ro})`, "i"),
+  en: new RegExp(`in any way|cannot be held liable|waive|not responsible(?!, ${LAW_LIMIT.en})`, "i"),
+} as const;
 
 describe("§NNN the runner takes ownership — the declaration's risks", () => {
   for (const { risk, ro, en } of RISKS) {
@@ -68,15 +85,30 @@ describe("§NNN the runner takes ownership — the declaration's risks", () => {
     paragraphs.ro.forEach((p, i) => expect(p.startsWith("• "), `paragraph ${i}`).toBe(paragraphs.en[i].startsWith("• ")));
   });
 
-  it("promises nobody immunity: the new bullets accept a risk and set out conduct, and the liability paragraph keeps its limit", () => {
-    const immunity = { ro: /în niciun fel|nu (?:pot|poate) fi (?:tras|trasă|trași|răspunz)|renunț/i, en: /in any way|cannot be held liable|waive/i };
+  it("promises nobody immunity: the new bullets accept a risk and set out conduct", () => {
+    // The checker first, on the sentences it exists to refuse — the belongings bullet as it was
+    // first written among them — and on the one qualified form it lets through.
+    expect("accept că organizatorul nu răspunde pentru pierderea sau deteriorarea lor").toMatch(IMMUNITY.ro);
+    expect("I accept that the organiser is not responsible for their loss or damage").toMatch(IMMUNITY.en);
+    expect("organizatorul nu poate fi tras la răspundere pentru eventualele accidente").toMatch(IMMUNITY.ro);
+    expect("accept că organizatorul nu răspunde, în limitele permise de lege, pentru pierderea lor").not.toMatch(IMMUNITY.ro);
+    expect("the organiser is not responsible, to the extent the law allows, for their loss").not.toMatch(IMMUNITY.en);
+    expect("le las pe răspunderea mea").not.toMatch(IMMUNITY.ro);
+
     for (const locale of ["ro", "en"] as const) {
       const owned = bullets[locale].filter((b) => RISKS.some((risk) => risk[locale].some((pattern) => pattern.test(b))));
       expect(owned.length, locale).toBeGreaterThanOrEqual(7);
-      for (const bullet of owned) expect(bullet, `${locale}: ${bullet.slice(0, 40)}`).not.toMatch(immunity[locale]);
+      for (const bullet of owned) expect(bullet, `${locale}: ${bullet.slice(0, 40)}`).not.toMatch(IMMUNITY[locale]);
     }
-    expect(paragraphs.ro.some((p) => p.includes("nu pot fi răspunzători") && p.includes("în limitele permise de lege"))).toBe(true);
-    expect(paragraphs.en.some((p) => p.includes("cannot be held liable") && p.includes("to the extent the law allows"))).toBe(true);
+  });
+
+  it("limits by the law every sentence that says the organiser does not answer for something", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const disclaimers = paragraphs[locale].filter((p) => DISCLAIMER[locale].test(p));
+      // The liability paragraph, the belongings bullet, and the paragraph on minors the runner brings.
+      expect(disclaimers.length, locale).toBe(3);
+      for (const paragraph of disclaimers) expect(paragraph, `${locale}: ${paragraph.slice(0, 40)}`).toContain(LAW_LIMIT[locale]);
+    }
   });
 
   it("keeps every merge field exactly as before, and the club's name as the footnote's placeholder", () => {

@@ -26,8 +26,16 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * under the Civil Code (art. 1355) liability for intent or gross fault cannot be excluded, harm to
  * the body or health cannot be excused except as the law allows, and accepting a risk is not by
  * itself a waiver of damages; what the text *can* do is inform, and set out the conduct the runner
- * owes, which counts when a harm was the victim's own doing (art. 1371). The liability paragraph
- * keeps its "în limitele permise de lege" for the same reason.
+ * owes, which counts when a harm was the victim's own doing (art. 1371). For the same reason every
+ * sentence that says the organiser does not answer for something — the liability paragraph, the
+ * belongings bullet, the paragraph on minors the runner brings along — carries "în limitele
+ * permise de lege" ("to the extent the law allows").
+ *
+ * **A Romanian lawyer should read it before the club approves it.** These notes are the platform's
+ * reading of the Civil Code, not legal advice: the text limits itself to what the law allows, but
+ * only a lawyer can say that it does, and the club is the one that approves and relies on it in
+ * `/admin/legal`. The paragraphs carried over from the club's paper form — the liability
+ * paragraph and the one on minors — are the ones to ask about first.
  *
  * **No hardcoded value (§NNN).** One approved declaration serves every event, so nothing in it
  * names an event, a place, a date or a distance — those are the merge fields — and nothing names
@@ -51,11 +59,11 @@ export const declarationRo: LegalDocumentBody = {
         "• Alerg în ritmul meu și îmi cunosc limitele: mă opresc dacă nu mă simt bine, urmez traseul marcat și anunț organizatorul dacă abandonez. Știu că o alergare în grup nu este o tură ghidată și că deciziile pe care le iau pe traseu îmi aparțin;",
         "• Voi concura în spiritul sportivității și al fair-play-ului, în limita capacităților mele, evitând expunerea la riscuri inutile;",
         "• În ariile naturale protejate rămân pe traseele marcate și nu las în urmă niciun deșeu;",
-        "• Obiectele personale le am asupra mea sau le las pe răspunderea mea; accept că organizatorul nu răspunde pentru pierderea sau deteriorarea lor;",
+        "• Obiectele personale le am asupra mea sau le las pe răspunderea mea; accept că organizatorul nu răspunde, în limitele permise de lege, pentru pierderea sau deteriorarea lor;",
         "• Kitul de participare se ridică personal, pe baza actului de identitate menționat mai sus — pentru un participant minor, al minorului sau al părintelui ori tutorelui legal.",
         "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
         "Am luat la cunoștință că la eveniment se fac fotografii și filmări, care rămân proprietatea intelectuală a organizatorului și pe care acesta le poate publica pentru a povesti evenimentul, în condițiile descrise în nota de confidențialitate — unde este descris și cum pot cere oricând să nu apar. Sunt de acord cu termenii, condițiile și regulamentul evenimentului.",
-        "În cazul în care voi fi însoțit/însoțită de persoane minore, îmi asum integral răspunderea pentru siguranța acestora pe parcursul evenimentului. Înțeleg că organizatorul nu poate fi tras la răspundere pentru eventualele accidente sau incidente care ar putea surveni.",
+        "În cazul în care voi fi însoțit/însoțită de persoane minore, îmi asum integral răspunderea pentru siguranța acestora pe parcursul evenimentului. Înțeleg că organizatorul nu poate fi tras la răspundere, în limitele permise de lege, pentru eventualele accidente sau incidente care ar putea surveni.",
         "De asemenea, sunt informat/ă că datele cu caracter personal din această declarație sunt prelucrate conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, pentru organizarea și desfășurarea acestui eveniment și, după el, ca dovadă a declarației, și că sunt păstrate trei ani de la data evenimentului (seria și numărul actelor de identitate, șapte zile de la eveniment).",
         "Această declarație este semnată electronic: numele scris mai jos (pentru un participant minor, al minorului și al părintelui ori tutorelui legal), bifa de acceptare, momentul semnării și amprenta textului citit sunt înregistrate împreună (semnătură electronică simplă, în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice). O copie îmi este trimisă pe adresa de email confirmată, iar una, cu seria și numărul actelor de identitate mascate (rămân cel mult primele două și ultimele două caractere), ajunge în arhiva clubului.",
         "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>.",
@@ -81,11 +89,11 @@ export const declarationEn: LegalDocumentBody = {
         "• I run at my own pace and know my limits: I stop if I feel unwell, keep to the marked course and tell the organiser if I drop out. I know that a group run is not a guided tour and that the decisions I make on the course are my own;",
         "• I will compete in the spirit of sportsmanship and fair play, within my abilities, avoiding needless risks;",
         "• In protected natural areas I keep to the marked trails and leave no waste behind;",
-        "• I carry or leave my personal belongings at my own risk, and I accept that the organiser is not responsible for their loss or damage;",
+        "• I carry or leave my personal belongings at my own risk, and I accept that the organiser is not responsible, to the extent the law allows, for their loss or damage;",
         "• The race kit is collected in person, against the identity document named above — for a minor participant, the minor's or the parent's or legal guardian's.",
         "I take responsibility for my own safety, my equipment and the decisions I make on the course.",
         "I acknowledge that photographs and film are made at the event, that they remain the organiser's intellectual property and that the organiser may publish them to tell the event's story, under the conditions described in the privacy notice — which also says how I can ask at any time not to appear. I agree with the event's terms, conditions and rules.",
-        "If I am accompanied by minors, I take full responsibility for their safety throughout the event. I understand that the organiser cannot be held liable for any accident or incident that may occur.",
+        "If I am accompanied by minors, I take full responsibility for their safety throughout the event. I understand that the organiser cannot be held liable, to the extent the law allows, for any accident or incident that may occur.",
         "I am also informed that the personal data in this declaration is processed under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, to organise and run this event and, afterwards, as evidence of the declaration, and is kept for three years from the date of the event (the identity documents' series and numbers, seven days from the event).",
         "This declaration is signed electronically: the name written below (for a minor participant, the minor's and the parent's or legal guardian's), the acceptance tick, the moment of signing and the fingerprint of the text read are recorded together (a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures). A copy is sent to my confirmed email address, and one, with the identity documents' series and numbers masked (at most the first two and last two characters remain), to the club's archive.",
         "*Organiser means <THE CLUB'S FULL LEGAL NAME>.",
