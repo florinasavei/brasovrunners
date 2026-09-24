@@ -998,6 +998,32 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
 }
 
 /**
+ * The part of one message the club may rewrite (§247), as the platform writes it: the subject and
+ * the body, and nothing the platform adds around a body — not the club copy's first line (§320),
+ * not "you were already registered" (§235), not the update's new place or the cancellation's
+ * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
+ * so a club text that repeated them would say them twice.
+ *
+ * The editor's starting text is built from this (§NNN, `email-copy-fields.ts`), with every field of
+ * the closed set standing for itself, so nothing of the page's sample reaches the box. The send
+ * path never calls it: `buildTemplateContent` below reads the same entries itself, unchanged.
+ */
+export function platformWords(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  data: TemplateData,
+): { subject: string; paragraphs: string[] } {
+  const entry = T[locale][KEY_BY_MESSAGE_TYPE[messageType]] as {
+    subject: string | ((d: TemplateData) => string);
+    body: (d: TemplateData) => string[];
+  };
+  return {
+    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    paragraphs: entry.body(data),
+  };
+}
+
+/**
  * Every message type's content, for one locale, given the data the renderer looked up.
  * `actionUrl` is undefined for the message types that carry none — `REGISTRATION_STATE_NOTICE`
  * (§16.3: "carries no scoped token and creates none") and the two waiting-list notices, which

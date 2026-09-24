@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -9,6 +10,7 @@ import { parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
+import { EmailCopySampleValueError, type EmailSampleHit } from "@/modules/notifications/domain/email-sample";
 import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
@@ -120,8 +122,9 @@ export async function sendOutboxNowFromEmailsAction(form: FormData): Promise<voi
 export async function updateClubNoticesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
-  const text = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)).trim() : "");
-  const list = (name: string): string[] => parseAddressList(text(name));
+  // `posted`, not `text`: the catalogue check reads any `t…("key")` in a file that translates.
+  const posted = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)).trim() : "");
+  const list = (name: string): string[] => parseAddressList(posted(name));
 
   try {
     const actor = await requireStaffRole("ADMIN");
@@ -129,7 +132,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
       getDb(),
       actor,
       {
-        declarations: { to: text("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
+        declarations: { to: posted("declarationsTo"), cc: list("declarationsCc"), bcc: list("declarationsBcc") },
         confirmations: { to: list("confirmationsTo") },
         // A club copy of every message a real participant receives (2026-09-22): since §320 one
         // outbox row per address, queued beside the participant's by `enqueueEmail`, stripped of
@@ -151,7 +154,10 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
  * A Redactor's verb, not an Administrator's: §103 is explicit that the Redactor writes the
  * words. The service asserts that again, validates every placeholder, and records the one
  * message that changed. "Revino la textul platformei" is the same form's second button — it
- * posts `reset`, and the service reads that as "no override".
+ * posts `reset`, and the service reads that as "no override". "Înlocuiește cu câmpurile" is a
+ * third, drawn only while the saved text holds sample values (§NNN): it posts `replace`, and the
+ * service rewrites them to their fields before it saves. A text that still holds one is refused,
+ * naming the value and its field.
  */
 /**
  * What the form posts, as an entry (§270): the subject, the document the rich-text island wrote,
@@ -184,15 +190,36 @@ function emailCopyEntryFrom(subject: string, body: string): { subject: string; p
   return { subject, paragraphs: emailBodyToParagraphs(doc), body: doc };
 }
 
+/**
+ * The refusal of words that still hold sample values (§NNN), as the form's state: the boxes named
+ * as for any refusal, and the sentence filled with the value and what goes in its place — the one
+ * value, or each of them — in the backoffice's language.
+ */
+async function sampleValueRefusal(error: EmailCopySampleValueError, outcome: FormOutcome, locale: Locale): Promise<FormOutcome> {
+  const t = await getTranslations({ locale, namespace: "Admin" });
+  const replacementOf = (hit: EmailSampleHit) =>
+    hit.placeholder ? `{${hit.placeholder}}` : t("emails.copy.sampleWords", { words: hit.words ?? "" });
+  const distinct = error.hits.filter((hit, index) => error.hits.findIndex((other) => other.value === hit.value) === index);
+  if (distinct.length === 1) {
+    return { ...outcome, error: "SAMPLE_VALUE_IN_EMAIL", errorValues: { value: distinct[0].value, placeholder: replacementOf(distinct[0]) } };
+  }
+  const found = distinct.map((hit) => t("emails.copy.samplePair", { value: hit.value, replacement: replacementOf(hit) })).join("; ");
+  return { ...outcome, error: "SAMPLE_VALUES_IN_EMAIL", errorValues: { found } };
+}
+
 export async function updateEmailCopyAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const lang = form.get("lang") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/admin/emails" });
   const back = `${path}?lang=${lang}`;
-  const text = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
+  const posted = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
+  const reset = form.get("reset") === "1";
+  // "Înlocuiește cu câmpurile" (§NNN): a third submit on the same form, saving what is in the boxes
+  // with every sample value rewritten to its field — the same gate and audit row as a save.
+  const replace = !reset && form.get("replace") === "1";
 
   let outcome: string;
-  const messageType = text("messageType") as EmailMessageType;
+  const messageType = posted("messageType") as EmailMessageType;
   try {
     const actor = await requireStaff();
     if (!(emailMessageType.enumValues as readonly string[]).includes(messageType)) {
@@ -204,17 +231,16 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
       {
         messageType,
         locale: lang,
-        entry:
-          form.get("reset") === "1"
-            ? null
-            : emailCopyEntryFrom(text("subject"), text("body")),
+        entry: reset ? null : emailCopyEntryFrom(posted("subject"), posted("body")),
+        replaceSampleValues: replace,
       },
       new Date(),
     );
-    outcome = form.get("reset") === "1" ? "saved=emailCopyReset" : "saved=emailCopy";
+    outcome = reset ? "saved=emailCopyReset" : replace ? "saved=emailCopySamples" : "saved=emailCopy";
   } catch (error) {
-    // The subject and the words come back as typed (§315); the `reset` press is not a value.
-    return refused(error, form, { never: ["reset"] });
+    // The subject and the words come back as typed (§315); the `reset` and `replace` presses are not values.
+    const kept = refused(error, form, { never: ["reset", "replace"] });
+    return error instanceof EmailCopySampleValueError ? sampleValueRefusal(error, kept, locale) : kept;
   }
   revalidatePath(path);
   // The message is named on the way back (§336), so its card opens with the preview that just

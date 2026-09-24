@@ -2,14 +2,18 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { emailCopyKey } from "@/modules/notifications/domain/email-copy";
+import { EmailCopySampleValueError } from "@/modules/notifications/domain/email-sample";
 import {
+  EMAIL_COPY_SETTING_KEY,
   forgetCachedEmailCopy,
   readEmailCopy,
   readEmailCopyForSending,
   updateEmailCopy,
 } from "@/modules/notifications/email-copy";
+import { sampleValuesIn } from "@/modules/notifications/email-copy-fields";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -107,6 +111,86 @@ describe("the club's own wording (§247)", () => {
     expect(await readEmailCopyForSending(db, NOW)).toEqual({});
     const [, second] = await db.select().from(auditLogs).where(eq(auditLogs.action, "email_copy.changed"));
     expect(second.metadataJson).toEqual({ key: KEY, from: words, to: null });
+  });
+
+  /*
+    §NNN — no sample value is stored. The owner, 2026-09-24: the editor offered "Ai început
+    înscrierea la Crosul de toamnă", the page's sample event, and a save would have sent that title
+    to every participant of every event.
+  */
+  it("refuses a sample value, naming the box, the value and its field, and changes nothing (§NNN)", async () => {
+    const author = await staff("COPYWRITER");
+    await updateEmailCopy(db, author, { messageType: "REGISTRATION_CANCELLED", locale: "ro", entry: words }, NOW);
+    const attempt = updateEmailCopy(
+      db,
+      author,
+      {
+        messageType: "REGISTRATION_CANCELLED",
+        locale: "ro",
+        entry: { subject: "Anulat: Crosul de toamnă", paragraphs: ["Salut Ana Popescu, codul EXAMPL nu mai e valabil."] },
+      },
+      NOW,
+    );
+    await expect(attempt).rejects.toBeInstanceOf(EmailCopySampleValueError);
+    await expect(attempt).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["subject", "body"],
+      hits: [
+        { field: "subject", value: "Crosul de toamnă", placeholder: "eventTitle" },
+        { field: "body", value: "Ana Popescu", placeholder: "participantName" },
+        { field: "body", value: "EXAMPL", placeholder: "checkinCode" },
+      ],
+    });
+    // The English sample in a Romanian text is as wrong as the Romanian one.
+    await expect(
+      updateEmailCopy(db, author, { messageType: "REGISTRATION_CANCELLED", locale: "ro", entry: { subject: "Anulat", paragraphs: ["The autumn cross"] } }, NOW),
+    ).rejects.toBeInstanceOf(EmailCopySampleValueError);
+    expect((await readEmailCopy(db)).copy[KEY]).toEqual(words);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "email_copy.changed"))).toHaveLength(1);
+  });
+
+  it("replaces the sample values with their fields for the Redactor, audited like a save, and refuses the Organizer (§NNN)", async () => {
+    const sampled = { subject: "Anulat: Crosul de toamnă", paragraphs: ["Salut Ana Popescu.", "Numărul tău de concurs: **42**."] };
+    await expect(
+      updateEmailCopy(db, await staff("MODERATOR"), { messageType: "EVENT_REMINDER", locale: "ro", entry: sampled, replaceSampleValues: true }, NOW),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect((await readEmailCopy(db)).copy).toEqual({});
+
+    const author = await staff("COPYWRITER");
+    const saved = await updateEmailCopy(db, author, { messageType: "EVENT_REMINDER", locale: "ro", entry: sampled, replaceSampleValues: true }, NOW);
+    const key = emailCopyKey("EVENT_REMINDER", "ro");
+    expect(saved.copy[key]).toEqual({
+      subject: "Anulat: {eventTitle}",
+      paragraphs: ["Salut {participantName}.", "Numărul tău de concurs: **{bibNumber}**."],
+    });
+    const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, "email_copy.changed"));
+    expect(row.actorStaffUserId).toBe(author.id);
+    expect(row.metadataJson).toEqual({
+      key,
+      from: null,
+      to: saved.copy[key],
+      replacedSampleValues: ["Crosul de toamnă", "Ana Popescu", "42"],
+    });
+  });
+
+  it("still reads and sends a text saved with sample values before the guard, and says which (§NNN)", async () => {
+    // Written the way the old editor let a Redactor write it: straight into the setting.
+    const stale = { subject: "Anulat: Crosul de toamnă", paragraphs: ["Înscrierea ta la Crosul de toamnă a fost anulată."] };
+    await db.insert(platformSettings).values({ key: EMAIL_COPY_SETTING_KEY, value: { [KEY]: stale }, updatedAt: NOW });
+    const stored = (await readEmailCopy(db)).copy[KEY];
+    expect(stored).toEqual(stale);
+    expect(sampleValuesIn(stored, "REGISTRATION_CANCELLED", "ro")).toEqual([
+      { field: "subject", value: "Crosul de toamnă", placeholder: "eventTitle" },
+      { field: "body", value: "Crosul de toamnă", placeholder: "eventTitle" },
+    ]);
+
+    const [queued] = await db
+      .insert(emailOutbox)
+      .values({ messageType: "REGISTRATION_CANCELLED", locale: "ro", recipientEmail: "ana@example.ro", payloadJson: {}, idempotencyKey: "stale-one", createdAt: NOW })
+      .returning();
+    const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    // Exactly what it said before §NNN: the guard is the save's, never the send's.
+    expect(message.subject).toContain("Anulat: Crosul de toamnă");
   });
 
   it("refuses a field the platform cannot fill, and changes nothing", async () => {

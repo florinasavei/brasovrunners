@@ -20,6 +20,12 @@ export type ParticipantEmailCard = {
    * somebody receives. Absent for every type that is sent.
    */
   neverSent?: string;
+  /**
+   * "textul salvat are valori de exemplu" (§NNN): the club's saved words for this message still
+   * hold a value of the page's sample, which every participant would receive as written. Said in
+   * the closed card's summary, and the card opens, for whoever may write the words; absent otherwise.
+   */
+  sampleValues?: string;
   /** When it is sent, in full, as the first line inside the card. */
   when: string;
   /** "Subiect: …", as the participant's inbox will show it. */
@@ -78,11 +84,19 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
             key={message.type}
             title={message.name}
             aside={
-              message.neverSent ? (
+              message.neverSent || message.sampleValues ? (
                 <>
-                  <Box component="span" data-testid="participant-email-never-sent" sx={{ color: "warning.main", fontWeight: 600 }}>
-                    {message.neverSent}
-                  </Box>
+                  {message.neverSent && (
+                    <Box component="span" data-testid="participant-email-never-sent" sx={{ color: "warning.main", fontWeight: 600 }}>
+                      {message.neverSent}
+                    </Box>
+                  )}
+                  {message.neverSent && message.sampleValues && " · "}
+                  {message.sampleValues && (
+                    <Box component="span" data-testid="participant-email-sample-values" sx={{ color: "warning.main", fontWeight: 600 }}>
+                      {message.sampleValues}
+                    </Box>
+                  )}
                   {` · ${message.whenShort}`}
                 </>
               ) : (
@@ -92,7 +106,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
             intro={message.when}
             collapsible
             level={3}
-            openWhen={{ saved: message.justSaved }}
+            openWhen={{ saved: message.justSaved, attention: Boolean(message.sampleValues) }}
             id={`email-${message.type}`}
             data-testid="participant-email"
           >
