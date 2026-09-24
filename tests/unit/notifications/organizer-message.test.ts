@@ -17,6 +17,7 @@ import {
 import { EVENT_NOTICE_STATUSES } from "@/modules/notifications/event-notices";
 import { buildOutgoingEmail, buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
 import { canMessageParticipants, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * `DECISIONS.md` §NNN — "Trimite un mesaj participanților": the organizer's own message to an
@@ -225,6 +226,21 @@ describe("§NNN §96 §354 the message as it arrives", () => {
     const content = buildTemplateContent("ORGANIZER_MESSAGE", "ro", { participantName: "Ana", eventTitle: "Crosul" }, undefined);
     expect(content.subject).toBe("Un mesaj despre Crosul");
     expect(content.paragraphs).toEqual(["Un mesaj de la organizatorii evenimentului Crosul, la care te-ai înscris:"]);
+  });
+
+  it("names no event rather than the club when the title is missing (§357)", () => {
+    const email = render("ro", { participantName: "Ana Pop" });
+    expect(email.subject).toBe("Un mesaj despre evenimentul la care te-ai înscris / A message about the event you registered for");
+    expect(email.text).toContain("Un mesaj de la organizatorii evenimentului la care te-ai înscris:");
+    expect(email.text).toContain("A message from the organizers of the event you registered for:");
+    // The sign-off names the club, as every message's does; the sentences about the event do not.
+    expect(email.subject).not.toContain(CLUB_NAME);
+    expect(email.text).not.toContain(`evenimentului ${CLUB_NAME}`);
+    expect(email.text).not.toContain(`organizers of ${CLUB_NAME}`);
+    // An empty title is no title either.
+    const empty = buildTemplateContent("ORGANIZER_MESSAGE", "en", { participantName: "Ana", eventTitle: "" }, undefined);
+    expect(empty.subject).toBe("A message about the event you registered for");
+    expect(empty.paragraphs).toEqual(["A message from the organizers of the event you registered for:"]);
   });
 
   it("is never rewritten by the club's stored wording: it is written per send (§247)", () => {

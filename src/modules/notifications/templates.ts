@@ -745,9 +745,14 @@ const T = {
      * person receives it, the event's page as the button and the usual links. Nothing to act on.
      */
     organizerMessage: {
-      subject: (d: TemplateData) => organizerSubject(d, `Un mesaj despre ${d.eventTitle ?? "eveniment"}`),
+      // Without a title the sentences name no event — never the club's name standing in for one (§357).
+      subject: (d: TemplateData) => organizerSubject(d, d.eventTitle ? `Un mesaj despre ${d.eventTitle}` : "Un mesaj despre evenimentul la care te-ai înscris"),
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
-      body: (d: TemplateData) => [`Un mesaj de la organizatorii evenimentului ${d.eventTitle ?? "Brașov Runners"}, la care te-ai înscris:`],
+      body: (d: TemplateData) => [
+        d.eventTitle
+          ? `Un mesaj de la organizatorii evenimentului ${d.eventTitle}, la care te-ai înscris:`
+          : "Un mesaj de la organizatorii evenimentului la care te-ai înscris:",
+      ],
       action: "Vezi pagina evenimentului",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
@@ -1006,9 +1011,13 @@ const T = {
       ],
     },
     organizerMessage: {
-      subject: (d: TemplateData) => organizerSubject(d, `A message about ${d.eventTitle ?? "the event"}`),
+      subject: (d: TemplateData) => organizerSubject(d, d.eventTitle ? `A message about ${d.eventTitle}` : "A message about the event you registered for"),
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
-      body: (d: TemplateData) => [`A message from the organizers of ${d.eventTitle ?? "Brașov Runners"}, which you registered for:`],
+      body: (d: TemplateData) => [
+        d.eventTitle
+          ? `A message from the organizers of ${d.eventTitle}, which you registered for:`
+          : "A message from the organizers of the event you registered for:",
+      ],
       action: "See the event's page",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
