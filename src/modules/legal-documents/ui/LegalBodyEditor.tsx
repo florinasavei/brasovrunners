@@ -13,11 +13,86 @@ import Typography from "@mui/material/Typography";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, Fragment, type ReactNode, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
 import ToolbarButton from "@/shared/ui/ToolbarButton";
-import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
+import { editorDocToText, type LegalBlock, type LegalEditorDoc, type LegalInline, textToEditorDoc } from "../domain/editor-doc";
+
+/**
+ * The writing area's own box: a legal text is long, and a box that looks like a field invites a
+ * field's worth of text. One object for the two places that draw it — Tiptap's `.tiptap` and the
+ * stand-in shown until Tiptap has mounted — so the two are always the same size (§NNN, the same
+ * pattern as `WRITING_AREA_BOX` in the pages' editor, §362; the two editors' boxes differ, so the
+ * pattern is shared and the numbers are each editor's own).
+ */
+const WRITING_AREA_BOX = { minHeight: 280, px: 1, py: 0.5 } as const;
+
+/** How the body's four kinds of thing are drawn, by the editor and by its stand-in alike. */
+const WRITING_AREA_TEXT = {
+  "& p": { my: 1.5, fontSize: "1rem", lineHeight: 1.6 },
+  "& h2": { fontSize: "1.25rem", mt: 3, mb: 1 },
+  "& a": { color: "primary.main", textDecoration: "underline" },
+  "& img": { maxWidth: "100%", height: "auto", borderRadius: 1 },
+} as const;
+
+/** What `@tiptap/core` injects for every `.ProseMirror` element, which the stand-in is not. */
+const PROSEMIRROR_TEXT = {
+  whiteSpace: "break-spaces",
+  overflowWrap: "break-word",
+  fontVariantLigatures: "none",
+  fontFeatureSettings: '"liga" 0',
+} as const;
+
+/**
+ * A paragraph's or a heading's runs as the stand-in draws them. A link is an `<a>` with no
+ * address — the link's look, nothing to follow or to focus. ProseMirror ends an empty block, and
+ * one whose last run is a break, with a break of its own so the line keeps its height; so does
+ * this.
+ */
+function standInRuns(runs: readonly LegalInline[] = []): ReactNode[] {
+  const drawn: ReactNode[] = runs.map((run, index) => {
+    if (run.type === "hardBreak") return <br key={index} />;
+    if (run.marks?.some((mark) => mark.type === "link")) return <a key={index}>{run.text}</a>;
+    return <Fragment key={index}>{run.text}</Fragment>;
+  });
+  if (runs.length === 0 || runs[runs.length - 1].type === "hardBreak") drawn.push(<br key="trailing" />);
+  return drawn;
+}
+
+/**
+ * The writing area before Tiptap has mounted (§NNN; the defect §362's addendum fixed in the pages'
+ * editor). Tiptap builds its editor only in the browser, after hydration, and until then this
+ * area was an empty `div`, zero pixels tall: the moment it mounted, the English box and "Salvează"
+ * under it moved down by the whole text — a prefilled sample measured 4,240 pixels on a desktop
+ * and 16,987 on a 320-pixel phone — and a press in that moment landed on the gap.
+ *
+ * So the stand-in is the text itself, drawn with the editor's own box and the editor's own rules,
+ * which makes it as tall as the editor that replaces it rather than merely as tall as an empty
+ * one. It is `aria-hidden` and holds nothing to focus, press or follow; it goes in the same render
+ * that brings Tiptap's element in, so nothing below moves.
+ */
+function WritingAreaStandIn({ doc }: { doc: LegalEditorDoc }) {
+  // An empty document is one empty paragraph in ProseMirror, a line tall.
+  const blocks: readonly LegalBlock[] = doc.content.length > 0 ? doc.content : [{ type: "paragraph" }];
+  return (
+    <Box
+      aria-hidden
+      data-testid="legal-body-reserved"
+      // The text rules Tiptap injects for `.ProseMirror` — typed spaces keep their width, no ligatures — so a line breaks where the editor's does.
+      sx={{ ...WRITING_AREA_BOX, ...WRITING_AREA_TEXT, ...PROSEMIRROR_TEXT }}
+    >
+      {blocks.map((block, index) => {
+        if (block.type === "heading") return <h2 key={index}>{standInRuns(block.content)}</h2>;
+        if (block.type === "image") {
+          // eslint-disable-next-line @next/next/no-img-element -- the same address the editor draws a moment later, at its natural size
+          return <img key={index} src={block.attrs.src} alt={block.attrs.alt} />;
+        }
+        return <p key={index}>{standInRuns(block.content)}</p>;
+      })}
+    </Box>
+  );
+}
 
 /**
  * The editor a legal document is written in (`DECISIONS.md` §279; the owner, 2026-09-22: "this
@@ -85,6 +160,8 @@ function LegalBodyEditorIsland({
   };
 }) {
   const [text, setText] = useState(initialText);
+  // The document the editor opens, read once: Tiptap takes it at creation and the stand-in draws it until then.
+  const [initialDoc] = useState(() => textToEditorDoc(initialText));
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
   const [imageDraft, setImageDraft] = useState<{ src: string; alt: string } | null>(null);
   const [imageInvalid, setImageInvalid] = useState(false);
@@ -129,7 +206,7 @@ function LegalBodyEditorIsland({
       */
       Image.configure({ allowBase64: false, inline: false }),
     ],
-    content: textToEditorDoc(initialText),
+    content: initialDoc,
     onUpdate: ({ editor: current }) => setText(editorDocToText(current.getJSON())),
     // The name belongs on the element somebody's cursor lands in — ProseMirror owns that DOM, so
     // it is set here rather than on the React wrapper, where a screen reader would not find it.
@@ -257,15 +334,9 @@ function LegalBodyEditorIsland({
           </Stack>
         )}
 
-        <Box
-          sx={{
-            "& .tiptap": { minHeight: 280, outline: "none", px: 1, py: 0.5 },
-            "& .tiptap p": { my: 1.5, fontSize: "1rem", lineHeight: 1.6 },
-            "& .tiptap h2": { fontSize: "1.25rem", mt: 3, mb: 1 },
-            "& .tiptap a": { color: "primary.main", textDecoration: "underline" },
-            "& .tiptap img": { maxWidth: "100%", height: "auto", borderRadius: 1 },
-          }}
-        >
+        {/* The writing area itself (`WRITING_AREA_BOX`, `WRITING_AREA_TEXT`), and its stand-in until Tiptap has mounted. */}
+        <Box sx={{ "& .tiptap": { ...WRITING_AREA_BOX, ...WRITING_AREA_TEXT, outline: "none" } }}>
+          {!editor && <WritingAreaStandIn doc={initialDoc} />}
           <EditorContent editor={editor} />
         </Box>
       </Paper>

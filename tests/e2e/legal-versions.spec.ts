@@ -101,6 +101,46 @@ test.describe("legal documents: the next version starts from the current one", (
     // And it is a document on the screen, not a box of markup: the stored headings are headings.
     await expect(page.locator(".tiptap h2").first()).toBeVisible();
   });
+
+  /**
+   * §NNN — the editor has its height before Tiptap mounts, so nothing under it moves. The first
+   * paint is read with every script refused, which is the page as it stands until hydration; the
+   * second with the editor mounted. The prefilled sample text measured 4,240 pixels on a desktop
+   * and 16,987 on a 320-pixel phone (2026-09-24), so a stand-in that reserved only an empty box's
+   * 280 would still move the English half by nearly all of that; the text drawn in the stand-in
+   * measured the same to the pixel.
+   */
+  test("the Romanian text takes the room it needs before the editor mounts, so the English half does not move", async ({ page }) => {
+    await signIn(page, "Dev Superadministrator");
+    await page.goto("/ro/admin/legal");
+    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
+    await page.getByRole("link", { name: "Pornește versiunea următoare din aceasta" }).click();
+    await expect(page).toHaveURL(/\/admin\/legal\/new\?from=[0-9a-f-]{36}$/);
+    const address = page.url();
+
+    const scripts = /\/_next\/static\/.*\.js(\?.*)?$/;
+    await page.route(scripts, (route) => route.abort());
+    await page.goto(address);
+    const standIn = page.getByTestId("legal-body-reserved").first();
+    await expect(standIn).toBeVisible();
+    // Nothing hydrated: no editor anywhere, so what is measured is the first paint.
+    await expect(page.locator(".tiptap")).toHaveCount(0);
+    const reserved = await standIn.boundingBox();
+    const englishBefore = await page.locator('[name="enTitle"]').boundingBox();
+    await page.unroute(scripts);
+
+    await page.goto(address);
+    const writingArea = page.locator(".tiptap").first();
+    await expect(writingArea).toBeVisible();
+    await expect(page.getByTestId("legal-body-reserved")).toHaveCount(0);
+    const mounted = await writingArea.boundingBox();
+    const englishAfter = await page.locator('[name="enTitle"]').boundingBox();
+
+    // Hundreds of pixels of text, and the stand-in within a few of the editor that replaced it.
+    expect(mounted!.height).toBeGreaterThan(400);
+    expect(Math.abs(mounted!.height - reserved!.height)).toBeLessThanOrEqual(4);
+    expect(Math.abs(englishAfter!.y - englishBefore!.y)).toBeLessThanOrEqual(4);
+  });
 });
 
 /**
