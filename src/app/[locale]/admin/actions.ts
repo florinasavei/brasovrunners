@@ -147,16 +147,29 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The partners (§168), posted as `event.coHosts[i].<box>` by `CoHostRowsEditor` — gathered
-   * by index like the programme's rows above, blanks included; `fields.ts` drops the spare
-   * line and refuses a page with no name beside it.
+   * The partners (§168) and their links (§NNN), posted as `event.coHosts[p].name` and
+   * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
+   * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
+   * a link and no name, or a link with no address, naming both indices.
    */
-  const coHosts: Array<Record<string, string>> = [];
+  const coHosts: Array<{ name?: string; links: Array<Record<string, string>> }> = [];
   for (const [key, entry] of form.entries()) {
-    const match = /^event\.coHosts\[(\d+)\]\.(name|url)$/.exec(key);
-    if (!match || typeof entry !== "string") continue;
-    const index = Number(match[1]);
-    coHosts[index] = { ...(coHosts[index] ?? {}), [match[2]]: entry };
+    if (typeof entry !== "string") continue;
+    const nameMatch = /^event\.coHosts\[(\d+)\]\.name$/.exec(key);
+    if (nameMatch) {
+      const p = Number(nameMatch[1]);
+      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), name: entry };
+      continue;
+    }
+    const linkMatch = /^event\.coHosts\[(\d+)\]\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
+    if (linkMatch) {
+      const p = Number(linkMatch[1]);
+      const l = Number(linkMatch[2]);
+      const partner = coHosts[p] ?? { links: [] };
+      const links = [...partner.links];
+      links[l] = { ...(links[l] ?? {}), [linkMatch[3]]: entry };
+      coHosts[p] = { ...partner, links };
+    }
   }
 
   /**
@@ -185,7 +198,9 @@ function eventFieldsFrom(form: FormData) {
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
     facebookEventUrl: value("facebookEventUrl"),
-    coHosts: coHosts.filter((row) => row !== undefined),
+    coHosts: coHosts
+      .filter((row) => row !== undefined)
+      .map((row) => ({ name: row.name, links: row.links.filter((link) => link !== undefined) })),
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,

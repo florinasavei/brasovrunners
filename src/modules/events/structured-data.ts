@@ -1,5 +1,5 @@
 import { env } from "@/shared/config/env";
-import { readCoHosts } from "./domain/co-hosts";
+import { primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
 import { hasAgeRule } from "./domain/event-type";
 import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
@@ -101,7 +101,8 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
  * The club, then the partners (§168): schema.org takes one organizer or several, and the
  * order is what says who holds the event. The club's entry is the same `@id` every event
  * points at, so a search engine reads one organization across the whole site; a partner is a
- * plain Organization with a name and, when the club pasted one, its page.
+ * plain Organization with a name and, when it named one, its `url` — its own site (§NNN), or
+ * its first link if it named no site.
  */
 function organizers(event: PublicEvent, organizationName: string) {
   const club = { "@type": "SportsOrganization", "@id": clubId(), name: organizationName };
@@ -109,7 +110,10 @@ function organizers(event: PublicEvent, organizationName: string) {
   if (coHosts.length === 0) return club;
   return [
     club,
-    ...coHosts.map((host) => ({ "@type": "Organization", name: host.name, ...(host.url ? { url: host.url } : {}) })),
+    ...coHosts.map((host) => {
+      const primary = primaryCoHostLink(host);
+      return { "@type": "Organization", name: host.name, ...(primary ? { url: primary.url } : {}) };
+    }),
   ];
 }
 

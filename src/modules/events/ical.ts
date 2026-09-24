@@ -1,5 +1,5 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
-import type { CoHost } from "./domain/co-hosts";
+import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -387,10 +387,11 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],
     checklist ? [{ text: `${t("calendar.checklist")}: ${checklist}` }] : [],
     // "Împreună cu A", then the other partners on their own lines: the label is said once,
-    // and each partner keeps its own link, which a joined sentence could not carry (§168).
+    // and each partner keeps its own link — its site if it named one, else its first link
+    // (§NNN) — which a joined sentence could not carry (§168).
     coHosts.map((host, index) => ({
       text: index === 0 ? `${t("coHost")} ${host.name.trim()}` : host.name.trim(),
-      url: host.url ?? undefined,
+      url: primaryCoHostLink(host)?.url,
       separator: " — ",
     })),
   ].filter((group) => group.length > 0);

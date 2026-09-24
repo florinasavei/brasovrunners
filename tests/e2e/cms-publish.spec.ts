@@ -207,7 +207,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
     await field("event.coHosts[0].name").fill("Clubul Prietenilor");
-    await field("event.coHosts[0].url").fill("https://example.org/prieteni");
+    await field("event.coHosts[0].links[0].url").fill("https://example.org/prieteni");
     await field("repeat.on").check();
     await field("repeat.cadence").selectOption("FORTNIGHTLY");
 
@@ -244,7 +244,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(field("event.schedule[0].ro")).toHaveValue("Startul");
     await expect(field("event.schedule[0].en")).toHaveValue("The start");
     await expect(field("event.coHosts[0].name")).toHaveValue("Clubul Prietenilor");
-    await expect(field("event.coHosts[0].url")).toHaveValue("https://example.org/prieteni");
+    await expect(field("event.coHosts[0].links[0].url")).toHaveValue("https://example.org/prieteni");
     await expect(field("repeat.on")).toBeChecked();
     await expect(field("repeat.cadence")).toBeVisible();
     await expect(field("repeat.cadence")).toHaveValue("FORTNIGHTLY");

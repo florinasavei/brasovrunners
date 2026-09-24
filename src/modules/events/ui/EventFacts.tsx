@@ -11,10 +11,11 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
-import { readCoHosts } from "../domain/co-hosts";
+import { coHostLinkHost, coHostLinkLabel, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
+import CoHostLinkGlyph from "./co-host-glyphs";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 
 /**
@@ -63,6 +64,7 @@ export default async function EventFacts({
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
+  const locale = (await getLocale()) as "ro" | "en";
   const compact = variant === "compact";
 
   const distance = distanceInKm(event.distanceMeters);
@@ -148,22 +150,72 @@ export default async function EventFacts({
   /**
    * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
    * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
-   * comma and an "and". Each partner that has a page is its own link inside that sentence,
-   * which is why the joined elements are built rather than a joined string, except where the
-   * facts may carry no links at all (a card that is itself one link).
+   * comma and an "and". A partner may carry any number of links now (§NNN), and a sentence has
+   * room for one, so each name is its own link to the partner's own site — its first link if it
+   * named no site — except where the facts may carry no links at all (a card that is itself one
+   * link). The compact card keeps this sentence exactly (§169); the full page does not, below.
    */
   const coHosts = readCoHosts(event);
   const coHostNames = coHosts.map((host) => host.name);
+  const coHostPrimaryLinks = coHosts.map((host) => primaryCoHostLink(host));
   const coHostSentence = () => {
-    if (!links || coHosts.every((host) => host.url === null)) return format.list(coHostNames);
+    if (!links || coHostPrimaryLinks.every((link) => link === null)) return format.list(coHostNames);
     return (
       <>
         {format.list(
-          coHosts.map((host, index) => (
-            <Fragment key={index}>{host.url ? outLink(host.url, host.name) : host.name}</Fragment>
-          )),
+          coHosts.map((host, index) => {
+            const primary = coHostPrimaryLinks[index];
+            return <Fragment key={index}>{primary ? outLink(primary.url, host.name) : host.name}</Fragment>;
+          }),
         )}
       </>
+    );
+  };
+
+  /**
+   * One partner, in full, for the page's own "Împreună cu" (§NNN; the owner: "this can have
+   * multiple links, so it should be a card, it's like: partner link, partner event, etc"): its
+   * name, then every link it carries as its own compact row — the kind's glyph, the club's own
+   * label or the kind's word, and the host in small text underneath, the same reading
+   * `EventLinks` gives "Linkuri și fișiere" (§332). A partner with no links is just its name.
+   *
+   * Plain `<span>`s throughout, never a `<ul>`: this sits inside `pieces()`'s bare `<span>` when
+   * there is only one partner, and a list has no business nested in an inline element. `links`
+   * gates it exactly as it gates every other link on this component — false inside a card that
+   * is itself one link (`EventCard`), where this is never called at all.
+   */
+  const partnerFacts = (host: (typeof coHosts)[number]) => {
+    if (host.links.length === 0) return <>{host.name}</>;
+    return (
+      <Box component="span" sx={{ display: "inline-flex", flexDirection: "column", rowGap: 0.5, verticalAlign: "top" }}>
+        <Box component="span">{host.name}</Box>
+        <Box component="span" sx={{ display: "flex", flexDirection: "column", rowGap: 0.5 }}>
+          {host.links.map((link, index) => {
+            const linkDomain = coHostLinkHost(link.url);
+            return (
+              <Link
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+              >
+                <CoHostLinkGlyph kind={link.kind} size={18} />
+                <Box component="span" sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                  <Box component="span" sx={{ overflowWrap: "anywhere" }}>
+                    {coHostLinkLabel(link, locale) ?? t(`coHostLinks.kinds.${link.kind}`)}
+                  </Box>
+                  {linkDomain && (
+                    <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: "anywhere", lineHeight: 1.3 }}>
+                      {linkDomain}
+                    </Typography>
+                  )}
+                </Box>
+              </Link>
+            );
+          })}
+        </Box>
+      </Box>
     );
   };
 
@@ -275,11 +327,18 @@ export default async function EventFacts({
     { label: t("when"), icon: CalendarMonthIcon, value: when },
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
-  // Held with other organizations (§121, §168): "A, B și C", each a link to its own page.
-  // One piece, not one per partner: the list is a sentence, and a bullet before each name
-  // would read as three separate facts rather than as who the event is held with.
+  // Held with other organizations (§121, §168), each its own card of links now (§NNN; the
+  // owner: "it should be a card, it's like: partner link, partner event, etc"): one piece per
+  // partner, so two or more partners read as their own rows — the bullets `stack()` already
+  // draws for any line with more than one piece — each carrying every link it has, not the one
+  // a joined sentence could fit. The compact card keeps the plain sentence (`coHostSentence`,
+  // above): it has no room for a row of rows, and a card that is itself a link may nest none.
   if (coHosts.length > 0) {
-    lines.push({ label: t("coHost"), icon: HandshakeIcon, value: [coHostSentence()] });
+    lines.push({
+      label: t("coHost"),
+      icon: HandshakeIcon,
+      value: coHosts.map((host, index) => <Fragment key={index}>{links ? partnerFacts(host) : host.name}</Fragment>),
+    });
   }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
   /*
@@ -291,7 +350,6 @@ export default async function EventFacts({
   */
   if (stacked && hasAgeRule(event)) {
     const rt = await getTranslations("Registration");
-    const locale = await getLocale();
     lines.push({
       label: t("age"),
       icon: CakeIcon,

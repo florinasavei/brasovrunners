@@ -207,8 +207,8 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     await save(await reload(source.id), "all", {
       fields: {
         coHosts: [
-          { name: "Brașov Marathon", url: "https://example.test/bm" },
-          { name: "Salvamont", url: "" },
+          { name: "Brașov Marathon", links: [{ kind: "SITE", url: "https://example.test/bm" }] },
+          { name: "Salvamont", links: [] },
         ],
         isSpecial: true,
       },
@@ -216,8 +216,8 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
 
     const carried = await reload(oct18.id);
     expect(carried.coHosts).toEqual([
-      { name: "Brașov Marathon", url: "https://example.test/bm" },
-      { name: "Salvamont", url: null },
+      { name: "Brașov Marathon", links: [{ kind: "SITE", url: "https://example.test/bm", labelRo: null, labelEn: null }] },
+      { name: "Salvamont", links: [] },
     ]);
     expect(carried.isSpecial).toBe(false);
     expect((await reload(source.id)).isSpecial).toBe(true);
