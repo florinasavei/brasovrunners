@@ -293,11 +293,19 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
 ): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
-    if (fields.capacity !== null || fields.declarationDocumentId !== null) {
+    // The waiting list's length is the places' kin (§NNN): nothing queues on an event that takes
+    // no registrations here, so a number left in its box is refused with the capacity's sentence.
+    const waitlistCapacitySet = fields.waitlistCapacity !== undefined && fields.waitlistCapacity !== null;
+    if (fields.capacity !== null || waitlistCapacitySet || fields.declarationDocumentId !== null) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        "capacity and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
-        ["registrationMode", ...(fields.capacity !== null ? ["capacity"] : []), ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : [])],
+        "capacity, a waiting-list length and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
+        [
+          "registrationMode",
+          ...(fields.capacity !== null ? ["capacity"] : []),
+          ...(waitlistCapacitySet ? ["waitlistCapacity"] : []),
+          ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : []),
+        ],
       );
     }
   } else if (fields.declarationDocumentId === null) {
@@ -402,6 +410,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    // The waiting list's length (§NNN), by the partners' discipline: a caller that said nothing
+    // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
+    // limit the organizer set just by not mentioning it. The editor and the create form post it.
+    ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
     // The race's band (§173): where its numbers start and what colour they print. Both were
     // parsed and validated by `fields.ts` from the day they were added and then dropped here,
     // so the editor's two controls posted into nothing — caught by review (§177).
@@ -444,6 +456,8 @@ function normalizeForType<T extends EventFieldsInput>(fields: T): T {
     scheduleRows: [],
     registrationMode: "NONE",
     capacity: null,
+    // Posted or not, a turn-up event queues nobody (§NNN); unposted stays unwritten.
+    ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: null }),
     declarationDocumentId: null,
     registrationOpensAtWallTime: "",
     registrationClosesAtWallTime: "",
@@ -1109,6 +1123,9 @@ const SERIES_COLUMNS = [
   "elevationGainMeters",
   "registrationMode",
   "capacity",
+  // The waiting list's length, like the places (§NNN). No lock and no allocation when it moves:
+  // raising it offers nobody anything, and lowering it removes nobody already waiting.
+  "waitlistCapacity",
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
@@ -1783,6 +1800,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Wednesday another club's race passes through — and the copy is a different one.
     isSpecial: false,
     capacity: source.capacity,
+    // The waiting list's length goes with the places it queues for (§NNN): a copy, and every
+    // date of a series, queue as many as the source does.
+    waitlistCapacity: source.waitlistCapacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date

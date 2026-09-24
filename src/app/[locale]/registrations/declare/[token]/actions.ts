@@ -6,6 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
+import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -50,6 +51,14 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     await clearFormDraft(path);
     redirect(`${path}?done=${result.registration.status === "WAITLISTED" ? "waitlisted" : "confirmed"}`);
   } catch (error) {
+    /*
+      The hold had lapsed at the press, its place went on down the waiting list, and the list is
+      full (§NNN): the allocator would not queue this registration again. Its own sentence, first,
+      because the refusal is a VALIDATION_ERROR and the generic branch below would call it an
+      unticked box. Nothing was recorded and the token was not spent.
+    */
+    const full = waitlistRefusalOf(error);
+    if (full) redirect(`${path}?full=${full === NO_WAITLIST ? "closed" : "1"}`);
     /*
       The signature is not the declarant's name (§314) — its own refusal, never the generic one.
 

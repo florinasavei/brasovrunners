@@ -193,6 +193,13 @@
         "other": "{count} de locuri"
       },
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline.",
+      "fullNoWaitlist": "Toate locurile au fost ocupate, așa că înscrierile s-au închis.",
+      "waitlistRoom": {
+        "one": "Mai este {count} loc pe lista de așteptare",
+        "few": "Mai sunt {count} locuri pe lista de așteptare",
+        "other": "Mai sunt {count} de locuri pe lista de așteptare"
+      },
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
       "openUntilShort": "Înscrieri deschise până pe {date}",
@@ -643,7 +650,9 @@
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
       "LEGAL_TERMS_ACCEPTED": "Nu s-a șters nimic: această versiune a termenilor are acum înscrieri sau declarații semnate din perioada în care a fost în vigoare, iar niciuna nu reține ce versiune a termenilor a fost acceptată. O poți retrage — rămâne în evidență și nu se mai oferă nimănui.",
-      "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana."
+      "UNDER_MINIMUM_AGE": "Nu s-a înscris nimic: după data nașterii scrise, persoana nu are {age} împliniți în ziua cursei, iar aceasta este vârsta minimă de participare la eveniment. Verifică data cu persoana.",
+      "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
+      "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -742,6 +751,8 @@
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
       "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte 24 h fiecare.",
+      "waitlistCapacity": "Lungimea maximă a listei de așteptare",
+      "waitlistCapacityHelp": "Lasă gol pentru nelimitat. 0 înseamnă fără listă de așteptare: când locurile se termină, înscrierile se opresc. Contează doar cu un număr de locuri. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni de pe listă — doar nu mai primește alții.",
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
@@ -1063,7 +1074,9 @@
       "waiting": "În așteptare",
       "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
       "lineTitle": "Lista de așteptare ({count})",
+      "lineTitleLimited": "Lista de așteptare ({count} din {limit})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
+      "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
       "offered": "ofertă până la {until}",
       "since": "din {when}",
@@ -1080,7 +1093,8 @@
       "explanation": "Participanți sintetici, pe adrese rezervate @test.invalid, care nu pot primi niciodată e-mail. Trec prin același flux de trimitere și confirmare ca oricine, deci ocupă locuri și umplu lista de așteptare exact ca oamenii reali — și sunt excluse din exportul CSV și marcate peste tot unde apar. Indisponibile în producție.",
       "count": "Câte",
       "add": "Adaugă înscrieri de test",
-      "remove": "Șterge toate înscrierile de test"
+      "remove": "Șterge toate înscrierile de test",
+      "stoppedAtLimit": "Adăugate {created} înscrieri de test; restul au fost refuzate, pentru că locurile și lista de așteptare s-au umplut — exact ca o înscriere reală."
     },
     "legal": {
       "title": "Documente legale",
@@ -2361,7 +2375,8 @@
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
-      "tooFastResend": "Trimite din nou înscrierea"
+      "tooFastResend": "Trimite din nou înscrierea",
+      "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular."
     },
     "sections": {
       "about": "Despre tine",
@@ -2560,7 +2575,9 @@
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
-      "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic."
+      "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
+      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -2570,6 +2587,8 @@
       "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
       "changed": "Declarația a fost actualizată în timp ce o citeai. Nu s-a înregistrat nimic. Mai jos este textul actual — te rugăm să îl citești și să semnezi din nou.",
+      "waitlistFull": "Termenul pentru semnare trecuse, iar locul a mers mai departe pe lista de așteptare. Nu te-am putut pune înapoi pe listă, pentru că și ea este plină, așa că semnătura nu a fost înregistrată.",
+      "noWaitlist": "Termenul pentru semnare trecuse, iar locul a mers mai departe. Evenimentul nu are listă de așteptare și nu mai are locuri libere, așa că semnătura nu a fost înregistrată.",
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",

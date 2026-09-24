@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Database } from "@/db/types";
 import { computeOccupied } from "../domain/capacity";
+import { waitlistLength } from "../domain/waitlist";
 import { countOccupied } from "../repository";
 import { listQueueForEvent } from "../admin-repository";
 
@@ -26,7 +27,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   now,
 }: {
   db: Database<T>;
-  event: { id: string; capacity: number | null };
+  event: { id: string; capacity: number | null; waitlistCapacity: number | null };
   /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
   waiting: number;
   now: Date;
@@ -39,6 +40,14 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;
   const line = rows.filter((row) => row.status === "WAITLISTED" || row.status === "WAITLIST_OFFERED");
+  /*
+    "7 din 10" when the line has a limit (§NNN): the length the allocator counts against it —
+    waiting, plus the offers still open — from the same two counts, so the panel says "full"
+    exactly when the next registration would be refused. Only on a capped event: an uncapped one
+    never waitlists anybody, whatever the limit's box holds.
+  */
+  const limit = event.capacity === null ? null : event.waitlistCapacity;
+  const length = waitlistLength({ waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
 
   const figure = (label: string, value: string | number) => (
     <Box sx={{ minWidth: 96 }}>
@@ -66,11 +75,11 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
 
       <Typography variant="subtitle1" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
         <HourglassTopIcon fontSize="small" aria-hidden="true" />
-        {t("queue.lineTitle", { count: line.length })}
+        {limit === null ? t("queue.lineTitle", { count: line.length }) : t("queue.lineTitleLimited", { count: length, limit })}
       </Typography>
       {line.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          {t("queue.lineEmpty")}
+          {limit === 0 ? t("queue.lineNone") : t("queue.lineEmpty")}
         </Typography>
       ) : (
         <Box component="ol" sx={{ m: 0, pl: 0, listStyle: "none" }}>

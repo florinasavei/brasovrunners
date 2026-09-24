@@ -12,7 +12,7 @@ import { accentOnHover } from "@/theme/surfaces";
 import { publicFill, registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
-import { fillPhrase } from "./counted-phrases";
+import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
 
 /**
  * The one way in to registration, on the two pages a visitor actually reads.
@@ -55,6 +55,9 @@ export default async function RegistrationCta({
   // The event's own number of places, from the same row the count was read against: the
   // "out of" of §NNN's sentence. Null for an uncapped event, and for every event not read here.
   let capacity: number | null = null;
+  // The waiting list's room and limit (§NNN), off the same cached read; null for no limit.
+  let waitlistRoom: number | null = null;
+  let waitlistCapacity: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
       /*
@@ -68,6 +71,8 @@ export default async function RegistrationCta({
       const places = await cachedPublicAvailability(event.id, now);
       availablePlaces = places.availablePlaces;
       capacity = places.capacity;
+      waitlistRoom = places.waitlistRoom;
+      waitlistCapacity = places.waitlistCapacity;
     } catch (error) {
       /*
         The one thing on a page that is never served from a copy (§281).
@@ -87,7 +92,7 @@ export default async function RegistrationCta({
     }
   }
 
-  const cta = registrationCta({ ...event, availablePlaces }, now);
+  const cta = registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity }, now);
   if (cta.kind === "NONE") return null;
 
   if (cta.kind === "EXTERNAL") {
@@ -146,6 +151,35 @@ export default async function RegistrationCta({
               {t("cta.placesRemaining", { count: cta.availablePlaces })}
             </Typography>
           )
+        )}
+
+        {/* The room left in a capped waiting list (§NNN); nothing for a list with no limit. */}
+        {cta.kind === "FULL" && cta.waitlistRoom !== null && (
+          <Typography variant="body2" data-testid="waitlist-room" sx={{ fontWeight: 600 }}>
+            {waitlistRoomPhrase(t, locale, cta.waitlistRoom)}
+          </Typography>
+        )}
+      </Stack>
+    );
+  }
+
+  /*
+    No place and nothing to join (§NNN): the waiting list is full, or the event keeps none. A
+    sentence and no button — a button would lead to a form that refuses at the end of it — with
+    how full the event is beside it, the same line the open state shows. The "anunță-mă" box is
+    the page's own and is untouched by this: it belongs to a window not yet open.
+  */
+  if (cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST") {
+    const fill = publicFill(capacity, availablePlaces);
+    return (
+      <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
+        <Typography variant="body1" data-testid="registration-full" sx={{ fontWeight: 500 }}>
+          {cta.kind === "WAITLIST_FULL" ? t("cta.waitlistFull") : t("cta.fullNoWaitlist")}
+        </Typography>
+        {fill && (
+          <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
+            {fillPhrase(t, locale, fill)}
+          </Typography>
         )}
       </Stack>
     );

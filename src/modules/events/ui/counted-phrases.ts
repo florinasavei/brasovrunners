@@ -21,6 +21,15 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
 }
 
 /**
+ * "Mai sunt 3 locuri pe lista de așteptare" / "3 places left on the waiting list" (§NNN): the
+ * room a capped waiting list has left, under its button. Romanian's "de" from twenty on, as the
+ * rest: "Mai este 1 loc", "Mai sunt 19 locuri", "Mai sunt 20 de locuri".
+ */
+export function waitlistRoomPhrase(say: Say, locale: string, room: number): string {
+  return say(`cta.waitlistRoom.${numberForm(locale, room)}`, { count: room });
+}
+
+/**
  * "42 de participanți confirmați — 39 cu numele afișat": the start list's own total, above it.
  *
  * `confirmed` is every confirmed, real registration of the event and `named` those of them who

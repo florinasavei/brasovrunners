@@ -27,6 +27,7 @@ import {
   addTestRegistrations,
   removeTestRegistrations,
 } from "@/modules/registrations/test-registrations";
+import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import {
   assertDevStaffSwitcherEnabled,
   type DevIdentityKey,
@@ -210,6 +211,9 @@ function eventFieldsFrom(form: FormData) {
     isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    // The waiting list's length (§NNN), only when the form carried its box: an empty box is "no
+    // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
+    waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*
@@ -782,17 +786,25 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
+  let stoppedAt: number | null = null;
   try {
     const actor = await requireStaffRole("ADMIN");
-    await addTestRegistrations(getDb(), actor, {
+    const result = await addTestRegistrations(getDb(), actor, {
       eventId,
       count: Number(text(form, "count")),
       locale,
     });
+    if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
   } catch (error) {
-    return refused(error, form);
+    // The places and the waiting list full before the first row (§NNN): said as such, the count
+    // still in its box — the marker is a rule about the event, not a box the summary could name.
+    const full = waitlistRefusalCode(error);
+    const refusal = refused(error, form);
+    return full ? { ...refusal, error: full, fields: [] } : refusal;
   }
 
+  // Stopped part-way at the waiting list's limit (§NNN): how many went in, and why the rest did not.
+  if (stoppedAt !== null) backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
   backTo(path, { saved: "testRegistrationsAdded" });
 }
 

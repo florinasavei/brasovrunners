@@ -27,7 +27,7 @@ import {
   listOfferExpiries,
   listPublicStartList,
 } from "@/modules/registrations/repository";
-import { readPublicAvailability } from "@/modules/registrations/service";
+import { readPublicPlaces } from "@/modules/registrations/service";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { publicRead } from "./cache";
@@ -121,11 +121,12 @@ export async function cachedSitemapEvents(locale: Locale) {
  *
  * `availablePlaces` is `null` for an uncapped event, and for one that no longer exists; `capacity`
  * is the event's own number of places, off the same row, for the "din 50 de locuri" (§NNN).
+ * `waitlistRoom` is how many more the waiting list takes (§NNN), null when it has no limit; and
+ * `waitlistCapacity` the limit itself, null for none and 0 for no waiting list at all. The room
+ * is counted from the same two counts as the places, and an offer lapsing — the key's clock —
+ * frees a slot in the line exactly when it frees a place.
  */
-export async function cachedPublicAvailability(
-  eventId: string,
-  now: Date,
-): Promise<{ availablePlaces: number | null; capacity: number | null }> {
+export async function cachedPublicAvailability(eventId: string, now: Date): Promise<CachedPublicPlaces> {
   const expiries = await publicRead(["places.offer-expiries", eventId], ["places", "events"], () =>
     listOfferExpiries(getDb(), eventId),
   );
@@ -133,10 +134,19 @@ export async function cachedPublicAvailability(
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
-    if (!event) return { availablePlaces: null, capacity: null };
-    return { availablePlaces: await readPublicAvailability(db, event, now), capacity: event.capacity };
+    if (!event) return { availablePlaces: null, capacity: null, waitlistRoom: null, waitlistCapacity: null };
+    const places = await readPublicPlaces(db, event, now);
+    return { ...places, capacity: event.capacity, waitlistCapacity: event.capacity === null ? null : event.waitlistCapacity };
   });
 }
+
+/** `cachedPublicAvailability`'s answer: the free places, the event's size, and the line's room. */
+export type CachedPublicPlaces = {
+  availablePlaces: number | null;
+  capacity: number | null;
+  waitlistRoom: number | null;
+  waitlistCapacity: number | null;
+};
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */
 export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number }> {

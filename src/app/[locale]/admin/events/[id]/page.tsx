@@ -378,13 +378,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
+        {/* A batch of test rows that met the waiting list's limit part-way (§NNN): how many went in,
+            and that the rest were refused as a real registration would be. */}
+        {saved === "testRegistrationsStopped" && (
+          <Alert severity="info">{t("testRegistrations.stoppedAtLimit", { created: /^\d+$/.test(created ?? "") ? (created as string) : "0" })}</Alert>
+        )}
         {/* What the save told the participants (§331), under whichever banner the save gave. */}
         {noticeOutcome && (
           <Alert severity={noticeOutcome === "none" || noticeOutcome === "cancelledQuiet" ? "info" : "success"} sx={{ mt: 1 }} data-testid="notice-outcome">
             {t(`editor.notice.outcome.${noticeOutcome}`, { queued: queuedCount })}
           </Alert>
         )}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) && !(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped"].includes(saved) &&!(saved === "created" && (created || notPublished)) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
         {/* The save that announced the place (§328): public from now on, and nobody was told —
@@ -967,7 +972,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
             {t("queue.title")}
           </Typography>
-          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} waiting={waiting} now={now} />
+          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity }} waiting={waiting} now={now} />
 
           {interestsWaiting !== null && (
             <Box sx={{ mt: 3 }}>
