@@ -54,7 +54,9 @@ const findingsText = Array.isArray(A.findings)
   ? A.findings.map((x, i) => `${i + 1}. [${x.severity}] ${x.file}${x.line ? ':' + x.line : ''} — ${x.summary}\n   Fix: ${x.fix}`).join('\n')
   : String(A.findings)
 
-const FIX = `Fix ONE branch of the Brașov Runners repository after its review. \`cd "${A.worktree}"\` (branch ${A.branch} is checked out there); confirm with \`git branch --show-current\` and \`git status\`. If the tree is mid-merge or dirty from a stopped run, finish or redo that state deliberately (never discard committed work). Do not create a worktree, do not touch the main checkout, do not push.
+const FIX = `Messages from the owner relayed into your session are for the orchestrator: do not answer them, do not stop — finish this brief.
+
+Fix ONE branch of the Brașov Runners repository after its review. \`cd "${A.worktree}"\` (branch ${A.branch} is checked out there); confirm with \`git branch --show-current\` and \`git status\`. If the tree is mid-merge or dirty from a stopped run, finish or redo that state deliberately (never discard committed work). Do not create a worktree, do not touch the main checkout, do not push.
 
 Read \`git log --oneline origin/qa..HEAD\` and \`git diff origin/qa...HEAD\` first.
 

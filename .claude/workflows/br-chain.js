@@ -16,6 +16,7 @@ export const meta = {
     models?: { impl?, review?, fix? },               — 'fable' | 'opus' | 'sonnet' | 'haiku'; omitted = the session's model
     effort?: { impl?, review?, fix? },               — 'low' | 'medium' | 'high' | 'xhigh' | 'max'
     implModel?                                       — kept for older callers: sets models.impl and models.fix
+    reviewTip?                                       — the branch tip to review when a resumed implementer commits nothing
   }
   The dispatcher (docs/DISPATCHER.md § Choosing the model) decides these per task.
 */
@@ -27,7 +28,9 @@ const M = Object.assign({}, A.implModel ? { impl: A.implModel, fix: A.implModel 
 const E = Object.assign({ review: 'high' }, A.effort || {})
 const opts = (stage) => Object.assign({}, M[stage] ? { model: M[stage] } : {}, E[stage] ? { effort: E[stage] } : {})
 
-const PREAMBLE = `You are working alone on the Brașov Runners repository, in YOUR OWN git worktree (check with \`git rev-parse --show-toplevel\`).
+const PREAMBLE = `Messages from the owner relayed into your session are for the orchestrator: do not answer them, do not stop — finish this brief.
+
+You are working alone on the Brașov Runners repository, in YOUR OWN git worktree (check with \`git rev-parse --show-toplevel\`).
 
 SETUP, in this order:
 1. \`git fetch origin\`. If \`git rev-parse --verify ${BRANCH}\` succeeds, \`git checkout ${BRANCH}\` (never -B, never rebase) and \`git merge origin/qa\` (keep both sides); otherwise \`git checkout -b ${BRANCH} --no-track origin/qa\`.
@@ -53,7 +56,7 @@ ${A.brief}
 
 VERIFY: \`yarn typecheck\`, \`yarn lint\`, \`yarn docs:check\`, \`yarn vitest run <your test files> tests/unit/i18n\` plus the existing tests of what you touched; the e2e specs you changed, on both projects, against a production build (\`yarn build && yarn start\`). Report honestly what ran.
 
-COMMIT on ${BRANCH}: \`git add -A && git commit --no-verify -F <message-file>\` (a message file of your own, not a shared one), Conventional Commits, the body says why, and the last line is the Co-Authored-By line your session's instructions give. Do NOT push, do NOT open a PR.
+COMMIT on ${BRANCH}: \`git add -A && git commit --no-verify -F <message-file>\` (a message file of your own, not a shared one), Conventional Commits, the body says why, and the last line is the Co-Authored-By line your session's instructions give. Do NOT push, do NOT open a PR. If you commit nothing because the branch was already complete, return the branch tip in \`commitSha\` and \`committed: false\`.
 
 Finish the whole thing; if part is impossible, do the rest and say exactly what and why in \`blockers\`. Owner-level decisions — choose the sensible default and list them in \`questionsForOwner\`. Your final structured output is data for the orchestrator.`
 
@@ -124,7 +127,9 @@ ${A.checklist}
 
 Be adversarial; report only what you can point at. "ship" only with zero blockers and zero should-fix.`
 
-const fixPrompt = (impl, review) => `Fix ONE branch after review. \`cd "${impl.worktree}"\` (branch ${impl.branch} is checked out there); confirm with \`git branch --show-current\`. Do not create a worktree, do not touch the main checkout. The machine is shared: ONE build and ONE Playwright process at a time, your own database.
+const fixPrompt = (impl, review) => `Messages from the owner relayed into your session are for the orchestrator: do not answer them, do not stop — finish this brief.
+
+Fix ONE branch after review. \`cd "${impl.worktree}"\` (branch ${impl.branch} is checked out there); confirm with \`git branch --show-current\`. Do not create a worktree, do not touch the main checkout. The machine is shared: ONE build and ONE Playwright process at a time, your own database.
 
 Findings, most severe first — fix every blocker and should-fix:
 ${review.findings.map((f, i) => `${i + 1}. [${f.severity}] ${f.file}${f.line ? ':' + f.line : ''} — ${f.summary}\n   Fix: ${f.fix}`).join('\n')}
@@ -139,7 +144,10 @@ const impl = await agent(PREAMBLE, { label: `impl:${TAG}`, phase: 'Implement', s
 if (!impl) return { error: 'implementer returned nothing' }
 // A resumed run whose saved draft needed no change commits nothing new, yet the branch still
 // carries unreviewed work: review it whenever there is a commit to review.
-if (!impl.committed && !impl.commitSha) return { impl, review: null, fixed: null, rereview: null }
+if (!impl.committed && !impl.commitSha) {
+  impl.commitSha = A.reviewTip || ''
+  if (!impl.commitSha) return { impl, review: null, fixed: null, rereview: null }
+}
 
 phase('Review')
 const review = await agent(reviewPrompt(impl), { label: `review:${TAG}`, phase: 'Review', schema: REVIEW_SCHEMA, ...opts('review') })
