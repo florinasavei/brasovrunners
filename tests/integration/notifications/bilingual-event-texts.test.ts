@@ -277,6 +277,19 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     expect(waitlistedEn.text).not.toContain("WAITLISTED");
   });
 
+  it("gives each half {currentStatus} in its own language's words, never the registrant's repeated (§NNN, email follow-up)", async () => {
+    const event = await bilingual();
+    const [ro1, en1] = halves(await renderOutboxMessage(await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED"), db, NOW));
+    expect(ro1).toContain("confirmată");
+    expect(en1).toContain("confirmed");
+    expect(en1).not.toContain("confirmată");
+
+    const [en2, ro2] = halves(await renderOutboxMessage(await queue(event.id, "en", "REGISTRATION_STATE_NOTICE", {}, "WAITLISTED"), db, NOW));
+    expect(en2).toContain("on the waiting list");
+    expect(ro2).toContain("pe lista de așteptare");
+    expect(ro2).not.toContain("on the waiting list");
+  });
+
   it("asks again after a read that failed, rather than failing the rest of the batch with it", async () => {
     const race = await bilingual();
     await queue(race.id, "ro", "WAITLIST_JOINED");

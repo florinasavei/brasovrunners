@@ -268,6 +268,8 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+    // The status in the other language's own words (§NNN, email follow-up), never the registrant's.
+    ...(data.currentStatusOther ? { currentStatus: data.currentStatusOther } : {}),
     /*
       The event's own words in the second half's language (§NNN, email follow-up): its title — in
       the second subject too, and in a `{eventTitle}` of the club's words for that language — and
@@ -280,10 +282,7 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
-    // The organizer's message (§364): its own words in the second half's language, and the event's
-    // facts that its placeholders read — the title, what to bring — in that language too. Those two
-    // for that message only, as `TemplateData` says: the page of every email renders all of them
-    // from one sample, and every other message's second half still reads the registrant's (§354).
+    // The organizer's message (§364): its own subject and body in the second half's language.
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
     // The organizer's message reads the same `eventTitleOther`/`eventChecklistOther` fields above
@@ -337,6 +336,8 @@ export type TemplateData = {
   /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
   eventRaceStartsAtFormatted?: string;
   currentStatus?: string;
+  /** The same status in the other language's words, for the bilingual message's second half (§NNN, email follow-up). */
+  currentStatusOther?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;

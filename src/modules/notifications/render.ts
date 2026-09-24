@@ -169,7 +169,7 @@ async function renderRow(
     has no text in that language — then the row this message reads may itself be the other
     language's (the fallback above), and both halves read it, as every message did before.
   */
-  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate !== eventDetails);
+  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate.locale !== eventDetails?.locale);
   // The place is not announced yet (§328): the query has withheld the place and the map, and the
   // facts line — and a `{eventLocationName}` in the club's own copy — says so in the page's words,
   // each half of the bilingual message in its own language.
@@ -195,6 +195,9 @@ async function renderRow(
     // In words, never the raw enum (§NNN, email follow-up review): the same table the sample and
     // the legend read (`registrationStatusWords`), so a runner never reads "CONFIRMED".
     currentStatus: registration ? registrationStatusWords(registration.status, locale) : undefined,
+    // The other language's own words, for the bilingual message's second half — never the first
+    // half's language repeated under the other language's sentence (§NNN, email follow-up).
+    currentStatusOther: registration ? registrationStatusWords(registration.status, otherLocale(locale)) : undefined,
     // The footer line is there whenever somebody can answer (§81).
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
     // The event's own page, for the deep link every message carries (§96).

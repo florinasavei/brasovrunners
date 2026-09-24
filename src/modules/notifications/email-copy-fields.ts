@@ -30,6 +30,7 @@ import {
   emailSampleValueOf,
   replaceEmailSampleLiterals,
 } from "./domain/email-sample";
+import { ORGANIZER_MESSAGE_PLACEHOLDERS } from "./domain/organizer-message";
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
 
 /**
@@ -80,6 +81,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventStartsAtFormatted: sample.eventStartsAtFormatted,
     eventStartsAtFormattedOther: other.eventStartsAtFormatted,
     currentStatus: sample.currentStatus,
+    currentStatusOther: other.currentStatus,
     checkinCode: sample.checkinCode,
     checkinQrUrl: `${base}/api/registrations/qr/${sample.checkinCode}.png`,
     bibNumber: sample.bibNumber,
@@ -270,6 +272,13 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
  * "Can": a number or a checklist is still missing from some sends (`EMAIL_COPY_CONDITIONAL_FACTS`).
  */
 export function placeholdersFilledBy(messageType: EmailMessageType): EmailCopyPlaceholder[] {
+  // The organizer's message fills its own closed set (`ORGANIZER_MESSAGE_PLACEHOLDERS`) — its
+  // `{bibNumber}` is the settled number only, and it carries no `{currentStatus}` at all, which
+  // the rules below would otherwise get wrong for it (§NNN, email follow-up).
+  if (messageType === "ORGANIZER_MESSAGE") {
+    const organizerSet = new Set<EmailCopyPlaceholder>(ORGANIZER_MESSAGE_PLACEHOLDERS);
+    return EMAIL_COPY_PLACEHOLDERS.filter((name) => organizerSet.has(name));
+  }
   return EMAIL_COPY_PLACEHOLDERS.filter((name) => {
     const only = ONLY_IN[name];
     if (only) return only.includes(messageType);
@@ -285,6 +294,7 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
   eventLocationName: "eventLocationNameOther",
   eventStartsAtFormatted: "eventStartsAtFormattedOther",
   eventChecklist: "eventChecklistOther",
+  currentStatus: "currentStatusOther",
   holdExpiresAtFormatted: "holdExpiresAtFormattedOther",
   signedAtFormatted: "signedAtFormattedOther",
 };

@@ -14,6 +14,7 @@ import {
   placeholdersFilledBy,
   placeholdersUsedBy,
 } from "@/modules/notifications/email-copy-fields";
+import { ORGANIZER_MESSAGE_PLACEHOLDERS } from "@/modules/notifications/domain/organizer-message";
 import { renderBilingual } from "@/modules/notifications/templates";
 import { formatDay } from "@/i18n/dates";
 import en from "../../../messages/en.json";
@@ -211,6 +212,14 @@ describe("§NNN which fields a message carries", () => {
     expect(renderBilingual("STAFF_INVITATION", "ro", emailSampleFor("STAFF_INVITATION", "ro"), emailSampleActionUrl("ro"), copy).text).toContain(
       "Rolul: Organizator.",
     );
+  });
+
+  it("fills the organizer's message with exactly its own closed set (§NNN, email follow-up): the settled bib, never the status", () => {
+    const filled = placeholdersFilledBy("ORGANIZER_MESSAGE");
+    expect(filled.sort()).toEqual([...ORGANIZER_MESSAGE_PLACEHOLDERS].sort());
+    expect(filled).toContain("bibNumber");
+    expect(filled).not.toContain("currentStatus");
+    expect(filled).not.toContain("checkinCode");
   });
 
   it("marks as 'may be missing' only the conditional facts a message carries", () => {
