@@ -1687,7 +1687,7 @@
           "every": "In force: at most once every {minutes} min, for each job."
         },
         "cost": "What a longer interval costs: a waiting-list offer, a reminder, an announcement or a race number may go out up to that many minutes late.",
-        "safe": "What does not change: a held place still lapses on time — every reading of the places counts the deadline at that moment, whether or not the scheduled job has run — and emails still go out right after the request that queued them. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
+        "safe": "What does not change: a held place still lapses on time — every reading of the places counts the deadline at that moment, whether or not the scheduled job has run. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
         "job": {
           "maintenance": "Registration maintenance",
           "outbox": "Email outbox"
@@ -1709,7 +1709,11 @@
         },
         "save": "Save the interval",
         "saving": "Saving…",
-        "saved": "The interval was saved. Each job looks at the database again at its next ping and plans by it."
+        "saved": "The interval was saved. Each job looks at the database again at its next ping and plans by it.",
+        "emails": {
+          "immediate": "Emails go out right after the request that queued them, whatever the interval; the scheduled queue only picks up what is left (a retry, a message deferred until the daily allowance resets).",
+          "scheduled": "Emails now go out only when the scheduled queue runs (the club's sending setting is on “scheduled”), so a longer interval delays them too, by up to that many minutes."
+        }
       }
     },
     "richText": {

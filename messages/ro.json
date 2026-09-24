@@ -1687,7 +1687,7 @@
           "every": "Setarea în vigoare: cel mult o dată la {minutes} min, pentru fiecare lucrare."
         },
         "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
-        "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp — fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată — iar emailurile pleacă imediat după cererea care le-a pus în coadă. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
+        "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp — fiecare citire a locurilor socotește termenul în clipa aceea, cu sau fără lucrarea programată. Un interval mai lung de o oră înlocuiește și verificarea de siguranță de o oră: setarea ta are întâietate.",
         "job": {
           "maintenance": "Mentenanța înscrierilor",
           "outbox": "Coada de emailuri"
@@ -1709,7 +1709,11 @@
         },
         "save": "Salvează intervalul",
         "saving": "Se salvează…",
-        "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el."
+        "saved": "Intervalul a fost salvat. Fiecare lucrare se uită din nou în bază la următorul ping și se planifică după el.",
+        "emails": {
+          "immediate": "Emailurile pleacă imediat după cererea care le-a pus în coadă, oricare ar fi intervalul; coada programată le reia doar pe cele rămase (o nouă încercare, o amânare până se reface limita zilnică).",
+          "scheduled": "Emailurile pleacă acum doar la rularea programată a cozii (setarea clubului pentru trimitere e pe „programat”), așa că un interval mai lung le întârzie și pe ele, cu până la atâtea minute."
+        }
       }
     },
     "richText": {

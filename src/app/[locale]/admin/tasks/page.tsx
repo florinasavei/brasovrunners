@@ -60,6 +60,7 @@ import type { JobName } from "@/modules/jobs/schedule";
 import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
+import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
@@ -364,7 +365,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     runs, and what each job did with it — read only for the panel that shows it, since the
     overview asks the cache and, when the cache does not answer here, the database.
   */
-  const jobCadence = await readJobCadence(db);
+  const [jobCadence, deliveryTiming] = await Promise.all([
+    readJobCadence(db),
+    // Whether the interval delays email too (§221): the panel's sentence about email follows it.
+    readDeliveryTiming(db),
+  ]);
   const jobOverviews =
     panel === "costs"
       ? await Promise.all(
@@ -658,7 +663,13 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
         {/* How often the platform may wake the database for its scheduled work (§NNN) — the
             throttle the owner asked for, beside the plan that bills each wake. */}
-        <JobCadencePanel locale={locale} cadence={jobCadence} jobs={jobOverviews} mayEdit={canManageRegistrations(actor.role)} />
+        <JobCadencePanel
+          locale={locale}
+          cadence={jobCadence}
+          jobs={jobOverviews}
+          mayEdit={canManageRegistrations(actor.role)}
+          emailTiming={deliveryTiming.timing}
+        />
 
         {/*
           The database's brakes (§NNN), beside the plan they are priced against: the compute's size

@@ -6,6 +6,7 @@ import { updateJobCadenceAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
 import type { JobCadenceState } from "@/modules/jobs/cadence";
 import type { JobOverview } from "@/modules/jobs/overview";
+import type { DeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { JOB_CADENCE_CHOICES, NEXT_DUE_CAP_MINUTES } from "@/modules/jobs/schedule";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -20,6 +21,12 @@ type Props = {
   jobs: JobOverview[];
   /** The Administrator's, like the Neon plan beside it; `updateJobCadence` refuses anybody else. */
   mayEdit: boolean;
+  /**
+   * When the club's email leaves (§221): right after the request that queued it, or only on the
+   * outbox job. It decides whether the interval chosen here delays email too, so the sentence
+   * about email is picked by it rather than stated once and false half the time.
+   */
+  emailTiming: DeliveryTiming;
 };
 
 /**
@@ -33,7 +40,7 @@ type Props = {
  * the last real run and the next one at the latest, per job, with the last ping and whether it
  * woke the database.
  */
-export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit }: Props) {
+export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming }: Props) {
   const t = await getTranslations("Admin");
   const clock = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "medium",
@@ -55,6 +62,11 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit }
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.jobCadence.safe")}
+      </Typography>
+      {/* Email, as it is on this deployment (§221): untouched by the interval when it leaves
+          after the request, delayed by it when the outbox job is the only sender. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-emails">
+        {t(emailTiming === "scheduled" ? "tasks.jobCadence.emails.scheduled" : "tasks.jobCadence.emails.immediate")}
       </Typography>
 
       {/* The measured effect: what each job did last, and when it will look again at the latest. */}
