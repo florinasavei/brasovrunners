@@ -79,6 +79,58 @@ export function openFoldsAround(node: FoldNode | null): number {
  */
 export const REVEAL_EVENT = "br:reveal";
 
+/**
+ * The name a fold shares with its twins in the other languages (§NNN; the owner, 2026-09-24: "I
+ * would like to keep the expand/collapsed state while changing the language tab in the event
+ * editor").
+ *
+ * A language strip (`LocaleTabPanels`) holds one panel per language, and a fold inside one panel
+ * has a twin in every other: the Romanian description's fold and the English one are one logical
+ * fold, written twice. Its name is the box's `name` with the panel's language taken out —
+ * `translations.ro.body` and `translations.en.body` are both `translations.*.body` — so the key
+ * needs nothing new from the caller, and a fold whose name carries no language (a field shared by
+ * both, in the strip's own panels) is simply its own key.
+ */
+export function twinFoldKey(name: string, locale: string): string {
+  return name
+    .split(".")
+    .map((part) => (part === locale ? "*" : part))
+    .join(".");
+}
+
+/**
+ * Which folds of one strip are open, by `twinFoldKey`, for as long as the strip is on the page
+ * (§NNN). Absent means never touched: the fold keeps what the server rendered.
+ *
+ * A store with a subscription rather than React state in the strip, so a fold re-renders when its
+ * own key changes and nothing else does — the strip re-renders on every keystroke that moves a
+ * tab's "· incomplet" mark, and the folds inside it hold a Tiptap editor each.
+ */
+export type TwinFoldStore = {
+  get(key: string): boolean | undefined;
+  set(key: string, open: boolean): void;
+  subscribe(listener: () => void): () => void;
+};
+
+export function createTwinFoldStore(): TwinFoldStore {
+  const open = new Map<string, boolean>();
+  const listeners = new Set<() => void>();
+  return {
+    get: (key) => open.get(key),
+    set: (key, value) => {
+      if (open.get(key) === value) return;
+      open.set(key, value);
+      for (const listener of [...listeners]) listener();
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
 /** The id a `#fragment` names, decoded; `null` for an empty or malformed one. */
 export function fragmentId(hash: string): string | null {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
