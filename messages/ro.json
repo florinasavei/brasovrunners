@@ -2121,7 +2121,7 @@
         "EVENT_THANKS": "manual, după eveniment",
         "DECLARATION_SIGNED": "după semnarea declarației, cu PDF",
         "DECLARATION_ARCHIVE": "odată cu declarația semnată, către arhivă",
-        "BIB_ASSIGNED": "când un organizator dă numărul de mână",
+        "BIB_ASSIGNED": "la închiderea înscrierilor, sau când numărul e dat de mână",
         "STAFF_INVITATION": "când e adăugat un coleg",
         "REGISTRATION_OPENED": "când se deschid înscrierile",
         "CLUB_CONFIRMATION_NOTICE": "la fiecare confirmare, către club",

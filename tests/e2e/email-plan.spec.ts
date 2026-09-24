@@ -253,8 +253,15 @@ test.describe("§NNN the emails participants receive, as a card of cards", () =>
     await expect(card.getByText("Limba în care vezi și scrii mesajele:")).toBeVisible();
     await expect(card.getByRole("link", { name: "Română", exact: true })).toHaveAttribute("aria-current", "page");
     const count = await messages.count();
-    expect(count).toBeGreaterThanOrEqual(18);
+    // Every message type, the two the event notices added (§331) among them.
+    expect(count).toBeGreaterThanOrEqual(20);
     for (let index = 0; index < count; index += 1) await expect(messages.nth(index)).not.toHaveAttribute("open");
+    await expect(card.locator("#email-EVENT_UPDATE_NOTICE > summary")).toContainText("doar când un organizator anunță o schimbare");
+    await expect(card.locator("#email-EVENT_CANCELLED > summary")).toContainText("la anularea evenimentului, dacă e bifat");
+    // A type nothing queues any more says so before it is opened, and is listed after the rest.
+    await expect(card.locator("#email-WAITLIST_OFFER_EXPIRED > summary")).toContainText("nu se mai trimite");
+    await expect(card.locator("#email-EVENT_REMINDER > summary")).not.toContainText("nu se mai trimite");
+    await expect(messages.last()).toHaveAttribute("id", /^email-(WAITLIST_OFFER_EXPIRED|REGISTRATION_MANAGE_LINK|DECLARATION_SIGNED)$/);
 
     // Each card's summary: the message's name, as a heading under the card's, and when it goes out.
     const reminder = card.locator("#email-EVENT_REMINDER");

@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import en from "../../../messages/en.json";
@@ -25,11 +26,12 @@ const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/st
 
 const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
 
-function card(type: EmailMessageType, justSaved = false): ParticipantEmailCard {
+function card(type: EmailMessageType, justSaved = false, neverSent = false): ParticipantEmailCard {
   return {
     type,
     name: ro.Admin.emails.types[type],
     whenShort: ro.Admin.emails.whenShort[type],
+    ...(neverSent ? { neverSent: ro.Admin.emails.neverSent } : {}),
     when: ro.Admin.emails.when[type],
     subjectLine: `Subiect: ${type}`,
     html: `<p>${type}</p>`,
@@ -116,15 +118,55 @@ describe("§NNN the emails participants receive: one card of cards", () => {
       expect(en.Admin.emails.whenShort[type], type).toBeTruthy();
     }
   });
+
+  /**
+   * §331 × §NNN: the two messages the event notices added are cards like every other — one inner
+   * fold each, with the short "when" in the closed summary and the full sentence, the subject and
+   * the preview inside — and the three types nothing queues any more say so on the closed card.
+   */
+  it("holds a card for each of the event notices' two messages, like the others", () => {
+    expect(TYPES).toEqual(expect.arrayContaining(["EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"]));
+    const html = render(TYPES.map((type) => card(type)));
+    expect(foldTags(html)).toHaveLength(TYPES.length + 1);
+    for (const type of ["EVENT_UPDATE_NOTICE", "EVENT_CANCELLED"] as const) {
+      expect(html).toContain(`id="email-${type}"`);
+      expect(html).toMatch(
+        new RegExp(`<h3[^>]*>${escape(ro.Admin.emails.types[type])}<span[^>]*>${escape(ro.Admin.emails.whenShort[type])}</span></h3>`),
+      );
+      expect(html).toContain(ro.Admin.emails.when[type]);
+      expect(html).toContain(`Subiect: ${type}`);
+      expect(html).toMatch(new RegExp(`<iframe[^>]*title="${escape(ro.Admin.emails.types[type])}"`));
+    }
+  });
+
+  it("says 'not sent any more' on the closed card of exactly the three types nothing queues", () => {
+    const html = render(TYPES.map((type) => card(type, false, NEVER_QUEUED_MESSAGE_TYPES.has(type))));
+    expect(html.match(/data-testid="participant-email-never-sent"/g) ?? []).toHaveLength(NEVER_QUEUED_MESSAGE_TYPES.size);
+    for (const type of NEVER_QUEUED_MESSAGE_TYPES) {
+      const start = html.indexOf(`id="email-${type}"`);
+      const summary = html.slice(start, html.indexOf("</summary>", start));
+      expect(summary).toContain(ro.Admin.emails.neverSent);
+      expect(summary).toContain(ro.Admin.emails.whenShort[type]);
+    }
+    const reminder = html.indexOf('id="email-EVENT_REMINDER"');
+    expect(html.slice(reminder, html.indexOf("</summary>", reminder))).not.toContain(ro.Admin.emails.neverSent);
+  });
 });
+
+/** A catalogue string as a literal inside a pattern. */
+function escape(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 describe("§NNN the page hands every message to the card, and the panels fold", () => {
   const page = read("src/app/[locale]/admin/emails/page.tsx");
 
   it("renders the card of cards from every message type, with the language switch inside it", () => {
     expect(page).toContain("<ParticipantEmailsPanel");
-    // Every type from the enum, the three nothing queues any more last (§331).
+    // Every type from the enum, the three nothing queues any more last and said so (§331).
     expect(page).toMatch(/const types = \[\s*\.\.\.\(emailMessageType\.enumValues/);
+    expect(page).toMatch(/filter\(\(type\) => !NEVER_QUEUED\.has\(type\)\)[\s\S]*?filter\(\(type\) => NEVER_QUEUED\.has\(type\)\)/);
+    expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
     expect(page).toMatch(/messages=\{types\.map\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.

@@ -2121,7 +2121,7 @@
         "EVENT_THANKS": "by hand, after the event",
         "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
         "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
-        "BIB_ASSIGNED": "when an organizer sets the number by hand",
+        "BIB_ASSIGNED": "when registration closes, or a number is set by hand",
         "STAFF_INVITATION": "when a colleague is added",
         "REGISTRATION_OPENED": "when registration opens",
         "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
