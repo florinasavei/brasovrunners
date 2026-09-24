@@ -134,7 +134,8 @@
         "INSTAGRAM": "Instagram",
         "STRAVA": "Strava",
         "OTHER": "Link"
-      }
+      },
+      "registerWith": "Înscriere la {partner}"
     },
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
@@ -944,6 +945,8 @@
         "moveDown": "Mută mai jos partenerul",
         "partnerNew": "Partener nou",
         "name": "Numele partenerului",
+        "about": "Despre parteneriat",
+        "descriptionHelp": "Opțional, în ambele limbi · o propoziție-două: ce facem împreună. Apare pe pagina evenimentului, sub numele partenerului.",
         "kind": "Tip",
         "url": "Adresa (https://…)",
         "labelRo": "Eticheta în română (opțional)",
@@ -957,8 +960,10 @@
         "nameError": "Partenerul {p}: partenerul are nevoie de un nume",
         "kindError": "Partenerul {p}, linkul {l}: alege tipul din listă",
         "urlError": "Partenerul {p}, linkul {l}: adresa trebuie să înceapă cu https://",
-        "labelRoError": "Partenerul {p}, linkul {l}: eticheta în română are cel mult {max} de caractere",
-        "labelEnError": "Partenerul {p}, linkul {l}: eticheta în engleză are cel mult {max} de caractere",
+        "labelRoError": "Partenerul {p}, linkul {l}: eticheta în română — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "labelEnError": "Partenerul {p}, linkul {l}: eticheta în engleză — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "descriptionRoError": "Partenerul {p} — despre parteneriat (Română): scrie textul în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "descriptionEnError": "Partenerul {p} — despre parteneriat (English): scrie textul în ambele limbi sau în niciuna, cel mult {max} de caractere",
         "tooManyLinks": "Partenerul {p}: cel mult {max} linkuri pe un partener",
         "tooManyLinksGeneric": "Un partener poate avea cel mult {max} linkuri",
         "tooMany": "Parteneri: cel mult {max} pe un eveniment"
@@ -976,8 +981,8 @@
         "row": "Linkul",
         "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
         "kindError": "Linkul {n}: alege tipul din listă",
-        "labelRoError": "Linkul {n}: eticheta în română are cel mult {max} de caractere",
-        "labelEnError": "Linkul {n}: eticheta în engleză are cel mult {max} de caractere",
+        "labelRoError": "Linkul {n}: eticheta în română — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "labelEnError": "Linkul {n}: eticheta în engleză — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
         "tooMany": "Linkuri și fișiere: cel mult {max} pe un eveniment"
       },
       "stravaEventUrl": "Link către evenimentul Strava",
@@ -1201,7 +1206,7 @@
         },
         "coHosts": {
           "title": "Parteneri — „Împreună cu”",
-          "note": "Opțional. Un card pentru fiecare organizație alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — cu oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu …” pe pagină, fiecare cu linkurile ei, și, dacă bifezi Partenerii în Subsol, pe numărul de concurs. Partenerii se copiază pe toate datele unei serii."
+          "note": "Opțional. Un card pentru fiecare organizație alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — cu o propoziție-două despre parteneriat, în română și în engleză, și oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu …” pe pagină, fiecare cu textul și linkurile ei, și, dacă bifezi Partenerii în Subsol, pe numărul de concurs. Partenerii se copiază pe toate datele unei serii."
         },
         "promotion": {
           "title": "Evidențiere pe site"
@@ -1342,6 +1347,8 @@
           },
           "coHosts": {
             "with": "Împreună cu {names}",
+            "described": "cu descriere",
+            "describedOneLanguage": "descriere într-o singură limbă",
             "none": "Fără parteneri"
           },
           "promotion": {

@@ -134,7 +134,8 @@
         "INSTAGRAM": "Instagram",
         "STRAVA": "Strava",
         "OTHER": "Link"
-      }
+      },
+      "registerWith": "Register with {partner}"
     },
     "openMap": "Open the map",
     "address": "Address",
@@ -944,6 +945,8 @@
         "moveDown": "Move down partner",
         "partnerNew": "New partner",
         "name": "Partner's name",
+        "about": "About the partnership",
+        "descriptionHelp": "Optional, in both languages · a sentence or two: what we do together. Shown on the event's page, under the partner's name.",
         "kind": "Kind",
         "url": "Address (https://…)",
         "labelRo": "Label in Romanian (optional)",
@@ -957,8 +960,10 @@
         "nameError": "Partner {p}: a partner needs a name",
         "kindError": "Partner {p}, link {l}: choose the kind from the list",
         "urlError": "Partner {p}, link {l}: the address must start with https://",
-        "labelRoError": "Partner {p}, link {l}: the Romanian label is at most {max} characters",
-        "labelEnError": "Partner {p}, link {l}: the English label is at most {max} characters",
+        "labelRoError": "Partner {p}, link {l}: the Romanian label — write it in both languages or neither, at most {max} characters",
+        "labelEnError": "Partner {p}, link {l}: the English label — write it in both languages or neither, at most {max} characters",
+        "descriptionRoError": "Partner {p} — about the partnership (Română): write it in both languages or neither, at most {max} characters",
+        "descriptionEnError": "Partner {p} — about the partnership (English): write it in both languages or neither, at most {max} characters",
         "tooManyLinks": "Partner {p}: at most {max} links on one partner",
         "tooManyLinksGeneric": "A partner can carry at most {max} links",
         "tooMany": "Partners: at most {max} on one event"
@@ -976,8 +981,8 @@
         "row": "Link",
         "urlError": "Link {n}: the address must start with https://",
         "kindError": "Link {n}: choose the kind from the list",
-        "labelRoError": "Link {n}: the Romanian label is at most {max} characters",
-        "labelEnError": "Link {n}: the English label is at most {max} characters",
+        "labelRoError": "Link {n}: the Romanian label — write it in both languages or neither, at most {max} characters",
+        "labelEnError": "Link {n}: the English label — write it in both languages or neither, at most {max} characters",
         "tooMany": "Links and files: at most {max} on one event"
       },
       "stravaEventUrl": "Strava event link",
@@ -1201,7 +1206,7 @@
         },
         "coHosts": {
           "title": "Co-hosts — “Together with”",
-          "note": "Optional. One card per organization the club holds the event with — an NGO, a shop, a brand, another club — with as many links as it has: its site, its event, registering with it, Facebook, Instagram, Strava or something else. They appear as “Together with …” on the page, each with its links, and, if you tick Partners in the footer, on the race number. Partners travel to every date of a series."
+          "note": "Optional. One card per organization the club holds the event with — an NGO, a shop, a brand, another club — with a sentence or two about the partnership, in Romanian and in English, and as many links as it has: its site, its event, registering with it, Facebook, Instagram, Strava or something else. They appear as “Together with …” on the page, each with its text and links, and, if you tick Partners in the footer, on the race number. Partners travel to every date of a series."
         },
         "promotion": {
           "title": "Promotion on the site"
@@ -1342,6 +1347,8 @@
           },
           "coHosts": {
             "with": "Together with {names}",
+            "described": "with a description",
+            "describedOneLanguage": "description in one language only",
             "none": "No co-hosts"
           },
           "promotion": {

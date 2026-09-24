@@ -12,7 +12,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
-import { coHostLinkHost, coHostLinkLabel, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
+import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
 import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
@@ -209,42 +209,63 @@ export default async function EventFacts({
    * label or the kind's word, and the host in small text underneath, the same reading
    * `EventLinks` gives "Linkuri și fișiere" (§332). A partner with no links is just its name.
    *
-   * Plain `<span>`s throughout, never a `<ul>`: this sits inside `pieces()`'s bare `<span>` when
-   * there is only one partner, and a list has no business nested in an inline element. `links`
-   * gates it exactly as it gates every other link on this component — false inside a card that
-   * is itself one link (`EventCard`), where this is never called at all.
+   * Between the name and the links, what the partnership is (§NNN; the owner, for the Brașov
+   * Running Festival: "a short description of the partnership") — in the reader's language and
+   * only when the club wrote it in both (`coHostDescription`): never the Romanian sentence on the
+   * English page, and never a partnership described on one page and silent on the other. Where to
+   * register with the partner comes first among its links and, with no label of the club's, says
+   * so with the partner's name ("Înscriere la Brașov Running Festival") — the one call to action on
+   * the card, written as a link in the weight of a heading, never a second button competing with
+   * the club's own registration beneath these facts (`RegistrationCta`).
+   *
+   * Plain `<span>`s throughout, never a `<ul>` or a `<p>`: this sits inside `pieces()`'s bare
+   * `<span>` when there is only one partner, and a block has no business nested in an inline
+   * element. `links` gates it exactly as it gates every other link on this component — false
+   * inside a card that is itself one link (`EventCard`), where this is never called at all.
    */
   const partnerFacts = (host: (typeof coHosts)[number]) => {
-    if (host.links.length === 0) return <>{host.name}</>;
+    const description = coHostDescription(host, locale);
+    const pageLinks = coHostLinksForPage(host);
+    if (pageLinks.length === 0 && !description) return <>{host.name}</>;
     return (
       <Box component="span" sx={{ display: "inline-flex", flexDirection: "column", rowGap: 0.5, verticalAlign: "top" }}>
         <Box component="span">{host.name}</Box>
-        <Box component="span" sx={{ display: "flex", flexDirection: "column", rowGap: 0.5 }}>
-          {host.links.map((link, index) => {
-            const linkDomain = coHostLinkHost(link.url);
-            return (
-              <Link
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
-              >
-                <CoHostLinkGlyph kind={link.kind} size={18} />
-                <Box component="span" sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                  <Box component="span" sx={{ overflowWrap: "anywhere" }}>
-                    {coHostLinkLabel(link, locale) ?? t(`coHostLinks.kinds.${link.kind}`)}
+        {description && (
+          <Typography component="span" variant="body2" color="text.secondary" data-testid="co-host-description" sx={{ overflowWrap: "anywhere" }}>
+            {description}
+          </Typography>
+        )}
+        {pageLinks.length > 0 && (
+          <Box component="span" sx={{ display: "flex", flexDirection: "column", rowGap: 0.5 }}>
+            {pageLinks.map((link, index) => {
+              const linkDomain = coHostLinkHost(link.url);
+              const registration = link.kind === "REGISTRATION";
+              const label =
+                coHostLinkLabel(link, locale) ?? (registration ? t("coHostLinks.registerWith", { partner: host.name }) : t(`coHostLinks.kinds.${link.kind}`));
+              return (
+                <Link
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+                >
+                  <CoHostLinkGlyph kind={link.kind} size={18} />
+                  <Box component="span" sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                    <Box component="span" sx={{ overflowWrap: "anywhere", fontWeight: registration ? 600 : undefined }}>
+                      {label}
+                    </Box>
+                    {linkDomain && (
+                      <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: "anywhere", lineHeight: 1.3 }}>
+                        {linkDomain}
+                      </Typography>
+                    )}
                   </Box>
-                  {linkDomain && (
-                    <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: "anywhere", lineHeight: 1.3 }}>
-                      {linkDomain}
-                    </Typography>
-                  )}
-                </Box>
-              </Link>
-            );
-          })}
-        </Box>
+                </Link>
+              );
+            })}
+          </Box>
+        )}
       </Box>
     );
   };

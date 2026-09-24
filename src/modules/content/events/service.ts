@@ -42,6 +42,8 @@ import {
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isBlankValue } from "@/shared/forms/blank-value";
+import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import {
   type EventFieldsInput,
@@ -702,6 +704,62 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // holds when the type changed in the same save or the hidden field still posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
   };
+}
+
+/** The optional texts of one language, as the row will hold them — the columns, not the posted boxes. */
+type OptionalTextColumns = {
+  bodyJson?: unknown;
+  rulesJson?: unknown;
+  scheduleJson?: unknown;
+  checklist?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+};
+
+/**
+ * Whether each optional text of one language says something, keyed by the name its box posts.
+ * A rich text is read by the rule the editor's "· incomplet" marks use (`isBlankValue`, §350), so
+ * a tab the page marks unfinished and a text the save refuses are always the same text.
+ */
+function writtenOptionalTexts(row: OptionalTextColumns) {
+  const writtenDoc = (doc: unknown) => doc !== null && doc !== undefined && !isBlankValue(JSON.stringify(doc));
+  return {
+    body: writtenDoc(row.bodyJson),
+    rules: writtenDoc(row.rulesJson),
+    schedule: writtenDoc(row.scheduleJson),
+    checklist: isWrittenText(row.checklist),
+    seoTitle: isWrittenText(row.seoTitle),
+    seoDescription: isWrittenText(row.seoDescription),
+  };
+}
+
+/**
+ * Both languages or neither, for the event's optional texts (§NNN; the owner: "I want
+ * multi-lingual, always"): the description, the rules, the programme's notes, what to bring, and
+ * the two search-engine overrides. Each is optional; none may be written in one language and left
+ * empty in the other. Refused on the empty side's box (`translations.<locale>.<field>`), so the
+ * summary links to the language still owed and brings its tab forward.
+ *
+ * Read on the columns as they will be stored, after `translationColumnsFrom`: a programme note on
+ * a group run is not stored (§111) and so cannot be refused, which is "a hidden box never blocks
+ * the save" (§350) for this rule too.
+ *
+ * Three texts are deliberately not here. The title and the page address are required in both
+ * languages at every save already (`translationFieldsSchema`). The summary is required in both
+ * before publication (§28) and may be half-written in a draft, the way a title may not. And a
+ * language's own name for the place is an override of the one meeting point both pages show
+ * (§36, migration `0058`) — "Tractorul Park" on the English page alone is its whole purpose.
+ */
+function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
+  const ro = writtenOptionalTexts(rows.ro);
+  const en = writtenOptionalTexts(rows.en);
+  const missing = (Object.keys(ro) as Array<keyof typeof ro>).flatMap((field) => {
+    const language = missingLanguage({ ro: ro[field], en: en[field] }, (written) => written);
+    return language ? [`translations.${language}.${field}`] : [];
+  });
+  if (missing.length > 0) {
+    throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: written in the other language only; write both languages or neither`, missing);
+  }
 }
 
 export async function saveEventTranslation<T extends Record<string, unknown>>(
@@ -1558,6 +1616,17 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       );
     }
 
+    /*
+      Both languages or neither (§NNN), on the two languages exactly as this save leaves them —
+      inside the transaction, so a refusal writes nothing. Only when this save carries both: the
+      editor posts both for anybody who may write both, and a save that carries one language (a
+      reader who may write only that one, a script) is not refused over the other language's text,
+      which it could not change.
+    */
+    const savedRo = savedTranslations.find((row) => row.locale === "ro");
+    const savedEn = savedTranslations.find((row) => row.locale === "en");
+    if (savedRo && savedEn) assertOptionalTextsInBothLanguages({ ro: savedRo, en: savedEn });
+
     // More places than before: the difference goes to the waiting list at once (§147), here,
     // where the row is already locked by the guarded update and the number is not yet committed.
     let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now) : 0;
@@ -1653,6 +1722,13 @@ export async function createEvent<T extends Record<string, unknown>>(
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
+  // Each language's columns, once: checked for both-or-neither (§NNN) before anything is written,
+  // then inserted exactly as checked.
+  const translationColumns = {
+    ro: translationColumnsFrom(parsed.translations.ro, parsed.type),
+    en: translationColumnsFrom(parsed.translations.en, parsed.type),
+  };
+  assertOptionalTextsInBothLanguages(translationColumns);
 
   const created = await db.transaction(async (tx) => {
     if (parsed.featured) await clearFeaturedExcept(tx, null, now);
@@ -1675,7 +1751,7 @@ export async function createEvent<T extends Record<string, unknown>>(
       routing.locales.map((locale) => ({
         eventId: event.id,
         locale,
-        ...translationColumnsFrom(parsed.translations[locale], parsed.type),
+        ...translationColumns[locale],
         authorStaffUserId: input.actor.id,
         createdAt: now,
         updatedAt: now,

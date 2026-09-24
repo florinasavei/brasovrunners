@@ -149,18 +149,21 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name` and
+   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name`,
+   * `event.coHosts[p].descriptionRo` / `.descriptionEn` (§NNN) and
    * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
    * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
-   * a link and no name, or a link with no address, naming both indices.
+   * a link and no name, a link with no address, or a text in one language only, naming both
+   * indices.
    */
-  const coHosts: Array<{ name?: string; links: Array<Record<string, string>> }> = [];
+  const coHosts: Array<{ name?: string; descriptionRo?: string; descriptionEn?: string; links: Array<Record<string, string>> }> = [];
   for (const [key, entry] of form.entries()) {
     if (typeof entry !== "string") continue;
-    const nameMatch = /^event\.coHosts\[(\d+)\]\.name$/.exec(key);
-    if (nameMatch) {
-      const p = Number(nameMatch[1]);
-      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), name: entry };
+    // The card's own boxes: its name, and what the partnership is in each language (§NNN).
+    const cardMatch = /^event\.coHosts\[(\d+)\]\.(name|descriptionRo|descriptionEn)$/.exec(key);
+    if (cardMatch) {
+      const p = Number(cardMatch[1]);
+      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), [cardMatch[2]]: entry };
       continue;
     }
     const linkMatch = /^event\.coHosts\[(\d+)\]\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
@@ -202,7 +205,7 @@ function eventFieldsFrom(form: FormData) {
     facebookEventUrl: value("facebookEventUrl"),
     coHosts: coHosts
       .filter((row) => row !== undefined)
-      .map((row) => ({ name: row.name, links: row.links.filter((link) => link !== undefined) })),
+      .map(({ links: cardLinks, ...card }) => ({ ...card, links: cardLinks.filter((link) => link !== undefined) })),
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,

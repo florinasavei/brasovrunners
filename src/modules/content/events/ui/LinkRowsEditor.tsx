@@ -118,7 +118,13 @@ function LinkRowsEditorIsland({
             spacing={1}
             role="group"
             aria-label={`${labels.row} ${n}`}
-            sx={{ p: 1.5, border: 1, borderColor: recall.named(name("url")) || recall.named(name("kind")) ? "error.main" : "divider", borderRadius: 1 }}
+            sx={{
+              p: 1.5,
+              border: 1,
+              // A label refused for being in one language only (§NNN) marks its row too.
+              borderColor: (["url", "kind", "labelRo", "labelEn"] as const).some((field) => recall.named(name(field))) ? "error.main" : "divider",
+              borderRadius: 1,
+            }}
           >
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
               <TextField

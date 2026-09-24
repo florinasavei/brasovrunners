@@ -10,12 +10,15 @@ import {
   DEFAULT_CO_HOST_LINK_KIND,
   isCoHostLinkKind,
   isCoHostUrl,
+  MAX_CO_HOST_DESCRIPTION,
   MAX_CO_HOST_LINK_LABEL,
   MAX_CO_HOST_LINK_URL,
   MAX_CO_HOST_LINKS,
   MAX_CO_HOSTS,
+  normalizeCoHostDescription,
   normalizeCoHostUrl,
 } from "@/modules/events/domain/co-hosts";
+import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { EVENT_COST_TYPES, type EventCostType, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
@@ -289,6 +292,10 @@ function costRule(
  * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
  * Exported so the editor reads the boxes' ceilings and the address's https pattern off it
  * (§315) rather than typing them a second time.
+ *
+ * The two labels are both or neither (§NNN): a label of the club's own in one language only is
+ * refused in `coHostsField`, naming the empty one — the kind's own word stands in for the pair,
+ * never for half of it.
  */
 export const coHostLinkRowSchema = z
   .object({
@@ -305,20 +312,34 @@ type CoHostLinkRowInput = z.infer<typeof coHostLinkRowSchema>;
 const isBlankCoHostLinkRow = (row: CoHostLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * One partner's card as the editor posts it (§344): a name, and its links. A row with nothing
- * typed in either — the editor's spare card — is dropped, like a spare link row is; a name with
- * no links is kept, since a partner's page is optional (§168) and always has been.
+ * One language of what the partnership is (§NNN): one short paragraph — every line break and run
+ * of spaces collapsed to one space **before** the ceiling is counted, so a box the browser let
+ * through at `maxLength` (which counts a line break as one character) is never refused by the
+ * server for the two characters the same line break posts as. Empty allowed: the pair is
+ * optional, and `coHostsField` refuses it only when one side is written and the other is not.
  */
-const coHostRowSchema = z
+const coHostDescriptionBox = z.string().overwrite(normalizeCoHostDescription).max(MAX_CO_HOST_DESCRIPTION).optional().default("");
+
+/**
+ * One partner's card as the editor posts it (§344): a name, what the partnership is in each
+ * language (§NNN), and its links. A row with nothing typed in any of them — the editor's spare
+ * card — is dropped, like a spare link row is; a name with no links and no description is kept,
+ * since a partner's page is optional (§168) and always has been. Exported so the editor reads the
+ * description boxes' ceiling off it (§315).
+ */
+export const coHostRowSchema = z
   .object({
     name: z.string().trim().max(200).optional().default(""),
+    descriptionRo: coHostDescriptionBox,
+    descriptionEn: coHostDescriptionBox,
     links: z.array(coHostLinkRowSchema).max(MAX_CO_HOST_LINKS + 4).optional().default([]),
   })
   .strict();
 
 type CoHostRowInput = z.infer<typeof coHostRowSchema>;
 
-const isBlankCoHostRow = (row: CoHostRowInput) => row.name === "" && row.links.every(isBlankCoHostLinkRow);
+const isBlankCoHostRow = (row: CoHostRowInput) =>
+  row.name === "" && row.descriptionRo === "" && row.descriptionEn === "" && row.links.every(isBlankCoHostLinkRow);
 
 /**
  * The partners, as the editor posts them (§168, extended by §344 into a card of links each).
@@ -329,7 +350,9 @@ const isBlankCoHostRow = (row: CoHostRowInput) => row.name === "" && row.links.e
  * (`form-names.ts`). A card with a link and no name is refused rather than dropped: somebody
  * meant a partner there. A link with a label and no address is refused the same way a plain
  * event link is (§332); a kind outside the set did not come from the select and is refused,
- * never quietly turned into "other".
+ * never quietly turned into "other". The card's description and each link's label are both or
+ * neither (§NNN, `refuseOneLanguage`): one language written and the other empty is refused on the
+ * empty box, so "Partenerul 1 — despre parteneriat (English)" is the line that says what is owed.
  *
  * Absent means "this caller is not editing the partners" and **not** "no partners" (§169): a
  * caller from before the list existed (a script, a fixture, a test's form) posts nothing, and a
@@ -348,6 +371,12 @@ const coHostsField = z
       if (row.name === "") {
         ctx.addIssue({ code: "custom", path: [index, "name"], message: `partner ${p}: a partner needs a name` });
       }
+      refuseOneLanguage(
+        ctx,
+        { ro: row.descriptionRo, en: row.descriptionEn },
+        { ro: [index, "descriptionRo"], en: [index, "descriptionEn"] },
+        `partner ${p}: the description of the partnership`,
+      );
       let filledLinks = 0;
       row.links.forEach((link, linkIndex) => {
         if (isBlankCoHostLinkRow(link)) return;
@@ -356,6 +385,12 @@ const coHostsField = z
         if (!isCoHostLinkKind(link.kind)) {
           ctx.addIssue({ code: "custom", path: [index, "links", linkIndex, "kind"], message: `partner ${p}, link ${l}: the kind must be one of the list` });
         }
+        refuseOneLanguage(
+          ctx,
+          { ro: link.labelRo, en: link.labelEn },
+          { ro: [index, "links", linkIndex, "labelRo"], en: [index, "links", linkIndex, "labelEn"] },
+          `partner ${p}, link ${l}: the label`,
+        );
         if (link.url === "") {
           ctx.addIssue({
             code: "custom",
@@ -379,6 +414,8 @@ const coHostsField = z
       .filter((row) => !isBlankCoHostRow(row))
       .map((row) => ({
         name: row.name,
+        descriptionRo: row.descriptionRo === "" ? null : row.descriptionRo,
+        descriptionEn: row.descriptionEn === "" ? null : row.descriptionEn,
         links: row.links
           .filter((link) => !isBlankCoHostLinkRow(link))
           .map((link) => ({
@@ -418,7 +455,9 @@ const isBlankLinkRow = (row: EventLinkRowInput) => row.url === "" && row.labelRo
  * spare lines are dropped — so "link 2" is the second row on the screen and the summary's link
  * lands on its box (`form-names.ts`). A row with a label and no address is refused rather than
  * dropped: somebody meant a link there. A kind outside the set did not come from the select and
- * is refused, never quietly turned into "other".
+ * is refused, never quietly turned into "other". The two labels are both or neither (§NNN,
+ * `refuseOneLanguage`): the kind's own word covers a row with no label of the club's, and a label
+ * in one language only is refused on the empty box rather than shown on one page and not the other.
  *
  * Absent means "this caller is not editing the links" — the discipline of `coHosts` (§169) — so
  * a fixture or an older caller leaves the column as it was. The editor always posts the list;
@@ -441,6 +480,7 @@ const eventLinksField = z
       } else if (!isEventLinkUrl(row.url)) {
         ctx.addIssue({ code: "custom", path: [index, "url"], message: `link ${n}: the address must start with https://` });
       }
+      refuseOneLanguage(ctx, { ro: row.labelRo, en: row.labelEn }, { ro: [index, "labelRo"], en: [index, "labelEn"] }, `link ${n}: the label`);
     });
     if (filled > MAX_EVENT_LINKS) {
       ctx.addIssue({ code: "custom", message: `at most ${MAX_EVENT_LINKS} links can be listed on one event` });
@@ -574,8 +614,9 @@ export const eventFieldsSchema = z
     coHosts: coHostsField,
     /**
      * "Linkuri și fișiere" (§332): the GPX on Google Drive, a PDF, the album, the results — at
-     * most twelve, each https, each label optional. Not part of what publication requires (§28):
-     * an empty label is the kind's own word in the reader's language.
+     * most twelve, each https, each row's labels optional — both languages or neither (§NNN). Not
+     * part of what publication requires (§28): no label is the kind's own word in the reader's
+     * language.
      */
     links: eventLinksField,
     /**

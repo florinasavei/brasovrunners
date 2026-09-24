@@ -62,7 +62,7 @@ export type SummaryWords = {
   startList: { hidden: string; shown: string };
   course: { route: string; km: string; elevation: string };
   links: { strava: string; facebook: string; files: CountWords; none: string };
-  coHosts: { with: string; none: string };
+  coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
   address: { locked: string; none: string };
 };
@@ -391,11 +391,28 @@ export function linksSummary(
 
 type CoHostEvent = Parameters<typeof readCoHosts>[0];
 
-/** Box 12: `Împreună cu Salvamont și Decathlon`, or `Fără parteneri`. */
+/**
+ * Box 12: `Împreună cu Brașov Running Festival · 2 linkuri · cu descriere`, or `Fără parteneri`.
+ *
+ * The links are counted across every card; the description (§NNN) is one word — "cu descriere"
+ * when a card carries it in both languages — and says "descriere într-o singură limbă" instead
+ * whenever a card holds half a pair, because that card is the one the next save will refuse and
+ * the closed line is where the organizer sees it first.
+ */
 export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, locale: string): string {
-  const names = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null }).map((host) => host.name);
-  if (names.length === 0) return words.coHosts.none;
-  return fillIn(words.coHosts.with, { names: new Intl.ListFormat(locale === "ro" ? "ro" : "en", { type: "conjunction" }).format(names) });
+  const hosts = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null });
+  if (hosts.length === 0) return words.coHosts.none;
+  const names = fillIn(words.coHosts.with, {
+    names: new Intl.ListFormat(locale === "ro" ? "ro" : "en", { type: "conjunction" }).format(hosts.map((host) => host.name)),
+  });
+  const links = hosts.reduce((count, host) => count + host.links.length, 0);
+  const oneLanguage = hosts.some((host) => (host.descriptionRo === null) !== (host.descriptionEn === null));
+  const described = hosts.some((host) => host.descriptionRo !== null && host.descriptionEn !== null);
+  return join(words, [
+    names,
+    links > 0 ? counted(words.links.files, links, locale) : null,
+    oneLanguage ? words.coHosts.describedOneLanguage : described ? words.coHosts.described : null,
+  ]);
 }
 
 /** Box 13: `Eveniment principal · Ediție specială`, or `Nimic în evidență`. */
