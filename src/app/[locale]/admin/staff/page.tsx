@@ -185,7 +185,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
         (§315); a successful one is shown in the list below and in the banner, so it does not
         reopen an empty form.
       */}
-      <Panel title={t("staff.inviteTitle")} collapsible id="staff-invite" data-testid="staff-invite">
+      <Panel
+        title={t("staff.inviteTitle")}
+        // What "Add" does, readable while the fold is shut, like every other fold's aside (§NNN,
+        // folds start closed): the account too when the Zitadel key can make it (§123).
+        aside={invitesSend ? t("staff.inviteAsideSends") : t("staff.inviteAsideManual")}
+        collapsible
+        id="staff-invite"
+        data-testid="staff-invite"
+      >
         {/* A refused address or name comes back in its box, named in the summary (§315); the
             browser refuses first what the schema would (`staffInviteConstraints`). */}
         <ActionForm

@@ -547,7 +547,8 @@
       "bulkEraseConfirm": "Scrie câte ștergi",
       "bulkEraseConfirmHelp": "Exact numărul de înscrieri bifate — altfel nu se șterge nimic.",
       "bulkEraseAction": "Șterge definitiv",
-      "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse."
+      "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse.",
+      "filtersNone": "niciun filtru · toate înscrierile"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1041,7 +1042,9 @@
       "accountsBlind": "Nu am putut verifica cine are cont de autentificare: cheia Zitadel se autentifică, dar vede {seen} conturi — nici pe al tău, deși ești autentificat cu el. Service user-ul cheii nu este „Org User Manager” în organizație (SETUP.md §37, pasul 2; De făcut → „Cheia de invitații”). Până se rezolvă, „Adaugă” pune persoana pe listă, dar nu îi poate crea contul.",
       "accountsUnchecked": "Nu am putut verifica cine are cont de autentificare — Zitadel a răspuns: {reason}. Rândurile de mai jos nu spun nimic despre conturi până la o verificare reușită; reîncarcă pagina peste câteva minute.",
       "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel.",
-      "inviting": "Se adaugă…"
+      "inviting": "Se adaugă…",
+      "inviteAsideSends": "contul și invitația, într-un pas",
+      "inviteAsideManual": "lista și invitația; contul, din consola Zitadel"
     },
     "queue": {
       "title": "Coada de înscrieri",

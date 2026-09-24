@@ -178,3 +178,37 @@ describe("§NNN the rule is written once", () => {
     expect(read("src/shared/ui/Panel.tsx")).toContain("open={opensByItself(openWhen) || undefined}");
   });
 });
+
+/**
+ * "A closed fold that says nothing is a fold nobody opens" (`Panel`'s `aside`). The two folds
+ * this change closed that had no aside — adding a colleague, and the registrations' search and
+ * filters when nothing is filtered — say one line in their summary like the others.
+ */
+describe("§NNN a closed fold says what is inside it", () => {
+  it("the staff invite says what 'Add' does, with the Zitadel key and without it", () => {
+    const page = read("src/app/[locale]/admin/staff/page.tsx");
+    expect(page).toMatch(
+      /<Panel[\s\S]*?title=\{t\("staff\.inviteTitle"\)\}[\s\S]*?aside=\{invitesSend \? t\("staff\.inviteAsideSends"\) : t\("staff\.inviteAsideManual"\)\}[\s\S]*?id="staff-invite"/,
+    );
+  });
+
+  it("the registrations' filters say the list is whole when nothing narrows it", () => {
+    const page = read("src/app/[locale]/admin/registrations/(list)/page.tsx");
+    const panelStart = page.indexOf('title={t("panels.filters")}');
+    const tag = page.slice(panelStart, page.indexOf('data-testid="registrations-filters"', panelStart));
+    expect(tag).toContain('t("registrations.filtersInUse")');
+    expect(tag).toContain('t("registrations.filterAutoFeatured"');
+    expect(tag).toContain('t("registrations.filtersNone")');
+    expect(tag).not.toMatch(/:\s*undefined\s*\}/);
+  });
+
+  it("has the words in both languages", async () => {
+    const ro = (await import("../../../messages/ro.json")).default;
+    const en = (await import("../../../messages/en.json")).default;
+    for (const messages of [ro, en]) {
+      expect(messages.Admin.staff.inviteAsideSends).toBeTruthy();
+      expect(messages.Admin.staff.inviteAsideManual).toBeTruthy();
+      expect(messages.Admin.registrations.filtersNone).toBeTruthy();
+    }
+  });
+});

@@ -547,7 +547,8 @@
       "bulkEraseConfirm": "Type how many you are erasing",
       "bulkEraseConfirmHelp": "Exactly the number of ticked registrations — anything else erases nothing.",
       "bulkEraseAction": "Erase for good",
-      "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased."
+      "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
+      "filtersNone": "no filter · every registration"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1041,7 +1042,9 @@
       "accountsBlind": "Could not check who has a sign-in account: the Zitadel key authenticates but sees {seen} accounts — not even yours, though you are signed in with it. The key's service user is not an “Org User Manager” of the organization (SETUP.md §37, step 2; To do → “The invitation key”). Until that is fixed, “Add” puts the person on the list but cannot create their account.",
       "accountsUnchecked": "Could not check who has a sign-in account — Zitadel answered: {reason}. The rows below say nothing about accounts until a check succeeds; reload the page in a few minutes.",
       "inviteKeyMissing": "Sign-in accounts cannot be created: the Zitadel key is missing (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Without it, “Add” puts the person on the list and sends our invitation, but no account is created — and the sign-in page has no “create an account”, so they are stuck. Until the key is set, create their account by hand in the Zitadel console, with exactly the address in the table.",
-      "inviting": "Adding…"
+      "inviting": "Adding…",
+      "inviteAsideSends": "the account and the invitation, in one step",
+      "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console"
     },
     "queue": {
       "title": "The registration queue",

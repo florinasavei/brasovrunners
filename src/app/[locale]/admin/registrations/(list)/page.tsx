@@ -941,7 +941,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             ? t("registrations.filtersInUse")
             : autoScopedToFeatured && featuredEvent
               ? t("registrations.filterAutoFeatured", { event: featuredEvent.title ?? featuredEvent.id })
-              : undefined
+              : // Closed and unfiltered (§NNN, folds start closed): the summary still says the list is whole.
+                t("registrations.filtersNone")
         }
         collapsible
         // Open while the list is narrowed, so nobody loses a filter behind a fold (§269) —
