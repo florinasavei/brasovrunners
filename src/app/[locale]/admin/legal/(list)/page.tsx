@@ -377,8 +377,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         warn, so nothing opens it by itself. Shown only here, below the page's own heading and
         alerts rather than above them (only this page has a use for it; §336 review).
       */}
-      <Box id="legal-versions" sx={{ mb: 1 }}>
-        <Panel title={t("legalNotice.title")} collapsible>
+      <Box sx={{ mb: 1 }}>
+        <Panel id="legal-versions" title={t("legalNotice.title")} collapsible>
           <Typography variant="body2" color="text.secondary">
             {t("legalNotice.body")}
           </Typography>

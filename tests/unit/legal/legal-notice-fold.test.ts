@@ -23,14 +23,20 @@ describe("§336 the legal-text notice folds shut on /admin/legal and nowhere els
   const backofficeShell = read("src/modules/staff-identity/ui/BackofficeShell.tsx");
 
   it("renders the notice as a closed, addressable fold on the legal list page, after its own heading", () => {
-    expect(page).toContain('<Panel title={t("legalNotice.title")} collapsible>');
+    expect(page).toContain('<Panel id="legal-versions" title={t("legalNotice.title")} collapsible>');
     expect(page).toContain('{t("legalNotice.body")}');
-    expect(page).toContain('<Box id="legal-versions"');
     // After the legal.title / legal.intro / whatIs block, not before it.
     const whatIsIndex = page.indexOf('{t(`legal.whatIs.${key}`)}');
     const noticeIndex = page.indexOf('id="legal-versions"');
     expect(whatIsIndex).toBeGreaterThan(0);
     expect(noticeIndex).toBeGreaterThan(whatIsIndex);
+  });
+
+  it("uses the same headings the message catalogues carry, in both languages", () => {
+    const ro = JSON.parse(read("messages/ro.json"));
+    const en = JSON.parse(read("messages/en.json"));
+    expect(ro.Admin.legalNotice.title).toBe("Cum funcționează versiunile textelor legale");
+    expect(en.Admin.legalNotice.title).toBe("How legal-text versions work");
   });
 
   it("leaves the section layout a plain role gate, with no Panel of its own", () => {
