@@ -23,6 +23,20 @@ export const MAX_CO_HOST_LINKS = 8;
 export const MAX_CO_HOST_LINK_LABEL = 80;
 /** Longer than any share link a partner's own site, event platform or social profile makes. */
 export const MAX_CO_HOST_LINK_URL = 2000;
+/**
+ * What the partnership is, in a sentence or two (§352; the owner, for the Brașov Running
+ * Festival's card: "a short description of the partnership") — one short paragraph under the
+ * partner's name, not an article. Three hundred characters is two full sentences.
+ */
+export const MAX_CO_HOST_DESCRIPTION = 300;
+
+/**
+ * A description as one paragraph: every run of whitespace — a line break typed in the box, a tab
+ * pasted from somewhere — one space, and none at either end. The editor's box and a stored row
+ * are read through the same function, so what the organizer typed and what the page shows are
+ * the same words.
+ */
+export const normalizeCoHostDescription = (value: string) => value.replace(/\s+/g, " ").trim();
 
 /**
  * What a partner's link is, as a closed set: its own site, its own page for this event, where
@@ -69,6 +83,15 @@ export type CoHostLink = {
 
 export type CoHost = {
   name: string;
+  /**
+   * What the partnership is, in each language, as stored (§352) — or null. **A public surface
+   * never reads these two directly**: it asks `coHostDescription`, which answers only when both
+   * are written, so a row that somehow holds one language is shown in neither and the English
+   * page never carries the Romanian sentence. The editor reads them as they are, so a half-written
+   * pair opens with its half and can be completed.
+   */
+  descriptionRo: string | null;
+  descriptionEn: string | null;
   links: CoHostLink[];
 };
 
@@ -100,6 +123,17 @@ const coHostLinkSchema = z.object({
 });
 
 /**
+ * One language of a stored description, read leniently like a label: anything that is not a
+ * string, is empty once its whitespace is collapsed, or is longer than the ceiling reads as none
+ * — never a reason to drop the partner. Absent is every row saved before the description existed.
+ */
+function readDescription(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = normalizeCoHostDescription(value);
+  return text !== "" && text.length <= MAX_CO_HOST_DESCRIPTION ? text : null;
+}
+
+/**
  * A stored partner, read leniently on purpose (§169), and read whichever shape it was last
  * saved in: the list's own two releases.
  *
@@ -108,11 +142,15 @@ const coHostLinkSchema = z.object({
  * makes the object fail to parse on its own: an unreadable `url` (not a string, not https) is
  * silently "no link", exactly as the two columns before the list ever did, and an unreadable
  * entry inside `links` is dropped rather than taking the rest of the partner's links with it.
- * A name is still required — a partner without one is nothing to render.
+ * A name is still required — a partner without one is nothing to render. The description
+ * (§352) is read the same forgiving way (`readDescription`): every older shape has none, and
+ * reads with both languages null.
  */
 const coHostSchema = z
   .object({
     name: z.string().trim().min(1).max(200),
+    descriptionRo: z.unknown().optional(),
+    descriptionEn: z.unknown().optional(),
     links: z.unknown().optional(),
     url: z.unknown().optional(),
   })
@@ -128,7 +166,7 @@ const coHostSchema = z
       : typeof row.url === "string" && isCoHostUrl(row.url.trim())
         ? [{ kind: LEGACY_CO_HOST_LINK_KIND, url: row.url.trim(), labelRo: null, labelEn: null }]
         : [];
-    return { name: row.name, links };
+    return { name: row.name, descriptionRo: readDescription(row.descriptionRo), descriptionEn: readDescription(row.descriptionEn), links };
   });
 
 /** What a row has to carry to be read: the column, and the two columns it replaced. */
@@ -158,9 +196,41 @@ export function readCoHosts(row: CoHostSource): CoHost[] {
   }
   if (row.coHostName) {
     const url = row.coHostUrl && isCoHostUrl(row.coHostUrl) ? row.coHostUrl : null;
-    return [{ name: row.coHostName, links: url ? [{ kind: LEGACY_CO_HOST_LINK_KIND, url, labelRo: null, labelEn: null }] : [] }];
+    return [
+      {
+        name: row.coHostName,
+        descriptionRo: null,
+        descriptionEn: null,
+        links: url ? [{ kind: LEGACY_CO_HOST_LINK_KIND, url, labelRo: null, labelEn: null }] : [],
+      },
+    ];
   }
   return [];
+}
+
+/**
+ * What the partnership is, in the reader's language — or null, which the page renders as nothing.
+ *
+ * **Both or neither** (§352; the owner: "I want multi-lingual, always"): the save refuses a
+ * description written in one language only, and this is the same rule on the way out, for a row
+ * that reached the column some other way (a hand-written `UPDATE`, a release that saved it
+ * before the rule). Half a pair answers null in *both* languages: the Romanian page does not
+ * describe a partnership the English page is silent about, and the English page never falls back
+ * to the Romanian sentence. The editor reads the stored pair itself, so the half is kept there
+ * until somebody completes it.
+ */
+export function coHostDescription(host: Pick<CoHost, "descriptionRo" | "descriptionEn">, locale: "ro" | "en"): string | null {
+  if (!host.descriptionRo || !host.descriptionEn) return null;
+  return locale === "ro" ? host.descriptionRo : host.descriptionEn;
+}
+
+/**
+ * The partner's links in the order the page lists them: where to register with it first — the
+ * one link on the card that asks the reader to do something — then the rest as the club ordered
+ * them. Stable, so two registration links keep their own order, and so does everything after.
+ */
+export function coHostLinksForPage(host: Pick<CoHost, "links">): CoHostLink[] {
+  return [...host.links.filter((link) => link.kind === "REGISTRATION"), ...host.links.filter((link) => link.kind !== "REGISTRATION")];
 }
 
 /**

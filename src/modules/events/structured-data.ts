@@ -1,5 +1,5 @@
 import { env } from "@/shared/config/env";
-import { primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
+import { coHostDescription, primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
 import { hasAgeRule } from "./domain/event-type";
 import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
@@ -107,9 +107,11 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
  * order is what says who holds the event. The club's entry is the same `@id` every event
  * points at, so a search engine reads one organization across the whole site; a partner is a
  * plain Organization with a name and, when it named one, its `url` — its own site (§344), or
- * its first link if it named no site.
+ * its first link if it named no site — and, on a page whose language is known, the partnership's
+ * `description` in that language (§352), by the same both-or-neither reading the page's own card
+ * uses (`coHostDescription`): the block never says in English what only the Romanian page says.
  */
-function organizers(event: PublicEvent, organizationName: string) {
+function organizers(event: PublicEvent, organizationName: string, locale?: "ro" | "en") {
   const club = { "@type": "SportsOrganization", "@id": clubId(), name: organizationName };
   const coHosts = readCoHosts(event);
   if (coHosts.length === 0) return club;
@@ -117,7 +119,8 @@ function organizers(event: PublicEvent, organizationName: string) {
     club,
     ...coHosts.map((host) => {
       const primary = primaryCoHostLink(host);
-      return { "@type": "Organization", name: host.name, ...(primary ? { url: primary.url } : {}) };
+      const description = locale ? coHostDescription(host, locale) : null;
+      return { "@type": "Organization", name: host.name, ...(primary ? { url: primary.url } : {}), ...(description ? { description } : {}) };
     }),
   ];
 }
@@ -156,8 +159,18 @@ function eventPlace(event: PublicEvent) {
   };
 }
 
-/** BR-REQ-052-02 criteria 2 and 4. */
-export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string, images: readonly string[] = []) {
+/**
+ * BR-REQ-052-02 criteria 2 and 4. `locale` is the page's language: the one thing the public row
+ * does not carry, and what a partner's description needs to be said in (§352). Left out, the
+ * partners are named without one — never in a language guessed for them.
+ */
+export function sportsEventJsonLd(
+  event: PublicEvent,
+  url: string,
+  organizationName: string,
+  images: readonly string[] = [],
+  locale?: "ro" | "en",
+) {
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -185,7 +198,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // The club, and every organization the event is held with (§121, §168) — the club
     // first, the partners in the club's own order. A bare object when the club hosts alone,
     // because `organizer` is one value there and an array of one reads as a list of one.
-    organizer: organizers(event, organizationName),
+    organizer: organizers(event, organizationName, locale),
     /**
      * Whether a runner needs their wallet (§343, reversing part of the owner's 2026-09-19 "state
      * somewhere that Brașov Runners events are always free"): true for `FREE` and for an event

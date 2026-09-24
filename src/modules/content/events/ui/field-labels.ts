@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { MAX_CO_HOST_LINK_LABEL, MAX_CO_HOST_LINKS, MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
+import { MAX_CO_HOST_DESCRIPTION, MAX_CO_HOST_LINK_LABEL, MAX_CO_HOST_LINKS, MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
 import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
 
 /**
@@ -113,6 +113,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   */
   labels["event.coHosts"] = t("editor.coHostRows.tooMany", { max: MAX_CO_HOSTS });
   labels["event.coHosts[].name"] = inBox("coHosts", t("editor.coHostRows.name"));
+  // What the partnership is (§352): the box's own heading and its language, as the boxes say it.
+  labels["event.coHosts[].descriptionRo"] = inBox("coHosts", `${t("editor.coHostRows.about")} (${tSite("languageName.ro")})`);
+  labels["event.coHosts[].descriptionEn"] = inBox("coHosts", `${t("editor.coHostRows.about")} (${tSite("languageName.en")})`);
   labels["event.coHosts[].links"] = t("editor.coHostRows.tooManyLinksGeneric", { max: MAX_CO_HOST_LINKS });
   labels["event.coHosts[].links[].kind"] = inBox("coHosts", t("editor.coHostRows.kind"));
   labels["event.coHosts[].links[].url"] = inBox("coHosts", t("editor.coHostRows.url"));
@@ -121,6 +124,10 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   for (let p = 0; p < MAX_CO_HOSTS; p += 1) {
     const partnerNumber = p + 1;
     labels[`event.coHosts[${p}].name`] = t("editor.coHostRows.nameError", { p: partnerNumber });
+    // "Partenerul 1 — despre parteneriat (English): …": the empty side of a one-language text
+    // (§352), which is the only side a both-or-neither refusal ever names.
+    labels[`event.coHosts[${p}].descriptionRo`] = t("editor.coHostRows.descriptionRoError", { p: partnerNumber, max: MAX_CO_HOST_DESCRIPTION });
+    labels[`event.coHosts[${p}].descriptionEn`] = t("editor.coHostRows.descriptionEnError", { p: partnerNumber, max: MAX_CO_HOST_DESCRIPTION });
     labels[`event.coHosts[${p}].links`] = t("editor.coHostRows.tooManyLinks", { p: partnerNumber, max: MAX_CO_HOST_LINKS });
     for (let l = 0; l < MAX_CO_HOST_LINKS; l += 1) {
       const linkNumber = l + 1;

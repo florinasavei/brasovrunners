@@ -52,14 +52,25 @@ const issuesOf = (links: unknown) => {
 describe("BR-REQ-011-01 criterion 20 the links a form may post", () => {
   it("keeps the order, the kind and both labels, and turns an empty label into none", () => {
     const parsed = parse([
-      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "" },
-      { kind: "DOCUMENT", url: PDF, labelRo: "", labelEn: "Extended rules" },
+      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "The 21 km route" },
+      { kind: "DOCUMENT", url: PDF, labelRo: "", labelEn: "" },
     ]);
     expect(parsed.success).toBe(true);
     expect(parsed.data?.links).toEqual([
-      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null },
-      { kind: "DOCUMENT", url: PDF, labelRo: null, labelEn: "Extended rules" },
+      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "The 21 km route" },
+      { kind: "DOCUMENT", url: PDF, labelRo: null, labelEn: null },
     ]);
+  });
+
+  it("refuses a label in one language only, on the empty side — both or neither (§352)", () => {
+    expect(issuesOf([{ kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "" }])).toEqual([
+      { path: "links.0.labelEn", message: "link 1: the label is written in Romanian only; write it in English too, or in neither" },
+    ]);
+    expect(issuesOf([{ kind: "GPX", url: DRIVE }, { kind: "DOCUMENT", url: PDF, labelRo: "", labelEn: "Extended rules" }])).toEqual([
+      { path: "links.1.labelRo", message: "link 2: the label is written in English only; write it in Romanian too, or in neither" },
+    ]);
+    // And the summary links to the empty box, by the name the form posts.
+    expect(eventFormFieldName("links.1.labelRo")).toBe("event.links[1].labelRo");
   });
 
   it("drops the editor's spare line — nothing typed, whatever the kind select says", () => {
@@ -104,7 +115,7 @@ describe("BR-REQ-011-01 criterion 20 the links a form may post", () => {
   });
 
   it("refuses a label with no address rather than dropping it — somebody meant a link there", () => {
-    expect(issuesOf([{ kind: "GPX", url: "", labelRo: "Traseul" }])).toEqual([
+    expect(issuesOf([{ kind: "GPX", url: "", labelRo: "Traseul", labelEn: "Route" }])).toEqual([
       { path: "links.0.url", message: "link 1: a link needs its address, starting with https://" },
     ]);
   });

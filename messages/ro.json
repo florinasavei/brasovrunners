@@ -134,7 +134,8 @@
         "INSTAGRAM": "Instagram",
         "STRAVA": "Strava",
         "OTHER": "Link"
-      }
+      },
+      "registerWith": "Înscriere la {partner}"
     },
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
@@ -631,24 +632,68 @@
       "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
-      "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
+      "eventsArchivedDone": {
+        "one": "{count} eveniment arhivat.",
+        "few": "{count} evenimente arhivate.",
+        "other": "{count} de evenimente arhivate."
+      },
+      "eventsArchiveFailed": {
+        "one": "{count} nu a putut fi arhivat.",
+        "few": "{count} nu au putut fi arhivate.",
+        "other": "{count} nu au putut fi arhivate."
+      },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
       "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până pe {until} — următoarele opt săptămâni. Restul le creează platforma singură, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit; nu mai ai nimic de apăsat.",
-      "seriesDraftsOne": "{dates} în ciornă — nu apare pe site:",
-      "seriesDraftsMany": "{dates} în ciornă — nu apar pe site:",
+      "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
+      "seriesDraftsMany": "{dates} în ciornă, nu sunt pe site:",
+      "seriesNewDates": {
+        "one": "{count} dată nouă",
+        "few": "{count} date noi",
+        "other": "{count} de date noi"
+      },
+      "seriesDraftsNewOne": "{dates}, creată automat, nu e pe site:",
+      "seriesDraftsNewMany": "{dates}, create automat, nu sunt pe site:",
+      "seriesDraftsSourceOne": "{dates} a seriei nu e pe site — seria nu e publicată:",
+      "seriesDraftsSourceMany": "{dates} ale seriei nu sunt pe site — seria nu e publicată:",
       "seriesDraftsMore": "și încă {count}",
-      "seriesDraftsAlways": "O dată în ciornă nu e pe site: nimeni n-o vede și nimeni nu se poate înscrie la ea. O singură dată o publici din editorul ei — datele de pe acest rând îl deschid. Toate deodată: bifează seria în listă (bifa ei le cuprinde pe toate datele) și apasă „{button}” — se publică fiecare dată a seriei care nu e încă publicată.",
-      "seriesDraftsWhyOff": "Motivul: la această serie publicarea automată e oprită, așa că fiecare dată nouă pornește ca ciornă. Ca să nu mai fie nevoie s-o faci pentru fiecare dată, deschide oricare dată a seriei și, în caseta „{section}”, bifează „{tick}” și apasă „{button}”.",
-      "seriesDraftsWhySource": "Motivul: sursa seriei nu e publicată acum, iar datele unei surse nepublicate rămân ciorne oricare ar fi setarea. Publică mai întâi evenimentul sursă.",
+      "seriesDraftsHintNew": "Seria își creează singură datele pe următoarele {weeks} săptămâni; cu publicarea automată oprită, fiecare dată nouă rămâne ciornă până o publici.",
+      "seriesDraftsHintSource": "Seria pornește dintr-un eveniment care nu e publicat; până îl publici, și datele pe care le creează rămân ciorne.",
+      "seriesDraftsPublish": "Publică",
+      "seriesDraftsPublishTitle": "Publici {dates}?",
+      "seriesDraftsPublishBody": "Apar pe site și, dacă evenimentul are înscrieri, se deschid înscrierile. O dată cu o limbă necompletată rămâne ciornă.",
+      "seriesDraftsAutoPublish": "Publică automat de acum",
+      "seriesDraftsAutoPublishTitle": "Pornești publicarea automată?",
+      "seriesDraftsAutoPublishBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site. Datele create deja, de pe acest rând, rămân ciorne — pe acelea le publici cu „{button}”.",
+      "seriesDraftsAutoPublishConfirm": "Pornește",
+      "seriesDraftsOpenSource": "Deschide seria",
+      "seriesAutoPublishStarted": "Publicarea automată e pornită: datele noi ale seriei apar singure pe site. Cele create deja rămân ciorne până apeși „{button}”.",
       "bulkSelectAll": "Toate",
       "bulkSelected": "Bifate: {count}",
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "eventsDeletedDone": {
+        "one": "{count} eveniment șters.",
+        "few": "{count} evenimente șterse.",
+        "other": "{count} de evenimente șterse."
+      },
+      "eventsDeleteFailed": {
+        "one": "{count} nu s-a putut șterge — are înscriși. Arhivează-l, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "few": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+        "other": "{count} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile."
+      },
+      "eventsPublishedDone": {
+        "one": "{count} eveniment publicat.",
+        "few": "{count} evenimente publicate.",
+        "other": "{count} de evenimente publicate."
+      },
+      "eventsPublishFailed": {
+        "one": "{count} nu a putut fi publicat (o limbă incompletă, sau modificat între timp).",
+        "few": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp).",
+        "other": "{count} nu au putut fi publicate (o limbă incompletă, sau modificate între timp)."
+      },
       "hardDelete": "Ștergere definitivă…",
       "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },
@@ -900,6 +945,8 @@
         "moveDown": "Mută mai jos partenerul",
         "partnerNew": "Partener nou",
         "name": "Numele partenerului",
+        "about": "Despre parteneriat",
+        "descriptionHelp": "Opțional, în ambele limbi · o propoziție-două: ce facem împreună. Apare pe pagina evenimentului, sub numele partenerului.",
         "kind": "Tip",
         "url": "Adresa (https://…)",
         "labelRo": "Eticheta în română (opțional)",
@@ -913,8 +960,10 @@
         "nameError": "Partenerul {p}: partenerul are nevoie de un nume",
         "kindError": "Partenerul {p}, linkul {l}: alege tipul din listă",
         "urlError": "Partenerul {p}, linkul {l}: adresa trebuie să înceapă cu https://",
-        "labelRoError": "Partenerul {p}, linkul {l}: eticheta în română are cel mult {max} de caractere",
-        "labelEnError": "Partenerul {p}, linkul {l}: eticheta în engleză are cel mult {max} de caractere",
+        "labelRoError": "Partenerul {p}, linkul {l}: eticheta în română — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "labelEnError": "Partenerul {p}, linkul {l}: eticheta în engleză — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "descriptionRoError": "Partenerul {p} — despre parteneriat (Română): scrie textul în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "descriptionEnError": "Partenerul {p} — despre parteneriat (English): scrie textul în ambele limbi sau în niciuna, cel mult {max} de caractere",
         "tooManyLinks": "Partenerul {p}: cel mult {max} linkuri pe un partener",
         "tooManyLinksGeneric": "Un partener poate avea cel mult {max} linkuri",
         "tooMany": "Parteneri: cel mult {max} pe un eveniment"
@@ -932,8 +981,8 @@
         "row": "Linkul",
         "urlError": "Linkul {n}: adresa trebuie să înceapă cu https://",
         "kindError": "Linkul {n}: alege tipul din listă",
-        "labelRoError": "Linkul {n}: eticheta în română are cel mult {max} de caractere",
-        "labelEnError": "Linkul {n}: eticheta în engleză are cel mult {max} de caractere",
+        "labelRoError": "Linkul {n}: eticheta în română — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "labelEnError": "Linkul {n}: eticheta în engleză — scrie-o în ambele limbi sau în niciuna, cel mult {max} de caractere",
         "tooMany": "Linkuri și fișiere: cel mult {max} pe un eveniment"
       },
       "stravaEventUrl": "Link către evenimentul Strava",
@@ -1157,7 +1206,7 @@
         },
         "coHosts": {
           "title": "Parteneri — „Împreună cu”",
-          "note": "Opțional. Un card pentru fiecare organizație alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — cu oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu …” pe pagină, fiecare cu linkurile ei, și, dacă bifezi Partenerii în Subsol, pe numărul de concurs. Partenerii se copiază pe toate datele unei serii."
+          "note": "Opțional. Un card pentru fiecare organizație alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — cu o propoziție-două despre parteneriat, în română și în engleză, și oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu …” pe pagină, fiecare cu textul și linkurile ei, și, dacă bifezi Partenerii în Subsol, pe numărul de concurs. Partenerii se copiază pe toate datele unei serii."
         },
         "promotion": {
           "title": "Evidențiere pe site"
@@ -1298,6 +1347,8 @@
           },
           "coHosts": {
             "with": "Împreună cu {names}",
+            "described": "cu descriere",
+            "describedOneLanguage": "descriere într-o singură limbă",
             "none": "Fără parteneri"
           },
           "promotion": {
@@ -1740,10 +1791,10 @@
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
-            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată — pe Free, orele incluse s-ar termina la jumătatea lunii și site-ul ar cădea până luna următoare; pe Launch, fiecare oră trează se plătește.",
+            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *). Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *). Un apel fără nimic de făcut răspunde fără să trezească baza de date, așa că apelurile dese nu costă nimic — baza se trezește doar când o sarcină chiar are ceva de făcut.",
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
-            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă orele proiectului lui — incluse pe Free, plătite pe Launch.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header, la 30 de minute (Custom → toate zilele, toate orele, minutele 0 și 30). La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
+            "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe această pagină → Costuri „Cât de des verifică platforma” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
+            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header — pe producție o dată pe oră, la minutul 2 (Custom → toate zilele, toate orele, minutul 2; e în regulă să lași deoparte 02:00 și 03:00: 2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). Nu la 30 de minute: fiecare verificare trezește baza de date pentru cinci minute, iar Neon exact asta facturează. La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
           ]
         },
         "retentionSweep": {

@@ -127,6 +127,37 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
+  it("says what the partnership is in the page's language, and only when the club wrote it in both (§352)", () => {
+    const festival = (descriptionEn: string | null) =>
+      baseEvent({
+        coHosts: [
+          {
+            name: "Brașov Running Festival",
+            descriptionRo: "Alergăm împreună duminică.",
+            descriptionEn,
+            links: [{ kind: "SITE", url: "https://festival.example.test", labelRo: null, labelEn: null }],
+          },
+        ],
+      } as Partial<PublicEvent>);
+    const partnerOf = (block: { organizer: unknown[] }) => block.organizer[1];
+
+    expect(partnerOf(parsed(sportsEventJsonLd(festival("We run together on Sunday."), URL, "Brașov Runners", [], "ro")))).toEqual({
+      "@type": "Organization",
+      name: "Brașov Running Festival",
+      url: "https://festival.example.test",
+      description: "Alergăm împreună duminică.",
+    });
+    expect(partnerOf(parsed(sportsEventJsonLd(festival("We run together on Sunday."), URL, "Brașov Runners", [], "en")))).toMatchObject({
+      description: "We run together on Sunday.",
+    });
+    // Half a pair: said in neither language — the English block never carries the Romanian text.
+    for (const locale of ["ro", "en"] as const) {
+      expect(partnerOf(parsed(sportsEventJsonLd(festival(null), URL, "Brașov Runners", [], locale)))).not.toHaveProperty("description");
+    }
+    // No language given: no description, never a guessed one.
+    expect(partnerOf(parsed(sportsEventJsonLd(festival("We run together on Sunday."), URL, "Brașov Runners")))).not.toHaveProperty("description");
+  });
+
   it("keeps one organizer object, not a list of one, when the club hosts alone", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });

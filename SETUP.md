@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.73-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.73-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.74-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -654,7 +654,8 @@ somebody paused and forgot. The health check knows the two cadences
 at noon. The site is allowed to be slower at night — the first request after an idle hour
 pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
 then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
-fifteen minutes around the clock and 180 at five.
+fifteen minutes around the clock and 180 at five. *(Superseded 2026-09-23/24: the health
+monitors are hourly on production and six-hourly on QA — §40 has the eight jobs as set.)*
 
 **Mailgun, done 2026-09-18.** Sending domain `mail.brasovrunners.com` — a subdomain, so the
 apex stays free for mailboxes later (`docs/RUNBOOKS.md` § Step 2 — Email) — EU region, shared
@@ -1210,6 +1211,7 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
 - **The health monitors** (`DECISIONS.md` §98): cron-job.org has `GET /api/health` every
   30 minutes with "notify on failure" on production and on QA — the club is emailed when
   email stops. Nine monitors in all: the two job pingers per environment (§26) and this one.
+  *(Eight since 2026-09-18 counted by job, with new schedules since 2026-09-24: §40.)*
   QA's pingers are hourly (§68), so QA carries `PINGER_CADENCE_MINUTES=60` (set 2026-09-19,
   `DECISIONS.md` §148): without it the health check measured QA against production's fifteen
   minutes and cried "degraded" — a cronjob-failed email — for most of every hour.
@@ -1442,17 +1444,46 @@ The size ceiling is `PATCH …/projects/<id>/endpoints/<endpoint id>` with
 `{"endpoint":{"autoscaling_limit_max_cu":1}}`, and the same values in the project's
 `default_endpoint_settings` so a recreated compute inherits them.
 
-**The monitors — the owner's part, on cron-job.org** (the job monitors are §26, the health
-monitors §36):
+**The monitors on cron-job.org, as set — read back from the owner's screenshots on
+2026-09-24.** Account time zone `Europe/Bucharest`. The job addresses are each Vercel project's
+own `vercel.app` address (§26's table), on purpose; the health monitors call the club's hosts.
+Every job POST carries `Authorization: Bearer <that environment's JOB_SECRET>` (the job's
+*Advanced* tab); the health GETs carry nothing.
 
-1. **Production health monitor** (`GET /api/health` on the `.com`): Schedule → Custom → every
-   day, every hour, minute **0** only — no longer 0 and 30. Notifications on failure stay on.
-2. **QA health monitor** (`GET /api/health` on `qa.`): Custom → every day, hours **0, 6, 12,
-   18**, minute **0**.
-3. **The four job monitors stay as they are.** From the release that makes a ping with nothing due
-   answer without the database, a frequent ping costs nothing.
-4. **After that release:** on QA, `/admin/tasks` → Costuri → „Cât de des verifică platforma" →
-   **2 ore**; production stays on „La nevoie".
+```text
+cron-job.org title          request                                          crontab               when
+prod outbox day             POST production …/api/internal/jobs/email-outbox  */15 7-22 * * *       every 15 min, 07:00–22:45
+prod outbox night           POST production …/api/internal/jobs/email-outbox  0 0-6,23 * * *        hourly, 23:00–06:00
+prod maintenance day        POST production …/jobs/registration-maintenance   0,15,30 7-22 * * *    :00 :15 :30, 07:00–22:30 — see below
+prod maintenance night      POST production …/jobs/registration-maintenance   0 0-1,4-6,23 * * *    hourly, 23:00–06:00, not 02:00 or 03:00
+brasovrunners PROD health   GET  the .com /api/health                         2 0-1,4-23 * * *      hourly at :02, not 02:02 or 03:02
+qa outbox                   POST QA …/api/internal/jobs/email-outbox          0 * * * *             hourly
+qa maintenance              POST QA …/jobs/registration-maintenance           0 */2 * * *           every 2 hours, even hours
+brasovrunners QA health     GET  qa. /api/health                              2 */6 * * *           00:02, 06:02, 12:02, 18:02
+```
 
-Steps 1 and 2 change nothing the health check measures — it times the *job* runs, not its own —
-so they are safe on any day. Step 4 waits for the release because the card does not exist before it.
+All eight: *notify on failure* after 1 failure, *notify when disabled for too many failures* on,
+responses not saved.
+
+**Why this is right against the health check** (`modules/jobs/quiet-hours.ts`: a job is
+`stale` after twice the cadence plus five minutes — 35 minutes by day, 125 at night on
+production; 125 on QA, which carries `PINGER_CADENCE_MINUTES=60`):
+
+- Production's night maintenance gap, 01:00 → 04:00, reads `stale` from 03:05 to 04:00 — but no
+  health check runs in that window (it skips 02:02 and 03:02), and the 04:02 check follows the
+  04:00 run. No false alarm; a hold or offer that expires at 02:10 is released at 04:00, when
+  nobody is registering.
+- QA's maintenance every 2 hours sits inside its 125 minutes, and each QA health check runs two
+  minutes after an even-hour maintenance run.
+- The health checks are the expensive ones: every `/api/health` touches the database, and on
+  Launch a wake costs at least five minutes (above). A job ping with nothing due answers from the
+  cache and wakes nothing (§334), which is why the job monitors stay frequent.
+
+**Two things still open, both the owner's:**
+
+1. **prod maintenance day** reads `0,15,30` — the :45 run is missing (probably a click). It
+   passes the health check (a 30-minute gap against 35), but by day a hold or a waiting-list offer
+   is then released up to 30 minutes late instead of 15, at no saving: tick minute **45** too, so
+   it reads `*/15 7-22 * * *` like the outbox.
+2. On QA, `/admin/tasks` → Costuri → „Cât de des verifică platforma" → **2 ore** (the card is
+   live since BR-V1.70); production stays on „La nevoie".
