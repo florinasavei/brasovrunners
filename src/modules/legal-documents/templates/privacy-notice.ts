@@ -20,8 +20,9 @@
  *
  * The hold, the offer and the reminder are merge fields — `{{holdMinutes}}`, `{{offerHours}}`,
  * `{{reminderClause}}` — filled from the club's "Termene" when the notice is shown (§NNN). The
- * reminder is a whole clause rather than a number, so that a club sending none (zero) drops it
- * from the sentence instead of promising "un memento cu 0 ore înainte". The retention periods
+ * reminder is a whole clause rather than a number, so that a club sending none by default (zero)
+ * reads "un memento înainte de start, dacă evenimentul trimite unul" — an event may still send one
+ * — instead of promising "un memento cu 0 ore înainte". The retention periods
  * (three years, seven days, thirty days…) are not merge fields: they are the club's legal
  * commitment, written in the text it approves, and no setting may move them.
  */

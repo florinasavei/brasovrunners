@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { events } from "@/db/schema/events";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import {
   computeDeclarationHoldExpiry,
   computeWaitlistOfferExpiry,
   confirmationWindow,
+  participationWindowOpen,
+  DEFAULT_CONFIRMATION_DEADLINE_DAYS,
+  DEFAULT_CONFIRMATION_OPENS_DAYS,
 } from "@/modules/registrations/domain/hold-deadlines";
 
 const NOW = new Date("2026-09-04T10:00:00.000Z");
@@ -105,5 +109,24 @@ describe("the participation window", () => {
     expect(computeDeclarationHoldExpiry({ now: NOW, registrationClosesAt: null, eventStartsAt: startsAt, window: null, deadlines: { holdMinutes: 45 } })).toEqual(
       new Date(NOW.getTime() + 45 * MINUTE),
     );
+  });
+});
+
+describe("§104 §NNN whether the participation window is open", () => {
+  const startsAt = new Date("2026-10-11T07:00:00.000Z");
+  const day = 24 * HOUR;
+  it("is closed before the opening day, open from it, and never for an event with no window", () => {
+    expect(participationWindowOpen(startsAt, 7, new Date(startsAt.getTime() - 8 * day))).toBe(false);
+    expect(participationWindowOpen(startsAt, 7, new Date(startsAt.getTime() - 7 * day))).toBe(true);
+    expect(participationWindowOpen(startsAt, 7, new Date(startsAt.getTime() - 3 * day))).toBe(true);
+    expect(participationWindowOpen(startsAt, 0, new Date(startsAt.getTime() - HOUR))).toBe(false);
+    expect(participationWindowOpen(startsAt, null, new Date(startsAt.getTime() - HOUR))).toBe(false);
+  });
+});
+
+describe("§104 the participation window's defaults", () => {
+  it("are the column defaults, one number in two places held together", () => {
+    expect(events.confirmationOpensDaysBefore.default).toBe(DEFAULT_CONFIRMATION_OPENS_DAYS);
+    expect(events.confirmationDeadlineDaysBefore.default).toBe(DEFAULT_CONFIRMATION_DEADLINE_DAYS);
   });
 });

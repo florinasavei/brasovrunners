@@ -83,6 +83,22 @@ describe("§NNN the club's deadlines as a setting", () => {
     expect(fakeNextCache.invalidated).toContain("br-jobs:due:registration-maintenance");
   });
 
+  it("a save that changes nothing writes nothing — no row, no audit, no cache expiry, no job woken", async () => {
+    const admin = await staff("ADMIN");
+    // Unset: saving today's numbers is no change.
+    expect(await updateDeadlines(db, admin, { ...DEFAULT_DEADLINES }, NOW)).toEqual({ deadlines: DEFAULT_DEADLINES, updatedAt: null });
+    expect(await db.select().from(platformSettings)).toEqual([]);
+    // Set once, then saved again unchanged: the first save's row and audit stand alone.
+    const next = { ...DEFAULT_DEADLINES, holdMinutes: 15 };
+    await updateDeadlines(db, admin, next, NOW);
+    fakeNextCache.reset();
+    const later = new Date(NOW.getTime() + 60_000);
+    expect(await updateDeadlines(db, admin, next, later)).toEqual({ deadlines: next, updatedAt: NOW });
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "deadlines.changed"))).toHaveLength(1);
+    expect((await readDeadlines(db)).updatedAt).toEqual(NOW);
+    expect(fakeNextCache.invalidated).toEqual([]);
+  });
+
   it("is a Superadministrator's too, the role above", async () => {
     const saved = await updateDeadlines(db, await staff("SUPERADMIN"), { ...DEFAULT_DEADLINES, offerHours: 12 }, NOW);
     expect(saved.deadlines.offerHours).toBe(12);

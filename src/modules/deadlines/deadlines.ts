@@ -81,6 +81,8 @@ export async function updateDeadlines<T extends Record<string, unknown>>(
   const next: Deadlines = parsed.data;
   const before = await readDeadlines(db);
   const changed = changedDeadlines(before.deadlines, next);
+  // A save that moves nothing writes nothing: no row, no audit, no cache expiry, no job woken.
+  if (changed.length === 0) return before;
 
   await db.transaction(async (tx) => {
     await tx

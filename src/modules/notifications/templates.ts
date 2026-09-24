@@ -369,6 +369,12 @@ export type TemplateData = {
   /** True when the hold is the participation window's (§104), not the club's minutes. */
   confirmLater?: boolean;
   /**
+   * True when the event's participation window is already open (§104, §NNN): the message is the
+   * send when the window opens (or a resend after it), itself the reminder, so it does not promise
+   * "or when we remind you".
+   */
+  windowOpen?: boolean;
+  /**
    * The deadlines this message states, as numbers (§NNN): the club's "Termene" in force when it is
    * rendered, this event's own reminder lead, its participation window's opening, and how long a
    * link with no deadline of its own lives. Each half of a bilingual message words them in its own
@@ -579,7 +585,7 @@ const T = {
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`
+          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
         `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
       ],
@@ -860,7 +866,7 @@ const T = {
           : "A place is waiting — sign the declaration",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. ${d.windowOpen ? "Sign now, from the link below." : `You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`}`
           : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
         `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
       ],
@@ -1308,13 +1314,6 @@ export function buildTemplateContent(
 }
 
 /**
- * The deadlines a message states, as words in one half's language (§NNN).
- *
- * The renderer and the preview always hand the numbers over; a caller that does not — a test, a
- * fixture — reads the club's defaults, which are exactly the numbers an unset setting has, so a
- * message never goes out with a blank where a duration belongs.
- */
-/**
  * How long the "my registrations" link lives, from the constant it is minted with (`DEFAULT_TOKEN_HOURS`):
  * what a body built without `timingWords` says — the editor's starting text (`platformWords`) — so
  * no path reads "valabil  și".
@@ -1323,6 +1322,13 @@ function defaultLinkLifetime(locale: EmailLocale): string {
   return durationPhrase(locale, DEFAULT_TOKEN_HOURS / 24, "days");
 }
 
+/**
+ * The deadlines a message states, as words in one half's language (§NNN).
+ *
+ * The renderer and the preview always hand the numbers over; a caller that does not — a test, a
+ * fixture — reads the club's defaults, which are exactly the numbers an unset setting has, so a
+ * message never goes out with a blank where a duration belongs.
+ */
 function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Partial<TemplateData> {
   const numbers = timings ?? { ...DEFAULT_DEADLINES };
   return {

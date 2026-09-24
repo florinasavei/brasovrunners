@@ -34,6 +34,19 @@ describe("§NNN the emails word the club's deadlines", () => {
     expect(text(week)).toContain("or when we remind you one week before the start.");
   });
 
+  it("the first send promises the reminder; the send when the window opens is the reminder and promises none, in both languages", () => {
+    const first = { ...base, confirmLater: true, holdExpiresAtFormatted: "vineri, 9 oct.", timings };
+    const firstBoth = renderBilingual("COMPLETE_DECLARATION", "ro", first, "https://example.test/x");
+    expect(firstBoth.text).toContain("sau când îți reamintim, cu 10 zile înainte de start.");
+    expect(firstBoth.text).toContain("or when we remind you 10 days before the start.");
+
+    const opened = renderBilingual("COMPLETE_DECLARATION", "ro", { ...first, windowOpen: true }, "https://example.test/x");
+    expect(opened.text).not.toContain("îți reamintim");
+    expect(opened.text).not.toContain("when we remind you");
+    expect(opened.text).toContain("Semnează acum, din linkul de mai jos.");
+    expect(opened.text).toContain("Sign now, from the link below.");
+  });
+
   it("says how long the 'my registrations' link lives, from the constant it is minted with", () => {
     expect(text(buildTemplateContent("PROFILE_MANAGE_LINK", "ro", { ...base, timings }, "https://example.test/x"))).toContain("Linkul este valabil 14 zile");
     expect(text(buildTemplateContent("PROFILE_MANAGE_LINK", "en", base, "https://example.test/x"))).toContain("The link is valid for 14 days");

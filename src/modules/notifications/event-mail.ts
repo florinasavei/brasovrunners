@@ -47,7 +47,7 @@ function insideReminderWindow(now: Date, clubHours: number) {
  *
  * Confirmed only: a waiting-list entry has nothing to be reminded of, and a registration that
  * still owes its declaration gets its own email from `queueDeclarationReminders` below, in
- * the same two days (§160). Scheduled events only: a cancelled or completed event reminds
+ * the same reminder lead (§160, §NNN). Scheduled events only: a cancelled or completed event reminds
  * nobody. Test registrations are included — they behave as real ones everywhere (§12.6) and
  * their addresses go nowhere. The number returned counts both messages.
  */
@@ -86,7 +86,7 @@ export async function queueParticipationConfirmations<T extends Record<string, u
         sql`${events.startsAt} > ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationDeadlineDaysBefore})`,
       ),
     );
-  // Only the holds the window gave: a thirty-minute hold taken inside the window is a person
+  // Only the holds the window gave: the club's hold (§NNN) taken inside the window is a person
   // signing right now, not somebody to remind a week later.
   const waiting = rows.filter((row) => row.holdExpiresAt && row.holdExpiresAt.getTime() - now.getTime() > day);
   if (waiting.length === 0) return 0;

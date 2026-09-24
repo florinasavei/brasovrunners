@@ -12,9 +12,10 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  *
  * **The reminder is a clause, not a number** (`reminderClause`): the club may send none by default
  * (zero), and "un memento cu 0 ore înainte" would promise a message that never goes. So the field
- * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte" — and is empty
- * when there is no reminder, which drops it from the sentence (`OMITTABLE_MERGE_FIELDS`):
- * "confirmări, legături, lista de așteptare{{reminderClause}} și cel mult o mulțumire…".
+ * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte" — and, when
+ * the default is none, a clause with no number that still covers an event sending its own
+ * (`reminderClause` below): "confirmări, legături, lista de așteptare{{reminderClause}} și cel
+ * mult o mulțumire…". A field given "" is still left out cleanly (`OMITTABLE_MERGE_FIELDS`).
  */
 export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderClause"] as const;
 
@@ -27,10 +28,18 @@ export const OMITTABLE_MERGE_FIELDS: ReadonlySet<string> = new Set(["reminderCla
 
 /**
  * The reminder as the clause the legal texts take, in one language: ", un memento cu 2 zile
- * înainte" / ", a reminder 2 days before" — and "" when the club sends none (zero), never "0 ore".
+ * înainte" / ", a reminder 2 days before" when the club's default sends one.
+ *
+ * When the club's default is none (zero) the clause does **not** disappear, because each event
+ * may still pick its own reminder (24, 48 or 72 hours) — a notice listing no reminder among the
+ * messages "we send only" would be a claim one event breaks. It then says, with no number and no
+ * single-event promise, ", un memento înainte de start, dacă evenimentul trimite unul" / ", a
+ * reminder before the start where the event sends one" — never "0 ore", never a dotted blank.
  */
 export function reminderClause(locale: string, reminderHours: number): string {
-  if (reminderHours <= 0) return "";
+  if (reminderHours <= 0) {
+    return locale === "en" ? ", a reminder before the start where the event sends one" : ", un memento înainte de start, dacă evenimentul trimite unul";
+  }
   const lead = leadPhrase(locale, reminderHours);
   return locale === "en" ? `, a reminder ${lead} before` : `, un memento cu ${lead} înainte`;
 }

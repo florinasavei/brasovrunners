@@ -18,7 +18,7 @@ import type { JobName } from "./schedule";
  * Each duty below mirrors the query of the job that performs it, and names it. A duty missing
  * here is not a wrong answer, it is a late one: the cap in `planQuiet` looks for real within the
  * hour whatever this says. The sweeps measured in days — the retention windows (`retention.ts`,
- * `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing series eight weeks ahead
+ * `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing series to the club's series horizon (§NNN)
  * (§122) — are left to the cap on purpose: an hour late on a seven-day window is nothing, and a
  * query to say so would be one more thing to keep in step.
  */

@@ -1592,7 +1592,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 
     return { registration: confirmed, offered };
   });
-  // A confirmation is a reminder two days out; a re-allocation onto the waiting list may have
+  // A confirmation is a reminder the club's reminder lead out (§NNN); a re-allocation onto the waiting list may have
   // made an offer, and so may a released hold (§334).
   wakeMaintenance(event, now, settings, signed.registration.holdExpiresAt, signed.offered > 0 ? offerDeadline(event, now, settings) : null);
   return signed.registration;

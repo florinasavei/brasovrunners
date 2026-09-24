@@ -139,7 +139,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
  *   saved text on a thank-you sent without one; the button, which names itself, is the machinery;
  * - **the programme's lines, the organizer's note and the cancellation's reason are absent**: they
  *   have no field, and the platform adds the note and the reason after the words whoever wrote them;
- * - **the declaration's first wording is the thirty-minute hold's**, as the preview shows it; a
+ * - **the declaration's first wording is the club's hold's (§NNN)**, as the preview shows it; a
  *   saved text replaces both wordings, as it always has (§247);
  * - **the reply line of the cancellation follows the deployment's reply address**, as the send does.
  */

@@ -68,15 +68,36 @@ describe("§NNN the deadlines as legal merge fields", () => {
     expect(mergeText("within {{confirmationHours}}", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe("within 48 hours");
   });
 
-  it("drops the reminder clause when the club sends none (0), in both languages — never '0 ore'", () => {
+  it("with a default of none (0) the reminder clause stays, numberless and conditional on the event, in both languages — never '0 ore'", () => {
     const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
-    expect(deadlineMergeValues("ro", off).reminderClause).toBe("");
-    expect(deadlineMergeValues("en", off).reminderClause).toBe("");
-    expect(mergeText("lista de așteptare{{reminderClause}} și o mulțumire", deadlineMergeValues("ro", off))).toBe("lista de așteptare și o mulțumire");
-    expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", off))).toBe("the waiting list and a thank-you");
+    // An event may still pick 24/48/72 h, so the notice must not list the messages without one.
+    expect(deadlineMergeValues("ro", off).reminderClause).toBe(", un memento înainte de start, dacă evenimentul trimite unul");
+    expect(deadlineMergeValues("en", off).reminderClause).toBe(", a reminder before the start where the event sends one");
+    expect(mergeText("lista de așteptare{{reminderClause}} și o mulțumire", deadlineMergeValues("ro", off))).toBe(
+      "lista de așteptare, un memento înainte de start, dacă evenimentul trimite unul și o mulțumire",
+    );
+    expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", off))).toBe(
+      "the waiting list, a reminder before the start where the event sends one and a thank-you",
+    );
+    for (const locale of ["ro", "en"]) {
+      const clause = deadlineMergeValues(locale, off).reminderClause;
+      expect(clause).not.toMatch(/\d/);
+      expect(mergeText(`x{{reminderClause}}y`, deadlineMergeValues(locale, off))).not.toContain("…");
+    }
+  });
+
+  it("with a default above zero the reminder clause keeps the lead, in both languages", () => {
     expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe(
       "the waiting list, a reminder 2 days before and a thank-you",
     );
+    expect(mergeText("lista de așteptare{{reminderClause}} și o mulțumire", deadlineMergeValues("ro", DEFAULT_DEADLINES))).toBe(
+      "lista de așteptare, un memento cu 2 zile înainte și o mulțumire",
+    );
+    expect(deadlineMergeValues("ro", { ...DEFAULT_DEADLINES, reminderHours: 24 }).reminderClause).toBe(", un memento cu o zi înainte");
+    expect(deadlineMergeValues("en", { ...DEFAULT_DEADLINES, reminderHours: 72 }).reminderClause).toBe(", a reminder 3 days before");
+  });
+
+  it("an omittable field given nothing leaves nothing behind", () => {
     // Nothing left behind: no dotted blank, no emphasised empty segment.
     expect(mergeTextSegments("a{{reminderClause}}b", { reminderClause: "" })).toEqual([
       { text: "a", filled: false },
@@ -86,11 +107,11 @@ describe("§NNN the deadlines as legal merge fields", () => {
     expect(mergeText("a{{reminderClause}}b", {})).toContain("…");
   });
 
-  it("the platform's privacy notice, merged with no reminder, says no reminder in either language", () => {
+  it("the platform's privacy notice, merged with a default of no reminder, names a reminder only where the event sends one, in either language", () => {
     const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
       const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, off))).join(" ");
-      expect(all).not.toMatch(/memento|reminder/i);
+      expect(all).toContain(locale === "en" ? "a reminder before the start where the event sends one" : "un memento înainte de start, dacă evenimentul trimite unul");
       expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
       expect(all).not.toContain("…………");
     }

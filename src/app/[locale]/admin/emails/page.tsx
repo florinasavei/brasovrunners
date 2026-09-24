@@ -38,6 +38,7 @@ import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import ParticipantEmailsPanel from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canEditTexts, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -173,7 +174,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     holdMinutes: deadlines.deadlines.holdMinutes,
     offerHours: deadlines.deadlines.offerHours,
     reminderHours: deadlines.deadlines.reminderHours,
-    confirmationOpensDays: 7,
+    // The window a new event gets unless its organizer changes it (§104), as the column does.
+    confirmationOpensDays: DEFAULT_CONFIRMATION_OPENS_DAYS,
   };
   const actionUrl = emailSampleActionUrl(emailLocale);
   const mayWrite = canEditTexts(staff.role);

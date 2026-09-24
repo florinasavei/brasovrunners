@@ -12,6 +12,7 @@ import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { DEFAULT_CONFIRMATION_DEADLINE_DAYS, DEFAULT_CONFIRMATION_OPENS_DAYS } from "@/modules/registrations/domain/hold-deadlines";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -336,21 +337,21 @@ export default async function RegistrationBox({
                     level={3}
                     id="box-confirmation"
                     title={t("editor.boxes.confirmation.title")}
-                    aside={confirmationSummary(words, event?.confirmationOpensDaysBefore ?? 7, event?.confirmationDeadlineDaysBefore ?? 2)}
+                    aside={confirmationSummary(words, event?.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS, event?.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS)}
                   >
                     <Stack spacing={1}>
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <RecallField
                           name="event.confirmationOpensDaysBefore"
                           label={t("editor.confirmationOpensDaysBefore")}
-                          defaultValue={event?.confirmationOpensDaysBefore ?? 7}
+                          defaultValue={event?.confirmationOpensDaysBefore ?? DEFAULT_CONFIRMATION_OPENS_DAYS}
                           {...box("confirmationOpensDaysBefore", { inputMode: "numeric" })}
                           fullWidth
                         />
                         <RecallField
                           name="event.confirmationDeadlineDaysBefore"
                           label={t("editor.confirmationDeadlineDaysBefore")}
-                          defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
+                          defaultValue={event?.confirmationDeadlineDaysBefore ?? DEFAULT_CONFIRMATION_DEADLINE_DAYS}
                           {...box("confirmationDeadlineDaysBefore", { inputMode: "numeric" })}
                           fullWidth
                         />

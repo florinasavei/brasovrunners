@@ -2228,8 +2228,8 @@ export type RepeatEventInput = {
  * The same event again, every week, fortnight or month — a standing series (`DECISIONS.md`
  * §64, §122): "every Monday and Wednesday, until 20 December, or for ever".
  *
- * The rule is written on the source, and the next eight weeks of occurrences are created at
- * once; from then on the maintenance job creates each week as it comes into the horizon
+ * The rule is written on the source, and the occurrences inside the club's series horizon (§NNN)
+ * are created at once; from then on the maintenance job creates each week as it comes into the horizon
  * (`materializeStandingRepeats`). Each occurrence is the source shifted on the wall clock in
  * its own zone (`addWallClockInterval`), everything with a time moving with it, the slug
  * carrying the date (`alergare-de-duminica-2026-10-04`), and names the source in `repeat_of`.
