@@ -11,6 +11,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findPublishedAlbumBySlug } from "@/modules/content/gallery/repository";
+import ContactLink from "@/shared/ui/ContactLink";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
 
@@ -106,6 +107,11 @@ export default async function AlbumPage({ params }: Props) {
           </Box>
         ))}
       </Box>
+
+      {/* Under the photographs, where somebody recognises themselves (§323): how to have one taken down. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
+        {t.rich("photosNotice", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
+      </Typography>
     </Container>
   );
 }

@@ -15,11 +15,13 @@ import { routing } from "@/i18n/routing";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
+import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   cancelFromMyRegistrationsAction,
   selfCheckInFromMyRegistrationsAction,
   setListConsentFromMyRegistrationsAction,
+  withdrawFromMyRegistrationsAction,
 } from "./actions";
 
 type Props = {
@@ -32,6 +34,9 @@ type Props = {
     hereFailed?: string;
     list?: string;
     listFailed?: string;
+    withdrawn?: string;
+    field?: string;
+    withdrawFailed?: string;
   }>;
 };
 
@@ -50,7 +55,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed, list, listFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
   const t = await getTranslations("Registrations");
   const format = await getFormatter();
 
@@ -78,6 +83,15 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       </Typography>
 
       {started && <Alert severity="info" sx={{ mb: 2 }}>{t("manage.eventStarted")}</Alert>}
+      {/* A closed registration whose last consent data was just withdrawn leaves the list (§324), so the answer is said here. */}
+      {withdrawn &&
+        context.ok &&
+        !context.items.some((item) => item.id === withdrawn) &&
+        !context.closed.some((item) => item.id === withdrawn) && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+          </Alert>
+        )}
 
       {!context.ok ? (
         <>
@@ -112,6 +126,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   color={item.status === "CONFIRMED" ? "success" : item.status === "WAITLISTED" ? "default" : "warning"}
                   label={t(`mine.status.${item.status}`)}
                 />
+                {/* The race will not run (§331); the registration's own state stays beside it. */}
+                {item.eventCancelled && <Chip size="small" color="error" label={t("mine.eventCancelledChip")} />}
               </Stack>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                 {format.dateTime(item.eventStartsAt, {
@@ -120,8 +136,14 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   timeStyle: "short", hourCycle: "h23",
                 })}
               </Typography>
+              {item.eventCancelled && (
+                <Alert severity="info" sx={{ mb: 1.5 }}>
+                  {t("mine.eventCancelled")}
+                </Alert>
+              )}
 
-              {item.status === "CONFIRMED" && item.checkinCode && (
+              {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
+              {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" }, mb: 1.5 }}>
                   <Box
                     component="img"
@@ -192,6 +214,10 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   </Button>
                 </form>
               </Stack>
+              {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {t.rich("cancelKeepsRecord", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
+              </Typography>
 
               {/*
                 The public participant list, the participant's own switch (BR-REQ-039-01;
@@ -224,9 +250,118 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   </form>
                 </Stack>
               </Stack>
+
+              {/*
+                What was given on consent, withdrawn from here (§322; art. 7(3) GDPR). A button
+                only for what this registration still holds — the page knows *whether*, never
+                *what* — and the link is read, not spent, so cancel above still works.
+              */}
+              {(item.holdsHealthNote || item.holdsSocials || withdrawn === item.id || withdrawFailed === item.id) && (
+                <Stack spacing={1} sx={{ mt: 1.5 }}>
+                  {withdrawn === item.id && (
+                    <Alert severity="success" sx={{ py: 0 }}>
+                      {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+                    </Alert>
+                  )}
+                  {withdrawFailed === item.id && (
+                    <Alert severity="warning" sx={{ py: 0 }}>
+                      {t("withdraw.failed")}
+                    </Alert>
+                  )}
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                    {item.holdsHealthNote && (
+                      <form action={withdrawFromMyRegistrationsAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={item.id} />
+                        <input type="hidden" name="field" value="health" />
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                          {t("withdraw.health")}
+                        </Button>
+                      </form>
+                    )}
+                    {item.holdsSocials && (
+                      <form action={withdrawFromMyRegistrationsAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={item.id} />
+                        <input type="hidden" name="field" value="socials" />
+                        <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                          {t("withdraw.socials")}
+                        </Button>
+                      </form>
+                    )}
+                  </Stack>
+                </Stack>
+              )}
             </Box>
           ))}
         </Stack>
+      )}
+
+      {/*
+        The registrations that are over — checked in, cancelled, expired — and still hold what
+        was given on consent (§324): the health note until seven days after the event, the
+        Strava and Instagram with the registration. "Delete them at any time from My
+        registrations" is true for these too; the two buttons and nothing else, since there is
+        nothing left to manage.
+      */}
+      {context.ok && context.closed.length > 0 && (
+        <Box component="section" sx={{ mt: 3 }} data-testid="my-closed-registrations">
+          <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 0.5 }}>
+            {t("mine.closedTitle")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("mine.closedHelp")}
+          </Typography>
+          <Stack component="ul" spacing={2} sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {context.closed.map((item) => (
+              <Box component="li" key={item.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ fontWeight: 600 }}>{item.eventTitle ?? item.eventId}</Typography>
+                  <Chip size="small" label={t(`mine.status.${item.status}`)} />
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {format.dateTime(item.eventStartsAt, { timeZone: item.eventTimezone, dateStyle: "long" })}
+                </Typography>
+                {withdrawn === item.id && (
+                  <Alert severity="success" sx={{ py: 0, mb: 1 }}>
+                    {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+                  </Alert>
+                )}
+                {withdrawFailed === item.id && (
+                  <Alert severity="warning" sx={{ py: 0, mb: 1 }}>
+                    {t("withdraw.failed")}
+                  </Alert>
+                )}
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+                  {item.holdsHealthNote && (
+                    <form action={withdrawFromMyRegistrationsAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="registrationId" value={item.id} />
+                      <input type="hidden" name="field" value="health" />
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        {t("withdraw.health")}
+                      </Button>
+                    </form>
+                  )}
+                  {item.holdsSocials && (
+                    <form action={withdrawFromMyRegistrationsAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="registrationId" value={item.id} />
+                      <input type="hidden" name="field" value="socials" />
+                      <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                        {t("withdraw.socials")}
+                      </Button>
+                    </form>
+                  )}
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       )}
     </Container>
   );

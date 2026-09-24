@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.68-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.69-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -13283,3 +13283,399 @@ The owner, 2026-09-23: "Min age must be 14".
 - Minor fixtures in `minors.test.ts` and `signature-name.test.ts` move from 12 to 15.
 
 Baseline `BR-V1.67-2026-09-23`.
+
+## 322. Decided — what the club holds about a runner is readable where it is needed, withdrawable by the runner, and gone from the trail when they are erased (2026-09-23)
+
+The owner, after the GDPR audit: "in order to be GDPR compliant, we need to inform people properly on how their data is used!" This is the data-handling half; the notices half is its own branch. The audit found four gaps between what the privacy notice promised and what the platform did. The form collected a phone, an emergency contact and a health note "for race day", and no screen could show them. The notice said the note was "retractabilă oricând", and the only way to withdraw it was to write to the club. An erasure left the name in the audit log. And the retention sweep that makes the notice's windows true failed in silence.
+
+### Decided
+
+**The emergency details are read by the people they are for, and each read is recorded.**
+- The registration's page has a section, opened on demand, with the phone, the emergency contact and the health note. Each opening writes `registration.health_viewed`, with no values.
+- Each event with its own queue has a printable emergency sheet at `/admin/events/[id]/urgente`. It lists every confirmed runner, checked in or not, and is audited once per render with a row count.
+- Both are for whoever may read the registrations (Organizer, Administrator, Superadministrator, §289), asserted on the server.
+- These details never appear on the desk and never in an export.
+
+**Erasing a person erases them from the trail too.** In the delete's transaction (`audit/repository.ts#scrubRegistrationFromAudit`):
+- every earlier audit row of the registration loses its `participant_id`;
+- a name correction loses its `from` and `to`;
+- every row but the deletion's own loses its typed `reason` (a cancellation's, a withdrawal's). The helper under the field ("do not write the person's name…") is a request, not a guarantee.
+
+When the erase takes the person's last registration, the rows about the *person* (`participant.data_exported`) lose `entity_id` as well as `participant_id` (`#scrubParticipantFromAudit`). The foreign key reaches only the second.
+
+The deletion row names nobody from the start: `participant_id` is null, and it keeps its status, its reason and its bib number (§311). No "your registration is cancelled" is queued on an erase (`unregister(..., { notify: false })`).
+
+The copies the database cannot reach are listed:
+- the archive mailbox and its Cc/Bcc copies;
+- downloaded exports;
+- the paper declaration;
+- Mailgun suppressions;
+- the database's backups, meaning Neon's restore history, at most 7 days on Launch, with nothing to do by hand.
+
+The list appears in every erase panel before the press (single, batch) and in the banner after a single, batch or whole-event erase.
+
+**Consent is withdrawn as easily as it was given (art. 7(3)).**
+- "Delete my health note" and "Delete my Strava and Instagram" are on the manage page and in "Înscrierile mele". The token is read, never spent; the action is POST only; the GET never writes.
+- An Administrator-only verb on the registration's page withdraws on the participant's behalf, with a reason. This is the new staff verb in `AGENTS.md` §15.11.
+
+One write, `consent-withdrawal.ts#clearOptionalData`:
+- the named fields are nulled, not flagged;
+- one audit row names the fields and the door, never the values;
+- status, place, number and messages are untouched;
+- it runs in one transaction with the row locked, so two presses at once are one withdrawal and one audit row.
+
+**The results consent is no longer asked.** There are no results to consent to (BR-REQ-072-01 is deferred to M2). New rows store `false`; the column stays for a later contract step.
+
+**Nationality and city are optional** and say what they are for; sex says why it is asked. No migration: both columns were already nullable. The spreadsheet (not the CSV) gains sex, age on race day, nationality, city and t-shirt size.
+
+**The retention sweep fails loudly.**
+- The 7-day clearing (identity document, health note) runs first.
+- Every step is its own transaction and `try`. Failures are logged by step name and written to `job_runs.last_error` as `retention:<steps>`.
+- Two consecutive runs with a retention failure make the job `failing`, and `/api/health` answers 503.
+- New windows:
+  - a registration whose email link lapsed unconfirmed goes 30 days after lapsing;
+  - a message about nobody goes 90 days after queueing;
+  - an action token goes 30 days after use, invalidation or expiry, whichever came first.
+- Throttle keys for an email identity are hashed.
+
+**Files that leave the application are recorded.** Every export writes `registration.exported` (event, format, count).
+
+**An Administrator can see everything held about one address.** The view is at `/admin/registrations/person`: canonical lookup, the address sealed rather than in the URL, and the view expires after half an hour. Each registration shown is recorded as a health read. The JSON download is recorded as `participant.data_exported`, with counts only.
+
+### Refused
+
+- **Stripping reasons with a pattern match for names.** Free text cannot be proved clean; the reason is dropped whole on every row but the one that explains the erasure.
+- **A conditional UPDATE instead of the row lock for the withdrawal.** It cannot say exactly which groups a concurrent press cleared. The lock makes the second press read the committed row.
+- **Showing the emergency details on the desk.** Every staff role works the desk, including the Voluntar, and the desk shows a name, a state and a number, never more (§67).
+- **Keeping the results consent on the form "for M2".** Asking consent for something that does not exist is not informed consent.
+
+### Follow-ups
+
+- The privacy-notice template must state the new windows and the field changes. Then the club re-approves its texts in `/admin/legal`.
+- A contract migration drops the results-consent columns once M2 decides.
+- If the club raises Neon's history window beyond 7 days, the erase checklist's figure moves with it.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 323. Fixed — the data is explained where it is given, every participant email links the notice, and the platform's notice template says what the platform does (2026-09-23)
+
+**Status:** Fixed. Files: `messages/{ro,en}.json`, the registration form (`events/[slug]/register`), the declaration page, "Înscrierile mele" (list, token and manage pages), the resend form, contact, gallery and album pages, the public privacy and terms pages, `admin/legal/[id]`, `admin/registrations/new`, `admin/tasks`, `shared/ui/SiteFooter.tsx`, `shared/ui/ContactLink.tsx`, `registrations/ui/HiddenForMinor.tsx` and `use-birth-date-minor.ts` (shared with `GuardianForMinor`), `RegistrationInterestForm`, `registrations/service.ts`, `notifications/templates.ts`, `legal-documents/ui/LegalDocumentBody.tsx`, the three templates in `legal-documents/templates/`, `diagnostics/owner-tasks.ts`. Migration `0060_list_opt_out_default` (expand only). Requirements: BR-REQ-080-01, BR-REQ-031-04, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-041-01, BR-REQ-070-04.
+
+**What the audit found.** The owner, on 2026-09-23: "in order to be GDPR compliant, we need to inform people properly on how their data is used!" GDPR articles 12 and 13 want the purpose, the recipients and the retention given when the data is collected, and easy to find afterwards. The audit found these missing, or wrong, in several places:
+- The registration form told people nobody but the organizers saw their data. The hosting and email providers do too, and a copy of the declaration goes to the club's archive.
+- The privacy tick said "I have read and agree to", but the notice is read, not agreed to.
+- The footer hid the privacy notice inside a closed fold.
+- Emails did not say who sent them or where the notice was.
+- The notice template said nothing of the emergency contact, the club's own Gmail copies, the team, or retention item by item.
+
+This section is the notices half of the audit. The data-handling half (reading, withdrawing and erasing data, the emergency sheet) is §323 on `fix/gdpr-data-handling`.
+
+**Decision.**
+
+1. *Said where the data is given.* These texts live in the message catalogues, so they change on the next deploy without an approval:
+   - The form's banner says the data never appears on the site, the club uses it only to run the race, and the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to the runner, and a copy goes to the club's archive with the identity document **masked, only the first two and last two characters left**, which is exactly what `maskIdDocument` (§320) draws. The banner also says the registration is kept three years.
+   - The privacy tick now reads "Am citit" / "I have read".
+   - The socials help says what they are for and that a tag is public on the network. The guardian help says the parent gives the child's choices. The ID-document help says the number is deleted seven days after the event, is masked in the club's copy, and that no copy of the document is ever kept.
+   - Under every Turnstile widget (registration, contact, "Anunță-mă"), a caption names Cloudflare and what it sees.
+   - The declaration page, "Înscrierile mele" and the resend form link the notice.
+   - Cancelling says the record is kept three years and how to ask to see, correct or erase it.
+   - The gallery says how to have a photo taken down, with no reason needed.
+   - The contact form says messages arrive in the club's Gmail and are deleted after at most 12 months.
+   - On the staff entry form, the list tick says to tick it only on request, and the relay confirmation says the person was told about the notice.
+
+2. *No socials for a minor.* The notice says the club keeps no Strava or Instagram of a child.
+   - `submitRegistration` stores neither for a minor, whatever is posted. "Minor" is judged on the day of registering, as for the guardian rule (§108).
+   - The form hides the section once the birth date says under eighteen, and **disables** its controls. A disabled control is neither validated nor posted. Hiding alone left a `type="url"` box that could block the browser's submission with nothing on screen to say why.
+   - When a refusal names either field, the section is shown whatever the date, so an error never points at something that cannot be reached.
+
+3. *The notice on every page.* The footer carries the privacy link on its always-visible bar, outside the fold. It reads "GDPR" on a phone, where 320 pixels leave no room for anything that names the notice, "Confidențialitate" from `sm` up, and "Privacy" in English. Its accessible name is "Nota de confidențialitate (GDPR)" / "Privacy notice" at every width. That name contains the visible word, so voice control still works (WCAG 2.5.3). The summary is sized `border-box`, so it cannot run onto the link.
+
+4. *Every participant email says who sends it.* Each language half ends with "Primești acest mesaj de la <CLUB_LEGAL_NAME, else Brașov Runners> pentru înscrierea ta. Cum folosim datele tale: <the notice>". The link is in that half's language and built from `APP_BASE_URL`. "Registration is open" says the address was left on the event page. The plain-text part ends on the address, so a client that links it cannot take a full stop into the link. Three types carry no such line: the archive copy, the confirmation notice (both to the club) and the staff invitation. The invitation says in its body what the club keeps about its team. A §320 club copy keeps the line and still has every personal link removed.
+
+5. *The legal pages show which version is in force.* The privacy and terms pages print "Versiunea N, în vigoare din …" under the title. Every heading gets an id (`#s1…`, prefixed per language in the backoffice's side-by-side view), so a reader can compare the page with the version their registration recorded, and a link can point to one section.
+
+6. *A disclosure fails closed.* `list_opt_out` defaults to true (migration `0060`, expand only). Every insert in the code already states the person's answer, so the default only affects a row written some other way, and that row stays off the public list.
+
+7. *The shredder reminder.* The notice promises that exported lists and printed race-day sheets are destroyed within 30 days, and that the identity numbers leave the database after seven. `/admin/tasks` shows an open, non-blocking club row between seven and thirty days after any published internal event that took at least one real (non-TEST) registration, naming each event once. Its steps cover:
+   - the downloads, the paper declarations' ID line and the emergency sheet;
+   - Gmail searches for declaration copies, confirmation notices and club copies older than three years (both subjects' languages);
+   - contact messages older than a year.
+
+   The system cannot see a laptop, so there is no "done": the row disappears when the window closes.
+
+8. *The templates.* Production keeps the texts the club approved until it approves new versions in `/admin/legal`.
+   - The privacy notice is rewritten: a purpose for each item; the emergency contact (art. 6(1)(f) and (d)); health data with where it appears and where it never does; automated place allocation and why art. 22 does not apply, with a person to review on request; minors, including the minimum age of 14 on the event day (§321) beside the rule that under 18 on the day of registering means a parent registers; socials by consent; the processors and the club's own Gmail with its copies (the declaration's identity document masked); transfers; retention item by item; rights split into what a person does alone and what they ask for; cookies as they are; a new section 12 on the club's team.
+   - The declaration and the terms say results with names are not published yet, and name the archive copy with the identity document masked.
+   - No placeholder was added. The length ceiling in `merge-fields.test.ts` was raised on purpose.
+
+**Rejected.**
+- Masking the club's copy completely, so the texts could keep "without the series and number". §320 chose the first-two/last-two mask on purpose, so the desk can match the paper to the card. The texts now describe the mask.
+- A longer visible label on a phone ("Date personale"). It is about fifty pixels wider than "GDPR" and would leave the summary beside it nothing at 320 pixels.
+- A consent banner for cookies. Nothing set needs consent (Law 506/2004 art. 4(6)).
+
+**Not done here.** The self-service deletion that the socials help and notice section 8 describe, and the emergency sheet that the shredder steps mention, are on `fix/gdpr-data-handling`. This branch must not reach `main` before that branch and the late batch are in `qa`. The archive email's own sentence (§320) still says "fără seria și numărul"; that is for the owner.
+
+**Tests.**
+- Unit: `notifications/privacy-footer.test.ts` covers every participant type in both languages (both notices linked, nothing glued to the address, the club and staff types without the line); `diagnostics/owner-tasks.test.ts` covers the row, its window, both catalogues and the subjects in the steps; `legal-documents/merge-fields.test.ts` has the new ceiling.
+- Integration: `registrations/minors.test.ts` (no socials stored for a minor); `registrations/list-consent.test.ts` (a row without an answer is off the list).
+- E2E: `legal-pages.spec.ts` (version line and section ids); `registration-form.spec.ts` (at 320px, a bad Strava value, then a minor's birth date, and the form still submits); `footer.spec.ts` and `build-badge.spec.ts` (the link on the bar, by its name).
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 324. Decided — the GDPR batch as one tree: a minor at the desk, the date's bound, the held resend (2026-09-24)
+
+The two halves of the GDPR audit ship together: fix/gdpr-data-handling (§322) and fix/gdpr-notices-and-templates (§323) are merged into one batch branch. Several texts that go live on deploy (socialsHelp, the notice's withdrawal and emergency-sheet paragraphs, optional nationality and city) describe features only the data half builds. With both in one branch, git enforces the merge order instead of anyone's memory. The club approves the rewritten privacy notice, terms and declaration in /admin/legal only after this batch is on production.
+
+Both final reviews are answered (b16b512):
+- Both declaration PDFs are recorded in the audit trail with the event and the count, never a name. The event's bundle writes event.declarations_downloaded; one registration's copy writes registration.declaration_downloaded, which now has its own line on that registration's timeline.
+- The list of what the platform cannot delete stands on the event's erase page before the press, and it now names the downloaded declarations PDF and the printed emergency sheet.
+- A retention sweep that fails two runs in a row is its own red row on /admin/tasks, pointing at /devs, and no longer shows up as a stopped scheduler.
+- The sweep scrubs the audit trail of the registrations it deletes, as a manual erase does, and clears a minor's Strava and Instagram kept from before §323's rule.
+- "Înscrierile mele" keeps listing ended registrations (checked in, cancelled, expired) while they still hold a health note or socials, with both withdrawal buttons. That covers a cancelled registration inside its 7-day window.
+- Consent withdrawal refuses a manage token without a registration, and an id that is not a uuid, as NOT_FOUND.
+- The club's copy of a participant email carries no "about your registration" privacy line.
+- "One tap" is gone from the texts, and the masked identity document reads "at most the first two and last two characters".
+- The shredder reminder counts events whatever their publication state now.
+
+A minor can be entered at the desk. The staff form (/admin/registrations/new, which the desk's walk-in opens) asks for the parent's or guardian's name once the birth date says under eighteen. It uses the public form's own component and rule (§108, §188), opens by itself when a refusal named it, and survives the kept form re-mounting its boxes (§315). The staff date box stops at the latest birth date still fourteen on the chosen event's day (§321), and the limit follows the event select. The server still decides: a 14–17-year-old entered without a parent is refused for guardianName alone, never for age.
+
+"Trimite din nou înscrierea", the resend after a too-fast refusal, waits for Cloudflare's token like the main send button, and a press made before the token arrives is sent once it lands (§285, §304).
+
+The registration form lost what was typed first. The phone prefix select sorted its countries in the browser by names from the browser's ICU data. Node names some countries differently (Hong Kong / India changed places around the fortieth option), so React threw away the server's form on every load and drew it again, taking with it whatever had been typed before it finished loading. That is the loss §211 set out to prevent, and it came back through data rather than code. The order is now computed once, on the server (phoneCountryOrder), and passed to PhoneField as plain data. Any list a client island draws in an order derived from Intl data should be ordered on the server the same way.
+
+The page leaves room above the sticky footer. html carries scroll-padding-bottom next to the header's scroll-padding-top: 96px on a phone, where the footer is now two lines, and 52px from sm up. A field or button reached with Tab, an anchor jump, or a scripted click stops above the bar instead of behind it (WCAG 2.4.11). A side effect: moving focus into the footer itself scrolls the page to its end, where the bar rests, which is where the footer is reached anyway.
+
+The phone footer names the privacy notice. On a phone the link reads "Confidențialitate" and takes a second line, shared with the language switcher. "GDPR" names a regulation, not the page, and nothing that names the notice fits on the 320px line. This reverses §136's "GDPR" label on the phone. The cost is a sticky bar two tap targets tall (88px) on a phone instead of one. The owner confirms or chooses otherwise.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 325. Changed — every fold's arrow sits on its heading's line (2026-09-23)
+
+The owner, 2026-09-23, of the event editor's "Rezumat" fold: "I would like this arrow to be aligned with the text", then "same for all accordions".
+
+The browser's disclosure triangle is a list-item marker, and a `<summary>` whose child is a block — a Typography heading, a Stack — puts that block on the line *under* the marker. Every section title of the event editor sat below its own triangle.
+
+**Decided.** `DISCLOSURE_SUMMARY_SX` (`src/shared/ui/disclosure.ts`) makes the summary a flex row and draws its own arrow: the native marker is hidden (`list-style: none`, the WebKit pseudo-element, `::marker`), and a CSS triangle in `currentColor` stands before the text, centred on it, turning a quarter when the fold is open (`DISCLOSURE_OPEN_ARROW`, spread into `DISCLOSURE_SX` and `BOXED_DISCLOSURE_SX`). The registration form's groups, the public start list, the registration steps and the listing's two folds use the same summary; the listing's "other events" heading hides the arrow from `sm` up, where that fold is always open and not a control.
+
+The warning the old code carried — `display: flex` removes the triangle in Chrome and Safari — is answered rather than ignored: the triangle is ours now. The summary keeps its 44-pixel height (BR-REQ-041-01 criterion 6) and its focus underline.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 326. Decided — the Neon plan is what Neon reports; the setting is the fallback (2026-09-23)
+
+The owner, 2026-09-23 evening, with `/admin/tasks` → Costuri open: "Neon is already on the Launch plan at $0.106/CU-hour, and here it shows that we have Free!" The account had been on Launch since 2026-09-22 (§280); the Neon row still said "Plan azi: Free · gratuit".
+
+The cause was a wrong premise in §280's follow-up, not a missed click. That follow-up made the plan a setting an Administrator states (`platform_settings.neonPlan`, Free when unset), because "Neon's API gives a project key the consumption and neither the plan nor the invoice". That was never true. The project row the page already fetched for the consumption — `GET /projects/{id}` with the project-scoped key — carries `owner.subscription_type`, and on QA it answered `"launch_v3"`. Nobody had stated Launch on either environment, so both pages believed the default over the vendor's own answer, which they had been receiving on every load.
+
+**Decided.** `readNeonConsumption` returns the plan Neon reports beside the hours (`reportedPlan`), mapped by prefix — `free…` is Free, `launch…` is Launch, the suffix being Neon's pricing generation — and anything else (Scale, Business, a name this code has not met) is null rather than a guess. `effectiveNeonPlan(stated, reported)` is the one rule: Neon's answer when there is one, the stated setting when the key is not set or Neon did not answer. `/admin/tasks` (the panel, the cost row, the verdict) and `/devs` read that. The panel says which it was — "Citit de la Neon acum: contul e pe planul Launch" or "Neon nu a spus planul…, așa că se folosește planul ales mai jos" — and its select is relabelled "Planul de rezervă, când Neon nu răspunde". `/devs` prints "Planul: Launch, citit de la Neon." without the link into the costs panel, since nothing there would change it.
+
+**Kept.** The setting, its audit row and its form stay: an environment without `NEON_API_KEY` (local, CI, a fresh deployment) still needs a way to say which plan it is on, and the default stays Free for the reason §280's follow-up gave — the plan with the ceilings is the safe one to be wrong about. The December review (§280) now needs nothing at all on this screen: if the account goes back to Free, the pages say so on the next load.
+
+**Rejected.** A second request to `/users/me` or the organisation's billing endpoint: a project-scoped key is refused there, and the project row already answers. Writing Launch into the production row by hand: it would have fixed tonight's label and left the next plan change to the same mistake.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 327. Decided — both Neon projects are capped; the bill is time awake, so the lever is fewer wakes (2026-09-23)
+
+The owner, 2026-09-23 night, with Neon's billing page open: "I've spent 1 dollar in Neon in 2 days, I think I need to throttle or set limits from my end", then, when production was left without a hard limit: "I want QA to be cheaper and also Prod to be capped, not ok to leave to unlimited".
+
+**Measured first.** $1.09 for 10.6 CU-hours in the first 37 hours of Launch (production 6.3, QA 4.3). Both computes averaged 0.26 CU while awake, against a floor of 0.25, so the money is time awake, not size. Neon's operations log (the consumption-history API is Scale-only) showed production awake 25 of 37 hours across 139 wakes: about 75 exactly at :00/:15/:30/:45 — the job and health monitors — and about 64 at other minutes: visitors, crawlers, staff, deployments, with 8 hours of long working sessions. On Launch a compute scales to zero only after 5 idle minutes and that figure cannot be lowered (only Scale configures it), so every request that touches PostgreSQL costs at least 5 minutes at 0.25 CU.
+
+**Decided — on Neon itself, read back after each change.** Production: autoscaling 0.25–1 CU (was 8), the same in the project's defaults, and a monthly `compute_time_seconds` quota of 360000 (100 CU-hours, about $10.60). QA: 0.25 CU fixed, and 108000 (30 CU-hours, about $3.20). Together under the organisation's $15 spending notification, which stays. The size ceiling bounds a spike and changes nothing on a normal day; the quota is the hard limit the owner asked for.
+
+**The risk, stated and accepted by the owner.** A project that reaches its quota is suspended until the next billing period — on production that is the site down: registrations, the desk, the emails. §280 had moved to Launch precisely to lose Free's suspension. The owner reaffirmed the cap after being told; the limit is therefore sized with room (6.3 CU-hours used in 37 hours on a day of heavy testing) and the month's hours are on `/admin/tasks` → Costuri. Raising a limit is one PATCH (`SETUP.md` §40).
+
+**The lever is fewer wakes, and it is in code and in the monitors.** Public pages served from cache so a crawler does not wake the database, job pings that answer without the database when nothing is due, an Administrator's setting for how often the checks may run, and a card on `/admin/tasks` to change the size ceiling and the quota — each its own decision in the same batch. On cron-job.org the owner moves the production health monitor to hourly and QA's to every six hours (`SETUP.md` §40, `CLAUDE.md` Still owed 13).
+
+**Rejected.** Leaving production unlimited (the owner's call, above). Moving to Scale for a shorter idle timeout: $0.222 per CU-hour, twice Launch's rate, to save minutes the code changes remove anyway. Disabling scale-to-zero: an always-on 0.25 CU is $19 a month per project.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 328. The place can be "to be announced" — a state of the event, not an empty field
+
+The owner, 2026-09-23: "Also I want to be able to set the location as TBD, and to not announce it yet".
+
+**What it is.** `events.location_to_be_announced`, a boolean, not null, default `false` (migration `0060_location_to_be_announced`, expand only — every row before it reads as "announced", which is what it was). A column rather than a meaning given to a blank `location_name`: blank already means "a row written before the column and never saved", which publication refuses (§36), and making blank mean "announced later" would have made every such row publishable and left nowhere to keep the venue the organizer has written down but not announced.
+
+**The editor and the create page.** One switch in "Când și unde", "Locația se anunță mai târziu" / "Location to be announced", above the meeting point. The meeting point's `required` is still read off the schema (§315) — the box declares it through `html` metadata, because the rule itself moved from the field's `min(1)` to an object-level `placeRule` that reads both fields — and the island (`PlaceToBeAnnounced`) drops it while the switch is on, so the browser refuses a blank place exactly when the server would. Saving with the switch on keeps whatever was typed (the shared name, the map link, the name on each language's tab) and publishes none of it. "Creează și publică" names a missing place only while the switch is off.
+
+**Publication.** `missingPublicEventFields` (and so `transitionEvent`) accepts an event whose place is to be announced with no place at all; with the switch off the rule of §36 stands unchanged — a blank meeting point refuses publication.
+
+**Withheld in SQL, said on every surface.** The public reads (`PUBLIC_COLUMNS` in `events/repository.ts`, and `findEventNotificationDetails` for the emails) return `null` for the place's name in either language, the address and the map link, and empty every programme row's own place ("Ridicarea kitului — Sala X" names the venue as surely as the meeting point), while the flag is on. A surface that forgets the flag therefore shows nothing, never the hidden place; the surfaces read the flag only to say, from one key (`Event.locationToBeAnnounced`), "Locația se anunță în curând" / "Location to be announced soon" where the place would be: the event page's facts, the listing card, the hero and the series card (`EventFacts`), the registration form's facts line (§102), the share picture (Open Graph and the Instagram square), the emails' facts line in both halves of a bilingual message (and a `{eventLocationName}` in the club's own copy), and the calendar entry's description. No map link, no address, no directions anywhere. The staff preview withholds the place the same way, so it shows what the page will.
+
+**The calendar has no `LOCATION`** while the place is to be announced — not "Brașov — locația se anunță": a calendar app geocodes `LOCATION` and offers directions to it, and directions to the middle of the city are directions to the wrong place on the morning of a race. The first line of the description is "📍 Locația se anunță în curând", and it links to the page, which will have the place; Google Calendar's add link carries no `location` and the same sentence in its details. The feed updates the entry when the place is announced; an `.ics` saved earlier keeps the sentence.
+
+**What search engines see.** The structured data stays a valid schema.org `SportsEvent`, whose `location` Google requires: a `Place` named "Brașov" with a `PostalAddress` of `addressLocality` "Brașov" and `addressCountry` "RO" — no street, no `hasMap`. A search result can say "Brașov", which is true, and no venue is invented or leaked.
+
+**The declaration** reads `{{eventLocation}}` as "Brașov" while the place is to be announced — on the web form and in the signed PDF — never the typed place: "în locația Brașov" is a sentence one can sign; "în locația Locația se anunță în curând" is not.
+
+**Announcing later** is the switch off and one save with a place: every surface is a read, so the place appears on all of them at once. Nobody is emailed by the save — a message sent as a side effect of a save would reach every entrant for a typo fixed a minute later; telling the participants is the organizer's own act (the "Anunță participanții" notice), and the editor's banner says that the save wrote to nobody and that the reminder 48 hours before the event will carry the place.
+
+**Staff** see the typed place in the editor, marked "Nepublicat cât timp locația se anunță mai târziu", and the backoffice list marks the event "Locație neanunțată". A series edit carries the flag like the place (§130); a duplicate and a generated date copy it, hidden place and all.
+
+**Refused:** "TBD" typed as the place (it would reach the structured data and be geocoded by calendars, and there would be no rule under which a race publishes without a place); emptying the typed place when the switch goes on (it loses the organizer's note); an automatic email when the place is announced; "Brașov" as the calendar's `LOCATION`.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 329. Changed — the minimum age is the event's own, fourteen by default (2026-09-23)
+
+The owner, 2026-09-23, hours after §321 went live: "actually this min age must be set at event level!"
+
+**The rule is the event's number.** `events.min_age` holds it: integer, NOT NULL DEFAULT 14, CHECK 0 to 99. It is still counted on the event's start date in the event's own time zone, by calendar years, with the arithmetic of §321 (`ageOn`, `dayIn`, `latestBirthDateFor`). `registrations/domain/age.ts` still imports nothing (§188). Zero means no minimum. `MIN_PARTICIPANT_AGE = 14` stays, but only as a default: the column's, the one the editor offers a new event, and the one a partial `EventForRegistration` built without the column is read with. It is never the rule on an event that has its own number. The migration is expand-only, and every event that existed before it was given 14, so no event's rule changed the day it was added.
+
+**One door, as before.** `submitRegistration` adds `minimumAgeRule(eventDay, minAge)`. The number is a parameter with no default, so a caller cannot fall back to 14 behind an event that says otherwise. Each of the three callers reads it off the row:
+- the public action;
+- `admin-service#eventForRegistration`, for a staff entry and the desk's walk-in;
+- `test-registrations#loadEvent`.
+
+A restart comes through the public door. A TEST row meets the number exactly as a real one does (`AGENTS.md` §12.6). "Add test registrations" types its own made-up entrant; that birth date is moved back only when the event asks for more years than 1990 gives (a veterans' race). The rule itself is not relaxed.
+
+**Where it is set.** "Vârsta minimă (ani)" sits in the editor's registration panel, on the create page and the edit page. It says "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea o face un părinte. 0 înseamnă fără vârstă minimă." Its bounds are read off the schema (§315), and a refusal names the box and keeps what was typed. An empty box is 14. The panel follows the type select, so a group run never shows it (§111).
+
+A series is one race, so the number travels with a copy, with every date a rule creates, and with a series edit (`SERIES_COLUMNS`), like the capacity. Changing it later touches no registration already made: the rule is counted at the door.
+
+**Words.** Every sentence that states the minimum interpolates the event's number as `{age}`. ICU plurals are not used in this codebase, so Romanian's one grammatical rule lives in a tested helper, `yearsPhrase(n, locale)`:
+- "de" goes between the number and "ani" when the last two digits are 00 or 20 to 99: "20 de ani", "100 de ani", but "19 ani" and "101 ani";
+- the singular is "1 an";
+- English says "N years", with "1 year" in the singular.
+
+The line before the first field has three forms, so it reads right whatever the number (`ageRuleVariant`):
+- a minor's minimum: "Participanți de la 14 ani; sub 18 ani, înscrierea o face un părinte.";
+- eighteen or more: "Participanți de la 21 de ani." — nobody who may enter needs a parent;
+- none: "Sub 18 ani, înscrierea o face un părinte." — never "from 0 years".
+
+The birth date's help and the public refusal ("Vârsta minimă de participare la acest eveniment este {age} împliniți în ziua cursei.") name the number. On an event with no minimum the help says only the categories.
+
+The staff refusal names the chosen event's number too. The action reads the event it was refused for and returns `FormOutcome.errorValues`, words it computed and never anything typed; `ActionForm` fills them into the catalogue's raw sentence. The staff form has no `max` on the birth date, because the event is a choice on that form and a bound would be the first event's. Instead each event in the select carries its number as "16+".
+
+**Said in public.** The event page's facts carry the same sentence under "Vârstă", read from the same catalogue key, so the page and the form cannot disagree. It appears only where the club takes the registrations itself (`hasAgeRule`: registration mode INTERNAL, not a type one turns up to). An event registered elsewhere follows the other organizer's rule, and stating the club's number there would be a rule nothing enforces.
+
+The structured data states the minimum as schema.org's open-ended range, `typicalAgeRange: "16-"`, under the same condition and only above zero.
+
+**Legal templates.** The terms and the privacy notice no longer say "14". They say an event may set a minimum age, shown on its page and counted on its day, and no number of their own. The texts in effect change only when the club approves a new version (§29, §95).
+
+*Rejected:*
+- ICU `plural`/`select` in the catalogues: this codebase does not use them, and the i18n checker reads plain `t("…")`.
+- Numbers written out in words per locale: they cannot follow a number the organizer types.
+- A per-event minimum that stays nullable, with null meaning "the club's": a second meaning for one column, and an event would change its rule the day the club constant moved.
+- The staff form's help recomputed live for the selected event: a client island for one sentence, where "16+" beside each name says it before the choice.
+
+*Unchanged:*
+- the guardian rule (§108): under eighteen, a parent registers them;
+- §321's known gap: a minor entered by staff with a birth date is refused for `guardianName`, because the staff form has no parent's-name box.
+
+**Migration numbering.** drizzle-kit numbered this `0060_event_min_age` after `0059_translation_location_name`. Other branches in flight also carry a 0060, so it is renumbered at integration.
+
+**Tests:**
+- unit `registrations/minimum-age.test.ts`:
+  - `yearsPhrase` at 0, 1, 14, 18, 19, 20, 21, 99, 100, 101, 119, 120 in both languages;
+  - `ageRuleVariant`;
+  - the picker's bound for 14, 16, 18 and 40 and for no minimum;
+  - every sentence carrying `{age}` and no number of its own;
+  - the templates carrying no number.
+- unit `events/structured-data.test.ts`: `typicalAgeRange`.
+- unit `shared/form-constraints.test.ts`: the box's 0 to 99.
+- integration `registrations/minimum-age.test.ts`:
+  - sixteen refuses fifteen and takes sixteen on the day;
+  - zero takes a six-year-old and still refuses dates outside the range;
+  - the default is 14 for an event created without the column;
+  - the staff door follows the chosen event;
+  - the staff refusal carries "21 de ani" / "21 years";
+  - TEST rows and batches.
+- integration `cms/crud.test.ts` and `cms/series-edit.test.ts`: storage, bounds, copies, series.
+- e2e `registration-form.spec.ts`: sixteen, then none, set in the editor and read on the form, the event page and the JSON-LD.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 330. A minor signs with a parent — two names, two documents
+
+The owner, 2026-09-23: "The minor signing must be a bit different! basically I wanna have the ID document of the minor and the parent, and also 2 signatures!" Until now a minor's declaration was signed by the parent alone, with the parent's document (§108, §314).
+
+**What changes.** A minor's declaration (a guardian named at registration) is signed at one press by both people. The minor types their registered name and their own identity document; the parent or guardian types the guardian name and their own document. Each signature box is checked with `signatureNameMatches` against its own name, in the browser and again in `signDeclaration`. Each wrong or missing piece is refused on its own field (`minorTypedName`, `typedName`, `minorIdDocument`, `idDocument`) before any hold expiry or allocation, so nothing is recorded and the link is not spent. An adult signs exactly as before.
+
+**Refusals.** A refused name returns to `?invalid=name` (§314), which now names whichever of the two boxes is wrong, each with its own way out: the club corrects a minor's registered name, but nobody corrects a parent's name, so for that one the way out is to cancel and register again. A document the text asks for that is missing or is not a series and number, reached only past the browser's own check, returns to `?invalid=document`. That page has its own summary with links to the boxes left empty and keeps the sealed draft. An unticked box keeps the generic refusal.
+
+**Storage is expand-only.** Two nullable columns: `declaration_acceptances.minor_typed_name` and `minor_id_document`. `typed_name` and `id_document` stay the declarant's (the parent's for a minor), so every acceptance already recorded reads as it did. Retention clears both documents seven days after the event and keeps both names for the three years (§95).
+
+**The text.** `{{idDocument}}` stays the declarant's document. There are two new optional merge fields: `{{participantIdDocument}}` and `{{guardianIdDocument}}`, which read as an em dash for an adult. The platform's declaration template opens with the participant and their own document, and names the parent in a sentence of its own. The terms and privacy-notice templates say both sign, each with their own document, and that the kit is collected against the minor's or the parent's document.
+
+**Paper, desk, exports.** The signed PDF prints both signatures and both documents. The club's archive copy masks both (§320). The event's blank paper form has a minor variant (`?for=minor`) with both lines. "Confirmă pe hârtie" on a minor records the guardian as `typed_name` and the minor as `minor_typed_name`, and says before the press that the paper must carry both signatures. The desk row, the registration page and the CSV/xlsx carry both documents.
+
+**Found on the way.** Since §225, every run of a declaration paragraph after the first lost its pdfkit options (`text(s, undefined, undefined, o)` reads `o` only when `x` is given), so the PDF broke the line after every fill-in. This is fixed, and the spaces either side of a fill-in are kept.
+
+**Release precondition — not before the club's texts say so.** Once this reaches production, it collects the minor's own identity-document number and records two signers. Production's approved privacy notice and terms are the club's own texts and do not pick up template edits: they still say the parent signs for the child and ask only for "your" document. The **qa → main release carrying this does not go out** until the club has approved, on production, new versions of the privacy notice and the terms from the updated templates (`/admin/legal` → New version → "start from the platform's text"). Ideally it also approves a new declaration, so that the text on screen names both signers. On QA the sample texts are the templates and are already consistent.
+
+**Migration numbering.** It was generated as `0060` and collides with other branches in flight. At integration it is regenerated with drizzle-kit under the next free number, still two nullable `ADD COLUMN`s.
+
+**The production gate (found in review, before release).** Production's approved declaration, terms and privacy notice were approved from the templates as they stood before this section, and they say the parent signs for the child with the parent's own document. If every minor were asked for their own identity number as soon as this ships, production would collect data its approved privacy notice does not describe (GDPR art. 13). The new templates do describe it, but a template is text the club has not yet approved. So the text itself switches the two-signer declaration on. A minor signs beside the parent, with their own document, only when the declaration in force names `{{participantIdDocument}}` (`asksForMinorSignature`). The platform's template names it. When the club approves a declaration made from that template, together with the privacy notice and terms made from theirs, the flow turns on for every event at once, with no setting and no deploy. `{{guardianIdDocument}}` on its own does not turn it on: it is the parent's document, which the parent types as the declarant anyway. When the text lacks the field, a minor's declaration is exactly what it was under §108 and §314: one signature (the guardian's name) and one document (the declarant's). The page shows no minor's box, the server requires no `minor_*` field, and nothing goes into `minor_typed_name` or `minor_id_document`, even when a hand-made post carries them.
+
+**Which text decides.** One approved declaration serves every event. Its translation in the registration's language is the text `signDeclaration` binds the signature to, and that translation decides in three places. First, the declare page, which reads it again only when the page is shown in a different language from the registration's. Second, `signDeclaration` itself. Third, the desk's paper confirmation, which records `minor_typed_name` only when the text asks the minor to sign. The server never trusts a flag the page posts. To guarantee that the server decides from the text the page actually showed, `signDeclaration` now checks the posted id and hash against the current version before it compares any name. It is the same `CONFLICT` as before, moved ahead of the other checks. A version approved between reading and signing therefore gets "the text has changed", not a refusal about a box the page never showed. One deliberate side effect: when a lapsed hold is sent back to the waiting list, that path used to skip the version check by returning early. It now refuses an outdated version first.
+
+**What follows the gate.** The minor's paper form (`?for=minor`) prints the one-signature form whenever the text in its language lacks the field, whatever was requested. The event page shows the link to it only when the text in its language asks for the minor's signature. The desk row, the registration's page and the list's confirm dialog say the paper needs both signatures only when the text in the registration's language asks for it; the three admin row types now carry the registration's locale so they can check this. The signed PDF, the club's copy, the export and retention needed no change, because they follow what was stored, and under an older text nothing of the minor's is stored. The admin guide and the legal editor's token legend now say that the minor signs only under a declaration containing `{{participantIdDocument}}`, and that this declaration is approved together with the new privacy notice and terms.
+
+**Consequence for the release.** The `qa → main` release no longer has to wait for the club to approve new texts. Until it does, production keeps handling minors' declarations exactly as it does today. The owner's request for two signatures works wherever the approved declaration comes from the new template. Locally that is already the case after a reset, because the sample seed wraps the platform templates. QA gets it once its sample documents are seeded again (`yarn db:seed:legal` adds a new version whenever the template text has changed).
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 331. Participants hear about an event change when the organizer asks; a cancelled event goes quiet (reverses §160 for cancelled events)
+
+**2026-09-24.** The owner: "I want to know exactly when and if participants get email alerts (e.g. event location gets updated)." The answer was *never*: no edit emailed anybody, cancelling emailed nobody, and a cancelled race went on offering places, confirming addresses and settling numbers.
+
+**Decided.**
+
+1. **Telling is the organizer's act, never a side effect of a save** (§9's line). The editor's save carries "Anunță participanții despre schimbare", unticked on every load, with an optional note (plain text, at most 500 characters). Only whoever may save the event row sees it or may post it (`canEditEventFields`, BR-REQ-060-01). The number of real registrations it would reach and what that costs against the Mailgun plan (§100) are shown before the press. Test rows are shown apart. The banner says how many were queued after it.
+2. **What counts as a change** (`events/domain/event-changes.ts`) is the place as a page shows it (the event's words, a language's own name for it, the map link), the start or a race's gun time, the programme's times and places, or the event put back on. The end does not count, and neither does a reworded label. If nothing of that kind changed, a ticked save sends nothing and says so, unless the organizer wrote a note. Only the *kinds* travel in the outbox row. The values are read at send time, so nothing the event held before the save reaches a runner.
+3. **A place not announced yet** is compared on what a runner can read. A place typed behind the switch is no change while it stays hidden. Switching it off is a change, whatever else changed at the same press. Hiding an announced place is not (the note is how the organizer says why). Programme places follow the switch.
+4. **One `EVENT_UPDATE_NOTICE` per active registration**: `PENDING_DECLARATION`, `WAITLIST_OFFERED`, `CONFIRMED`, `WAITLISTED`.
+   - It is written in the registration's language, carries no token, and its button is the event's page.
+   - It is queued in the save's transaction, keyed by the save (`<event>:v<version>`) so a retried press queues nothing twice.
+   - It is audited as `event.update_notice_sent` with the kinds, the note and the count, never who.
+   - It does not go to an unconfirmed address or to a cancelled or lapsed registration. Test rows are written to and counted nowhere (`AGENTS.md` §12.6).
+   - A series save tells each future date's own registrants once, about their own date. A date that has already begun is told nothing.
+5. **Cancelling asks why.** Choosing "Anulat" requires a reason (at most 500 characters) and offers "tell the participants", ticked.
+   - `EVENT_CANCELLED` carries the reason.
+   - `event.cancelled` is audited with who, why, whether and how many were told. There is one row per date the save cancelled, including a series date already begun (marked `alreadyStarted`, told nobody).
+   - An event that takes no registrations here has no box, and the banner says there was nobody to tell.
+6. **Registrations keep their status.** Cancelling the event cancels nobody's registration. The rows are the record of who had entered, and a race put back on finds its queue where it left it.
+7. **A cancelled event goes quiet.** Each of these reads the status under the event lock:
+   - `fillAvailableSpots` offers nothing and releases nothing.
+   - `confirmEmail` allocates nothing and sends nothing, and the confirmation page says why.
+   - The desk refuses to confirm on paper, give a place or check in.
+   - Resend sends only the state notice.
+   - A number typed by hand is written and mailed to nobody.
+   - The thank-you is refused.
+   - The maintenance job selects scheduled events only, so nothing is expired, closed, offered, settled or mailed.
+   - The public link request hands out no link for a cancelled event. Asked without an event, it finds the newest active registration on a scheduled event.
+   - "Înscrierile mele" and the manage page say the race will not run and offer no "I am here".
+8. **`/admin/emails`** previews both new types. It marks the three types that are never queued and lists them last, and describes `EVENT_THANKS`, `BIB_ASSIGNED` and the archive copy as the code sends them.
+
+**Reverses §160 in one respect.** §160 released every lapsed declaration hold "once the event has started or been cancelled". A cancelled event's holds are now left standing, like the rest of its queue. Releasing them was a silent status change on a race nobody can take a place in, and it sent nothing. The started and `COMPLETED` cases are unchanged. Every read still counts an offer past its deadline as lapsed, so rows left as they stood overbook nothing. `AGENTS.md` §10.5, §10.6, §15.3 and §16.2 say so, and `SPECS.md` BR-REQ-033-01 criterion 3 is amended.
+
+Migration `0060_event_notices` adds the two message types to `email_message_type`, expand only (renumbered at integration).
+
+**Not done.** The M3 `event_updates` workflow (localized bodies through Draft, In review and Published) is not built; this is the direct notice only. Nothing is sent on publish, on a capacity change or on an edit to the words alone.
+
+Baseline `BR-V1.69-2026-09-24`.
+
+## 332. Decided — "Linkuri și fișiere": other links and files on an event (2026-09-24)
+
+The owner, 2026-09-23: "Also on Event I wanna be able to put other links such as google drive files for GPX track files, etc."
+
+**Decision.** `events.links`, a nullable jsonb column (migration `0060_event_links.sql`, expand-only), holds an ordered list of at most twelve `{ kind, url, labelRo, labelEn }` rows — the GPX track on Google Drive, the extended rules as a PDF, last year's album, the results, a map on a platform, or anything else. `kind` is one of six values in `modules/events/domain/links.ts#EVENT_LINK_KINDS` (`GPX`, `MAP`, `DOCUMENT`, `PHOTOS`, `RESULTS`, `OTHER`); `url` must be https, at most 2048 characters, on any host; each label is optional, at most 80 characters per language. An empty label is not a gap: the reader is shown the kind's own word in their language ("Traseul (GPX)" / "Route (GPX)") instead, so a link never has to wait on a translation — deliberately outside what `DECISIONS.md` §28 requires before publication.
+
+The database carries the same guarantee the single-value link columns (`map_url`, `route_url`, …) already give one address, for a list: `events_links_is_a_short_array_of_https_links` refuses anything that is not a JSON array, more than twelve entries, or an entry whose `url` is not an https string. Unlike `co_hosts`, which carries no such CHECK, this one was added because the array shape is worth guarding at the layer that already refuses a non-https `route_url` from a seed or a hand-written `UPDATE`.
+
+Read through one function that decides what a stored row means, `readEventLinks`: anything that is not an array is "no links" (null is every row saved before the column existed); an entry with no https address is dropped; an entry with a `kind` this release does not know survives as `OTHER` rather than taking the whole link down — the leniency `co-hosts.ts` already established for an unknown key or value.
+
+**Placement and behaviour** follow `route_url`'s (`DECISIONS.md` §49): the links are one occurrence's kin to the route rather than a per-language fact, so a series edit and `duplicateEvent`/`repeatEvent` carry them onto every date, and the editor (`LinkRowsEditor.tsx`) sits beside the route and map fields in "Când și unde", on both the create and the edit form through the one shared component and the one Server Action (`admin/actions.ts#eventFieldsFrom`). A caller that posts nothing about the links leaves the column untouched, the discipline §169 set for the partners; the editor always posts a hidden `event.links.present` marker, so removing every row still writes "no links" rather than leaving stale ones behind. A refused row is named by its position — "Linkul 2: adresa trebuie să înceapă cu https://" — the same discipline §315 gave every other row editor.
+
+On the public page (`EventLinks.tsx`), a "Linkuri și fișiere" section renders under `#links`, after the route and map facts and before the programme, only when the event has at least one link: each row carries the kind's own glyph (`link-glyphs.ts`, the public set — never the backoffice's `action-icons.ts` registry, §318), the club's label or the kind's default word in the reader's language, and the link's host in small text beneath it ("drive.google.com") so nobody is surprised by what opens; every row opens in a new tab with `rel="noopener noreferrer"` and is at least 44 pixels tall (BR-REQ-041-01 criterion 6). The confirmation and the race-week reminder each gain one line, "Linkuri și fișiere: pe pagina evenimentului" / "Links and files: on the event's page", deep-linking `#links` — never the addresses themselves, which stay on the page rather than travelling into a forwarded email.
+
+**Rejected.**
+- A file upload. Media storage is still deferred (`AGENTS.md` §17); the file stays wherever the club already keeps it, and the page points at it, exactly as `route_url` already does.
+- Making a link's label part of what publication requires (§28). A GPX or an album is worth publishing even when only one language's own words describe it, and the kind's own word already covers the gap honestly.
+- One more single-value column per kind, the way `map_url`/`route_url`/`video_url` grew one at a time. A club that wants a GPX, the extended rules and last year's album on one event would need three more migrations for the fourth kind; a bounded list closes that off the way `co_hosts` already closed it for partners.
+
+**Tests.** Unit: `events/event-links.test.ts` (reading a stored list, the label fallback, the block's markup and its placement on the page and the preview), `content/event-links-field.test.ts` (the form schema: https only, the twelve-row ceiling, label lengths, the spare line dropped, a refusal named by row), `content/event-links-summary.test.ts` (the refusal summary's per-row labels in both languages), `notifications/templates.test.ts` (the one line on the confirmation and the reminder, and nowhere else). Integration: `cms/event-links.test.ts` (saving and reading back through the public query, the database's own CHECK, a series edit and a duplicate carrying the links, a caller that says nothing leaving them alone), `notifications/render.test.ts` (the reminder's `#links` line, present only when the event has links, never the raw address). E2e: `event-route.spec.ts` extends the existing route-link spec rather than adding a new heavy one — a GPX link added in the editor, published, read back on both languages' pages with its host and a 44-pixel target, and removed again.
+
+Baseline `BR-V1.69-2026-09-24`.

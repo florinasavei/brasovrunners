@@ -32,12 +32,19 @@ export function eventFormFieldName(path: string): string {
   if (summary) return `${summary[1]}.excerptBody`;
   if (path === "repeat.weekday") return "weekday";
   if (path.startsWith("translations.") || path.startsWith("repeat.")) return path;
+  // The notice to the participants and the cancellation's reason (§331) post under their own names.
+  if (path.startsWith("notice.") || path.startsWith("cancel.")) return path;
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;
   if (path === "scheduleRows") return "event.schedule[0].date";
   const partner = /^coHosts\.(\d+)\.(\w+)$/.exec(path);
   if (partner) return `event.coHosts[${partner[1]}].${partner[2]}`;
   if (path === "coHosts") return "event.coHosts[0].name";
+  // The links (§332): a row's box by the index the editor gave it, and the whole list — "more
+  // than twelve" — as the list itself, which `LinkRowsEditor` carries the id of.
+  const link = /^links\.(\d+)\.(\w+)$/.exec(path);
+  if (link) return `event.links[${link[1]}].${link[2]}`;
+  if (path === "links") return "event.links";
   // A wall-clock instant is two boxes; the date is the one the summary points at.
   if (path.endsWith("WallTime")) return `event.${path.slice(0, -"WallTime".length)}Date`;
   if (/^(startsAt|endsAt|raceStartsAt|registrationOpensAt|registrationClosesAt)$/.test(path)) return `event.${path}Date`;

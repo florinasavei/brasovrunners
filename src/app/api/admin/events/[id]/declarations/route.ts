@@ -2,6 +2,7 @@ import { hasLocale } from "next-intl";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { declarationWords, pdfResponse } from "@/modules/registrations/declaration-labels";
 import { renderEventDeclarationsPdf } from "@/modules/registrations/signed-declaration";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -30,6 +31,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!hasLocale(routing.locales, locale)) return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
 
   const now = new Date();
-  const pdf = await renderEventDeclarationsPdf(getDb(), id, locale, await declarationWords(locale, now), now);
+  const db = getDb();
+  let rowCount = 0;
+  const pdf = await renderEventDeclarationsPdf(db, id, locale, await declarationWords(locale, now), now, (count) => {
+    rowCount = count;
+  });
+  // The file leaves the application with every name and identity document in it, and no erase
+  // reaches it (§324): the trail says it was made — the event and how many, never who.
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    action: "event.declarations_downloaded",
+    entityType: "event",
+    entityId: id,
+    metadata: { format: "pdf", rowCount },
+    now,
+  });
   return pdfResponse(pdf, `declaratii-${id.slice(0, 8)}.pdf`, "attachment");
 }

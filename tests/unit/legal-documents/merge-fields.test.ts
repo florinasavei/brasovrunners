@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  asksForIdDocument,
+  asksForMinorSignature,
   BLANK,
+  isMergeField,
   MERGE_FIELDS,
   mergeFieldsIn,
   mergeLegalBody,
@@ -43,10 +46,68 @@ describe("the declaration's merge fields", () => {
     const ro = mergeFieldsIn(declarationRo);
     const en = mergeFieldsIn(declarationEn);
     expect([...ro].sort()).toEqual([...en].sort());
-    // `declarant` (§108) opens the text: the runner, or the parent of a minor with the relation spelled out.
-    for (const field of ["declarant", "idDocument", "event", "eventDate", "eventLocation"]) {
+    /*
+      Since §330 the platform's text opens with the participant and their own document, and names
+      the parent or guardian with theirs in a sentence of its own — a minor's declaration is signed
+      by both. `{{declarant}}` and `{{idDocument}}` (§108, §95) stay fields every approved text may
+      use; this template no longer needs them.
+    */
+    for (const field of ["participant", "participantIdDocument", "guardian", "guardianIdDocument", "event", "eventDate", "eventLocation"]) {
       expect(ro.has(field as (typeof MERGE_FIELDS)[number]), field).toBe(true);
     }
+    expect(asksForIdDocument(declarationRo)).toBe(true);
+  });
+
+  /** §330 — each signer's document is a field of its own, and naming any document asks for them. */
+  it("knows the two newer document fields, and asks for documents when a text names any of the three", () => {
+    for (const field of ["idDocument", "participantIdDocument", "guardianIdDocument"]) {
+      expect(isMergeField(field), field).toBe(true);
+      expect(asksForIdDocument({ sections: [{ paragraphs: [`CI {{${field}}}`] }] }), field).toBe(true);
+    }
+    expect(asksForIdDocument({ sections: [{ paragraphs: ["{{participant}} at {{event}}"] }] })).toBe(false);
+    expect(asksForIdDocument("not a body")).toBe(false);
+    // A value fills each; none is a blank, as every other field.
+    expect(mergeText("{{participantIdDocument}} / {{guardianIdDocument}}", { participantIdDocument: "MP 654321", guardianIdDocument: "—" })).toBe("MP 654321 / —");
+    expect(mergeText("{{guardianIdDocument}}", {})).toBe(BLANK);
+  });
+
+  /**
+   * §330 — the production gate. A minor signs beside the parent, with the minor's own document,
+   * only under a text that names `{{participantIdDocument}}`: the platform's template, in both
+   * languages. A text the club approved before it — the parent declares with the parent's
+   * document — does not, and a minor's declaration under it is signed by the parent alone.
+   */
+  describe("asksForMinorSignature", () => {
+    const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
+
+    it("is on when the text names the participant's own document, in either language", () => {
+      expect(asksForMinorSignature(declarationRo)).toBe(true);
+      expect(asksForMinorSignature(declarationEn)).toBe(true);
+      expect(asksForMinorSignature(text("I, {{participant}}, holder of {{participantIdDocument}}."))).toBe(true);
+      // Spaced inside the braces, as the merge reads it too.
+      expect(asksForMinorSignature(text("CI {{ participantIdDocument }}"))).toBe(true);
+      // In a heading as well as a paragraph: wherever the merge would fill it.
+      expect(asksForMinorSignature({ sections: [{ heading: "Participant: {{participantIdDocument}}", paragraphs: ["No fields."] }] })).toBe(true);
+    });
+
+    it("is off for a text approved before two signatures, in either language", () => {
+      // The pre-§330 template's shape: the declarant and the declarant's document.
+      expect(asksForMinorSignature(text("Subsemnatul/a {{declarant}}, posesor/posesoare al actului de identitate {{idDocument}}, declar că particip la {{event}}."))).toBe(false);
+      expect(asksForMinorSignature(text("I, {{declarant}}, holder of identity document {{idDocument}}, take part in {{event}}."))).toBe(false);
+      // The parent's document alone is the declarant's anyway: it asks nothing of the minor.
+      expect(asksForMinorSignature(text("{{guardian}}, {{guardianIdDocument}}"))).toBe(false);
+      // Still asks for a document — the parent's — as it always did.
+      expect(asksForIdDocument(text("{{declarant}} {{idDocument}}"))).toBe(true);
+    });
+
+    it("is off for a text with no fields at all, and for a body nobody can read", () => {
+      expect(asksForMinorSignature(text("No blanks in this declaration."))).toBe(false);
+      expect(asksForMinorSignature({ sections: [] })).toBe(false);
+      expect(asksForMinorSignature("not a body")).toBe(false);
+      expect(asksForMinorSignature(null)).toBe(false);
+      // A misspelt field is not the field: it stays in the text as written, and asks nothing.
+      expect(asksForMinorSignature(text("{{participantIdDoc}}"))).toBe(false);
+    });
   });
 
   it("keeps only the club's four facts as placeholders in every template", () => {
@@ -67,9 +128,14 @@ describe("the declaration's merge fields", () => {
           expect(allowed.has(placeholder), `${key} ${locale}: ${placeholder}`).toBe(true);
         }
         // Complete, and short (the owner: "the terms and the GDPR notice should be short"):
-        // a real document, not an outline, and not a treatise either.
+        // a real document, not an outline, and not a treatise either. The privacy notice has
+        // its own ceiling since the GDPR transparency pass (§323; the owner: "we need to inform
+        // people properly on how their data is used"): every item now carries its purpose, its
+        // basis, who sees it and how long it stays, which is what art. 13 asks, and that is
+        // about half as long again as the text it replaced.
+        const ceiling = key === "EVENT_DECLARATION" ? 4000 : key === "PRIVACY_NOTICE" ? 17000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
-        expect(text.length, `${key} ${locale}`).toBeLessThan(key === "EVENT_DECLARATION" ? 4000 : 11000);
+        expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }
     }
   });
