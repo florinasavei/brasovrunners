@@ -151,6 +151,24 @@ describe("§336 the emails participants receive: one card of cards", () => {
     const reminder = html.indexOf('id="email-EVENT_REMINDER"');
     expect(html.slice(reminder, html.indexOf("</summary>", reminder))).not.toContain(ro.Admin.emails.neverSent);
   });
+
+  /*
+    §359: a saved text still holding a value of the page's sample ("Crosul de toamnă") is what every
+    participant would read. The card says so while closed, and opens by itself — `attention` — so
+    the Redactor who opens the page finds it without opening twenty cards.
+  */
+  it("marks and opens exactly the card whose saved words hold sample values, naming the language", () => {
+    // The English text, seen from the Romanian tab: every message goes out in both (§96).
+    const marker = ro.Admin.emails.copy.sampleMarker.replace("{languages}", "EN");
+    const flagged = { ...card("VERIFY_REGISTRATION_EMAIL"), sampleValues: marker };
+    const html = render([flagged, card("EVENT_REMINDER")], { attention: true });
+    expect(foldTags(html).map(isOpen)).toEqual([true, true, false]);
+    expect(html.match(/data-testid="participant-email-sample-values"/g) ?? []).toHaveLength(1);
+    const start = html.indexOf('id="email-VERIFY_REGISTRATION_EMAIL"');
+    const summary = html.slice(start, html.indexOf("</summary>", start));
+    expect(summary).toContain("textul salvat (EN) are valori de exemplu");
+    expect(summary).toContain(ro.Admin.emails.whenShort.VERIFY_REGISTRATION_EMAIL);
+  });
 });
 
 /** A catalogue string as a literal inside a pattern. */
@@ -167,12 +185,19 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toMatch(/const types = \[\s*\.\.\.\(emailMessageType\.enumValues/);
     expect(page).toMatch(/filter\(\(type\) => !NEVER_QUEUED\.has\(type\)\)[\s\S]*?filter\(\(type\) => NEVER_QUEUED\.has\(type\)\)/);
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
-    expect(page).toMatch(/messages=\{types\.map\(/);
+    // Through `cards`, which is `types` with each message's preview and saved words (§359).
+    expect(page).toMatch(/const cards = types\.map\(/);
+    expect(page).toMatch(/messages=\{cards\.map\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.
     expect(page).not.toContain('component="details"');
     expect(page).not.toContain("<SubNav");
-    expect(page).toMatch(/openWhen=\{\{ saved: copySaved, inUse: lang !== undefined \}\}/);
+    // And for whoever may write the words, when a saved text still holds a sample value (§359) —
+    // in either language, whichever tab is open; the editor's warning stays with the one on screen.
+    expect(page).toMatch(/openWhen=\{\{ saved: copySaved, inUse: lang !== undefined, attention: anySamples \}\}/);
+    expect(page).toMatch(/const samples = mayWrite && own \? sampleValuesIn\(own, messageType, emailLocale\) : \[\];/);
+    expect(page).toContain("const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];");
+    expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
   });
 
   it("makes the Mailgun plan a fold, with the plan and the day's figure in its summary", () => {
