@@ -41,8 +41,8 @@ import { findRegistrationById } from "./repository";
  *
  * The published set (`repository.ts#listPublicStartList`) already reads the column, so a name
  * leaves the list the moment the row changes and returns the same way; no second query and no
- * cache stand between the choice and the page (§281). §186's "Participant anonim" count picks
- * the row up on the other side of the same column.
+ * cache stand between the choice and the page (§281). §186's "Participant (nume ascuns)" count
+ * picks the row up on the other side of the same column.
  *
  * "Set", not "flip": the form carries the choice it is making, so a double submission — or a
  * choice made from two tabs — lands on the state the button said, and a second identical

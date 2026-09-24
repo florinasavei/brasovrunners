@@ -37,7 +37,9 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // §NNN: "N înscriși din 50 de locuri" — the same free-place count read the other way round.
     // Loosely matched: other Playwright projects register real people against this same shared
     // event, so the taken count is whatever it is by the time this test runs, never a fixed one.
-    await expect(hero.getByTestId("registration-fill")).toHaveText(/\d+ (înscris|înscriși) din 50 de locuri/);
+    // Romanian puts "de" before the noun from twenty on ("20 de înscriși"), so both forms
+    // must be accepted here (`src/i18n/number-form.ts`).
+    await expect(hero.getByTestId("registration-fill")).toHaveText(/\d+ (de )?înscri(s|și) din 50 de locuri/);
 
     const enter = hero.getByRole("link", { name: "Înscrie-te la eveniment" });
     // BR-REQ-041-01 criterion 6: a 44px tap target, on the page whose whole purpose is to be

@@ -106,6 +106,16 @@ export type PublicFill = { taken: number; capacity: number };
  * Never more than the capacity and never below nought, whatever arrives: the formula clamps at
  * nought already, and this clamps again rather than print "51 of 50" from a row that lowered
  * its capacity under a hold between two reads.
+ *
+ * **A `TEST` registration counts here too**, because `readPublicAvailability` counts it: §12.6
+ * says `kind` appears in neither the allocator nor the capacity formula, so a demonstration
+ * registration holds a place exactly like a real one and this reads the same free-place number
+ * the button does, deliberately, rather than a second, REAL-only count that could disagree with
+ * it. That is only ever true where a `TEST` row can exist at all — never in production
+ * (`modules/registrations/test-registrations.ts`) — so the figure a real visitor reads never
+ * includes one. `tests/integration/registrations/test-kind.test.ts` proves the arithmetic
+ * against a mixed REAL/TEST event on a real database, the same way it proves every other §30
+ * property.
  */
 export function publicFill(capacity: number | null, availablePlaces: number | null): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
