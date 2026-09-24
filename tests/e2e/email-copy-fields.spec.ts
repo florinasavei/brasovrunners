@@ -24,6 +24,61 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 const STALE_KEY = "REGISTRATION_CANCELLED:ro";
 
 /**
+ * `DECISIONS.md` §373 (email follow-up; the owner, 2026-09-24: "I like how the placeholders are
+ * listed here on the documents — need to have the same on emails") — the legend under a message's
+ * words, on a phone and a desktop. It reads nothing but the page, so both projects run it.
+ */
+test.describe("the fields of an email's words, as a legend", () => {
+  test("a closed card that lists every field, this message's first, the ones it never carries dimmed", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto("/ro/admin/emails?lang=ro");
+    const main = page.locator("#main");
+    const card = main.locator("#email-REGISTRATION_CONFIRMED");
+    await openFold(card);
+
+    const legend = main.getByTestId("email-fields-REGISTRATION_CONFIRMED");
+    await expect(legend).not.toHaveAttribute("open", "");
+    const summary = legend.locator(":scope > summary");
+    await expect(summary).toContainText("Câmpurile pe care le poți folosi");
+    await expect(summary).toContainText("12 câmpuri · 4 câmpuri folosite aici");
+    // A thumb opens it (BR-REQ-041-01 criterion 6).
+    expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await openFold(legend);
+
+    const terms = legend.locator("dt");
+    await expect(terms).toHaveCount(12);
+    await expect(terms.nth(0)).toContainText("{eventTitle}");
+    await expect(terms.nth(0)).toContainText("folosit în textul platformei");
+    // The example is the preview's: the sample's title, in italics beside what the field is.
+    await expect(legend.locator("dd").nth(0)).toContainText("Titlul evenimentului, în limba acestui text — Crosul de toamnă");
+    // The invitation's two fields, last and dimmed — by colour, never by opacity (AGENTS.md §18.2).
+    const role = legend.locator("dt", { hasText: "{staffRole}" });
+    await expect(role.locator("xpath=..")).toHaveAttribute("data-muted", "true");
+    await expect(role).not.toHaveCSS("opacity", "0.6");
+    await expect(legend.locator("dd").nth(10)).toContainText("nu se completează în acest mesaj");
+    await expect(terms.nth(11)).toContainText("{inviterName}");
+
+    // The old sentence is gone, and the phone keeps its width with the card open (criterion 1).
+    await expect(main.getByTestId("email-copy-placeholders")).toHaveCount(0);
+    const overflow = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+
+  test("the preview's second half reads the other language's sample", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto("/ro/admin/emails?lang=ro");
+    const card = page.locator("#main").locator("#email-EVENT_UPDATE_NOTICE");
+    await openFold(card);
+    // Each half its own title, in the subject too (§373, email follow-up).
+    await expect(card).toContainText("Detalii actualizate pentru Crosul de toamnă / Updated details for The autumn cross");
+    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Tâmpa cable-car station\./);
+  });
+});
+
+/**
  * BR-REQ-080-01, `DECISIONS.md` §359 — the words of a message start from the platform's text with
  * the fields in it, and a sample value is refused at the save.
  *
@@ -54,9 +109,15 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     const words = editor.locator(".ProseMirror");
     await expect(words).toContainText("Ai început înscrierea la {eventTitle}. Pentru a continua, confirmă adresa ta de email.");
     await expect(words).not.toContainText("Crosul de toamnă");
-    await expect(editor.getByTestId("email-copy-placeholders")).toContainText("Textul platformei pentru acest mesaj folosește: {eventTitle}.");
+    // The fields are a legend under the box now (§373, email follow-up), the one this text uses first.
+    const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
+    await expect(legend).toContainText("12 câmpuri · 1 câmp folosit aici");
+    await openFold(legend);
+    await expect(legend.locator("dt").first()).toContainText("{eventTitle}");
+    await expect(legend.locator("dt").first()).toContainText("folosit în textul platformei");
 
     const subject = editor.getByLabel("Subiect");
+    await hydrated(page);
     await subject.fill("Confirmă adresa pentru Crosul de toamnă");
     await editor.getByRole("button", { name: "Salvează textul" }).click();
 
@@ -97,6 +158,9 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
       await expect(warning).toContainText("Textul salvat conține valori de exemplu, nu câmpuri");
       await expect(warning).toContainText("„Crosul de toamnă” — în subiect și în text; în locul ei: {eventTitle}");
 
+      // A form pressed before React has taken the page over is lost (`hydrated`), and the page
+      // grew twenty legends in the email follow-up (§373): the press waits for the client.
+      await hydrated(page);
       await editor.getByRole("button", { name: "Înlocuiește cu câmpurile" }).click();
       await expect(main.getByText("Am pus câmpurile în locul valorilor de exemplu și am salvat textul.")).toBeVisible();
       await expect(editor.getByTestId("email-copy-samples")).toHaveCount(0);

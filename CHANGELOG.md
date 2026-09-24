@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.84-2026-09-25
+
+- **The phone footer is one row with every item on it.** On a phone the bar now holds, left to right: the light/dark switch, "Despre club", Facebook, Instagram and Strava, a lock that opens the privacy notice and names it on hover and to a screen reader, then the Romanian and English flags, with the current language ringed. On the narrowest phones each is 24 pixels, from 360 pixels wide 28, and on tablets and desktops 44 as before. Opening "Despre club" keeps the row in place and shows its links under it. §372.
+- Cleaned up a leftover comment and a dead duplicate block from the organizer-message bilingual rendering path, and widened the split-halves status and legend test coverage to both locales and both statuses (§373). §373.
+- **The dispatcher keeps its own context small** — grep instead of whole-file reads, delegate sweeps to Haiku, resumed branches still get reviewed, and `yarn ship` skips a batch PR that is already merged §368. §374.
 ## BR-V1.83-2026-09-24
 
 - **The club's name is written in one place.** The page title, the header, the wordmark, the JSON-LD, the share pictures, the calendar, the legal PDF's Author and the sender's default all read `CLUB_NAME`, and the catalogues no longer hold the name: a sentence that names the club takes it as `{club}`. The declaration's token legend uses a made-up event in both languages. A donation event is free to attend in structured data, with its link as a `DonateAction`. The queue panel shows times in the event's own zone, and the legal editor no longer jumps when it loads. §369.
