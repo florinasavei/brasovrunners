@@ -40,7 +40,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(legend).not.toHaveAttribute("open", "");
     const summary = legend.locator(":scope > summary");
     await expect(summary).toContainText("Câmpurile pe care le poți folosi");
-    await expect(summary).toContainText("12 câmpuri · 4 folosite aici");
+    await expect(summary).toContainText("12 câmpuri · 4 câmpuri folosite aici");
     // A thumb opens it (BR-REQ-041-01 criterion 6).
     expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await openFold(legend);
@@ -51,9 +51,10 @@ test.describe("the fields of an email's words, as a legend", () => {
     await expect(terms.nth(0)).toContainText("folosit în textul platformei");
     // The example is the preview's: the sample's title, in italics beside what the field is.
     await expect(legend.locator("dd").nth(0)).toContainText("Titlul evenimentului, în limba acestui text — Crosul de toamnă");
-    // The invitation's two fields, last and dimmed.
+    // The invitation's two fields, last and dimmed — by colour, never by opacity (AGENTS.md §18.2).
     const role = legend.locator("dt", { hasText: "{staffRole}" });
-    await expect(role).toHaveCSS("opacity", "0.6");
+    await expect(role.locator("xpath=..")).toHaveAttribute("data-muted", "true");
+    await expect(role).not.toHaveCSS("opacity", "0.6");
     await expect(legend.locator("dd").nth(10)).toContainText("nu se completează în acest mesaj");
     await expect(terms.nth(11)).toContainText("{inviterName}");
 
@@ -96,6 +97,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
   test("a Redactor is handed {eventTitle}, not the sample's title, and a sample value is refused", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
     await page.goto("/ro/admin/emails?lang=ro");
+    await hydrated(page);
     const main = page.locator("#main");
 
     const card = main.locator("#email-VERIFY_REGISTRATION_EMAIL");
@@ -109,7 +111,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     await expect(words).not.toContainText("Crosul de toamnă");
     // The fields are a legend under the box now (§NNN, email follow-up), the one this text uses first.
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
-    await expect(legend).toContainText("12 câmpuri · 1 folosit aici");
+    await expect(legend).toContainText("12 câmpuri · 1 câmp folosit aici");
     await openFold(legend);
     await expect(legend.locator("dt").first()).toContainText("{eventTitle}");
     await expect(legend.locator("dt").first()).toContainText("folosit în textul platformei");
@@ -140,6 +142,9 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     try {
       await signIn(page, "Dev Copywriter");
       await page.goto("/ro/admin/emails?lang=ro");
+      // Every assertion before the press below already holds on the server's HTML, so without this
+      // the press can land mid-hydration and be dropped — no refusal, no banner, nothing saved.
+      await hydrated(page);
       const main = page.locator("#main");
 
       // The card of cards and the message's own card open by themselves, and the closed line says why.

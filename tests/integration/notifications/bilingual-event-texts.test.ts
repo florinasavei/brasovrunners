@@ -89,7 +89,13 @@ describe("§NNN each half of a bilingual message reads its own language's event 
       { locale: "en", title: EN.title, checklist: EN.checklist, locationName: EN.place },
     ]);
 
-  async function queue(eventId: string, locale: "ro" | "en", messageType: EmailMessageType, payload: Record<string, unknown> = {}) {
+  async function queue(
+    eventId: string,
+    locale: "ro" | "en",
+    messageType: EmailMessageType,
+    payload: Record<string, unknown> = {},
+    status: "CONFIRMED" | "WAITLISTED" = "CONFIRMED",
+  ) {
     sequence += 1;
     const identity = canonicalizeEmail(`runner${sequence}@example.ro`);
     const [participant] = await db
@@ -107,7 +113,7 @@ describe("§NNN each half of a bilingual message reads its own language's event 
       .values({
         eventId,
         participantId: participant.id,
-        status: "CONFIRMED",
+        status,
         locale,
         registeredName: `Runner ${sequence}`,
         displayName: `Runner ${sequence}`,
@@ -250,6 +256,25 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     expect(subjects.filter((subject) => subject.includes(EN.title))).toHaveLength(0);
     expect(sender.calls.filter((call) => call.text.includes(RO.title) && call.text.includes(EN.title))).toHaveLength(3);
     expect(sender.calls.filter((call) => call.text.includes("Alergarea de luni") && call.text.includes("The Monday run"))).toHaveLength(1);
+  });
+
+  it("writes {currentStatus} in the reader's own words, never the raw enum (§NNN, email follow-up review)", async () => {
+    const event = await bilingual();
+    const confirmedRo = await renderOutboxMessage(await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED"), db, NOW);
+    expect(confirmedRo.text).toContain("confirmată");
+    expect(confirmedRo.text).not.toContain("CONFIRMED");
+
+    const confirmedEn = await renderOutboxMessage(await queue(event.id, "en", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED"), db, NOW);
+    expect(confirmedEn.text).toContain("confirmed");
+    expect(confirmedEn.text).not.toContain("CONFIRMED");
+
+    const waitlistedRo = await renderOutboxMessage(await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "WAITLISTED"), db, NOW);
+    expect(waitlistedRo.text).toContain("pe lista de așteptare");
+    expect(waitlistedRo.text).not.toContain("WAITLISTED");
+
+    const waitlistedEn = await renderOutboxMessage(await queue(event.id, "en", "REGISTRATION_STATE_NOTICE", {}, "WAITLISTED"), db, NOW);
+    expect(waitlistedEn.text).toContain("on the waiting list");
+    expect(waitlistedEn.text).not.toContain("WAITLISTED");
   });
 
   it("asks again after a read that failed, rather than failing the rest of the batch with it", async () => {

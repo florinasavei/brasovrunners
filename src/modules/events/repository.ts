@@ -428,9 +428,23 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
   return eventNotificationDetailsIn(await findEventNotificationRows(db, eventId), locale);
 }
 
-/** One language's row of `findEventNotificationRows`, or the first there is when it has none. */
-export function eventNotificationDetailsIn<R extends { locale: Locale }>(rows: readonly R[], locale: Locale) {
-  return rows.find((row) => row.locale === locale) ?? rows[0];
+/**
+ * One language's row of `findEventNotificationRows`, or the first there is when it has none —
+ * carrying `locationNames`, the place's name in every language the event has, for the half of a
+ * bilingual message written in the other one (§362, `renderBilingual`): the English half names
+ * the English place, read by the same rule — and withheld the same way while the place is to be
+ * announced (§328).
+ */
+export function eventNotificationDetailsIn<R extends { locale: Locale; locationName: string | null }>(
+  rows: readonly R[],
+  locale: Locale,
+) {
+  const row = rows.find((candidate) => candidate.locale === locale) ?? rows[0];
+  if (!row) return undefined;
+  const locationNames: Partial<Record<Locale, string | null>> = Object.fromEntries(
+    rows.map((candidate) => [candidate.locale, candidate.locationName]),
+  );
+  return { ...row, locationNames };
 }
 
 export type EventNotificationRow = Awaited<ReturnType<typeof findEventNotificationRows>>[number];

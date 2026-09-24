@@ -23,3 +23,6 @@
 
 # SVG is deliberately absent from the list above. It is text, and keeping it diffable is how a
 # change to the club's logo shows up in a review as something a person can read.
+
+# Workflow scripts are read by the Workflow tool, which refuses a carriage return in a script (docs/DISPATCHER.md).
+.claude/workflows/*.js text eol=lf

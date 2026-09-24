@@ -27,6 +27,8 @@ import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { readOrganizerMessagePayload } from "./domain/organizer-message";
+import { registrationStatusWords } from "./domain/registration-status-words";
 import { readEmailCopyForSending } from "./email-copy";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -176,17 +178,23 @@ async function renderRow(
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
-    // Nullable on the event row now that the meeting point is one value for the whole event
+    // The place in the runner's language (§362), nullable on an event row from before the column
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
     eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
-    ...(placeLater ? { eventLocationNameOther: placeToBeAnnouncedWords(locale === "ro" ? "en" : "ro") } : {}),
+    // And in the other language, for the second half of the bilingual message: its own name for
+    // the place, never the first half's words — or the sentence while it is to be announced (§328).
+    eventLocationNameOther: placeLater
+      ? placeToBeAnnouncedWords(otherLocale(locale))
+      : (eventDetails?.locationNames[otherLocale(locale)] ?? undefined),
     eventStartsAtFormatted: formatEventStart(eventDetails, locale),
     // The other language's half of the bilingual message reads its own date (§96).
     eventStartsAtFormattedOther: formatEventStart(eventDetails, locale === "ro" ? "en" : "ro"),
     eventMapUrl: eventDetails?.mapUrl ?? undefined,
     eventStravaEventUrl: eventDetails?.stravaEventUrl ?? undefined,
     eventChecklist: eventDetails?.checklist ?? undefined,
-    currentStatus: registration?.status,
+    // In words, never the raw enum (§NNN, email follow-up review): the same table the sample and
+    // the legend read (`registrationStatusWords`), so a runner never reads "CONFIRMED".
+    currentStatus: registration ? registrationStatusWords(registration.status, locale) : undefined,
     // The footer line is there whenever somebody can answer (§81).
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
     // The event's own page, for the deep link every message carries (§96).
@@ -262,6 +270,37 @@ async function renderRow(
     if (reason.text) data.cancellationReason = reason.text;
     if (reason.other) data.cancellationReasonOther = reason.other;
   }
+  /*
+    "Trimite un mesaj participanților" (§364): the organizer's subject and body, this registrant's
+    language first and the other language's own words in the second half (§354). A row whose
+    payload cannot be read goes with the platform's subject and framing sentence alone.
+
+    The second half's placeholders read the second language's facts — the event's title and "what
+    to bring" in English under the English words — which §354 left undone for every other message
+    because it costs a second read per message. Here the organizer writes `{eventTitle}` into both
+    halves, and an English sentence carrying the Romanian title is the thing "bilingual always"
+    exists to prevent, so this message pays for the read.
+  */
+  if (row.messageType === "ORGANIZER_MESSAGE") {
+    const words = readOrganizerMessagePayload(row.payloadJson);
+    const other = otherLocale(locale);
+    if (words) {
+      data.organizerSubject = words.subject[locale];
+      data.organizerSubjectOther = words.subject[other];
+      data.organizerBody = words.body[locale];
+      data.organizerBodyOther = words.body[other];
+    }
+    if (otherDetails) {
+      if (otherDetails.title) data.eventTitleOther = otherDetails.title;
+      if (otherDetails.checklist) data.eventChecklistOther = otherDetails.checklist;
+      if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+    }
+    // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
+    // without the line that says it can still move (§237).
+    if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
+    // "Înscrierile mele" by address, not by token: this message mints nothing (§77).
+    data.myRegistrationsUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
+  }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
   // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the
   // email names where they are, never a raw Drive link in a message that is forwarded.
@@ -306,7 +345,8 @@ async function renderRow(
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.
-  if (row.messageType === "EVENT_UPDATE_NOTICE" && data.eventUrl) payloadActionUrl = data.eventUrl;
+  // The organizer's message too (§364): the one place a runner checks what the message is about.
+  if ((row.messageType === "EVENT_UPDATE_NOTICE" || row.messageType === "ORGANIZER_MESSAGE") && data.eventUrl) payloadActionUrl = data.eventUrl;
   // "Registration is open" (§146): no participant, no token; the action is the ordinary
   // registration page, which asks everything itself.
   if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {

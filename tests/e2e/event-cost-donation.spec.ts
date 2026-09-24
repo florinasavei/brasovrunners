@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §343 — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
@@ -27,7 +27,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -36,6 +36,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-05-08");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Alergare cu donație ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await excerpt("ro", "Alergare fără taxă, cu o donație opțională pentru Wings for Life.");

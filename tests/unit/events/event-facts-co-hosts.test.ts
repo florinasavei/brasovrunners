@@ -229,20 +229,26 @@ describe("BR-REQ-011-01 criterion 16 the partnership's description and the partn
     expect(html).not.toContain("<a ");
   });
 
-  it("keeps the one-line forms — the listing card and the featured hero — to the names alone", async () => {
+  it("keeps the featured hero's one-line form to the names alone, and the listing card's facts to none of it (§366)", async () => {
     currentLocale = "ro";
-    const card = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, variant: "compact" }));
     const hero = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW }));
-    for (const html of [card, hero]) {
-      expect(html).toContain("Brașov Running Festival");
-      expect(html).not.toContain("Alergăm");
-      expect(html).not.toContain("Înscriere la Brașov Running Festival");
-    }
+    expect(hero).toContain("Brașov Running Festival");
+    expect(hero).not.toContain("Alergăm");
+    expect(hero).not.toContain("Înscriere la Brașov Running Festival");
+    const card = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, variant: "compact" }));
+    expect(card).not.toContain("Brașov Running Festival");
+    expect(card).not.toContain("Alergăm");
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 the listing card's mention", () => {
-  it("keeps the plain sentence, each name its own link to the partner's site (or its first link)", async () => {
+/**
+ * The listing card's facts say nothing of the partners (§366; the owner, 2026-09-24, of the card's
+ * facts line "Piața Sfatului, Brașov · Împreună cu Brașov Running Festival · 8 km · …": "this is
+ * currently pretty ugly!"). The sentence sat between the place and the kilometres; the partner's mark
+ * on a card belongs to its chips, and the event page and the hero keep theirs (above and below).
+ */
+describe("BR-REQ-011-01 criterion 16 the listing card's facts leave the partners out (§366)", () => {
+  it("draws no «Împreună cu», no partner's name and no partner's link among a card's facts", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({
         event: event({
@@ -255,20 +261,12 @@ describe("BR-REQ-011-01 criterion 16 the listing card's mention", () => {
         variant: "compact",
       }),
     );
-    expect(html).toContain("Împreună cu");
-    // A sentence, not a block of rows: no "small text" host caption under either name.
-    expect(html).not.toContain("bm.example.test<");
-    const anchors = [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
-    expect(anchors.some((anchor) => anchor.includes('href="https://bm.example.test"'))).toBe(true);
-    expect(anchors.some((anchor) => anchor.includes('href="https://strava.com/clubs/1"'))).toBe(true);
-  });
-
-  it("names a partner as plain text when it carries no link at all", async () => {
-    const html = renderToStaticMarkup(
-      await EventFacts({ event: event({ coHosts: [{ name: "Salvamont", links: [] }] }), now: NOW, variant: "compact" }),
-    );
-    expect(html).toContain("Salvamont");
-    expect(html).not.toContain("<a ");
+    expect(html).not.toContain("Împreună cu");
+    expect(html).not.toContain("Brașov Marathon");
+    expect(html).not.toContain("Salvamont");
+    expect(html).not.toContain("bm.example.test");
+    expect(html).not.toContain("strava.com/clubs/1");
+    expect(html).not.toContain('data-testid="HandshakeIcon"');
   });
 });
 

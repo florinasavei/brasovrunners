@@ -70,6 +70,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-06");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Versiune ${suffix}`);
     await field("translations.ro.slug").fill(`versiune-${suffix}`);
     await languageTab(page, "title", "en").click();
@@ -144,6 +145,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-20");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Fără declarație ${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`No declaration ${suffix}`);
@@ -200,7 +202,10 @@ test.describe("§358 a refusal inside a card of the first box opens the box and 
 
     await fillDateField(page, "Începutul evenimentului", "2027-07-04");
     await fillTimeField(page, "Ora", "09:00");
+    // The meeting point in both languages (§362): a blank English box is the browser's refusal,
+    // and the one this test is about is the server's.
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Link pe jumătate ${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Half a link ${suffix}`);
@@ -255,6 +260,7 @@ test.describe("§350 a wrong value in a hidden registration mode", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-27");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Mod ascuns ${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Hidden mode ${suffix}`);

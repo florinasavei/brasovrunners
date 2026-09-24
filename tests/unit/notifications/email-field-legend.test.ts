@@ -147,13 +147,13 @@ describe("§NNN the fields of an email's words, as a legend", () => {
     expect(html.endsWith("</details>")).toBe(true);
     expect(html.match(/<details[^>]*>/)?.[0]).not.toMatch(/\sopen/);
     expect(html).toContain('id="email-fields-REGISTRATION_CONFIRMED"');
-    expect(html).toMatch(/<summary[^>]*><h4[^>]*>Câmpurile pe care le poți folosi<span[^>]*>12 câmpuri · 4 folosite aici<\/span><\/h4><\/summary>/);
+    expect(html).toMatch(/<summary[^>]*><h4[^>]*>Câmpurile pe care le poți folosi<span[^>]*>12 câmpuri · 4 câmpuri folosite aici<\/span><\/h4><\/summary>/);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);
 
-    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("12 câmpuri · 1 folosit aici");
+    expect(text(await render("VERIFY_REGISTRATION_EMAIL", "ro"))).toContain("12 câmpuri · 1 câmp folosit aici");
     expect(text(await render("PROFILE_MANAGE_LINK", "ro"))).toContain("12 câmpuri · niciunul folosit aici");
-    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 12 fields · 4 used here");
+    expect(text(await render("REGISTRATION_CONFIRMED", "en"))).toContain("The fields you can use 12 fields · 4 fields used here");
   });
 
   it("gives the examples of the language being edited, whatever the backoffice's language", async () => {

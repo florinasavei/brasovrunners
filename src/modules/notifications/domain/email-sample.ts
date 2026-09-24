@@ -3,10 +3,13 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { EmailCopyPlaceholder } from "./email-copy";
+import { registrationStatusWords } from "./registration-status-words";
 
 /**
  * The made-up runner at the made-up event every preview on `/admin/emails` is rendered with
- * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain.
+ * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain. The
+ * participant-message composer's preview is addressed to the same runner, and its help line names
+ * her from here (§364): one sample, never a second copy of it beside this one.
  *
  * ## Why the sample and the guard read one constant
  *
@@ -69,6 +72,13 @@ export type EmailSampleValues = {
   /** "Detalii actualizate" and "Eveniment anulat" (§331) — the organizer's words, never the club's copy. */
   organizerNote: string;
   cancellationReason: string;
+  /**
+   * "Trimite un mesaj participanților" (§364): a sample message, written per send, so its card
+   * previews one — with a placeholder in each box, as the composer on the event's page would send
+   * it. The organizer's words, like the note and the reason: never the club's copy, never refused.
+   */
+  organizerSubject: string;
+  organizerBody: string;
 };
 
 export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
@@ -77,7 +87,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     eventTitle: "Crosul de toamnă",
     eventLocationName: "Stația de telecabină Tâmpa",
     eventStartsAtFormatted: emailSampleWhen("ro"),
-    currentStatus: "confirmată",
+    currentStatus: registrationStatusWords("CONFIRMED", "ro"),
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Apă, o haină de ploaie, bună dispoziție",
@@ -88,13 +98,19 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     staffEmail: "ana.popescu@example.org",
     organizerNote: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
     cancellationReason: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
+    organizerSubject: "Vreme rea la {eventTitle}: startul se mută la 10:00",
+    organizerBody: [
+      "Salut, {participantName}!",
+      "Prognoza anunță furtună până la 9:00, așa că mutăm startul la 10:00. Masa de înscrieri se deschide la 9:15, în același loc.",
+      "Aduceți o haină de ploaie.",
+    ].join("\n\n"),
   },
   en: {
     participantName: "Ana Popescu",
     eventTitle: "The autumn cross",
     eventLocationName: "Tâmpa cable-car station",
     eventStartsAtFormatted: emailSampleWhen("en"),
-    currentStatus: "confirmed",
+    currentStatus: registrationStatusWords("CONFIRMED", "en"),
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Water, a rain jacket, good spirits",
@@ -105,6 +121,12 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     staffEmail: "ana.popescu@example.org",
     organizerNote: "We meet at the Livada Poștei entrance, by the map board.",
     cancellationReason: "An orange weather warning for Tâmpa: the route is not safe.",
+    organizerSubject: "Bad weather at {eventTitle}: the start moves to 10:00",
+    organizerBody: [
+      "Hi, {participantName}!",
+      "The forecast says storms until 9:00, so we are moving the start to 10:00. The registration desk opens at 9:15, in the same place.",
+      "Bring a rain jacket.",
+    ].join("\n\n"),
   },
 };
 
@@ -165,7 +187,8 @@ const EVERY_LOCALE: readonly EmailLocale[] = ["ro", "en"];
  * are found where the platform's own sentence carried them (`email-copy-fields.ts`), and so is the
  * inviter's former name (`EMAIL_SAMPLE_FORMER_INVITER`). Nor the organizer's note and the
  * cancellation reason: they are the platform's lines around the words, never part of the editor's
- * text.
+ * text. Nor the organizer's message (§364): it is written per send, has no editor on the page, and
+ * its sample holds only placeholders and ordinary words.
  */
 export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([
   // The address first: its local part is the sample name, and it must be replaced whole.

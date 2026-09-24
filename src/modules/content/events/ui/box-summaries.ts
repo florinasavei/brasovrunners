@@ -5,6 +5,7 @@ import { identicalInBothLanguages, isWrittenText, missingLanguage } from "@/shar
 import { fillIn } from "@/shared/forms/fill-in";
 import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
+import { placeInBox } from "@/modules/events/domain/place";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
@@ -158,7 +159,6 @@ export function incompleteLocales(
 export const BLANK = {
   titleSummary: (translation: SummaryTranslation) => translation.title.trim() === "" || summaryBlank(translation),
   description: (translation: SummaryTranslation) => docBlank(translation.bodyJson),
-  place: (translation: SummaryTranslation) => (translation.locationName ?? "").trim() === "",
   // One test per field the strip watches (`schedule`, `checklist`), in that order.
   programme: [
     (translation: SummaryTranslation) => docBlank(translation.scheduleJson),
@@ -252,15 +252,25 @@ export function timezoneSummary(words: SummaryWords, zone: string): string {
 
 type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "locationToBeAnnounced" | "mapUrl">;
 
-/** Box 5: `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`. */
+/**
+ * Box 5: `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`.
+ *
+ * The Romanian name first — the event's own meeting point — and another language's only when it
+ * says something else (§362): "Stadionul Tineretului" twice over would be the redundancy the box
+ * was rebuilt to remove. Each language reads as its box and its page do (`placeInBox`), so an
+ * event saved before §362, whose English row is empty, summarises as the one name it shows.
+ */
 export function placeSummary(words: SummaryWords, event: PlaceEvent | null, translations: readonly SummaryTranslation[]): string {
   if (!event) return words.place.tba;
   if (event.locationToBeAnnounced) return words.place.tba;
-  const name = [event.locationName, event.locationAddress].filter(Boolean).join(", ");
+  const inLanguage = (locale: string) => placeInBox(event, translations.find((translation) => translation.locale === locale)?.locationName);
+  const name = inLanguage("ro");
   if (name === "") return words.place.none;
   const others = translations
-    .filter((translation) => (translation.locationName ?? "").trim() !== "" && translation.locationName !== name)
-    .map((translation) => fillIn(words.place.inLanguage, { language: code(translation.locale), name: (translation.locationName ?? "").trim() }));
+    .filter((translation) => translation.locale !== "ro")
+    .map((translation) => ({ locale: translation.locale, place: inLanguage(translation.locale) }))
+    .filter((other) => other.place !== "" && other.place !== name)
+    .map((other) => fillIn(words.place.inLanguage, { language: code(other.locale), name: other.place }));
   return join(words, [others.length > 0 ? `${name} (${others.join(", ")})` : name, event.mapUrl ? words.place.map : null]);
 }
 

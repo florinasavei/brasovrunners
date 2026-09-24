@@ -18,6 +18,7 @@ import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -197,8 +198,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
-          each with its glyph (§112); the words stay, the glyphs decorate. */}
-      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held
+          with a partner, the handshake and "În parteneriat cu …" (§367) — the marker the listing
+          card and the calendar wear. The line wraps rather than overflowing a phone: a partner's
+          name is long, and the small "·" before it stays at the end of the line it follows. */}
+      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.75, rowGap: 0 }}>
         <TypeGlyph type={event.type} />
         {t(`type.${event.type}`)}
         {event.surface && (
@@ -208,6 +212,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             {t(`surface.${event.surface}`)}
           </>
         )}
+        <PartnerOverline event={event} />
       </Typography>
       {/* An edition apart (§168): the same badge the card and the hero wear, above the
           title where the overline already says what kind of event this is. */}
