@@ -3,7 +3,7 @@ import { pickerClock, pickerDate, postedClock, postedDate } from "@/shared/forms
 import { DATE_PATTERN, DATE_VALUE, isDateValue, isTimeValue, TIME_PATTERN, TIME_VALUE } from "@/shared/forms/pickers/wall-values";
 
 /**
- * The pickers' own value conversion (`shared/forms/pickers`, `DECISIONS.md` §NNN): what is
+ * The pickers' own value conversion (`shared/forms/pickers`, `DECISIONS.md` §345): what is
  * posted, both ways, and the two shapes of "not a value" — empty and malformed — that the boxes
  * agree on before and after a picker replaces the scriptless fallback.
  *

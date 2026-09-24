@@ -10,6 +10,7 @@ import { canManageTestRegistrations } from "@/modules/staff-identity/domain/role
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { ageOn, dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "./domain/age";
+import { waitlistRefusalOf } from "./domain/waitlist";
 import { findRegistrationByEventAndParticipant } from "./repository";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "./service";
 
@@ -127,6 +128,12 @@ export type AddTestRegistrationsInput = {
 
 export type AddTestRegistrationsResult = {
   created: number;
+  /**
+   * The batch stopped before `count` because the places and the waiting list were full (§NNN):
+   * a test row is refused at the limit exactly as a real one is (`AGENTS.md` §12.6), and the
+   * rest of the batch would only be refused the same way.
+   */
+  stoppedAtWaitlistLimit?: true;
 };
 
 /**
@@ -169,6 +176,16 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
   const batch = now.toISOString().replace(/[^0-9]/g, "").slice(0, 14);
 
   let created = 0;
+  /*
+    The waiting list's limit (§NNN) refuses a test row as it refuses a real one — at the form, or
+    at the confirmation if the line filled in between. The first refusal ends the batch: every row
+    after it would meet the same full line. With nothing added the refusal is the answer, and the
+    form says it; with some added, the batch reports how many and that it stopped.
+  */
+  const stopAtTheLimit = (error: unknown): AddTestRegistrationsResult => {
+    if (waitlistRefusalOf(error) === null || created === 0) throw error;
+    return { created, stoppedAtWaitlistLimit: true };
+  };
   for (let index = 1; index <= input.count; index += 1) {
     const email = `test-${batch}-${index}@${TEST_PARTICIPANT_EMAIL_DOMAIN}`;
 
@@ -183,42 +200,41 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
     const firstName = "Test";
     const lastName = `Runner ${batch}-${index}`;
 
-    await submitRegistration(
-      db,
-      event,
-      {
-        firstName,
-        lastName,
-        email,
-        locale,
-        birthDate: syntheticBirthDate(event),
-        sex: "UNSPECIFIED",
-        nationality: "RO",
-        city: "Brașov",
-        phone: "+40000000000",
-        emergencyContactName: "Test Contact",
-        // A different number from the participant's, because the schema now refuses a contact
-        // who is the runner (§228) — and a synthetic row goes through the public schema
-        // unchanged, which is the whole point of it (§30).
-        emergencyContactPhone: "+40000000001",
-        tshirtSize: "NONE",
-        healthConsent: false,
-        privacyAcknowledged: true,
-        // A test registration goes through the public schema unchanged (§30, `AGENTS.md`
-        // §12.6): whatever a real entrant must tick, this ticks too, or the synthetic row
-        // would stop being a rehearsal of the real path.
-        fitnessDeclared: true,
-        rulesAcknowledged: true,
-        resultsNameConsent: false,
-        // A synthetic row is never on a public start list anyway (`listPublicStartList`
-        // filters `kind = REAL`), and asking it to opt out would state a preference nobody has.
-        listOptOut: false,
-        honeypot: "",
-        renderedAt: new Date(now.getTime() - RENDERED_SECONDS_AGO * 1000).toISOString(),
-      },
-      now,
-      "TEST",
-    );
+    const submission = {
+      firstName,
+      lastName,
+      email,
+      locale,
+      birthDate: syntheticBirthDate(event),
+      sex: "UNSPECIFIED",
+      nationality: "RO",
+      city: "Brașov",
+      phone: "+40000000000",
+      emergencyContactName: "Test Contact",
+      // A different number from the participant's, because the schema now refuses a contact
+      // who is the runner (§228) — and a synthetic row goes through the public schema
+      // unchanged, which is the whole point of it (§30).
+      emergencyContactPhone: "+40000000001",
+      tshirtSize: "NONE",
+      healthConsent: false,
+      privacyAcknowledged: true,
+      // A test registration goes through the public schema unchanged (§30, `AGENTS.md`
+      // §12.6): whatever a real entrant must tick, this ticks too, or the synthetic row
+      // would stop being a rehearsal of the real path.
+      fitnessDeclared: true,
+      rulesAcknowledged: true,
+      resultsNameConsent: false,
+      // A synthetic row is never on a public start list anyway (`listPublicStartList`
+      // filters `kind = REAL`), and asking it to opt out would state a preference nobody has.
+      listOptOut: false,
+      honeypot: "",
+      renderedAt: new Date(now.getTime() - RENDERED_SECONDS_AGO * 1000).toISOString(),
+    };
+    try {
+      await submitRegistration(db, event, submission, now, "TEST");
+    } catch (error) {
+      return stopAtTheLimit(error);
+    }
 
     const [participant] = await db
       .select({ id: participants.id })
@@ -230,7 +246,13 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
     const registration = await findRegistrationByEventAndParticipant(db, event.id, participant.id);
     if (!registration) continue;
 
-    await confirmEmail(db, event, registration.id, now);
+    try {
+      await confirmEmail(db, event, registration.id, now);
+    } catch (error) {
+      // Refused at the confirmation: the row stays unconfirmed, as a real one would, and goes with
+      // "Șterge înscrierile de test" like the rest.
+      return stopAtTheLimit(error);
+    }
     created += 1;
   }
 

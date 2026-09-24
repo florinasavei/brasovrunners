@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -11,13 +12,14 @@ import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold"
  * the automatic publication is switched and the recurrence stopped.
  */
 
-/** "Du 04.10.2026, 08:00" — the editor's own way of writing a date (`summaryDateTime`). */
-const WEEKDAY = ["Du", "Lu", "Ma", "Mi", "Jo", "Vi", "Sâ"];
-const label = (date: Date, time: string) => {
-  const [year, month, day] = date.toISOString().slice(0, 10).split("-");
-  return `${WEEKDAY[date.getUTCDay()]} ${day}.${month}.${year}, ${time}`;
-};
-const dayOf = (date: Date) => date.toISOString().slice(0, 10).split("-").reverse().join(".");
+/*
+  The dates as the editor writes them — the site's short form (`src/i18n/dates.ts`, §NNN weekday
+  on every date): "Dum., 4 oct. 2026, 08:00" where a date starts a line or a link, "dum., 4 oct.
+  2026" inside the Salvare box's sentence. The dates below are at noon UTC, the same calendar day
+  in Brașov, and the time is the one the event was given on its own clock.
+*/
+const label = (date: Date, time: string) => `${formatDay(date, { locale: "ro", timeZone: "UTC", style: "short" })}, ${time}`;
+const dayOf = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short", position: "inline" });
 
 /** The editor of one date of the series, opened from the Salvare box's list of dates (15.1). */
 async function openDate(page: Page, text: string) {

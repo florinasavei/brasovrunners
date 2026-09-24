@@ -8,7 +8,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — a running series' automatic publication, switched after it started
+ * `DECISIONS.md` §341 — a running series' automatic publication, switched after it started
  * (`setRepeatPublish`, `src/modules/content/events/service.ts`).
  *
  * A series begun without the tick under "Repetă evenimentul" — or from a draft — made every
@@ -18,7 +18,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * A draft source's "on" is stored and waits (the editor's redesign, §NNN): the dates go live only
  * while the source is live too. It is switched from any date of the series.
  */
-describe("§NNN setRepeatPublish — the running series' publish switch", () => {
+describe("§341 setRepeatPublish — the running series' publish switch", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

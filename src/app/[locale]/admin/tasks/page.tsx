@@ -13,6 +13,7 @@ import { getDb } from "@/db/client";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -566,11 +567,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                   count: email.deferred,
                   allowance: volume.allowance ?? "—",
                   resumesAt: email.resumesAt
-                    ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short", hourCycle: "h23",
-                        timeZone: "Europe/Bucharest",
-                      }).format(new Date(email.resumesAt))
+                    ? formatDay(new Date(email.resumesAt), { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" })
                     : "—",
                 })}
               </Typography>
@@ -750,7 +747,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         */}
         <Alert severity={freshness.state === "stale" ? "warning" : "info"}>
           {t(`freshness.${freshness.state}`, {
-            checked: oldestCheckDate(services),
+            checked: formatCalendarDay(oldestCheckDate(services), { locale, style: "long", position: "inline" }),
             days: Number.isFinite(freshness.days) ? freshness.days : 0,
           })}
         </Alert>
@@ -860,7 +857,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
                 )}
 
                 <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
-                  {t("checkedOn", { checked: row.checkedOn })}
+                  {t("checkedOn", { checked: formatCalendarDay(row.checkedOn, { locale, style: "short", position: "inline" }) })}
                 </Typography>
               </Box>
             ))}

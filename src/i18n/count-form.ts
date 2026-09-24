@@ -1,6 +1,6 @@
 /**
  * Which of three phrasings a counted noun takes, so "1 dată", "2 date" and "20 de date" each
- * read as Romanian (`DECISIONS.md` §NNN; the owner, of a series row reading "Ciornă · 1 date":
+ * read as Romanian (`DECISIONS.md` §341; the owner, of a series row reading "Ciornă · 1 date":
  * "ce înseamnă această 1 ciornă?").
  *
  * The catalogues carry no ICU plurals (`docs/VIBECODING.md`), so a counted phrase is three plain

@@ -22,6 +22,14 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    * window is open; the caller does not have to count for an event nobody can enter.
    */
   availablePlaces: number | null;
+  /**
+   * How many more the waiting list takes (`registrations/domain/waitlist.ts#waitlistRoom`, §NNN),
+   * or null — or absent — when it has no limit. Read with `availablePlaces`, under the same
+   * condition: only once the places are gone does the line matter.
+   */
+  waitlistRoom?: number | null;
+  /** The limit itself: 0 is an event with no waiting list at all; null or absent, no limit. */
+  waitlistCapacity?: number | null;
 };
 
 export type RegistrationCta =
@@ -35,7 +43,16 @@ export type RegistrationCta =
   | { kind: "CLOSED" }
   /** `availablePlaces` is null for an uncapped event — open, with no number to show. */
   | { kind: "OPEN"; availablePlaces: number | null }
-  | { kind: "FULL" };
+  /**
+   * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
+   * takes when it has a limit (§NNN) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
+   * it has none, which says no number, as today.
+   */
+  | { kind: "FULL"; waitlistRoom: number | null }
+  /** No place and the waiting list at its limit (§NNN): a sentence, no button. */
+  | { kind: "WAITLIST_FULL" }
+  /** No place on an event with no waiting list (a limit of 0, §NNN): closed as full, no button. */
+  | { kind: "FULL_NO_WAITLIST" };
 
 export function registrationCta(event: RegistrationCtaInput, now: Date): RegistrationCta {
   // An event nobody registers for gets no control and no explanation. `EventFacts` already
@@ -72,9 +89,58 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "OPEN":
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
-      return event.availablePlaces === 0 ? { kind: "FULL" } : { kind: "OPEN", availablePlaces: event.availablePlaces };
+      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces };
+      // …unless the event keeps no waiting list, or keeps one that is full (§NNN): then there is
+      // nothing to join, and a button would lead to a form that refuses at the end of it.
+      if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
+      if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
+      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null };
 
     case "NOT_APPLICABLE":
       return { kind: "NONE" };
   }
+}
+
+/** How full a capped event is, in the two numbers a visitor reads beside the button (§346). */
+export type PublicFill = { taken: number; capacity: number };
+
+/**
+ * "12 înscriși din 50 de locuri" — the free places read the other way round (§346; the owner:
+ * "I need to show the total number registered out of the available places").
+ *
+ * **Not a second count.** `taken` is the event's places minus the free places the button
+ * already shows, and those come from `readPublicAvailability`, the allocator's own formula
+ * (AGENTS.md §10.6). So the two lines beside the button can never disagree — "12 of 50" beside
+ * "38 places left" is one number read twice — and what "taken" means is exactly what the
+ * formula means by occupied: confirmed places, held places (a declaration still to sign, a
+ * waiting-list offer still open) and the waiting list's claim on anything free. A form sent but
+ * not yet confirmed by email takes no place and is not counted (BR-REQ-034-01 criterion 5).
+ *
+ * It says nothing the page did not say already: with the free places public, the taken places
+ * are the event's size minus them. What is new is the size, and the size is a fact about the
+ * event, not about anybody — which is why the public event query still carries no capacity and
+ * this is read from the row the free-place count already reads (`RegistrationCta`).
+ *
+ * `null` for an uncapped event, where the formula gives no free places either: BR-REQ-034-01
+ * criterion 4 shows no number there, and a head count with no "out of" beside it would be a
+ * count of people rather than of places — held places and all, which §32 declined to publish.
+ *
+ * Never more than the capacity and never below nought, whatever arrives: the formula clamps at
+ * nought already, and this clamps again rather than print "51 of 50" from a row that lowered
+ * its capacity under a hold between two reads.
+ *
+ * **A `TEST` registration counts here too**, because `readPublicAvailability` counts it: §12.6
+ * says `kind` appears in neither the allocator nor the capacity formula, so a demonstration
+ * registration holds a place exactly like a real one and this reads the same free-place number
+ * the button does, deliberately, rather than a second, REAL-only count that could disagree with
+ * it. That is only ever true where a `TEST` row can exist at all — never in production
+ * (`modules/registrations/test-registrations.ts`) — so the figure a real visitor reads never
+ * includes one. `tests/integration/registrations/test-kind.test.ts` proves the arithmetic
+ * against a mixed REAL/TEST event on a real database, the same way it proves every other §30
+ * property.
+ */
+export function publicFill(capacity: number | null, availablePlaces: number | null): PublicFill | null {
+  if (capacity === null || availablePlaces === null) return null;
+  const taken = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
+  return { taken, capacity };
 }

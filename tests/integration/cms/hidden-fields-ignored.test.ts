@@ -145,6 +145,24 @@ describe("§NNN a box the chosen mode hides cannot refuse the save", () => {
   });
 });
 
+describe("§NNN the waiting list's length, the capacity's kin (the waiting-list cap)", () => {
+  it("'La organizator' ignores a length nobody can see, even one below nought", async () => {
+    const elsewhere = await create({
+      registrationMode: "EXTERNAL",
+      capacity: "",
+      waitlistCapacity: "-4",
+      externalProvider: "Asociația X",
+      externalRegistrationUrl: "https://entries.example.test",
+    });
+    expect((await reload(elsewhere.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("'Pe site' stores the length typed beside the places", async () => {
+    const here = await create({ waitlistCapacity: "12" });
+    expect((await reload(here.id)).waitlistCapacity).toBe(12);
+  });
+});
+
 describe("§NNN what the chosen mode shows, and what every mode keeps, is still checked", () => {
   it("refuses a zero capacity under 'Pe site', naming the box", async () => {
     await expect(create({ capacity: "0" })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["capacity"] });

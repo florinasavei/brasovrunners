@@ -30,13 +30,14 @@ export type RiskMark = { count: number; chip: string };
 /** One language of a per-language box: the text, whether the reader may write it, its name. */
 export type LanguageEntry = { translation: TranslationDraft; mayEdit: boolean; label: string };
 
-/** The catalogue's summary templates and the weekdays' two letters, for `box-summaries.ts`. */
-export async function summaryWords(): Promise<{ words: SummaryWords; weekdays: Record<string, string> }> {
+/**
+ * The catalogue's summary templates, for `box-summaries.ts`. The dates in them are written by
+ * `src/i18n/dates.ts` in the reader's language (§NNN weekday on every date), so no weekday words
+ * travel with them.
+ */
+export async function summaryWords(): Promise<{ words: SummaryWords }> {
   const t = await getTranslations("Admin");
-  return {
-    words: t.raw("editor.boxes.summary") as SummaryWords,
-    weekdays: t.raw("editor.weekdays") as Record<string, string>,
-  };
+  return { words: t.raw("editor.boxes.summary") as SummaryWords };
 }
 
 /** The risk mark for a count of real registrations, or null when there are none. */

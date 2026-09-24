@@ -18,6 +18,16 @@ export const routing = defineRouting({
    */
   localeDetection: false,
   localeCookie: false,
+  /**
+   * No `Link: <…>; rel="alternate"; hreflang=…` response header (§342). next-intl adds one to
+   * every page by default, and on this site it was wrong twice over: its `x-default` is the
+   * unprefixed path (`/evenimente`, `/termeni`), which answers 307 to `/ro/…` — a redirecting
+   * URL advertised by every page, which Search Console then reports — and on an event, a
+   * standing page or an album it swaps the prefix and keeps this locale's slug, so its `en`
+   * alternate is a 404 (BR-REQ-040-01 criterion 5 forbids exactly that). The pages declare
+   * their alternates in their own metadata instead, from the database (`modules/seo/alternates.ts`).
+   */
+  alternateLinks: false,
 
   /**
    * Localized pathnames, per AGENTS.md §9.2. The key is the internal route — the folder under

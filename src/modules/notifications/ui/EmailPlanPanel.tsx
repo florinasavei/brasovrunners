@@ -7,6 +7,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
@@ -107,7 +108,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
           {t("emails.plan.updatedAt", {
-            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "medium", timeStyle: "short", hourCycle: "h23", timeZone: "Europe/Bucharest" }).format(plan.updatedAt),
+            when: formatDay(plan.updatedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
             note: plan.note || "—",
           })}
         </Typography>
@@ -141,7 +142,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
             defaultValue={plan.plan}
             size="small"
             slotProps={{ select: { native: true } }}
-            helperText={t("emails.plan.fieldHelp", { checkedOn: EMAIL_PLANS_CHECKED_ON })}
+            helperText={t("emails.plan.fieldHelp", { checkedOn: formatCalendarDay(EMAIL_PLANS_CHECKED_ON, { locale, style: "long", position: "inline" }) })}
           >
             {EMAIL_PLAN_IDS.map((id) => {
               const entry = id === "CUSTOM" ? null : EMAIL_PLANS[id];

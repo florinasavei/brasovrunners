@@ -13,7 +13,7 @@ const ROMANIAN = roRO.components.MuiLocalizationProvider.defaultProps.localeText
 
 /**
  * The date and time pickers' one provider, mounted once, by the backoffice's layout
- * (`DECISIONS.md` §NNN) — and nowhere a visitor goes: no public page asks for a date the club
+ * (`DECISIONS.md` §345) — and nowhere a visitor goes: no public page asks for a date the club
  * types, and `tests/unit/shared/pickers-backoffice-only.test.ts` fails if one ever reaches this.
  *
  * **Romanian** is Day.js's `ro` (months, weekdays, the week starting on Monday) with MUI's own

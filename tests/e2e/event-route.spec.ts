@@ -54,7 +54,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
-    // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §NNN).
+    // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §345).
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
@@ -79,7 +79,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
-    const firstLink = page.getByRole("group", { name: "Linkul 1" });
+    // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§347).
+    const firstLink = page.getByRole("group", { name: "Linkul 1", exact: true });
     await firstLink.getByRole("combobox").click();
     await page.getByRole("option", { name: "Traseul (GPX)" }).click();
     await field("event.links[0].url").fill(GPX_LINK);
@@ -176,7 +177,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".
     await expect(page.locator('[name="event.links[0].url"]')).toHaveValue(GPX_LINK);
-    await page.getByRole("button", { name: "Șterge linkul 1" }).click();
+    await page.getByRole("button", { name: "Șterge linkul 1", exact: true }).click();
     await expect(page.locator('[name="event.links[0].url"]')).toHaveCount(0);
     // The event is published now, so the save carries the live-edit acknowledgement for the
     // whole form (BR-REQ-051-01 criterion 4) — and cannot be sent without it: the box is

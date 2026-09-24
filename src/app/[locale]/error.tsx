@@ -63,9 +63,12 @@ export default function LocaleError({
         {/*
           A plain anchor, not the locale-aware `Link`. This boundary can catch a failure in the
           very routing it would need to build a localized href, and the one thing this page must
-          do is work. `/` is served by the proxy, which sends it to the reader's own locale.
+          do is work. `/events`, not `/` (§342): the root itself is a second redirect on top of
+          the proxy's own locale one — `/` → the proxy's locale prefix → `page.tsx`'s 308 to the
+          listing — and skipping straight to `/events` (localized the same way, by the proxy)
+          drops that second hop without needing any routing code of this page's own to run.
         */}
-        <Button component="a" href="/" variant="outlined" sx={TAP_TARGET}>
+        <Button component="a" href="/events" variant="outlined" sx={TAP_TARGET}>
           {t("home")}
         </Button>
       </Stack>

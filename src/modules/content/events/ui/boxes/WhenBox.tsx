@@ -1,5 +1,5 @@
 import Stack from "@mui/material/Stack";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
@@ -36,7 +36,9 @@ function timezoneOptions(current: string): readonly string[] {
  */
 export default async function WhenBox({ event, mayEditSettings, risk, inSeries = false }: BoxProps & { inSeries?: boolean }) {
   const t = await getTranslations("Admin");
-  const { words, weekdays } = await summaryWords();
+  const { words } = await summaryWords();
+  // The reader's language for the dates (`src/i18n/dates.ts`), on the event's own clock.
+  const locale = await getLocale();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
 
@@ -45,13 +47,13 @@ export default async function WhenBox({ event, mayEditSettings, risk, inSeries =
       collapsible
       id="box-when"
       title={t("editor.boxes.when.title")}
-      aside={whenSummary(words, event, weekdays)}
+      aside={whenSummary(words, event, locale)}
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
       badge={risk?.chip}
     >
       {risk && event && (
-        <RiskLine>{t("editor.risk.when", { count: risk.count, date: summaryDateTime(event.startsAt, event.timezone, weekdays) })}</RiskLine>
+        <RiskLine>{t("editor.risk.when", { count: risk.count, date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
       {mayEditSettings ? (
         <Stack spacing={2}>

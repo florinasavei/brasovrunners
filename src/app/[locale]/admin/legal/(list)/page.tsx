@@ -6,7 +6,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -129,7 +130,6 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const { saved, error } = current;
 
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const versions = await listVersionsForBackoffice(getDb());
   // The one press (§132): offered while any of the three has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
@@ -169,9 +169,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     if (!facts) throw new Error(`no deletion facts were read for version ${version.id}`);
     return facts;
   };
-  // "4–20 sept. 2026": the stretch a terms version was the text in force.
+  // "joi, 4 sept. 2026 – dum., 20 sept. 2026": the stretch a terms version was the text in
+  // force, inside the sentence (§NNN).
   const span = (window: InForceWindow) =>
-    format.dateTimeRange(window.from, window.until ?? now, { dateStyle: "medium" });
+    formatDayRange(window.from, window.until ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
   const missingFacts = (
     [
       ["CLUB_LEGAL_NAME", facts.legalName],
@@ -273,7 +274,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       key: "effectiveAt",
       label: t("legal.effectiveAt"),
       hideBelow: "lg",
-      render: (version) => format.dateTime(version.effectiveAt, { dateStyle: "medium" }),
+      render: (version) => formatDay(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short" }),
     },
   ];
 
@@ -472,7 +473,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                   {version.withdrawnAt ? (
                     reason(
                       t("legal.withdrawnOn", {
-                        date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
+                        date: formatDay(version.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
                       }),
                     )
                   ) : !mayDestroy ? (

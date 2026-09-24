@@ -42,7 +42,11 @@ import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Preset = "this" | "following" | "all";
 
-/** A date of the series, with its day in numbers for the sentence ("30.09.2026"). */
+/**
+ * A date of the series, with its day as the sentence reads it ("mie., 30 sept. 2026") — written
+ * on the server by `src/i18n/dates.ts` (§NNN weekday on every date) and handed here as a string,
+ * so this island formats no date itself (§324).
+ */
 export type ScopeDate = SeriesDate & { day: string };
 
 type ScopeState = {

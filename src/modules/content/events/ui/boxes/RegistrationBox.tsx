@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
@@ -25,6 +26,7 @@ import {
   startListSummary,
   summaryDate,
 } from "../box-summaries";
+import CostFields from "../CostFields";
 import GlyphSelect from "../GlyphSelect";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
@@ -70,9 +72,9 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * mode-dependent box carries a browser `required`: the server decides; and while hidden, the boxes
  * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
  *
- * Where later fields go (the round that merges them): the cost's amount and payment or donation
- * link sit with the cost, at the top (`feat/cost-amount-and-donation`); the waiting list's length
- * sits beside the capacity (`feat/waitlist-length`).
+ * The cost's amount and its payment or donation link sit with the cost, at the top (§343,
+ * `CostFields`, which shows them only while the chosen kind needs them); the waiting list's length
+ * sits beside the capacity (§NNN, the waiting-list cap), and "not here" stores no length either.
  */
 export default async function RegistrationBox({
   event,
@@ -96,14 +98,17 @@ export default async function RegistrationBox({
   locale: string;
 }) {
   const t = await getTranslations("Admin");
-  const { words, weekdays } = await summaryWords();
+  const { words } = await summaryWords();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
-  const costLabel = event?.costType === "FREE" || event?.costType === "PAID" ? t(`editor.costValues.${event.costType}`) : null;
+  // "Cu taxă, 50 lei", "Donație": the kind in the select's own words, and the amount beside a kind
+  // that has one (§343) — what the page will say, on the box's closed line.
+  const costAmount = event?.costType === "PAID" || event?.costType === "DONATION" ? (event.costAmount ?? "").trim() : "";
+  const costLabel = event?.costType ? `${t(`editor.costValues.${event.costType}`)}${costAmount ? `, ${costAmount}` : ""}` : null;
   const minAge = event?.minAge ?? MIN_PARTICIPANT_AGE;
   const needsDeclaration = initialMode === "INTERNAL" && declaration === null && event !== null;
   const design = readBibDesign(event?.bibDesign ?? null);
@@ -147,8 +152,31 @@ export default async function RegistrationBox({
             defaultValue={event?.costType ?? ""}
             options={[
               { value: "", label: t("editor.notStated") },
-              ...(["FREE", "PAID"] as const).map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
+              ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
             ]}
+          />
+
+          {/*
+            "Suma" and "Unde se plătește" for a paid event, "Link pentru donație" and "Suma
+            sugerată" for a donation (§343; the owner: "Cu taxă" showed no box for the money, and
+            usually nothing is paid — the exception is Wings for Life, where a donation is made
+            on another site). One pair of columns, relabelled by `CostFields` rather than posted
+            twice; shown only while the chosen kind needs one of them, values kept otherwise.
+          */}
+          <CostFields
+            initialCostType={event?.costType ?? ""}
+            costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
+            costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}
+            labels={{
+              paidAmount: t("editor.costAmount"),
+              paidAmountHelp: t("editor.costAmountHelp"),
+              paidUrl: t("editor.costPaidUrl"),
+              paidUrlHelp: t("editor.costPaidUrlHelp"),
+              donationUrl: t("editor.costDonationUrl"),
+              donationUrlHelp: t("editor.costDonationUrlHelp"),
+              donationAmount: t("editor.costDonationAmount"),
+              donationAmountHelp: t("editor.costDonationAmountHelp"),
+            }}
           />
 
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>
@@ -196,7 +224,10 @@ export default async function RegistrationBox({
 
               <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
                 <Stack spacing={2}>
-                  {/* The waiting list's length goes beside this box (`feat/waitlist-length`). */}
+                  {/* The places and the waiting list's length side by side (§NNN, the waiting-list
+                      cap): the second only means anything once the first is set, and a row says
+                      they are one question. Stacked on a phone. Empty is no limit for both; 0 on
+                      the second is no waiting list at all. */}
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} data-testid="capacity-row">
                     <RecallField
                       name="event.capacity"
@@ -206,10 +237,18 @@ export default async function RegistrationBox({
                       {...box("capacity", { inputMode: "numeric" })}
                       sx={{ flex: 1 }}
                     />
+                    <RecallField
+                      name="event.waitlistCapacity"
+                      label={t("editor.waitlistCapacity")}
+                      helperText={t("editor.waitlistCapacityHelp")}
+                      defaultValue={event?.waitlistCapacity ?? ""}
+                      {...box("waitlistCapacity", { inputMode: "numeric" })}
+                      sx={{ flex: 1 }}
+                    />
                   </Stack>
 
                   {/* 8.1 — from when until when. */}
-                  <Panel collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, weekdays)}>
+                  <Panel collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
                       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                         <WallTimeField name="event.registrationOpensAt" label={t("editor.registrationOpensAt")} timeLabel={t("editor.timeOfDay")} value={event?.registrationOpensAt ?? null} zone={zone} />
@@ -289,9 +328,9 @@ export default async function RegistrationBox({
                       {event && (
                         <Typography variant="body2" data-testid="confirmation-dates">
                           {t("editor.boxes.confirmation.dates", {
-                            date: summaryDate(event.startsAt, zone),
-                            opens: summaryDate(new Date(event.startsAt.getTime() - event.confirmationOpensDaysBefore * 86_400_000), zone),
-                            due: summaryDate(new Date(event.startsAt.getTime() - event.confirmationDeadlineDaysBefore * 86_400_000), zone),
+                            date: summaryDate(event.startsAt, zone, locale, "inline"),
+                            opens: summaryDate(new Date(event.startsAt.getTime() - event.confirmationOpensDaysBefore * 86_400_000), zone, locale, "inline"),
+                            due: summaryDate(new Date(event.startsAt.getTime() - event.confirmationDeadlineDaysBefore * 86_400_000), zone, locale, "inline"),
                           })}
                         </Typography>
                       )}

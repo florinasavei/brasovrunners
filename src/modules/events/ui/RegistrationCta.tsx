@@ -4,14 +4,16 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { unstable_rethrow } from "next/navigation";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { accentOnHover } from "@/theme/surfaces";
-import { registrationCta } from "../domain/registration-cta";
+import { publicFill, registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
+import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
 
 /**
  * The one way in to registration, on the two pages a visitor actually reads.
@@ -23,7 +25,9 @@ import type { PublicEvent } from "../repository";
  *
  * The count comes from `readPublicAvailability`, which is the allocator's own formula
  * (AGENTS.md §10.6). Nothing here counts anything itself, and nothing here mutates: this is a
- * page render, not a capacity decision.
+ * page render, not a capacity decision. "12 înscriși din 50 de locuri" (§346) is the same count
+ * read against the event's own number of places — `publicFill`, arithmetic on the two numbers
+ * this already holds, never a second query.
  */
 export default async function RegistrationCta({
   event,
@@ -36,7 +40,7 @@ export default async function RegistrationCta({
   raceWeek?: boolean;
 }) {
   const t = await getTranslations("Event");
-  const format = await getFormatter();
+  const locale = await getLocale();
 
   /**
    * Only an open internal event costs a query.
@@ -48,6 +52,12 @@ export default async function RegistrationCta({
    * the query this avoids.
    */
   let availablePlaces: number | null = null;
+  // The event's own number of places, from the same row the count was read against: the
+  // "out of" of §346's sentence. Null for an uncapped event, and for every event not read here.
+  let capacity: number | null = null;
+  // The waiting list's room and limit (§NNN), off the same cached read; null for no limit.
+  let waitlistRoom: number | null = null;
+  let waitlistCapacity: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
       /*
@@ -55,9 +65,17 @@ export default async function RegistrationCta({
         registration that moves expires it, and the one input the clock changes — a waiting-list
         offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
         Without it, an open race's page woke the database for every visitor during exactly the
-        weeks the page is read most.
+        weeks the page is read most. The same entry carries the event's size beside the free
+        places (§346 public fill count) and the waiting list's room and limit (§NNN waiting-list
+        length), off the same row the count was taken against, so neither line costs more.
       */
-      availablePlaces = await cachedPublicAvailability(event.id, now);
+      const availability = await cachedPublicAvailability(event.id, now);
+      if (availability) {
+        availablePlaces = availability.available;
+        capacity = availability.capacity;
+        waitlistRoom = availability.waitlistRoom;
+        waitlistCapacity = availability.waitlistCapacity;
+      }
     } catch (error) {
       /*
         The one thing on a page that is never served from a copy (§281).
@@ -77,7 +95,7 @@ export default async function RegistrationCta({
     }
   }
 
-  const cta = registrationCta({ ...event, availablePlaces }, now);
+  const cta = registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity }, now);
   if (cta.kind === "NONE") return null;
 
   if (cta.kind === "EXTERNAL") {
@@ -103,6 +121,9 @@ export default async function RegistrationCta({
   }
 
   if (cta.kind === "OPEN" || cta.kind === "FULL") {
+    // How full it is (§346): the free places read against the event's size. Null — and nothing
+    // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
+    const fill = publicFill(capacity, availablePlaces);
     return (
       <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
         <ButtonLink
@@ -116,6 +137,12 @@ export default async function RegistrationCta({
           {cta.kind === "FULL" ? t("cta.joinWaitingList") : t("cta.register")}
         </ButtonLink>
 
+        {fill && (
+          <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
+            {fillPhrase(t, locale, fill)}
+          </Typography>
+        )}
+
         {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4). */}
         {cta.kind === "FULL" ? (
           <Typography variant="body2" color="text.secondary">
@@ -127,6 +154,35 @@ export default async function RegistrationCta({
               {t("cta.placesRemaining", { count: cta.availablePlaces })}
             </Typography>
           )
+        )}
+
+        {/* The room left in a capped waiting list (§NNN); nothing for a list with no limit. */}
+        {cta.kind === "FULL" && cta.waitlistRoom !== null && (
+          <Typography variant="body2" data-testid="waitlist-room" sx={{ fontWeight: 600 }}>
+            {waitlistRoomPhrase(t, locale, cta.waitlistRoom)}
+          </Typography>
+        )}
+      </Stack>
+    );
+  }
+
+  /*
+    No place and nothing to join (§NNN): the waiting list is full, or the event keeps none. A
+    sentence and no button — a button would lead to a form that refuses at the end of it — with
+    how full the event is beside it, the same line the open state shows. The "anunță-mă" box is
+    the page's own and is untouched by this: it belongs to a window not yet open.
+  */
+  if (cta.kind === "WAITLIST_FULL" || cta.kind === "FULL_NO_WAITLIST") {
+    const fill = publicFill(capacity, availablePlaces);
+    return (
+      <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
+        <Typography variant="body1" data-testid="registration-full" sx={{ fontWeight: 500 }}>
+          {cta.kind === "WAITLIST_FULL" ? t("cta.waitlistFull") : t("cta.fullNoWaitlist")}
+        </Typography>
+        {fill && (
+          <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
+            {fillPhrase(t, locale, fill)}
+          </Typography>
         )}
       </Stack>
     );
@@ -144,14 +200,8 @@ export default async function RegistrationCta({
         : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a
             // Brașov race opens at a Brașov hour wherever the page is read.
-            date: format.dateTime(cta.opensAt, {
-              timeZone: event.timezone,
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit", hourCycle: "h23",
-            }),
+            // Inside the sentence, so the weekday keeps its lower case (§NNN).
+            date: formatDay(cta.opensAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
           });
 
   // The opening date is the one fact a visitor wants before the window (§146; the owner:

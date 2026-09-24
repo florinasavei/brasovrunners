@@ -28,6 +28,7 @@ import {
   addTestRegistrations,
   removeTestRegistrations,
 } from "@/modules/registrations/test-registrations";
+import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import {
   assertDevStaffSwitcherEnabled,
   type DevIdentityKey,
@@ -148,16 +149,29 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The partners (§168), posted as `event.coHosts[i].<box>` by `CoHostRowsEditor` — gathered
-   * by index like the programme's rows above, blanks included; `fields.ts` drops the spare
-   * line and refuses a page with no name beside it.
+   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name` and
+   * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
+   * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
+   * a link and no name, or a link with no address, naming both indices.
    */
-  const coHosts: Array<Record<string, string>> = [];
+  const coHosts: Array<{ name?: string; links: Array<Record<string, string>> }> = [];
   for (const [key, entry] of form.entries()) {
-    const match = /^event\.coHosts\[(\d+)\]\.(name|url)$/.exec(key);
-    if (!match || typeof entry !== "string") continue;
-    const index = Number(match[1]);
-    coHosts[index] = { ...(coHosts[index] ?? {}), [match[2]]: entry };
+    if (typeof entry !== "string") continue;
+    const nameMatch = /^event\.coHosts\[(\d+)\]\.name$/.exec(key);
+    if (nameMatch) {
+      const p = Number(nameMatch[1]);
+      coHosts[p] = { ...(coHosts[p] ?? { links: [] }), name: entry };
+      continue;
+    }
+    const linkMatch = /^event\.coHosts\[(\d+)\]\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
+    if (linkMatch) {
+      const p = Number(linkMatch[1]);
+      const l = Number(linkMatch[2]);
+      const partner = coHosts[p] ?? { links: [] };
+      const links = [...partner.links];
+      links[l] = { ...(links[l] ?? {}), [linkMatch[3]]: entry };
+      coHosts[p] = { ...partner, links };
+    }
   }
 
   /**
@@ -186,7 +200,9 @@ function eventFieldsFrom(form: FormData) {
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
     facebookEventUrl: value("facebookEventUrl"),
-    coHosts: coHosts.filter((row) => row !== undefined),
+    coHosts: coHosts
+      .filter((row) => row !== undefined)
+      .map((row) => ({ name: row.name, links: row.links.filter((link) => link !== undefined) })),
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
@@ -201,6 +217,8 @@ function eventFieldsFrom(form: FormData) {
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,
     costType: value("costType") || null,
+    costAmount: value("costAmount"),
+    costUrl: value("costUrl"),
     mapUrl: value("mapUrl"),
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
@@ -211,6 +229,9 @@ function eventFieldsFrom(form: FormData) {
     isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    // The waiting list's length (§NNN), only when the form carried its box: an empty box is "no
+    // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
+    waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*
@@ -678,7 +699,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
 }
 
 /**
- * The series' automatic publication, on or off (§NNN): whether the dates made from now on go
+ * The series' automatic publication, on or off (§341): whether the dates made from now on go
  * live as they are made. The button posts which way it switches; the role and the published
  * source are the service's to assert.
  */
@@ -810,17 +831,25 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
+  let stoppedAt: number | null = null;
   try {
     const actor = await requireStaffRole("ADMIN");
-    await addTestRegistrations(getDb(), actor, {
+    const result = await addTestRegistrations(getDb(), actor, {
       eventId,
       count: Number(text(form, "count")),
       locale,
     });
+    if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
   } catch (error) {
-    return refused(error, form);
+    // The places and the waiting list full before the first row (§NNN): said as such, the count
+    // still in its box — the marker is a rule about the event, not a box the summary could name.
+    const full = waitlistRefusalCode(error);
+    const refusal = refused(error, form);
+    return full ? { ...refusal, error: full, fields: [] } : refusal;
   }
 
+  // Stopped part-way at the waiting list's limit (§NNN): how many went in, and why the rest did not.
+  if (stoppedAt !== null) backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
   backTo(path, { saved: "testRegistrationsAdded" });
 }
 

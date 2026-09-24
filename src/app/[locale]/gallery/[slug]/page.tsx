@@ -3,14 +3,17 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import ContactLink from "@/shared/ui/ContactLink";
-import { cachedPublishedAlbumBySlug } from "@/modules/public-cache/reads";
+import { cachedPublishedAlbumBySlug, cachedPublishedAlbumTranslations } from "@/modules/public-cache/reads";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
 
@@ -28,6 +31,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: album.title,
     description: album.description ?? undefined,
     robots: { index: true, follow: true },
+    /*
+      Its own canonical, never the other locale's slug (BR-REQ-040-01 criterion 5) — an album
+      is per-locale content the same way an event is, and a locale with no translation is a
+      404 there (BR-REQ-040-02), so it advertises no alternate.
+    */
+    alternates: pageAlternates(
+      locale,
+      slugRouteUrls(env.APP_BASE_URL, "/gallery/[slug]", await cachedPublishedAlbumTranslations(album.id)),
+    ),
     ...(album.coverThumbUrl ? { openGraph: { images: [album.coverThumbUrl] } } : {}),
   };
 }
@@ -50,7 +62,6 @@ export default async function AlbumPage({ params }: Props) {
   if (!album) notFound();
 
   const t = await getTranslations("Gallery");
-  const format = await getFormatter();
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -63,7 +74,7 @@ export default async function AlbumPage({ params }: Props) {
         {album.title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
-        {format.dateTime(album.takenOn, { dateStyle: "long" })} · {t("photoCount", { count: album.photoCount })}
+        {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
         {album.event && (
           <>
             {" · "}

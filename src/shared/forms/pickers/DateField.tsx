@@ -44,7 +44,7 @@ export type DateFieldProps = {
 
 /**
  * A date in the backoffice, on MUI's date picker: `30.09.2026`, day first, with a calendar in the
- * backoffice's language (`DECISIONS.md` §NNN; the owner, over "09/30/2026": "timepickerul ar
+ * backoffice's language (`DECISIONS.md` §345; the owner, over "09/30/2026": "timepickerul ar
  * trebui să fie tot element MUI"). A native `<input type="date">` prints the digits in the
  * *browser's* order, and nothing a page does changes that (§70).
  *

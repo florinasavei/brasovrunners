@@ -48,7 +48,7 @@ const LABELS = {
   version: "Versiunea",
   generatedOn: "Generat",
   page: (n: number, total: number) => `${n}/${total}`,
-  signedByLink: (when: string) => `Semnat electronic la ${when}`,
+  signedByLink: (when: string) => `Semnat electronic pe ${when}`,
   signedOnPaper: (who: string, when: string) => `Pe hârtie; ${who} ${when}`,
   attesterRemoved: "un membru al echipei",
 };

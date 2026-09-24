@@ -1,10 +1,10 @@
 import { countForm } from "@/i18n/count-form";
+import { formatDay, formatTime } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { fillIn } from "@/shared/forms/fill-in";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { readEventLinks } from "@/modules/events/domain/links";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
-import { toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import type { EditableEvent } from "../repository";
 
 /**
@@ -19,8 +19,9 @@ import type { EditableEvent } from "../repository";
  * read with `t.raw`), filled here with `fillIn`, because the catalogues carry no ICU plurals: a
  * counted noun is three keys and `countForm` picks one.
  *
- * Dates are ro-RO numeric — `Sâ 21.11.2026, 09:00` — in the event's own time zone, the weekday
- * from the catalogue's two letters (`editor.weekdays`), never the browser's clock.
+ * Dates are the site's short form (`src/i18n/dates.ts`, §NNN weekday on every date) — `Sâm., 21
+ * nov. 2026, 09:00` / `Sat, 21 Nov 2026, 09:00` — in the reader's language and the event's own
+ * time zone, never the server's or the browser's clock; times are 24-hour.
  */
 
 /** A counted noun, as `countForm` names its three forms. */
@@ -74,19 +75,23 @@ function join(words: SummaryWords, parts: readonly (string | null | undefined | 
   return parts.filter((part): part is string => typeof part === "string" && part !== "").join(words.separator);
 }
 
-/** `Sâ 21.11.2026, 09:00` — the weekday's two letters from the catalogue, the rest numeric (§NNN). */
-export function summaryDateTime(date: Date, zone: string, weekdays: Readonly<Record<string, string>>): string {
-  const wall = toWallTimeInput(date, zone);
-  const [ymd, time] = wall.split("T");
-  const [year, month, day] = ymd.split("-");
-  const weekday = weekdays[String(wallClockWeekday(date, zone))] ?? "";
-  return `${weekday} ${day}.${month}.${year}, ${time}`.trim();
+/**
+ * `Sâm., 21 nov. 2026, 09:00` — a date and its time as the site writes them in a list or a closed
+ * line (`formatDay`'s short form, §NNN), in the reader's language and the event's zone. `inline`
+ * keeps Romanian's lower case for a date inside a sentence ("până la dum., 1 nov. 2026").
+ */
+export function summaryDateTime(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {
+  return formatDay(date, { locale, timeZone: zone, style: "short", withTime: true, position });
 }
 
-/** `21.11.2026` in the event's zone. */
-export function summaryDate(date: Date, zone: string): string {
-  const [year, month, day] = toWallTimeInput(date, zone).slice(0, 10).split("-");
-  return `${day}.${month}.${year}`;
+/** `Sâm., 21 nov. 2026` — the same short form without the time. */
+export function summaryDate(date: Date, zone: string, locale: string, position: "start" | "inline" = "start"): string {
+  return formatDay(date, { locale, timeZone: zone, style: "short", position });
+}
+
+/** `09:30` on the event's clock, always 24-hour. */
+function summaryTime(date: Date, zone: string, locale: string): string {
+  return formatTime(date, { locale, timeZone: zone });
 }
 
 /** What a box needs of one language, stored or blank. */
@@ -187,14 +192,14 @@ export function rulesSummary(words: SummaryWords, translations: readonly Summary
 
 type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone">;
 
-/** Box 4: `Sâ 21.11.2026, 09:00 · startul cursei 09:30 · 180 min`. */
-export function whenSummary(words: SummaryWords, event: WhenEvent | null, weekdays: Readonly<Record<string, string>>): string {
+/** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 180 min`. */
+export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
   const minutes = event.endsAt ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000) : null;
   return join(words, [
-    summaryDateTime(event.startsAt, event.timezone, weekdays),
+    summaryDateTime(event.startsAt, event.timezone, locale),
     event.type === "RACE" && event.raceStartsAt
-      ? fillIn(words.when.raceStart, { time: toWallTimeInput(event.raceStartsAt, event.timezone).slice(11, 16) })
+      ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
       : null,
     minutes && minutes > 0 ? fillIn(words.when.duration, { minutes }) : null,
   ]);
@@ -235,9 +240,9 @@ export function programmeSummary(
   if (!hasProgramme) rows = words.programme.groupRun;
   else if (items.length === 0 || !event) rows = words.programme.none;
   else {
-    const first = toWallTimeInput(new Date(items[0].startsAt), event.timezone).slice(11, 16);
+    const first = summaryTime(new Date(items[0].startsAt), event.timezone, locale);
     const lastItem = items[items.length - 1];
-    const last = toWallTimeInput(new Date(lastItem.endsAt ?? lastItem.startsAt), event.timezone).slice(11, 16);
+    const last = summaryTime(new Date(lastItem.endsAt ?? lastItem.startsAt), event.timezone, locale);
     rows = `${counted(words.programme.moments, items.length, locale)}${first === last ? `, ${first}` : `, ${fillIn(words.programme.range, { from: first, to: last })}`}`;
   }
   return join(words, [rows, checklist.length > 0 ? fillIn(words.programme.checklist, { languages: checklist.join(", ") }) : null]);
@@ -281,10 +286,14 @@ export function registrationSummary(
 
 type WindowEvent = Pick<EditableEvent, "registrationOpensAt" | "registrationClosesAt" | "timezone">;
 
-/** Sub-card 8.1: `01.10.2026, 10:00 – 19.11.2026, 23:59`, or `De la publicare până la start`. */
-export function registrationWindowSummary(words: SummaryWords, event: WindowEvent | null, weekdays: Readonly<Record<string, string>>): string {
-  const from = event?.registrationOpensAt ? summaryDateTime(event.registrationOpensAt, event.timezone, weekdays) : words.window.fromPublication;
-  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, weekdays) : words.window.untilStart;
+/**
+ * Sub-card 8.1: `Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59`, or `De la publicare – până
+ * la start`. The second date continues the first, so it keeps the language's own case, as
+ * `formatDayRange` writes a span.
+ */
+export function registrationWindowSummary(words: SummaryWords, event: WindowEvent | null, locale: string): string {
+  const from = event?.registrationOpensAt ? summaryDateTime(event.registrationOpensAt, event.timezone, locale) : words.window.fromPublication;
+  const to = event?.registrationClosesAt ? summaryDateTime(event.registrationClosesAt, event.timezone, locale, "inline") : words.window.untilStart;
   return fillIn(words.window.range, { from, to });
 }
 

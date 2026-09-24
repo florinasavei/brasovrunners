@@ -151,7 +151,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
-    // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §NNN).
+    // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §345).
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
     // The meeting point is asked once, in Settings: it is the same place whichever language the
@@ -222,7 +222,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("event.schedule[0].en").fill("The start");
     await openEditorBox(page, "Parteneri");
     await field("event.coHosts[0].name").fill("Clubul Prietenilor");
-    await field("event.coHosts[0].url").fill("https://example.org/prieteni");
+    await field("event.coHosts[0].links[0].url").fill("https://example.org/prieteni");
     await field("repeat.on").check();
     await field("repeat.cadence").selectOption("FORTNIGHTLY");
 
@@ -263,7 +263,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(field("event.schedule[0].ro")).toHaveValue("Startul");
     await expect(field("event.schedule[0].en")).toHaveValue("The start");
     await expect(field("event.coHosts[0].name")).toHaveValue("Clubul Prietenilor");
-    await expect(field("event.coHosts[0].url")).toHaveValue("https://example.org/prieteni");
+    await expect(field("event.coHosts[0].links[0].url")).toHaveValue("https://example.org/prieteni");
     await expect(field("repeat.on")).toBeChecked();
     await expect(field("repeat.cadence")).toBeVisible();
     await expect(field("repeat.cadence")).toHaveValue("FORTNIGHTLY");
@@ -481,7 +481,7 @@ async function loadAfresh(page: Page) {
 }
 
 /*
-  §117, §NNN, review finding 1. Client-side navigation from the events list never showed this:
+  §117, §345, review finding 1. Client-side navigation from the events list never showed this:
   the picker there is already running by the time `ScheduleRowsEditorIsland` mounts, so its
   listener lands on the real box from the start. Only a full page load hits the gap —
   `useIslandRunning`'s `useSyncExternalStore` swaps the scriptless box for the picker in a
@@ -492,7 +492,7 @@ async function loadAfresh(page: Page) {
   `page.goto`, a full load) and the editor (`loadAfresh`). Run against a build of
   `ScheduleRowsEditor.tsx` as it was before the fix, the row stays on its first date on each.
 */
-test.describe("BR-REQ-050-02 the programme follows the start date after a full page load (§117, §NNN)", () => {
+test.describe("BR-REQ-050-02 the programme follows the start date after a full page load (§117, §345)", () => {
   test("moves the row's date when the picker replaces the scriptless box during hydration", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `program-dupa-reincarcare-${suffix}`;
@@ -551,7 +551,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
 });
 
 /*
-  §NNN, review finding 2. Every existing assertion on a picker's format reads the hidden posted
+  §345, review finding 2. Every existing assertion on a picker's format reads the hidden posted
   input (`YYYY-MM-DD` / `HH:mm`), which says nothing about what the picker *shows* — and every
   one of them is a morning time, where 12-hour and 24-hour read the same digits. This asserts
   what the picker box itself renders instead, on an afternoon hour, before and after a save and
@@ -568,7 +568,7 @@ async function expectPickerShows(group: Locator, sections: string[], shown: stri
   await expect(group.locator("input")).toHaveValue(shown);
 }
 
-test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-year, not only post that way (§303, §NNN)", () => {
+test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-year, not only post that way (§303, §345)", () => {
   test("shows 19:00 with no AM/PM and 30.09.2027 in day, month, year order — before and after saving", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `ceas-24h-${suffix}`;

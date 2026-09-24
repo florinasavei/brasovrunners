@@ -225,6 +225,8 @@ export type EventErasurePlan = {
   eventId: string;
   titles: Array<{ locale: Locale; title: string }>;
   startsAt: Date;
+  /** The zone the date above is read in — the event's own. */
+  timezone: string;
   editorialStatus: EditableEvent["editorialStatus"];
   total: number;
   confirmed: number;
@@ -263,6 +265,7 @@ export async function readEventErasurePlan<T extends Record<string, unknown>>(
       // the club's own language rather than whichever locale sorts first.
       .sort((a, b) => routing.locales.indexOf(a.locale) - routing.locales.indexOf(b.locale)),
     startsAt: event.startsAt,
+    timezone: event.timezone,
     editorialStatus: event.editorialStatus,
     total: counts?.total ?? 0,
     confirmed: counts?.confirmed ?? 0,

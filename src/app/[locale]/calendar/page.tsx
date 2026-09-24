@@ -9,11 +9,13 @@ import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
 import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
+import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import Wordmark from "@/shared/ui/Wordmark";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { headingRule } from "@/theme/surfaces";
@@ -41,7 +43,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Events" });
-  return { title: t("calendar.pageTitle"), description: t("calendar.pageIntro") };
+  return {
+    title: t("calendar.pageTitle"),
+    description: t("calendar.pageIntro"),
+    /*
+      One calendar page per language, whatever month, year, layout or kind the address names
+      (§342). The "Lună" pill on the plain page links to `?month=<this month>`, which is this
+      very page under a second address, and neither declared a canonical — the likeliest pair
+      behind Search Console's "duplicate without user-selected canonical". Another month is the
+      same events' own pages, arranged; the event pages are what is indexed, and every month's
+      links are still followed.
+    */
+    alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/calendar")),
+  };
 }
 
 export default async function CalendarPage({ params, searchParams }: Props) {

@@ -4,6 +4,7 @@ import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/Repe
 import { followingIds, presetOf } from "@/modules/content/events/ui/SeriesScope";
 import { slugFromTitle } from "@/modules/content/events/ui/slug";
 import { ignoreHiddenFields, normalizeForMode } from "@/modules/content/events/service";
+import { weekdayNames } from "@/modules/events/ui/series-sentence";
 import { isBlankValue } from "@/shared/forms/blank-value";
 
 /**
@@ -67,7 +68,14 @@ describe("§NNN the rule in one live sentence", () => {
     forever: ro.Admin.editor.repeatRuleLiveForever,
     until: ro.Admin.editor.repeatRuleLiveUntil,
     horizon: ro.Admin.editor.repeatRuleLiveHorizon,
+    // Written on the server (`series-sentence.ts#weekdayNames`) and handed to the island (§324).
+    weekdayNames: weekdayNames("ro"),
   };
+
+  it("hands the island the seven weekday names, ISO-numbered, in the reader's language", () => {
+    expect(weekdayNames("ro")).toEqual({ "1": "luni", "2": "marți", "3": "miercuri", "4": "joi", "5": "vineri", "6": "sâmbătă", "7": "duminică" });
+    expect(weekdayNames("en")["7"]).toBe("Sunday");
+  });
 
   it("says the days, the time, and for ever — or until when — and what is made now", () => {
     expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [3, 1], time: "18:30", day: "", until: "" }, "ro")).toBe(
@@ -149,5 +157,25 @@ describe("§NNN ignoreHiddenFields — what the type or mode hides is replaced b
     expect(ignoreHiddenFields({ registrationMode: "SOMETIMES", capacity: "0" })).toEqual({ registrationMode: "SOMETIMES", capacity: "0" });
     expect(ignoreHiddenFields(null)).toBeNull();
     expect(ignoreHiddenFields("fields")).toBe("fields");
+  });
+
+  it("replaces the waiting list's length where 'Pe site' is hidden, the capacity's kin (the waiting-list cap)", () => {
+    expect(ignoreHiddenFields({ ...posted, registrationMode: "NONE", waitlistCapacity: "-3" })).toMatchObject({ capacity: null, waitlistCapacity: null });
+    expect(ignoreHiddenFields({ ...posted, type: "GROUP_RUN", waitlistCapacity: "5" })).toMatchObject({ waitlistCapacity: null });
+    // Shown under "Pe site": checked as typed.
+    expect(ignoreHiddenFields({ ...posted, waitlistCapacity: "5" })).toMatchObject({ waitlistCapacity: "5" });
+    // Not sent, not added: a caller that never mentioned the limit never lifts it.
+    expect(ignoreHiddenFields({ ...posted, registrationMode: "NONE" })).not.toHaveProperty("waitlistCapacity");
+  });
+
+});
+
+describe("§NNN normalizeForMode and the waiting list's length (the waiting-list cap)", () => {
+  const base = { type: "RACE", registrationMode: "NONE", capacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
+
+  it("stores no length where nothing queues, and writes nothing when the caller never sent one", () => {
+    expect(normalizeForMode({ ...base, waitlistCapacity: 10 } as unknown as Parameters<typeof normalizeForMode>[0])).toMatchObject({ waitlistCapacity: null });
+    expect(normalizeForMode(base as unknown as Parameters<typeof normalizeForMode>[0]).waitlistCapacity).toBeUndefined();
+    expect(normalizeForMode({ ...base, registrationMode: "INTERNAL", waitlistCapacity: 10 } as unknown as Parameters<typeof normalizeForMode>[0])).toMatchObject({ waitlistCapacity: 10 });
   });
 });

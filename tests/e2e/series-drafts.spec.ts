@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
+ * `DECISIONS.md` §341 — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
  * 1 date": "ce înseamnă această 1 ciornă?". A series started from a published event, with
  * "Publică edițiile create" left unticked, makes every new date a draft the site never shows —
  * and until now the list said nothing beyond a bare, wrongly-pluralised count.
@@ -34,7 +35,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const today = new Date();
     const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 8, 9));
     const ymd = (date: Date) => date.toISOString().slice(0, 10);
-    const short = (date: Date) => new Intl.DateTimeFormat("ro-RO", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(date);
+    // A draft's chip as the list writes it (§NNN weekday on every date): the short form, starting
+    // the link, so capitalised — "Vin., 9 oct. 2026". The same calendar day in UTC as in Brașov at 09:00.
+    const short = (date: Date) => formatDay(date, { locale: "ro", timeZone: "UTC", style: "short" });
 
     await signIn(page, "Dev Administrator");
 
@@ -108,8 +111,14 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
     await expect(tooltip).toContainText("publicarea automată e oprită");
-    // `role="tooltip"` is on MUI's Popper, the positioning shell; `TOOLTIP_TEXT_SX` is on the
-    // tooltip slot inside it (`slotProps.tooltip`), which is the box that holds the text.
+    // Where the switch really is, and what the list's tick really does (§341 hints): the tick and
+    // its save in the "Recurență" box (§NNN, the editor's boxes), and the bar's verb for a series' tick.
+    await expect(tooltip).toContainText("în caseta „Recurență”, bifează „Publică datele noi automat” și apasă „Salvează setarea”");
+    await expect(tooltip).toContainText("bifează seria în listă");
+    await expect(tooltip).toContainText("„Publică cele bifate”");
+    await expect(tooltip).not.toContainText("setările seriei");
+    // The style sits on MUI's inner tooltip box, the slot `Hint` hands `TOOLTIP_TEXT_SX` to —
+    // the element carrying `role="tooltip"` is the popper around it, which keeps `normal`.
     await expect(tooltip.locator(".MuiTooltip-tooltip")).toHaveCSS("white-space", "pre-line");
 
     // The link is real: it opens the draft's own editor, where it is a draft and nothing else.

@@ -1,9 +1,11 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
-import type { CoHost } from "./domain/co-hosts";
+import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
+import { costUrlHost, type EventCostType } from "./domain/cost";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { env } from "@/shared/config/env";
+import { formatDay, formatTime } from "@/i18n/dates";
 
 /**
  * The environment on a calendar name and on every entry, QA only (§174; the owner: "the QA
@@ -91,7 +93,11 @@ export type CalendarEvent = {
   elevationGainMeters?: number | null;
   surface?: EventSurface | null;
   difficulty?: "EASY" | "MODERATE" | "HARD" | null;
-  costType?: "FREE" | "PAID" | null;
+  costType?: EventCostType | null;
+  /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
+  costAmount?: string | null;
+  /** Where a paid event is settled, or where a donation is made (§343); https, or nothing. */
+  costUrl?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
   videoUrl?: string | null;
@@ -325,8 +331,28 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const notice = event.eventStatus === "CANCELLED" ? t("cancelledNotice") : event.eventStatus === "COMPLETED" ? t("completedNotice") : "";
 
   // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
-  const time = new Intl.DateTimeFormat(intl, { hour: "2-digit", minute: "2-digit", timeZone });
-  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time.format(event.startsAt) })} · ${t("raceStartAt", { time: time.format(event.raceStartsAt) })}` : "";
+  const time = (at: Date) => formatTime(at, { locale, timeZone });
+  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time(event.startsAt) })} · ${t("raceStartAt", { time: time(event.raceStartsAt) })}` : "";
+
+  /*
+    The cost (§343), the same short phrase the page's full facts say — an amount for a paid
+    event, "plata pe {host}" after it when the club gave a link; a donation's own phrase names
+    the host it goes to, with the suggested amount after it. Never the raw URL: only the host a
+    runner recognises, which is what the page's own facts line allows too.
+  */
+  const costFacts = ((): string[] => {
+    if (event.costType === "PAID") {
+      const main = event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID");
+      const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+      return host ? [main, t("costPaidWhere", { host })] : [main];
+    }
+    if (event.costType === "DONATION") {
+      const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+      const main = host ? t("costDonation", { host }) : t("costValues.DONATION");
+      return event.costAmount ? [main, t("costDonationSuggested", { amount: event.costAmount })] : [main];
+    }
+    return event.costType ? [t(`costValues.${event.costType}`)] : [];
+  })();
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
@@ -336,7 +362,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     event.elevationGainMeters ? `↗ ${t("elevationM", { m: new Intl.NumberFormat(intl).format(event.elevationGainMeters) })}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
     event.difficulty ? t(`difficultyValues.${event.difficulty}`) : "",
-    event.costType ? t(`costValues.${event.costType}`) : "",
+    ...costFacts,
   ]
     .filter((part) => part.length > 0)
     .join(" · ");
@@ -349,7 +375,9 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     if (!r) return null;
     if (r.kind === "OPEN") return { text: t("registrationState.OPEN"), url: r.url, separator: " — " };
     if (r.kind === "NOT_YET_OPEN") {
-      const date = new Intl.DateTimeFormat(intl, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone }).format(r.opensAt);
+      // Human text in the DESCRIPTION, so the one long form, inside the sentence (§NNN); the
+      // DTSTART/DTEND stay the machine's.
+      const date = formatDay(r.opensAt, { locale, timeZone, style: "long", withTime: true, position: "inline" });
       return { text: t("cta.opensOnShort", { date }), url: r.url, separator: " — " };
     }
     if (r.kind === "CLOSED") return { text: t("registrationState.CLOSED") };
@@ -387,10 +415,11 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],
     checklist ? [{ text: `${t("calendar.checklist")}: ${checklist}` }] : [],
     // "Împreună cu A", then the other partners on their own lines: the label is said once,
-    // and each partner keeps its own link, which a joined sentence could not carry (§168).
+    // and each partner keeps its own link — its site if it named one, else its first link
+    // (§344) — which a joined sentence could not carry (§168).
     coHosts.map((host, index) => ({
       text: index === 0 ? `${t("coHost")} ${host.name.trim()}` : host.name.trim(),
-      url: host.url ?? undefined,
+      url: primaryCoHostLink(host)?.url,
       separator: " — ",
     })),
   ].filter((group) => group.length > 0);

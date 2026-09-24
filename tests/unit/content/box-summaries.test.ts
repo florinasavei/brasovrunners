@@ -37,7 +37,6 @@ import { fillIn } from "@/shared/forms/fill-in";
  */
 const words = ro.Admin.editor.boxes.summary as SummaryWords;
 const wordsEn = en.Admin.editor.boxes.summary as SummaryWords;
-const weekdays = ro.Admin.editor.weekdays as Record<string, string>;
 const ZONE = "Europe/Bucharest";
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
@@ -59,16 +58,22 @@ function language(locale: string, overrides: Partial<SummaryTranslation> = {}): 
   };
 }
 
-describe("§NNN dates in the summaries: ro-RO numbers, the weekday's two letters, the event's zone", () => {
-  it("writes a Saturday race start as `Sâ 21.11.2026, 09:00` in Bucharest, whatever the server's zone", () => {
+describe("§NNN dates in the summaries: the site's short form (src/i18n/dates.ts), the reader's language, the event's zone", () => {
+  it("writes a Saturday race start as `Sâm., 21 nov. 2026, 09:00` in Bucharest, whatever the server's zone", () => {
     const start = new Date("2026-11-21T07:00:00Z"); // 09:00 in Bucharest (UTC+2 in November)
-    expect(summaryDateTime(start, ZONE, weekdays)).toBe("Sâ 21.11.2026, 09:00");
-    expect(summaryDate(start, ZONE)).toBe("21.11.2026");
+    expect(summaryDateTime(start, ZONE, "ro")).toBe("Sâm., 21 nov. 2026, 09:00");
+    expect(summaryDate(start, ZONE, "ro")).toBe("Sâm., 21 nov. 2026");
+  });
+
+  it("writes it in English for an English reader, and in lower case inside a Romanian sentence", () => {
+    const start = new Date("2026-11-21T07:00:00Z");
+    expect(summaryDateTime(start, ZONE, "en")).toBe("Sat, 21 Nov 2026, 09:00");
+    expect(summaryDate(start, ZONE, "ro", "inline")).toBe("sâm., 21 nov. 2026");
   });
 
   it("names the date the zone's own day, not UTC's", () => {
     // 23:30 UTC on the 30th is already 02:30 on 1 October in Bucharest (UTC+3 in summer).
-    expect(summaryDateTime(new Date("2026-09-30T23:30:00Z"), ZONE, weekdays)).toBe("Jo 01.10.2026, 02:30");
+    expect(summaryDateTime(new Date("2026-09-30T23:30:00Z"), ZONE, "ro")).toBe("Joi, 1 oct. 2026, 02:30");
   });
 });
 
@@ -82,10 +87,11 @@ describe("§NNN each box's summary, empty and filled", () => {
   } as const;
 
   it("Data și ora", () => {
-    expect(whenSummary(words, null, weekdays)).toBe(words.when.none);
-    expect(whenSummary(words, event as never, weekdays)).toBe("Sâ 21.11.2026, 09:00 · startul cursei 09:30 · 180 min");
+    expect(whenSummary(words, null, "ro")).toBe(words.when.none);
+    expect(whenSummary(words, event as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 180 min");
+    expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 180 min");
     // A gun time is a race's alone (§71).
-    expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, weekdays)).toBe("Sâ 21.11.2026, 09:00 · 180 min");
+    expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 180 min");
   });
 
   it("Fus orar", () => {
@@ -154,10 +160,18 @@ describe("§NNN each box's summary, empty and filled", () => {
   });
 
   it("the registration box's cards", () => {
-    expect(registrationWindowSummary(words, null, weekdays)).toBe("De la publicare – până la start");
+    expect(registrationWindowSummary(words, null, "ro")).toBe("De la publicare – până la start");
     expect(
-      registrationWindowSummary(words, { registrationOpensAt: new Date("2026-10-01T07:00:00Z"), registrationClosesAt: null, timezone: ZONE }, weekdays),
-    ).toBe("Jo 01.10.2026, 10:00 – până la start");
+      registrationWindowSummary(words, { registrationOpensAt: new Date("2026-10-01T07:00:00Z"), registrationClosesAt: null, timezone: ZONE }, "ro"),
+    ).toBe("Joi, 1 oct. 2026, 10:00 – până la start");
+    // A span: the second date continues the first, in the language's own case.
+    expect(
+      registrationWindowSummary(
+        words,
+        { registrationOpensAt: new Date("2026-10-01T07:00:00Z"), registrationClosesAt: new Date("2026-11-19T21:59:00Z"), timezone: ZONE },
+        "ro",
+      ),
+    ).toBe("Joi, 1 oct. 2026, 10:00 – joi, 19 nov. 2026, 23:59");
     expect(conditionsSummary(words, 14, { version: 3, title: "Declarația" })).toBe("de la 14 ani · declarația v3");
     expect(conditionsSummary(words, 16, null)).toBe(`de la 16 ani · ${words.conditions.noDeclaration}`);
     expect(confirmationSummary(words, 7, 2)).toBe("Cerută cu 7 zile înainte, termen cu 2 zile înainte");

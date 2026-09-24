@@ -7,7 +7,8 @@ import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -80,7 +81,6 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
   const mayWrite = canManageStaff(actor.role);
 
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const db = getDb();
   const document = await findVersionWithTranslations(db, id);
   if (!document) notFound();
@@ -109,7 +109,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
               ? t("legal.approved")
               : t("legal.draft")}{" "}
           ·{" "}
-          {t("legal.effectiveAt")}: {format.dateTime(document.effectiveAt, { dateStyle: "medium" })}
+          {t("legal.effectiveAt")}: {formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long" })}
         </Typography>
         {/*
           The hash is what makes "immutable" checkable rather than asserted: two deployments
@@ -208,7 +208,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
           {document.withdrawnAt && (
             <Alert severity="warning">
               {t("legal.withdrawnNotice", {
-                date: format.dateTime(document.withdrawnAt, { dateStyle: "medium" }),
+                date: formatDay(document.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
               })}
             </Alert>
           )}

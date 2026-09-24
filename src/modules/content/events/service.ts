@@ -25,6 +25,7 @@ import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeek
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
+import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -286,14 +287,26 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * §12.3 requires an approved declaration on an internal event, and it cannot be a CHECK because
  * "approved" lives in another table.
  */
-function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
+async function assertCoherentRegistrationBlock<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: EventFieldsInput,
+  now: Date,
+): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
-    if (fields.capacity !== null || fields.declarationDocumentId !== null) {
+    // The waiting list's length is the places' kin (§NNN): nothing queues on an event that takes
+    // no registrations here, so a number left in its box is refused with the capacity's sentence.
+    const waitlistCapacitySet = fields.waitlistCapacity !== undefined && fields.waitlistCapacity !== null;
+    if (fields.capacity !== null || waitlistCapacitySet || fields.declarationDocumentId !== null) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        "capacity and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
-        ["registrationMode", ...(fields.capacity !== null ? ["capacity"] : []), ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : [])],
+        "capacity, a waiting-list length and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
+        [
+          "registrationMode",
+          ...(fields.capacity !== null ? ["capacity"] : []),
+          ...(waitlistCapacitySet ? ["waitlistCapacity"] : []),
+          ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : []),
+        ],
       );
     }
   } else if (fields.declarationDocumentId === null) {
@@ -304,14 +317,35 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
     );
   }
 
-  if (fields.participantListVisibility === "NAMES" && fields.registrationMode !== "INTERNAL") {
-    // For NONE there are no participants to list, and for EXTERNAL the people who entered are
-    // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      "a start list can only be published for an event that takes registrations here",
-      ["participantListVisibility"],
-    );
+  if (fields.participantListVisibility === "NAMES") {
+    if (fields.registrationMode !== "INTERNAL") {
+      // For NONE there are no participants to list, and for EXTERNAL the people who entered are
+      // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "a start list can only be published for an event that takes registrations here",
+        ["participantListVisibility"],
+      );
+    }
+
+    /**
+     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §346: the disclosure MUST NOT be switched on
+     * before the approved privacy notice describes it. §32 recorded the rule and left it
+     * unenforced because no environment had an approved notice at all yet, so nothing could be
+     * blocked — that stopped being true on 2026-09-22, when production approved one. The check
+     * asks the same question `legal-documents/service.ts` asks for "in force" — approved,
+     * effective by now, never withdrawn — and by key alone, the same way `declarationNone`
+     * reads the environment rather than one locale: an event is publishable only with both
+     * languages complete (§28), so a notice missing from one language is not a state a public
+     * disclosure should be allowed to launch from either.
+     */
+    if (!(await findCurrentApprovedVersionId(db, "PRIVACY_NOTICE", now))) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "the participant list cannot be published before an approved, effective privacy notice describes the disclosure",
+        ["participantListVisibility"],
+      );
+    }
   }
 
   if (fields.registrationMode === "EXTERNAL") {
@@ -371,12 +405,21 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationToBeAnnounced: fields.locationToBeAnnounced,
     difficulty: fields.difficulty,
     costType: fields.costType,
+    // Absent means this caller is not editing the cost fields (§343), the discipline `links`
+    // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
+    // is in the boxes even while the chosen kind does not need one of them.
+    ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
+    ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    // The waiting list's length (§NNN), by the partners' discipline: a caller that said nothing
+    // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
+    // limit the organizer set just by not mentioning it. The editor and the create form post it.
+    ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
     // The race's band (§173): where its numbers start and what colour they print. Both were
     // parsed and validated by `fields.ts` from the day they were added and then dropped here,
     // so the editor's two controls posted into nothing — caught by review (§177).
@@ -413,7 +456,16 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
  */
 function normalizeForType<T extends EventFieldsInput>(fields: T): T {
   if (takesRegistrations(fields.type)) return fields;
-  return { ...fields, ...TURN_UP_FIELDS };
+  return keepUnsentWaitlist(fields, { ...fields, ...TURN_UP_FIELDS });
+}
+
+/**
+ * The waiting list's length is written only by a caller that sent it (§NNN, the waiting-list
+ * cap): a hidden block stores null in its place when the form posted the box, and nothing at all
+ * when it did not — so a save that never mentioned the limit never lifts it.
+ */
+function keepUnsentWaitlist<T extends EventFieldsInput>(fields: T, normalized: T): T {
+  return fields.waitlistCapacity === undefined ? { ...normalized, waitlistCapacity: undefined } : normalized;
 }
 
 /** What a turn-up type is written with, whatever the hidden block posted (§111). */
@@ -422,6 +474,8 @@ const TURN_UP_FIELDS = {
   scheduleRows: [],
   registrationMode: "NONE",
   capacity: null,
+  // A turn-up event queues nobody (§NNN, the waiting-list cap).
+  waitlistCapacity: null,
   declarationDocumentId: null,
   registrationOpensAtWallTime: "",
   registrationClosesAtWallTime: "",
@@ -437,17 +491,18 @@ const TURN_UP_FIELDS = {
  * was typed. A capacity left behind a switch to "Fără înscrieri" is a box the organizer can no
  * longer see — refusing the save over it would name a field that is not on the screen.
  *
- * So: not here → no capacity, no declaration, no public list; not elsewhere → no organizer's name
- * or link. The window, the confirmation days, the minimum age and the bib band are kept whatever
- * the mode, so a switch back restores them. `assertCoherentRegistrationBlock` stays as the
- * guarantee for anything that reaches the service another way.
+ * So: not here → no capacity, no waiting-list length, no declaration, no public list; not
+ * elsewhere → no organizer's name or link. The window, the confirmation days, the minimum age and
+ * the bib band are kept whatever the mode, so a switch back restores them.
+ * `assertCoherentRegistrationBlock` stays as the guarantee for anything that reaches the service
+ * another way.
  */
 export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
-  return { ...fields, ...hiddenByMode(fields.registrationMode) };
+  return keepUnsentWaitlist(fields, { ...fields, ...hiddenByMode(fields.registrationMode) });
 }
 
 /** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
-const INTERNAL_ONLY_FIELDS = { capacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
+const INTERNAL_ONLY_FIELDS = { capacity: null, waitlistCapacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
 const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
 
 function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
@@ -1034,7 +1089,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
   const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
-  assertCoherentRegistrationBlock(fields);
+  await assertCoherentRegistrationBlock(db, fields, now);
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
@@ -1139,10 +1194,15 @@ const SERIES_COLUMNS = [
   "locationToBeAnnounced",
   "difficulty",
   "costType",
+  "costAmount",
+  "costUrl",
   "distanceMeters",
   "elevationGainMeters",
   "registrationMode",
   "capacity",
+  // The waiting list's length, like the places (§NNN). No lock and no allocation when it moves:
+  // raising it offers nobody anything, and lowering it removes nobody already waiting.
+  "waitlistCapacity",
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
@@ -1429,7 +1489,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
     }
-    assertCoherentRegistrationBlock(parsedEventFields);
+    await assertCoherentRegistrationBlock(db, parsedEventFields, now);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -1581,7 +1641,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   }
 
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
-  assertCoherentRegistrationBlock(parsed);
+  await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
 
   const created = await db.transaction(async (tx) => {
@@ -1817,6 +1877,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
     costType: source.costType,
+    costAmount: source.costAmount,
+    costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
@@ -1824,6 +1886,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Wednesday another club's race passes through — and the copy is a different one.
     isSpecial: false,
     capacity: source.capacity,
+    // The waiting list's length goes with the places it queues for (§NNN): a copy, and every
+    // date of a series, queue as many as the source does.
+    waitlistCapacity: source.waitlistCapacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
@@ -2112,7 +2177,7 @@ export async function stopRepeat<T extends Record<string, unknown>>(
 }
 
 /**
- * Switch a running series' automatic publication on or off (`DECISIONS.md` §NNN): whether the
+ * Switch a running series' automatic publication on or off (`DECISIONS.md` §341): whether the
  * dates the job makes from now on go live as they are made, or wait as drafts.
  *
  * The rule's `publish` flag was chosen once, with the tick under "Repetă evenimentul", and never

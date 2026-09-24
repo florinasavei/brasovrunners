@@ -5,10 +5,12 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
+import { numberForm } from "@/i18n/number-form";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -16,7 +18,7 @@ import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/c
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
 import { describeIncompleteLocales, missingPublicEventFields } from "@/modules/content/events/service";
 import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/BibPrint";
-import { riskMark, summaryWords } from "@/modules/content/events/ui/boxes/box-kit";
+import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
@@ -140,6 +142,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
   const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
+  // How many test rows went in before the waiting list's limit stopped the batch (§NNN).
+  const stoppedCount = /^\d+$/.test(created ?? "") ? Number(created) : 0;
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.
   const notPublished = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === notPublishedParam);
@@ -155,10 +159,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
-  const format = await getFormatter();
-  const { weekdays } = await summaryWords();
   const now = new Date();
-  // "1 dată", "7 date", "20 de date" (§NNN), for the banners that count a series' dates. The
+  // "1 dată", "7 date", "20 de date" (§341), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
   const datesWords = (raw: string | undefined) => tEvent(`series.count.${countForm(countOf(raw), locale)}`, { count: countOf(raw) });
@@ -243,20 +245,27 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const seriesTitle = event.repeatOf ? await findEventTitle(db, event.repeatOf, locale) : null;
   const seriesDates = inSeries ? await listSeriesDates(db, event.repeatOf ?? event.id) : [];
   const usual = usualOf(seriesDates);
-  const dateLabel = (member: { startsAt: Date; timezone: string }) => summaryDateTime(member.startsAt, member.timezone, weekdays);
+  /*
+    Every date of the series as the site writes it (`src/i18n/dates.ts`, §NNN weekday on every
+    date): the short form with its time where it starts a line or a link — "Mie., 7 oct. 2026,
+    18:30" — and in lower case inside the Salvare box's sentence, in the reader's language and
+    each date's own zone. Rendered here and handed to the islands as strings (§324).
+  */
+  const dateLabel = (member: { startsAt: Date; timezone: string }) => summaryDateTime(member.startsAt, member.timezone, locale);
   const scopeDates: ScopeDate[] = await Promise.all(
     seriesDates.map(async (member) => ({
       id: member.id,
       href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: member.id } } }),
       label: dateLabel(member),
-      day: summaryDate(member.startsAt, member.timezone),
+      day: summaryDate(member.startsAt, member.timezone, locale, "inline"),
       note: await editionNote(editionDifference(member, usual)),
     })),
   );
   const position = seriesDates.findIndex((member) => member.id === event.id);
   const ruleEnded = repeatRule?.until ? new Date(`${repeatRule.until}T23:59:59`).getTime() < now.getTime() : false;
   const ruleWords = repeatRule && source ? await ruleSentence(repeatRule, source, source.timezone, locale) : null;
-  const untilWords = repeatRule?.until ? repeatRule.until.split("-").reverse().join(".") : null;
+  // A `date` column, read as the calendar day it names (no zone to move it), inside the rule's sentence.
+  const untilWords = repeatRule?.until ? formatCalendarDay(repeatRule.until, { locale, style: "short", position: "inline" }) : null;
   const ruleLine = ruleWords
     ? untilWords
       ? t(ruleEnded ? "editor.repeatRuleEnded" : "editor.repeatRuleUntil", { sentence: ruleWords, until: untilWords })
@@ -376,7 +385,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <Alert severity="success">
               {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
                 dates: datesWords(created),
-                until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
+                until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: event.timezone, style: "short", position: "inline" }),
               })}
             </Alert>
           )}
@@ -393,6 +402,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
+          {/* A batch of test rows that met the waiting list's limit part-way (§NNN, the waiting-list
+              cap): how many went in, and that the rest were refused as a real registration would be.
+              A counted phrase — "1 înscriere", "19 înscrieri", "20 de înscrieri". */}
+          {saved === "testRegistrationsStopped" && (
+            <Alert severity="info">{t(`testRegistrations.stoppedAtLimit.${numberForm(locale, stoppedCount)}`, { created: stoppedCount })}</Alert>
+          )}
           {/* What the save told the participants (§331), under whichever banner the save gave. */}
           {noticeOutcome && (
             <Alert severity={noticeOutcome === "none" || noticeOutcome === "cancelledQuiet" ? "info" : "success"} sx={{ mt: 1 }} data-testid="notice-outcome">
@@ -400,7 +415,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished"].includes(saved) &&
+            !["bibsAssigned", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -726,7 +741,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
                       {/* 16.1 — the queue as the allocator sees it, and the waiting list in its order (§92). */}
                       <Panel collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
-                        <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} waiting={waiting} now={now} />
+                        <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity }} waiting={waiting} now={now} />
                         {interestsWaiting !== null && (
                           <Box sx={{ mt: 3 }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -755,7 +770,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <Panel collapsible level={3} id="box-thanks" title={t("editor.boxes.thanks.title")} openWhen={{ attention: !event.thanksSentAt }}>
                           {event.thanksSentAt ? (
                             <Typography variant="body2" color="text.secondary">
-                              {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short", hourCycle: "h23" }) })}
+                              {t("thanks.sentOn", { date: formatDay(event.thanksSentAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) })}
                             </Typography>
                           ) : (
                             // A refused link comes back in its box (§315).

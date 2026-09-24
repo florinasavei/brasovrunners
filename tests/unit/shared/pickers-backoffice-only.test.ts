@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The date and time pickers (`shared/forms/pickers`, `DECISIONS.md` §NNN) reach the backoffice
+ * The date and time pickers (`shared/forms/pickers`, `DECISIONS.md` §345) reach the backoffice
  * and nowhere else. `PickerProvider`'s own JSDoc names this file.
  *
  * The registry review of §318 (`action-icons.test.ts`) found the same shape of bug once: a
@@ -105,7 +105,7 @@ function reaching(start: string): Set<string> {
  * a check that allowed `/devs/` too and then throw at runtime for want of the localization
  * context. This copies `action-icons.test.ts`'s own `isBackofficeRoute`, which rightly allows
  * both — an icon needs no provider, so it really does reach either route safely — and that
- * shape of check does not carry over to a component a provider has to be mounted for (§NNN).
+ * shape of check does not carry over to a component a provider has to be mounted for (§345).
  */
 const isBackofficeRoute = (file: string) => file.startsWith("src/app/[locale]/admin/");
 

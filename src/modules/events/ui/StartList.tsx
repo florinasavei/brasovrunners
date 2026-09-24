@@ -1,16 +1,19 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { cachedStartListCounts, cachedStartListPage } from "@/modules/public-cache/reads";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { PublicEvent } from "../repository";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
+import { confirmedPhrase } from "./counted-phrases";
 
 /**
- * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §250): the confirmed,
- * real, not-opted-out participants of an event whose organizer switched the list on.
+ * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
+ * confirmed, real participant of an event whose organizer switched the list on — by name for
+ * those who ticked "Vreau să apar pe lista de participanți", and as "Participant (nume ascuns)"
+ * for everybody else.
  *
  * A native disclosure, closed, with the count in its summary: a page whose bottom third is a
  * list of names reads like a list of names, and the event page is about the event.
@@ -30,6 +33,21 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclo
  * What is *not* in the table is the guarantee: the display name and the club, which is what the
  * repository's select list carries and what `tests/privacy/public-surface.test.ts` refuses to
  * let widen. No number, no address, no state.
+ *
+ * ## The hidden names (§186, §346)
+ *
+ * A runner who did not tick the box is a row that says "Participant (nume ascuns)" and nothing
+ * else — not initials, not a club, not a position. There is nothing to leak because nothing was
+ * read: `countAnonymousStartListEntries` selects a number. The rows sit after every named one,
+ * because the order the named rows follow is the order people confirmed in, and a hidden row
+ * placed *in* that order would say "somebody confirmed between Ana and Ion" — which, to anybody
+ * who knows when a friend signed up, is the friend. Grouped at the end they say only how many.
+ * The same reason keeps the position column empty on them: the next number after the named
+ * rows would read as a place in the confirmed order that nobody holds.
+ *
+ * The line above the table counts both — "42 de participanți confirmați — 39 cu numele afișat" —
+ * from the same two counts the rows are drawn from, so it matches the confirmed count the club
+ * sees in the backoffice, test registrations excluded (`AGENTS.md` §12.6).
  */
 export default async function StartList({
   event,
@@ -42,9 +60,12 @@ export default async function StartList({
   if (event.participantListVisibility !== "NAMES") return null;
 
   const t = await getTranslations("Event");
+  const locale = await getLocale();
   // Two counts first, so one page of fifty never fetches four hundred rows (§250). Both, and the
   // page, from the public cache (§333): a confirmation, a cancellation, an erasure or somebody
-  // leaving the list expires them, so a name is never shown after its owner withdrew it.
+  // leaving the list expires them, so a name is never shown after its owner withdrew it. The
+  // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
+  // them, never a row, a position or an initial.
   const { named, anonymous } = await cachedStartListCounts(event.id);
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE);
   const participants =
@@ -81,6 +102,11 @@ export default async function StartList({
         </Typography>
       ) : (
         <>
+          {/* How many are confirmed, and how many of them are named (§346). */}
+          <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 1 }}>
+            {confirmedPhrase(t, locale, { confirmed: view.total, named })}
+          </Typography>
+
           {/*
             A real table, with a caption a screen reader announces and column headers that say
             which figure is which. It scrolls inside its own box rather than widening the page —
@@ -117,7 +143,7 @@ export default async function StartList({
                 {participants.map((participant, index) => (
                   // The name is not unique — two people called Ana Popescu may both be running —
                   // so the position in the confirmed order is what identifies the row.
-                  <Box component="tr" key={`${view.namedOffset + index}-${participant.displayName}`}>
+                  <Box component="tr" key={`${view.namedOffset + index}-${participant.displayName}`} data-testid="start-list-named">
                     <Box component="td">{view.firstPosition + index}</Box>
                     <Box component="td">{participant.displayName}</Box>
                     <Box component="td" sx={{ color: "text.secondary" }}>
@@ -126,17 +152,18 @@ export default async function StartList({
                   </Box>
                 ))}
                 {/*
-                  The runners who asked to be left off, counted but never named (§186).
+                  The runners who did not ask to be named, counted but never named (§186, §346).
 
                   One row each rather than a single "and 3 others", because the list is read to
-                  find out how many are coming as much as who — and a row that says "participant
-                  anonim" is the truth about that person: they are coming, and they said not to
-                  print their name. Nothing identifies them; the query that counted them selected
-                  a number.
+                  find out how many are coming as much as who — and a row that says "Participant
+                  (nume ascuns)" is the truth about that person: they are coming, and their name
+                  is not printed. Nothing identifies them; the query that counted them selected
+                  a number. No position either (see the note above the component): the cells
+                  either side of the words are empty on purpose.
                 */}
                 {Array.from({ length: view.anonymousOnPage }, (_, index) => (
-                  <Box component="tr" key={`anonymous-${index}`}>
-                    <Box component="td">{view.firstPosition + participants.length + index}</Box>
+                  <Box component="tr" key={`anonymous-${index}`} data-testid="start-list-anonymous">
+                    <Box component="td" />
                     <Box component="td" sx={{ color: "text.secondary", fontStyle: "italic" }}>
                       {t("startList.anonymous")}
                     </Box>

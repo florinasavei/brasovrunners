@@ -27,11 +27,20 @@ export type RuleSentenceWords = {
   forever: string;
   until: string;
   horizon: string;
+  /**
+   * The seven weekday names by ISO number, written on the server (`series-sentence.ts#weekdayNames`)
+   * and handed here as strings: a client island formats no date itself (§324, §NNN weekday on
+   * every date).
+   */
+  weekdayNames: Readonly<Record<string, string>>;
 };
 
 /**
  * "Se repetă săptămânal, lunea și miercurea, la 18:30 — la nesfârșit." — the rule, in words,
  * from the boxes as they stand (§NNN). Pure: the caller reads the form.
+ *
+ * The end is echoed as the date box shows it while it is typed (`30.09.2026`, the pickers'
+ * format, §303); once saved, the Recurență box writes the rule on the server, with its weekday.
  */
 export function ruleSentenceFrom(
   words: RuleSentenceWords,
@@ -39,9 +48,7 @@ export function ruleSentenceFrom(
   locale: string,
 ): string {
   const lang = locale === "ro" ? "ro" : "en";
-  const names = [...rule.weekdays]
-    .sort((a, b) => a - b)
-    .map((weekday) => new Intl.DateTimeFormat(lang, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2024, 0, weekday, 12))));
+  const names = [...rule.weekdays].sort((a, b) => a - b).map((weekday) => words.weekdayNames[String(weekday)] ?? "");
   const days = new Intl.ListFormat(lang, { type: "conjunction" }).format(names);
   const base =
     rule.cadence === "MONTHLY"

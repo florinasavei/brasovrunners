@@ -5,7 +5,7 @@ import Hint from "@/shared/ui/Hint";
 
 /**
  * "1 dată în ciornă — nu apare pe site: lun. 16 nov. (?)" — the series row's line for the dates
- * the site is missing (`DECISIONS.md` §NNN), in place of the bare "Ciornă · 1 date" chip that
+ * the site is missing (`DECISIONS.md` §341), in place of the bare "Ciornă · 1 date" chip that
  * made the owner ask "ce înseamnă această 1 ciornă?".
  *
  * Each date is its own link into its editor, where it is published; the "?" says what a draft

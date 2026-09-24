@@ -31,7 +31,7 @@ export type TimeFieldProps = {
 
 /**
  * A time of day in the backoffice, on MUI's time picker and always on the 24-hour clock: `19:00`,
- * never `07:00 PM` (`DECISIONS.md` §NNN; the owner: "vreau ca timpul să fie mereu în format de
+ * never `07:00 PM` (`DECISIONS.md` §345; the owner: "vreau ca timpul să fie mereu în format de
  * 24H, nu cu AM și PM"). `<input type="time">` posts `HH:mm` but *shows* the browser's clock, and
  * an English-language Chrome shows AM and PM whatever the page says (§70, §303).
  *

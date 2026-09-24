@@ -22,7 +22,7 @@ export default function InfoTip({ text }: { text: string }) {
       /*
         Newlines in the text are lines in the tooltip (§257). A sentence is unaffected — it has
         none — and a list written as one line per item reads as a list. The style is the one
-        `Hint` uses (`tooltip-text.ts`, §NNN), so the two kinds of tooltip read alike.
+        `Hint` uses (`tooltip-text.ts`, §341), so the two kinds of tooltip read alike.
       */
       slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
     >

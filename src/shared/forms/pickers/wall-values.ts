@@ -1,6 +1,6 @@
 /**
  * What the backoffice's date and time boxes post, and what they show (`DECISIONS.md` §70, §303
- * and the § that put the pickers in, §NNN).
+ * and the § that put the pickers in, §345).
  *
  * Two different things, kept apart on purpose:
  *

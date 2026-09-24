@@ -8,7 +8,7 @@ import { TimePickerInput } from "@/shared/forms/pickers/TimeField";
 
 /**
  * `DatePickerInput` and `TimePickerInput` — the picker a page gets once the island runs — rendered
- * on the server under the backoffice's own `PickerProvider` (`DECISIONS.md` §NNN, §303).
+ * on the server under the backoffice's own `PickerProvider` (`DECISIONS.md` §345, §303).
  *
  * Two things, read from the markup, in both languages of the backoffice:
  *

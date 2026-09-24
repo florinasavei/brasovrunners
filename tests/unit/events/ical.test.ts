@@ -16,6 +16,13 @@ import {
   type CalendarEvent,
   type CalendarLabels,
 } from "@/modules/events/ical";
+import type { CoHost } from "@/modules/events/domain/co-hosts";
+
+/** A partner with its one page, the shape a bare `url` always meant (§168, §344). */
+const partner = (name: string, url: string | null): CoHost => ({
+  name,
+  links: url ? [{ kind: "SITE", url, labelRo: null, labelEn: null }] : [],
+});
 
 /** BR-REQ-020-01 criterion 7 (`DECISIONS.md` §107, §159) — events as a calendar file and a feed. */
 const event: CalendarEvent = {
@@ -157,7 +164,7 @@ describe("the calendar file", () => {
     // The briefing has no place of its own, so it is at the event's.
     expect(unfolded).toContain("SUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Briefing\r\nDESCRIPTION:https://example.test/ro/evenimente/crosul-aniversar\r\nURL:https://example.test/ro/evenimente/crosul-aniversar\r\nLOCATION:Parcul Tractorul\\, intrarea principală");
     // The event's own description lists the rows before the text, with the day since they span two, under the page's heading.
-    expect(unfolded).toContain("Event programme:\\nSat 10 Oct 16:00–19:00 — Kit pickup (Start tent)\\nSun 11 Oct 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
+    expect(unfolded).toContain("Event programme:\\nSat\\, 10 Oct 2026\\, 16:00–19:00 — Kit pickup (Start tent)\\nSun\\, 11 Oct 2026\\, 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
   });
 
   const full: CalendarEvent = {
@@ -179,7 +186,7 @@ describe("the calendar file", () => {
     stravaEventUrl: "https://www.strava.com/clubs/1/group_events/2",
     facebookEventUrl: "https://www.facebook.com/events/3",
     checklist: "număr de concurs, apă",
-    coHosts: [{ name: "Clubul Alpin", url: "https://alpin.example.test" }],
+    coHosts: [partner("Clubul Alpin", "https://alpin.example.test")],
     registration: { kind: "OPEN", url: "https://example.test/ro/evenimente/crosul-aniversar/inscriere" },
   };
 
@@ -230,14 +237,26 @@ describe("the calendar file", () => {
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
   });
 
+  it("carries a paid event's amount and where it is paid, and a donation's host and suggested amount (§343)", () => {
+    const paid = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsRo);
+    expect(paid).toContain("Taxă: 50 lei · plata pe revolut.me");
+    const paidEn = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsEn);
+    expect(paidEn).toContain("Fee: 50 lei · payment on revolut.me");
+    const donation = calendarDescription(
+      { ...full, costType: "DONATION", costAmount: "50 lei", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" },
+      labelsRo,
+    );
+    expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
+  });
+
   it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
     const three = calendarDescription(
       {
         ...event,
         coHosts: [
-          { name: "Brașov Marathon", url: "https://example.test/bm" },
-          { name: "Clubul Alpin", url: "https://alpin.example.test" },
-          { name: "Salvamont", url: null },
+          partner("Brașov Marathon", "https://example.test/bm"),
+          partner("Clubul Alpin", "https://alpin.example.test"),
+          partner("Salvamont", null),
         ],
       },
       labelsRo,
@@ -254,12 +273,12 @@ describe("the calendar file", () => {
     expect(three.match(/Împreună cu/g)).toHaveLength(1);
     // The same group as paragraphs and links for Outlook, each partner its own anchor.
     const html = calendarDescriptionHtml(
-      { ...event, coHosts: [{ name: "Brașov Marathon", url: "https://example.test/bm" }, { name: "Salvamont", url: null }] },
+      { ...event, coHosts: [partner("Brașov Marathon", "https://example.test/bm"), partner("Salvamont", null)] },
       labelsRo,
     );
     expect(html).toContain('<p><a href="https://example.test/bm">Împreună cu Brașov Marathon</a><br>Salvamont</p>');
     // A single partner reads exactly as it did before the list existed.
-    expect(calendarDescription({ ...event, coHosts: [{ name: "Salvamont", url: null }] }, labelsRo).split("\n\n").at(-1)).toBe(
+    expect(calendarDescription({ ...event, coHosts: [partner("Salvamont", null)] }, labelsRo).split("\n\n").at(-1)).toBe(
       "Împreună cu Salvamont",
     );
     // No partners, no line and no label.
@@ -284,7 +303,7 @@ describe("the calendar file", () => {
     expect(at({ kind: "OPEN", url: register })).toContain(`\n\nÎnscrierile sunt deschise — ${register}\n\n`);
     // The opening date in the event's zone, the page's own sentence, and the door after it.
     expect(at({ kind: "NOT_YET_OPEN", opensAt: new Date("2026-10-01T15:00:00.000Z"), url: register })).toContain(
-      `\n\nÎnscrierile se deschid pe 1 octombrie 2026 la 18:00 — ${register}\n\n`,
+      `\n\nÎnscrierile se deschid pe joi, 1 oct. 2026, 18:00 — ${register}\n\n`,
     );
     expect(at({ kind: "CLOSED" })).toContain("\n\nÎnscrierile s-au închis\n\n");
     expect(at({ kind: "EXTERNAL", url: "https://organizer.example.test/entries" })).toContain("\n\nÎnscriere pe site-ul organizatorului — https://organizer.example.test/entries\n\n");
@@ -367,7 +386,7 @@ describe("the calendar file", () => {
     const full: CalendarEvent = {
       ...event,
       title: "Crosul <aniversar> & co, ediția a 3-a",
-      coHosts: [{ name: "A & B <sport>", url: "https://alpin.example.test/?a=1&b=2" }],
+      coHosts: [partner("A & B <sport>", "https://alpin.example.test/?a=1&b=2")],
       rulesJson: rules,
       registration: { kind: "OPEN", url: "https://example.test/ro/evenimente/crosul-aniversar/inscriere" },
     };
@@ -402,7 +421,7 @@ describe("the calendar file", () => {
 
   it("keeps Google's add-event link within a budget: the text cut at a word, the page's link last (§159)", () => {
     const programme = paragraphs(Array.from({ length: 30 }, (_, i) => `Ora ${i + 7}:00 — încălzire în Parcul Tractorul, apoi alergăm ușor până la Șchei și înapoi, cu opriri la fiecare țâșnitoare.`));
-    const long: CalendarEvent = { ...full, scheduleJson: programme, checklist: "număr de concurs, apă, jachetă", coHosts: [{ name: "Clubul Alpin", url: null }] };
+    const long: CalendarEvent = { ...full, scheduleJson: programme, checklist: "număr de concurs, apă, jachetă", coHosts: [partner("Clubul Alpin", null)] };
     // The file keeps the whole text.
     expect(calendarDescription(long, labelsRo)).toContain("Ora 36:00");
     expect(calendarDescription(long, labelsRo).length).toBeGreaterThan(3000);

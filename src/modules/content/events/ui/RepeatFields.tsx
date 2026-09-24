@@ -1,6 +1,7 @@
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { REPEAT_CADENCES } from "@/modules/events/domain/repeat";
+import { weekdayNames } from "@/modules/events/ui/series-sentence";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import RepeatRuleFields, { RepeatPublishField, type RuleSentenceWords } from "./RepeatRuleFields";
@@ -50,6 +51,7 @@ export default async function RepeatFields({
     forever: t.raw("editor.repeatRuleLiveForever") as string,
     until: t.raw("editor.repeatRuleLiveUntil") as string,
     horizon: t("editor.repeatRuleLiveHorizon"),
+    weekdayNames: weekdayNames(locale),
   };
 
   return (

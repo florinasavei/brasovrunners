@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { draftExplanation, seriesDrafts } from "@/modules/events/domain/series-drafts";
 
 /**
- * `DECISIONS.md` §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă · 1
+ * `DECISIONS.md` §341 — the owner, of a series row reading "Publicat · 8 date · Ciornă · 1
  * date": "ce înseamnă această 1 ciornă?". `seriesDrafts` names the dates a series is missing
  * from the site, soonest-first among the ones still ahead; `draftExplanation` says why, when
  * `materializeSeries` (`src/modules/content/events/service.ts`) can tell — the rule's own switch
  * is off, or its source is not published.
  */
-describe("§NNN seriesDrafts — the dates a series is missing from the site", () => {
+describe("§341 seriesDrafts — the dates a series is missing from the site", () => {
   const source = (repeatRule: unknown) => ({ editorialStatus: "PUBLISHED" as const, startsAt: new Date("2026-01-01T00:00:00Z"), repeatRule });
   const child = (startsAt: string, editorialStatus: "DRAFT" | "PUBLISHED" = "PUBLISHED") => ({
     editorialStatus,
@@ -33,7 +33,7 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
     ];
     const { drafts } = seriesDrafts(members, new Date("2026-01-05"));
     // Nothing left to publish about a date whose day already came and went — a past draft
-    // reads as an ask nobody can act on, so it is not named at all (§NNN).
+    // reads as an ask nobody can act on, so it is not named at all (§341).
     expect(drafts.map((d) => d.startsAt.toISOString().slice(0, 10))).toEqual([
       "2026-01-08", // ahead, soonest first
       "2026-01-15",
@@ -59,7 +59,7 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
   });
 
   it("names 'sourceNotPublished' — not 'autoPublishOff' — for a draft source whose rule also has publish:false", () => {
-    // The common case: a series started from the new-event form's "creează ca ciornă" (§NNN).
+    // The common case: a series started from the new-event form's "creează ca ciornă" (§341).
     // `repeatEvent` always stores `publish: false` on the rule when the source is not published,
     // whatever the tick said, so the flag cannot be trusted to mean "the tick is off" here — the
     // source being unpublished is the real, actionable reason, and the only one with a switch a
@@ -85,7 +85,7 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
   });
 });
 
-describe("§NNN draftExplanation — the hint behind the draft line's \"?\"", () => {
+describe("§341 draftExplanation — the hint behind the draft line's \"?\"", () => {
   const sentences = { always: "always.", autoPublishOff: "off.", sourceNotPublished: "source." };
 
   it("is only the general sentence when there is no reason to name", () => {

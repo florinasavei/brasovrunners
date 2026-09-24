@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  publicFill,
   registrationCta,
   type RegistrationCtaInput,
 } from "@/modules/events/domain/registration-cta";
@@ -138,12 +139,89 @@ describe("BR-REQ-034-01 an open event", () => {
 
 describe("BR-REQ-035-01 a full event", () => {
   it("offers the waiting list rather than refusing", () => {
-    expect(registrationCta(event({ availablePlaces: 0 }), DURING)).toEqual({ kind: "FULL" });
+    // No limit said — every event before §NNN, and every caller that does not pass one.
+    expect(registrationCta(event({ availablePlaces: 0 }), DURING)).toEqual({ kind: "FULL", waitlistRoom: null });
   });
 
   it("is never full when it is uncapped", () => {
     // `null` is "no capacity", which is not the same number as zero — and reading it as one is
     // how an unlimited event would start turning people away.
     expect(registrationCta(event({ availablePlaces: null }), DURING).kind).toBe("OPEN");
+  });
+});
+
+/**
+ * BR-REQ-035-01 (§NNN) — the waiting list's length: its room under the button while it has
+ * some, a sentence and no button once it is full, and an event with no line closed as full.
+ */
+describe("BR-REQ-035-01 a full event whose waiting list has a limit (§NNN)", () => {
+  it("offers the waiting list with the room it has left", () => {
+    expect(registrationCta(event({ availablePlaces: 0, waitlistCapacity: 10, waitlistRoom: 3 }), DURING)).toEqual({
+      kind: "FULL",
+      waitlistRoom: 3,
+    });
+  });
+
+  it("offers nothing to join once the line is full, and says so", () => {
+    expect(registrationCta(event({ availablePlaces: 0, waitlistCapacity: 10, waitlistRoom: 0 }), DURING)).toEqual({
+      kind: "WAITLIST_FULL",
+    });
+  });
+
+  it("closes an event with no waiting list as full, without mentioning a line", () => {
+    expect(registrationCta(event({ availablePlaces: 0, waitlistCapacity: 0, waitlistRoom: 0 }), DURING)).toEqual({
+      kind: "FULL_NO_WAITLIST",
+    });
+  });
+
+  it("ignores the line while places are free: a place is a place", () => {
+    expect(registrationCta(event({ availablePlaces: 2, waitlistCapacity: 0, waitlistRoom: 0 }), DURING)).toEqual({
+      kind: "OPEN",
+      availablePlaces: 2,
+    });
+  });
+
+  it("leaves a closed or cancelled window as it was, whatever the line says", () => {
+    const closed = event({ registrationClosesAt: new Date("2026-09-10T00:00:00Z"), availablePlaces: 0, waitlistRoom: 0, waitlistCapacity: 5 });
+    expect(registrationCta(closed, DURING).kind).toBe("CLOSED");
+    expect(registrationCta(event({ eventStatus: "CANCELLED", availablePlaces: 0, waitlistRoom: 0, waitlistCapacity: 0 }), DURING).kind).toBe("CANCELLED");
+  });
+});
+
+/**
+ * §346 — how full a capped event is, read from the exact two numbers the button already uses:
+ * never a second query, never a second formula.
+ */
+describe("§346 publicFill — capacity minus the allocator's own free-place count", () => {
+  it("is nought taken when nobody has registered yet", () => {
+    expect(publicFill(50, 50)).toEqual({ taken: 0, capacity: 50 });
+  });
+
+  it("reads some taken against the free places left", () => {
+    expect(publicFill(50, 38)).toEqual({ taken: 12, capacity: 50 });
+  });
+
+  it("is the whole capacity taken when the free-place count is nought — BR-REQ-035-01's FULL", () => {
+    expect(publicFill(50, 0)).toEqual({ taken: 50, capacity: 50 });
+  });
+
+  it("is null for an uncapped event, whatever the free-place count says", () => {
+    // `readPublicAvailability` itself returns null for capacity === null, so this case is what
+    // a real caller sees — but the clamp does not rely on that: it is null whichever side is.
+    expect(publicFill(null, null)).toBeNull();
+  });
+
+  it("is null when the free-place count could not be read, even for a capped event", () => {
+    // `RegistrationCta` leaves `availablePlaces` null on the one query it never serves stale
+    // (§281) — the fill line disappears with the rest of the number rather than print a taken
+    // count with no free-place count to have been derived from.
+    expect(publicFill(50, null)).toBeNull();
+  });
+
+  it("never reads over capacity — clamped at both ends against an impossible row", () => {
+    // The allocator's own formula cannot produce a negative free-place count or one above
+    // capacity, but the clamp holds anyway rather than trust that between two reads of the row.
+    expect(publicFill(50, 55)).toEqual({ taken: 0, capacity: 50 }); // more "free" than capacity
+    expect(publicFill(50, -5)).toEqual({ taken: 50, capacity: 50 }); // a negative free count
   });
 });

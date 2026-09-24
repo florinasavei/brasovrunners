@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { updateBotCheckAction } from "@/app/[locale]/admin/tasks/actions";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { BotCheckState } from "@/modules/registrations/bot-check";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
@@ -48,12 +49,7 @@ export default async function BotCheckPanel({
       {state.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
           {t("botCheck.updatedAt", {
-            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-              dateStyle: "medium",
-              timeStyle: "short",
-              hourCycle: "h23",
-              timeZone: "Europe/Bucharest",
-            }).format(state.updatedAt),
+            when: formatDay(state.updatedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
           })}
         </Typography>
       )}

@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -139,7 +140,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       hideBelow: "md",
       render: (row) => (
         <>
-          {format.dateTime(row.createdAt, { dateStyle: "medium" })}
+          {formatDay(row.createdAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short" })}
           {row.uploadedByName ? ` · ${row.uploadedByName}` : ""}
         </>
       ),

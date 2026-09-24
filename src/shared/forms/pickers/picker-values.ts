@@ -2,7 +2,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import { isDateValue, isTimeValue } from "./wall-values";
 
 /**
- * The posted wall-clock strings and the pickers' own values, both ways (`DECISIONS.md` §NNN).
+ * The posted wall-clock strings and the pickers' own values, both ways (`DECISIONS.md` §345).
  *
  * A picker holds a Day.js object, which is an instant in the *browser's* zone. Nothing here lets
  * that zone reach what is posted: a date goes in as the browser's noon of that day and comes out

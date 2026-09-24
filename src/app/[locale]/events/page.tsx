@@ -23,6 +23,8 @@ import { listingSections, presentEventTypes } from "@/modules/events/domain/list
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
+import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import CardLink from "@/shared/ui/CardLink";
 import ChipLink from "@/shared/ui/ChipLink";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
@@ -57,10 +59,23 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 
+/**
+ * The listing is one page per language, whatever the address adds (§342).
+ *
+ * `?type=` shows a subset of the same cards, each of which is an indexed page of its own, and
+ * `?view=` changes nothing here at all since the calendar moved to its own page (§251) — the
+ * filter links only carry it back there. Neither view has content of its own, so every one of
+ * them names the plain listing as canonical and only the plain listing is in the sitemap.
+ */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Events" });
-  return { title: t("title"), description: t("intro") };
+  return {
+    title: t("title"),
+    description: t("intro"),
+    alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/events")),
+  };
 }
 
 /** The locale, exactly as the repository spells it. */
@@ -126,7 +141,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
         this page is now the homepage — the site root redirects here. Incomplete by design:
         logo and sameAs are absent until the club supplies them. See structured-data.ts.
       */}
-      <JsonLd data={sportsOrganizationJsonLd(tSite("name"))} />
+      <JsonLd data={sportsOrganizationJsonLd(tSite("name"), staticRouteUrl(env.APP_BASE_URL, "/events", locale))} />
 
       {/* The kit-face wordmark — moved here out of the header (`BR-V1.32`), and since 2026-09-22
           also at the head of the calendar and the contact page (`DECISIONS.md` §292). `shared/ui/Wordmark` says where it may appear. */}

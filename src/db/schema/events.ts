@@ -73,14 +73,19 @@ export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL",
 export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
 
 /**
- * Whether the event costs money — and deliberately not how much.
+ * Whether the event costs money, and how — three answers, not two.
  *
- * A price is not an enum: it is an amount, a currency, and usually a deadline. This column
- * answers the only question every event page must answer today, which is whether a runner
- * needs their wallet. The amount becomes its own nullable column the day the club runs an
- * event that charges, and `PAID` is what will point at it.
+ * `FREE` and `PAID` were migration `0018`'s pair, and the amount was deliberately left for "the
+ * day the club runs an event that charges". That day arrived as a question rather than a race:
+ * the owner, 2026-09-24, on "Cu taxă" showing no box for the money — "usually nothing is paid;
+ * the exception is Wings for Life, where a donation is made on another site". `DONATION` is that
+ * third answer: no fee the platform or the club takes, a link to somewhere else where a runner
+ * gives what they choose. `cost_amount` (free text — a price is rarely just a number: "50 lei",
+ * "20 € la ridicarea kitului") and `cost_url` (https, below) are what `PAID` and `DONATION` point
+ * at — the amount required on a paid event, the link required on a donation, each optional the
+ * other way round, and both null on `FREE` and on an event that has not said.
  */
-export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID"]);
+export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID", "DONATION"]);
 
 /**
  * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
@@ -343,6 +348,20 @@ export const events = pgTable(
      */
     difficulty: eventDifficulty("difficulty"),
     costType: eventCostType("cost_type"),
+    /**
+     * What a paid event costs, or what a donation suggests — free text (§343), because a price
+     * is rarely just a number: "50 lei", "20 € la ridicarea kitului", "sugerat 50 lei". Required
+     * by `content/events/fields.ts` when `cost_type` is `PAID`, optional on `DONATION`, kept
+     * whatever it holds while a different kind is chosen — like the meeting point while the
+     * place is to be announced (§328) — so switching back does not lose what was typed.
+     */
+    costAmount: text("cost_amount"),
+    /**
+     * Where a paid event is settled, or where a donation is made — https, checked here as
+     * `map_url` is. Optional on `PAID` ("Unde se plătește"); required by `fields.ts` on
+     * `DONATION`, where it is the whole point of the fact. Null on `FREE` and on an unstated cost.
+     */
+    costUrl: text("cost_url"),
 
     /**
      * The one event the landing page leads with, or none.
@@ -414,6 +433,18 @@ export const events = pgTable(
     bibsSettledAt: timestamp("bibs_settled_at", { withTimezone: true }),
 
     capacity: integer("capacity"),
+    /**
+     * How long the waiting list may grow (§NNN; the owner: "for the waiting list, I also need
+     * to set a queue length"). Null is no limit — every event before this column, unchanged;
+     * zero is no waiting list at all: once the places are gone, registration is refused.
+     *
+     * The queue it bounds is `WAITLISTED` plus every waiting-list offer still open — the line the
+     * queue panel shows (§92). Counted by the allocator under the event lock
+     * (`registrations/service.ts#allocateOrWaitlist`), so two people can never take its last
+     * slot. Lowering it removes nobody already waiting; it only refuses the next. Meaningless
+     * without a `capacity`: an uncapped event never waitlists anybody.
+     */
+    waitlistCapacity: integer("waitlist_capacity"),
     /**
      * The participation window (`DECISIONS.md` §104): for an event further away than
      * `confirmation_opens_days_before`, a registration that clears email verification keeps its
@@ -522,6 +553,7 @@ export const events = pgTable(
     check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
 
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    check("events_cost_url_is_https", sql`${t.costUrl} IS NULL OR ${t.costUrl} LIKE 'https://%'`),
     check(
       "events_route_url_is_https",
       sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
@@ -575,6 +607,12 @@ export const events = pgTable(
      * which is what `registration_mode = NONE` already says honestly.
      */
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    /**
+     * A waiting list's length is a count of people (§NNN): zero — no waiting list — or more.
+     * Null is no limit. The form says the same bound; this is for the seed and the script.
+     */
+    check("events_waitlist_capacity_non_negative", sql`${t.waitlistCapacity} IS NULL OR ${t.waitlistCapacity} >= 0`),
 
     /**
      * A minimum age a person can have (§329): zero (no minimum) to ninety-nine. The form says

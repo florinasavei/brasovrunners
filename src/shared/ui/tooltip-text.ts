@@ -1,5 +1,5 @@
 /**
- * How a tooltip that explains something is set (`DECISIONS.md` §257, §NNN): the one style
+ * How a tooltip that explains something is set (`DECISIONS.md` §257, §341): the one style
  * `Hint` and `InfoTip` both hand to MUI's tooltip slot, and how long it stays up after a tap.
  *
  * The owner, of the registrations list's journey hint arriving as one paragraph of dashes:

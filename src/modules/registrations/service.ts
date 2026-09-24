@@ -32,6 +32,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
+import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
@@ -116,14 +117,26 @@ const EVENT_TIMEZONE_DEFAULT = "Europe/Bucharest";
  */
 function withLockedRow(
   event: EventForRegistration,
-  locked: { capacity: number | null; startsAt: Date; eventStatus: EventForRegistration["eventStatus"] },
-): EventForRegistration {
-  return event.capacity === locked.capacity &&
-    event.startsAt.getTime() === locked.startsAt.getTime() &&
-    event.eventStatus === locked.eventStatus
-    ? event
-    : { ...event, capacity: locked.capacity, startsAt: locked.startsAt, eventStatus: locked.eventStatus };
+  locked: {
+    capacity: number | null;
+    startsAt: Date;
+    eventStatus: EventForRegistration["eventStatus"];
+    waitlistCapacity: number | null;
+  },
+): LockedEventForRegistration {
+  /*
+    The waiting list's length (§NNN) is only ever read here, off the locked row, and never off
+    the caller's: no caller passes it, so none can pass a stale one, and the type below is what
+    makes `allocateOrWaitlist` refuse an event that did not come through this function.
+  */
+  return { ...event, capacity: locked.capacity, startsAt: locked.startsAt, eventStatus: locked.eventStatus, waitlistCapacity: locked.waitlistCapacity };
 }
+
+/** The event as `withLockedRow` hands it over: the caller's row, the lock's numbers. */
+type LockedEventForRegistration = EventForRegistration & {
+  /** `events.waitlist_capacity` as it stands under the lock (§NNN): null no limit, 0 no waiting list. */
+  waitlistCapacity: number | null;
+};
 
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
   if (event.registrationMode !== "INTERNAL") {
@@ -262,19 +275,51 @@ async function deliveryEmailOf<T extends Record<string, unknown>>(
  * with a hold, `WAITLISTED`, or — when this registration is the first to wait behind a lapsed
  * hold that was being kept for want of a queue (§160) — `WAITLIST_OFFERED`, the offer email
  * already queued by `fillAvailableSpots`.
+ *
+ * **Refuses with `waitlistFullError`** when there is no place and the event's waiting list is
+ * at its limit (§NNN) — nothing is written by the refusal, and the throw takes the caller's
+ * whole transaction back with it, the token spend included, as `declarationChanged` does. The
+ * count is the one taken just above for the place, under the same lock, so two registrations
+ * racing for the last slot in the line are serialised like two racing for the last place, and
+ * exactly one of them gets it (`tests/concurrency/capacity.test.ts`). Every door into the queue
+ * comes through here — confirmation, restart, the desk, a late signature — so none needs its
+ * own check.
  */
 async function allocateOrWaitlist<T extends Record<string, unknown>>(
   db: Transaction<T>,
-  event: EventForRegistration,
+  event: LockedEventForRegistration,
   registrationId: string,
   now: Date,
 ): Promise<Registration> {
   await repo.expireStaleHolds(db, event, now);
   await fillAvailableSpots(db, event, now);
 
-  const occupied = computeOccupied(await repo.countOccupied(db, event.id, now));
+  const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
-  const direct = hasDirectAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted });
+  let direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted });
+
+  // No place: this registration would join the line, and the line may be full (§NNN).
+  if (
+    !direct &&
+    !waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds })
+  ) {
+    /*
+      The line cannot take this registration, so this registration is itself somebody wanting a
+      place who is not in the line (§160): one lapsed declaration hold goes for it, the oldest
+      deadline first, under the same lock, and the place is its own — there is nobody `WAITLISTED`
+      left to offer it to, or the expiry above would already have released that hold for them.
+      Without it, on an event with no waiting list nobody could ever want a kept place, and a
+      runner who never signed would hold it until the race while every newcomer was refused.
+      With no lapsed hold there is nothing to release and the refusal stands; a refusal after a
+      release takes the release back with it, like everything else in the transaction.
+    */
+    if (counts.lapsedDeclarationHolds > 0) {
+      await repo.expireStaleHolds(db, event, now, { wanting: 1 });
+      const after = await repo.countOccupied(db, event.id, now);
+      direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
+    }
+    if (!direct) throw waitlistFullError(event.waitlistCapacity);
+  }
 
   const updated = direct
     ? await repo.transitionRegistration(db, {
@@ -445,11 +490,85 @@ export async function readPublicAvailability<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null },
   now: Date,
 ): Promise<number | null> {
-  if (event.capacity === null) return null;
+  return (await readPublicPlaces(db, { ...event, waitlistCapacity: null }, now)).availablePlaces;
+}
 
-  const occupied = computeOccupied(await repo.countOccupied(db, event.id, now));
+/** What the event page says about places (§NNN): the free ones, and the room left in the line. */
+export type PublicPlaces = {
+  /** `readPublicAvailability`'s number: null for an uncapped event. */
+  availablePlaces: number | null;
+  /**
+   * How many more the waiting list takes (`domain/waitlist.ts#waitlistRoom`), or null when it has
+   * no limit — and always null for an uncapped event, which never waitlists anybody.
+   */
+  waitlistRoom: number | null;
+};
+
+/**
+ * `readPublicAvailability` and the waiting list's room, from the same two counts (§NNN).
+ *
+ * The same read, with the same guarantees and the same absence of a lock: nothing is decided
+ * here. A "Mai sunt 3 locuri pe lista de așteptare" can be one slot stale the instant it renders;
+ * the allocator counts again, under the lock, when somebody actually joins.
+ *
+ * When the line has no room, a declaration hold past its deadline is counted as the free place
+ * it is for the next newcomer (`occupiedForNewcomer`, §160): the allocator releases one for them
+ * rather than refusing, so the page offers the button rather than "full". Where the line has
+ * room — and always without a limit — the count is exactly `readPublicAvailability`'s.
+ */
+export async function readPublicPlaces<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: { id: string; capacity: number | null; waitlistCapacity: number | null },
+  now: Date,
+): Promise<PublicPlaces> {
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null };
+
+  const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
-  return computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted });
+  const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  return {
+    availablePlaces: computePublicAvailability({
+      capacity: event.capacity,
+      occupied: occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds }),
+      eligibleWaitlisted,
+    }),
+    waitlistRoom: waitlistRoom(line),
+  };
+}
+
+/**
+ * The door's own answer when the places and the waiting list are both full (§NNN), before a
+ * registration is written at all.
+ *
+ * Not the decision: a submission takes no place and no slot in the line — the address is still
+ * to be confirmed — and the allocator counts again under the lock when it is
+ * (`allocateOrWaitlist`). This is what spares a person a verification email for a registration
+ * that would be refused the moment they clicked it, and it is the sentence the form answers with
+ * while the event page already says the same thing and offers no button.
+ *
+ * Asked of the event row as it stands, read here, not of the caller's copy — no caller has to
+ * remember to pass the limit. And asked **before anything is known about who is submitting**:
+ * the answer depends on the event alone, so it cannot say whether an address is registered
+ * already (the oracle `AGENTS.md` §19.4 refuses). Two cheap reads when the event has a limit;
+ * one, and nothing counted, when it has none.
+ *
+ * A lapsed declaration hold is a place here when the line is full (`occupiedForNewcomer`, §160),
+ * because the allocator gives it to the newcomer rather than refusing them.
+ */
+async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<void> {
+  const row = await repo.findEventForAllocation(db, eventId);
+  if (!row || row.capacity === null || row.waitlistCapacity === null) return;
+  const counts = await repo.countOccupied(db, eventId, now);
+  const waitlisted = await repo.countEligibleWaitlisted(db, eventId);
+  const line = { waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  if (waitlistHasRoom(line)) return;
+  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
+  if (hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
+  throw waitlistFullError(row.waitlistCapacity);
 }
 
 // --- Spam defenses (AGENTS.md §19.4, WEEKEND.md) ---------------------------------------------
@@ -827,6 +946,15 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       );
     }
   }
+
+  /*
+    The places and the waiting list both full (§NNN): refused here, at every door alike — the
+    public form, a staff entry and the desk's walk-in behind it, a restart, a TEST batch — and
+    before the throttle is spent or anything is written. Before the participant is looked up
+    too, so the answer is the same for an address that is registered already and one that is not
+    (§19.4). The allocator asks again under the lock; this only spares the email.
+  */
+  await assertWaitlistCanTakeOneMore(db, event.id, now);
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!privacyNotice) {

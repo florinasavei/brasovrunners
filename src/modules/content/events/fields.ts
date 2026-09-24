@@ -5,7 +5,18 @@ import { isYoutubeLink } from "@/modules/events/domain/video";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { MAX_CO_HOSTS, isCoHostUrl } from "@/modules/events/domain/co-hosts";
+import {
+  type CoHost,
+  DEFAULT_CO_HOST_LINK_KIND,
+  isCoHostLinkKind,
+  isCoHostUrl,
+  MAX_CO_HOST_LINK_LABEL,
+  MAX_CO_HOST_LINK_URL,
+  MAX_CO_HOST_LINKS,
+  MAX_CO_HOSTS,
+  normalizeCoHostUrl,
+} from "@/modules/events/domain/co-hosts";
+import { EVENT_COST_TYPES, type EventCostType, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -253,6 +264,134 @@ function placeRule(fields: { locationName: string | null; locationToBeAnnounced:
 }
 
 /**
+ * What each cost kind needs, and only that (`DECISIONS.md` §343): a paid event has to say how
+ * much, a donation has to say where. Named on the box the kind actually requires, so the
+ * refusal summary links the right one (§315) — the same shape as `placeRule` above. Absent
+ * (`undefined`) means this caller is not editing the cost fields at all, the discipline `links`
+ * and `bibDesign` follow, and is never a reason to refuse: only a caller that *is* editing them
+ * and left the required one blank is refused.
+ */
+function costRule(
+  fields: { costType: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
+  ctx: z.RefinementCtx,
+): void {
+  if (fields.costType === "PAID" && fields.costAmount !== undefined && !fields.costAmount) {
+    ctx.addIssue({ code: "custom", path: ["costAmount"], message: "a paid event must say how much" });
+  }
+  if (fields.costType === "DONATION" && fields.costUrl !== undefined && !fields.costUrl) {
+    ctx.addIssue({ code: "custom", path: ["costUrl"], message: "a donation needs the link where it is made, starting with https://" });
+  }
+}
+
+/**
+ * One partner's link row as the editor posts it (§344): a kind from the select, the address,
+ * and a label in each language — the same four boxes `eventLinkRowSchema` carries for
+ * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
+ * Exported so the editor reads the boxes' ceilings and the address's https pattern off it
+ * (§315) rather than typing them a second time.
+ */
+export const coHostLinkRowSchema = z
+  .object({
+    kind: z.string().trim().max(20).optional().default(DEFAULT_CO_HOST_LINK_KIND),
+    url: z.string().trim().max(MAX_CO_HOST_LINK_URL).optional().default("").meta(HTTPS_BOX),
+    labelRo: z.string().trim().max(MAX_CO_HOST_LINK_LABEL).optional().default(""),
+    labelEn: z.string().trim().max(MAX_CO_HOST_LINK_LABEL).optional().default(""),
+  })
+  .strict();
+
+type CoHostLinkRowInput = z.infer<typeof coHostLinkRowSchema>;
+
+/** The editor's spare link line: nothing typed. The kind alone is not an answer. */
+const isBlankCoHostLinkRow = (row: CoHostLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
+
+/**
+ * One partner's card as the editor posts it (§344): a name, and its links. A row with nothing
+ * typed in either — the editor's spare card — is dropped, like a spare link row is; a name with
+ * no links is kept, since a partner's page is optional (§168) and always has been.
+ */
+const coHostRowSchema = z
+  .object({
+    name: z.string().trim().max(200).optional().default(""),
+    links: z.array(coHostLinkRowSchema).max(MAX_CO_HOST_LINKS + 4).optional().default([]),
+  })
+  .strict();
+
+type CoHostRowInput = z.infer<typeof coHostRowSchema>;
+
+const isBlankCoHostRow = (row: CoHostRowInput) => row.name === "" && row.links.every(isBlankCoHostLinkRow);
+
+/**
+ * The partners, as the editor posts them (§168, extended by §344 into a card of links each).
+ *
+ * Every refusal names the partner **and** the link, both as the editor numbered them — the
+ * posted index, before the spare lines are dropped — so "Partenerul 2, linkul 3" is the second
+ * card and its third link row on the screen, and the summary's link lands on that exact box
+ * (`form-names.ts`). A card with a link and no name is refused rather than dropped: somebody
+ * meant a partner there. A link with a label and no address is refused the same way a plain
+ * event link is (§332); a kind outside the set did not come from the select and is refused,
+ * never quietly turned into "other".
+ *
+ * Absent means "this caller is not editing the partners" and **not** "no partners" (§169): a
+ * caller from before the list existed (a script, a fixture, a test's form) posts nothing, and a
+ * column nobody mentioned is a column nobody may erase. The editor always posts the cards, so
+ * an empty list from it is the club having removed every partner and is written as `[]`.
+ */
+const coHostsField = z
+  .array(coHostRowSchema)
+  .max(50)
+  .superRefine((rows, ctx) => {
+    let filledPartners = 0;
+    rows.forEach((row, index) => {
+      if (isBlankCoHostRow(row)) return;
+      filledPartners += 1;
+      const p = index + 1;
+      if (row.name === "") {
+        ctx.addIssue({ code: "custom", path: [index, "name"], message: `partner ${p}: a partner needs a name` });
+      }
+      let filledLinks = 0;
+      row.links.forEach((link, linkIndex) => {
+        if (isBlankCoHostLinkRow(link)) return;
+        filledLinks += 1;
+        const l = linkIndex + 1;
+        if (!isCoHostLinkKind(link.kind)) {
+          ctx.addIssue({ code: "custom", path: [index, "links", linkIndex, "kind"], message: `partner ${p}, link ${l}: the kind must be one of the list` });
+        }
+        if (link.url === "") {
+          ctx.addIssue({
+            code: "custom",
+            path: [index, "links", linkIndex, "url"],
+            message: `partner ${p}, link ${l}: a link needs its address, starting with https://`,
+          });
+        } else if (!isCoHostUrl(link.url)) {
+          ctx.addIssue({ code: "custom", path: [index, "links", linkIndex, "url"], message: `partner ${p}, link ${l}: the address must start with https://` });
+        }
+      });
+      if (filledLinks > MAX_CO_HOST_LINKS) {
+        ctx.addIssue({ code: "custom", path: [index, "links"], message: `partner ${p}: at most ${MAX_CO_HOST_LINKS} links can be listed on one partner` });
+      }
+    });
+    if (filledPartners > MAX_CO_HOSTS) {
+      ctx.addIssue({ code: "custom", message: `at most ${MAX_CO_HOSTS} partners can be named on one event` });
+    }
+  })
+  .transform((rows): CoHost[] =>
+    rows
+      .filter((row) => !isBlankCoHostRow(row))
+      .map((row) => ({
+        name: row.name,
+        links: row.links
+          .filter((link) => !isBlankCoHostLinkRow(link))
+          .map((link) => ({
+            kind: isCoHostLinkKind(link.kind) ? link.kind : DEFAULT_CO_HOST_LINK_KIND,
+            url: normalizeCoHostUrl(link.url),
+            labelRo: link.labelRo === "" ? null : link.labelRo,
+            labelEn: link.labelEn === "" ? null : link.labelEn,
+          })),
+      })),
+  )
+  .optional();
+
+/**
  * One link row as the editor posts it (`DECISIONS.md` §332): a kind from the select, the
  * address, and a label in each language. Every box a string, empty allowed here; the list
  * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
@@ -387,7 +526,21 @@ export const eventFieldsSchema = z
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
-    costType: optionalEnum(["FREE", "PAID"]),
+    costType: optionalEnum(EVENT_COST_TYPES),
+    /**
+     * What a paid event costs, or what a donation suggests (§343): free text, at most 60
+     * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input
+     * — absent means this caller is not editing the cost fields, the discipline `links` and
+     * `bibDesign` follow — but the editor always posts it, so a blank box while `PAID` is chosen
+     * is refused there, not silently accepted.
+     */
+    costAmount: optionalText(MAX_EVENT_COST_AMOUNT).optional(),
+    /**
+     * Where a paid event is settled, or where a donation is made (§343): https, like every other
+     * pasted link. Required by `costRule` below when `costType` is `DONATION`; optional on
+     * `PAID`. Same absent-means-not-editing discipline as `costAmount`.
+     */
+    costUrl: httpsUrl("a cost link must start with https://").optional(),
     mapUrl: httpsUrl("a map link must start with https://"),
     // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
     // and never a file: media storage is deferred (`AGENTS.md` §17).
@@ -416,42 +569,9 @@ export const eventFieldsSchema = z
         message: "a Facebook event link must be an https page on facebook.com",
       })
       .meta(HTTPS_BOX),
-    /**
-     * The organizations the event is held with (§168), as the editor posts them: a name and a
-     * page per row, in the club's own order. A row left blank in both boxes is the editor's
-     * spare line and is dropped; a row with a page and no name is refused with its number,
-     * so the organizer is told which line rather than that one is wrong.
-     *
-     * Absent means "this caller is not editing the partners" and **not** "no partners"
-     * (§169). The editor always posts the boxes, so an empty list from it is the club having
-     * removed every partner and is written as `[]` — which is what `readCoHosts` needs in
-     * order not to fall back to the two columns §121 wrote. A caller from before the list
-     * existed (a script, a fixture, a test's form) posts nothing, and a column nobody
-     * mentioned is a column nobody may erase: the save leaves it exactly as it was, so a
-     * legacy row's partner survives an update that never spoke about it.
-     */
-    coHosts: z
-      .array(
-        z.object({
-          name: z.string().trim().max(200).optional().default(""),
-          url: z.string().trim().max(2000).optional().default(""),
-        }),
-      )
-      .max(50)
-      .transform((rows) => rows.filter((row) => row.name !== "" || row.url !== ""))
-      .superRefine((rows, ctx) => {
-        if (rows.length > MAX_CO_HOSTS) {
-          ctx.addIssue({ code: "custom", message: `at most ${MAX_CO_HOSTS} partners can be named on one event` });
-        }
-        rows.forEach((row, index) => {
-          if (!row.name) ctx.addIssue({ code: "custom", message: `co-host ${index + 1}: a partner needs a name` });
-          if (row.url && !isCoHostUrl(row.url)) {
-            ctx.addIssue({ code: "custom", message: `co-host ${index + 1}: the partner's page must start with https://` });
-          }
-        });
-      })
-      .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
-      .optional(),
+    // The organizations the event is held with, each a card of its own links (§168, §344) —
+    // what `coHostsField` above decides, name and all.
+    coHosts: coHostsField,
     /**
      * "Linkuri și fișiere" (§332): the GPX on Google Drive, a PDF, the album, the results — at
      * most twelve, each https, each label optional. Not part of what publication requires (§28):
@@ -491,6 +611,13 @@ export const eventFieldsSchema = z
     // a declaration only on an INTERNAL event, the external fields only on an EXTERNAL one.
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
+    /**
+     * How long the waiting list may grow (§NNN): empty is no limit, zero is no waiting list at
+     * all, and the bounds are the database's CHECK said again so the box carries `min` (§315).
+     * Optional, and absent means "this caller is not editing it" — the service writes nothing
+     * then, so a save from anything that does not post the box keeps the limit the organizer set.
+     */
+    waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
     /**
      * The race's own band (§173): where its numbers start, and the colour the sheet prints
      * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
@@ -543,7 +670,8 @@ export const eventFieldsSchema = z
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
   .strict()
-  .superRefine(placeRule);
+  .superRefine(placeRule)
+  .superRefine(costRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

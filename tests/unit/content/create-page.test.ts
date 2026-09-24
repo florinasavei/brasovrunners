@@ -142,6 +142,11 @@ describe("the time is picked, always on the 24-hour clock", () => {
   const WALL_VALUES = read("src/shared/forms/pickers/wall-values.ts");
 
   it("makes every time box MUI's picker, never a native input the browser's own locale could show as AM/PM", () => {
+    // §303's native `<input type="time">` still showed the OS's own clock face — "07:00 PM" on
+    // an English-language Chrome — which is the defect the picker replaced it for
+    // (`DECISIONS.md` §345, the owner: "vreau ca timpul să fie mereu în format de 24H"). The
+    // file's own doc comment still names the old markup as history, so the check is for what is
+    // actually rendered rather than for the substring's total absence from the file.
     const rendered = WALL_TIME.slice(WALL_TIME.indexOf("export default function WallTimeField"));
     expect(rendered).not.toContain('type="time"');
     expect(rendered).not.toContain('type="date"');
