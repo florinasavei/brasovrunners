@@ -2449,7 +2449,9 @@
     "privacyLinkName": "Nota de confidențialitate (GDPR)",
     "termsLinkLabel": "Termeni de concurs",
     "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",
-    "inForce": "Versiunea {version}, în vigoare din {date}"
+    "inForce": "Versiunea {version}, în vigoare din {date}",
+    "termsTitle": "Termeni și condiții",
+    "privacyTitle": "Notă de confidențialitate"
   },
   "Registration": {
     "title": "Înscriere: {event}",

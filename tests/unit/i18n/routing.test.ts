@@ -15,6 +15,14 @@ describe("BR-REQ-040-01 locale routing", () => {
   it("always prefixes the locale, so an unprefixed path never silently means Romanian", () => {
     expect(routing.localePrefix).toBe("always");
   });
+
+  // BR-REQ-070-02 criterion 1 (§NNN): next-intl's own `Link` response header would advertise
+  // the unprefixed path as `x-default` (a 307 to `/ro/…`) and swap this locale's slug onto the
+  // other language (a 404 there). The pages declare their own alternates instead, from the
+  // database (`modules/seo/alternates.ts`), so this stays off.
+  it("declares no alternate-links header of its own — the pages build hreflang from the database", () => {
+    expect(routing.alternateLinks).toBe(false);
+  });
 });
 
 describe("BR-REQ-040-02 unknown locales do not fall back", () => {

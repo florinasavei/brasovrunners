@@ -45,6 +45,7 @@ import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
+import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
 
@@ -89,19 +90,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: event.seoTitle ?? event.title,
     description: event.seoDescription ?? event.excerpt ?? undefined,
-    alternates: {
-      canonical: eventUrl(locale, slug),
-      // BR-REQ-040-01 criterion 5: each alternate points at *that locale's own slug*, looked
-      // up from the database. Never build one by swapping the prefix on this slug — the
-      // slugs differ per locale, so a concatenated URL is a 404.
-      // Only published locales appear; advertising a draft one is worse than advertising none.
-      languages: Object.fromEntries(
-        (await cachedPublishedTranslations(event.id)).map((t) => [
-          t.locale,
-          eventUrl(t.locale, t.slug),
-        ]),
-      ),
-    },
+    /*
+      Its own canonical, never another date's: a date of a series is its own page, with its own
+      places, holds and start list, and it is what the series card's date chips link to (§113,
+      §NNN canonical and hreflang). The canonical carries no query — `?lista=`, `?interest=` and
+      `?since=` are the same page. BR-REQ-040-01 criterion 5: each alternate points at *that
+      locale's own slug*, looked up from the database through the public cache (§333) — never
+      this slug under another prefix, which is a 404 — and only a published locale appears
+      (BR-REQ-040-02); `x-default` is the Romanian one.
+    */
+    alternates: pageAlternates(
+      locale,
+      slugRouteUrls(env.APP_BASE_URL, "/events/[slug]", await cachedPublishedTranslations(event.id)),
+    ),
     openGraph: {
       title: event.seoTitle ?? event.title,
       description: event.seoDescription ?? event.excerpt ?? undefined,

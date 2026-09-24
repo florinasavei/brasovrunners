@@ -7,8 +7,10 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
+import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
+import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -19,9 +21,22 @@ type Props = { params: Promise<{ locale: string }> };
 // dates — so a version approved ahead of time takes over on its day with nobody saving anything.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  robots: { index: true, follow: true },
-};
+/**
+ * Its own title, and indexed only while a notice is in force in this language — with a
+ * canonical and hreflang to the languages that have one (§NNN). See `public-page.ts`.
+ */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "Legal" });
+  return legalPageMetadata({
+    baseUrl: env.APP_BASE_URL,
+    key: "PRIVACY_NOTICE",
+    locale,
+    inForce: await readLegalDocumentsInForce("PRIVACY_NOTICE", new Date()),
+    fallbackTitle: t("privacyTitle"),
+  });
+}
 
 /**
  * The privacy notice (AGENTS.md §9.2, §12.5; BR-REQ-053-01 criterion 5).
@@ -70,7 +85,14 @@ export default async function PrivacyNoticePage({ params }: Props) {
           <LegalDocumentBody body={document.body} />
         </>
       ) : (
-        <Alert severity="info">{t("unavailable")}</Alert>
+        <>
+          {/* The document's name even when there is no text yet (§NNN): the two legal pages
+              were one page twice without it. */}
+          <Typography variant="h1" gutterBottom>
+            {t("privacyTitle")}
+          </Typography>
+          <Alert severity="info">{t("unavailable")}</Alert>
+        </>
       )}
     </Container>
   );

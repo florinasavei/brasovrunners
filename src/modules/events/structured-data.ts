@@ -29,8 +29,13 @@ export function clubId(): string {
  * Still missing for the criterion: `logo`, which needs an absolute URL to a raster the club has
  * approved for the purpose. The SVG in `public/brand/` is not one — search engines want a
  * bitmap of a stated size — and producing one is the club's call, not this file's.
+ *
+ * `url` is the listing in the reader's language — the club's front page — and never the bare
+ * `APP_BASE_URL`: the root redirects twice (to `/ro`, then to the listing), and a structured
+ * data `url` that redirects is one more address a crawler reports as "page with redirect"
+ * (§NNN). The `@id` above stays the base: it is an identifier, not an address anybody fetches.
  */
-export function sportsOrganizationJsonLd(name: string) {
+export function sportsOrganizationJsonLd(name: string, url: string) {
   const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL].filter(
     (url): url is string => Boolean(url),
   );
@@ -40,7 +45,7 @@ export function sportsOrganizationJsonLd(name: string) {
     "@type": "SportsOrganization",
     "@id": clubId(),
     name,
-    url: env.APP_BASE_URL,
+    url,
     sport: "Running",
     areaServed: { "@type": "City", name: "Brașov" },
     ...(sameAs.length > 0 ? { sameAs } : {}),
