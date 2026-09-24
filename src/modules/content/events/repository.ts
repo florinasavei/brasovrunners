@@ -197,6 +197,8 @@ export async function listSeriesDates<T extends Record<string, unknown>>(db: Dat
       startsAt: events.startsAt,
       timezone: events.timezone,
       locationName: events.locationName,
+      // The pin beside the name: two dates with the same map link are at the same place (§367).
+      mapUrl: events.mapUrl,
       eventStatus: events.eventStatus,
       editorialStatus: events.editorialStatus,
       // A special edition is one of the four marks a date of a series can wear (§169).
