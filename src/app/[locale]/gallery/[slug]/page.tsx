@@ -10,7 +10,9 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { findPublishedAlbumBySlug } from "@/modules/content/gallery/repository";
+import { findPublishedAlbumBySlug, findPublishedAlbumTranslations } from "@/modules/content/gallery/repository";
+import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import ContactLink from "@/shared/ui/ContactLink";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { riseIn } from "@/theme/motion";
@@ -28,6 +30,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: album.title,
     description: album.description ?? undefined,
     robots: { index: true, follow: true },
+    /*
+      Its own canonical, never the other locale's slug (BR-REQ-040-01 criterion 5) — an album
+      is per-locale content the same way an event is, and a locale with no translation is a
+      404 there (BR-REQ-040-02), so it advertises no alternate.
+    */
+    alternates: pageAlternates(
+      locale,
+      slugRouteUrls(env.APP_BASE_URL, "/gallery/[slug]", await findPublishedAlbumTranslations(getDb(), album.id)),
+    ),
     ...(album.coverThumbUrl ? { openGraph: { images: [album.coverThumbUrl] } } : {}),
   };
 }

@@ -9,8 +9,10 @@ import { getDb } from "@/db/client";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
-import { findPublishedPageBySlug } from "@/modules/content/pages/repository";
+import { findPublishedPageBySlug, findPublishedPageTranslations } from "@/modules/content/pages/repository";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import { PAGE_WIDTH, PROSE_MEASURE } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
@@ -29,6 +31,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: page.seoTitle ?? page.title,
     description: page.seoDescription ?? undefined,
     robots: { index: true, follow: true },
+    /*
+      Its own canonical, never the other locale's slug (BR-REQ-040-01 criterion 5): a standing
+      page is per-locale content like an event, and a locale with no translation is a 404 there
+      (BR-REQ-040-02), so it advertises no alternate.
+    */
+    alternates: pageAlternates(
+      locale,
+      slugRouteUrls(env.APP_BASE_URL, "/pages/[slug]", await findPublishedPageTranslations(getDb(), page.id)),
+    ),
     // Shared as an article, with the site's card (`[locale]/opengraph-image.tsx`, §90).
     openGraph: { title: page.seoTitle ?? page.title, description: page.seoDescription ?? undefined, type: "article" },
   };
