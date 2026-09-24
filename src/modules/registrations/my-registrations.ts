@@ -79,7 +79,7 @@ export type MyRegistration = {
   bibNumber: number | null;
   /** The number held before the settle (§214); what the runner is shown until then. */
   provisionalBibNumber: number | null;
-  /** "I am here" is offered from the day before the start, confirmed registrations only — never at a cancelled event. */
+  /** "I am here" is offered from the club's check-in lead before the start ("Termene", §NNN), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
    * The event was cancelled (§331). The registration keeps its own status — it is the record of
@@ -247,7 +247,7 @@ export async function checkInSelfFromMyRegistrations<T extends Record<string, un
   const item = context.items.find((row) => row.id === registrationId);
   if (!item) throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
   if (!item.selfCheckinOpen) {
-    throw new DomainError("VALIDATION_ERROR", "self check-in opens the day before the event");
+    throw new DomainError("VALIDATION_ERROR", "self check-in is not open yet: it opens the club's check-in lead before the start");
   }
   const registration = await checkIn(db, item.id, null, now);
   return { ok: true as const, registration };

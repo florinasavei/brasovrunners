@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §343 — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
@@ -27,7 +27,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -36,6 +36,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-05-08");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Alergare cu donație ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await excerpt("ro", "Alergare fără taxă, cu o donație opțională pentru Wings for Life.");
@@ -78,12 +79,16 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     const editorUrl = page.url();
 
     await page.goto(`/ro/evenimente/${slug}`);
-    const cost = page.locator("dd").filter({ hasText: "Donație" });
+    // The cost is its own row since §356: a «Donație» pill under «Cost», then where to give.
+    const cost = page.locator("dt", { hasText: /^Cost$/ }).locator("xpath=following-sibling::dd[1]");
     await expect(cost).toBeVisible();
-    const link = cost.getByRole("link", { name: /Donație: pe donate\.example\.test/ });
+    await expect(cost.locator(".MuiChip-root")).toHaveText("Donație");
+    const link = cost.getByRole("link", { name: /Donează pe donate\.example\.test/ });
     await expect(link).toHaveAttribute("href", DONATION_LINK);
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", /noopener/);
+    // A thumb's 44 pixels, on the phone and the desktop alike (BR-REQ-041-01 criterion 6).
+    expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(cost).toContainText("sugerat 50 lei");
     // The platform takes no money itself — the club's own words say so on the editor, and the
     // page never claims a price it cannot honour: no raw currency amount is invented for JSON-LD.
@@ -94,7 +99,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
 
     // The English page says it in English, from the same row.
     await page.goto(`/en/events/${englishSlug}`);
-    await expect(page.getByRole("link", { name: /Donation: on donate\.example\.test/ })).toHaveAttribute("href", DONATION_LINK);
+    await expect(page.getByRole("link", { name: /Donate on donate\.example\.test/ })).toHaveAttribute("href", DONATION_LINK);
 
     // Off the site again.
     await page.goto(editorUrl);

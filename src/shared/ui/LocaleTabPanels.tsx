@@ -1,11 +1,59 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { isBlankValue } from "@/shared/forms/blank-value";
-import { REVEAL_EVENT } from "./fold";
+import { identicalInBothLanguages } from "@/shared/forms/both-languages";
+import { createTwinFoldStore, REVEAL_EVENT, type TwinFoldStore, twinFoldKey } from "./fold";
+
+/** What a panel tells the folds inside it (§363): the strip's shared store, its language, whether it is on top. */
+export type TwinFoldPanel = { store: TwinFoldStore; locale: string; shown: boolean };
+
+const TwinFoldContext = createContext<TwinFoldPanel | null>(null);
+
+/** One panel's side of the strip's folds: every `useTwinFold` inside reads and writes `value.store`. */
+export function TwinFoldProvider({ value, children }: { value: TwinFoldPanel; children: ReactNode }) {
+  return <TwinFoldContext.Provider value={value}>{children}</TwinFoldContext.Provider>;
+}
+
+/**
+ * A fold's open state, shared with its twin in every other language of the strip (§363; the
+ * owner: "I would like to keep the expand/collapsed state while changing the language tab in the
+ * event editor"). Keyed by `twinFoldKey(name, locale)`: opening the Romanian description opens the
+ * English one, closing it in English closes it in Romanian, for as long as the page is open — and
+ * across a refused save too, since the strip is not re-mounted by one while the fold inside it is.
+ *
+ * `open` starts `false` on the server and on the first client render, which is exactly what a
+ * `<details>` without the attribute says, so nothing the server renders changes and a page with
+ * JavaScript off folds as before. `shown` says whether the fold's panel is the one on top: a fold
+ * that opened because its twin did may wait to mount something heavy until it can be seen.
+ *
+ * Outside a strip (a fold with no twins), the same answer from a store of its own.
+ */
+export function useTwinFold(name: string): { open: boolean; setOpen: (open: boolean) => void; shown: boolean } {
+  const panel = useContext(TwinFoldContext);
+  const [own] = useState(createTwinFoldStore);
+  const store = panel?.store ?? own;
+  const key = panel ? twinFoldKey(name, panel.locale) : name;
+  const read = () => store.get(key) ?? false;
+  const open = useSyncExternalStore(store.subscribe, read, read);
+  const setOpen = useCallback((next: boolean) => store.set(key, next), [store, key]);
+  return { open, setOpen, shown: panel?.shown ?? true };
+}
 
 export type LocalePanel = {
   locale: string;
@@ -28,6 +76,15 @@ export type LocalePanel = {
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
 
 /**
+ * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
+ * compare across languages, what the amber line above the panels says, and the word each copying
+ * tab wears — every tab after the first, compared with the first (`routing.locales` order). A
+ * warning, never a refusal. `initial` is the server's answer from what is stored, so the first
+ * paint already shows it; the boxes are re-read as they are typed, like the marks above.
+ */
+export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
+
+/**
  * One tab per language, over panels that are all part of the same form.
  *
  * **The panels are hidden, never unmounted, and that is the whole point.** The editor is one
@@ -42,7 +99,9 @@ export type TabWatch = { names: readonly string[]; rule: "required" | "parity" }
  * setting shared by both languages never hides behind a language tab.
  *
  * Everything below it is uncontrolled — plain `defaultValue` fields the browser owns — so this
- * component holds which language is on top and which tabs are marked unfinished.
+ * component holds which language is on top and which tabs are marked unfinished, **and which folds
+ * are open** (§363): a fold inside a panel and its twin in the other language are one fold, so the
+ * description opened in Română is open in English (`useTwinFold`).
  *
  * With JavaScript off, the first tab is the visible one and the rest are unreachable. That is a
  * degradation and not a data loss: every hidden field still carries its `defaultValue`, so a save
@@ -53,6 +112,8 @@ export default function LocaleTabPanels({
   panels,
   watch,
   markLabel,
+  identical,
+  live = true,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
@@ -61,14 +122,29 @@ export default function LocaleTabPanels({
   watch?: TabWatch;
   /** The mark's word ("incomplet") for a tab that becomes unfinished while typing. */
   markLabel?: string;
+  /** Warn when a watched text says the same words in both languages (§354). */
+  identical?: IdenticalWatch;
+  /** Whether anything here can be typed into; a read-only strip keeps the server's first answers. */
+  live?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
+  const [same, setSame] = useState(identical?.initial ?? false);
   const markWord = markLabel ?? panels.find((panel) => panel.incompleteLabel)?.incompleteLabel;
   // Whether this validation pass has already brought a panel forward; see `reveal`.
   const revealed = useRef(false);
   const root = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  /*
+    The folds' shared state (§363), one store per strip for the strip's life. Each panel's value is
+    kept stable across the re-renders typing causes (the marks), so a fold's editor re-renders on
+    a tab change or its own fold's change, never on a keystroke elsewhere in the strip.
+  */
+  const [folds] = useState(createTwinFoldStore);
+  const panelFolds = useMemo(
+    () => panels.map((panel, index): TwinFoldPanel => ({ store: folds, locale: panel.locale, shown: index === active })),
+    [folds, panels, active],
+  );
 
   /** Bring panel `index` forward — the DOM attribute at once, React's state after it. */
   const bringForward = useCallback((index: number, element: HTMLElement | null) => {
@@ -128,26 +204,38 @@ export default function LocaleTabPanels({
   */
   useEffect(() => {
     const container = root.current;
-    if (!watch || !container) return;
-    const valueOf = (locale: string, field: string) =>
-      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`)?.value ?? "";
+    if ((!watch && !identical) || !live || !container) return;
+    const boxOf = (locale: string, field: string) =>
+      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`);
+    const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
-      setIncomplete(
-        panels.map((panel) =>
-          watch.names.some((field) => {
-            const blank = isBlankValue(valueOf(panel.locale, field));
-            if (watch.rule === "required") return blank;
-            return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
-          }),
-        ),
-      );
+      if (watch) {
+        setIncomplete(
+          panels.map((panel) =>
+            watch.names.some((field) => {
+              const blank = isBlankValue(valueOf(panel.locale, field));
+              if (watch.rule === "required") return blank;
+              return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
+            }),
+          ),
+        );
+      }
+      if (identical) {
+        const [first, ...rest] = panels;
+        // A language with no boxes here (the reader may not write it) cannot be re-read: the
+        // server's answer stands for it rather than turning into "different" on a keystroke.
+        const readable = first !== undefined && rest.every((panel) => identical.names.every((field) => boxOf(panel.locale, field) && boxOf(first.locale, field)));
+        if (readable) {
+          setSame(identical.names.some((field) => rest.some((panel) => identicalInBothLanguages(valueOf(first.locale, field), valueOf(panel.locale, field)))));
+        }
+      }
     };
     const deferred = () => setTimeout(measure, 0);
     for (const type of ["input", "change", "focusout"]) container.addEventListener(type, deferred);
     return () => {
       for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, deferred);
     };
-  }, [watch, panels]);
+  }, [watch, identical, live, panels]);
 
   return (
     <Box ref={root}>
@@ -182,7 +270,14 @@ export default function LocaleTabPanels({
               the missing language was found at the moment publication was refused, which is the
               worst moment to find it.
             */
-            label={incomplete[index] && markWord ? `${panel.label} · ${markWord}` : panel.label}
+            label={[
+              panel.label,
+              incomplete[index] && markWord ? markWord : null,
+              // The copying language's tab — every one after the first — says it (§354).
+              same && identical && index > 0 ? identical.mark : null,
+            ]
+              .filter((part): part is string => Boolean(part))
+              .join(" · ")}
             id={`${idPrefix}-tab-${panel.locale}`}
             aria-controls={`${idPrefix}-panel-${panel.locale}`}
             value={index}
@@ -190,6 +285,13 @@ export default function LocaleTabPanels({
           />
         ))}
       </Tabs>
+
+      {/* The same words in both languages (§354): above the panels, so it reads whichever tab is on top. */}
+      {same && identical && (
+        <Alert severity="warning" sx={{ mb: 2 }} data-testid={`${idPrefix}-identical`}>
+          {identical.warning}
+        </Alert>
+      )}
 
       {panels.map((panel, index) => (
         <Box
@@ -205,7 +307,7 @@ export default function LocaleTabPanels({
           // Which language a box belongs to, for `SubmitButton`'s "fill in first: English: Titlu".
           data-language={panel.label}
         >
-          {panel.content}
+          <TwinFoldProvider value={panelFolds[index]}>{panel.content}</TwinFoldProvider>
         </Box>
       ))}
     </Box>

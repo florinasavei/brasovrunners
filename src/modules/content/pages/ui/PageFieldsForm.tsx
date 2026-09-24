@@ -105,12 +105,14 @@ export default async function PageFieldsForm({
               <RecallField
                 name={name("seoTitle")}
                 label={t("fields.seoTitle")}
+                helperText={t("seoHelp")}
                 defaultValue={translation?.seoTitle ?? ""}
                 {...box("seoTitle")}
               />
               <RecallField
                 name={name("seoDescription")}
                 label={t("fields.seoDescription")}
+                helperText={t("seoHelp")}
                 defaultValue={translation?.seoDescription ?? ""}
                 multiline
                 minRows={2}

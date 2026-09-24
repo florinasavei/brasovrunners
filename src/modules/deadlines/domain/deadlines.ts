@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { raceWeek } from "@/modules/events/domain/race-week";
 
 /**
  * The club's deadlines — "Termene" (§NNN; the owner, 2026-09-24: "Why is this reminder
@@ -186,13 +187,18 @@ export function selfCheckinOpensAt(startsAt: Date, deadlines: Pick<Deadlines, "s
 }
 
 /**
- * Whether an event is inside race week measured in plain elapsed time — the backoffice's "print the
- * bibs now" attention (§311). The public countdown counts calendar days on the event's own wall
- * clock instead (`events/domain/race-week.ts`); both read the same number of days.
+ * Whether an event is inside race week — the backoffice's "print the bibs now" attention (§311).
+ * Counted exactly as the public countdown counts it (`events/domain/race-week.ts#raceWeek`, §NNN):
+ * whole calendar days on the event's own wall clock, the start still ahead. So "0 = on race day
+ * only", as the setting's help says, is what both do — the bib card and the homepage open on the
+ * same morning.
  */
-export function withinRaceWeek(startsAt: Date, now: Date, deadlines: Pick<Deadlines, "raceWeekDays">): boolean {
-  const until = startsAt.getTime() - now.getTime();
-  return until >= 0 && until <= deadlines.raceWeekDays * DAY;
+export function withinRaceWeek(
+  event: { startsAt: Date; timezone: string },
+  now: Date,
+  deadlines: Pick<Deadlines, "raceWeekDays">,
+): boolean {
+  return raceWeek(event, now, deadlines) !== null;
 }
 
 /** Up to when a standing series keeps its dates created (§122), before the rule's own end. */

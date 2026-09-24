@@ -132,8 +132,11 @@ describe("the declaration's merge fields", () => {
         // its own ceiling since the GDPR transparency pass (§323; the owner: "we need to inform
         // people properly on how their data is used"): every item now carries its purpose, its
         // basis, who sees it and how long it stays, which is what art. 13 asks, and that is
-        // about half as long again as the text it replaced.
-        const ceiling = key === "EVENT_DECLARATION" ? 4000 : key === "PRIVACY_NOTICE" ? 17000 : 11000;
+        // about half as long again as the text it replaced. The declaration has its own since the
+        // runner took ownership of the risks (§357; the owner: "wild animals, proper equipment
+        // (shoes, headlamp for night running), falling, etc"): seven bullets and a sentence, about
+        // two thousand characters, raised on purpose and no further.
+        const ceiling = key === "EVENT_DECLARATION" ? 6500 : key === "PRIVACY_NOTICE" ? 17000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

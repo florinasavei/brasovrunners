@@ -1,22 +1,16 @@
 import Alert from "@mui/material/Alert";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
-import { routing, type Locale } from "@/i18n/routing";
-import EventExcerpt from "@/modules/events/ui/EventExcerpt";
-import EventFacts from "@/modules/events/ui/EventFacts";
-import EventKindChips from "@/modules/events/ui/EventKindChips";
+import { routing } from "@/i18n/routing";
+import EventCard from "@/modules/events/ui/EventCard";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections, presentEventTypes } from "@/modules/events/domain/listing";
@@ -25,22 +19,19 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
-import CardLink from "@/shared/ui/CardLink";
 import ChipLink from "@/shared/ui/ChipLink";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
-import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
+import type { listUpcomingEvents } from "@/modules/events/repository";
 import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import CardDoor from "@/modules/events/ui/CardDoor";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
-import { liftOnHover, riseIn } from "@/theme/motion";
-import { specialCard, headingRule } from "@/theme/surfaces";
+import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -323,6 +314,7 @@ async function PastEvents({
           gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
           // Every card in a row is as tall as the tallest (§275): `start` left a short card
           // beside a tall one and a hole under it, which is what made the listing look broken.
+          // The room a short card is given is at its foot, under its door (§366, `CARD_BODY_SX`).
           alignItems: "stretch",
         }}
       >
@@ -435,78 +427,6 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<
         ),
       )}
     </Box>
-  );
-}
-
-/**
- * One event on the listing. Each card rises into place in reading order and lifts under a
- * pointer — CSS only, and none of it for a reader who asked for less motion
- * (`theme/motion.ts`).
- *
- * Every card carries the summary, pictures and all (§251). It did not under the featured event
- * — §242 kept that list dense so the lead was not followed by a scroll — and the owner asked
- * for the opposite once a picture could be cropped to the shape a card shows (§241): "on the
- * event card I wanna be able to see pictures in the preview".
- */
-async function EventCard({
-  event,
-  index,
-  now,
-}: {
-  event: PublicEvent;
-  index: number;
-  now: Date;
-}) {
-  const tEvent = await getTranslations("Event");
-  const locale = (await getLocale()) as Locale;
-  const page = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } });
-  return (
-    <Card
-      component="li"
-      variant="outlined"
-      /* An event the club marked special wears it on the whole card (§272), not only as a chip.
-         A flex column so the button under the link sits at the foot of every card in a row (§275). */
-      sx={{ ...liftOnHover, ...riseIn(index), ...(event.isSpecial ? specialCard : {}), display: "flex", flexDirection: "column" }}
-    >
-      <Box sx={{ flexGrow: 1 }}>
-      <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
-        <CardContent>
-          <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-            {/* What it is and what it is run on, with their glyphs (§112). */}
-            <EventKindChips type={event.type} surface={event.surface} />
-            {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
-                somebody else's race. Any number of events may wear it. */}
-            {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
-            {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
-            {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
-            {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}
-          </Stack>
-
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {event.title}
-          </Typography>
-
-          {/* The short description as it was written, picture and all (§73) — the card used to
-              render the plain-text shadow of it, so a picture in a short description showed on
-              the event page and nowhere else. `EventExcerpt` renders nothing when there is
-              nothing, which is what the old `event.excerpt &&` did. */}
-          <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />
-
-          {/* No links inside: the card is the link. */}
-          <EventFacts event={event} now={now} variant="compact" links={false} />
-        </CardContent>
-      </CardLink>
-      </Box>
-
-      {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri
-          pentru 'descrierea completa a evenimentului'") — the same button the series card wears,
-          so the two kinds of card read alike. It stands *outside* the whole-card link: a real
-          button inside a link would be a control inside a control. The arrowed "Vezi detaliile"
-          hint it replaces was aria-hidden and inside the link — a decoration, not a door. */}
-      <Box sx={{ px: 2, pb: 2 }}>
-        <CardDoor href={page} label={tEvent("series.fullDescription")} />
-      </Box>
-    </Card>
   );
 }
 

@@ -660,8 +660,8 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
 
   /**
    * AGENTS.md §10.5 has no `PENDING_EMAIL_CONFIRMATION -> CANCELLED` edge, and this does not add
-   * one: a registration whose address has never been confirmed lapses on its own after 48 hours
-   * (`expireStalePendingEmailConfirmations`), and it occupies no place in the meantime, so there
+   * one: a registration whose address has never been confirmed lapses on its own when its email
+   * link does (`email_link_expires_at`, from the club's "Termene", §NNN; `expireStalePendingEmailConfirmations`), and it occupies no place in the meantime, so there
    * is nothing for an organizer to release. Refused with a sentence rather than with the bare
    * CONFLICT the guarded UPDATE would produce — the difference matters to whoever is reading it
    * with somebody waiting at a desk. `DECISIONS.md` §33 records this as the club's question to

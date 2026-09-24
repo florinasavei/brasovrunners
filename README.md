@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.74-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -85,6 +85,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/email-probe.ts`](./scripts/email-probe.ts) | `yarn email:probe [--fail] <address>` — sends one message through the real Mailgun adapter, to an address typed on the command line. Exercises the provider half of `AGENTS.md` §16 (key, region, sending domain, and the transient/permanent mapping) without going near the outbox |
 | [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--alias-of <canonical>] [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding, through `vercel api`: adds the hostnames to that environment's own Vercel project, redirects `www` to the apex, sets `APP_BASE_URL` for a canonical domain or a permanent redirect for a second one, prints the DNS records to create and the consoles a machine must not touch. Dry run unless `--apply` |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
+| [`scripts/ship.mjs`](./scripts/ship.mjs) | `yarn ship <batch PR> <new baseline> <previous baseline> "<title>"` — one small release end to end: merges the batch PR into `qa` when green, opens and merges the `qa → main` PR, approves the gated migration run, and waits for production's `/api/health` to name the new baseline. Production's origin comes from `SHIP_PRODUCTION_URL` in the environment or `.env.local` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
+| [`scripts/land-batch.mjs`](./scripts/land-batch.mjs) | `yarn docs:land <manifest.json> [--apply]` — lands a batch's documentation from the chains' structured results: bumps the baseline, numbers the decisions, numbers each decision placeholder in the code by the commit that wrote it, appends DECISIONS.md and CHANGELOG.md, adds the SPECS.md criteria. A dry run without `--apply` (`docs/DISPATCHER.md`, `DECISIONS.md` §368) |
 | [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
 | [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
 | [`scripts/brand-assets.mjs`](./scripts/brand-assets.mjs) | `node scripts/brand-assets.mjs` — rasterises the club's lockup from `public/brand/*.svg` into the two places that cannot take an SVG: the PDFs (flat, no alpha — an alpha channel reaches a PDF as a soft mask and prints as an outline) and the email header. Outputs are committed; run it after changing the source (`DECISIONS.md` §174) |
@@ -102,6 +104,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
 | [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |
+| [`docs/QUEUE.md`](./docs/QUEUE.md) | The work queue: what the owner asked for, what is being built, what waits on the owner, and what shipped in which baseline — updated with every batch. A list, not authority: the decisions are in `DECISIONS.md` |
+| [`docs/DISPATCHER.md`](./docs/DISPATCHER.md) | How one orchestrating session runs the queue through subagents: the prompt to start it, the loop, which Claude model each kind of task gets, the usage bands, the machine's limits, and a card per kind of work. Its workflows are `.claude/workflows/br-chain.js` and `br-fix-round.js` (`DECISIONS.md` §368) |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |

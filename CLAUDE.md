@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.74-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.82-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -220,6 +220,29 @@ sections and in `CHANGELOG.md`.
   „Publică” and „Publică automat de acum” on the row (§351); a partner card has a short description of the partnership
   in both languages, its registration link first, and **every optional text the club types is both languages or neither**,
   refused at save — the owner's rule "multi-lingual, always" (§352, `src/shared/forms/both-languages.ts`).
+- **Batch 6 (2026-09-24):** public pages carry only their islands' words — the listing 119 → 39 KB on the wire —
+  and `/ro`, `/en` are a real 308 from `src/proxy.ts` (§353); bilingual everywhere: the organizer's note and the
+  cancellation reason in both languages, each registrant reading their own; page SEO and album descriptions both or
+  neither; one-sided labels read as a pair; "the same words in both languages" warned (§354).
+- **Batch 7 (2026-09-24):** the jobs' safety look on the pinger's hour, one wake per idle hour (§355); the event page's
+  facts grouped by question — "Când" on one line, the address under the place, route and cost as pills (§356); the
+  declaration names the risks the runner takes on, and no legal text or email carries a hardcoded value (§357);
+  the work queue in `docs/QUEUE.md`, updated with every batch.
+- **Batch 8 (2026-09-24):** the event editor's first card holds the status, the course and the links as named cards,
+  create and edit alike (§358).
+- **Batch 9 (2026-09-24):** the email editor starts from the placeholders, a sample value is refused at save and an
+  old one flagged with "Înlocuiește cu câmpurile" (§359); every backoffice sub-navigation is one row of secondary tabs (§360).
+- **Batch 10 (2026-09-24):** both text editors' toolbars wear Material icons with tooltips, one shared `ToolbarButton` (§361).
+- **Batch 11 (2026-09-24):** the meeting point is asked once per language, Română and English side by side, and every
+  reader sees the place in their language; the server never fills a blank English name (§362).
+- **Batch 12 (2026-09-24):** the editor's floating bars are lifted on what they render (Tiptap drops their style in
+  production) and a fold keeps its state across the language tabs (§363); organizers write to an event's participants,
+  in both languages, by group, through the outbox as `ORGANIZER_MESSAGE` (§364, migration `0068`); the phone's footer
+  floats one line and rests two, the build stamp in the "Despre club" fold (§365).
+- **Batch 13 (2026-09-24):** the listing's cards are one structure — the title the blue link, the place its map, the
+  time its clock, route and cost as the page's pills (§366); a partnered event wears a handshake on its card, calendar
+  entry and page, and a series' usual place is read, not compared byte for byte (§367); the dispatcher is in the
+  repository — `docs/DISPATCHER.md`, the `br-chain` and `br-fix-round` workflows, `yarn docs:land`, `yarn ship` (§368).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

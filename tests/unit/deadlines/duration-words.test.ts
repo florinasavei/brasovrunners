@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { deadlineMergeValues, isMergeField, mergeText } from "@/modules/legal-documents/domain/merge-fields";
+import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
+import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
  * §NNN — a deadline as words that agree with its number, in both languages: the one copy the
@@ -58,11 +59,40 @@ describe("§NNN durations as words", () => {
 
 describe("§NNN the deadlines as legal merge fields", () => {
   it("are merge fields, and fill a text in either language from the setting", () => {
-    for (const field of ["confirmationHours", "holdMinutes", "offerHours", "reminderHours"]) expect(isMergeField(field)).toBe(true);
-    const text = "Confirmi în {{confirmationHours}}; locul e ținut {{holdMinutes}}; oferta, {{offerHours}}; reminderul, cu {{reminderHours}} înainte.";
+    for (const field of ["confirmationHours", "holdMinutes", "offerHours", "reminderClause"]) expect(isMergeField(field)).toBe(true);
+    expect(isMergeField("reminderHours")).toBe(false);
+    const text = "Confirmi în {{confirmationHours}}; locul e ținut {{holdMinutes}}; oferta, {{offerHours}}; mesaje: legături{{reminderClause}} și o mulțumire.";
     expect(mergeText(text, deadlineMergeValues("ro", { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 72 }))).toBe(
-      "Confirmi în 12 ore; locul e ținut o oră; oferta, 6 ore; reminderul, cu 3 zile înainte.",
+      "Confirmi în 12 ore; locul e ținut o oră; oferta, 6 ore; mesaje: legături, un memento cu 3 zile înainte și o mulțumire.",
     );
     expect(mergeText("within {{confirmationHours}}", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe("within 48 hours");
+  });
+
+  it("drops the reminder clause when the club sends none (0), in both languages — never '0 ore'", () => {
+    const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
+    expect(deadlineMergeValues("ro", off).reminderClause).toBe("");
+    expect(deadlineMergeValues("en", off).reminderClause).toBe("");
+    expect(mergeText("lista de așteptare{{reminderClause}} și o mulțumire", deadlineMergeValues("ro", off))).toBe("lista de așteptare și o mulțumire");
+    expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", off))).toBe("the waiting list and a thank-you");
+    expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe(
+      "the waiting list, a reminder 2 days before and a thank-you",
+    );
+    // Nothing left behind: no dotted blank, no emphasised empty segment.
+    expect(mergeTextSegments("a{{reminderClause}}b", { reminderClause: "" })).toEqual([
+      { text: "a", filled: false },
+      { text: "b", filled: false },
+    ]);
+    // With no value at all it is still a gap to fill, like every field.
+    expect(mergeText("a{{reminderClause}}b", {})).toContain("…");
+  });
+
+  it("the platform's privacy notice, merged with no reminder, says no reminder in either language", () => {
+    const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
+    for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, off))).join(" ");
+      expect(all).not.toMatch(/memento|reminder/i);
+      expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
+      expect(all).not.toContain("…………");
+    }
   });
 });

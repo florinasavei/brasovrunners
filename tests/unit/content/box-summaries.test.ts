@@ -9,8 +9,10 @@ import {
   confirmationSummary,
   courseSummary,
   descriptionSummary,
+  identicalLocales,
   incompleteLocales,
   BLANK,
+  kindSummary,
   linksSummary,
   placeSummary,
   programmeSummary,
@@ -106,12 +108,33 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(titleSummarySummary(words, englishShort)).toBe("„Crosul Tâmpei” · „Tâmpa Cross” · lipsește rezumatul (EN)");
   });
 
-  it("Descrierea and Regulamentul: per language, and what the empty language's page shows", () => {
+  it("Descrierea and Regulamentul: per language, and the language a one-sided text still owes (§354)", () => {
     const one = [language("ro", { bodyJson: doc("Totul despre cursă."), rulesJson: doc("Casca e obligatorie.") }), language("en")];
-    expect(descriptionSummary(words, one)).toBe("RO: completat · EN: gol — pagina EN arată rezumatul");
-    expect(rulesSummary(words, one)).toBe("RO: completat · EN: gol — pagina EN nu are regulament");
-    // Both empty: no half-sentence about a fallback nobody wrote.
+    // Both or neither: the next save refuses this, so the line names the language that owes it.
+    expect(descriptionSummary(words, one)).toBe("RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)");
+    expect(rulesSummary(words, one)).toBe("RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)");
+    expect(descriptionSummary(wordsEn, one)).toBe("RO: written · EN: empty — to write in EN too (both languages or neither)");
+    // Both empty: nothing owed.
     expect(descriptionSummary(words, [language("ro"), language("en")])).toBe("RO: gol · EN: gol");
+  });
+
+  it("names a long text whose English is its Romanian word for word — and not a short one (§354)", () => {
+    const pasted = "Alergăm pe Tâmpa în fiecare luni seara, pornind de la telecabină.";
+    const copied = [language("ro", { bodyJson: doc(pasted), rulesJson: doc(pasted) }), language("en", { bodyJson: doc(`  ${pasted}\n`), rulesJson: doc("Happy Monday") })];
+    expect(descriptionSummary(words, copied)).toBe("RO: completat · EN: completat · EN identic cu RO");
+    expect(descriptionSummary(wordsEn, copied)).toBe("RO: written · EN: written · EN same as RO");
+    // The rules differ, and a short name may honestly be the same in both.
+    expect(rulesSummary(words, copied)).toBe("RO: completat · EN: completat");
+    const named = [language("ro", { rulesJson: doc("Happy Monday") }), language("en", { rulesJson: doc("Happy Monday") })];
+    expect(rulesSummary(words, named)).toBe("RO: completat · EN: completat");
+    expect(identicalLocales(copied, ["body"])).toEqual(["en"]);
+    expect(identicalLocales(copied, ["rules"])).toEqual([]);
+    // The summary (box 2) too — the rich one, or its plain column.
+    const summaries = [
+      language("ro", { title: "Happy Monday", excerpt: pasted }),
+      language("en", { title: "Happy Monday", excerptJson: doc(pasted) }),
+    ];
+    expect(titleSummarySummary(words, summaries)).toBe("„Happy Monday” · „Happy Monday” · EN identic cu RO");
   });
 
   it("Locul: the place, its other names, the map — or to be announced", () => {
@@ -131,8 +154,18 @@ describe("§350 each box's summary, empty and filled", () => {
     };
     const checklist = [language("ro", { checklist: "apă" }), language("en", { checklist: "water" })];
     expect(programmeSummary(words, rows as never, true, checklist, "ro")).toBe("2 momente, 08:00–12:30 · ce să aduci: RO, EN");
+    // What to bring in one language only: the language that owes it (§354).
     expect(programmeSummary(words, null, false, [language("ro", { checklist: "frontală" }), language("en")], "ro")).toBe(
-      "Fără program (alergare de grup) · ce să aduci: RO",
+      "Fără program (alergare de grup) · ce să aduci: RO · de scris și în EN (ambele limbi sau niciuna)",
+    );
+    // A group run keeps no notes (§111): notes in one language there owe nothing.
+    expect(programmeSummary(words, null, false, [language("ro", { scheduleJson: doc("09:00 start") }), language("en")], "ro")).toBe(
+      "Fără program (alergare de grup)",
+    );
+    // The same long text in both is named, on a race's notes as on what to bring.
+    const long = "Număr de concurs, apă, o geacă de ploaie și frontala pentru start.";
+    expect(programmeSummary(words, null, false, [language("ro", { checklist: long }), language("en", { checklist: long })], "ro")).toBe(
+      "Fără program (alergare de grup) · ce să aduci: RO, EN · EN identic cu RO",
     );
     expect(programmeSummary(words, { timezone: ZONE, scheduleItems: null } as never, true, [], "ro")).toBe("Fără program");
   });
@@ -196,6 +229,18 @@ describe("§350 each box's summary, empty and filled", () => {
         "ro",
       ),
     ).toBe("Strava · 2 linkuri (GPX, Hartă)");
+    // A row whose label is in one language only is the one the next save refuses (§354).
+    expect(
+      linksSummary(words, { stravaEventUrl: null, facebookEventUrl: null, links: [{ kind: "GPX", url: "https://g.test", labelRo: "Traseul de 21 km" }] }, { GPX: "GPX" }, "ro"),
+    ).toBe("1 link (GPX) · etichetă într-o singură limbă");
+    expect(
+      linksSummary(
+        words,
+        { stravaEventUrl: null, facebookEventUrl: null, links: [{ kind: "GPX", url: "https://g.test", labelRo: "Traseul", labelEn: "The route" }] },
+        { GPX: "GPX" },
+        "ro",
+      ),
+    ).toBe("1 link (GPX)");
     expect(coHostsSummary(words, null, "ro")).toBe("Fără parteneri");
     expect(coHostsSummary(words, { coHosts: [{ name: "Salvamont" }, { name: "Decathlon" }], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Salvamont și Decathlon",
@@ -217,8 +262,41 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(coHostsSummary(words, { coHosts: [{ ...festival, descriptionEn: null, links: [] }], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Brașov Running Festival · descriere într-o singură limbă",
     );
+    // A partner's link labelled in one language only, and a description copied word for word (§354).
+    const halfLabel = { ...festival, links: [{ kind: "SITE", url: "https://festival.example.test", labelRo: "Site-ul festivalului" }] };
+    expect(coHostsSummary(words, { coHosts: [halfLabel], coHostName: null, coHostUrl: null }, "ro")).toBe(
+      "Împreună cu Brașov Running Festival · 1 link · etichetă într-o singură limbă · cu descriere",
+    );
+    const copiedText = "Alergăm împreună duminică dimineață, la festivalul din centrul Brașovului.";
+    const copied = { ...festival, descriptionRo: copiedText, descriptionEn: copiedText, links: [] };
+    expect(coHostsSummary(words, { coHosts: [copied], coHostName: null, coHostUrl: null }, "ro")).toBe(
+      "Împreună cu Brașov Running Festival · cu descriere · EN identic cu RO",
+    );
     expect(promotionSummary(words, null)).toBe("Nimic în evidență");
     expect(promotionSummary(words, { featured: true, isSpecial: true })).toBe("Eveniment principal · Ediție specială");
+  });
+
+  it("Ce fel de eveniment, with its three cards inside it (§358): the type, the status, the course in brief, every link counted", () => {
+    const labels = { type: "Alergare de grup", status: "Programat", surface: null, difficulty: null };
+    // The create page: nothing stored yet, so the type and "Programat" only — no empty words.
+    expect(kindSummary(words, null, labels, "ro")).toBe("Alergare de grup · Programat");
+    const event = {
+      distanceMeters: 10_000,
+      elevationGainMeters: 450,
+      routeUrl: "https://r.test",
+      stravaEventUrl: null,
+      facebookEventUrl: "https://f.test",
+      links: [{ kind: "GPX", url: "https://g.test" }],
+    };
+    // The climb and the route stay on the course card's own line; Facebook counts with the rows.
+    expect(kindSummary(words, event, { ...labels, surface: "Asfalt", difficulty: "Ușor" }, "ro")).toBe(
+      "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri",
+    );
+    expect(kindSummary(words, { ...event, distanceMeters: 21_100, facebookEventUrl: null, links: [] }, { ...labels, type: "Concurs", status: "Anulat" }, "ro")).toBe(
+      "Concurs · Anulat · 21,1 km",
+    );
+    expect(kindSummary(wordsEn, { ...event, stravaEventUrl: "https://s.test" }, { ...labels, type: "Race" }, "en")).toBe("Race · Programat · 10 km · 3 links");
+    expect(kindSummary(words, { ...event, links: [] }, labels, "ro")).toBe("Alergare de grup · Programat · 10 km · 1 link");
   });
 
   it("Adresa paginii: each language's path, and the lock", () => {
@@ -226,6 +304,9 @@ describe("§350 each box's summary, empty and filled", () => {
     const translations = [language("ro", { slug: "crosul-tampei" }), language("en", { slug: "tampa-cross" })];
     expect(addressSummary(words, translations, paths, true)).toBe("/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare");
     expect(addressSummary(words, [language("ro"), language("en", { slug: "x" })], paths, false)).toBe("RO: fără adresă · /en/events/x");
+    // A search-engine override in one language only (§354).
+    const seoHalf = [language("ro", { slug: "crosul-tampei", seoTitle: "Crosul Tâmpei 2026" }), language("en", { slug: "tampa-cross", seoTitle: "" })];
+    expect(addressSummary(words, seoHalf, paths, false)).toBe("/ro/evenimente/crosul-tampei · /en/events/tampa-cross · SEO într-o singură limbă");
   });
 });
 

@@ -86,6 +86,7 @@ export default async function ProgrammeBox({ event, mayEditSettings, risk, langu
           languages={languages}
           watch={{ names: ["schedule", "checklist"], rule: "parity" }}
           blank={BLANK.programme}
+          identical={["schedule", "checklist"]}
           render={(entry) => <ProgrammeTextFields translation={entry.translation} mayEdit={entry.mayEdit} eventType={initialType} />}
         />
       </Stack>

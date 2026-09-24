@@ -15,11 +15,11 @@ const text = (content: ReturnType<typeof buildTemplateContent>) =>
   content.paragraphs.map((part) => (typeof part === "string" ? part : part.text.join("\n"))).join("\n");
 
 describe("§NNN the emails word the club's deadlines", () => {
-  it("says the event's reminder lead, in each half's language", () => {
+  it("says the event is coming rather than a lead, in each half's language (§357)", () => {
     const both = renderBilingual("EVENT_REMINDER", "ro", { ...base, timings }, "https://example.test/x");
-    expect(both.text).toContain("Crosul de toamnă este peste 3 zile.");
-    expect(both.text).toContain("Crosul de toamnă is 3 days away.");
-    expect(both.text).not.toContain("două zile");
+    expect(both.text).toContain("Crosul de toamnă se apropie.");
+    expect(both.text).toContain("Crosul de toamnă is coming up.");
+    expect(both.text).not.toContain("3 zile");
   });
 
   it("says the event is coming, with no lead, when it sends no reminder (a reminder resent by hand)", () => {
@@ -40,7 +40,8 @@ describe("§NNN the emails word the club's deadlines", () => {
   });
 
   it("reads today's constants when a caller hands no numbers — never a blank where a duration belongs", () => {
-    expect(text(buildTemplateContent("EVENT_REMINDER", "ro", base, undefined))).toContain("este peste 2 zile.");
+    expect(text(buildTemplateContent("PROFILE_MANAGE_LINK", "ro", base, "https://example.test/x"))).toContain("Linkul este valabil 14 zile");
+    expect(text(buildTemplateContent("VERIFY_REGISTRATION_EMAIL", "ro", base, "https://example.test/x"))).not.toMatch(/ {2}|valabil +și/);
   });
 
   it("fills the four deadline placeholders in the club's own words, number and noun together, per half", () => {

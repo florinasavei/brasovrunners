@@ -34,8 +34,8 @@ import {
   nextVersionNumber,
   retireVersionNumber,
 } from "./repository";
-import { LEGAL_TEMPLATES } from "./templates/catalogue";
-import { type ClubFacts, fillClubFacts, remainingPlaceholders } from "./templates/club-facts";
+import { templatePrefill } from "./templates/catalogue";
+import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
 
 /**
  * Writing legal documents from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -830,11 +830,9 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
       result.alreadyApproved.push(key);
       continue;
     }
-    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
-      locale,
-      title: LEGAL_TEMPLATES[key][locale].title,
-      body: fillClubFacts(LEGAL_TEMPLATES[key][locale].body, facts),
-    }));
+    // The same prefill as "start from the platform's text": the fields kept, the facts written in (§357).
+    const prefill = templatePrefill(key, facts);
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...prefill[locale] }));
     const blanks = [...new Set(translations.flatMap((translation) => remainingPlaceholders(translation.body)))];
     if (blanks.length > 0) {
       throw new DomainError(

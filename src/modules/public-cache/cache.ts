@@ -60,7 +60,7 @@ export type PublicContent =
   | "gallery"
   /** The terms and the privacy notice in force. */
   | "legal"
-  /** The two settings a public page reads: who receives the contact form, and the bot check. */
+  /** The settings a public page reads: who receives the contact form, the bot check and the club's deadlines ("Termene", §NNN). */
   | "settings";
 
 /** The cache tag one kind of content is filed under. */

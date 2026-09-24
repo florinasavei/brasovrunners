@@ -404,7 +404,7 @@ export default async function RegistrationBox({
                     id="box-bibs"
                     title={t("editor.boxes.bibs.title")}
                     aside={bibsSummary(words, event?.bibStartNumber ?? 1, colourLabel, bibCounts ? { allocated: bibCounts.total, unprinted: bibCounts.unprinted } : null)}
-                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event.startsAt, now, clubDeadlines)) }}
+                    openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

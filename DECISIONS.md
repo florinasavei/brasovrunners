@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.74-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14269,3 +14269,781 @@ Baseline `BR-V1.74-2026-09-24`.
 No migration, no new variable, no new dependency.
 
 Baseline `BR-V1.74-2026-09-24`.
+
+## 353. A public page carries only its islands' words, and the site root is a real 308
+
+**2026-09-24.** Every public page carried the whole message catalogue in its RSC payload. In next-intl 4, a `NextIntlClientProvider` rendered from a Server Component with no `messages` prop inherits every message and format of the request, and the root layout (`src/app/[locale]/layout.tsx`) rendered one bare. That was about 250 KB of JSON per page, three quarters of it the backoffice's `Admin` namespace, all to serve the eleven client files that call `useTranslations`. A Server Component translates on the server and ships only the sentence it rendered, so the catalogue needs to reach the browser only for what an island translates itself.
+
+**Decision.**
+
+- **Two lists, one per provider** (`src/i18n/client-messages.ts`):
+  - `PUBLIC_CLIENT_MESSAGES`: the header's islands, `[locale]/error.tsx` and the declaration's `SignatureField`.
+  - `STAFF_CLIENT_MESSAGES`: the date and time pickers, and the series scope in the event editor.
+  - The root provider passes `pickMessages(messages, PUBLIC_CLIENT_MESSAGES)` and `formats={null}`.
+  - The `/admin` and `/devs` layouts each nest a provider carrying `BACKOFFICE_CLIENT_MESSAGES` (public plus staff), because a provider's `messages` replace its parent's instead of merging with them.
+  - An entry is a dotted path. An island that builds a key at runtime (`t(section.segment)`, `` t(`languageCode.${locale}`) ``) takes the whole sub-tree above it.
+- **A guard derived from the source, not declared** (`tests/unit/i18n/client-messages.test.ts`):
+  - It walks value imports from every route file (page, layout, error, not-found, template, loading) to each `"use client"` file.
+  - It reads each island's keys from its syntax tree: literal keys, both branches of a ternary, the prefix of a template, or the whole namespace when the key cannot be read.
+  - It fails on a key missing from the island's provider, a list entry no island needs, a `useTranslations` it cannot read, or a server-rendered provider left bare.
+  - An island that any public route reaches is held to the public list.
+- **A missing message is loud where someone can catch it** (`src/i18n/errors.ts`):
+  - With `APP_ENV` `local` or `test`, `MISSING_MESSAGE` and `INSUFFICIENT_PATH` throw. On the server this goes through `request.ts`'s `onError`; in islands it goes through `IntlErrorHandling`, a client provider nested under the root, because a function cannot cross from the server.
+  - The e2e suite runs a production build with `APP_ENV=local`, so every spec now also checks for missing keys on the server and the client.
+  - QA and production keep next-intl's quiet fallback: the failure is logged and the page renders (BR-REQ-040-04 criterion 2).
+  - The check is on `APP_ENV`, not `NODE_ENV`, because `yarn start` runs with `NODE_ENV=production` on a laptop too.
+- **The site root is answered by the proxy** (`src/i18n/root-redirect.ts`, `src/proxy.ts`):
+  - `app/[locale]/page.tsx` threw `permanentRedirect` after the root layout had started streaming. So production answered `/ro`, its most-visited URL, with a 200 and a 300 KB error document (`<html id="__next_error__">`) carrying a client-side hop.
+  - The proxy now answers `/ro` and `/en` with a 308 to the listing, keeping the query. The target is read from `routing.pathnames`, so renaming the listing's path cannot leave the root pointing at a 404.
+  - For `/`, the proxy rewrites next-intl's own redirect to go straight to the listing: one hop, with next-intl's choice of locale and its 307 kept.
+  - `page.tsx` stays as the fallback.
+
+**Measured** locally (`yarn build && yarn start`, gzip on the wire): `/ro/evenimente` 119 KB → 39 KB; an event page 113 KB → 31 KB; `/ro` went from a 308 intent served as a 297 KB body to a 308 with 14 bytes.
+
+**What it found.** The first full e2e run on the branch failed `location-to-be-announced.spec.ts` (§328) on both projects:
+
+- The spec asked for the calendar file at `/ro/evenimente/<slug>/calendar.ics`, and no route answers that address. The page links `/${locale}/events/${slug}/calendar.ics`, and a path with an extension skips the proxy, so the request was the `[...rest]` 404.
+- It had passed on qa only because the 404 page's payload carried the whole catalogue, "Locația se anunță în curând" included. Once the payload no longer carried the catalogue, the assertion lost what it had been passing on by accident.
+- The spec now asks for the linked address and checks for a 200 and `text/calendar`.
+- The lesson for specs: a `toContain` on raw HTML must first check it is looking at the right document.
+
+**Verification:** unit `i18n/client-messages.test.ts`, `i18n/missing-messages.test.ts`, `i18n/root-redirect.test.ts`; e2e `client-words.spec.ts` (every page with a translating island opens, hydrates and shows no raw key or error page, in the public pages and the backoffice; a public page's HTML carries no backoffice key; `/ro` and `/en` are 308s with no body, `/` is one 307). The full suite on 2026-09-24: 338 tests, 325 passed, 13 skipped, 0 failed, mobile 320px and desktop.
+
+Baseline `BR-V1.75-2026-09-24`.
+
+## 354. Bilingual everywhere: the organizer's note and reason in both languages, both-or-neither on pages and albums, labels read as a pair, and a warning for the same words twice
+
+**Context.** The owner, 2026-09-24: "I want multi-lingual, always." The partner commit made an optional bilingual text both languages or neither for the event's own texts, the partner description and the link labels (the `§354` of `shared/forms/both-languages.ts`). Its audit found other places where one language's text could still reach a reader of the other. One of them is live on production: the English "Happy Monday" date has the Romanian description in its English box, so the English page shows Romanian prose. This § closes them.
+
+**1. The organizer's note and the cancellation's reason are written in both languages (amends §331).**
+- **Before.** "Anunță participanții despre schimbare" had one note box, and cancelling had one reason box. Every registrant got that one text, in both halves of the bilingual email, so a Romanian note reached English readers.
+- **The boxes.** Each text is now two boxes, Română and English side by side from `sm`, the partner-description pattern (`EventNoticeFields.tsx#NoticeTextPair`). They post `notice.noteRo`/`notice.noteEn` and `cancel.reasonRo`/`cancel.reasonEn`.
+- **The rules** (`service.ts#readNoticeRequest`):
+  - The note stays optional, both or neither. One side only is refused on the empty box.
+  - The reason was required, so it is required in both. Each empty box is named.
+  - Each language has its own 500-character ceiling.
+  - The rest of the form comes back as typed (§315).
+  - An unticked note is still ignored.
+- **The outbox.** The payload carries `note: { ro, en }` and `reason: { ro, en }`.
+- **Rendering** (`event-changes.ts#readEventNoticeWords`, `render.ts`, `templates.ts`). The row's language reads first, and the second half reads the other language's own text (`organizerNoteOther`, `cancellationReasonOther`), never the same text twice.
+- **Older rows.** A row queued before this carries one string and renders exactly as before: the same words in both halves. The outbox is not rewritten.
+- **Half a pair.** A stored pair with only one side readable (only a hand-made row can have one) renders no note in either half. The rest of the message still goes.
+- **Audit.** `event.update_notice_sent` and `event.cancelled` keep both texts.
+- **Previews.** `/admin/emails` previews both message types with each half in its own language.
+- **Rollback.** A release from before this, reading a new row, finds an object where it expects a string and drops the note or the reason. The message still goes, and nothing is shown in the wrong language. This was accepted rather than writing a redundant string.
+
+**2. A standing page's search-engine texts and an album's description are both or neither.**
+- `pages/fields.ts` refines `translations` on `seoTitle`/`seoDescription`; `gallery/fields.ts` refines it on `description`. Both use `refuseOneLanguage`, on the empty box, with the rest kept (§315).
+- Both editors post both languages in one save, so the rule is read where both are known. Nothing waits for a second save, and no language is saved alone.
+- The refusal line adds "scrie-l/scrie-o în ambele limbi sau în niciuna", because a refused box loses its help to "Verifică acest câmp". Each box also carries a help line.
+- Stored one-sided values are not rewritten. Each public page reads only its own language, so nothing crosses languages. The next save of that page or album is refused until both are written.
+
+**3. A stored label in one language only reads as no label, on both pages.**
+- `eventLinkLabel` and `coHostLinkLabel` answer only when both labels are written, the rule `coHostDescription` applies to descriptions.
+- A "Linkuri și fișiere" row or a partner link saved before the rule, with a label in one language, now shows the kind's own word on both pages. Before, one page showed the club's label and the other the default word.
+- The editor still reads the stored pair, so the half can be completed.
+- The closed lines mark it: `linksSummary`, and the link count in `coHostsSummary`, say "etichetă într-o singură limbă", the way "descriere într-o singură limbă" already worked.
+
+**4. The same words in both languages are warned about, never refused.**
+- **The test** (`both-languages.ts#identicalInBothLanguages`). Both sides are compared on their words: a rich text's text runs, whitespace collapsed, NFC, no case. They count as identical only when both are written, identical, and longer than 40 characters. A name like "Happy Monday", a brand or a short label may honestly read the same in both languages. The same function runs in the browser on every keystroke and on the server over stored rows, so the first paint and the first keystroke agree.
+- **Where it applies.** The summary, the description, the rules, the programme's notes, what to bring, each partner's description, and the notice note/reason pair. Not the title, the place's name or a link's label.
+- **What it shows:**
+  - an amber line in the box (`LocaleTabPanels`' `identical` watch, per card in `CoHostRowsEditor`, under the note/reason pair);
+  - "· identic cu româna" on the English tab;
+  - "EN identic cu RO" on the closed line;
+  - a list in the Publicare box, "De verificat: textul în engleză e identic cu cel în română (nu blochează publicarea)", each line a link to the English box. The editor computes it from what is stored, like "Ce lipsește pentru publicare"; the create page updates it as the form is typed (`publish-check.ts#identicalTexts`, `storedTextReader`).
+- No save and no publication is refused for it.
+
+**5. The closed lines and the guide say the rule.**
+- The description and rules lines used to say what the empty page falls back to ("pagina EN arată rezumatul"). Nothing falls back any more, so they now say "de scris și în EN (ambele limbi sau niciuna)".
+- The programme line names the language that still owes its notes or what to bring. The address line says "SEO într-o singură limbă".
+- The help texts of the description, rules, what to bring and "Linkuri și fișiere" say "în ambele limbi sau în niciuna".
+- `/admin/guide`: the Redactor's "both languages count" step, and one sentence in the Organizer's settings step about the note and the reason.
+
+**Not done.** The second half of every bilingual email still reads the event's title, "what to bring" (`{eventChecklist}`) and a language's own place name in the registrant's language. `findEventNotificationDetails` is read once, for the row's locale. Fixing that is a second read per message and changes every subject line. It is left to its own decision.
+
+No migration: the outbox payload and the co-host and link columns are JSON.
+
+Tests:
+- unit: `content/bilingual-everywhere.test.ts`, `content/box-summaries.test.ts`, `events/event-links.test.ts`, `events/co-hosts.test.ts`, `events/event-facts-co-hosts.test.ts`, `notifications/event-notices.test.ts`;
+- integration: `cms/event-notices.test.ts` (payload shape, per-language rendering, the legacy row, half a pair, refusal naming), `cms/gallery.test.ts`;
+- e2e: `event-notices.spec.ts`, `identical-languages.spec.ts`, `gallery.spec.ts`.
+
+Baseline `BR-V1.75-2026-09-24`.
+
+## 355. The safety look lands on the pinger's hour, and a minimum interval on its own marks on the clock
+
+**2026-09-24.** The owner sent the Neon bill: $1.54 for 14.7 CU-hours in 2.3 days on Launch, where every separate wake is billed as at least five minutes. After §334 (a ping with nothing to do answers from the cache), production's operations log still showed wakes at 10:00, 10:15, 11:02, 12:02, 12:15, 13:02, 13:15 and 14:15. The hour-long safety cap and the Administrator's minimum interval were measured from the previous real run, so each job's forced run drifted to wherever its last run had happened: maintenance at :15 after a woken run, the outbox at :00. The health monitor's check just after the hour then woke the database a third time.
+
+**Decision.** Both limits now end on the pinger's own slots in the club's clock (`CLUB_TIME_ZONE`), not a fixed number of minutes after the run (`src/modules/jobs/schedule.ts`):
+
+- **The cap** (`safetyCapEnd`) ends two minutes before the latest top of the hour that is at most sixty minutes after the run. A run at 10:15 looks again at the 11:00 call. The end is the minimum of this and §334's `ranAt + 60 − grace`, so it is never later than before, and every threshold measured against the cap holds as it was. The hour is searched up to the grace past sixty minutes, so a :00 call that landed a few hundred milliseconds early still counts as that hour's run.
+- **A minimum interval** (`minimumIntervalEnd`) ends on the first boundary of its own length at least the interval after the run: quarter-hours for 15, :00/:30 for 30, the hour for 60, even hours for 120. A minimum stays a minimum, so alignment only ever moves the end later. When the boundary is more than `ALIGN_STRETCH_MINUTES` (plus the grace) past the interval, the run goes to the latest pinger slot within that stretch, and later runs reach the boundary. Even hours are on the club's clock, so they stay even through daylight saving.
+- **A deadline the work itself has** (`nextWorkAt`: a hold or offer lapse, a reminder window) is never aligned. Before it there is nothing to do, and after it the next call runs, exactly as before.
+
+**The stretch is one pinger period, fifteen minutes, not thirty.** The tightest health threshold is production's by day: max(cap, interval) + 2 × 15 + 5. `health.ts` promises that one slow run never flips it. Stretch + one missed call + grace = 32 of the 35 minutes. Thirty would have left five minutes, so a stretched run followed by one missed call would read `stale` and could page the owner once production picked 60 or 120. The cost is slower convergence: from a run on the pinger's grid, up to three runs under 60 and seven under 120, each at most fifteen minutes late; one more from a run off the grid. Two missed calls in a row right after a stretched run go past the promise (before alignment the limit was three in a row). No health threshold moved. The email health's night worst case is again the interval plus about an hour, inside ninety plus the interval.
+
+**Effect.** In an idle hour, both jobs' safety runs and the health monitor's check share the :00 wake: one wake an hour instead of up to three. QA's two-hour interval under its hourly pinger lands on even hours, so its 00/06/12/18 health checks ride those wakes. An hour with a real deadline still wakes when the deadline says. Slots, `MAX_QUIET_MINUTES` and `wakeJobs` are unchanged: an interval at least as long as the cap ends the quiet exactly where its floor ends, and a wake forgets the quiet but never the floor. The Costuri card on `/admin/tasks` says, in both languages, that the safety check is on the hour with the health monitor, that an idle hour costs at most one wake, and that getting onto an interval's marks may make some checks up to a quarter of an hour late each.
+
+**Verification:** unit `jobs/schedule-alignment.test.ts`: on the hour after any run moment, both jobs sharing one :00, a day of simulated runs by day and night on both pingers against the job and email thresholds, any single dropped call, the reviewer's double-miss scenario, and daylight saving in both directions. Also unit `jobs/schedule.test.ts` and `jobs/job-cadence-panel.test.ts`, and integration `jobs/job-sleep.test.ts`.
+
+Baseline `BR-V1.76-2026-09-24`.
+
+## 356. The event page's facts, grouped by question: one line for when, the address under the place, the route and the cost as pills
+
+**Asked by the owner, 2026-09-24**, looking at a public event page's facts block ("Când / Unde / Traseu", `EventFacts`, shared by the staff preview): "This info needs to be better grouped, address with address icons not consistent, distance, difficulty, elevation should be on the same line, better styled". Then, with a screenshot of "Traseu • 10 km / • ı Ușor / • $̸ Gratuit", each on its own bulleted line and only some with a glyph: "same here, these need to be pills". Measured on QA's `test-bvr`: "Când • Sâmbătă, 26 sept. 2026 • începe la 08:00", "Traseu • 10 km • 300 m diferență de nivel • [icon] Ușor • [icon] Gratuit".
+
+**Decided: the page groups its facts by question and draws each group in the shape its facts have.** This covers the event page and its preview, the `stacked` form of §168. §168's one bullet per piece is replaced.
+
+- **Când** is one line: the date with its weekday (§349), a hidden middle dot, then the time. For example, "Sâmbătă, 26 sept. 2026 · 08:00". A race's two times keep their names ("întâlnire la 09:00 · start la 10:00") on the same flowing line, which may wrap between pieces on a phone. The dot ends the piece before it, so a wrapped line never starts with one. §169 named the lone time ("începe la 09:00") only because it stood on a bullet of its own. With the bullet gone, the name goes too, and `Event.startAt` is removed from both catalogues.
+- **Unde** is the place's name, which is the map link when the organizer pasted one, with the address on the line under it in the smaller grey type of a second line. Before, the address stood on its own further down the page and the preview, under "Adresă", with no glyph and a second link to the same map. That was the owner's "address icons not consistent". Now the map is offered once. While the place is to be announced (§328) this row holds only the sentence, and the flag is read before the name or the address.
+- **Traseu** is one wrapping row of pills: distance, climb, difficulty, surface, in that order.
+  - Each pill is the small outlined `GlyphChip` the listing cards already wear (`EventKindChips`), so the page and the cards read alike. Each glyph crosses the Server–client boundary by name (§112).
+  - There is a pill only for what the club stated. There is no empty item and no pill for a missing climb.
+  - The climb is short on a pill: "300 m D+" in Romanian, the trail runners' notation, and "300 m climb" in English, the fell runners' word.
+  - Distance and climb get glyphs of their own (a ruler; a rising line, as the calendar entry's "↗"). A pill without a glyph beside three with one was exactly "some with a glyph, some without".
+  - A pill's words wrap instead of ending in MUI's ellipsis. A club's amount can be sixty characters, and it must be read whole at 320 pixels.
+  - The route's links (the route, the Strava event, the Facebook event) sit on a line under the pills.
+- **Cost** is not a fact of the route, so it has its own row, labelled "Cost" (the key existed), with one pill:
+  - "Gratuit";
+  - the club's own amount ("50 lei"; the label already says it is a cost, so not "Taxă: 50 lei");
+  - "Cu taxă" when no amount was stated;
+  - "Donație".
+  After the pill come words and links rather than pills: "plata pe {host}", or "Donează pe {host}" (new key `costDonateOn`) and then "sugerat {amount}". A pill is a fact; a link is a link. Nothing at all when the club has not said: null is unstated, not free.
+- **Order:** when, where, the route, the cost, the age (§329), "no registration needed" where it applies (§111), and the partners last (§344, §352). A partner's card is the tallest thing in the block, and the short facts are what a runner scans first. Several partners are spaced one under another, never bulleted.
+
+**One row glyph.** Every row's glyph (Când, Unde, Traseu, Cost, Vârstă, Înscriere, Împreună cu) comes from one style object: 20 pixels, `text.secondary`, `vertical-align: middle` on the label's line. A row cannot drift from the others.
+
+**On a phone the question sits over its answer.** Below `sm`, the label and its glyph are one line and the answer is under it, indented to the label's first letter. From `sm` up, the label column returns, as wide as its longest label, with the answer baseline-aligned to it. At 320 pixels a label column costs the answer a quarter of the width ("Împreună cu" alone is about a hundred pixels). The answers are what need the width now: a row of pills, and a date and time that should fit on one line. This reverses, for the page only, the "on a phone the pair still shares one line" that §73 and §168 kept. The block is about 40–65 px taller on a 320 phone and about a third shorter on a desktop.
+
+**A link keeps its 44 pixels without making its line 44 pixels tall.** The place's map link and the cost's links take `my: -10px` beside their `minHeight: 44`. The box a thumb hits is unchanged, as BR-REQ-041-01 criterion 6 measures it, but the line is as tall as its text, so the address sits right under the name. This applies only to a link whose neighbours are words. The route's links, which wrap into each other on a phone, keep their full height so two targets never overlap.
+
+**Unchanged:** the listing's featured hero (one line of pieces per question, middle dots, the cost among the route's pieces as "Taxă: 50 lei" / "Donație: pe {host}") and the listing and series cards (two plain lines). They are summaries above the fold (§169). The overline still carries the type and the surface (BR-REQ-010-01 criterion 1). The words of every other fact are unchanged.
+
+**Cost on its own row, not "Participare".** Grouping cost, age and registration under one "Participare" label was considered and not chosen. Each row's label is the question it answers, and "Cost" is the one a runner asks. A "Participare" row would hold a pill, a sentence and a state in one answer, which is the mixed bag the owner asked to separate.
+
+**Refused:**
+- **The surface as a route row on its own.** It would repeat the overline under another label. It completes a route row instead.
+- **The donation pill as the link itself.** A clickable 24-pixel chip fails the 44-pixel rule. Enlarging only that pill would make it the odd one.
+- **"Donație" pill followed by "Donație: pe {host}".** The same word twice.
+- **The address as a second map link.** The same destination twice.
+- **A `<ul>` for the pills.** They are short facts, the bullets were what the owner objected to, and the §169 WebKit workaround would come back with them.
+- **Stacking or pilling the hero.** It would push the button the hero exists for off a phone.
+
+**Tests:**
+- Unit `events/event-facts-pills.test.ts` checks:
+  - rows in order;
+  - no `ul`/`li`/"•";
+  - pills in order, each small, outlined and with its glyph, in both languages;
+  - no pill for an unstated climb or difficulty;
+  - no route row from the surface alone;
+  - the cost in its own row for each kind;
+  - Când one line with the weekday, no "începe la";
+  - the address under the place with one map link, and none while TBA;
+  - one class for every row glyph (20 px, secondary colour, middle);
+  - 44-pixel links;
+  - no address block left on the page and the preview;
+  - the hero and the card unchanged.
+- `events/event-cost-facts.test.ts` checks the page's pill and the hero's unchanged phrases.
+- The partner, TBA and weekday suites have their fixtures fixed: `surface: "ROAD"` was never an enum value.
+- E2e: `event-pages.spec.ts` (four pills in order, Cost's pill, Când on one line at 320 px, every row glyph 20 px, no overflow), `event-route.spec.ts` (the surface pill beside the route link; no Traseu row from the surface alone), `event-cost-donation.spec.ts` (the Cost row's pill, "Donează pe …", 44 px).
+
+**Consequences:** `events/ui/EventFacts.tsx`, `events/ui/glyphs.ts` (`distance`, `elevation`), the event page and the preview (address block removed), `Event.elevationShort` and `Event.costDonateOn` in both catalogues, `Event.startAt` removed from both. BR-REQ-041-01 criterion 15 is superseded; BR-REQ-011-01 criterion 7 and BR-REQ-020-01 criterion 8 are amended.
+
+Baseline `BR-V1.76-2026-09-24`.
+
+## 357. The runner takes ownership of the risks, and nothing in a legal text or an email is written in
+
+**Status:** Decided. Changes the platform's three legal templates (`src/modules/legal-documents/templates/`), the emails' own sentences, the metadata of the declaration and bib PDFs, Zitadel's invitation, the seed and the "start from the platform's text" prefill. No migration. Nothing in effect changes until the club approves new versions in `/admin/legal`, and production still refuses the seed (§29).
+
+The owner, 2026-09-24, said three things. The declaration must "cover us on the encounters with wild animals, proper equipment (shoes, headlamp for night running), falling, etc — basically the runner takes ownership of everything". "When I seed a document I must have the placeholders as well!" And "I do not [want] hardcoded stuff in the document and emails anymore!"
+
+### The runner takes ownership, as informed acceptance and never immunity
+
+The declaration has seven new bullets in its own "• …;" style, in both languages. They cover:
+- the terrain and falls;
+- wild animals and dogs, with the basic rules (keep your distance, do not feed, never run from a bear) and 112;
+- the weather and the dark;
+- the runner's own equipment: shoes suited to the terrain, a charged phone, a working headlamp with charged batteries after dark, reflective elements on roads, and a start refused without the mandatory kit the event's rules announce;
+- their own pace and decisions (a group run is not a guided tour);
+- protected areas;
+- personal belongings.
+
+A sentence in the owner's words closes the list: "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu."
+
+The bullets are informed acceptance of a risk plus the runner's own obligations. They are not a promise that nobody answers for anything. Under Civil Code art. 1355, liability for intent or gross fault cannot be excluded, and harm to the body or health cannot be excused except as the law allows. Accepting a risk is not by itself a waiver of damages. What the text can do is inform the runner and set out the conduct they owe, which counts when the victim caused the harm (art. 1371).
+
+So every sentence that says the organiser does not answer for something carries "în limitele permise de lege" / "to the extent the law allows": the liability paragraph, the belongings bullet, and the paragraph on minors the runner brings along. Review found the belongings bullet and the minors paragraph (carried over from the paper form) without the limit, and both carry it now. `tests/unit/legal-documents/declaration-risks.test.ts` refuses an unqualified "nu răspunde" / "not responsible" in the new bullets and holds every disclaimer in the text to the limit.
+
+**A Romanian lawyer should read the declaration before the club approves it on production.** These notes are the platform's reading of the Civil Code, not legal advice. The club approves the text and relies on it. The paragraphs carried over from the paper form, the liability paragraph and the one on minors, are the ones to ask about first.
+
+### No hardcoded value
+
+One approved declaration serves every event, and one privacy notice and one set of terms serve every event and every year. So no template writes in a value of an event or of the club: an event's facts are merge fields, and a club fact is its `<PLACEHOLDER>` (§132).
+
+- The terms name "the courts of the club's registered seat", not a town, and give the participation window's deadline where an event has one (§104).
+- The privacy notice describes the member tick as "the tick saying you are a member of the group", as the form words it: a claim (§48) about the group (§189), not the association.
+- The seed's banner says "the club".
+- The emails read `CLUB_NAME` (§215).
+- The confirmation no longer promises "a week before", because the window is each event's own (§104).
+- The reminder says the event "se apropie" rather than "peste două zile", because a late confirmer is reminded nearer the start (§126).
+- A cancellation without a title names no event, where it used to name the club in the event's place.
+- The declaration PDF's footer and metadata, the bib sheet's Author and Zitadel's invitation `applicationName` read the constant too.
+
+Some things stay written in because they are neither the club's nor an event's: the laws cited, the supervisory authority's statutory contact (art. 13(2)(d) GDPR), 112, and the platform's own fixed periods. `tests/unit/legal-documents/no-hardcoded-values.test.ts` and `tests/unit/notifications/no-hardcoded-values.test.ts` enforce this.
+
+### The placeholders survive the seed and the prefill
+
+"Start from the platform's text" and the one-press approval now share one function, `templatePrefill` in `templates/catalogue.ts`. Every `{{field}}` stays a field, and every club fact the environment does not know stays its placeholder. The seed keeps both. `yarn db:seed:legal` inserts the next version when a template's hash changed and inserts nothing when it did not. `tests/unit/legal-documents/template-placeholders.test.ts` and `tests/integration/legal/sample-seed.test.ts` count the gaps in the template, the in-memory sample, the stored version and the prefill.
+
+### The longer text on two pages
+
+The signed and blank declaration PDFs, adult and minor, flow onto a second page rather than being cut off. Every line of text sits between the margins, and only the footer is under them. The layout test reads the page geometry from `declaration-pdf.ts`'s exports rather than copies. The right edge is checked only as far as every run starting inside it, because a line's end is not in the file's positions.
+
+Baseline `BR-V1.76-2026-09-24`.
+
+## 358. The event editor's first box holds the status, the course and the links
+
+**Context.** The owner, 2026-09-24, with a screenshot of the event editor: "these 3 cards should be in the first one, both on edit and create mode". "Starea evenimentului", "Traseul" and "Linkuri și fișiere" were separate boxes in two different groups (§350). All three describe the event itself, as its type does.
+
+**1. Three named cards inside "Ce fel de eveniment" (amends §350's box list).**
+- The cards are 1.1 "Starea evenimentului", 1.2 "Traseul" and 1.3 "Linkuri și fișiere". Each is a level-3 card (an h3 under the box's h2) placed under the type and "Ce înseamnă fiecare tip?", the same way "Participare și înscrieri" holds 8.1–8.5.
+- The cards start closed on both pages (§336). The box itself is open on the create page and closed on the editor.
+- The page draws the cards and passes them to `KindBox` as children. Each keeps its own props, fields, posted names and id (`#box-status`, `#box-course`, `#box-links`). No field is renamed.
+- The box's closed line gives a word or two from each card (`kindSummary`): `Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri`. Strava and Facebook count as links.
+- The one warning a card line carries is repeated on the box line: "etichetă într-o singură limbă" (§354). A label in one language only is what the next save refuses, and it must be visible without opening two folds.
+- The third group loses the course and the links. It is now called "Parteneri și prezentare" / "Partners and presentation".
+- The cancellation heading inside the status card is an h4.
+
+**2. The create page shows the same card, read-only.**
+- The status card on the create page shows "Programat", disabled, with one line: "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+- The card posts nothing. The page's hidden `event.eventStatus = SCHEDULED` posts, as before (§331). "Anulat" and "Încheiat" are never offered for an event that does not exist yet.
+- `StatusBox`'s props are a discriminated type: no event and no notice on create, or an event and its notice on the editor. A saved event can never fall into the read-only branch.
+
+**3. With people registered, the closed box says so (keeps §350's promise).**
+- The status card is one of the five boxes whose change reaches registered people. It now sits inside a box that is closed on the editor.
+- "Ce fel de eveniment" is therefore amber and shows the count too ("23 înscriși"). The sentence about what a cancellation does stays in the status card.
+- The course and the links reach nobody and are not marked.
+
+**4. A role that may only read the settings is told once.**
+- "Setările le schimbă un Organizator sau un Administrator." appears once, in the box, in place of the type.
+- Each of the three cards is then its heading and its closed line, with nothing to open: a `Panel` that does not fold, whose body is now optional.
+- The amber count still shows on the box and on the status card.
+
+**5. A refusal opens both folds.** `openFoldsAround` already walks every fold upwards. A refused route link, link address or one-sided label, from the browser or the server, opens the box and then the card. The e2e helper `openEditorBox` opens every enclosing box before the card, and finds a card whose heading is hidden inside a closed box.
+
+**Not changed.** The status words ("Programat", "Anulat", "Încheiat") stay Romanian on the English backoffice. That is §35, backoffice enum labels written once; §354 covers the organizer's content. No migration and no new dependency.
+
+Tests:
+- unit: `content/editor-first-card.test.ts` (nesting, closed lines in both locales, the one-language warning, the risk mark, the read-only role, the create page's read-only status, refusals opening both folds), `content/editor-order.test.ts`, `content/create-page.test.ts`, `content/box-summaries.test.ts`;
+- e2e: `cms-publish.spec.ts`, `event-route.spec.ts`, `forms-keep-values.spec.ts`.
+
+Baseline `BR-V1.77-2026-09-24`.
+
+## 359. The email words start from the fields, and the preview's sample never reaches a participant
+
+The owner, 2026-09-24, with a screenshot of "Confirmă adresa de email" on `/admin/emails`: the editable text read "Ai început înscrierea la Crosul de toamnă" — the preview's made-up event — where it should read `{eventTitle}`. "Also all emails text must include these placeholders!"
+
+**What was wrong.** The words editor under each preview (§247, §270) started from the preview itself: the platform's words rendered with the page's sample (§91). A Redactor who saved it unchanged stored the sample's title, runner, place, date, bib, desk code or checklist as literal words, and every participant of every event would have read them. The same starting text put every paragraph in one block, which the email's HTML ran together, and printed the platform's `**bold**` as asterisks.
+
+**Decided.**
+
+1. **The starting text is the platform's words with the fields** — every field of the closed set written as its placeholder, for all twenty message types in both languages (`platformWords` in `templates.ts`, `emailCopyPrefill` in `email-copy-fields.ts`), one paragraph block per paragraph, the platform's bold as bold. Per sentence: the invitation's address reads as the platform's own fallback ("adresa aceasta"), since `{staffEmail}` is not a field; no "results at the link below" on the thank-you; none of the lines the platform adds around a body (the update's new place and time, the club copy's note, "already registered", "provisional"), which are sent whoever wrote the words.
+2. **The sample is one constant, and the save refuses it.** The preview is unchanged and reads its sample from `domain/email-sample.ts`; the save refuses a subject or paragraph holding one of its values, naming the box, the value and the field to use, with what was typed kept (§315). The check is the save's, not the schema's, so a text already stored with a sample value still reads and sends. The bib and the status are too ordinary to refuse as words ("42 de kilometri") and are found only inside the platform's own sentence. The sample inviter is "Ion Exemplu", a name nobody at the club has, so it is refused in every message; the former "Florin" — a real name at the club — is looked for only inside the platform's invitation sentence, so a club that signs "Florin" is not refused.
+3. **A saved text with sample values is flagged in either language.** Every message goes out in both (§96), so an English text holding the sample's title reaches every Romanian participant too: on either tab the card of cards and the message's card open, and the closed card names the language ("textul salvat (EN) are valori de exemplu"). The amber warning and "Înlocuiește cu câmpurile" stay with the language being edited; the button saves the text with each value rewritten to its field — the platform's own sentences whole, so the bib, the status and the old inviter too — audited like a save.
+4. **A paragraph whose only fields are facts the message lacks is not sent.** The platform writes a sentence around seven facts only when a message has them: the place, the start, the number, the desk code, the hold's deadline, the time of signing, what to bring (`EMAIL_COPY_CONDITIONAL_FACTS`). Four are in fact missing from real sends — no number yet, no checklist, no desk code on the club's copy (§320), the hold's deadline once past (§160). A text the club writes cannot say "only when", so the paragraph is the unit: "Numărul tău de concurs: {bibNumber}." is not sent without a number, and the same holds for a heading, a list item and a quoted paragraph. The runner's name, the title, the status, the role and the inviter are not among them: the platform keeps its sentence with a stand-in word ("eveniment", "Un coleg"), and a club paragraph naming one is sent. The starting text gives each conditional platform sentence a paragraph of its own, so a text saved unchanged drops it as the platform does. The helper line under the box says so.
+
+**What goes out.** A message the club never rewrote renders byte for byte as before (1,920 renders compared). The starting text saved unchanged sends the platform's own message for every type and language — with every fact, with none of the four, and as a club copy — but for two differences the test pins: a paragraph break before the conditional sentence in three messages (the declaration's hold deadline, the desk code in the number given by hand, the number in the club's confirmation notice), and the club copy of the number given by hand drops "Îl ridici la masă în ziua cursei" together with the code.
+
+**Rejected.** Leaving the conditional sentences out of the starting text: the owner asked for every text to carry the fields. A rule by sentence: "Numărul tău de concurs: …. Îl primești la masă…" would keep its second sentence with no number to refer to, and a rich-text paragraph's sentences cross its runs. Dropping any paragraph whose fields all came out empty, name and title included: "{participantName}, locul tău a fost anulat." would lose the whole message in a send with no name to put in it.
+
+No migration, no dependency. Tests: unit `notifications/email-copy-prefill.test.ts`, `notifications/emails-page-folds.test.ts`; integration `notifications/email-copy.test.ts`; e2e `email-copy-fields.spec.ts`.
+
+Baseline `BR-V1.78-2026-09-24`.
+
+## 360. Every backoffice sub-navigation is one row of secondary tabs, not pill buttons
+
+**Context.** The owner, 2026-09-24, with screenshots of `/devs` ("Stare | General | Emailuri | Anti-robot") and `/admin/tasks` ("De făcut | Anti-robot | Costuri | Sistem"): "I do not like the subtabs/buttons of the configs and todos". §265 had drawn these panels as MUI buttons, the current one filled blue with a shadow, the others outlined. The row sat under the backoffice's main navigation, which is a row of text tabs with an underline. Buttons under tabs read as things to do rather than as parts of the page. At 320 pixels the four-entry rows wrapped into a second row of buttons, 96 pixels tall. The gallery drew the same idea a third way: two `GlyphButtonLink`s with glyphs (§183, §318), with no `aria-current` on the current one. The email previews' language switch (§268) was already `SubNav` and wore the same buttons.
+
+**Decision.** *One look, one component.* `shared/ui/SubNav` is every sub-navigation in the backoffice: the configuration panels, the to-do panels, the gallery's albums and pictures (`GallerySubNav` now renders it), and the email previews' language. It is drawn as secondary tabs, the main bar's smaller relative:
+
+- **The entry.** Plain links in a list inside a labelled `<nav>` (`label` is required and becomes the `aria-label`). The words are 0.8125rem at weight 500, in the secondary text colour, with no fill, no border box, no shadow and no glyph.
+- **The current entry.** The primary colour, weight 600 and a 2-px underline in the primary colour, sitting on the row's 1-px divider the way the main bar's indicator does.
+- **Styled from `aria-current="page"` itself** (`&[aria-current="page"]`), never from a second prop, so the eye and a screen reader cannot be told different things. Colour alone is not the signal (BR-REQ-041-01): the weight and the underline carry it too.
+- **Heights.** Every entry keeps a transparent 2-px underline, so the current one is not taller. Every entry is 44 pixels.
+- **Focus.** The ring is drawn inside the entry (`outline-offset: -2px`), because the row is a scroll container and would clip one drawn outside.
+- **On a phone.** One line that scrolls sideways inside itself, with the scrollbar hidden as MUI hides the main bar's. It never wraps and never widens the page. The padding is 8 pixels on a phone and 12 from `sm`, so today's rows fit at 320 without scrolling at all.
+
+*Still a Server Component of anchors* (§265): real navigation, rendered on the server, underline included with JavaScript off. The links and their parameters are unchanged. Links rather than `role="tab"`: every entry changes the address, and a tab widget promises arrow keys and a panel in the same document that these rows do not have. The gallery moves from the client-side `GlyphButtonLink` to the same anchors, with its hrefs resolved by `getPathname`.
+
+*No glyphs on a sub-tab row.* The main bar carries the pictures, and a row of one-word labels under it is lighter without them. The alternative was a glyph on every entry of every row: seven panel names and two languages, several with no honest picture. **Amends §318**, which gave the gallery's two sub-navigation buttons glyphs. The `album` name is used nowhere else, so it leaves `action-icons.ts`.
+
+**Rejected.**
+- *MUI `Tabs` for the sub-row.* It is a client component whose indicator is placed by script after hydration, so the current entry would have no underline with JavaScript off. It would also make every sub-row a client island for what CSS draws.
+- *Keeping the buttons with a lighter variant (text buttons).* That is still button chrome and still a ripple, and it still reads as a verb.
+- *Wrapping on a phone.* A second line of tabs is the thing the owner saw and disliked.
+
+**Tests.**
+- `tests/unit/shared/sub-nav.test.ts` renders `SubNav` as the server sends it and reads the markup and the CSS Emotion writes beside it. It checks a labelled `<nav>` holding a `<ul>` of links with the hrefs as given, and `aria-current="page"` on the current entry only. It checks no `<button>`, no MUI Button, Chip or Tab class, no `<svg>`, and no background or shadow. It checks the base rule's transparent 2-px underline, weight 500, 44 px and `nowrap`, and the `[aria-current="page"]` rule's primary border and colour at weight 600. It checks the inset `:focus-visible` ring, and the row's `overflow-x: auto`, 1-px divider, no-wrap flex list and non-shrinking items. At source level it checks that `SubNav` is not a client component, that the gallery, tasks, devs and email previews use it with a label, and that no `? "contained" : "outlined"` pill navigation is left in `src/`.
+- `tests/e2e/config-panels.spec.ts` gains a 320-px walk over the to-do screen, the configuration's general panel and the gallery's pictures. It checks the current link carries `aria-current`, there are no buttons in the row, and the entries sit on one line. It checks every entry is at least 44 px and the page does not overflow. It checks a 2-px underline in a colour no other entry wears, and weight 600. Squeezed to 60 pixels, the row is still one line, overflows and scrolls.
+
+Baseline `BR-V1.78-2026-09-24`.
+
+## 361. The text editors' toolbars wear Material glyphs, one button for both editors
+
+**Context.** The owner, 2026-09-24, with a screenshot of `/admin/legal`'s toolbar ("H2 | ¶ | 🔗 | 🖼 | ↶ | ↷"), pointing at the picture: "I hate this image icon!" Both text editors drew their buttons from characters. The legal editor used "¶", "🔗", "🖼", "↶" and "↷". The pages' editor used "B", "I", "•—", "1.", "❝", "⊞", "🔗", "↶" and "↷", and its table bar used "+↓", "+→", "−↓", "−→", "▦/▤/▢", "↕", "▦", "▩", "H" and "⊟". An emoji is whatever the reader's system font makes of it: a tiny grey picture on Windows, and on 2026-09-18 a broken box on the owner's machine. That was why the pages' editor fell back to words ("Imagine", "Din galerie", "YouTube") and why §274 called the toolbar's rule "words, not icons". The arrows and box-drawing characters read as noise.
+
+**Decision.** *One button for both editors.* `shared/ui/ToolbarButton.tsx` replaces the two local `Control` components. Every button has:
+- a filled Material glyph at 20 px (`TOOLBAR_GLYPH_PX`), in the button's own colour (`action.active`, and the text colour once pressed);
+- a target at least 44 px square;
+- `ToggleButton`'s `aria-pressed` for the states;
+- its full label as `aria-label`, and as an MUI `Tooltip` that shows on hover and on a long press (`enterTouchDelay`).
+
+The tooltip is `disableInteractive`: it never takes the pointer, so in a wrapped row it cannot sit over the next button and take its click. The native `title` is gone, because two tooltips at once is noise too.
+
+The editors are client islands, so the glyph is passed as the component itself, and nothing crosses the server boundary. `action-icons.ts` (§318) remains the registry for buttons a Server Component renders.
+
+*The glyphs.* One family (filled, like the rest of the backoffice, §318), one file per glyph, never the barrel (§90).
+- Bold `FormatBold`, italic `FormatItalic`, lists `FormatListBulleted` and `FormatListNumbered`, quote `FormatQuote`. The three alignments keep §274's glyphs.
+- Insert a table `TableChart`, link `Link`, a picture `AddPhotoAlternate` (in both editors), the gallery `PhotoLibrary`, undo `Undo`, redo `Redo`, and preview `Visibility` (previously the outlined eye, the only glyph from another family).
+- A YouTube film is `SmartDisplay`, the play mark, not YouTube's logo: §90 refused Material's brand glyphs.
+- The table's bar:
+  - Rows (`TableRows`) and columns (`ViewColumn`) wear a small plus or minus badge (`AddCircle`/`RemoveCircle`). That is two pictures and two signs, not four unrelated glyphs, since Material has none for these verbs.
+  - The borders control shows the state it is in: `BorderAll`, `BorderHorizontal` or `BorderClear`.
+  - Middle alignment is `VerticalAlignCenter`.
+  - The line colour is `BorderColor` and the header fill `FormatColorFill`, the two glyphs every office suite uses for these.
+  - The header row is `WebAsset`, a box whose top band is filled.
+  - Deleting the table is the §318 bin.
+
+*Words where a word is clearer.* "H2" and "H3" stay words at the glyph's height. A heading level is read faster as its name than as any picture. The legal editor's paragraph button reads "Text" (catalogue `Admin.legal.editor.paragraphShort`, the same in both languages), beside "H2", the pair every word processor's style list offers. Material's glyphs for "a block of text" (`Notes`, `Subject`) are lines of text, which is exactly what "align left" looks like in the pages' editor. `FormatTextdirectionLToR` is a text-direction control, not a paragraph.
+
+*The floating bars above the sticky toolbar.* Tiptap appends the table's bar and the selection's bar to the writing area with no stacking order of their own. The sticky toolbar's `zIndex: 2` (§273) therefore painted over the table's bar whenever a table sat at the top of the body, and every table verb was hidden behind it. Both bars now take `style={FLOATING_BAR_STYLE}` (`zIndex: 3`), a module constant like the bars' other props, so it is one object across renders (§274's React #185). That puts them above the toolbar and far below MUI's app bar and popovers.
+
+*Unchanged.* Every command, shortcut, catalogue label and pressed-state rule, and the three-state cycles of the table controls. The legal editor's row is now a named `role="toolbar"`, like the pages' editor. The short words the three media buttons wore (`imageShort`, `imageFromGalleryShort`, `youtubeShort`) are no longer drawn; like `alignShort` and `previewShort` before them, they stay in the catalogue until a cleanup drops them.
+
+*Amends §274 and §263.* §274's "words, not icons" was a rule about emoji, and an SVG glyph cannot render as a broken box. §263's box-drawing characters for the borders state are replaced by the three border glyphs.
+
+**Refused.**
+- *Keeping emoji or Unicode characters with a font stack that draws them better.* The owner's complaint is the picture itself, and no font is on every machine.
+- *The registry by name (`action-icons.ts`) for these buttons.* Both editors are client islands that make their own elements. Routing twenty-five editor-only glyphs through the server-safe lookup would add them to every backoffice page that renders a `GlyphButton`.
+- *YouTube's own logo.* §90 refused Material's brand glyphs.
+- *A lines glyph for the paragraph.* It would be read as "align left".
+- *An interactive tooltip.* Over a wrapped row of buttons, it takes the click meant for the next button.
+
+**Test.** `tests/unit/content/editor-toolbar-icons.test.ts`:
+- renders both editors' toolbars as the server does;
+- for every button, checks: a name, no `title`, no old character or letter as its face, and either "H2", "H3" or "Text", or a glyph and nothing else;
+- checks that every glyph in an editor shares one CSS class, drawn at 20 px with no colour of its own;
+- reads the table's bar and the selection's bar from the source (29 `ToolbarButton` elements, each an icon or "H2"/"H3", two plus badges and two minus badges, no `Control` left);
+- checks both bars' `zIndex`, the non-interactive tooltip, and the one-file-per-glyph, filled-only imports;
+- checks that none of the old characters remains in either editor's code.
+
+Baseline `BR-V1.79-2026-09-24`.
+
+## 362. The meeting point, asked once per language
+
+**2026-09-24.** The owner, of the editor's Locul box, with a screenshot: "There is some redundance on this meeting spot location". The box asked for the place twice: a shared "Punct de întâlnire", then "Denumirea locului (în această limbă)" on Română | English tabs, which in practice held the same text again.
+
+**Decision.** The box asks "Punct de întâlnire" once per language: two boxes, Română and English, side by side from `sm` and stacked on a phone. Both are required unless the place is to be announced; §328 hides and keeps them. The map link stays one field, because a link has no language.
+
+- **Storage, no migration.** The Romanian box writes `events.location_name`, which the desk, the backoffice and every reader without a language read, and the Romanian row's `location_name`. The English box always writes the English row's `location_name`, even when it matches the Romanian, so no English page borrows the Romanian words.
+- **Opening values.** Each box opens with what its page shows today (`place.ts#placeInBox`): the row's own name, else the event's, with an older event's street address folded in. An event saved before this opens unchanged.
+- **Whose field it is.** The names belong to the event, not the words. The event save writes them (the Organizer's save, §207) under the event row's version. A text save refuses a `locationName`, so a Redactor saving in the same minute is never refused over a place she did not touch.
+- **Readers.** Each reader reads its own language's name: the page, the preview, the emails, the calendar file, the JSON-LD and the declaration's `{{eventLocation}}`. In a bilingual email, each half names its own language's place.
+- **Publication.** A missing English place is refused like a missing translation, judged by what the page would show, so older events still publish.
+- **"Did the place move."** There is one rule for this: `place.ts#placeShown`, which is what the page shows with spacing normalised. The series edit and the participants' notice both use it. A series save carries a place moved in either language to every date it reaches. The first save of an older event moves no date's place and announces nothing.
+
+**The copy button.** "Același nume și în engleză" fills an **empty** English box only. It never replaces a name already there: on a phone, the 44-pixel button sits right under the English box, and one tap would replace "Tractorul Park" in a way the browser's undo cannot reverse (found by review).
+
+**The English follows the Romanian while they agree** (found by review). An older event's English page had no name of its own, so its English box opens with the Romanian words. Moving only the Romanian used to save the old place as that date's English name. A series save then sent the new Romanian name to every other date, whose English pages follow it, so the edited date's English page kept the old meeting point on its own.
+- **In the editor:** while the two boxes say the same non-empty place, typing in Romanian writes the English box too.
+- **On the server,** for any save: `englishNameAfterSave` gives the English row the new Romanian name when all three hold:
+  - the English row had no name of its own;
+  - the English box posted exactly what the English page showed;
+  - the Romanian place moved.
+- **An English name of its own is never written over.** When the Romanian moves away from it, a line under the English box says the English still names the old place, and the organizer decides.
+
+Found on the way: in MUI's `sx`, `width: 1` means 100%. The visually hidden half of each label pushed the 320px create page to 342px, so taps below the box landed beside their targets. Sizes are strings now.
+
+Found by re-review and settled in the round before the crash (a5a72dad), then checked again in this one: the server's rule that lets an older event's English name follow its Romanian one (`place.ts#englishNameAfterSave`) never fills a blank English box. A blank box is saved blank. So an event whose place is to be announced (§328), with only the Romanian venue typed, keeps its English row empty, and `placeRule` asks for the English name when the switch goes off. The owner's rule is "multi-lingual, always": the English name stays required unless the place is to be announced, and the Romanian is never written into it by the server. The English follows the Romanian only when all three hold:
+- neither language's row had a name of its own;
+- the English box posted exactly what the English page showed;
+- the Romanian moved.
+
+When the Romanian row had a name of its own, the two pages already said different things. The English is then kept as posted, as the amber line under the English box says ("În engleză scrie tot „{place}”").
+
+Once JavaScript runs in it, the editor's Locul box posts `event.placeNamesAsTyped` (the constant is in `form-names.ts`, not in the "use client" file). The service then keeps both names as posted: the box already made the English follow on the screen, and what it holds is what the organizer left there, including an English box put back to the old name. The server's HTML carries no marker, so a save without JavaScript, from a script or from a test gets the server rule.
+
+The tests read no source line for the place except one layout guard: the unseen half of each label stays one pixel wide, never MUI's `1` (100%), because a label-wide span pushed a 320-pixel page sideways. The refusal summary's labels for the two boxes are checked by calling `eventFormFieldLabels` against the shipped Romanian catalogue, not by reading the file.
+
+**Found by CI on this batch (PR #159), second round.** Two e2e failures, neither in the code this section changed.
+
+- **§358's refusal spec** (`forms-keep-values.spec.ts`, "a link label in Romanian only…") was merged at the same time as this section and filled only the Romanian meeting point. With the English box required, the browser refused the press ("Completează mai întâi: Punct de întâlnire (English)"), so the server's refusal the test asserts never rendered. The spec now fills both boxes, as this section's own spec updates did. No other spec fills the Romanian place on the create page without the English one.
+- **"Înlocuiește cu câmpurile"** (`email-copy-fields.spec.ts`, §359) failed once in CI, passed on the retry, and failed every time on a loaded laptop. The action was never reached: no request left the page. The rich-text editor builds Tiptap only in the browser, after hydration (`immediatelyRender: false`), and until then its writing area was an empty `div`. When Tiptap mounted, the area grew to its 240-pixel minimum plus padding, and everything under it moved down 272 pixels. On `/admin/emails` that is every message's "Salvează textul" and "Înlocuiește cu câmpurile". A press in that first second landed on the gap the button had just left and did nothing, with no refusal and no answer. On a phone, a real organizer can hit this; it is not only a test artifact.
+
+**Decision.** Until Tiptap has mounted, the writing area is an empty, aria-hidden box of exactly the same minimum height and padding: one object, `WRITING_AREA_BOX`, sets both. The box leaves in the same render that brings Tiptap's element in (Tiptap's `EditorContent` attaches it when it mounts, before the browser paints), so nothing under an editor moves when the editor loads. The spec was left as it was, pressing without waiting for hydration: it now checks that a press in that moment reaches its button. The legal documents' editor (`LegalBodyEditor`) is built the same way and is not changed here.
+
+Baseline `BR-V1.80-2026-09-24`.
+
+## 363. The floating bars are lifted on what they render, and a fold keeps its state across the language tabs
+
+**2026-09-24. The owner, twice about the backoffice text editors.** First, with a screenshot of the event description: text selected and three empty rounded buttons over it, only the tooltip "Îngroșat" readable: "I can't see these buttons in the rich text editor". Second: "I would like to keep the expand/collapsed state while changing the language tab in the event editor."
+
+### The bars over a selection and over a table (amends §361)
+
+§361 lifted both floating bars above the editor's sticky toolbar (`zIndex: 2`) by passing `style={{ zIndex: 3 }}` to Tiptap's `BubbleMenu`. It worked under `next dev` and nowhere else. Tiptap 3.31 copies `style`, `className` and the `data-*`/`aria-*` props onto the menu's element in a helper, `useMenuElementProps`. Its loops for style and attributes are written as a `new Set([...])` annotated `@__PURE__` with `.forEach(…)` called on it. The production minifier takes the annotation for the whole call, finds the result unused and deletes it: the built chunk has no style code at all. In production the bar had no stacking order. A word selected on the first lines puts the bar over the toolbar, and the toolbar painted over it, so the owner saw the bottoms of the three buttons below the toolbar with their glyphs behind it. The table's bar had the same fault, so the thing §361 fixed for tables at the top of the body never shipped either.
+
+**Decision.** The order is set on the bar's own `Paper`, which React renders and Emotion styles: `position: relative; z-index: 3` (`FLOATING_BAR_SX`). While shown, the menu element has `z-index: auto` and `opacity: 1`, so it makes no stacking context, and the Paper is stacked with the toolbar. `BubbleMenu` is given only the plugin's own props (`editor`, `pluginKey`, `shouldShow`, `options`, and the delays, `appendTo` and `getReferencedVirtualElement`), and a unit test refuses anything else. Whatever a bar needs goes on what it renders, including the `data-floating-bar` attribute the tests find it by.
+
+**Refused.**
+- A `yarn patch` of Tiptap: a dependency change for one line of our own styling, and it would be undone by the next upgrade.
+- `className` on `BubbleMenu`: `syncClassName` survives today's minifier, but it rides the same fragile helper.
+- Waiting for an upstream fix.
+
+**How it stays fixed.** An e2e check (`tests/e2e/support/floating-bar.ts`) selects a word on the first line and puts the caret in a table. For every button of the bar that appears, it requires a glyph with a non-zero box, a fill that is neither transparent nor the bar's surface, and a hit test at the glyph's centre that lands in its own button. A bounding box and a colour were right all along; only the hit test sees the toolbar on top. Run against a build of the fix without the z-index, it fails on both viewports and in both editors; with the fix it passes. The e2e suite runs on a production build, which is where this fault lived. The legal documents' editor has no floating bar. The email words' editor has the selection bar and is fixed by the same change.
+
+### A fold and its twin in the other language
+
+The event editor gives every box with per-language text its own Română | English tabs (§350). Inside a panel, the summary, the description, the programme's notes and the rules are folds that mount their editor when opened (§96). Each language had its own fold state, so what the organizer opened in Romanian was closed in English.
+
+**Decision.** A fold inside a language strip and its twin in the other language are one fold.
+- **Key.** The fold's name with the panel's language segment taken out: `translations.ro.body` and `translations.en.body` are both `translations.*.body` (`twinFoldKey` in `shared/ui/fold.ts`). No caller had to change.
+- **Store.** The strip (`LocaleTabPanels`) holds one small store per strip for its life (`createTwinFoldStore`) and hands it to each panel with the panel's language and whether it is on top (`TwinFoldProvider`). A fold reads it through `useTwinFold`, with `useSyncExternalStore`, so only the fold whose key changed re-renders. Typing elsewhere in the strip moves the tabs' marks and re-renders nothing inside.
+- **The attribute and `toggle`.** The fold's `open` attribute is driven by the store, and its `toggle` event feeds the store. A press on the summary, a refusal opening the folds around a box (`revealField` / `openFoldsAround`, §336, §358) and the twin's change all end in one `set`, which does nothing when the value is already there.
+- **Server rendering.** The store is empty on the server and on the first client render, so the HTML is what it was (closed) and a browser without JavaScript folds as before.
+- **Refused saves.** A refused save keeps the state: the lazy editor re-mounts on the answer's generation (§315), but the strip holding the store does not.
+- **The hidden twin.** A twin that opened behind a hidden tab mounts its editor when its tab comes forward, not before. Two Tiptap instances for one press would bring back §96's cost, for a language nobody is looking at yet.
+
+**Once mounted, a lazy editor stays mounted.** Closing the fold used to swap the editor for the hidden field that carries the stored document, so text typed and then folded away was replaced at the save by what the page was loaded with. With twins, that would be a whole language's typing lost to a click in the other one. A closed fold now hides the editor; it does not unmount it.
+
+**Refused.**
+- One page-wide language switch: §350 removed it for good reasons.
+- Remembering fold state across reloads (localStorage): a closed fold on arrival is §336's rule.
+- Mounting both editors at once.
+
+**Consequence for the tests.** A spec that opened the Romanian summary and then clicked the English one closed the twin that was already open. Such steps use the idempotent `openFold`.
+
+Baseline `BR-V1.81-2026-09-24`.
+
+## 364. The organizer writes to an event's participants: a message per send, in both languages, to the group they choose
+
+**Context.** The owner, 2026-09-24: "I also want to be able to send custom emails to people, in case something happens, e.g. bad weather, cancelled event, etc!" §331 gave the platform two notices: "Detalii actualizate" and "Eveniment anulat". Both carry the platform's sentences, and the organizer's words ride on them only as a note beside a save. Nothing let the organizer simply say something: the storm, the start moved an hour, the car park closed.
+
+**Decided.**
+
+1. **Its own page under the event.** It is `/admin/events/[id]/mesaje`, and two places link to it:
+   - the editor's immediate actions (the "Înscrierile primite" box, `announce` glyph);
+   - the registrations list, when one event is selected.
+
+   It is a page rather than a box in the editor for three reasons. The preview is a whole email in a sandboxed frame. The history belongs beside it. The editor is one form, one save, and a message is its own act, never a side effect of a save (§9, §331.1).
+2. **Who hears it, chosen, with live counts.** The page offers four groups (`domain/organizer-message.ts#AUDIENCE_STATUSES`):
+   - `ALL_ACTIVE`: exactly §331's `EVENT_NOTICE_STATUSES`, held to it by a test;
+   - `CONFIRMED`;
+   - `WAITLIST`: `WAITLISTED` and `WAITLIST_OFFERED`, because somebody offered a place is still waiting until they sign;
+   - `PENDING_DECLARATION`.
+
+   The last three partition the first. The rest of the rule:
+   - Never `CANCELLED`, `EXPIRED` or `PENDING_EMAIL_CONFIRMATION`, for §331's reasons.
+   - Test rows are written to like real ones and counted apart, as §331 does (`AGENTS.md` §12.6). `enqueueEmail` gives them no club copy.
+   - Before the press the page shows the real count, the test count, and the messages including the club's copies (`organizerMessageCost`). It also shows what the plan has left (§100) minus what already waits.
+   - When the send is larger than that, the page says how many leave now and how many wait for the reset (`organizerMessageDeferral`). It never refuses: the outbox already defers (§40).
+3. **The words: subject and body, Română and English, both required.**
+   - A refusal names every empty box, and the rest comes back as typed (§315).
+   - The text is plain. A blank line starts a paragraph and a single break stays a line. It is escaped, and no `**`/`__` is read inside it, as for §331's note.
+   - Ceilings: subject 150 characters in each language, body 4 000.
+   - The subject a runner receives joins the two languages with " / " (§96) after the placeholders are filled, so it can run to more than twice 150. That is accepted: a mail client cuts a long subject short and the provider does not refuse it, the stored §247 wording of every other type allows 200 per language, and 150 keeps the registrant's own language, which comes first, whole.
+   - The placeholders are a closed subset of §247's: `{participantName}`, `{eventTitle}`, `{eventStartsAtFormatted}`, `{eventLocationName}`, `{bibNumber}`, `{eventChecklist}`.
+   - Anything else in braces is refused by name (`MESSAGE_UNKNOWN_PLACEHOLDER`). That includes the §247 names this message never fills: `{staffRole}`, `{holdExpiresAtFormatted}`, `{signedAtFormatted}`, and the desk code `{checkinCode}`, which only the participant may hold.
+   - `{bibNumber}` is the settled number only. A provisional one would print without the line that says it can still move (§237).
+   - The same-words-twice warning of §354 shows under the body.
+4. **The preview is the real email.** Each pause in typing (500 ms) asks the server (`previewParticipantMessageAction`) to render the words through `renderBilingual`, the template the outbox sends with.
+   - It uses the event's own facts, read now in both languages, and a made-up runner (Ana Popescu, 42).
+   - Two tabs show the Romanian registrant's copy and the English one, like `/admin/emails`.
+   - Unknown placeholders are named above it before any press.
+   - Nothing is queued and nothing is minted.
+5. **Sending: `ORGANIZER_MESSAGE`.** Migration `0068_organizer_message` adds one enum value, expand only (renumbered at integration).
+   - One row per registration, in its language, with payload `{ subject: { ro, en }, body: { ro, en } }`.
+   - The key is `organizer-message:<send id>:registration:<id>`, and `requested_by_staff_user_id` is the sender.
+   - The message is rendered in the one card: the facts line, one framing sentence, the organizer's words, and the event's page as the button. It has the usual links plus "Înscrierile mele" by address (§77).
+   - No token, no attachment, and the privacy line (§323).
+   - The club's copies follow the participant list through `enqueueEmail` (§320), and tracking is off in the adapter.
+   - The second half's placeholders read the second language's facts: the title, what to bring and the place's own name. This costs one extra event read per row. §354 left this undone for the other types and it stays so there; here the organizer writes `{eventTitle}` into both halves, and an English sentence carrying the Romanian title is what "bilingual always" forbids.
+   - A payload that cannot be read renders the platform's fallback subject and framing sentence.
+6. **Idempotent.** The page mints a `sendId` on every render, and the form re-mounts on it, so the boxes are empty after a send.
+   - The send takes the event row's lock (`lockEventForCapacity`, the one every allocation takes) and looks for an audit row carrying that id first.
+   - A second press of the same form finds it and queues nothing: "fusese deja trimis".
+   - A registrant who arrived between the two presses is not written to either.
+   - The outbox keys would refuse the same rows anyway.
+   - An empty group queues and audits nothing, and the refusal names the group (`NO_RECIPIENTS`).
+7. **Who may send: `canMessageParticipants` = `canEditEventFields && canReadRegistrations`.** That is the Organizer, the Administrator and the Superadministrator. It is asserted in the service; the page answers 404 and the preview answers nothing for anybody else.
+   - **This narrows §331's set, and the owner has not confirmed it yet.** §331's notices need only `canEditEventFields`, so the Tehnic role (`DEV`) may send the update and cancellation notices, free-text note included. Those go out only with a save of the event itself, with the note under the platform's sentences and sent to everybody active. This message stands alone: whatever was typed, to a group the sender picks from the registrations' states. That makes it an act on the participant list, and `DEV` is the role that never receives the list (§38, §289).
+   - Should the owner want §331's set instead, the predicate becomes `canEditEventFields` alone. That is one line in `roles.ts`, plus the role rows of the unit, integration and e2e tests.
+   - The volunteer and the Redactor are out, as they are out of the event's settings.
+8. **Audit and history.** `event.participant_message_sent` on the event records the actor, `{ sendId, audience, recipients, test, subject: { ro, en } }`. It never records an address or the body (§12.12: no email body). "Mesaje trimise" under the composer shows the last twenty: the date, the subject as written in the backoffice's language (the Romanian one when a row carries no other), the group, how many, and who.
+9. **`/admin/emails`** has a card for the type, previewed with a sample message in both languages. It says the text is written per send on the event's page. The §247 copy editor refuses the type, and `buildTemplateContent` ignores any stored wording for it.
+10. **A cancelled event can still be written to.** §331.7's "goes quiet" is about the platform's machinery. This is an explicit human act, like the cancellation notice itself: a new date, a refund of the entry fee. The page says so.
+11. **The privacy notice template** (section 5, both languages) now names "the organizers' announcements about the event you registered for", on the same basis, art. 6(1)(b), not marketing. The §331 notices were missing from it too. It also says the organizers' own words are the one text an outbox row keeps. It has no effect until the club approves a new version.
+
+**Rejected.**
+- A note box on the editor's save, like §331's. It ties a message to a save and a version, and the editor is one form.
+- Writing to `PENDING_EMAIL_CONFIRMATION`: nobody has vouched for that address.
+- Refusing a send larger than today's allowance. The outbox defers, and a refusal would drop the storm warning.
+- Keeping the body in the audit row.
+- Making the type a §247-editable template: the words are per send.
+- The rich-text editor (§270). A plain box is what somebody types on a phone at six in the morning, and a Tiptap island is cost the brief did not need. It can be added if asked.
+- Lowering the subject ceiling so the joined subject stays under 150–200 characters: it would squeeze a message's own language to about 75 characters, to save a line that the mail client cuts anyway.
+
+**Not done.**
+- **"All dates of the series ahead" is left out.** Each date is its own event with its own registrants. A series-wide send would turn the counts, the preview's facts, the confirmation and the audit into per-date lists. §331's series save does that fan-out and could be reused, but not simply. Each date's page has its own composer, and the page says so on a series date.
+- No scheduling for later, and no attachment: a new GPX goes on the page's "Linkuri și fișiere" (§332), which the message links.
+- `enqueueEmail` schedules one after-response drain per row, as §331's notices already do; concurrent drains are safe (`SKIP LOCKED`).
+
+**Tests.**
+- Unit: `notifications/organizer-message.test.ts` covers:
+  - the groups and the §331 set;
+  - roles;
+  - both languages required;
+  - placeholders refused by name;
+  - ceilings, paragraphs, the payload reader, cost and deferral;
+  - rendering per language with each half's own words and facts, escaping, the fallback, stored wording ignored, the club copy.
+- Integration: `notifications/participant-messages.test.ts` covers:
+  - the enum migration;
+  - counts with every status and a test row;
+  - one row per recipient with both languages;
+  - a double press, with a registrant arriving in between;
+  - an empty group;
+  - refusals;
+  - roles, preview included;
+  - the audit row without addresses or body, and the history;
+  - per-language rendering and no token;
+  - `{bibNumber}` settled only;
+  - club copies for real rows only, each picked by its registration and rendered in its registrant's language ("[Copie club]" for a Romanian registrant, "[Club copy]" for an English one), because neither the send nor the outbox orders them;
+  - the preview;
+  - the copy editor refusing the type.
+- `cms/boundary.test.ts` gains the route.
+- e2e: `participant-message.spec.ts` runs on the phone and the desktop.
+
+Without the event's title (a row whose title could not be read, or an empty one), the organizer's message names no event rather than the club: the subject falls back to "Un mesaj despre evenimentul la care te-ai înscris" / "A message about the event you registered for", and the platform's one sentence to "Un mesaj de la organizatorii evenimentului la care te-ai înscris:" / "A message from the organizers of the event you registered for:" — the rule §357 set for the cancellation, and the reason the club's name appears in `templates.ts` only through `CLUB_NAME`. The organizer's own subject, when it is there, still wins over the fallback.
+
+The branch now sits on qa's §359. The organizer's sample message on /admin/emails ("Vreme rea la {eventTitle}: startul se mută la 10:00" / "Bad weather at {eventTitle}…", a body greeting {participantName}) is kept in `EMAIL_SAMPLE` in `domain/email-sample.ts` with the other sample values. It reaches the page through `emailSampleData`, like every other preview, so the preview and §359's guard read one constant. The guard does not list it as a value to refuse, just as it leaves out the note and the reason from §331. It holds only placeholders and ordinary words, and it is never part of an editor's text.
+
+The organizer's card is the only one on /admin/emails with no words to edit. It previews the sample message and says the text is written per send on the event's page. It reads no stored wording (`own` is null) and asks for no sample-value languages, so it never raises the amber marker and never opens the card of cards for attention. This matches the other two places that already treat the type as written per send: the §247 save refuses an entry for it, and `buildTemplateContent` ignores one. The §359 per-type tests run over the twenty types that have an editor. The organizer's card is pinned by its own block.
+
+`renderBilingual` now takes the other language's title and checklist (`eventTitleOther`, `eventChecklistOther`) only for ORGANIZER_MESSAGE. Before, the rule was a comment on `TemplateData` and the send path simply never set them for other types. It is now enforced where they are read. So the one sample can carry both, the organizer card's English half shows the English title as the send does, and every other message's second half still reads the registrant's language, as §354 left it.
+
+The composer's preview no longer shows one language's copy under the other tab. The pause after typing is a small object (`ui/preview-pause.ts`). A tab picked cancels it and asks at once for that tab. A pause that runs out asks for the tab open then, not the tab open when the key was pressed.
+
+The composer's preview is addressed to the same made-up runner as every /admin/emails preview. Her name and race number come from `EMAIL_SAMPLE` in `domain/email-sample.ts`, and the page's help line above the preview ("…for a sample participant, {name}, number {bibNumber}") is filled on the server from that same constant. The branch's own copy (`PREVIEW_PARTICIPANT`) is gone. The line and the preview cannot name two different people, and a change to the sample reaches both, as §359 already set for the sample and its guard.
+
+Test-only: the §359 e2e spec (`email-copy-fields.spec.ts`) now waits for the page to finish loading its scripts before it presses "Înlocuiește cu câmpurile" or "Salvează textul". Every check before the press already holds on the server's HTML, so on a warm production build the press could land before the page was interactive and be dropped: no refusal, no banner, nothing saved. CI's slower single worker had not shown this.
+
+Baseline `BR-V1.81-2026-09-24`.
+
+## 365. A phone's footer is two short lines: the build stamp in the fold, RO and EN side by side
+
+**Context.** The owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile… it now takes way too much space, and version shows by default." §324 gave the phone's bar a second line, with the privacy notice ("Confidențialitate") and the language on it. Under that bar the layout still rendered `BuildBadge`, and below `md` that was a third line of footer. Every visitor read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" on every page. Measured on production builds at 320, 360 and 390 pixels, on a page three screens long: the sticky bar was 89px on every screen (two 44px lines and the border), and 127px at the page's end from the bar's top to the document's end. The language switcher on the second line was RO stacked over EN: two 22px lines, stretched to one 44px target by a pseudo-element. From `md` the badge floated in the bottom-right corner.
+
+**Decision.**
+- *The build stamp is the last line of the "Despre club" fold* (`shared/ui/BuildBadge.tsx`, rendered by `SiteFooter`; the layout no longer renders it). It is on screen at no width and in no environment until somebody opens the fold. It is still the staff entrance (§34): a double-click, a long press on a phone, or `Enter` when focused. One tap still does nothing, so a tap in the open fold is not a trap. It is a quiet 44px line of the panel, as wide as its words, and wraps instead of being cut. Where `STAFF_AUTH_MODE=disabled` it is an inert label. One rule for every environment: QA already says it is QA in words above the header (`EnvironmentNotice`), and a rule keyed on the environment could only be tested on a production build. `/api/health` and `/devs` report the same values.
+- *RO and EN side by side at every width* (`shared/ui/LocaleSwitcher.tsx`), each link a 44px target. The phone's switcher has not been on the header row since §262 (the header's copy is `display: none` below `sm`). It sits on the footer's second line beside the privacy notice, where about 100 pixels are free. The stack and its `::before` hit-area extension are gone.
+- *The bar stays two 44px lines on a phone and one from `sm`, sticky at `bottom: 0` at every scroll position.* It is 89px with its border, the same as before, and now has nothing under it. `scroll-padding-bottom` stays 96px on a phone and 52 from 600px (BR-REQ-041-01 criterion 22).
+
+**Considered and refused: one floating line on a phone.** A negative sticky offset (`bottom: -44px` below `sm`) makes the bar float one line, 45px, while the page scrolls, and rest two lines tall at the page's end. A `:has(:focus-visible)` rule would raise it for the keyboard. The review refused it. It takes the privacy notice off the always-visible bar that BR-REQ-041-01 criterion 21 and §323 put it on ("from any page without opening anything", GDPR art. 12). It does the same to a phone's only language switch. And `:focus-visible` does not follow a screen reader's own cursor (VoiceOver swipe, TalkBack), so a link could be focused under the screen's edge. That is a change to a documented rule and the owner's to make; it is asked of him separately. The ask as given (at most two short rows, RO | EN inline, the stamp not shown by default) is met without it.
+
+**Consequences.** A phone's footer is 89px at every scroll position, with nothing under it; at a page's end it was 127px. From 600px up it is 45px and nothing floats in the corner. The stamp costs a visitor nothing and costs staff one tap, opening the fold. The e2e suite measures it (`tests/e2e/footer.spec.ts`, `tests/e2e/build-badge.spec.ts`). `tests/unit/shared/site-footer.test.ts` pins it on every commit: the stamp only inside the fold's panel, no `BuildBadge` in the layout, sticky `bottom: 0` with no negative offset, the privacy link and the language outside the fold, the 96/52 reserve, and RO/EN as a row of 44px targets.
+
+Baseline `BR-V1.81-2026-09-24`.
+
+## 366. The listing's cards are one structure: the title is the blue link, the place its map, the time its clock, the route and the cost the page's pills
+
+**Asked by the owner, 2026-09-24**, with screenshots of the public listing (`/ro/evenimente`, two columns of cards): "There is too much whitespace on these cards, it needs to be better spaced". Then, of the one-off "Trail to Road cu Brașov Running Festival" beside two series cards:
+- "I do not see the google maps link for this event, although I've put the maps URL";
+- "for the time I would like a clock icon as well, and prioritize the card layout";
+- "I am missing the blue link for this event, why?";
+- comparing the card's line "Piața Sfatului, Brașov · Împreună cu Brașov Running Festival · 8 km · 250 m diferență de nivel · Mediu" with the event page's pills: "I like these pills on the full page details! this is currently pretty ugly!".
+
+**Measured on production (BR-V1.79):**
+- On a 1280 px desktop the cards were 531, 531 and 465 px tall. The one-off card had about 190 px of nothing between its facts and its door, because the door was pinned to the foot of a card stretched to its row (§275).
+- Its summary printed a 60-character registration address.
+- Its summary's rich-text links sat inside the whole-card `<a>`, which made nested anchors.
+
+**The root cause was two card structures.** The one-off card was one `<a>` (`CardLink`) around everything, so:
+- its title was a black heading beside the series cards' blue links;
+- its place could not be the map link the club had pasted, because a link cannot hold another link.
+
+**Decided: both cards are one structure, from one set of constants (`events/ui/card-layout.ts`).**
+- **No card is a link.** On both cards the title in the `<h2>` is the link to the event.
+  - Its colour is the theme's primary (the club's blue, and the lighter blue in the dark scheme), the same when visited, never the browser's purple.
+  - No underline until a pointer or the keyboard is on it.
+  - It keeps the size and weight both titles already had (1.25rem, 500).
+  - **Its 44 px (BR-REQ-041-01 criterion 6) are padding given back as an equal negative margin, so the line is as tall as its words.** A title that wraps grows the padding box instead of pulling the summary into its second line.
+  - **The reach is uneven: 8 px (`LINE_GAP`) below the words and the rest of the 44 above them (10 px for one line).** The reason: whatever comes later on the card paints over the link and takes a press on the pixels the two share.
+    - The first version reached 10 px below. The series card's recurrence line sat 4 px under the title and a one-off card's summary 8 px under it, so a finger could hit about 40 px of the link (42 above a summary), while the link's own box measured 44.
+    - Now nothing is nearer under a title than the link reaches: the recurrence line and the summary are a line's gap below, and the facts a group's gap. Above, the chips are 12 px away, more than the 10 px the link reaches up.
+  - The one-off card's lift under a pointer went with the whole-card link, because it said "all of this is one press". The series card never had it.
+- **Order on both cards:** the chips, the title, the summary (on a series card, the recurrence sentence first), the facts, and on a series card the folded dates, then the door (§305, §319).
+- **Spacing: two gaps and nothing else.**
+  - 8 px between the lines of one group: the title, a series' recurrence line and the summary; the date and the place; the pills among themselves.
+  - 12 px between groups.
+  - The door follows the facts or the fold with 4 px, which its own invisible 44 px box makes up to a group's gap.
+  - Rows keep equal heights (§275: a ragged row was what looked broken). Whatever a row leaves over sits below the door, at the card's foot, never between the content and its door.
+- **The summary** reads at most three lines (`-webkit-line-clamp`). Its links are words, and a bare web address prints as its host ("register.hakuapp.com/…", `shortenUrls`), the rule §332 and §343 already follow. The event page keeps the whole text with its links.
+- **The facts (`EventFacts`, compact) draw the event page's shapes (§356), smaller:**
+  - **When** is a line led by the row's calendar glyph: "Duminică, 27 sept. 2026 · [clock] 10:00". On a series card it starts with "Următoarea:". The line only ever breaks between whole pieces.
+    - Measured: on a 320 px phone it takes two lines on every card. The time goes under the date with its clock, or, on a series card with a long weekday ("Miercuri"), the date and time go under "Următoarea:".
+    - From 375 px it is one line on a one-off card and on a series card with a short weekday.
+    - One line at 320 px would need the short weekday or no lead below a breakpoint (two renderings of one date, chosen by width). Not taken, because the wrap already falls cleanly between pieces.
+  - **Where** is a line led by the pin in the same flex row, so the pin stays on the place's first line. The place is the map link on every card that has one. While the place is to be announced, only the sentence is shown (§328).
+    - The link is `tight` (padding plus negative margin) above and below only when the pills follow, 12 px away.
+    - When anything nearer follows (the registration line 8 px under it, or, when the place is the last fact, the door 4 px or a series fold right under the facts), it gives back only the 10 px above. It keeps the 10 px below inside the facts, where nothing sits on them, at the cost of 10 px of height on such a card.
+  - **The route and the cost** are the page's small outlined pills, in one wrapping row with no middle dots: distance, climb ("D+"), difficulty, surface, cost. There is a pill only for what the club stated. The cost is the closed set's word ("Gratuit", "Cu taxă", "Donație"), as §343 keeps it on a card. The surface is said once, as a pill, so the chip at the top of the card no longer carries it.
+  - **The state of registration** is the last line (BR-REQ-011-01 criterion 18).
+  - **No partner among the facts.** "Împreună cu …" between the place and the kilometres was one of the things the owner pointed at. The partner's mark on a card belongs to its chips (a separate branch). The hero keeps its sentence and the page its partner cards. The hero's route line, its links and its partner sentence are built only for the hero, not for every card.
+- **A clock before the time** (`ScheduleIcon`, secondary colour) wherever the time is read:
+  - On the card and the event page's "Când" row (§356), at the row glyph's 20 px with middle alignment.
+  - On the hero, at the hero's own glyph size (18 px, 3 px under the baseline), one style shared with its label glyphs, so it is not bigger than the calendar and the pin beside it.
+  - A race's two named times get one clock, before the first.
+- The page's `tight` links (the place, the cost's links) take the same padding-plus-negative-margin, so a place that wraps onto two lines no longer overlaps the lines around it. A single-line link is exactly as tall in the flow as before.
+
+**Refused:**
+- **A title stretched over the card with `::after`, so a press anywhere still opens the page.** The brief asked for no whole-card link. It would sit under the map link and the dates. The series card never had it.
+- **`align-items: start`, one height per card.** It moves the same room outside the border as a ragged row edge, which §275 decided against.
+- **The date and its time as one unbreakable piece.** At 320 px, "Duminică, 27 sept. 2026 · [clock] 10:00" is wider than the card and would be clipped.
+- **The amount on the card's cost pill.** §343 keeps it for the page; a club's amount can be sixty characters.
+- **A partner chip here.** The other branch owns it.
+- **Measuring a link's 44 px by its box alone.** A box can be 44 px while something later on the card covers part of it. The e2e check presses the edges instead.
+
+**Supersedes:** §356's "Unchanged: … the listing and series cards (two plain lines)" and §169's "the compact card keeps this sentence exactly" (for the card, not the hero).
+
+**Tests:**
+- **Unit `events/listing-card.test.ts`:**
+  - One structure: no anchor around the heading and no nested anchor; the title, place and door are the three links.
+  - The title's rule: primary colour including `:visited`, no underline, underline on hover and focus, 44 px, 10 px of reach above and 8 px below.
+  - Nothing nearer under the title than its reach: the summary at `LINE_GAP`, the facts at 12 px, the series recurrence line at 8 px.
+  - One title class for both cards.
+  - The pin and the place in one flex line, the place an `<a>` to the map.
+  - The clock between the date and the time; the pills; no partner text in the facts; registration last; both languages.
+- **Unit `events/event-facts-pills.test.ts`:**
+  - The compact lines in order.
+  - The clock's rule (20 px, secondary, middle).
+  - The tight map link's padding and margin, and its above-only reach when no pills follow.
+  - The page's "Când" clock; the hero's clock sharing its label glyphs' class (18 px, -3 px).
+  - The hero's route, Strava, Facebook and partner links on the hero and none of them on a card.
+- **Unit `events/event-facts-co-hosts.test.ts`:** no partner among a card's facts; the hero unchanged.
+- **E2e `listing-cards.spec.ts`:**
+  - No whole-card link; titles in the door's primary colour at 20 px/500.
+  - The pin on the first line of words; map links 44 px.
+  - Every title and map link hit by `elementFromPoint` 2 px inside its top and bottom edges.
+  - A 20 px clock on every card; pills and no "Împreună cu"; the door gap; a three-line summary; the 320 px fit.
+- **E2e `event-pages.spec.ts`:** the "Când" clock.
+
+**Consequences:**
+- Code: `events/ui/card-layout.ts`, `EventCard.tsx` (out of `events/page.tsx`), `SeriesCard.tsx`, `EventFacts.tsx`, `EventExcerpt.tsx`, `content/rich-text/ui/RichText.tsx` (`links`), `content/rich-text/domain/short-url.ts`.
+- Catalogues: `Event.series.nextLabel` gains its colon in both.
+- Specs: BR-REQ-041-01 gains a criterion, and criterion 26 is amended. BR-REQ-011-01 criteria 16 and 18 and BR-REQ-010-01 criterion 1 are amended.
+
+Second review round. The three e2e specs of the branch (listing-cards, event-pages, listing-card-button) ran on both projects against a production build. They found two layout defects that no unit test could see. The listing's cards stand inside the "other events" `<details>` whenever there is a lead event (§78). The browser slots a fold's content into the fold's own shadow tree, and MUI's `*, ::before, ::after { box-sizing: inherit }` does not reach across that slot, so everything under a fold is `content-box`. The measured chain was DETAILS border-box, then UL content-box. So the title link's `minHeight: 44` was the words' box, and its eighteen pixels of padding were added on top: a 62-pixel link, a heading 44 tall instead of its words' 26, and the line under it 27 pixels below the title's words instead of 9, on the listing the owner had asked to be tighter. The place's map link had the same flaw: 64 pixels, with the words 12 pixels under the pin. Both links now say `box-sizing: border-box` themselves, so the arithmetic in `card-layout.ts` and `outLink` holds wherever the facts are drawn. Nothing overlapped, so the edge presses passed. What found it was measuring the heading against its words, and that measurement is now a check of its own in `listing-cards.spec.ts`.
+
+A series' dates were 24-pixel chips, the chip itself being the link, under a comment that claimed 44 (BR-REQ-041-01 criterion 6). Each date is now a link at least 44 by 44 around the small pill, the shape `ChipLink` already gives small pills (§158). Unlike the card's tight links, its padding is not given back as a negative margin. A negative margin is only ever as large as the gap on its side, because whatever comes later paints over the link and takes a press there, and the dates have no gap: a wrapped row sits directly under the one before, the first row four pixels under the fold's 44-pixel summary, the last four above the door. So wrapped rows stand 44 apart, with twenty pixels between pills.
+
+The tap-target e2e check now makes its own series in the backoffice, because CI's seed has none: weekly, three published dates, a map link, and a summary in both languages. It presses two pixels inside all four edges of every link and fold on every card, then deletes the series through the backoffice's bulk bar. It goes through the application rather than the database because the listing reads the public cache (§333), which only an application write expires. It deletes the series because a phone folds the listing once there are more than four cards (§78), which would change what every later spec reads. MUI puts `data-testid` on icons only outside a production build, so the e2e suite finds glyphs by their position and leaves the names to the unit tests.
+
+Baseline `BR-V1.82-2026-09-24`.
+
+## 367. A partnered event wears a handshake, a calendar entry has one tooltip, and a series' usual place is read rather than compared byte for byte
+
+**Context.** Three asks from the owner, 2026-09-24, all on the public listing and calendar.
+
+1. "I would like to have a special marker with this partnered event, so that people know this is not a regular Brașov Runners group run — show like a handshake icon on the card and in the calendar." The listing card said "Împreună cu …" in its facts, the least visible line on the card. The calendar said nothing at all.
+2. Hovering a month-grid entry that carries the ⚠ edition mark (§122) opened two tooltips at once, one over the other. They were the entry's own MUI tooltip (§261) and the mark's `EditionMark` tooltip nested inside it.
+3. A Happy Monday date was marked "Nu în locul obișnuit: Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov". The owner: "the location is actually the same, IDK why it flags it as different". The real strings, read on 2026-09-24:
+   - production's public pages, every date: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov" in Romanian, "Tractorul Sports Park – entrance from the Olympic Ice Rink" in English, one map link on both;
+   - QA's database, read only, all nine dates: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic", with no map link.
+
+   The difference was a trailing ", Brasov": the club's city, typed without its "ș". `editionDifference` compared the strings byte for byte and took the most common string as "usual". While most dates on view still read the shorter spelling, every date with the longer one was "moved".
+
+**Decision.**
+
+*The partner marker.* One phrase, `partnerPhrase` (`counted-phrases.ts`):
+- one partner: "În parteneriat cu X" / "With X";
+- two partners, both named: "… cu X și Y" / "… with X and Y";
+- from three on, the first named and the rest counted: "… cu X și încă 2 parteneri" / "… and 2 more partners". The count picks a plain key with `countForm` (one/few/other), never an ICU plural, and "de" comes in from twenty.
+
+Partners are read the one way every surface reads them (`readCoHosts`), in the club's order. A chip on a 320-pixel card has room for a name and a number, not a list; the full list is the event page's partner cards (§344). The glyph is the handshake the facts row has worn since §168. It is `GLYPHS.partner` in the registry and crosses the server/client boundary by name (§112). The phrase appears in four places:
+- **Listing card, series card, featured hero:** one small outlined chip in the chips row (`PartnerChip`), the size and colour of the rhythm chip. It wraps rather than ending in an ellipsis. The series card shows the next date's partners, the date whose facts it shows.
+- **Calendar:** the handshake at the end of the entry, before the ⚠. The words go in the entry's tooltip and its accessible name. In the agenda (`?view=list`) the handshake has its own tooltip (`PartnerMark`), because the agenda row has no tooltip of its own (§261).
+- **Event page:** "· [handshake] În parteneriat cu X" on the overline, after the type and the surface, at the overline's 18 px glyph size and grey (`PartnerOverline`, a Server Component). The overline now wraps on a phone.
+- **Nowhere** for an event with no partners, or one whose partners were all removed.
+
+*One tooltip per calendar entry.*
+- **Month grid:** the marks are bare glyphs (`EditionGlyph`, the handshake). The entry's single MUI tooltip carries every line: the time and the whole title in bold, then the date's note, then the partner. No element carries a `title` attribute. The same tooltip opens on keyboard focus.
+- **Accessible name:** the link's `aria-label` is every line, each ended with a full stop. `aria-labelledby` is forced off: for a tooltip whose title is not a string, MUI would otherwise point the name at the tooltip while it is open.
+- **Agenda:** keeps a tooltip per mark, side by side and never nested.
+- **Screen readers:** MUI's `SvgIcon` writes `aria-hidden="true"` on any glyph without `titleAccess`. The ⚠'s `role="img"` and name had therefore never been read, not in a series card's date chip, the backoffice list or the agenda. `EditionMark` and `PartnerMark` now pass `aria-hidden={false}`. `titleAccess` was not used: it draws an SVG `<title>`, the browser's own tooltip, on top of MUI's.
+
+*The same place, read rather than compared* (`events/domain/same-place.ts`, amending §122). **What is compared** is the name the reader's page shows, in the reader's language. A public row's `locationName` is already that language's own name, else the event's (the rule of `place.ts#placeNameIn`, §362). The backoffice compares the event's own name. The street address an older event still carries is **not** compared: `placeShown` folds it in to answer "did this save move this event", while this answers "is this date where the others meet". A date whose address a later save cleared would otherwise be "moved".
+
+Two places are the same when either holds, and in no other case:
+1. **Their map links are the same link:** scheme ignored, host lower case without "www.", no trailing slash, no fragment, no `g_st`/`utm_*` share parameters. Two different short links to one pin are not resolved, and different links are never a difference on their own.
+2. **Their names say the same place.** Each comma-separated part is folded: diacritics dropped (ș/ş, ț/ţ, ă, â, î), lower case, every run of punctuation or spacing one space, so the dashes and "( )" never make a different place. Then trailing parts are taken off one by one from the end, never the first part, when a part is exactly one of:
+   - the club's city (`CLUB_LOCALITY`: "Brașov", "Brasov", "municipiul/mun. Brașov");
+   - its county ("județul/jud. Brașov", "jud. BV", "BV", "Brașov County");
+   - the country ("România", "Romania", "RO");
+   - a postcode (six digits, alone or with the city);
+   - a Romanian street by its first word (strada/str., bulevardul/bd./b-dul, calea, aleea, șoseaua/șos., splaiul);
+   - an English street by its last word (street/st, road/rd, avenue/ave, boulevard/blvd);
+   - a house number ("nr. 5", "no. 5", "5", "5A").
+
+`usualOf` keeps the name most dates give once read, together with every map link those dates carry. `editionDifference` asks `isAtPlace`. The mark still names the date's place as it is written. A different entrance, a square ("Piața Sfatului"), another city, another park and another kilometre are all still marked.
+
+**Refused.**
+- *A similarity score or an edit distance.* It would call a real move a typo. The rule is a closed list a reader can check.
+- *Stripping every trailing part after a comma.* "Parcul Tractorul, intrarea de nord" is a different entrance, and an entrance is exactly what the Happy Monday name names.
+- *Treating "piața" as an address word.* A square is where people meet.
+- *Comparing `placeShown` with the address folded in* (see above).
+- *Resolving short map links to coordinates.* That is a network call on every render, for a question the name answers.
+- *Listing every partner on the chip.* Three names do not fit a phone card; the event page lists them.
+- *Keeping the ⚠'s own tooltip inside the grid entry and suppressing the outer one on hover.* That gives two tooltips by keyboard, and a grid entry whose title is unreadable without its tooltip.
+- *`titleAccess` for the glyphs' names.* It draws the browser's tooltip, the thing that was removed.
+- *Restyling the listing card.* `feat/listing-cards-spacing` owns the card body; the marker is one chip in the chips row.
+
+**Test.**
+- `tests/unit/events/same-place.test.ts`: the real strings (production's and QA's Happy Monday, the English name, the Wednesday run's "Sub Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov"), every address kind, the map-link rule, and real moves still marked.
+- `tests/unit/events/series.test.ts`: `usualOf` and `editionDifference` over the owner's September (two spellings, either order), longer addresses, the same pin under another name, English names, a real move, and no place.
+- `tests/unit/events/partner-marker.test.ts`:
+  - the phrase for 1, 2, 3 and 21 partners in both languages;
+  - the chip, one handshake and one chip per card, legacy columns, nothing without partners;
+  - its place in the three cards' chips rows;
+  - the overline rendered for 1, 2 and 3 partners in both languages, and nothing without partners;
+  - one tooltip per grid entry with its three lines, bare marks inside it, no `title` anywhere, and the complete `aria-label`, dense or not;
+  - the agenda's two named marks (`aria-hidden="false"`, no `<title>`);
+  - `EventCalendar`, grid and agenda, with 1, 2 and 3 partners in both languages;
+  - no ⚠ on a September of two spellings, and one ⚠ on a real move.
+- `tests/e2e/partner-marker.spec.ts`: creates and publishes its own event, then checks:
+  - the chip in both listings;
+  - the overline in both languages at 320 px;
+  - the grid entry's name, 44 px height, no `title`, and one tooltip on hover (also over the mark) and on keyboard focus;
+  - the agenda's named handshake and its single tooltip;
+  - the English calendar.
+- `tests/e2e/event-pages.spec.ts`: no calendar entry carries a `title`.
+
+Baseline `BR-V1.82-2026-09-24`.
+
+## 368. The dispatcher: one orchestrating session, a card per kind of work, and the model that fits each
+
+**Decided (2026-09-24, the owner: "Gimme the token aware prompt dispatcher that fans out subagents and chooses the appropriate Claude model for each task, also save this dispatcher with cards in the repo" — and: "Please note this is a public repo").**
+
+Since §347 the work has run as batches: one session briefs a subagent per change, each change is implemented in its own worktree, reviewed adversarially, fixed and re-reviewed, and the session lands the documentation and releases two to four changes at a time. The procedure lived in files outside the repository and in one session's memory, which dies with the session. It is in the repository now, where a new session — or a person — can start it:
+
+- `docs/DISPATCHER.md` — the prompt that starts an orchestrating session, the loop (intake → card → dispatch → integrate → land → ship → report), which model each kind of task gets, the usage bands, the machine's limits, and a card per kind of work: feature chain, fix round, investigation, conflict merge, land a batch, ship, status sweep, handoff.
+- `.claude/workflows/br-chain.js` (implement → review → fix → re-review) and `.claude/workflows/br-fix-round.js` (fix → re-review in an existing worktree). Both take `models` and `effort` per stage, so the dispatcher chooses per task.
+- `yarn docs:land` (`scripts/land-batch.mjs`) — the documentation step as one command: the baseline bump, the numbers, each `§368` replaced by the commit that wrote it, DECISIONS.md, CHANGELOG.md and the SPECS.md criteria, a dry run first.
+- `yarn ship` (`scripts/ship.mjs`) — the release step as one command. It waits for the previous release on production, merges the batch into `qa`, opens and merges the release PR, approves the gated migration (§31) and waits for `/api/health` to name the new baseline.
+
+**The model rule is the cheapest model that does the task well, and never a cheap review.** Mechanical work goes to Haiku. A precise brief and a fix round with concrete findings go to Sonnet. Cross-cutting work goes to Fable or Opus, and so does anything that touches a rule that cannot be broken. The adversarial review is always Opus at high effort: it is what makes a cheaper implementer safe to ship. Fable and Opus draw on separate weekly allowances, so the implementers move to whichever has room.
+
+**Token-aware** means three bands, read from the owner's usage page because the session cannot read it: green up to four chains, amber two chains on Sonnet, red no new agents — land, ship, hand off. **The machine's limit is separate and absolute:** at most four chains at once, each with one build, one Playwright process and its own database. Eleven at once exhausted the processes on 2026-09-24.
+
+**The repository is public, and so is all of this.** No secret, key, token, database URL, personal address, account id or local path appears in the page, the workflows, the scripts or the briefs they write. The two workflows repeat the rule to every agent and every reviewer checks for it. `yarn ship` takes production's origin from `SHIP_PRODUCTION_URL` in the environment or the git-ignored `.env.local`, never from the file, because the club's domain lives only in `SETUP.md` §26 (§98). Commit attribution is the line each session's own instructions give, not a model name written into a script.
+
+Baseline `BR-V1.82-2026-09-24`.

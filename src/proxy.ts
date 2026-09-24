@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
+import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
 import { isPrivatePath } from "@/shared/security/private-paths";
 
@@ -38,7 +39,36 @@ export default function proxy(request: NextRequest) {
     return redirect;
   }
 
+  /**
+   * A locale's root is the listing (§353): `/ro` → `/ro/evenimente`, a real 308 with an empty
+   * body, the query kept. Answered here rather than by `app/[locale]/page.tsx`'s
+   * `permanentRedirect`, which runs after the layout has started streaming and so could only
+   * send a 200 and an error document carrying a client-side hop.
+   */
+  const listing = localeRootTarget(url.pathname);
+  if (listing) {
+    const target = new URL(listing, url);
+    target.search = url.search;
+    return NextResponse.redirect(target, 308);
+  }
+
   const response = intlProxy(request);
+
+  /**
+   * And `/` in one hop rather than two. next-intl answers it with a redirect to a locale's root
+   * (`/ro`, 307), which the branch above would then send on to the listing; pointing next-intl's
+   * own redirect at the listing instead keeps its choice of locale and its status, and saves the
+   * visitor a round trip.
+   */
+  const location = response.headers.get("location");
+  if (location) {
+    const target = new URL(location, url);
+    const retarget = localeRootTarget(target.pathname);
+    if (retarget) {
+      target.pathname = retarget;
+      response.headers.set("location", target.toString());
+    }
+  }
 
   if (isPrivatePath(url.pathname)) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");

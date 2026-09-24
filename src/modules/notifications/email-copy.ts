@@ -14,6 +14,8 @@ import {
   emailCopyKey,
   emailCopySchema,
 } from "./domain/email-copy";
+import { EmailCopySampleValueError } from "./domain/email-sample";
+import { replaceSampleValues, sampleValuesIn } from "./email-copy-fields";
 
 /**
  * Where the club's own wording is kept (`DECISIONS.md` §247).
@@ -77,37 +79,66 @@ export function forgetCachedEmailCopy(): void {
   cached = null;
 }
 
+/** One entry through the setting's schema — the placeholders, the lengths — or the refusal naming its boxes. */
+function parsedEntry(key: string, value: unknown): EmailCopyEntry {
+  const parsed = emailCopySchema.safeParse({ [key]: value });
+  if (!parsed.success) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      parsed.error.issues.map((issue) => String(issue.path[1] ?? "subject")),
+    );
+  }
+  return parsed.data[key];
+}
+
 /**
  * Write one message's words, or drop them back to the platform's text.
  *
  * One entry at a time, deliberately: the panel edits one message in one language, and a whole
  * map posted at once would make the audit row unreadable and a concurrent edit destructive.
  * `null` removes the override — "revino la textul platformei" — and is what a cleared form does.
+ *
+ * **No sample value is saved (§359).** A subject or paragraph still holding a value of the page's
+ * sample — "Crosul de toamnă", "Ana Popescu", "EXAMPL", the sample's date — is refused, naming the
+ * box and the value, because every participant would receive it as written. Checked here and not in
+ * the setting's schema: the schema also reads what is already stored, and a stored text with a
+ * sample value in it must still send (it is warned about on the page instead) rather than make the
+ * whole setting unreadable.
+ *
+ * `replaceSampleValues` is "Înlocuiește cu câmpurile": the same save, with every sample value in
+ * the posted words rewritten to its field first (`email-copy-fields.ts`). The same gate, the same
+ * refusal for whatever the rewrite could not reach, the same audit row — naming the values replaced.
  */
 export async function updateEmailCopy<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
-  input: { messageType: EmailMessageType; locale: EmailLocale; entry: unknown | null },
+  input: { messageType: EmailMessageType; locale: EmailLocale; entry: unknown | null; replaceSampleValues?: boolean },
   now: Date,
 ): Promise<EmailCopyState> {
   if (!canEditTexts(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not write the emails' words`);
   }
 
+  // The organizer's message is written per send (§364): a stored wording for it would never be
+  // read, and a panel that saved one would be saying something untrue about what goes out.
+  if (input.messageType === "ORGANIZER_MESSAGE") {
+    throw new DomainError("VALIDATION_ERROR", "the organizer's message is written per send, on the event's page, not here");
+  }
+
   const key = emailCopyKey(input.messageType, input.locale);
   const before = await readEmailCopy(db);
   let entry: EmailCopyEntry | null = null;
+  let replaced: string[] | null = null;
 
   if (input.entry !== null) {
-    const parsed = emailCopySchema.safeParse({ [key]: input.entry });
-    if (!parsed.success) {
-      throw new DomainError(
-        "VALIDATION_ERROR",
-        parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
-        parsed.error.issues.map((issue) => String(issue.path[1] ?? "subject")),
-      );
+    entry = parsedEntry(key, input.entry);
+    if (input.replaceSampleValues) {
+      replaced = [...new Set(sampleValuesIn(entry, input.messageType, input.locale).map((hit) => hit.value))];
+      entry = parsedEntry(key, replaceSampleValues(entry, input.messageType, input.locale));
     }
-    entry = parsed.data[key];
+    const hits = sampleValuesIn(entry, input.messageType, input.locale);
+    if (hits.length > 0) throw new EmailCopySampleValueError(hits);
   }
 
   const next: EmailCopy = { ...before.copy };
@@ -128,8 +159,9 @@ export async function updateEmailCopy<T extends Record<string, unknown>>(
       entityType: "platform_setting",
       entityId: EMAIL_COPY_SETTING_ENTITY_ID,
       // The one message that changed, from and to — not the whole map, which would make every
-      // row in the trail unreadable and hide which words actually moved.
-      metadata: { key, from: before.copy[key] ?? null, to: entry },
+      // row in the trail unreadable and hide which words actually moved. "Înlocuiește cu
+      // câmpurile" says so, and which sample values it replaced (§359).
+      metadata: { key, from: before.copy[key] ?? null, to: entry, ...(replaced ? { replacedSampleValues: replaced } : {}) },
       now,
     });
   });

@@ -2,8 +2,6 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
-import MuiLink from "@mui/material/Link";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -13,6 +11,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
+import { placeNameIn } from "@/modules/events/domain/place";
 import { withoutPlaces } from "@/modules/events/domain/schedule";
 import type { PublicEvent } from "@/modules/events/repository";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
@@ -117,10 +116,9 @@ export default async function PreviewEventPage({ params }: Props) {
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,
     participantListVisibility: event.participantListVisibility,
-    // One value for the whole event (`DECISIONS.md` §36), so the preview reads them from the
-    // event row exactly as the public page does — the place's *name* in this language first,
-    // when the club gave it one (migration `0058`), as `PUBLIC_COLUMNS` reads it.
-    locationName: placeLater ? null : translation.locationName?.trim() || event.locationName,
+    // The place's name in this language (§362), else the event's, exactly as `PUBLIC_COLUMNS`
+    // reads it — one rule, `placeNameIn`; the address and the rest from the event row (§36).
+    locationName: placeLater ? null : placeNameIn(event, translation.locationName),
     locationAddress: placeLater ? null : event.locationAddress,
     locationToBeAnnounced: placeLater,
     difficulty: event.difficulty,
@@ -196,24 +194,7 @@ export default async function PreviewEventPage({ params }: Props) {
         </Box>
       )}
 
-      {preview.locationAddress && (
-        <Stack sx={{ mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            {preview.mapUrl ? (
-              <MuiLink
-                href={preview.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-              >
-                {preview.locationAddress}
-              </MuiLink>
-            ) : (
-              preview.locationAddress
-            )}
-          </Typography>
-        </Stack>
-      )}
+      {/* The address is the second line of "Unde" in the facts above (§356), as on the public page. */}
     </Container>
   );
 }

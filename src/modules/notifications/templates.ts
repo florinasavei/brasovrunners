@@ -1,10 +1,11 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
-import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { organizerParagraphs } from "./domain/organizer-message";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
-import { COLOR } from "@/theme/brand";
+import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -56,9 +57,15 @@ export type TemplateContent = {
   privacy?: { text: string; url: string };
 };
 
+/*
+  The club's everyday name is the platform's one constant (`CLUB_NAME`, §215), never a literal
+  in a message (§357; the owner: "I do not [want] hardcoded stuff in the document and emails
+  anymore!"): the sign-off, the banner's words, the invitation and the "my registrations" subject
+  all read it, so the name is written once, and a message says nothing a constant could not.
+*/
 const SIGN_OFF: Record<EmailLocale, string> = {
-  ro: "Echipa Brașov Runners",
-  en: "The Brașov Runners team",
+  ro: `Echipa ${CLUB_NAME}`,
+  en: `The ${CLUB_NAME} team`,
 };
 
 function escapeHtml(value: string): string {
@@ -182,7 +189,7 @@ function card(blocks: string[][]): string {
    * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
    * §8): no hostname is written in `src/`.
    */
-  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="Bra&#536;ov Runners" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="${escapeHtml(CLUB_NAME)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
   /**
    * The header is a **white banner**, and the message declares itself a light-scheme document
    * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
@@ -264,6 +271,18 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+    // The organizer's own words in the second half's language (§354, bilingual everywhere) —
+    // absent only for a row queued with one text, which both halves then read as before.
+    ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
+    ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
+    // The organizer's message (§364): its own words in the second half's language, and the event's
+    // facts that its placeholders read — the title, what to bring — in that language too. Those two
+    // for that message only, as `TemplateData` says: the page of every email renders all of them
+    // from one sample, and every other message's second half still reads the registrant's (§354).
+    ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
+    ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
+    ...(messageType === "ORGANIZER_MESSAGE" && data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
+    ...(messageType === "ORGANIZER_MESSAGE" && data.eventChecklistOther ? { eventChecklist: data.eventChecklistOther } : {}),
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
   const a = renderContent(first, locale);
@@ -298,8 +317,9 @@ export type TemplateData = {
   eventTitle?: string;
   eventLocationName?: string;
   /**
-   * The place in the other language's words, for the bilingual message's second half — set only
-   * while the place is to be announced (§328), when the "place" is a sentence and not a name.
+   * The place in the other language's words, for the bilingual message's second half: that
+   * language's own name for the place (§362) — "Tractorul Park" under "Parcul Tractorul" — or,
+   * while the place is to be announced (§328), the sentence that says so in that language.
    */
   eventLocationNameOther?: string;
   eventStartsAtFormatted?: string;
@@ -413,10 +433,41 @@ export type TemplateData = {
    * fields above; this says which of them to name as new.
    */
   updateChanges?: readonly EventChangeKind[];
-  /** The organizer's own words on that message, plain text, at most 500 characters. */
+  /** The organizer's own words on that message, plain text, at most 500 characters — in this half's language. */
   organizerNote?: string;
-  /** Why the event was cancelled, as the organizer typed it (§331). */
+  /**
+   * The same note in the other language, for the bilingual message's second half (§354, bilingual
+   * everywhere). Absent for a row queued before the note was written twice: both halves then
+   * carry `organizerNote`, as they always did.
+   */
+  organizerNoteOther?: string;
+  /** Why the event was cancelled, as the organizer typed it (§331) — in this half's language. */
   cancellationReason?: string;
+  /** The same reason in the other language, for the second half (§354); absent on an older row. */
+  cancellationReasonOther?: string;
+  /**
+   * "Trimite un mesaj participanților" (§364): the subject and the body the organizer wrote for
+   * this send, in this half's language — plain text, placeholders still in it, filled here with
+   * this half's facts. Absent only for a row whose payload cannot be read, which then goes with
+   * the platform's own subject and framing sentence.
+   */
+  organizerSubject?: string;
+  organizerBody?: string;
+  /** The same two in the other language, for the second half — never the same text twice (§354). */
+  organizerSubjectOther?: string;
+  organizerBodyOther?: string;
+  /**
+   * The event's title and "what to bring" in the other language, for the second half of the
+   * organizer's message, whose placeholders read them (§364). Set for that message only: every
+   * other message's second half still reads the registrant's language, as §354 left it.
+   */
+  eventTitleOther?: string;
+  eventChecklistOther?: string;
+  /**
+   * "Înscrierile mele" without a token (§77): the page that asks for an address and mails the link.
+   * On the organizer's message, which mints nothing, so its reader can still find their registration.
+   */
+  myRegistrationsUrl?: string;
 };
 
 /**
@@ -432,6 +483,28 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
     html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5"><strong>${escapeHtml(label)}</strong><br>${lines.map(escapeHtml).join("<br>")}</p>`,
     text: [label, ...lines],
   };
+}
+
+/**
+ * The organizer's own message (§364), after the platform's one framing sentence: the body they
+ * typed, its placeholders filled with this half's facts, a blank line starting a paragraph and a
+ * single line break kept. Escaped as plain text, and — like the note on an update (§331) — no
+ * `**` or `__` read inside it: a pair of asterisks somebody typed prints as asterisks.
+ */
+function organizerMessageParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
+  if (messageType !== "ORGANIZER_MESSAGE" || !data.organizerBody) return [];
+  const paragraphs = organizerParagraphs(fillPlaceholders(data.organizerBody, data as unknown as Record<string, unknown>));
+  return paragraphs.map((lines, index) => ({
+    html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,
+    // A blank line between paragraphs in the plain-text part too, so it reads as it was typed.
+    text: index < paragraphs.length - 1 ? [...lines, ""] : lines,
+  }));
+}
+
+/** The subject the organizer wrote, filled with this half's facts (§364); the platform's own when a row carries none. */
+function organizerSubject(d: TemplateData, fallback: string): string {
+  if (!d.organizerSubject) return fallback;
+  return fillPlaceholders(d.organizerSubject, d as unknown as Record<string, unknown>) || fallback;
 }
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
@@ -558,7 +631,8 @@ const T = {
       subject: "Ne vedem în curând — detaliile pentru ziua cursei",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        d.reminderHours ? `${d.eventTitle ?? "Evenimentul"} este peste ${d.reminderHours}. Iată ce ai nevoie.` : `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
+        // "Se apropie", never a number of days: a runner confirmed late gets this a day after confirming, nearer the start (§126, §357).
+        `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
@@ -629,9 +703,9 @@ const T = {
       ],
     },
     staffInvitation: {
-      subject: "Ești în echipa Brașov Runners",
+      subject: `Ești în echipa ${CLUB_NAME}`,
       body: (d: TemplateData) => [
-        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
+        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul ${CLUB_NAME}, ca ${d.staffRole ?? "membru al echipei"}.`,
         `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
         // What the club keeps about its own team (§323), said to the person it is kept about.
         "Pentru cont folosim Zitadel, cu numele și adresa ta; ce faci în backoffice rămâne în jurnalul clubului, cu numele tău, cel mult trei ani. Detalii în nota de confidențialitate.",
@@ -670,10 +744,10 @@ const T = {
       action: "Gestionează înscrierea",
     },
     profileManageLink: {
-      subject: "Înscrierile tale la Brașov Runners",
+      subject: `Înscrierile tale la ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
-        `Linkul este valabil ${d.linkLifetime ?? ""} și doar pentru tine.`,
+        `Linkul este valabil ${d.linkLifetime ?? defaultLinkLifetime("ro")} și doar pentru tine.`,
       ],
       action: "Vezi înscrierile mele",
     },
@@ -693,12 +767,30 @@ const T = {
       action: "Vezi pagina evenimentului",
     },
     eventCancelled: {
-      subject: (d: TemplateData) => `Evenimentul „${d.eventTitle ?? "Brașov Runners"}” a fost anulat`,
+      // Without a title the sentence names no event — never the club's name standing in for one (§357).
+      subject: (d: TemplateData) => (d.eventTitle ? `Evenimentul „${d.eventTitle}” a fost anulat` : "Evenimentul a fost anulat"),
       body: (d: TemplateData) => [
-        `Ne pare rău: evenimentul „${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
+        `Ne pare rău: evenimentul${d.eventTitle ? ` „${d.eventTitle}”` : ""}${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
         "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
         `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
+    },
+    /**
+     * "Trimite un mesaj participanților" (§364): the organizer's subject and body, written for this
+     * send; the platform adds only the facts line, one sentence saying who writes and why this
+     * person receives it, the event's page as the button and the usual links. Nothing to act on.
+     */
+    organizerMessage: {
+      // Without a title the sentences name no event — never the club's name standing in for one (§357).
+      subject: (d: TemplateData) => organizerSubject(d, d.eventTitle ? `Un mesaj despre ${d.eventTitle}` : "Un mesaj despre evenimentul la care te-ai înscris"),
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        d.eventTitle
+          ? `Un mesaj de la organizatorii evenimentului ${d.eventTitle}, la care te-ai înscris:`
+          : "Un mesaj de la organizatorii evenimentului la care te-ai înscris:",
+      ],
+      action: "Vezi pagina evenimentului",
+      links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
@@ -792,7 +884,7 @@ const T = {
       subject: "See you soon — the details for race day",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        d.reminderHours ? `${d.eventTitle ?? "The event"} is ${d.reminderHours} away. Here is what you need.` : `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
+        `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
         ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
@@ -858,9 +950,9 @@ const T = {
       ],
     },
     staffInvitation: {
-      subject: "You are on the Brașov Runners team",
+      subject: `You are on the ${CLUB_NAME} team`,
       body: (d: TemplateData) => [
-        `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
+        `${d.inviterName || "A colleague"} added you to the team that runs the ${CLUB_NAME} website, as ${d.staffRole ?? "a team member"}.`,
         `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
         "Your account is held by Zitadel, with your name and address; what you do in the backoffice stays in the club's log, under your name, for at most three years. Details in the privacy notice.",
       ],
@@ -924,10 +1016,10 @@ const T = {
       action: "Manage your registration",
     },
     profileManageLink: {
-      subject: "Your registrations at Brașov Runners",
+      subject: `Your registrations at ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
-        `The link is valid for ${d.linkLifetime ?? ""} and only for you.`,
+        `The link is valid for ${d.linkLifetime ?? defaultLinkLifetime("en")} and only for you.`,
       ],
       action: "See my registrations",
     },
@@ -947,12 +1039,23 @@ const T = {
       action: "See the event's page",
     },
     eventCancelled: {
-      subject: (d: TemplateData) => `“${d.eventTitle ?? "Brașov Runners"}” has been cancelled`,
+      subject: (d: TemplateData) => (d.eventTitle ? `“${d.eventTitle}” has been cancelled` : "The event has been cancelled"),
       body: (d: TemplateData) => [
-        `We are sorry: “${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+        `We are sorry: ${d.eventTitle ? `“${d.eventTitle}”` : "the event"}${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
         "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
         `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
       ],
+    },
+    organizerMessage: {
+      subject: (d: TemplateData) => organizerSubject(d, d.eventTitle ? `A message about ${d.eventTitle}` : "A message about the event you registered for"),
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        d.eventTitle
+          ? `A message from the organizers of ${d.eventTitle}, which you registered for:`
+          : "A message from the organizers of the event you registered for:",
+      ],
+      action: "See the event's page",
+      links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
@@ -1006,6 +1109,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
+  ORGANIZER_MESSAGE: "organizerMessage",
 };
 
 /**
@@ -1029,6 +1133,34 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
     ...(changes.has("programme") ? [words.programme(data)] : []),
     ...(data.organizerNote ? [organizerTextPart(words.noteLabel, data.organizerNote)] : []),
   ];
+}
+
+/**
+ * The part of one message the club may rewrite (§247), as the platform writes it: the subject and
+ * the body, and nothing the platform adds around a body — not the club copy's first line (§320),
+ * not "you were already registered" (§235), not the update's new place or the cancellation's
+ * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
+ * so a club text that repeated them would say them twice.
+ *
+ * The editor's starting text is built from this (§359, `email-copy-fields.ts`), with every field of
+ * the closed set standing for itself, so nothing of the page's sample reaches the box — and each
+ * sentence the platform adds only when a fact exists in a paragraph of its own, so a saved text
+ * drops it the same way. The send path never calls it: `buildTemplateContent` below reads the same
+ * entries itself, unchanged.
+ */
+export function platformWords(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  data: TemplateData,
+): { subject: string; paragraphs: string[] } {
+  const entry = T[locale][KEY_BY_MESSAGE_TYPE[messageType]] as {
+    subject: string | ((d: TemplateData) => string);
+    body: (d: TemplateData) => string[];
+  };
+  return {
+    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    paragraphs: entry.body(data),
+  };
 }
 
 /**
@@ -1085,7 +1217,9 @@ export function buildTemplateContent(
     state of a registration rather than about how the club likes to write, and a club that
     rewrote the confirmation would otherwise silently lose them.
   */
-  const written = copyFor(overrides, messageType, locale);
+  // The organizer's message is written per send (§364): there is no stored wording to apply, and a
+  // hand-made entry for it in the setting must not replace what the organizer wrote this time.
+  const written = messageType === "ORGANIZER_MESSAGE" ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1130,14 +1264,19 @@ export function buildTemplateContent(
         A stored document that cannot be read — an older shape, a node an email may not carry —
         falls back to the plain paragraphs beside it rather than to nothing, which is the same
         direction `readEmailCopy` takes with an unreadable setting: a message still goes out.
+        Either way a paragraph whose only fields are facts this message lacks is not sent
+        (§359): the platform's "only when there is a number", said the one way a text the club
+        wrote can.
       */
       ...(writtenBody
         ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
         : written
-          ? written.paragraphs.map(fill)
+          ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
+      // The organizer's message itself, after its one framing sentence (§364).
+      ...organizerMessageParts(messageType, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -1175,6 +1314,15 @@ export function buildTemplateContent(
  * fixture — reads the club's defaults, which are exactly the numbers an unset setting has, so a
  * message never goes out with a blank where a duration belongs.
  */
+/**
+ * How long the "my registrations" link lives, from the constant it is minted with (`DEFAULT_TOKEN_HOURS`):
+ * what a body built without `timingWords` says — the editor's starting text (`platformWords`) — so
+ * no path reads "valabil  și".
+ */
+function defaultLinkLifetime(locale: EmailLocale): string {
+  return durationPhrase(locale, DEFAULT_TOKEN_HOURS / 24, "days");
+}
+
 function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Partial<TemplateData> {
   const numbers = timings ?? { ...DEFAULT_DEADLINES };
   return {
@@ -1205,7 +1353,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
  * club's everyday name. Never a literal of the legal name: the repository is public (§98).
  */
 function controllerName(): string {
-  return env.CLUB_LEGAL_NAME ?? "Brașov Runners";
+  return env.CLUB_LEGAL_NAME ?? CLUB_NAME;
 }
 
 /** The privacy notice's address in one language, from `APP_BASE_URL` like every link here (§8). */

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -58,6 +58,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -73,9 +74,28 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
     await hydrated(page);
-    await openEditorBox(page, "Traseul");
+    // "Traseul" is a card inside "Ce fel de eveniment" (§358); the helper opens the box first.
+    const course = await openEditorBox(page, "Traseul");
+    const firstBox = editorBox(page, "Ce fel de eveniment");
+    await expect(firstBox).toHaveAttribute("open", "");
+
+    // A route link the browser refuses, with the card and the box around it shut again: pressing
+    // Salvează must open both and put the cursor in the box, so a card inside a card is never a
+    // Save that silently does nothing (§350, §358).
+    await field("event.routeUrl").fill("www.traseu-fara-https.example");
+    await course.locator(":scope > summary").press("Enter");
+    await expect(course).not.toHaveAttribute("open", "");
+    await firstBox.locator(":scope > summary").press("Enter");
+    await expect(firstBox).not.toHaveAttribute("open", "");
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(field("event.routeUrl")).toBeFocused();
+    await expect(field("event.routeUrl")).toBeVisible();
+    await expect(firstBox).toHaveAttribute("open", "");
+    await expect(course).toHaveAttribute("open", "");
+    await expect(page).not.toHaveURL(/saved=event/);
+
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // "Linkuri și fișiere" is the box right after the course (§332, §350).
+    // "Linkuri și fișiere" is the card right after the course (§332, §350, §358).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
@@ -91,7 +111,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // language's own panel, because the hidden one carries the same fold.
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -119,6 +139,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
 
     // Its own labelled fact, not folded into the meeting point (`DECISIONS.md` §49).
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);
+    // With a route to show, the surface completes the row as its pill, beside the link (§356).
+    const routeRow = page.locator("dt").filter({ hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
+    await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail"]);
 
     const route = page.getByRole("link", { name: "Vezi traseul" });
     await expect(route).toHaveAttribute("href", ROUTE_LINK);
@@ -196,6 +219,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // Absent, not an empty row and not a guessed link — the same rule the cost follows.
     // The label is matched exactly: the seeded descriptions use the word "traseu" in prose.
     await expect(page.getByRole("link", { name: "Vezi traseul" })).toHaveCount(0);
+    // The event is still on trail, and the overline still says so — but the surface alone makes no
+    // "Traseu" row (§356): it completes a route, it is not one.
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(0);
     // And no "Linkuri și fișiere" once the event has none: no heading, no `#links` anchor.
     await expect(page.locator("#links")).toHaveCount(0);

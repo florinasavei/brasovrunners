@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { existsSync } from "node:fs";
+import { expect, test, type Page } from "@playwright/test";
+import pg from "pg";
 import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
@@ -6,10 +8,43 @@ import { openFold } from "./support/fold";
  * §NNN — "Termene" on `/admin/emails`: the club's deadlines, one box each, the Administrator's.
  *
  * One round trip that ends where it began: the defaults are read, one deadline is changed and read
- * back in the panel's line and in the reminder's when-line under it, then everything goes back to
- * the defaults, so every other spec on this database reads the numbers it always did. Desktop
- * only, like the Mailgun plan beside it: one `platform_settings` row, two projects, one database.
+ * back in the panel's line and in the reminder's when-line under it. The defaults come back in an
+ * `afterEach`, whatever happened in the test — a failure halfway must not leave every later spec
+ * on this database reading three-day reminders. Desktop only, like the Mailgun plan beside it: one
+ * `platform_settings` row, two projects, one database.
  */
+
+function databaseUrl(): string {
+  if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set: this spec needs the database the server uses");
+  return url;
+}
+
+/**
+ * The defaults back, through the panel — the save drops the server's copy and expires the public
+ * pages' cached one, which a bare `DELETE` would not. Should the page itself be what broke, the row
+ * goes anyway (no row reads as the defaults), so the database is right even if a cache lags a minute.
+ */
+async function restoreDefaults(page: Page, defaults: Record<string, string>): Promise<void> {
+  try {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/emails");
+    const panel = page.locator("#main").getByTestId("deadlines");
+    await openFold(panel);
+    for (const [name, value] of Object.entries(defaults)) await panel.locator(`input[name="${name}"]`).fill(value);
+    await panel.getByRole("button", { name: "Salvează termenele" }).click();
+    await expect(page.locator("#main").getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
+  } catch {
+    const client = new pg.Client({ connectionString: databaseUrl() });
+    await client.connect();
+    try {
+      await client.query("DELETE FROM platform_settings WHERE key = 'deadlines'");
+    } finally {
+      await client.end();
+    }
+  }
+}
 test.describe("§NNN the club's deadlines on /admin/emails", () => {
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
@@ -25,7 +60,12 @@ test.describe("§NNN the club's deadlines on /admin/emails", () => {
     seriesHorizonDays: "56",
   };
 
-  test("an Administrator changes a deadline, the page says it, and puts it back", async ({ page }) => {
+  test.afterEach(async ({ page }) => {
+    if (test.info().project.name !== "desktop") return;
+    await restoreDefaults(page, DEFAULTS);
+  });
+
+  test("an Administrator changes a deadline, and the page says it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");
     const main = page.locator("#main");
@@ -54,14 +94,6 @@ test.describe("§NNN the club's deadlines on /admin/emails", () => {
     // The box comes back as typed (§315); the saved line still says three days.
     await expect(panel.locator('input[name="holdMinutes"]')).toHaveValue("5");
     await expect(panel.locator(":scope > summary")).toContainText("loc ținut 30 de minute");
-
-    // Back to the defaults, so the next spec on this database reads what it always did.
-    await page.goto("/ro/admin/emails");
-    await openFold(main.getByTestId("deadlines"));
-    for (const [name, value] of Object.entries(DEFAULTS)) await main.getByTestId("deadlines").locator(`input[name="${name}"]`).fill(value);
-    await main.getByTestId("deadlines").getByRole("button", { name: "Salvează termenele" }).click();
-    await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
-    await expect(main.getByTestId("deadlines").locator(":scope > summary")).toContainText("reminder 2 zile");
   });
 
   test("an Organizer reads the numbers in force and is offered no form", async ({ page }) => {

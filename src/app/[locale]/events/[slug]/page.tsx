@@ -2,7 +2,6 @@ import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
-import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -19,6 +18,7 @@ import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -198,8 +198,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
-          each with its glyph (§112); the words stay, the glyphs decorate. */}
-      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held
+          with a partner, the handshake and "În parteneriat cu …" (§367) — the marker the listing
+          card and the calendar wear. The line wraps rather than overflowing a phone: a partner's
+          name is long, and the small "·" before it stays at the end of the line it follows. */}
+      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.75, rowGap: 0 }}>
         <TypeGlyph type={event.type} />
         {t(`type.${event.type}`)}
         {event.surface && (
@@ -209,6 +212,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             {t(`surface.${event.surface}`)}
           </>
         )}
+        <PartnerOverline event={event} />
       </Typography>
       {/* An edition apart (§168): the same badge the card and the hero wear, above the
           title where the overline already says what kind of event this is. */}
@@ -228,7 +232,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <Divider sx={{ my: 3 }} />
-      {/* One fact per line here (§168): the page is where they are read one at a time. */}
+      {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
+          the address under the place. */}
       <EventFacts event={event} now={now} stacked />
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
@@ -279,36 +284,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         />
       </Box>
 
-      {event.locationAddress && (
-        <Stack sx={{ mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            {t("address")}
-          </Typography>
-          <Typography variant="body1">
-            {/*
-              The address itself is the map link when the club has given one. One link rather
-              than an address followed by a second "open the map": the same destination twice
-              on one page is noise for a screen reader and for a crawler.
-
-              The URL is whatever the organizer pasted (AGENTS.md §8 forbids assembling one),
-              so it opens in a new tab with `rel="noopener noreferrer"` — the opened page can
-              then neither reach back through `window.opener` nor learn where it came from.
-            */}
-            {event.mapUrl ? (
-              <MuiLink
-                href={event.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-              >
-                {event.locationAddress}
-              </MuiLink>
-            ) : (
-              event.locationAddress
-            )}
-          </Typography>
-        </Stack>
-      )}
+      {/* The address is not repeated here: it is the second line of "Unde" in the facts above
+          (§356), under the place's name, which is the one link to the map. */}
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.

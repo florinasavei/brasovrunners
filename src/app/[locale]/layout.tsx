@@ -5,12 +5,14 @@ import { Caveat, Inter, Nunito, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import { env } from "@/shared/config/env";
+import { PUBLIC_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
+import { missingMessagesAreLoud } from "@/i18n/errors";
+import IntlErrorHandling from "@/i18n/IntlErrorHandling";
 import { routing } from "@/i18n/routing";
-import BuildBadge from "@/shared/ui/BuildBadge";
 import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
@@ -102,6 +104,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   const site = await getTranslations({ locale, namespace: "Site" });
+  const messages = await getMessages({ locale });
 
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
@@ -113,58 +116,67 @@ export default async function LocaleLayout({ children, params }: Props) {
         <InitColorSchemeScript attribute="data" defaultMode="light" />
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
-            <NextIntlClientProvider>
-              {/* Not a <main>: every page already renders its own via `id="main" component="main"` on
-                  its root Container, and a document may have only one. */}
-              <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
-                {/* Above the header, because it has to be read before anything below it is
-                    mistaken for the club's real website. */}
-                <EnvironmentNotice />
-                {/*
-                  Skip to the content. Every page renders its own `id="main" component="main"`,
-                  so `#main` is a stable target, and a keyboard reader no longer has to
-                  tab through the lockup, the sections and the language switcher on
-                  every single page before reaching what they came for.
+            {/*
+              Only the words the public islands read (§353). Left bare, next-intl 4 hands the
+              client every message and format of the request — the whole catalogue, backoffice
+              included, in the payload of every page. The backoffice's layouts nest a provider of
+              their own with the staff islands' words added. No `formats`: no island formats a
+              date by name (the server does, and passes the string, §324).
+            */}
+            <NextIntlClientProvider messages={pickMessages(messages, PUBLIC_CLIENT_MESSAGES)} formats={null}>
+              <IntlErrorHandling loud={missingMessagesAreLoud(env.APP_ENV)}>
+                {/* Not a <main>: every page already renders its own via `id="main" component="main"` on
+                    its root Container, and a document may have only one. */}
+                <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+                  {/* Above the header, because it has to be read before anything below it is
+                      mistaken for the club's real website. */}
+                  <EnvironmentNotice />
+                  {/*
+                    Skip to the content. Every page renders its own `id="main" component="main"`,
+                    so `#main` is a stable target, and a keyboard reader no longer has to
+                    tab through the lockup, the sections and the language switcher on
+                    every single page before reaching what they came for.
 
-                  Visually hidden until focused *from the keyboard*: the standard pattern,
-                  and it must not be `display: none`, which would take it out of the tab
-                  order and defeat the whole point. `:focus-visible`, not `:focus`, since
-                  2026-09-18: a tap that happened to land focus on it (the back gesture on a
-                  phone, a tap on the page edge) made a "Skip to content" box pop out of the
-                  corner of a site whose visitors have no idea what it is for, and pressing
-                  it on a short page moved nothing. Keyboard users still get it; nobody else
-                  ever sees it.
-                */}
-                <Box
-                  component="a"
-                  href="#main"
-                  sx={{
-                    position: "absolute",
-                    left: -10000,
-                    top: 0,
-                    // A literal, not a theme callback: this is a Server Component, and a
-                    // function in `sx` cannot cross into a Client Component. Above MUI's
-                    // tooltip layer (1500), which is the highest thing this site renders.
-                    zIndex: 1600,
-                    "&:focus-visible": {
-                      left: 8,
-                      top: 8,
-                      px: 2,
-                      py: 1,
-                      bgcolor: "background.paper",
-                      border: 1,
-                      borderColor: "divider",
-                      borderRadius: 1,
-                    },
-                  }}
-                >
-                  {site("skipToContent")}
+                    Visually hidden until focused *from the keyboard*: the standard pattern,
+                    and it must not be `display: none`, which would take it out of the tab
+                    order and defeat the whole point. `:focus-visible`, not `:focus`, since
+                    2026-09-18: a tap that happened to land focus on it (the back gesture on a
+                    phone, a tap on the page edge) made a "Skip to content" box pop out of the
+                    corner of a site whose visitors have no idea what it is for, and pressing
+                    it on a short page moved nothing. Keyboard users still get it; nobody else
+                    ever sees it.
+                  */}
+                  <Box
+                    component="a"
+                    href="#main"
+                    sx={{
+                      position: "absolute",
+                      left: -10000,
+                      top: 0,
+                      // A literal, not a theme callback: this is a Server Component, and a
+                      // function in `sx` cannot cross into a Client Component. Above MUI's
+                      // tooltip layer (1500), which is the highest thing this site renders.
+                      zIndex: 1600,
+                      "&:focus-visible": {
+                        left: 8,
+                        top: 8,
+                        px: 2,
+                        py: 1,
+                        bgcolor: "background.paper",
+                        border: 1,
+                        borderColor: "divider",
+                        borderRadius: 1,
+                      },
+                    }}
+                  >
+                    {site("skipToContent")}
+                  </Box>
+                  <SiteHeader />
+                  <Box sx={{ flex: 1 }}>{children}</Box>
+                  {/* The build stamp is the last line of the footer's fold (§365), not a label of its own. */}
+                  <SiteFooter />
                 </Box>
-                <SiteHeader />
-                <Box sx={{ flex: 1 }}>{children}</Box>
-                <SiteFooter />
-                <BuildBadge />
-              </Box>
+              </IntlErrorHandling>
             </NextIntlClientProvider>
           </AppTheme>
         </AppRouterCacheProvider>

@@ -1,5 +1,5 @@
 {
-  "id": "366e898f-991a-4a3d-a2a3-b84f0ba1ba39",
+  "id": "f20b7e20-06dc-4da2-949c-b7e5a5bd5375",
   "prevId": "4af6e1db-9c86-4818-95ea-91b6515d4819",
   "version": "7",
   "dialect": "postgresql",
@@ -1262,12 +1262,6 @@
           "notNull": true,
           "default": 2
         },
-        "reminder_hours_before": {
-          "name": "reminder_hours_before",
-          "type": "smallint",
-          "primaryKey": false,
-          "notNull": false
-        },
         "min_age": {
           "name": "min_age",
           "type": "integer",
@@ -1620,10 +1614,6 @@
         "events_min_age_in_range": {
           "name": "events_min_age_in_range",
           "value": "\"events\".\"min_age\" >= 0 AND \"events\".\"min_age\" <= 99"
-        },
-        "events_reminder_hours_before_in_range": {
-          "name": "events_reminder_hours_before_in_range",
-          "value": "\"events\".\"reminder_hours_before\" IS NULL OR (\"events\".\"reminder_hours_before\" >= 0 AND \"events\".\"reminder_hours_before\" <= 168)"
         },
         "events_participant_list_internal_only": {
           "name": "events_participant_list_internal_only",
@@ -3242,12 +3232,6 @@
           "notNull": true,
           "default": "now()"
         },
-        "email_link_expires_at": {
-          "name": "email_link_expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "email_confirmed_at": {
           "name": "email_confirmed_at",
           "type": "timestamp with time zone",
@@ -3785,7 +3769,8 @@
         "REGISTRATION_OPENED",
         "CLUB_CONFIRMATION_NOTICE",
         "EVENT_UPDATE_NOTICE",
-        "EVENT_CANCELLED"
+        "EVENT_CANCELLED",
+        "ORGANIZER_MESSAGE"
       ]
     },
     "public.email_outbox_status": {

@@ -4,6 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -21,6 +22,7 @@ import {
   MAX_CO_HOSTS,
 } from "@/modules/events/domain/co-hosts";
 import CoHostLinkGlyph from "@/modules/events/ui/co-host-glyphs";
+import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
 
@@ -138,6 +140,11 @@ function CoHostRowsEditorIsland({
     descriptionEn: string;
     /** One line under both: optional, in both languages, a sentence or two, shown under the name. */
     descriptionHelp: string;
+    /**
+     * The amber line under the two boxes when they say the same words (§354, bilingual
+     * everywhere): "Textul în engleză e identic cu cel în română — e tradus?". Never a refusal.
+     */
+    identical: string;
     kind: string;
     url: string;
     labelRo: string;
@@ -182,6 +189,10 @@ function CoHostRowsEditorIsland({
       return next;
     });
   const renamePartner = (key: number, title: string) => setRows((current) => current.map((row) => (row.key === key ? { ...row, title } : row)));
+  // What the two description boxes hold now, read from their own `onChange` like the title: the
+  // boxes stay uncontrolled, and only the "identical in both languages" line below follows them.
+  const describePartner = (key: number, language: "Ro" | "En", text: string) =>
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, [`description${language}`]: text } : row)));
 
   const addLink = (partnerKey: number) =>
     setRows((current) =>
@@ -282,6 +293,7 @@ function CoHostRowsEditorIsland({
                         error={recall.named(field)}
                         label={label}
                         defaultValue={initialValue}
+                        onChange={(event) => describePartner(key, language, event.target.value)}
                         multiline
                         minRows={2}
                         maxRows={5}
@@ -294,6 +306,12 @@ function CoHostRowsEditorIsland({
                 <Typography id={aboutHelpId} variant="caption" color="text.secondary">
                   {labels.descriptionHelp}
                 </Typography>
+                {/* The Romanian pasted into the English box (§354): said here, never refused. */}
+                {identicalInBothLanguages(descriptionRo, descriptionEn) && (
+                  <Alert severity="warning" data-testid={`co-host-${index}-identical`}>
+                    {labels.identical}
+                  </Alert>
+                )}
               </Stack>
 
               <Stack spacing={1} id={recall.idOf(`event.coHosts[${index}].links`)} tabIndex={-1} sx={{ outline: "none" }}>

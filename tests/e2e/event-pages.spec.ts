@@ -30,6 +30,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+    // One tooltip per entry, and it is MUI's (§367): no entry carries the browser's `title` too.
+    await expect(main.locator("[role=table] a[title], [role=table] a [title]")).toHaveCount(0);
 
     await main.getByRole("link", { name: "Listă", exact: true }).click();
     await expect(page).toHaveURL(/view=list/);
@@ -54,6 +56,9 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
 
   test("shows every seeded event with its date and meeting point as text", async ({ page }) => {
     await page.goto("/ro/evenimente");
+    // Folded or not, they are text: with more than four cards a phone folds them all (§78), which
+    // another spec's events — `listing-cards.spec.ts`'s series among them — can make true for a moment.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 2 and BR-REQ-070-03 criterion 2: facts as text, not styling or an image.
     const body = await page.locator("body").innerText();
@@ -137,8 +142,17 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // Open every fold, so the links are measured as a reader would see them.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
-    // Criterion 6. The whole card is the link, so this should pass comfortably — the test
-    // exists to catch a future redesign that shrinks it to a text link.
+    // Criterion 6. Every card's title is its link (§366; no card is one whole link any more) — 44
+    // pixels tall at either width — and so is its door (§319) and its place's map link. This
+    // measures the boxes; that nothing later on the card covers part of one, which a box's own
+    // height cannot show, is pressed at its edges in `listing-cards.spec.ts`.
+    const titles = page.locator("main ul > li h2 a");
+    expect(await titles.count()).toBeGreaterThan(0);
+    for (let i = 0; i < (await titles.count()); i += 1) {
+      const box = await titles.nth(i).boundingBox();
+      if (!box) continue;
+      expect.soft(box.height, `title link ${i} height`).toBeGreaterThanOrEqual(44);
+    }
     const links = page.locator("main a");
     const count = await links.count();
     expect(count).toBeGreaterThan(0);
@@ -147,8 +161,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
       44 on a phone, which is the design target and where a finger is the pointer; 24 — WCAG
       2.2's own minimum — on a desktop, where it is not (§175).
 
-      The criterion is about the *event* links, and those are whole cards: comfortably over 44
-      at either width, and this loop exists to catch a redesign that shrinks one to a text link.
+      The criterion is about the *event* links, and those are the cards' titles and doors: 44 at
+      either width, and this loop exists to catch a redesign that shrinks one to a text link.
       What sits beside them on the listing is the calendar and share row, and eight
       finger-sized pills across a desktop page were the loudest thing on it — the owner:
       "aceste butoane sunt mult prea mari", "these buttons must be smaller as well".
@@ -177,6 +191,48 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     for (const fact of ["Când", "Unde", "Traseu", " km"]) {
       expect(body).toContain(fact);
     }
+  });
+
+  /**
+   * `DECISIONS.md` §356 — the owner, of the bulleted facts §168 had made: "better grouped …
+   * distance, difficulty, elevation should be on the same line", and "these need to be pills".
+   * Read on both projects: 320 pixels, where the question sits over its answer, and a desktop.
+   */
+  test("draws the route as one row of pills, the cost as its own, «când» on one line", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+    const facts = page.getByTestId("event-facts");
+    const value = (label: string) => facts.locator("dt", { hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
+
+    // No bullets and no list: pills and lines.
+    await expect(facts.locator("li")).toHaveCount(0);
+    await expect(facts).not.toContainText("•");
+
+    // The seeded Tâmpa run — 14 km, 600 m of climb, moderate, on trail — as four pills, in order.
+    await expect(value("Traseu").locator(".MuiChip-root")).toHaveText(["14 km", "600 m D+", "Mediu", "Trail"]);
+    // Free, in a row of its own rather than among the route's pills.
+    await expect(value("Cost").locator(".MuiChip-root")).toHaveText(["Gratuit"]);
+    await expect(value("Traseu")).not.toContainText("Gratuit");
+
+    // «Când»: the weekday's date and the time, no «începe la», on one line at 320 px too.
+    const when = value("Când");
+    await expect(when).toHaveText(/^(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}·\d{2}:\d{2}$/);
+    const lineHeight = await when.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
+    expect((await when.boundingBox())?.height ?? Infinity).toBeLessThan(lineHeight * 1.5);
+    // A clock in front of the time (§366), the row glyph's size, as the listing cards have it: the
+    // one glyph in the answer, the row's own being in its label. Found by place, because MUI names
+    // its icons (`data-testid="ScheduleIcon"`) only outside a production build, and this suite runs
+    // one; `event-facts-pills.test.ts` checks the name.
+    const clock = when.locator("svg");
+    await expect(clock).toHaveCount(1);
+    expect(Math.round((await clock.boundingBox())?.width ?? 0)).toBe(20);
+
+    // Every row's glyph the same size, whichever question it answers.
+    const glyphs = await facts.locator("dt svg").evaluateAll((svgs) => svgs.map((svg) => Math.round(svg.getBoundingClientRect().width)));
+    expect(glyphs.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(glyphs)).toEqual(new Set([20]));
+
+    // Still nothing wider than the phone.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 
   test("carries a parseable SportsEvent block naming the club as organizer", async ({ page }) => {
@@ -364,7 +420,8 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     } else {
       // On the footer's last line, centred in it. A phone's footer has two lines since §324 — the
       // summary on the first, the privacy notice and the language on the second (footer.spec.ts) —
-      // each a 44px row, so the 44px stack of RO over EN centres on the bar's bottom 44 pixels.
+      // each a 44px row, so RO and EN side by side (§365), each 44px tall, centre on the bar's
+      // bottom 44 pixels.
       const barBox = await page.locator("footer").boundingBox();
       const lastLine = { y: (barBox?.y ?? NaN) + (barBox?.height ?? NaN) - 44, height: 44 };
       expect(Math.abs(centre(languageBox) - centre(lastLine))).toBeLessThan(8);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { raceWeek } from "@/modules/events/domain/race-week";
 import {
   changedDeadlines,
   DEADLINE_KEYS,
@@ -144,11 +145,35 @@ describe("§NNN the timings: one function each, the only arithmetic on these num
     expect(selfCheckinOpensAt(start, { selfCheckinHours: 3 })).toEqual(new Date(start.getTime() - 3 * HOUR));
   });
 
-  it("race week, in elapsed time for the backoffice, is the club's days before a start still ahead", () => {
+  it("race week, for the backoffice, is the club's days before a start still ahead", () => {
+    const at = (startsAt: Date) => ({ startsAt, timezone: "Europe/Bucharest" });
     const start = new Date(NOW.getTime() + 6 * DAY);
-    expect(withinRaceWeek(start, NOW, DEFAULT_DEADLINES)).toBe(true);
-    expect(withinRaceWeek(start, NOW, { raceWeekDays: 5 })).toBe(false);
-    expect(withinRaceWeek(new Date(NOW.getTime() - HOUR), NOW, DEFAULT_DEADLINES)).toBe(false);
+    expect(withinRaceWeek(at(start), NOW, DEFAULT_DEADLINES)).toBe(true);
+    expect(withinRaceWeek(at(start), NOW, { raceWeekDays: 5 })).toBe(false);
+    expect(withinRaceWeek(at(new Date(NOW.getTime() - HOUR)), NOW, DEFAULT_DEADLINES)).toBe(false);
+  });
+
+  it("race week counts calendar days on the event's wall clock, as the public countdown does (§NNN)", () => {
+    const zone = "Europe/Bucharest";
+    // Saturday 07:00 in Brașov (05:00 UTC in November); the race-day morning and the evening before.
+    const race = { startsAt: new Date("2026-11-21T05:00:00.000Z"), timezone: zone };
+    const raceMorning = new Date("2026-11-21T04:30:00.000Z"); // 06:30 Brașov, same day
+    const fridayLate = new Date("2026-11-20T21:59:00.000Z"); // 23:59 Brașov, the day before
+    // 0 = on race day only: the day before is out, although the start is barely seven hours away.
+    expect(withinRaceWeek(race, raceMorning, { raceWeekDays: 0 })).toBe(true);
+    expect(withinRaceWeek(race, fridayLate, { raceWeekDays: 0 })).toBe(false);
+    expect(raceWeek(race, fridayLate, { raceWeekDays: 0 })).toBeNull();
+    // The boundary day: seven calendar days before is in at any hour, eight is out — at 00:01 and
+    // at 23:59 alike, which elapsed time would split.
+    const sevenBeforeEarly = new Date("2026-11-13T22:01:00.000Z"); // Sat 14 Nov 00:01 Brașov
+    const eightBeforeLate = new Date("2026-11-13T21:59:00.000Z"); // Fri 13 Nov 23:59 Brașov
+    expect(withinRaceWeek(race, sevenBeforeEarly, DEFAULT_DEADLINES)).toBe(true);
+    expect(withinRaceWeek(race, eightBeforeLate, DEFAULT_DEADLINES)).toBe(false);
+    for (const now of [raceMorning, fridayLate, sevenBeforeEarly, eightBeforeLate]) {
+      for (const raceWeekDays of [0, 1, 7]) expect(withinRaceWeek(race, now, { raceWeekDays })).toBe(raceWeek(race, now, { raceWeekDays }) !== null);
+    }
+    // Started: out, whatever the number.
+    expect(withinRaceWeek(race, new Date("2026-11-21T05:01:00.000Z"), { raceWeekDays: 0 })).toBe(false);
   });
 
   it("a series is created up to the club's horizon", () => {

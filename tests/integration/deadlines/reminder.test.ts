@@ -162,7 +162,7 @@ describe("§NNN the reminder lead, the event's or the club's", () => {
     expect(await nextMaintenanceWork(db, NOW)).toEqual(none.startsAt);
   });
 
-  it("says in the email the lead it goes with, in words — or that the event is coming, when it has none", async () => {
+  it("says the event is coming, never a number of days — whatever the lead, even none (§357)", async () => {
     const own = await seedEvent(new Date(NOW.getTime() + 60 * HOUR), 72);
     const confirmed = await seedRegistration(own.id, "CONFIRMED");
     const row = {
@@ -186,10 +186,12 @@ describe("§NNN the reminder lead, the event's or the club's", () => {
       sentAt: null,
     };
     const message = await renderOutboxMessage(row, db, NOW);
-    expect(message.text).toContain("Crosul este peste 3 zile.");
-    // The English half, in its own words (the title is the message's language's, as ever).
-    expect(message.text).toContain("Crosul is 3 days away.");
-    expect(message.text).not.toContain("două zile");
+    // "Se apropie", not "peste 3 zile": a runner confirmed after the lead opened gets this nearer
+    // the start than the lead says (§357, which landed on qa beside this branch).
+    expect(message.text).toContain("Crosul se apropie.");
+    expect(message.text).toContain("Crosul is coming up.");
+    expect(message.text).not.toContain("3 zile");
+    expect(message.text).not.toContain("3 days");
 
     // A reminder resent by hand for an event that sends none (§15.8) names no lead.
     await db.update(events).set({ reminderHoursBefore: 0 }).where(eq(events.id, own.id));

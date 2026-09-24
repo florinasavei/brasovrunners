@@ -278,7 +278,7 @@ export async function checkInSelf(secret: string, now: Date) {
   const context = await readRaceDayContext(secret, now);
   if (!context.ok) return context;
   if (!context.selfCheckinOpen) {
-    throw new DomainError("VALIDATION_ERROR", "self check-in opens the day before the event");
+    throw new DomainError("VALIDATION_ERROR", "self check-in is not open yet: it opens the club's check-in lead before the start");
   }
   const registration = await checkIn(getDb(), context.registration.id, null, now);
   return { ok: true as const, registration };

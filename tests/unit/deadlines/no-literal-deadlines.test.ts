@@ -83,6 +83,7 @@ describe("§NNN no sentence states a deadline the setting cannot change", () => 
     "Admin.tasks.items.scheduler.how.5",
     // Quotes "48 de ore" as what the four deadline placeholders fill in.
     "Admin.emails.copy.placeholders",
+    "Admin.emails.copy.placeholdersUsed",
   ]);
 
   it("in either catalogue", () => {
@@ -114,6 +115,6 @@ describe("§NNN no sentence states a deadline the setting cannot change", () => 
       }
     }
     expect(read("src/modules/legal-documents/templates/terms.ts")).toContain("{{confirmationHours}}");
-    expect(read("src/modules/legal-documents/templates/privacy-notice.ts")).toContain("{{reminderHours}}");
+    expect(read("src/modules/legal-documents/templates/privacy-notice.ts")).toContain("{{reminderClause}}");
   });
 });

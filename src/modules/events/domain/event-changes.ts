@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { placeShown as shownOnPage } from "./place";
 import { readScheduleItems } from "./schedule";
 
 /**
@@ -62,13 +63,18 @@ const words = (value: string | null | undefined) => (value ?? "").replace(/\s+/g
  * the name, says the same thing, and must not read as a new place.
  */
 function eventPlace(event: Pick<EventChangeFacts, "locationName" | "locationAddress">): string {
-  return [words(event.locationName), words(event.locationAddress)].filter((part) => part !== "").join(", ");
+  return shownOnPage(event, null);
 }
 
-/** The place as each language's page shows it: its own name when it has one, else the event's. */
+/**
+ * The place as each language's page shows it: its own name when it has one, else the event's —
+ * and an older event's street address after either, because the page shows it after either
+ * (`EventFacts`). The same rule the editor's box and the series edit read (`place.ts#placeShown`,
+ * §362): an older event with an English name of its own ("Tractor Park") and an address opens
+ * with "Tractor Park, Str. Turnului 5" in the English box, and saving that is not a new place.
+ */
 function placesByLanguage(event: EventChangeFacts, languages: readonly PlaceInLanguage[]): Map<string, string> {
-  const fallback = eventPlace(event);
-  return new Map(languages.map((language) => [language.locale, words(language.locationName) || fallback]));
+  return new Map(languages.map((language) => [language.locale, shownOnPage(event, language.locationName)]));
 }
 
 const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true;
@@ -84,7 +90,10 @@ const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true
  *   wants to say why writes the note, which goes on its own.
  * - announced by the save (hidden before, shown after) — always, whether or not the words behind
  *   the switch changed at the same press: to the runner the place is new.
- * - shown before and after — when the place, the map link or a language's own name differs.
+ * - shown before and after — when the map link differs, or the place a language's page shows.
+ *   With the languages in hand, the place is read per language only (§362): the first save of an
+ *   older event writes the Romanian page's own name into the event's column, which changes the
+ *   column and not what any page says. Without them, the event's own place is what is compared.
  */
 function placeChanged(
   before: EventChangeFacts,
@@ -94,8 +103,8 @@ function placeChanged(
 ): boolean {
   if (hidden(after)) return false;
   if (hidden(before)) return true;
-  if (eventPlace(before) !== eventPlace(after)) return true;
   if (words(before.mapUrl) !== words(after.mapUrl)) return true;
+  if (languagesBefore.length === 0 || languagesAfter.length === 0) return eventPlace(before) !== eventPlace(after);
   const was = placesByLanguage(before, languagesBefore);
   const now = placesByLanguage(after, languagesAfter);
   for (const [locale, place] of now) {
@@ -145,7 +154,9 @@ export function readEventChanges(value: unknown): EventChangeKind[] {
  * The organizer's own words on the two messages — the note on "details updated", the reason on
  * "cancelled" — as plain text, at most five hundred characters, which is a paragraph and not a
  * newsletter. Line breaks are kept (a two-line note is written as two lines); every other control
- * character is dropped, and the template escapes the rest.
+ * character is dropped, and the template escapes the rest. Each language's box is read by this
+ * rule on its own (§354, bilingual everywhere): five hundred characters in Romanian and five
+ * hundred in English.
  */
 export const EVENT_NOTICE_TEXT_MAX = 500;
 
@@ -165,4 +176,29 @@ export function readEventNoticeText(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const parsed = eventNoticeTextSchema.safeParse(value);
   return parsed.success && parsed.data !== "" ? parsed.data : undefined;
+}
+
+/**
+ * The note or the reason as a message is written from it (§354, bilingual everywhere): what the
+ * half in `language` says, and what the other half says.
+ *
+ * - **Both languages** — the shape every row queued since the organizer types the text twice:
+ *   `{ ro, en }`. Each half of the bilingual message reads its own language, so the Romanian
+ *   registrant's English half carries the English text and never the Romanian one.
+ * - **One string** — a row queued before, with the one text the organizer typed. Rendered as it
+ *   always was, the same words in both halves: the row is already in the outbox and rewriting what
+ *   it says is not this release's to do.
+ * - **Half a pair**, or nothing readable — nothing at all. The save refuses one language only, so
+ *   a half can only come from a hand-made row, and showing it would put one language's text in
+ *   front of a reader of the other; the rest of the message still goes.
+ */
+export function readEventNoticeWords(value: unknown, language: "ro" | "en"): { text?: string; other?: string } {
+  const legacy = readEventNoticeText(value);
+  if (legacy) return { text: legacy };
+  if (!value || typeof value !== "object") return {};
+  const pair = value as { ro?: unknown; en?: unknown };
+  const ro = readEventNoticeText(pair.ro);
+  const en = readEventNoticeText(pair.en);
+  if (!ro || !en) return {};
+  return language === "ro" ? { text: ro, other: en } : { text: en, other: ro };
 }

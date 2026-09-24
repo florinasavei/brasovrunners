@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
@@ -20,6 +20,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     const slug = `locatie-neanuntata-${suffix}`;
     const englishSlug = `place-to-be-announced-${suffix}`;
     const secret = `Sala secretă ${suffix}`;
+    const secretEnglish = `Secret hall ${suffix}`;
 
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
@@ -27,27 +28,34 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
 
+    // The two names side by side from `sm`, stacked on a phone — and never wider than the phone (§362).
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await fillDateField(page, "Începutul evenimentului", "2027-06-12");
     await fillTimeField(page, "Ora", "09:00");
 
-    // The browser asks for a meeting point until the switch says it is to be announced (§315).
+    // The browser asks for a meeting point in each language until the switch says it is to be
+    // announced (§315, §362).
     await expect(field("event.locationName")).toHaveAttribute("required", "");
+    await expect(field("event.locationNameEn")).toHaveAttribute("required", "");
     // A venue written down the moment it is known — then the switch hides it, kept and not shown
     // (the owner: "if the location is announced later, we should hide these fields").
     await field("event.locationName").fill(secret);
+    await field("event.locationNameEn").fill(secretEnglish);
     const toggle = page.getByRole("switch", { name: "Locația se anunță mai târziu" });
     await toggle.check();
-    await expect(field("event.locationName")).not.toHaveAttribute("required", "");
-    await expect(field("event.locationName")).toBeHidden();
+    for (const name of ["event.locationName", "event.locationNameEn"]) {
+      await expect(field(name)).not.toHaveAttribute("required", "");
+      await expect(field(name)).toBeHidden();
+    }
     await expect(field("event.mapUrl")).toBeHidden();
-    // Each language's own name for the place hides with them, in the same box (§328, §350).
-    await expect(languageTab(page, "place", "ro")).toBeHidden();
+    await expect(page.getByTestId("place-copy-to-english")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
+    await expect(field("event.locationNameEn")).toHaveValue(secretEnglish);
 
     await field("translations.ro.title").fill(`Locație neanunțată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -71,9 +79,19 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     expect((await page.goto(`/en/events/${englishSlug}`))?.status()).toBe(200);
     await expect(page.locator("main").getByText("Location to be announced soon")).toBeVisible();
     expect(await page.content()).not.toContain(secret);
+    expect(await page.content()).not.toContain(secretEnglish);
 
-    // The calendar file: the sentence, and no LOCATION for a calendar to route to.
-    const ics = await (await page.request.get(`/ro/evenimente/${slug}/calendar.ics`)).text();
+    /*
+      The calendar file: the sentence, and no LOCATION for a calendar to route to. At the address
+      the page links (`events/[slug]/page.tsx`, `/${locale}/events/${slug}/calendar.ics`): a path
+      with an extension skips the proxy, so the localized `/ro/evenimente/…/calendar.ics` this used
+      to ask for was the catch-all's 404 — which passed only while every page's payload carried the
+      whole catalogue, this sentence included (§353). Hence the status and the type, too.
+    */
+    const icsResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    expect(icsResponse.status()).toBe(200);
+    expect(icsResponse.headers()["content-type"]).toContain("text/calendar");
+    const ics = await icsResponse.text();
     expect(ics).toContain("Locația se anunță în curând");
     expect(ics).not.toContain("LOCATION:");
     expect(ics.replace(/\r\n /g, "")).not.toContain(secret);
@@ -127,7 +145,9 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.getByRole("switch", { name: "Locația se anunță mai târziu" }).uncheck();
     await expect(field("event.locationName")).toBeVisible();
     await expect(field("event.locationName")).toHaveAttribute("required", "");
-    await expect(languageTab(page, "place", "en")).toBeVisible();
+    await expect(field("event.locationNameEn")).toBeVisible();
+    await expect(field("event.locationNameEn")).toHaveAttribute("required", "");
+    await expect(field("event.locationNameEn")).toHaveValue(secretEnglish);
     await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("place-announced")).toContainText("Locația e anunțată");
@@ -135,6 +155,10 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.goto(`/ro/evenimente/${slug}`);
     await expect(page.locator("main").getByText(secret).first()).toBeVisible();
     await expect(page.locator("main")).not.toContainText("Locația se anunță în curând");
+    // The English page names the place in English, never the Romanian words (§362).
+    await page.goto(`/en/events/${englishSlug}`);
+    await expect(page.locator("main").getByText(secretEnglish).first()).toBeVisible();
+    await expect(page.locator("main")).not.toContainText(secret);
 
     // Off the site again.
     await page.goto(editorUrl);

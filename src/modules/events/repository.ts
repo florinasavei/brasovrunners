@@ -465,7 +465,15 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
     .where(eq(eventTranslations.eventId, eventId));
 
-  return rows.find((row) => row.locale === locale) ?? rows[0];
+  const row = rows.find((candidate) => candidate.locale === locale) ?? rows[0];
+  if (!row) return undefined;
+  /*
+    The place in every language the event has, for the half of a bilingual message written in the
+    other one (§362, `renderBilingual`): the English half names the English place, read by the same
+    rule — and withheld the same way while the place is to be announced (§328).
+  */
+  const locationNames: Partial<Record<Locale, string | null>> = Object.fromEntries(rows.map((candidate) => [candidate.locale, candidate.locationName]));
+  return { ...row, locationNames };
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */

@@ -19,7 +19,7 @@ import {
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
-import { eventFormFieldName, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
@@ -209,8 +209,11 @@ function eventFieldsFrom(form: FormData) {
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
-    // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
+    // "Punct de întâlnire", once per language (§362): the Romanian box, which is also the event's
+    // own meeting point (§36), and the English one — only when the form carried it, so a form
+    // without the box reads as "not editing the English name" rather than as a blank one.
     locationName: value("locationName"),
+    locationNameEn: form.has("event.locationNameEn") ? value("locationNameEn") : undefined,
     // No box for it any more (the Locul box); the field is folded into the meeting point.
     locationAddress: null,
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
@@ -285,8 +288,8 @@ function translationInputFrom(form: FormData, locale: Locale) {
     body: value("body"),
     rules: value("rules"),
     schedule: value("schedule"),
-    // The place's name in this language, or "" for the event's own (migration `0058`).
-    locationName: value("locationName"),
+    // No place name here: it is asked once per language in the Locul box and read with the
+    // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
   };
@@ -527,11 +530,18 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       /*
         "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
         its "tell them" box (§331). Read as posted and judged by the service — the role, the
-        reason required on a cancellation, the five hundred characters — so a replayed POST
-        meets the same rules as the page. An unticked box posts nothing, which is "no".
+        reason required on a cancellation, the five hundred characters, both languages or
+        neither (§354, bilingual everywhere) — so a replayed POST meets the same rules as the
+        page. An unticked box posts nothing, which is "no". The note and the reason are one box
+        per language; the cancellation is there when either of its boxes was drawn.
       */
-      notice: { notify: form.get("notice.notify") === "on", note: text(form, "notice.note") },
-      cancellation: form.has("cancel.reason") ? { reason: text(form, "cancel.reason"), notify: form.get("cancel.notify") === "on" } : undefined,
+      notice: { notify: form.get("notice.notify") === "on", note: { ro: text(form, "notice.noteRo"), en: text(form, "notice.noteEn") } },
+      cancellation:
+        form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
+          ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
+          : undefined,
+      // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
+      placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
     // So does what the participants were told (§331): the kind and the count, never who.

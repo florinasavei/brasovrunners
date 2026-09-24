@@ -70,6 +70,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-06");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Versiune ${suffix}`);
     await field("translations.ro.slug").fill(`versiune-${suffix}`);
     await languageTab(page, "title", "en").click();
@@ -144,6 +145,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-20");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Fără declarație ${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`No declaration ${suffix}`);
@@ -173,6 +175,69 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
+  §358: the status, the course and the links are cards inside "Ce fel de eveniment", on the create
+  page as on the editor. A link's label in one language only is a refusal only the server makes
+  (§352, both or neither), and it names the empty box — inside "Linkuri și fișiere", inside the first
+  box. Both are shut before the press, so the refusal is what has to open them, and every box keeps
+  what was typed. On the way, the create page's status card: there, read-only, "Programat".
+*/
+test.describe("§358 a refusal inside a card of the first box opens the box and the card", () => {
+  // Built from parts: no hostname literal (`AGENTS.md` §8).
+  const GPX_LINK = ["https:/", "drive.example.test", "file", "d", "e2e-half-label", "view"].join("/");
+
+  test("a link label in Romanian only comes back with «Ce fel de eveniment» and «Linkuri și fișiere» open", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    // The status card is on the create page too, so the two pages look the same — read-only.
+    const status = await openEditorBox(page, "Starea evenimentului");
+    const statusBox = status.getByRole("textbox", { name: "Starea evenimentului" });
+    await expect(statusBox).toHaveValue("Programat");
+    await expect(statusBox).toBeDisabled();
+    await expect(status.getByRole("combobox")).toHaveCount(0);
+    await expect(status.getByTestId("status-on-create")).toContainText("starea se poate schimba după ce evenimentul e creat");
+
+    await fillDateField(page, "Începutul evenimentului", "2027-07-04");
+    await fillTimeField(page, "Ora", "09:00");
+    // The meeting point in both languages (§362): a blank English box is the browser's refusal,
+    // and the one this test is about is the server's.
+    await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
+    await field("translations.ro.title").fill(`Link pe jumătate ${suffix}`);
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Half a link ${suffix}`);
+
+    const links = await openEditorBox(page, "Linkuri și fișiere");
+    // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§347).
+    await page.getByRole("group", { name: "Linkul 1", exact: true }).getByRole("combobox").click();
+    await page.getByRole("option", { name: "Traseul (GPX)" }).click();
+    await field("event.links[0].url").fill(GPX_LINK);
+    await field("event.links[0].labelRo").fill("Traseul oficial");
+    // Folded again, the card and the box, so the refusal is what has to open them.
+    const kind = editorBox(page, "Ce fel de eveniment");
+    await links.locator(":scope > summary").press("Enter");
+    await expect(links).not.toHaveAttribute("open", "");
+    await kind.locator(":scope > summary").press("Enter");
+    await expect(kind).not.toHaveAttribute("open", "");
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toBeVisible();
+    await expect(refusal.getByRole("link", { name: /^Linkul 1: eticheta în engleză/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(kind).toHaveAttribute("open", "");
+    await expect(links).toHaveAttribute("open", "");
+    await expect(field("event.links[0].labelEn")).toBeVisible();
+    await expect(field("event.links[0].labelRo")).toHaveValue("Traseul oficial");
+    await expect(field("event.links[0].url")).toHaveValue(GPX_LINK);
+    await expect(field("translations.ro.title")).toHaveValue(`Link pe jumătate ${suffix}`);
+  });
+});
+
+/*
   §350, found by review: a box the chosen registration mode hides cannot stop the save.
 
   The boxes of the other modes stay in the document, hidden, so switching back finds them — and
@@ -195,6 +260,7 @@ test.describe("§350 a wrong value in a hidden registration mode", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-06-27");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Noua");
+    await field("event.locationNameEn").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Mod ascuns ${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Hidden mode ${suffix}`);

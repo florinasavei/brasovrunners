@@ -13,10 +13,33 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import BorderAllIcon from "@mui/icons-material/BorderAll";
+import BorderClearIcon from "@mui/icons-material/BorderClear";
+import BorderColorIcon from "@mui/icons-material/BorderColor";
+import BorderHorizontalIcon from "@mui/icons-material/BorderHorizontal";
+import DeleteIcon from "@mui/icons-material/Delete";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
+import LinkIcon from "@mui/icons-material/Link";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import RedoIcon from "@mui/icons-material/Redo";
+import SmartDisplayIcon from "@mui/icons-material/SmartDisplay";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import TableRowsIcon from "@mui/icons-material/TableRows";
+import UndoIcon from "@mui/icons-material/Undo";
+import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import WebAssetIcon from "@mui/icons-material/WebAsset";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { Extension, mergeAttributes, Node, type Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -24,9 +47,10 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
-import { type ComponentProps, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { type ComponentProps, type ComponentType, useCallback, useEffect, useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
+import ToolbarButton from "@/shared/ui/ToolbarButton";
 import {
   BLOCK_ALIGNMENTS,
   EMPTY_DOC,
@@ -48,21 +72,53 @@ import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
-/**
- * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
- * the text should resemble microsoft word!").
- *
- * The toolbar's rule has been "words, not icons" since the picture emoji rendered as a broken
- * box on the owner's machine, and it still holds for the verbs whose names are the clearest
- * thing about them. These three are the exception the rule was always going to have: the lines
- * of a left-, centre- and right-aligned paragraph are the same picture in every editor anybody
- * has used, and "S", "C", "D" are three letters somebody has to decode. The glyphs come from
- * `@mui/icons-material`, which the backoffice already imports for its tab row, and only the
- * backoffice loads this file — no public page pays for them.
- */
 /** Floating-UI's placement for the table's bar: above the table, created once. */
 const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 
+/**
+ * The two floating bars, above the sticky toolbar (§361, §363). Tiptap appends a bar to the
+ * writing area and positions it with no stacking order of its own, so the toolbar's `zIndex: 2`
+ * painted over it: a table at the top of the body had its bar — every table verb — hidden behind
+ * the toolbar it sat under, and a word selected on the first lines had the bar over it drawn
+ * *under* the toolbar, which the owner saw as "three empty buttons" (2026-09-24: "I can't see
+ * these buttons in the rich text editor"): the bottoms of the three buttons below the toolbar,
+ * their glyphs behind it.
+ *
+ * **On the `Paper` we render, never on `BubbleMenu`'s `style`.** §361 passed `{ zIndex: 3 }` as the
+ * menu's `style` prop, and it worked under `next dev` and nowhere else. Tiptap 3.31 copies `style`
+ * and the `data-*`/`aria-*` props onto the menu's element in a helper whose loop is a
+ * `new Set([...])` annotated `@__PURE__` with `.forEach(…)` called on it; the production minifier
+ * takes the annotation for the whole call, finds its result unused and deletes it — the built
+ * chunk has no trace of the style code at all. So nothing passed to `BubbleMenu` beyond the plugin's own props (`editor`,
+ * `pluginKey`, `shouldShow`, `options`) exists in production, and a unit test keeps it that way.
+ *
+ * The menu's element has `z-index: auto` and `opacity: 1` while shown, so it makes no stacking
+ * context of its own: a positioned `Paper` inside it is stacked with the toolbar's, and 3 is one
+ * above it — far below MUI's app bar, tooltips and popovers.
+ */
+const FLOATING_BAR_SX = { position: "relative", zIndex: 3 } as const;
+
+/**
+ * The writing area's own box: a generous minimum, because a page body that looks like a one-line
+ * field invites a one-line page. One object for the two places that draw it — Tiptap's `.tiptap`
+ * and the stand-in shown until Tiptap has mounted — so the two are always the same height.
+ *
+ * **Why the stand-in** (found by CI on BR-V1.80, not by anything that batch changed). Tiptap
+ * builds its editor only in the browser, after hydration (`immediatelyRender: false`, below), and
+ * until then the writing area was an empty `div`, zero pixels tall. The moment it mounted, it
+ * grew to this box and pushed everything under it down — 272 pixels on `/admin/emails`, where
+ * "Salvează textul" and "Înlocuiește cu câmpurile" stand under each message's editor. A press in
+ * that first second landed on the gap the button had just left and did nothing: no request, no
+ * answer, the page as it was. With the stand-in the area has its height from the first paint, and
+ * the stand-in goes in the same render that brings Tiptap's element in, so nothing below moves.
+ */
+const WRITING_AREA_BOX = { minHeight: 240, p: 2 } as const;
+
+/**
+ * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
+ * the text should resemble microsoft word!"). They were the toolbar's first glyphs; since §361
+ * every button wears one, from the same family.
+ */
 const ALIGN_ICON = {
   left: FormatAlignLeftIcon,
   center: FormatAlignCenterIcon,
@@ -88,11 +144,15 @@ const ALIGN_ICON = {
  * still carries the body it was given, so a save writes the text back unchanged rather than
  * blanking somebody's page.
  *
- * ## The toolbar has words on it, not icons
+ * ## The toolbar wears Material glyphs (§361)
  *
- * `@mui/icons-material` is a dependency, and this is the only screen in the product that would
- * need it (§1.5: prefer nothing). "B", "I", "H2" and "Listă" are also what a volunteer reads
- * without hovering, and every control carries its own accessible name.
+ * It had words and characters on it — "B", "•—", "⊞", "🔗", "↶", "Imagine" — because the picture
+ * emoji rendered as a broken box on the owner's machine (2026-09-18), and a character is whatever
+ * the reader's font makes of it. A Material glyph is an SVG: the same picture on every machine,
+ * at one size, in one colour. The backoffice already loads `@mui/icons-material` for its buttons
+ * (§318), so it costs no dependency. Every control is a `ToolbarButton`, which says its full name
+ * as its accessible name and as a tooltip; "H2" and "H3" stay words, because a heading level is
+ * read faster as its name than as any picture.
  */
 function RichTextEditorIsland({
   name,
@@ -193,7 +253,11 @@ function RichTextEditorIsland({
     imageNoAltOne: string;
     imageNoAltMany: string;
     imageFromGallery: string;
-    /** The two words on the buttons themselves; the long labels are their accessible names. */
+    /**
+     * The words the three media buttons wore until §361, like `alignShort` and `previewShort`
+     * before them: every button wears a glyph now and says its long label. Not drawn; kept while
+     * the catalogue still has them.
+     */
     imageShort: string;
     imageFromGalleryShort: string;
     imageGalleryLoading: string;
@@ -619,87 +683,77 @@ function RichTextEditorIsland({
             borderTopRightRadius: "inherit",
           }}
         >
-          <Control
+          <ToolbarButton
             label={labels.bold}
-            text="B"
+            icon={FormatBoldIcon}
             active={editor?.isActive("bold") ?? false}
             onClick={() => editor?.chain().focus().toggleBold().run()}
-            sx={{ fontWeight: 700 }}
           />
-          <Control
+          <ToolbarButton
             label={labels.italic}
-            text="I"
+            icon={FormatItalicIcon}
             active={editor?.isActive("italic") ?? false}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
-            sx={{ fontStyle: "italic" }}
           />
-          <Control
+          <ToolbarButton
             label={labels.heading2}
             text="H2"
             active={editor?.isActive("heading", { level: 2 }) ?? false}
             onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.heading3}
             text="H3"
             active={editor?.isActive("heading", { level: 3 }) ?? false}
             onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.bulletList}
-            text="•—"
+            icon={FormatListBulletedIcon}
             active={editor?.isActive("bulletList") ?? false}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.orderedList}
-            text="1."
+            icon={FormatListNumberedIcon}
             active={editor?.isActive("orderedList") ?? false}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.quote}
-            text="❝"
+            icon={FormatQuoteIcon}
             active={editor?.isActive("blockquote") ?? false}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           />
-          {/*
-            Left, centred, right (§213) — letters from the catalogue rather than glyphs, for the
-            reason the whole toolbar has words on it: the picture emoji rendered as a broken box
-            on the owner's own machine, and three broken boxes side by side would be worse than
-            three letters. The full name is the accessible name and the tooltip.
-          */}
-          {BLOCK_ALIGNMENTS.map((align) => {
-            const AlignIcon = ALIGN_ICON[align];
-            return (
-              <Control
-                key={align}
-                label={labels.align[align]}
-                icon={<AlignIcon fontSize="small" />}
-                active={align === "left" ? !editor?.isActive({ align: "center" }) && !editor?.isActive({ align: "right" }) : (editor?.isActive({ align }) ?? false)}
-                onClick={() => setAlign(align)}
-              />
-            );
-          })}
+          {/* Left, centred, right (§213), in Word's three glyphs (§274). The full name is the
+              accessible name and the tooltip. */}
+          {BLOCK_ALIGNMENTS.map((align) => (
+            <ToolbarButton
+              key={align}
+              label={labels.align[align]}
+              icon={ALIGN_ICON[align]}
+              active={align === "left" ? !editor?.isActive({ align: "center" }) && !editor?.isActive({ align: "right" }) : (editor?.isActive({ align }) ?? false)}
+              onClick={() => setAlign(align)}
+            />
+          ))}
           {/*
             One button inserts a table; the rest of the verbs appear only while the caret is
             inside one (§196). A toolbar that showed "add a row" to somebody writing a paragraph
-            is four dead controls, and this toolbar already has words on it rather than icons
-            precisely so that what it offers is legible.
+            is four dead controls.
           */}
           {features.tables !== false && (
-          <Control
+          <ToolbarButton
             label={labels.table}
-            text="⊞"
+            icon={TableChartIcon}
             active={editor?.isActive("table") ?? false}
             onClick={() =>
               editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
             }
           />
           )}
-          <Control
+          <ToolbarButton
             label={labels.link}
-            text="🔗"
+            icon={LinkIcon}
             active={editor?.isActive("link") ?? false}
             onClick={() =>
               setLinkDraft((open) =>
@@ -707,13 +761,17 @@ function RichTextEditorIsland({
               )
             }
           />
-          {/* Words, not glyphs: the picture emoji rendered as a broken box on the owner's
-              machine (2026-09-18), and two of them side by side read as two broken boxes. */}
+          {/*
+            A picture from the phone or the computer is the picture with a plus; one already
+            uploaded is the library of them; a film is the play mark. They were words (2026-09-18)
+            because the picture emoji rendered as a broken box; a Material glyph cannot (§361).
+            The play mark and not YouTube's own logo: Material's brand glyphs were refused (§90).
+          */}
           {features.media !== false && (
           <>
-          <Control
+          <ToolbarButton
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
-            text={labels.imageShort}
+            icon={AddPhotoAlternateIcon}
             active={false}
             onClick={() => fileInputRef.current?.click()}
           />
@@ -728,15 +786,15 @@ function RichTextEditorIsland({
               if (file) void insertImage(file);
             }}
           />
-          <Control
+          <ToolbarButton
             label={labels.imageFromGallery}
-            text={labels.imageFromGalleryShort}
+            icon={PhotoLibraryIcon}
             active={gallery !== null}
             onClick={() => void openGallery()}
           />
-          <Control
+          <ToolbarButton
             label={labels.youtube}
-            text={labels.youtubeShort}
+            icon={SmartDisplayIcon}
             active={youtubeDraft !== null || (editor?.isActive("youtube") ?? false)}
             onClick={() => {
               setYoutubeInvalid(false);
@@ -745,23 +803,23 @@ function RichTextEditorIsland({
           />
           </>
           )}
-          <Control
+          <ToolbarButton
             label={labels.undo}
-            text="↶"
+            icon={UndoIcon}
             active={false}
             onClick={() => editor?.chain().focus().undo().run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.redo}
-            text="↷"
+            icon={RedoIcon}
             active={false}
             onClick={() => editor?.chain().focus().redo().run()}
           />
           {/* Last, and an eye (§274): it is about the whole body rather than about the caret,
               so it belongs at the end of the row and not among the verbs that change text. */}
-          <Control
+          <ToolbarButton
             label={labels.preview}
-            icon={<VisibilityOutlinedIcon fontSize="small" />}
+            icon={VisibilityIcon}
             active={preview !== null}
             onClick={() => setPreview(editor?.getHTML() ?? "")}
           />
@@ -883,11 +941,9 @@ function RichTextEditorIsland({
 
         <Box
           sx={{
-            // The writing area itself. A generous minimum, because a page body that looks like a
-            // one-line field invites a one-line page.
+            // The writing area itself (`WRITING_AREA_BOX`).
             "& .tiptap": {
-              minHeight: 240,
-              p: 2,
+              ...WRITING_AREA_BOX,
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
               // A floated picture at the end of the body would otherwise hang out of the
@@ -979,28 +1035,38 @@ function RichTextEditorIsland({
               shouldShow={showOverTable}
               options={TABLE_BAR_OPTIONS}
             >
-              <Paper elevation={3} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}>
-              <Control
+              <Paper
+                elevation={3}
+                data-floating-bar="table"
+                sx={{ ...FLOATING_BAR_SX, display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}
+              >
+              {/* A row is the rows glyph and a column the columns glyph; the corner says whether
+                  the press adds one or deletes the one the caret is in (§361). */}
+              <ToolbarButton
                 label={labels.tableAddRow}
-                text="+↓"
+                icon={TableRowsIcon}
+                mark="add"
                 active={false}
                 onClick={() => editor?.chain().focus().addRowAfter().run()}
               />
-              <Control
+              <ToolbarButton
                 label={labels.tableAddColumn}
-                text="+→"
+                icon={ViewColumnIcon}
+                mark="add"
                 active={false}
                 onClick={() => editor?.chain().focus().addColumnAfter().run()}
               />
-              <Control
+              <ToolbarButton
                 label={labels.tableDeleteRow}
-                text="−↓"
+                icon={TableRowsIcon}
+                mark="remove"
                 active={false}
                 onClick={() => editor?.chain().focus().deleteRow().run()}
               />
-              <Control
+              <ToolbarButton
                 label={labels.tableDeleteColumn}
-                text="−→"
+                icon={ViewColumnIcon}
+                mark="remove"
                 active={false}
                 onClick={() => editor?.chain().focus().deleteColumn().run()}
               />
@@ -1010,9 +1076,9 @@ function RichTextEditorIsland({
                 grid → rows → none, showing what it is on rather than what it will do, because
                 three separate buttons for one three-valued choice is three buttons.
               */}
-              <Control
+              <ToolbarButton
                 label={labels.tableBorders[tableBorders]}
-                text={TABLE_BORDER_GLYPH[tableBorders]}
+                icon={TABLE_BORDER_ICON[tableBorders]}
                 active={tableBorders !== "all"}
                 onClick={() =>
                   editor
@@ -1026,9 +1092,9 @@ function RichTextEditorIsland({
               />
               {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
                   buttons to the left — a cell holds paragraphs, so it is already there. */}
-              <Control
+              <ToolbarButton
                 label={labels.tableValign}
-                text="↕"
+                icon={VerticalAlignCenterIcon}
                 active={tableValign === "middle"}
                 onClick={() =>
                   editor
@@ -1041,21 +1107,22 @@ function RichTextEditorIsland({
               {/*
                 The two colours (§271), each a control that cycles its own closed set and is
                 named after the state it is in — the same shape the borders control has, for the
-                same reason: a toolbar with words on it can say "lines: blue" and a colour
-                picker cannot say anything at all.
+                same reason: a named control can say "lines: blue" and a colour picker cannot say
+                anything at all. The glyphs are the ones every office suite draws for the two:
+                the pen over a line for the lines' colour, the bucket for a fill.
               */}
-              <Control
+              <ToolbarButton
                 label={labels.tableBorderColour[tableBorderColour]}
-                text="▦"
+                icon={BorderColorIcon}
                 active={tableBorderColour !== "default"}
                 onClick={() => {
                   const next = TABLE_BORDER_COLOURS[(TABLE_BORDER_COLOURS.indexOf(tableBorderColour) + 1) % TABLE_BORDER_COLOURS.length];
                   editor?.chain().focus().updateAttributes("table", { borderColour: next === "default" ? null : next }).run();
                 }}
               />
-              <Control
+              <ToolbarButton
                 label={labels.tableHeaderFill[tableHeaderFill]}
-                text="▩"
+                icon={FormatColorFillIcon}
                 active={tableHeaderFill !== "default"}
                 onClick={() => {
                   const next = TABLE_HEADER_FILLS[(TABLE_HEADER_FILLS.indexOf(tableHeaderFill) + 1) % TABLE_HEADER_FILLS.length];
@@ -1063,16 +1130,18 @@ function RichTextEditorIsland({
                 }}
               />
               {/* A layout table has no header row, and a table that grew one by accident has no
-                  other way to lose it. Tiptap's own command: it converts the row in place. */}
-              <Control
+                  other way to lose it. Tiptap's own command: it converts the row in place. The
+                  glyph is a box whose top band is filled — a table with its header row. */}
+              <ToolbarButton
                 label={labels.tableHeaderRow}
-                text="H"
+                icon={WebAssetIcon}
                 active={editor?.isActive("tableHeader") ?? false}
                 onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
               />
-              <Control
+              {/* The bin, as deleting wears everywhere in the backoffice (§318). */}
+              <ToolbarButton
                 label={labels.tableDelete}
-                text="⊟"
+                icon={DeleteIcon}
                 active={false}
                 onClick={() => editor?.chain().focus().deleteTable().run()}
               />
@@ -1092,24 +1161,22 @@ function RichTextEditorIsland({
           */}
           {editor && (
             <BubbleMenu editor={editor}>
-              <Paper elevation={3} sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
-                <Control
+              <Paper elevation={3} data-floating-bar="selection" sx={{ ...FLOATING_BAR_SX, display: "flex", gap: 0.5, p: 0.5 }}>
+                <ToolbarButton
                   label={labels.bold}
-                  text="B"
+                  icon={FormatBoldIcon}
                   active={editor.isActive("bold")}
                   onClick={() => editor.chain().focus().toggleBold().run()}
-                  sx={{ fontWeight: 700 }}
                 />
-                <Control
+                <ToolbarButton
                   label={labels.italic}
-                  text="I"
+                  icon={FormatItalicIcon}
                   active={editor.isActive("italic")}
                   onClick={() => editor.chain().focus().toggleItalic().run()}
-                  sx={{ fontStyle: "italic" }}
                 />
-                <Control
+                <ToolbarButton
                   label={labels.link}
-                  text="🔗"
+                  icon={LinkIcon}
                   active={editor.isActive("link")}
                   onClick={() =>
                     setLinkDraft((open) => (open === null ? (editor.getAttributes("link").href ?? "") : null))
@@ -1118,6 +1185,8 @@ function RichTextEditorIsland({
               </Paper>
             </BubbleMenu>
           )}
+          {/* The writing area's height before Tiptap has mounted (`WRITING_AREA_BOX`): nothing to read, nothing to focus. */}
+          {!editor && <Box aria-hidden sx={WRITING_AREA_BOX} data-testid="rich-text-reserved" />}
           <EditorContent editor={editor} />
         </Box>
       </Box>
@@ -1496,10 +1565,15 @@ const TableStyle = Extension.create({
 });
 
 /**
- * What the borders control shows: the state it is in, drawn with box-drawing characters rather
- * than an icon package (`AGENTS.md` §1.5) and in the same spirit as the rest of this toolbar.
+ * What the borders control shows: the state it is in, in Material's three border glyphs (§361)
+ * — the solid grid, the rows alone, and the dotted grid of a table that draws no lines. They
+ * replaced the box-drawing characters "▦", "▤" and "▢", which a font draws as it likes.
  */
-const TABLE_BORDER_GLYPH: Record<TableBorders, string> = { all: "▦", rows: "▤", none: "▢" };
+const TABLE_BORDER_ICON: Record<TableBorders, ComponentType<SvgIconProps>> = {
+  all: BorderAllIcon,
+  rows: BorderHorizontalIcon,
+  none: BorderClearIcon,
+};
 
 const ALIGNABLE = ["paragraph", "heading"] as const;
 
@@ -1599,51 +1673,6 @@ function countMissingAlt(doc: unknown): number {
 function countWords(text: string): number {
   const trimmed = text.trim();
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
-}
-
-/**
- * One toolbar button. `ToggleButton` rather than `IconButton` because these are states, not
- * actions — it renders `aria-pressed`, which is how a screen reader says "bold is on" — and undo
- * and redo pass `active={false}`, which reads as a button that is simply never pressed.
- *
- * `onMouseDown` prevents the default so clicking a control does not first take focus out of the
- * editor: losing the selection would make "bold" apply to nothing.
- */
-function Control({
-  label,
-  text,
-  icon,
-  active,
-  onClick,
-  sx,
-}: {
-  label: string;
-  /** The word or letter on the button, when it has no glyph. */
-  text?: string;
-  /**
-   * A glyph instead of the letters (§274). Only for the controls whose shape is the same in
-   * every editor anybody has used — the three alignments and the eye — because those are
-   * recognised faster as a picture than read as a word, and misread as neither.
-   */
-  icon?: ReactNode;
-  active: boolean;
-  onClick: () => void;
-  sx?: Record<string, unknown>;
-}) {
-  return (
-    <ToggleButton
-      value={label}
-      selected={active}
-      aria-label={label}
-      title={label}
-      size="small"
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={onClick}
-      sx={{ minWidth: 44, minHeight: 44, px: 1, lineHeight: 1, ...sx }}
-    >
-      {icon ?? text}
-    </ToggleButton>
-  );
 }
 
 /**

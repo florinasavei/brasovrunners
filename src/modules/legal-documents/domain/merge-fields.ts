@@ -9,12 +9,35 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * reminder through these, so the words follow "Termene" instead of freezing today's numbers into
  * an approved text. They merge when the text is shown (`deadlineMergeValues`); the approved
  * template and its hash are untouched, as for every field (§12.5).
+ *
+ * **The reminder is a clause, not a number** (`reminderClause`): the club may send none by default
+ * (zero), and "un memento cu 0 ore înainte" would promise a message that never goes. So the field
+ * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte" — and is empty
+ * when there is no reminder, which drops it from the sentence (`OMITTABLE_MERGE_FIELDS`):
+ * "confirmări, legături, lista de așteptare{{reminderClause}} și cel mult o mulțumire…".
  */
-export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderHours"] as const;
+export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderClause"] as const;
+
+/**
+ * The fields whose empty value is an answer rather than a gap: given as "", they leave nothing
+ * in the text — no dotted blank, no emphasis. Given no value at all they still show the blank,
+ * like every other field, so a text previewed without the setting reads as unfilled.
+ */
+export const OMITTABLE_MERGE_FIELDS: ReadonlySet<string> = new Set(["reminderClause"]);
+
+/**
+ * The reminder as the clause the legal texts take, in one language: ", un memento cu 2 zile
+ * înainte" / ", a reminder 2 days before" — and "" when the club sends none (zero), never "0 ore".
+ */
+export function reminderClause(locale: string, reminderHours: number): string {
+  if (reminderHours <= 0) return "";
+  const lead = leadPhrase(locale, reminderHours);
+  return locale === "en" ? `, a reminder ${lead} before` : `, un memento cu ${lead} înainte`;
+}
 
 /**
  * The four deadline fields' values in one language: the same words the emails and the pages use
- * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", "2 zile".
+ * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", ", un memento cu 2 zile înainte".
  */
 export function deadlineMergeValues(
   locale: string,
@@ -24,7 +47,7 @@ export function deadlineMergeValues(
     confirmationHours: hoursPhrase(locale, deadlines.confirmationHours),
     holdMinutes: minutesPhrase(locale, deadlines.holdMinutes),
     offerHours: hoursPhrase(locale, deadlines.offerHours),
-    reminderHours: leadPhrase(locale, deadlines.reminderHours),
+    reminderClause: reminderClause(locale, deadlines.reminderHours),
   };
 }
 
@@ -123,8 +146,10 @@ export function mergeTextSegments(text: string, values: MergeValues): MergedSegm
     if (!isMergeField(name)) continue;
     if (at > index) segments.push({ text: text.slice(index, at), filled: false });
     const value = values[name];
-    segments.push({ text: value && value.trim() ? value.trim() : BLANK, filled: true });
     index = at + match[0].length;
+    // An omittable field answered with nothing leaves nothing (`OMITTABLE_MERGE_FIELDS`).
+    if (value === "" && OMITTABLE_MERGE_FIELDS.has(name)) continue;
+    segments.push({ text: value && value.trim() ? value.trim() : BLANK, filled: true });
   }
 
   if (index < text.length) segments.push({ text: text.slice(index), filled: false });
