@@ -116,8 +116,10 @@ export default function DateField({ name, label, defaultValue = "", value, requi
 }
 
 /**
- * The picker and the hidden input that posts for it. Exported for the unit test, which renders it
- * on the server and reads what it would post; pages use `DateField`.
+ * The picker and the hidden input that posts for it. Exported for
+ * `tests/unit/shared/pickers-running.test.ts`, which renders it on the server under
+ * `PickerProvider` and reads what it would post (`YYYY-MM-DD`, from the hidden input alone) and
+ * what it shows (`30.09.2026`, day first); pages use `DateField`.
  */
 export function DatePickerInput({
   id,
