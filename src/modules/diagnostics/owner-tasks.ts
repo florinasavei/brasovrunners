@@ -18,6 +18,8 @@
  * so "register the domain" is gone, and the `.ro` that follows it in a year is here instead.
  */
 
+import { isNeonQuotaNearLimit } from "./domain/neon-limits";
+
 export type TaskOwner = "club" | "developer";
 
 /** The two owners, in the order the filter offers them; also the closed set a query value is checked against. */
@@ -61,7 +63,8 @@ export type TaskId =
   | "declarationArchiveMail"
   | "vercelUsage"
   | "contactForm"
-  | "roDomain";
+  | "roDomain"
+  | "neonLimits";
 
 /**
  * Each task's kind, typed as a `Record` over every id so a task added without one does not
@@ -80,6 +83,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   vercelUsage: "account",
   contactForm: "account",
   roDomain: "decision",
+  neonLimits: "decision",
 };
 
 export type OwnerTask = {
@@ -186,6 +190,14 @@ export type OwnerTaskInputs = {
    * on QA is never, and that is honest: QA is not the club's address.
    */
   roDomainBound: boolean;
+  /**
+   * This environment's monthly compute-time quota and this period's spend against it, both read
+   * from the same Neon project row the consumption panel already fetches (§NNN) — never a
+   * second request. `null` when there is no quota, or when Neon could not be read at all (no
+   * key, or no answer): the row asks for the same next step either way — set a limit, or find
+   * out why it could not be checked — so both are `open`.
+   */
+  neonQuota: { quotaCuHours: number | null; usedCuHours: number } | null;
 };
 
 export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
@@ -305,6 +317,25 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   push("roDomain", {
     owner: "club",
     state: input.roDomainBound ? "done" : "open",
+  });
+
+  /**
+   * The monthly compute-time limit, and this period's spend against it (§NNN; the owner,
+   * 2026-09-23, after $1.09 in two days of Launch: "I want toggles in my admin area, so I can
+   * throttle myself when needed"). Not blocking: a limit is a brake the club chooses to pull,
+   * not something a registration depends on. `broken` — red — at 80% of the quota is
+   * deliberately the same word the invitation key's row uses for "set up and needs a hand
+   * today": Neon suspends the whole database at 100%, every page down until the next billing
+   * period, and a row that still had time to prevent that must not read as merely `open`.
+   */
+  const quota = input.neonQuota?.quotaCuHours ?? null;
+  const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
+  push("neonLimits", {
+    owner: "club",
+    state: quota === null ? "open" : nearLimit ? "broken" : "done",
+    // `broken` needs its own sentence — the default "todo"/"done" pair cannot say "this is
+    // about to suspend the database", which is the one thing this row exists to say in time.
+    text: nearLimit ? "broken" : undefined,
   });
 
   /**

@@ -51,6 +51,25 @@ export const NEON_QUOTA_MARGIN_CU_HOURS = 5;
 /** A limit larger than this is a typo: 8 CU awake every hour of a month is under 6,000. */
 export const NEON_QUOTA_MAX_CU_HOURS = 10_000;
 
+/**
+ * 80%: the one share of a quota that both `/api/health`'s early warning and the derived
+ * `neonLimits` row on `/admin/tasks` read the period's spend against (§NNN). Neon suspends the
+ * whole database at 100% — every page down until the next billing period — so there has to be
+ * one formula that decides "close to it", or the two could disagree the day it matters.
+ */
+export const NEON_QUOTA_WARNING_RATIO = 0.8;
+
+/** How much of a quota this period has spent, 0–1, or null when there is no quota to spend against. */
+export function neonQuotaRatio(usedCuHours: number, quotaCuHours: number | null): number | null {
+  return quotaCuHours === null || quotaCuHours <= 0 ? null : usedCuHours / quotaCuHours;
+}
+
+/** Whether the spend has reached the warning share of the quota — the one test both readers make. */
+export function isNeonQuotaNearLimit(usedCuHours: number, quotaCuHours: number | null): boolean {
+  const ratio = neonQuotaRatio(usedCuHours, quotaCuHours);
+  return ratio !== null && ratio >= NEON_QUOTA_WARNING_RATIO;
+}
+
 /** The month the worst cases are priced over — the same thirty days the cost row projects to. */
 export const NEON_MONTH_HOURS = 30 * 24;
 

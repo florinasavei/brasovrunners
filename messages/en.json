@@ -1400,6 +1400,17 @@
             "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
+        },
+        "neonLimits": {
+          "title": "The database's monthly compute-time limit",
+          "todo": "The database can be capped from Costuri → “The database's limits”, above this list: how large it may grow, and how many CU-hours a billing period may spend before Neon suspends it until the next one. No limit is set on this environment yet.",
+          "broken": "This period has already spent 80% or more of the monthly limit. Neon suspends the whole database — every page, until the next billing period — the moment it is reached: raise the limit or wait for the reset, today rather than when it happens.",
+          "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
+          "how": [
+            "Open Costuri → “The database's limits”, above this list: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §40).",
+            "A limit needs a key that may modify the project, not only read it (NEON_API_KEY with the Editor right) — the card names the exact key when the one set cannot write.",
+            "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
+          ]
         }
       },
       "freeVerdict": {

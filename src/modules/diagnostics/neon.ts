@@ -1,5 +1,12 @@
 import type { Env } from "@/shared/config/env";
-import { cuHoursToSeconds, NEON_MIN_CU, type NeonLimitsReading, secondsToCuHours } from "./domain/neon-limits";
+import {
+  cuHoursToSeconds,
+  isNeonQuotaNearLimit,
+  NEON_MIN_CU,
+  type NeonLimitsReading,
+  neonQuotaRatio,
+  secondsToCuHours,
+} from "./domain/neon-limits";
 import { NEON_PLANS, type NeonPlanId, neonPlanFromSubscription } from "./domain/neon-plan";
 
 /** Neon's API, the one third-party host this module talks to (`scripts/docs-check.mjs` lists it). */
@@ -34,6 +41,8 @@ export type NeonConsumption = {
   periodEnd: Date;
   /** The plan Neon reports for the owning account, or null when it names one this code does not know. */
   reportedPlan: NeonPlanId | null;
+  /** The period's compute-time limit in CU-hours (§NNN), or null when there is none (absent or zero). */
+  quotaCuHours: number | null;
 };
 
 export async function readNeonConsumption(
@@ -55,6 +64,7 @@ export async function readNeonConsumption(
         consumption_period_start?: string;
         consumption_period_end?: string;
         owner?: { subscription_type?: string };
+        settings?: { quota?: { compute_time_seconds?: number } };
       };
     };
     const project = body.project;
@@ -69,10 +79,76 @@ export async function readNeonConsumption(
         periodStart: new Date(project.consumption_period_start),
         periodEnd: new Date(project.consumption_period_end),
         reportedPlan: neonPlanFromSubscription(project.owner?.subscription_type),
+        quotaCuHours: secondsToCuHours(project.settings?.quota?.compute_time_seconds),
       },
     };
   } catch (error) {
     return { ok: false, reason: error instanceof Error ? error.name : String(error) };
+  }
+}
+
+/** How long `/api/health`'s own reading of the quota is kept, so a monitor's ping does not put a Neon request behind every one of them. */
+const NEON_HEALTH_CACHE_SECONDS = 900;
+
+/**
+ * `/api/health`'s early warning for a project's monthly compute-time quota (§NNN): once this
+ * period's spend reaches 80% of it (`NEON_QUOTA_WARNING_RATIO`), health degrades before Neon
+ * suspends the database at 100% — a suspension is total, every page down until the next billing
+ * period, and the 503 is the one channel a monitor still reads once email is among what stopped.
+ *
+ * This supersedes BR-REQ-090-07 criterion 5's "`/api/health` reads no Neon figure" for the quota
+ * case only: that line was about the *plan*, which is a setting nobody would notice go stale;
+ * a quota is a suspension the owner asked to be warned of before it lands (`DECISIONS.md` §NNN).
+ *
+ * Cached for fifteen minutes in Next's Data Cache (`next: { revalidate }`) rather than the
+ * admin panel's `no-store` — the monitors ping every fifteen minutes by day on production and
+ * hourly on QA, and an Administrator reading the Costuri panel wants this second's figure, but a
+ * monitor reads the same number whichever minute inside the window it asks. The same console API
+ * request as `readNeonConsumption`'s, never a query against the database itself, so this never
+ * wakes a suspended (or merely sleeping) compute to answer it.
+ *
+ * Never fails health on its own: unconfigured, refused or unreachable all read `ok` with no
+ * figures — a monitor woken by a key nobody meant to set on this environment, or by Neon's API
+ * having a bad minute, would be a false alarm about a warning that already has its own row on
+ * `/admin/tasks` (`owner-tasks.ts`).
+ */
+export type NeonQuotaHealth = {
+  status: "ok" | "near-limit";
+  quotaCuHours: number | null;
+  usedCuHours: number | null;
+  /** The whole percent of the quota spent, rounded, or null with no quota or no reading. */
+  percent: number | null;
+};
+
+export async function checkNeonQuotaHealth(
+  env: Pick<Env, "NEON_API_KEY" | "NEON_PROJECT_ID">,
+  fetchImpl: typeof fetch = fetch,
+): Promise<NeonQuotaHealth> {
+  const unavailable: NeonQuotaHealth = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null };
+  if (!env.NEON_API_KEY || !env.NEON_PROJECT_ID) return unavailable;
+  try {
+    const response = await fetchImpl(`${NEON_API}/projects/${env.NEON_PROJECT_ID}`, {
+      headers: { authorization: `Bearer ${env.NEON_API_KEY}`, accept: "application/json" },
+      signal: AbortSignal.timeout(5_000),
+      next: { revalidate: NEON_HEALTH_CACHE_SECONDS },
+    });
+    if (!response.ok) return unavailable;
+    const body = (await response.json()) as {
+      project?: { compute_time_seconds?: number; settings?: { quota?: { compute_time_seconds?: number } } };
+    };
+    const project = body.project;
+    if (!project) return unavailable;
+    const quotaCuHours = secondsToCuHours(project.settings?.quota?.compute_time_seconds);
+    const usedCuHours = (project.compute_time_seconds ?? 0) / 3600;
+    const ratio = neonQuotaRatio(usedCuHours, quotaCuHours);
+    return {
+      status: isNeonQuotaNearLimit(usedCuHours, quotaCuHours) ? "near-limit" : "ok",
+      quotaCuHours,
+      usedCuHours,
+      percent: ratio === null ? null : Math.round(ratio * 100),
+    };
+  } catch {
+    return unavailable;
   }
 }
 

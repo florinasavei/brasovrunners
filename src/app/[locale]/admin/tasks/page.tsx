@@ -245,6 +245,15 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // count and different problems.
   const staleJobNames = jobs.filter((job) => job.status !== "ok").map((job) => job.jobName);
 
+  // Read early, ahead of the task board: the derived `neonLimits` row (§NNN) needs this
+  // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
+  // (`readNeonLimits`, the two extra requests) stays gated — the task board's own row only
+  // needs the same project row `readNeonConsumption` already fetches.
+  const [neon, neonLimits] = await Promise.all([
+    readNeonConsumption(env),
+    panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
+  ]);
+
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
@@ -270,6 +279,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
       // the page does: is there a way out, and is there anybody at the other end.
       contactFormConfigured: contactFormReaches(env, contactRecipients),
+      // The same reading the Costuri panel shows, never a second request (§NNN): null when
+      // Neon could not be read at all, so "no quota" and "we could not check" both read `open`.
+      neonQuota: neon.ok ? { quotaCuHours: neon.consumption.quotaCuHours, usedCuHours: neon.consumption.cuHours } : null,
     }),
   );
 
@@ -304,12 +316,6 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   });
 
   const databaseBytes = await readDatabaseSizeBytes(db);
-  // The database's brakes (§NNN) are read only where they are shown — the costs panel — and
-  // beside the consumption rather than after it, so the two bounded requests overlap.
-  const [neon, neonLimits] = await Promise.all([
-    readNeonConsumption(env),
-    panel === "costs" ? readNeonLimits(env) : Promise.resolve(null),
-  ]);
   // The Neon plan (§280's follow-up, §NNN): what Neon reports for the account when it answered,
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
