@@ -19,7 +19,14 @@ import { defineConfig, devices } from "@playwright/test";
  * port under the range cannot be handed out that way. Windows's range starts at 49152, which
  * is why it never happened on a laptop.
  */
-const PORT = Number(process.env.E2E_PORT ?? 4783);
+/**
+ * `E2E_DEV=1` runs the suite against `next dev` rather than a production build (§370) — for
+ * `tests/e2e/dev-routes.spec.ts`, which exists because a page can work built and fail under
+ * `yarn dev`. It gets a port of its own, 4784, so it never reuses a production server a routine
+ * run left on 4783 and reports that server's answers as the development one's.
+ */
+const DEV = process.env.E2E_DEV === "1";
+const PORT = Number(process.env.E2E_PORT ?? (DEV ? 4784 : 4783));
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -69,8 +76,9 @@ export default defineConfig({
 
   webServer: {
     // The production server, not `next dev`: this is the artefact that gets deployed, and
-    // dev-only behaviour has hidden real bugs before.
-    command: `yarn build && yarn start --port ${PORT}`,
+    // dev-only behaviour has hidden real bugs before. `E2E_DEV=1` is the one exception, and it
+    // exists for the reverse case — a bug only `next dev` shows (§370).
+    command: DEV ? `yarn next dev --port ${PORT}` : `yarn build && yarn start --port ${PORT}`,
     url: `${baseURL}/ro`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

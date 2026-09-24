@@ -30,6 +30,7 @@ import { routing } from "@/i18n/routing";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { CLUB_NAME } from "@/theme/brand";
 import { createRegistrationAction } from "../actions";
 
 type Props = {
@@ -184,7 +185,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <RecallField name="clubName" label={rt("clubName")} {...textFieldConstraints(staffRegistrationConstraints("clubName"))} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. */}
-          <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared")}</CheckboxField>
+          <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared", { club: CLUB_NAME })}</CheckboxField>
             <RecallField
               name="email"
               label={t("registrations.participantEmail")}
@@ -241,7 +242,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                 label={t("registrations.create")}
                 pendingLabel={t("editor.saving")}
                 icon="addPerson"
-                incompleteHintNamed={t("forms.incompleteFirst")}
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                 size="medium"
               />
             </Box>

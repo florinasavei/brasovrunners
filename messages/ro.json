@@ -1,6 +1,5 @@
 {
   "Site": {
-    "name": "Brașov Runners",
     "language": "Limbă",
     "languageCode": {
       "ro": "RO",
@@ -35,11 +34,6 @@
       "reload": "Reîncarcă pagina",
       "dismiss": "Închide anunțul despre versiunea nouă"
     }
-  },
-  "Home": {
-    "title": "Brașov Runners",
-    "intro": "Alergăm împreună în Brașov. Vezi evenimentele care urmează.",
-    "seeEvents": "Vezi evenimentele"
   },
   "Events": {
     "title": "Evenimente",
@@ -482,7 +476,7 @@
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
       "eraseLeftovers": "Șterge și manual: mesajele „Declarație semnată” ale persoanei din căsuța arhivei și din copiile Cc/Bcc, rândul din exporturile descărcate și pagina ei din PDF-urile cu declarații descărcate, fișa de urgență tipărită, declarația pe hârtie, și adresa din Mailgun → Suppressions, dacă apare. Copiile de siguranță ale bazei de date (istoricul de restaurare Neon) mai păstrează înscrierea până expiră, cel mult 7 zile — acolo nu e nimic de șters manual.",
       "rowActions": "Acțiuni pentru {name}",
-      "clubMemberLabel": "Membri Brașov Runners",
+      "clubMemberLabel": "Membri {club}",
       "bouncedLabel": "Email",
       "bouncedOnly": "Doar email respins",
       "clubMemberOnly": "Doar cei care s-au declarat membri",
@@ -786,7 +780,7 @@
       "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
       "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
-      "costHelp": "Ce plătește un participant. Platforma nu încasează bani — taxa sau donația se fac direct, la organizator sau la linkul de mai jos. Lasă „Nespecificat” dacă nu s-a stabilit încă.",
+      "costHelp": "Ce plătește un participant. Platforma nu încasează bani — taxa sau donația se fac direct, la organizator sau la linkul de mai jos. Lasă „Nespecificat” dacă nu s-a stabilit încă. O donație e la alegerea participantului: dacă locul se primește doar după plată, alege „Cu taxă” și pune linkul de plată.",
       "costAmount": "Suma",
       "costAmountHelp": "De exemplu „50 lei”. Obligatoriu la un eveniment cu taxă.",
       "costPaidUrl": "Unde se plătește (opțional)",
@@ -1804,7 +1798,7 @@
             "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
             "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată. Apoi „Verify” în Mailgun — poate dura până la o oră.",
             "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints” — cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
-            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=o adresă pe care clubul o citește (dacă nu există încă, nu seta variabila deloc — goală, pornirea o refuză). Expeditorul e „Brașov Runners” <noreply@{mailDomain}> fără altă setare.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=o adresă pe care clubul o citește (dacă nu există încă, nu seta variabila deloc — goală, pornirea o refuză). Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
             "Probă pe QA, nu pe producție (producția refuză înscrierile până sunt aprobate textele legale): pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA — emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
           ]
         },
@@ -1849,7 +1843,7 @@
           "unreachable": "Nu am putut verifica cheia: Zitadel nu a răspuns. Nu este neapărat o problemă a cheii — reîncarcă pagina peste câteva minute. Răspunsul",
           "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
           "how": [
-            "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „Brașov Runners — invitații”, access token type Bearer. Create.",
+            "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „{club} — invitații”, access token type Bearer. Create.",
             "Organization → Managers → + New: service account-ul, rolul Org User Manager (poate crea utilizatori și le poate trimite codurile de invitație; nimic altceva). Dialogul se numește „Add an Administrator” și cere service user-ul; dacă cere un Loginname, este „brasovrunners-invites”. Atenție: „Role Assignments” NU este asta — acea pagină dă roluri în interiorul unui proiect și nu are legătură cu gestionarea utilizatorilor; un service account poate sta acolo Activ, arătând configurat, și să nu poată crea pe nimeni (DECISIONS.md §288).",
             "Pe service account → Personal Access Tokens → New. Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit. Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
             "Vercel → proiectul de producție → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = tokenul (Production). La fel pe proiectul QA. Redeploy pe ambele.",
@@ -1947,7 +1941,7 @@
           "done": "Formularul de contact trimite în căsuța clubului.",
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
-            "Tot în Security → App passwords → creează una cu numele „Brașov Runners site” → copiază cele 16 caractere (se arată o singură dată).",
+            "Tot în Security → App passwords → creează una cu numele „{club} site” → copiază cele 16 caractere (se arată o singură dată).",
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
             "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
@@ -2090,7 +2084,7 @@
         "entryContribution": {
           "question": "Va cere clubul vreodată bani pentru participare?",
           "open": "Este publicat un eveniment cu taxă, iar asta contrazice ce s-a hotărât pe 7 septembrie 2026. Cineva trebuie să spună dacă este o donație sau o taxă obligatorie: diferența stă în felul în care este scris, nu în intenție, iar de ea depinde dacă găzduirea gratuită se mai aplică. Până când: înainte ca evenimentul să primească înscrieri.",
-          "answered": "Nu. Proprietarul a confirmat pe 7 septembrie 2026 că Brașov Runners nu vinde nimic și nu încasează bani. Dacă răspunsul se schimbă vreodată: o donație este permisă explicit pe planul gratuit, o taxă obligatorie nu."
+          "answered": "Nu. Proprietarul a confirmat pe 7 septembrie 2026 că clubul nu vinde nimic și nu încasează bani. Dacă răspunsul se schimbă vreodată: o donație este permisă explicit pe planul gratuit, o taxă obligatorie nu."
         },
         "mailgunBeforeRace": {
           "question": "Luăm o lună de Mailgun plătit înainte de prima cursă adevărată?",
@@ -2223,7 +2217,7 @@
     "pages": {
       "title": "Pagini",
       "create": "Pagină nouă",
-      "intro": "Paginile fixe ale clubului — „Despre Brașov Runners”, „Contact”. Se publică în ambele limbi deodată, ca evenimentele.",
+      "intro": "Paginile fixe ale clubului — „Despre {club}”, „Contact”. Se publică în ambele limbi deodată, ca evenimentele.",
       "empty": "Nu există nicio pagină încă.",
       "untitled": "Fără titlu",
       "edit": "Editează pagina",
@@ -2928,7 +2922,6 @@
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
       "socialLabel": "Clubul pe rețelele sociale",
-      "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale. Toate evenimentele clubului sunt gratuite.",
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
@@ -3136,13 +3129,13 @@
       }
     },
     "disclosure": {
-      "race": "Membru Brașov Runners, club și tricou — opțional",
+      "race": "Membru {club}, club și tricou — opțional",
       "origin": "De unde ești — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
-    "clubMemberDeclared": "Sunt membru al grupului Brașov Runners",
+    "clubMemberDeclared": "Sunt membru al grupului {club}",
     "clubNameFromMembership": "Completat automat, pentru că ai bifat că ești membru. Debifează ca să scrii alt club.",
     "facts": {
       "details": "Detaliile evenimentului",
@@ -3612,7 +3605,7 @@
       "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie pe {date}",
-      "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
+      "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id '<id>'`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/'<id>') sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
     },

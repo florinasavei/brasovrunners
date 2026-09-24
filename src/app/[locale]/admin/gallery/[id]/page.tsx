@@ -115,9 +115,9 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                 uploadUrl={`/api/admin/gallery/${album.id}/photos`}
                 labels={{
                   choose: t("gallery.upload"),
-                  uploading: t("gallery.uploading"),
-                  done: t("gallery.uploaded"),
-                  failed: t("gallery.uploadFailed"),
+                  uploading: t.raw("gallery.uploading") as string,
+                  done: t.raw("gallery.uploaded") as string,
+                  failed: t.raw("gallery.uploadFailed") as string,
                 }}
               />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -209,7 +209,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                 label={t("editor.save")}
                 pendingLabel={t("editor.saving")}
                 icon="save"
-                incompleteHintNamed={t("forms.incompleteFirst")}
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                 size="medium"
               />
             </Box>

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.82-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.83-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -36,6 +36,7 @@ yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
+yarn test:e2e:dev  Playwright against `next dev`: every backoffice and public route, twice; minutes; not in CI (§370)
 yarn check        docs:check + secrets:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
 yarn secrets:check  refuse a commit carrying a provider credential — the repository is public (§98)
@@ -243,6 +244,11 @@ sections and in `CHANGELOG.md`.
   time its clock, route and cost as the page's pills (§366); a partnered event wears a handshake on its card, calendar
   entry and page, and a series' usual place is read, not compared byte for byte (§367); the dispatcher is in the
   repository — `docs/DISPATCHER.md`, the `br-chain` and `br-fix-round` workflows, `yarn docs:land`, `yarn ship` (§368).
+- **Batch 7 (2026-09-24, `BR-V1.83`):** the club's name has one source, `CLUB_NAME`, and the last hardcoded values
+  leave the documents and screens — a donation event reads as free to attend with a `DonateAction`, the queue panel in
+  the event's zone, the legal editor keeps its height (§369) · the backoffice works under `yarn dev` again: no element
+  prop into a client component (a source-walk test in `yarn check`), no bare template lookup, `yarn test:e2e:dev` (§370) ·
+  a save press paints "Se salvează…" first — every measured press under 200 ms at 4× CPU, `afterPaint` (§371).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

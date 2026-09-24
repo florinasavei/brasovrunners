@@ -2,6 +2,7 @@
 
 import Typography from "@mui/material/Typography";
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { useRecall } from "@/shared/forms/recall";
 
 /**
@@ -17,8 +18,14 @@ function useTicked(anchor: RefObject<HTMLElement | null>, name: string): boolean
     if (!form) return;
     const read = () => setTicked(new FormData(form).get(name) === "on");
     read();
-    form.addEventListener("change", read);
-    return () => form.removeEventListener("change", read);
+    // The whole form is read, and every box's `change` asks — the one a save button's press makes
+    // on the box it leaves too — so after the frame, once for a burst (§371).
+    const scheduler = paintedScheduler(read);
+    form.addEventListener("change", scheduler.schedule);
+    return () => {
+      form.removeEventListener("change", scheduler.schedule);
+      scheduler.cancel();
+    };
   }, [anchor, name, generation]);
   return ticked;
 }

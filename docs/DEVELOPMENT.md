@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
 
 # Running this locally
 
-**Baseline `BR-V1.82-2026-09-24`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.83-2026-09-24`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -97,6 +97,7 @@ yarn db:seed:legal       the sample legal documents alone; never deletes, safe o
 yarn db:migrate:env      apply migrations to one named environment (local|qa|production)
 yarn smoke               ask a deployment's /api/health whether it actually works
 yarn test:e2e:ui         the same, in Playwright's UI mode
+yarn test:e2e:dev        every backoffice and public route against `next dev` (E2E_DEV=1; port 4784, or a running `yarn dev` via E2E_PORT); minutes; not in CI (§370)
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint
 yarn docs:check          documentation consistency

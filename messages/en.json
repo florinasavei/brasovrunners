@@ -1,6 +1,5 @@
 {
   "Site": {
-    "name": "Brașov Runners",
     "language": "Language",
     "languageCode": {
       "ro": "RO",
@@ -35,11 +34,6 @@
       "reload": "Reload the page",
       "dismiss": "Dismiss the new-version notice"
     }
-  },
-  "Home": {
-    "title": "Brașov Runners",
-    "intro": "We run together in Brașov. See what is coming up.",
-    "seeEvents": "See the events"
   },
   "Events": {
     "title": "Events",
@@ -482,7 +476,7 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "eraseLeftovers": "Also delete by hand: the person's “Signed declaration” messages in the archive mailbox and its Cc/Bcc copies, their row in any downloaded export and their page in any downloaded declarations PDF, any printed emergency sheet, the paper declaration, and their address in Mailgun → Suppressions if it is there. The database's backups (Neon's restore history) still hold the registration until they expire, at most 7 days later — nothing to do there by hand.",
       "rowActions": "Actions for {name}",
-      "clubMemberLabel": "Brașov Runners members",
+      "clubMemberLabel": "{club} members",
       "bouncedLabel": "Email",
       "bouncedOnly": "Email bounced only",
       "clubMemberOnly": "Only those who declared membership",
@@ -786,7 +780,7 @@
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
-      "costHelp": "What a participant pays. The platform does not collect money itself — the fee or the donation happens directly, with the organiser or at the link below. Leave \"Not stated\" when this has not been decided yet.",
+      "costHelp": "What a participant pays. The platform does not collect money itself — the fee or the donation happens directly, with the organiser or at the link below. Leave \"Not stated\" when this has not been decided yet. A donation is the participant’s choice: if the place is given only once paid, choose \"Paid\" and add the payment link.",
       "costAmount": "Amount",
       "costAmountHelp": "For example \"50 lei\". Required for a paid event.",
       "costPaidUrl": "Where to pay (optional)",
@@ -1804,7 +1798,7 @@
             "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
             "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated. Then “Verify” in Mailgun — up to an hour.",
             "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints” — the two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
-            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=a mailbox the club reads (if none exists yet, leave the variable unset — an empty one is refused at startup). The sender is “Brașov Runners” <noreply@{mailDomain}> with no further setting.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=a mailbox the club reads (if none exists yet, leave the variable unset — an empty one is refused at startup). The sender is “{senderName}” <noreply@{mailDomain}> with no further setting — the name in EMAIL_FROM_NAME, the club’s own name by default.",
             "Rehearse on QA, not on production (production refuses registrations until the legal texts are approved): on the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA — the email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
           ]
         },
@@ -1849,7 +1843,7 @@
           "unreachable": "The key could not be checked: Zitadel did not answer. Not necessarily a problem with the key — reload the page in a few minutes. The answer",
           "done": "The key works: checked just now with a real search, it found your account. “Add” on Echipa creates the sign-in account and Zitadel sends the password link.",
           "how": [
-            "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “Brașov Runners — invitații”, access token type Bearer. Create.",
+            "Zitadel console → Users → Service Accounts → New: user name “brasovrunners-invites”, name “{club} — invitații”, access token type Bearer. Create.",
             "Organization → Managers → + New: the service account, role Org User Manager (it may create users and send their invitation codes; nothing else). The dialog is called “Add an Administrator” and names the service user at the top; if it asks for a Loginname, that is “brasovrunners-invites”. Careful: “Role Assignments” is NOT this — that page grants roles inside a project and has nothing to do with managing users; a service account can sit there Active, looking configured, and still be unable to create anybody (DECISIONS.md §288).",
             "On the service account → Personal Access Tokens → New. The console offers no expiry here and the token does not expire — it is a secret that has to be revoked by hand, on the same screen, when it is no longer wanted. Copy it (shown once) into the password manager and note there that it has no end date.",
             "Vercel → the production project → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = the token (Production). The same on the QA project. Redeploy both.",
@@ -1947,7 +1941,7 @@
           "done": "The contact form sends to the club's mailbox.",
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
-            "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
+            "Still under Security → App passwords → create one named “{club} site” → copy the 16 characters (shown once).",
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
             "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To”, under “Copy (Cc)” if somebody should get a copy, and under “Hidden copy (Bcc)” for a copy nobody on the message sees → Save. Changed here at any time, with no redeploy.",
@@ -2090,7 +2084,7 @@
         "entryContribution": {
           "question": "Will the club ever ask for money to take part?",
           "open": "A published event is marked as charging a fee, which contradicts what was decided on 7 September 2026. Somebody has to say whether it is a donation or a compulsory fee: the difference is in how it is written rather than in the intention, and free hosting depends on it. By when: before that event takes entries.",
-          "answered": "No. The owner confirmed on 7 September 2026 that Brașov Runners sells nothing and takes no money. If that ever changes: a donation is explicitly allowed on the free plan, a compulsory fee is not."
+          "answered": "No. The owner confirmed on 7 September 2026 that the club sells nothing and takes no money. If that ever changes: a donation is explicitly allowed on the free plan, a compulsory fee is not."
         },
         "mailgunBeforeRace": {
           "question": "Do we take a paid month of Mailgun before the first real race?",
@@ -2223,7 +2217,7 @@
     "pages": {
       "title": "Pages",
       "create": "New page",
-      "intro": "The club’s standing pages — “About Brașov Runners”, “Contact”. They publish in both languages together, like events.",
+      "intro": "The club’s standing pages — “About {club}”, “Contact”. They publish in both languages together, like events.",
       "empty": "There are no pages yet.",
       "untitled": "Untitled",
       "edit": "Edit the page",
@@ -2928,7 +2922,6 @@
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",
       "socialLabel": "The club on social media",
-      "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races. Every club event is free.",
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
@@ -3136,13 +3129,13 @@
       }
     },
     "disclosure": {
-      "race": "Brașov Runners member, club and t-shirt — optional",
+      "race": "{club} member, club and t-shirt — optional",
       "origin": "Where you're from — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
     },
-    "clubMemberDeclared": "I am a member of the Brașov Runners group",
+    "clubMemberDeclared": "I am a member of the {club} group",
     "clubNameFromMembership": "Filled in because you ticked that you are a member. Untick it to enter a different club.",
     "facts": {
       "details": "Event details",
@@ -3612,7 +3605,7 @@
       "estimate": "An estimate, not an invoice: Neon adds storage and restore history (${restoreRate}/GB-month) over the whole period and rounds at the end.",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
-      "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id <id>`; (2) the project id is in the console address (console.neon.tech/app/projects/<id>) or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
+      "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id '<id>'`; (2) the project id is in the console address (console.neon.tech/app/projects/'<id>') or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
       "failed": "Neon did not answer: {reason}",
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     },

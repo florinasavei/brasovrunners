@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:dev": "E2E_DEV=1 playwright test tests/e2e/dev-routes.spec.ts --project=desktop",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:env": "node --env-file-if-exists=.env.local scripts/db-migrate.mjs",
