@@ -20,6 +20,7 @@ import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
+import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 
 const schema = {
   auditLogs,
@@ -66,6 +67,8 @@ export async function createTestDatabase(): Promise<{
   const db = drizzle(client, { schema });
 
   await migrate(db, { migrationsFolder: "./src/db/migrations" });
+  // A fresh database has no deadlines row: nothing memoized from another database may answer for it.
+  forgetCachedDeadlines();
 
   return {
     db,
@@ -77,6 +80,9 @@ export async function createTestDatabase(): Promise<{
 
 /** Truncate every table so one test cannot see another's rows. Children before parents. */
 export async function resetTables(db: TestDatabase): Promise<void> {
+  // The club's deadlines are memoized per process (§NNN); a test that set them must not leave
+  // its numbers to the next test's empty database.
+  forgetCachedDeadlines();
   await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
   await db.delete(emailActionTokens);

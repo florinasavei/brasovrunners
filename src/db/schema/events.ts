@@ -7,6 +7,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
   unique,
@@ -455,6 +456,12 @@ export const events = pgTable(
      */
     confirmationOpensDaysBefore: integer("confirmation_opens_days_before").notNull().default(7),
     confirmationDeadlineDaysBefore: integer("confirmation_deadline_days_before").notNull().default(2),
+    /**
+     * How many hours before the start this event's reminder goes (§81, §NNN): null is the club's
+     * number ("Termene" on `/admin/emails`), zero is no reminder, anything else this event's own.
+     * Set in the editor's registration box for an event registered here, carried by a series edit.
+     */
+    reminderHoursBefore: smallint("reminder_hours_before"),
 
     /**
      * The youngest a participant may be **on the day of the event**, in whole years (§329,
@@ -619,6 +626,16 @@ export const events = pgTable(
      * the same bounds; this is for the seed, the script and the hand-written `UPDATE`.
      */
     check("events_min_age_in_range", sql`${t.minAge} >= 0 AND ${t.minAge} <= 99`),
+
+    /**
+     * A reminder lead an event can have (§NNN): none (zero) to a week, the club setting's own
+     * bounds. The editor offers four choices; this is for the seed, the script and the hand-written
+     * `UPDATE`.
+     */
+    check(
+      "events_reminder_hours_before_in_range",
+      sql`${t.reminderHoursBefore} IS NULL OR (${t.reminderHoursBefore} >= 0 AND ${t.reminderHoursBefore} <= 168)`,
+    ),
 
     /**
      * A start list can only be published for an event this platform actually registers.
