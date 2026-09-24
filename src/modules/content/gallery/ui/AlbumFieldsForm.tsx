@@ -94,6 +94,7 @@ export default async function AlbumFieldsForm({
               <RecallField
                 name={name("description")}
                 label={t("fields.description")}
+                helperText={t("descriptionHelp")}
                 defaultValue={translation?.description ?? ""}
                 multiline
                 minRows={2}

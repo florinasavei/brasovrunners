@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import ro from "../../../messages/ro.json";
 import { calendarDayWords } from "@/i18n/dates";
 import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/RepeatRuleFields";
-import { followingIds, presetOf } from "@/modules/content/events/ui/SeriesScope";
+import { followingIds, presetIds, presetOf, shownPreset } from "@/modules/content/events/ui/SeriesScope";
 import { slugFromTitle } from "@/modules/content/events/ui/slug";
 import { ignoreHiddenFields, normalizeForMode } from "@/modules/content/events/service";
 import { weekdayNames } from "@/modules/events/ui/series-sentence";
@@ -57,6 +57,22 @@ describe("§350 the series scope: three words, 'this and the following' by defau
     expect(presetOf(dates, "b", new Set(["a"]))).toBeNull();
     // On the last date there is nothing after it: the default is this date alone.
     expect(presetOf(dates, "d", new Set(followingIds(dates, "d")))).toBe("this");
+  });
+
+  it("shows the preset that was pressed when two presets tick the same dates (the owner: \"acest selector nu funcționează\")", () => {
+    // On the first date, "all" and "following" are the same three dates: the pressed one shows.
+    const all = new Set(presetIds("all", dates, "a"));
+    expect([...all]).toEqual(followingIds(dates, "a"));
+    expect(shownPreset("all", dates, "a", all)).toBe("all");
+    expect(shownPreset("following", dates, "a", all)).toBe("following");
+    // On the last date, "following" ticks nothing, like "this": the pressed one shows.
+    expect(shownPreset("following", dates, "d", new Set())).toBe("following");
+    expect(shownPreset("this", dates, "d", new Set())).toBe("this");
+    // A date ticked by hand clears the pressed preset: the ticks decide again.
+    expect(shownPreset(null, dates, "b", new Set(["a"]))).toBeNull();
+    expect(shownPreset(null, dates, "b", new Set(["a", "c", "d"]))).toBe("all");
+    // A pressed preset whose ticks were since changed is not shown.
+    expect(shownPreset("all", dates, "b", new Set(["c"]))).toBeNull();
   });
 });
 

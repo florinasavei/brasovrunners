@@ -231,7 +231,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
       acknowledgeLiveEdit: true,
       scope,
       // A save that cancels says why (§331); these tests are about the offers, so nobody is told.
-      ...(changes.eventStatus === "CANCELLED" && row.eventStatus !== "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
+      ...(changes.eventStatus === "CANCELLED" && row.eventStatus !== "CANCELLED" ? { cancellation: { reason: { ro: "Ploaie torențială.", en: "Torrential rain." }, notify: false } } : {}),
       now: at,
     });
   }

@@ -4,6 +4,8 @@ import {
   coHostLinkHost,
   coHostLinkLabel,
   coHostLinksForPage,
+  hasOneLanguageCoHostDescription,
+  hasOneLanguageCoHostLabel,
   MAX_CO_HOST_DESCRIPTION,
   MAX_CO_HOST_LINKS,
   MAX_CO_HOSTS,
@@ -173,15 +175,23 @@ describe("BR-REQ-011-01 criterion 16 a partner's one link for a sentence (§344)
 });
 
 describe("BR-REQ-011-01 criterion 16 a partner link's label and host, in each language", () => {
-  const link = { kind: "SITE" as const, url: "https://www.example.test/parteneri?ref=br", labelRo: "Site-ul lor", labelEn: null };
+  const link = { kind: "SITE" as const, url: "https://www.example.test/parteneri?ref=br", labelRo: "Site-ul lor", labelEn: "Their site" };
 
-  it("is the club's own word when it wrote one, in that language only", () => {
+  it("is the club's own word in each language when it wrote both", () => {
     expect(coHostLinkLabel(link, "ro")).toBe("Site-ul lor");
+    expect(coHostLinkLabel(link, "en")).toBe("Their site");
+    expect(hasOneLanguageCoHostLabel(link)).toBe(false);
   });
 
-  it("is null in a language the club did not write, so the caller shows the kind's own word", () => {
-    expect(coHostLinkLabel(link, "en")).toBeNull();
-    expect(coHostLinkLabel({ ...link, labelRo: null }, "ro")).toBeNull();
+  it("is null in both languages when the club wrote one only, so both pages show the kind's own word (§354)", () => {
+    const half = { ...link, labelEn: null };
+    expect(coHostLinkLabel(half, "ro")).toBeNull();
+    expect(coHostLinkLabel(half, "en")).toBeNull();
+    expect(coHostLinkLabel({ ...link, labelRo: null }, "en")).toBeNull();
+    expect(hasOneLanguageCoHostLabel(half)).toBe(true);
+    expect(hasOneLanguageCoHostLabel({ ...link, labelRo: null, labelEn: null })).toBe(false);
+    expect(hasOneLanguageCoHostDescription({ descriptionRo: "Alergăm împreună.", descriptionEn: null })).toBe(true);
+    expect(hasOneLanguageCoHostDescription({ descriptionRo: null, descriptionEn: null })).toBe(false);
   });
 
   it("reads the host without the leading www, for the small text under the label", () => {
