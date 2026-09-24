@@ -162,6 +162,15 @@
     },
     "coHost": "Together with",
     "special": "Special edition",
+    "partner": {
+      "one": "With {partner}",
+      "two": "With {first} and {second}",
+      "more": {
+        "one": "With {first} and {count} more partner",
+        "few": "With {first} and {count} more partners",
+        "other": "With {first} and {count} more partners"
+      }
+    },
     "surface": {
       "ASPHALT": "Asphalt",
       "TRAIL": "Trail",
@@ -261,7 +270,7 @@
       },
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
-      "nextLabel": "Next",
+      "nextLabel": "Next:",
       "allDatesCount": "Upcoming dates ({count})",
       "fullDescription": "Full event description"
     },

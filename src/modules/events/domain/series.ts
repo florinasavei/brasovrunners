@@ -1,3 +1,4 @@
+import { isAtPlace, type PlaceIdentity, placeIdentity } from "./same-place";
 import { toWallTimeInput, wallClockWeekday } from "./zoned-time";
 
 
@@ -99,8 +100,18 @@ export function recurrenceOf(members: readonly { startsAt: Date }[], timeZone: s
  * What a series usually is — the place and the wall-clock time most of its dates share — so a
  * date that differs can say so (§122): cancelled, at another place, at another time. The
  * organizer edits one date like any event; nothing is recorded as "moved", it is read.
+ *
+ * The name compared is the one the reader is shown: a public row's `locationName` is already the
+ * page language's own name when the club gave one, else the event's (`PUBLIC_COLUMNS`), so the
+ * Romanian calendar compares Romanian names and the English one English names.
+ *
+ * The place is read, not compared byte for byte (§367, `same-place.ts`): the usual one is the
+ * name most dates give once `placeKey` has read it — so "…Patinoarul Olimpic" and "…Patinoarul
+ * Olimpic, Brasov" are one place with two spellings, not two places — together with every map
+ * link those dates carry, so a date that names the spot differently but pins the same link is at
+ * the usual place too.
  */
-export type Usual = { place: string | null; time: string | null };
+export type Usual = { place: PlaceIdentity | null; time: string | null };
 
 const mode = <T,>(values: T[]): T | null => {
   const counts = new Map<T, number>();
@@ -116,9 +127,15 @@ const mode = <T,>(values: T[]): T | null => {
   return best;
 };
 
-export function usualOf(members: readonly { startsAt: Date; timezone: string; locationName: string | null }[]): Usual {
+export function usualOf(
+  members: readonly { startsAt: Date; timezone: string; locationName: string | null; mapUrl?: string | null }[],
+): Usual {
+  // Null for a date with no place, as before: when most dates have none, nothing is "moved".
+  const keys = members.map((member) => placeIdentity(member).key);
+  const key = mode(keys);
+  const mapLinks = new Set(members.flatMap((member, index) => (keys[index] === key ? placeIdentity(member).mapLinks : [])));
   return {
-    place: mode(members.map((member) => member.locationName)),
+    place: key === null ? null : { key, mapLinks: [...mapLinks] },
     time: mode(members.map((member) => toWallTimeInput(member.startsAt, member.timezone).slice(11, 16))),
   };
 }
@@ -139,12 +156,13 @@ export type EditionDifference =
  * having to infer it — then the place, then the hour.
  */
 export function editionDifference(
-  member: { startsAt: Date; timezone: string; locationName: string | null; eventStatus: string; isSpecial: boolean },
+  member: { startsAt: Date; timezone: string; locationName: string | null; mapUrl?: string | null; eventStatus: string; isSpecial: boolean },
   usual: Usual,
 ): EditionDifference {
   if (member.eventStatus === "CANCELLED") return { kind: "cancelled" };
   if (member.isSpecial) return { kind: "special" };
-  if (member.locationName && usual.place && member.locationName !== usual.place) return { kind: "moved", place: member.locationName };
+  // The same place read, not the same string (§367): the mark names the date's place as it is written.
+  if (member.locationName && usual.place && !isAtPlace(member, usual.place)) return { kind: "moved", place: member.locationName };
   const time = toWallTimeInput(member.startsAt, member.timezone).slice(11, 16);
   if (usual.time && time !== usual.time) return { kind: "retimed", time };
   return null;

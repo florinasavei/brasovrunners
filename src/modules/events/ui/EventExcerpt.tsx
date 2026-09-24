@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { fromPlainText, hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { LINE_GAP } from "./card-layout";
 
 /**
  * Where the short description is read: the event page and the hero give it the column, a
@@ -41,10 +42,28 @@ export const PAGE_EXCERPT_SX = {
  *
  * The words stay the size a card's words were (`body2`): this change is about the picture, and
  * a listing whose type grew would be a second, unasked-for change.
+ *
+ * **Three lines of words, and no address** (§366; the owner, 2026-09-24, of the listing: "There
+ * is too much whitespace on these cards, it needs to be better spaced"). A summary as long as its
+ * author made it was what set one card's height against its neighbour's, and a registration
+ * address in it wrapped over two lines of a phone. So the card reads at most three lines —
+ * `-webkit-line-clamp`, which every engine the site supports implements on a `-webkit-box` and
+ * counts across the summary's paragraphs, ending the third in an ellipsis — and the rest is on the
+ * event page, one press away. A picture is not a line: one written before the words keeps its
+ * place above them, and one written after three lines of words is on the page, not the card. The
+ * words carry no link (`RichText links={false}`): an address is its host, and `overflowWrap` is
+ * the net under anything else too long for a 320-pixel line.
  */
 export const CARD_EXCERPT_SX = {
   color: "text.secondary",
-  mb: 2,
+  // A line's gap under the title (or the series' rhythm): the summary belongs to them. Never less:
+  // the title's link reaches exactly this far below its words (`CARD_TITLE_SX`, §366).
+  mt: LINE_GAP,
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 3,
+  overflow: "hidden",
+  overflowWrap: "anywhere",
   "& p": { fontSize: "0.875rem", lineHeight: 1.43, mb: 1 },
   "& p:last-of-type": { mb: 0 },
   // One class more specific than the figure's own rule, which is how the chosen width and the
@@ -85,8 +104,8 @@ export default function EventExcerpt({
   const doc = excerptJson ? readRichText(excerptJson) : fromPlainText(excerpt);
   if (!hasRichTextContent(doc)) return null;
   return (
-    <Box sx={place === "card" ? CARD_EXCERPT_SX : PAGE_EXCERPT_SX}>
-      <RichText body={doc} />
+    <Box sx={place === "card" ? CARD_EXCERPT_SX : PAGE_EXCERPT_SX} data-testid={place === "card" ? "card-excerpt" : undefined}>
+      <RichText body={doc} links={place !== "card"} />
     </Box>
   );
 }

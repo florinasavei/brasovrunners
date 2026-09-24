@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.81-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.82-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.81-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.82-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14853,3 +14853,197 @@ Baseline `BR-V1.81-2026-09-24`.
 **Consequences.** A phone's footer is 89px at every scroll position, with nothing under it; at a page's end it was 127px. From 600px up it is 45px and nothing floats in the corner. The stamp costs a visitor nothing and costs staff one tap, opening the fold. The e2e suite measures it (`tests/e2e/footer.spec.ts`, `tests/e2e/build-badge.spec.ts`). `tests/unit/shared/site-footer.test.ts` pins it on every commit: the stamp only inside the fold's panel, no `BuildBadge` in the layout, sticky `bottom: 0` with no negative offset, the privacy link and the language outside the fold, the 96/52 reserve, and RO/EN as a row of 44px targets.
 
 Baseline `BR-V1.81-2026-09-24`.
+
+## 366. The listing's cards are one structure: the title is the blue link, the place its map, the time its clock, the route and the cost the page's pills
+
+**Asked by the owner, 2026-09-24**, with screenshots of the public listing (`/ro/evenimente`, two columns of cards): "There is too much whitespace on these cards, it needs to be better spaced". Then, of the one-off "Trail to Road cu Brașov Running Festival" beside two series cards:
+- "I do not see the google maps link for this event, although I've put the maps URL";
+- "for the time I would like a clock icon as well, and prioritize the card layout";
+- "I am missing the blue link for this event, why?";
+- comparing the card's line "Piața Sfatului, Brașov · Împreună cu Brașov Running Festival · 8 km · 250 m diferență de nivel · Mediu" with the event page's pills: "I like these pills on the full page details! this is currently pretty ugly!".
+
+**Measured on production (BR-V1.79):**
+- On a 1280 px desktop the cards were 531, 531 and 465 px tall. The one-off card had about 190 px of nothing between its facts and its door, because the door was pinned to the foot of a card stretched to its row (§275).
+- Its summary printed a 60-character registration address.
+- Its summary's rich-text links sat inside the whole-card `<a>`, which made nested anchors.
+
+**The root cause was two card structures.** The one-off card was one `<a>` (`CardLink`) around everything, so:
+- its title was a black heading beside the series cards' blue links;
+- its place could not be the map link the club had pasted, because a link cannot hold another link.
+
+**Decided: both cards are one structure, from one set of constants (`events/ui/card-layout.ts`).**
+- **No card is a link.** On both cards the title in the `<h2>` is the link to the event.
+  - Its colour is the theme's primary (the club's blue, and the lighter blue in the dark scheme), the same when visited, never the browser's purple.
+  - No underline until a pointer or the keyboard is on it.
+  - It keeps the size and weight both titles already had (1.25rem, 500).
+  - **Its 44 px (BR-REQ-041-01 criterion 6) are padding given back as an equal negative margin, so the line is as tall as its words.** A title that wraps grows the padding box instead of pulling the summary into its second line.
+  - **The reach is uneven: 8 px (`LINE_GAP`) below the words and the rest of the 44 above them (10 px for one line).** The reason: whatever comes later on the card paints over the link and takes a press on the pixels the two share.
+    - The first version reached 10 px below. The series card's recurrence line sat 4 px under the title and a one-off card's summary 8 px under it, so a finger could hit about 40 px of the link (42 above a summary), while the link's own box measured 44.
+    - Now nothing is nearer under a title than the link reaches: the recurrence line and the summary are a line's gap below, and the facts a group's gap. Above, the chips are 12 px away, more than the 10 px the link reaches up.
+  - The one-off card's lift under a pointer went with the whole-card link, because it said "all of this is one press". The series card never had it.
+- **Order on both cards:** the chips, the title, the summary (on a series card, the recurrence sentence first), the facts, and on a series card the folded dates, then the door (§305, §319).
+- **Spacing: two gaps and nothing else.**
+  - 8 px between the lines of one group: the title, a series' recurrence line and the summary; the date and the place; the pills among themselves.
+  - 12 px between groups.
+  - The door follows the facts or the fold with 4 px, which its own invisible 44 px box makes up to a group's gap.
+  - Rows keep equal heights (§275: a ragged row was what looked broken). Whatever a row leaves over sits below the door, at the card's foot, never between the content and its door.
+- **The summary** reads at most three lines (`-webkit-line-clamp`). Its links are words, and a bare web address prints as its host ("register.hakuapp.com/…", `shortenUrls`), the rule §332 and §343 already follow. The event page keeps the whole text with its links.
+- **The facts (`EventFacts`, compact) draw the event page's shapes (§356), smaller:**
+  - **When** is a line led by the row's calendar glyph: "Duminică, 27 sept. 2026 · [clock] 10:00". On a series card it starts with "Următoarea:". The line only ever breaks between whole pieces.
+    - Measured: on a 320 px phone it takes two lines on every card. The time goes under the date with its clock, or, on a series card with a long weekday ("Miercuri"), the date and time go under "Următoarea:".
+    - From 375 px it is one line on a one-off card and on a series card with a short weekday.
+    - One line at 320 px would need the short weekday or no lead below a breakpoint (two renderings of one date, chosen by width). Not taken, because the wrap already falls cleanly between pieces.
+  - **Where** is a line led by the pin in the same flex row, so the pin stays on the place's first line. The place is the map link on every card that has one. While the place is to be announced, only the sentence is shown (§328).
+    - The link is `tight` (padding plus negative margin) above and below only when the pills follow, 12 px away.
+    - When anything nearer follows (the registration line 8 px under it, or, when the place is the last fact, the door 4 px or a series fold right under the facts), it gives back only the 10 px above. It keeps the 10 px below inside the facts, where nothing sits on them, at the cost of 10 px of height on such a card.
+  - **The route and the cost** are the page's small outlined pills, in one wrapping row with no middle dots: distance, climb ("D+"), difficulty, surface, cost. There is a pill only for what the club stated. The cost is the closed set's word ("Gratuit", "Cu taxă", "Donație"), as §343 keeps it on a card. The surface is said once, as a pill, so the chip at the top of the card no longer carries it.
+  - **The state of registration** is the last line (BR-REQ-011-01 criterion 18).
+  - **No partner among the facts.** "Împreună cu …" between the place and the kilometres was one of the things the owner pointed at. The partner's mark on a card belongs to its chips (a separate branch). The hero keeps its sentence and the page its partner cards. The hero's route line, its links and its partner sentence are built only for the hero, not for every card.
+- **A clock before the time** (`ScheduleIcon`, secondary colour) wherever the time is read:
+  - On the card and the event page's "Când" row (§356), at the row glyph's 20 px with middle alignment.
+  - On the hero, at the hero's own glyph size (18 px, 3 px under the baseline), one style shared with its label glyphs, so it is not bigger than the calendar and the pin beside it.
+  - A race's two named times get one clock, before the first.
+- The page's `tight` links (the place, the cost's links) take the same padding-plus-negative-margin, so a place that wraps onto two lines no longer overlaps the lines around it. A single-line link is exactly as tall in the flow as before.
+
+**Refused:**
+- **A title stretched over the card with `::after`, so a press anywhere still opens the page.** The brief asked for no whole-card link. It would sit under the map link and the dates. The series card never had it.
+- **`align-items: start`, one height per card.** It moves the same room outside the border as a ragged row edge, which §275 decided against.
+- **The date and its time as one unbreakable piece.** At 320 px, "Duminică, 27 sept. 2026 · [clock] 10:00" is wider than the card and would be clipped.
+- **The amount on the card's cost pill.** §343 keeps it for the page; a club's amount can be sixty characters.
+- **A partner chip here.** The other branch owns it.
+- **Measuring a link's 44 px by its box alone.** A box can be 44 px while something later on the card covers part of it. The e2e check presses the edges instead.
+
+**Supersedes:** §356's "Unchanged: … the listing and series cards (two plain lines)" and §169's "the compact card keeps this sentence exactly" (for the card, not the hero).
+
+**Tests:**
+- **Unit `events/listing-card.test.ts`:**
+  - One structure: no anchor around the heading and no nested anchor; the title, place and door are the three links.
+  - The title's rule: primary colour including `:visited`, no underline, underline on hover and focus, 44 px, 10 px of reach above and 8 px below.
+  - Nothing nearer under the title than its reach: the summary at `LINE_GAP`, the facts at 12 px, the series recurrence line at 8 px.
+  - One title class for both cards.
+  - The pin and the place in one flex line, the place an `<a>` to the map.
+  - The clock between the date and the time; the pills; no partner text in the facts; registration last; both languages.
+- **Unit `events/event-facts-pills.test.ts`:**
+  - The compact lines in order.
+  - The clock's rule (20 px, secondary, middle).
+  - The tight map link's padding and margin, and its above-only reach when no pills follow.
+  - The page's "Când" clock; the hero's clock sharing its label glyphs' class (18 px, -3 px).
+  - The hero's route, Strava, Facebook and partner links on the hero and none of them on a card.
+- **Unit `events/event-facts-co-hosts.test.ts`:** no partner among a card's facts; the hero unchanged.
+- **E2e `listing-cards.spec.ts`:**
+  - No whole-card link; titles in the door's primary colour at 20 px/500.
+  - The pin on the first line of words; map links 44 px.
+  - Every title and map link hit by `elementFromPoint` 2 px inside its top and bottom edges.
+  - A 20 px clock on every card; pills and no "Împreună cu"; the door gap; a three-line summary; the 320 px fit.
+- **E2e `event-pages.spec.ts`:** the "Când" clock.
+
+**Consequences:**
+- Code: `events/ui/card-layout.ts`, `EventCard.tsx` (out of `events/page.tsx`), `SeriesCard.tsx`, `EventFacts.tsx`, `EventExcerpt.tsx`, `content/rich-text/ui/RichText.tsx` (`links`), `content/rich-text/domain/short-url.ts`.
+- Catalogues: `Event.series.nextLabel` gains its colon in both.
+- Specs: BR-REQ-041-01 gains a criterion, and criterion 26 is amended. BR-REQ-011-01 criteria 16 and 18 and BR-REQ-010-01 criterion 1 are amended.
+
+Second review round. The three e2e specs of the branch (listing-cards, event-pages, listing-card-button) ran on both projects against a production build. They found two layout defects that no unit test could see. The listing's cards stand inside the "other events" `<details>` whenever there is a lead event (§78). The browser slots a fold's content into the fold's own shadow tree, and MUI's `*, ::before, ::after { box-sizing: inherit }` does not reach across that slot, so everything under a fold is `content-box`. The measured chain was DETAILS border-box, then UL content-box. So the title link's `minHeight: 44` was the words' box, and its eighteen pixels of padding were added on top: a 62-pixel link, a heading 44 tall instead of its words' 26, and the line under it 27 pixels below the title's words instead of 9, on the listing the owner had asked to be tighter. The place's map link had the same flaw: 64 pixels, with the words 12 pixels under the pin. Both links now say `box-sizing: border-box` themselves, so the arithmetic in `card-layout.ts` and `outLink` holds wherever the facts are drawn. Nothing overlapped, so the edge presses passed. What found it was measuring the heading against its words, and that measurement is now a check of its own in `listing-cards.spec.ts`.
+
+A series' dates were 24-pixel chips, the chip itself being the link, under a comment that claimed 44 (BR-REQ-041-01 criterion 6). Each date is now a link at least 44 by 44 around the small pill, the shape `ChipLink` already gives small pills (§158). Unlike the card's tight links, its padding is not given back as a negative margin. A negative margin is only ever as large as the gap on its side, because whatever comes later paints over the link and takes a press there, and the dates have no gap: a wrapped row sits directly under the one before, the first row four pixels under the fold's 44-pixel summary, the last four above the door. So wrapped rows stand 44 apart, with twenty pixels between pills.
+
+The tap-target e2e check now makes its own series in the backoffice, because CI's seed has none: weekly, three published dates, a map link, and a summary in both languages. It presses two pixels inside all four edges of every link and fold on every card, then deletes the series through the backoffice's bulk bar. It goes through the application rather than the database because the listing reads the public cache (§333), which only an application write expires. It deletes the series because a phone folds the listing once there are more than four cards (§78), which would change what every later spec reads. MUI puts `data-testid` on icons only outside a production build, so the e2e suite finds glyphs by their position and leaves the names to the unit tests.
+
+Baseline `BR-V1.82-2026-09-24`.
+
+## 367. A partnered event wears a handshake, a calendar entry has one tooltip, and a series' usual place is read rather than compared byte for byte
+
+**Context.** Three asks from the owner, 2026-09-24, all on the public listing and calendar.
+
+1. "I would like to have a special marker with this partnered event, so that people know this is not a regular Brașov Runners group run — show like a handshake icon on the card and in the calendar." The listing card said "Împreună cu …" in its facts, the least visible line on the card. The calendar said nothing at all.
+2. Hovering a month-grid entry that carries the ⚠ edition mark (§122) opened two tooltips at once, one over the other. They were the entry's own MUI tooltip (§261) and the mark's `EditionMark` tooltip nested inside it.
+3. A Happy Monday date was marked "Nu în locul obișnuit: Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov". The owner: "the location is actually the same, IDK why it flags it as different". The real strings, read on 2026-09-24:
+   - production's public pages, every date: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov" in Romanian, "Tractorul Sports Park – entrance from the Olympic Ice Rink" in English, one map link on both;
+   - QA's database, read only, all nine dates: "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic", with no map link.
+
+   The difference was a trailing ", Brasov": the club's city, typed without its "ș". `editionDifference` compared the strings byte for byte and took the most common string as "usual". While most dates on view still read the shorter spelling, every date with the longer one was "moved".
+
+**Decision.**
+
+*The partner marker.* One phrase, `partnerPhrase` (`counted-phrases.ts`):
+- one partner: "În parteneriat cu X" / "With X";
+- two partners, both named: "… cu X și Y" / "… with X and Y";
+- from three on, the first named and the rest counted: "… cu X și încă 2 parteneri" / "… and 2 more partners". The count picks a plain key with `countForm` (one/few/other), never an ICU plural, and "de" comes in from twenty.
+
+Partners are read the one way every surface reads them (`readCoHosts`), in the club's order. A chip on a 320-pixel card has room for a name and a number, not a list; the full list is the event page's partner cards (§344). The glyph is the handshake the facts row has worn since §168. It is `GLYPHS.partner` in the registry and crosses the server/client boundary by name (§112). The phrase appears in four places:
+- **Listing card, series card, featured hero:** one small outlined chip in the chips row (`PartnerChip`), the size and colour of the rhythm chip. It wraps rather than ending in an ellipsis. The series card shows the next date's partners, the date whose facts it shows.
+- **Calendar:** the handshake at the end of the entry, before the ⚠. The words go in the entry's tooltip and its accessible name. In the agenda (`?view=list`) the handshake has its own tooltip (`PartnerMark`), because the agenda row has no tooltip of its own (§261).
+- **Event page:** "· [handshake] În parteneriat cu X" on the overline, after the type and the surface, at the overline's 18 px glyph size and grey (`PartnerOverline`, a Server Component). The overline now wraps on a phone.
+- **Nowhere** for an event with no partners, or one whose partners were all removed.
+
+*One tooltip per calendar entry.*
+- **Month grid:** the marks are bare glyphs (`EditionGlyph`, the handshake). The entry's single MUI tooltip carries every line: the time and the whole title in bold, then the date's note, then the partner. No element carries a `title` attribute. The same tooltip opens on keyboard focus.
+- **Accessible name:** the link's `aria-label` is every line, each ended with a full stop. `aria-labelledby` is forced off: for a tooltip whose title is not a string, MUI would otherwise point the name at the tooltip while it is open.
+- **Agenda:** keeps a tooltip per mark, side by side and never nested.
+- **Screen readers:** MUI's `SvgIcon` writes `aria-hidden="true"` on any glyph without `titleAccess`. The ⚠'s `role="img"` and name had therefore never been read, not in a series card's date chip, the backoffice list or the agenda. `EditionMark` and `PartnerMark` now pass `aria-hidden={false}`. `titleAccess` was not used: it draws an SVG `<title>`, the browser's own tooltip, on top of MUI's.
+
+*The same place, read rather than compared* (`events/domain/same-place.ts`, amending §122). **What is compared** is the name the reader's page shows, in the reader's language. A public row's `locationName` is already that language's own name, else the event's (the rule of `place.ts#placeNameIn`, §362). The backoffice compares the event's own name. The street address an older event still carries is **not** compared: `placeShown` folds it in to answer "did this save move this event", while this answers "is this date where the others meet". A date whose address a later save cleared would otherwise be "moved".
+
+Two places are the same when either holds, and in no other case:
+1. **Their map links are the same link:** scheme ignored, host lower case without "www.", no trailing slash, no fragment, no `g_st`/`utm_*` share parameters. Two different short links to one pin are not resolved, and different links are never a difference on their own.
+2. **Their names say the same place.** Each comma-separated part is folded: diacritics dropped (ș/ş, ț/ţ, ă, â, î), lower case, every run of punctuation or spacing one space, so the dashes and "( )" never make a different place. Then trailing parts are taken off one by one from the end, never the first part, when a part is exactly one of:
+   - the club's city (`CLUB_LOCALITY`: "Brașov", "Brasov", "municipiul/mun. Brașov");
+   - its county ("județul/jud. Brașov", "jud. BV", "BV", "Brașov County");
+   - the country ("România", "Romania", "RO");
+   - a postcode (six digits, alone or with the city);
+   - a Romanian street by its first word (strada/str., bulevardul/bd./b-dul, calea, aleea, șoseaua/șos., splaiul);
+   - an English street by its last word (street/st, road/rd, avenue/ave, boulevard/blvd);
+   - a house number ("nr. 5", "no. 5", "5", "5A").
+
+`usualOf` keeps the name most dates give once read, together with every map link those dates carry. `editionDifference` asks `isAtPlace`. The mark still names the date's place as it is written. A different entrance, a square ("Piața Sfatului"), another city, another park and another kilometre are all still marked.
+
+**Refused.**
+- *A similarity score or an edit distance.* It would call a real move a typo. The rule is a closed list a reader can check.
+- *Stripping every trailing part after a comma.* "Parcul Tractorul, intrarea de nord" is a different entrance, and an entrance is exactly what the Happy Monday name names.
+- *Treating "piața" as an address word.* A square is where people meet.
+- *Comparing `placeShown` with the address folded in* (see above).
+- *Resolving short map links to coordinates.* That is a network call on every render, for a question the name answers.
+- *Listing every partner on the chip.* Three names do not fit a phone card; the event page lists them.
+- *Keeping the ⚠'s own tooltip inside the grid entry and suppressing the outer one on hover.* That gives two tooltips by keyboard, and a grid entry whose title is unreadable without its tooltip.
+- *`titleAccess` for the glyphs' names.* It draws the browser's tooltip, the thing that was removed.
+- *Restyling the listing card.* `feat/listing-cards-spacing` owns the card body; the marker is one chip in the chips row.
+
+**Test.**
+- `tests/unit/events/same-place.test.ts`: the real strings (production's and QA's Happy Monday, the English name, the Wednesday run's "Sub Tâmpa, lângă Apeduct, Aleea Tiberiu Brediceanu, Brașov"), every address kind, the map-link rule, and real moves still marked.
+- `tests/unit/events/series.test.ts`: `usualOf` and `editionDifference` over the owner's September (two spellings, either order), longer addresses, the same pin under another name, English names, a real move, and no place.
+- `tests/unit/events/partner-marker.test.ts`:
+  - the phrase for 1, 2, 3 and 21 partners in both languages;
+  - the chip, one handshake and one chip per card, legacy columns, nothing without partners;
+  - its place in the three cards' chips rows;
+  - the overline rendered for 1, 2 and 3 partners in both languages, and nothing without partners;
+  - one tooltip per grid entry with its three lines, bare marks inside it, no `title` anywhere, and the complete `aria-label`, dense or not;
+  - the agenda's two named marks (`aria-hidden="false"`, no `<title>`);
+  - `EventCalendar`, grid and agenda, with 1, 2 and 3 partners in both languages;
+  - no ⚠ on a September of two spellings, and one ⚠ on a real move.
+- `tests/e2e/partner-marker.spec.ts`: creates and publishes its own event, then checks:
+  - the chip in both listings;
+  - the overline in both languages at 320 px;
+  - the grid entry's name, 44 px height, no `title`, and one tooltip on hover (also over the mark) and on keyboard focus;
+  - the agenda's named handshake and its single tooltip;
+  - the English calendar.
+- `tests/e2e/event-pages.spec.ts`: no calendar entry carries a `title`.
+
+Baseline `BR-V1.82-2026-09-24`.
+
+## 368. The dispatcher: one orchestrating session, a card per kind of work, and the model that fits each
+
+**Decided (2026-09-24, the owner: "Gimme the token aware prompt dispatcher that fans out subagents and chooses the appropriate Claude model for each task, also save this dispatcher with cards in the repo" — and: "Please note this is a public repo").**
+
+Since §347 the work has run as batches: one session briefs a subagent per change, each change is implemented in its own worktree, reviewed adversarially, fixed and re-reviewed, and the session lands the documentation and releases two to four changes at a time. The procedure lived in files outside the repository and in one session's memory, which dies with the session. It is in the repository now, where a new session — or a person — can start it:
+
+- `docs/DISPATCHER.md` — the prompt that starts an orchestrating session, the loop (intake → card → dispatch → integrate → land → ship → report), which model each kind of task gets, the usage bands, the machine's limits, and a card per kind of work: feature chain, fix round, investigation, conflict merge, land a batch, ship, status sweep, handoff.
+- `.claude/workflows/br-chain.js` (implement → review → fix → re-review) and `.claude/workflows/br-fix-round.js` (fix → re-review in an existing worktree). Both take `models` and `effort` per stage, so the dispatcher chooses per task.
+- `yarn docs:land` (`scripts/land-batch.mjs`) — the documentation step as one command: the baseline bump, the numbers, each `§368` replaced by the commit that wrote it, DECISIONS.md, CHANGELOG.md and the SPECS.md criteria, a dry run first.
+- `yarn ship` (`scripts/ship.mjs`) — the release step as one command. It waits for the previous release on production, merges the batch into `qa`, opens and merges the release PR, approves the gated migration (§31) and waits for `/api/health` to name the new baseline.
+
+**The model rule is the cheapest model that does the task well, and never a cheap review.** Mechanical work goes to Haiku. A precise brief and a fix round with concrete findings go to Sonnet. Cross-cutting work goes to Fable or Opus, and so does anything that touches a rule that cannot be broken. The adversarial review is always Opus at high effort: it is what makes a cheaper implementer safe to ship. Fable and Opus draw on separate weekly allowances, so the implementers move to whichever has room.
+
+**Token-aware** means three bands, read from the owner's usage page because the session cannot read it: green up to four chains, amber two chains on Sonnet, red no new agents — land, ship, hand off. **The machine's limit is separate and absolute:** at most four chains at once, each with one build, one Playwright process and its own database. Eleven at once exhausted the processes on 2026-09-24.
+
+**The repository is public, and so is all of this.** No secret, key, token, database URL, personal address, account id or local path appears in the page, the workflows, the scripts or the briefs they write. The two workflows repeat the rule to every agent and every reviewer checks for it. `yarn ship` takes production's origin from `SHIP_PRODUCTION_URL` in the environment or the git-ignored `.env.local`, never from the file, because the club's domain lives only in `SETUP.md` §26 (§98). Commit attribution is the line each session's own instructions give, not a model name written into a script.
+
+Baseline `BR-V1.82-2026-09-24`.
