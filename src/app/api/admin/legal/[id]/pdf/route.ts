@@ -10,6 +10,7 @@ import { findVersionWithTranslations } from "@/modules/legal-documents/repositor
 import { atLeast } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
@@ -37,6 +38,7 @@ export async function GET(
   }
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const locale = new URL(request.url).searchParams.get("locale") ?? routing.defaultLocale;
   if (!hasLocale(routing.locales, locale)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });

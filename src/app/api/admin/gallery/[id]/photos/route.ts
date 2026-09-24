@@ -6,6 +6,7 @@ import { isStorageConfigured } from "@/modules/media/storage";
 import { canEditEventFields } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 
 /**
  * One photo into an album (BR-REQ-054-01). `POST` multipart with a `file`; the uploader sends
@@ -31,6 +32,7 @@ export async function POST(
   }
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
