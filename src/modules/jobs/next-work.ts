@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -70,6 +70,12 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     `expireStaleHolds`: an offer at its deadline, a declaration hold at its own. Every hold ahead,
     whether or not anybody waits yet — somebody who joins the queue later is a write path that
     wakes the job itself, and a deadline that passes with nobody waiting costs one short run.
+
+    Scheduled events only, as the job itself (`findEventsNeedingMaintenance`): a cancelled event's
+    queue is left as it stood (§331, event notices), holds and all, so its deadlines are no work of
+    the job's, and waking the database at each of them would be a real run that does nothing
+    (§NNN, jobs sleep when nothing is due). An event put back on is a save, and the save wakes the
+    job itself.
   */
   const [holds] = await any
     .select({ next: sql<unknown>`min(${registrations.holdExpiresAt})` })
@@ -78,7 +84,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .where(
       and(
         inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
-        ne(events.eventStatus, "COMPLETED"),
+        eq(events.eventStatus, "SCHEDULED"),
         gt(registrations.holdExpiresAt, now),
       ),
     );
@@ -107,7 +113,9 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        ne(events.eventStatus, "COMPLETED"),
+        // Scheduled only, for the reason above (§331): a cancelled race closes no list, settles
+        // no number and reminds nobody.
+        eq(events.eventStatus, "SCHEDULED"),
         inArray(registrations.status, [...PLACE_HOLDING_STATUSES, "WAITLISTED"]),
         or(gt(events.startsAt, now), gt(events.registrationClosesAt, now)),
       ),

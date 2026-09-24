@@ -187,6 +187,20 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     expect(await nextMaintenanceWork(db, NOW)).toBeNull();
   });
 
+  /**
+   * §331 (event notices) × §NNN: a cancelled event's queue is left as it stood, holds and all, and
+   * the job does nothing with it — so its deadlines, its start and its reminders are no reason to
+   * wake the database.
+   */
+  it("leaves a cancelled event alone, as the job does since §331", async () => {
+    const event = await createEvent({ startsAt: new Date(NOW.getTime() + 5 * DAY), registrationClosesAt: new Date(NOW.getTime() + 2 * HOUR) });
+    await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date(NOW.getTime() + HOUR) });
+    expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + HOUR));
+
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    expect(await nextMaintenanceWork(db, NOW)).toBeNull();
+  });
+
   it("looks only forward: a deadline already behind is the run's own work, not the next one's", async () => {
     const event = await createEvent();
     await register(event, { status: "PENDING_DECLARATION", holdExpiresAt: new Date(NOW.getTime() - MINUTE) });
