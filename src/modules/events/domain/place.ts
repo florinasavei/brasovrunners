@@ -53,3 +53,75 @@ export function placeNameIn(event: { locationName: string | null }, own: string 
 export function placeInBox(event: { locationName: string | null; locationAddress: string | null }, own: string | null | undefined): string {
   return [placeNameIn(event, own), event.locationAddress?.trim()].filter((part): part is string => Boolean(part)).join(", ");
 }
+
+/** Text as a reader takes it in: spacing is not a different place. */
+const spoken = (text: string | null | undefined) => (text ?? "").replace(/\s+/g, " ").trim();
+
+/**
+ * The place one language's page shows, spacing aside — `placeInBox`, compared. Every "did the
+ * place move" asks this one question (§NNN): the series edit (`service.ts#placesShown`), the
+ * participants' notice (`event-changes.ts`) and the English name that follows the Romanian one
+ * below. The street address an older event carries stands after a language's own name as much as
+ * after the event's, because that is where the page shows it.
+ */
+export function placeShown(event: { locationName: string | null; locationAddress: string | null }, own: string | null | undefined): string {
+  return spoken(placeInBox(event, own));
+}
+
+/**
+ * The English name one save of an **older event** writes (§NNN, found by review): the Romanian
+ * one, when the English page had no name of its own and the organizer moved only the Romanian.
+ *
+ * An event saved before the Locul box asked once per language has no English row name: its English
+ * page shows the event's meeting point, which is what the English box opens with. Moving the
+ * Romanian box alone used to store that old name as English, explicitly — and a series save then
+ * left every other date's English page following the new Romanian name, while the edited date's
+ * kept the old one. Here the English page follows the Romanian, as it always had: the English box
+ * posted exactly what the English page showed, and the Romanian place is not the one it showed.
+ *
+ * Nothing else is touched: an English row with a name of its own keeps what was posted, and so
+ * does an English box the organizer changed. The editor's box does the same while it is typed
+ * (`englishFollowsTyping`); this is the rule for a save that did not come through it.
+ */
+export function englishNameAfterSave(
+  before: { locationName: string | null; locationAddress: string | null },
+  rows: { ro: string | null | undefined; en: string | null | undefined },
+  posted: { ro: string | null; en: string | null },
+): string | null {
+  if (spoken(rows.en) !== "") return posted.en;
+  if (spoken(posted.en) !== placeShown(before, null)) return posted.en;
+  if (spoken(posted.ro) === placeShown(before, rows.ro)) return posted.en;
+  return posted.ro;
+}
+
+/**
+ * Whether the English box follows the Romanian one as it is typed (§NNN, found by review): while
+ * both say the same place. An older event opens with the event's name in both, a place called the
+ * same in both languages stays so, and "Același nume și în engleză" links them from then on —
+ * moving the Romanian then moves the English with it, on the screen, before anything is saved. An
+ * English box that says something else, or nothing, is the organizer's own and is never written.
+ */
+export function englishFollowsTyping(romanianBefore: string, english: string): boolean {
+  const said = spoken(english);
+  return said !== "" && said === spoken(romanianBefore);
+}
+
+/**
+ * Whether "Același nume și în engleză" may fill the English box: only an empty one, and only with
+ * something (§NNN, found by review). It never writes over a name the organizer typed — a thumb
+ * under the English box on a phone would otherwise replace "Tractorul Park" in one tap, past the
+ * browser's own undo.
+ */
+export function mayCopyToEnglish(romanian: string, english: string): boolean {
+  return spoken(romanian) !== "" && spoken(english) === "";
+}
+
+/**
+ * Whether the English box still names the place the Romanian one has moved away from (§NNN, found
+ * by review): the Romanian differs from what was stored, the English is what was stored, and it is
+ * a name of its own ("Tractorul Park") — so it did not follow, and says so under the box.
+ */
+export function englishLeftBehind(stored: { ro: string; en: string }, now: { ro: string; en: string }): boolean {
+  const english = spoken(now.en);
+  return english !== "" && spoken(now.ro) !== spoken(stored.ro) && english === spoken(stored.en) && english !== spoken(now.ro);
+}

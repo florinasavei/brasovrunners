@@ -20,7 +20,9 @@ import { type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryW
  * Each box opens with what that language's page shows today (`placeInBox`): the language's own
  * name, else the event's meeting point, the street address of an older event folded in. So an event
  * saved before §NNN opens with the same words on both sides, and one save stores them on both
- * rows. The Romanian box is also the event's own meeting point (`events.location_name`).
+ * rows — while the two agree, the English box follows what is typed in the Romanian one, so moving
+ * the place moves it in both (found by review; `PlaceToBeAnnounced`). The Romanian box is also the
+ * event's own meeting point (`events.location_name`).
  *
  * While the place is to be announced, **everything below the switch hides** (the owner,
  * 2026-09-24: "if the location is announced later, we should hide these fields"): hidden, never
@@ -64,6 +66,8 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
             locationHelp: t("editor.locationHelp"),
             unpublished: t("editor.placeUnpublished"),
             copyToEnglish: t("editor.locationCopyToEnglish"),
+            // A template: the island fills `{place}` with what the English box still says.
+            englishLeftBehind: t.raw("editor.locationEnglishLeftBehind") as string,
           }}
           names={{
             ro: { defaultValue: inBox("ro"), box: textFieldConstraints(eventInputConstraints("locationName")) },

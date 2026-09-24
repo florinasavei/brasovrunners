@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
-import { PLACE_NAME_FIELD, type PlaceNameField, placeInBox, placeNameIn } from "@/modules/events/domain/place";
+import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
   horizonEnd,
@@ -636,8 +636,21 @@ function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames)
 /** The place each language's page shows (§NNN), the street address folded in: what a series edit compares. */
 function placesShown(event: EditableEvent, rows: readonly EditableTranslation[]): Record<Locale, string> {
   return Object.fromEntries(
-    routing.locales.map((locale) => [locale, placeInBox(event, rows.find((row) => row.locale === locale)?.locationName)]),
+    routing.locales.map((locale) => [locale, placeShown(event, rows.find((row) => row.locale === locale)?.locationName)]),
   ) as Record<Locale, string>;
+}
+
+/**
+ * The names one save writes, an older event's English following its Romanian (§NNN, found by
+ * review; `place.ts#englishNameAfterSave`). Without it, an older event whose organizer moved only
+ * the Romanian box stored the old place as its English name — and a series save carried the new
+ * Romanian to every other date, whose English pages follow it, while this date's English page
+ * kept the old meeting point. `rows` are this date's languages as loaded, before the save.
+ */
+function namesAfterSave(before: EditableEvent, rows: readonly EditableTranslation[], names: PlaceNames): PlaceNames {
+  if (names.ro === undefined || names.en === undefined) return names;
+  const own = (locale: Locale) => rows.find((row) => row.locale === locale)?.locationName;
+  return { ...names, en: englishNameAfterSave(before, { ro: own("ro"), en: own("en") }, { ro: names.ro, en: names.en }) };
 }
 
 // --- Translations ---------------------------------------------------------------------------
@@ -1295,9 +1308,11 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       now,
     );
     // The place's name in each language is the event's (§NNN): written with the row, under its version.
+    // An older event's English name follows its Romanian one when only the Romanian moved, which
+    // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
     const announcing = request.notify || request.cancellation !== null;
-    const names = placeNamesFrom(fields);
-    const translationsBefore = announcing ? await listTranslationsForEvent(tx, input.eventId) : [];
+    const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
+    const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
     if (announcing) {
       // No words are saved here; only the place's names moved, and the notice compares those.
@@ -1705,8 +1720,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
-    // The place's name in each language, when the event's fields are part of this save (§NNN).
-    const names: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
+    // The place's name in each language, when the event's fields are part of this save (§NNN) —
+    // an older event's English following its Romanian when only the Romanian moved.
+    const names: PlaceNames = parsedEventFields ? namesAfterSave(current, existingTranslations, placeNamesFrom(parsedEventFields)) : {};
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,

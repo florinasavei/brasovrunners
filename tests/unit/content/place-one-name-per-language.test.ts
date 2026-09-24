@@ -10,7 +10,16 @@ import { eventFormFieldName } from "@/modules/content/events/form-names";
 import { placeSummary, type SummaryTranslation, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
 import PlaceToBeAnnounced from "@/modules/content/events/ui/PlaceToBeAnnounced";
 import { eventChangesToAnnounce, type EventChangeFacts } from "@/modules/events/domain/event-changes";
-import { PLACE_NAME_FIELD, placeInBox, placeNameIn } from "@/modules/events/domain/place";
+import {
+  englishFollowsTyping,
+  englishLeftBehind,
+  englishNameAfterSave,
+  mayCopyToEnglish,
+  PLACE_NAME_FIELD,
+  placeInBox,
+  placeNameIn,
+  placeShown,
+} from "@/modules/events/domain/place";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import { RecallProvider } from "@/shared/forms/recall";
 
@@ -118,6 +127,68 @@ describe("BR-REQ-011-01 criterion 29 what each language's page shows", () => {
     expect(placeInBox({ locationName: "Parcul Tractorul", locationAddress: null }, undefined)).toBe("Parcul Tractorul");
     expect(placeInBox({ locationName: null, locationAddress: null }, null)).toBe("");
   });
+
+  it("compares the place as the page shows it, spacing aside, the address after a language's own name too", () => {
+    const older = { locationName: "Parcul  Tractorul ", locationAddress: " Str. Turnului 5" };
+    expect(placeShown(older, null)).toBe("Parcul Tractorul, Str. Turnului 5");
+    expect(placeShown(older, " Tractor   Park")).toBe("Tractor Park, Str. Turnului 5");
+  });
+});
+
+/**
+ * Found by review: an older event's English page had no name of its own — it showed the event's —
+ * so its English box opens with the Romanian words. Moving only the Romanian must move the English
+ * with it, or the date keeps the old place in English while a series save sends the new one to
+ * every other date.
+ */
+describe("BR-REQ-011-01 criterion 29 an older event's English name follows its Romanian one", () => {
+  const older = { locationName: "Parcul Tractorul", locationAddress: null };
+
+  it("takes the Romanian name when the English box posted the page's old name and the Romanian moved", () => {
+    expect(englishNameAfterSave(older, { ro: null, en: null }, { ro: "Parcul Titulescu", en: "Parcul Tractorul" })).toBe("Parcul Titulescu");
+    // Spacing is not an edit of the English box, and the address folded in is the page's old name.
+    expect(englishNameAfterSave(older, { ro: null, en: " " }, { ro: "Parcul Titulescu", en: " Parcul  Tractorul" })).toBe("Parcul Titulescu");
+    const withAddress = { locationName: "Parcul Tractorul", locationAddress: "Str. Turnului 5" };
+    expect(
+      englishNameAfterSave(withAddress, { ro: null, en: null }, { ro: "Parcul Titulescu", en: "Parcul Tractorul, Str. Turnului 5" }),
+    ).toBe("Parcul Titulescu");
+  });
+
+  it("keeps what was posted otherwise: a name of its own, an English box changed, a Romanian place not moved", () => {
+    expect(englishNameAfterSave(older, { ro: null, en: "Tractorul Park" }, { ro: "Parcul Titulescu", en: "Tractorul Park" })).toBe("Tractorul Park");
+    expect(englishNameAfterSave(older, { ro: null, en: null }, { ro: "Parcul Titulescu", en: "Titulescu Park" })).toBe("Titulescu Park");
+    // The first save of an older event, nothing moved: both rows take the page's name.
+    expect(englishNameAfterSave(older, { ro: null, en: null }, { ro: "Parcul Tractorul", en: "Parcul Tractorul" })).toBe("Parcul Tractorul");
+  });
+});
+
+describe("BR-REQ-011-01 criterion 29 the English box while the Romanian is typed", () => {
+  it("follows while the two say the same place, and never when the English is blank or its own", () => {
+    expect(englishFollowsTyping("Parcul Tractorul", "Parcul Tractorul")).toBe(true);
+    expect(englishFollowsTyping("Parcul Tractorul ", " Parcul  Tractorul")).toBe(true);
+    expect(englishFollowsTyping("Parcul Tractorul", "Tractorul Park")).toBe(false);
+    expect(englishFollowsTyping("", "")).toBe(false);
+    expect(englishFollowsTyping("Parcul Tractorul", "")).toBe(false);
+  });
+
+  it("copies into an empty English box only, and only something", () => {
+    expect(mayCopyToEnglish("Stadionul Tineretului", "")).toBe(true);
+    expect(mayCopyToEnglish("Stadionul Tineretului", "  ")).toBe(true);
+    expect(mayCopyToEnglish("Stadionul Tineretului", "Youth Stadium")).toBe(false);
+    expect(mayCopyToEnglish("Stadionul Tineretului", "Stadionul Tineretului")).toBe(false);
+    expect(mayCopyToEnglish(" ", "")).toBe(false);
+  });
+
+  it("says the English still names the old place when the Romanian moved away from a name of its own", () => {
+    const stored = { ro: "Parcul Tractorul", en: "Tractorul Park" };
+    expect(englishLeftBehind(stored, { ro: "Poiana Brașov", en: "Tractorul Park" })).toBe(true);
+    // Nothing moved, the English changed too, or the English is empty: nothing to say.
+    expect(englishLeftBehind(stored, stored)).toBe(false);
+    expect(englishLeftBehind(stored, { ro: "Poiana Brașov", en: "Poiana Brasov" })).toBe(false);
+    expect(englishLeftBehind(stored, { ro: "Poiana Brașov", en: "" })).toBe(false);
+    // The create page: nothing stored, nothing left behind.
+    expect(englishLeftBehind({ ro: "", en: "" }, { ro: "Poiana Brașov", en: "" })).toBe(false);
+  });
 });
 
 describe("BR-REQ-011-01 criterion 29 the closed Locul box", () => {
@@ -155,6 +226,7 @@ describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
     locationHelp: "Locul.",
     unpublished: "Nepublicat.",
     copyToEnglish: "Același nume și în engleză",
+    englishLeftBehind: "În engleză scrie tot „{place}”.",
   };
   const render = (roName: string, enName: string, values: Record<string, string[]> | null = null) =>
     renderToStaticMarkup(
@@ -181,9 +253,9 @@ describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
     expect(html).toMatch(/Punct de întâlnire \(<\/span>English<span[^>]*>\)/);
   });
 
-  it("offers the copy while the English box says something else, and not when there is nothing to copy", () => {
+  it("offers the copy only into an empty English box: a name already there is never replaced by a tap", () => {
     expect(copyButton(render("Stadionul Tineretului", ""))).not.toMatch(/\bdisabled\b/);
-    expect(copyButton(render("Stadionul Tineretului", "Youth Stadium"))).not.toMatch(/\bdisabled\b/);
+    expect(copyButton(render("Stadionul Tineretului", "Youth Stadium"))).toMatch(/\bdisabled\b/);
     expect(copyButton(render("Stadionul Tineretului", "Stadionul Tineretului"))).toMatch(/\bdisabled\b/);
     expect(copyButton(render("", ""))).toMatch(/\bdisabled\b/);
     expect(render("a", "")).toContain(labels.copyToEnglish);
@@ -195,11 +267,26 @@ describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
     expect(copyButton(html)).toMatch(/\bdisabled\b/);
   });
 
+  it("says under the English box that it still names the place the Romanian moved away from", () => {
+    const moved = { "event.locationName": ["Poiana Brașov"], "event.locationNameEn": ["Tractorul Park"] };
+    const html = render("Parcul Tractorul", "Tractorul Park", moved);
+    expect(html).toContain('data-testid="place-english-left-behind"');
+    expect(html).toContain("În engleză scrie tot „Tractorul Park”.");
+    // Nothing moved, or the English moved too: no line.
+    expect(render("Parcul Tractorul", "Tractorul Park")).not.toContain("place-english-left-behind");
+    const both = { "event.locationName": ["Poiana Brașov"], "event.locationNameEn": ["Poiana Brasov"] };
+    expect(render("Parcul Tractorul", "Tractorul Park", both)).not.toContain("place-english-left-behind");
+  });
+
   it("is a thumb's size, and fills the box through the input's own setter so every watcher sees it", () => {
     const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
     expect(island).toContain("sx={{ ...TAP_TARGET, alignSelf: \"flex-start\", textTransform: \"none\" }}");
-    expect(island).toContain('Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, ro.trim())');
+    expect(island).toContain('Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, text)');
     expect(island).toContain('input.dispatchEvent(new Event("input", { bubbles: true }))');
+    // The copy asks the rule before it writes, and the Romanian box moves a linked English one.
+    expect(island).toContain("if (mayCopyToEnglish(ro, en)) writeEnglish(enBox.current, ro.trim());");
+    expect(island).toContain("if (englishFollowsTyping(ro, en)) writeEnglish(box.form?.elements.namedItem(EN_NAME), text);");
+    expect(island).toContain("disabled={!mayCopyToEnglish(ro, en)}");
     // The unseen half of each label is one pixel, not MUI's `1` (100%): a label-wide span pushed a
     // 320-pixel page sideways.
     expect(island).toContain('width: "1px"');
@@ -229,6 +316,25 @@ describe("BR-REQ-011-01 criterion 29 the participants' notice (§331)", () => {
       { locale: "en", locationName: "Parcul Tractorul, Str. Turnului 5" },
     ];
     expect(eventChangesToAnnounce(before, after, languagesBefore, languagesAfter)).toEqual([]);
+  });
+
+  it("counts no change when an older event's own English name takes the address it was shown with", () => {
+    // Found by review: the page shows the address after a language's own name too, so the box
+    // opens with "Tractor Park, Str. Turnului 5" — and saving that is the same place, as the series
+    // edit already said.
+    const after = { ...before, locationName: "Parcul Tractorul, Str. Turnului 5", locationAddress: null };
+    const languagesBefore = [
+      { locale: "ro", locationName: null },
+      { locale: "en", locationName: "Tractor Park" },
+    ];
+    const languagesAfter = [
+      { locale: "ro", locationName: "Parcul Tractorul, Str. Turnului 5" },
+      { locale: "en", locationName: "Tractor Park, Str. Turnului 5" },
+    ];
+    expect(eventChangesToAnnounce(before, after, languagesBefore, languagesAfter)).toEqual([]);
+    // And a real move of the English name still counts.
+    const moved = [languagesAfter[0], { locale: "en", locationName: "Titulescu Park" }];
+    expect(eventChangesToAnnounce(before, after, languagesBefore, moved)).toEqual(["place"]);
   });
 
   it("counts a place moved in English alone", () => {

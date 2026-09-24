@@ -15,7 +15,7 @@ import {
 } from "@/modules/content/events/service";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels } from "@/modules/events/calendar-labels";
-import { placeInBox } from "@/modules/events/domain/place";
+import { placeInBox, placeNameIn } from "@/modules/events/domain/place";
 import { buildCalendar } from "@/modules/events/ical";
 import { findEventNotificationDetails, findPublishedEventBySlug } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
@@ -227,6 +227,23 @@ describe("BR-REQ-011-01 criterion 29 the meeting point, once per language (§NNN
       expect(await rowOf(event.id)).toMatchObject({ locationName: `${RO_PLACE}, Str. Turnului 5`, locationAddress: null });
     });
 
+    it("moves its English page with the Romanian box when only the Romanian moved (found by review)", async () => {
+      const event = await legacy();
+      const rows = await listTranslationsForEvent(db, event.id);
+      const englishBox = placeInBox(event, rows.find((row) => row.locale === "en")?.locationName);
+      // The organizer changes the Romanian box and leaves the English one as it opened: the old name.
+      await saveEventAndTranslations(db, {
+        actor: organizer,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: englishBox },
+        translations: [],
+        now: NOW,
+      });
+      // The English page followed the event's name before; it follows the Romanian now.
+      expect(await namesOf(event.id)).toEqual({ ro: "Parcul Titulescu", en: "Parcul Titulescu" });
+    });
+
     it("is refused publication without a place its English page could show, naming the English box", async () => {
       // The meeting point typed only as the Romanian row's own name: the English page would show nothing.
       const event = await legacy({ locationName: null, locationAddress: null });
@@ -344,6 +361,30 @@ describe("BR-REQ-011-01 criterion 29 the meeting point, once per language (§NNN
       for (const [index, date] of dates.entries()) {
         expect(await namesOf(date.id)).toEqual({ ro: RO_PLACE, en: "Tractorul Park, main gate" });
         expect((await rowOf(date.id)).version).toBe(versions[index] + 1);
+      }
+    });
+
+    it("moves an older series' English pages with the Romanian box on every date, the edited one too (found by review)", async () => {
+      const { source, dates } = await series();
+      // An older series: no language has a name of its own; every English page shows the event's.
+      const ids = [source.id, ...dates.map((date) => date.id)];
+      await db.update(eventTranslations).set({ locationName: null });
+      const rows = await listTranslationsForEvent(db, source.id);
+      const englishBox = placeInBox(await rowOf(source.id), rows.find((row) => row.locale === "en")?.locationName);
+      expect(englishBox).toBe(RO_PLACE);
+
+      // Only the Romanian box changes; the English one is posted as it opened.
+      const result = await saveAsOrganizer(
+        source.id,
+        { type: "GROUP_RUN", startsAtWallTime: "2026-10-11T08:00", locationName: "Parcul Titulescu", locationNameEn: englishBox },
+        "all",
+      );
+      expect(result.appliedTo).toBe(dates.length);
+      // Every date's English page names the same place, and it is the new one — no date left behind.
+      for (const id of ids) {
+        const names = await namesOf(id);
+        expect(placeNameIn(await rowOf(id), names.en)).toBe("Parcul Titulescu");
+        expect(names).toEqual({ ro: "Parcul Titulescu", en: "Parcul Titulescu" });
       }
     });
 

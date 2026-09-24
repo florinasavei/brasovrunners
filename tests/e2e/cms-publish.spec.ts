@@ -674,6 +674,9 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await page.getByTestId("place-copy-to-english").click();
     await expect(field("event.locationNameEn")).toHaveValue("Parcul Titulescu");
     await expect(page.getByTestId("place-copy-to-english")).toBeDisabled();
+    // While the two agree, the English follows what is typed in Romanian (found by review).
+    await field("event.locationName").fill("Parcul Nicolae Titulescu");
+    await expect(field("event.locationNameEn")).toHaveValue("Parcul Nicolae Titulescu");
 
     // Recurrence, in the side column — first on a phone: the event's own day follows the date
     // typed above, ticked and locked; Wednesday is added.

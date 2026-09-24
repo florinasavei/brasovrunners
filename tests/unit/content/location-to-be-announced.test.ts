@@ -102,6 +102,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     locationHelp: "Locul, cum i-ai spune unui prieten.",
     unpublished: "Nepublicat cât timp locația se anunță mai târziu.",
     copyToEnglish: "Același nume și în engleză",
+    englishLeftBehind: "În engleză scrie tot „{place}”.",
   };
   const render = (defaultChecked: boolean, values: Record<string, string[]> | null = null, typed = "") =>
     renderToStaticMarkup(

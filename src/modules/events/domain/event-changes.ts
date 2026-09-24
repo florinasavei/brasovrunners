@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { placeShown as shownOnPage } from "./place";
 import { readScheduleItems } from "./schedule";
 
 /**
@@ -62,13 +63,18 @@ const words = (value: string | null | undefined) => (value ?? "").replace(/\s+/g
  * the name, says the same thing, and must not read as a new place.
  */
 function eventPlace(event: Pick<EventChangeFacts, "locationName" | "locationAddress">): string {
-  return [words(event.locationName), words(event.locationAddress)].filter((part) => part !== "").join(", ");
+  return shownOnPage(event, null);
 }
 
-/** The place as each language's page shows it: its own name when it has one, else the event's. */
+/**
+ * The place as each language's page shows it: its own name when it has one, else the event's —
+ * and an older event's street address after either, because the page shows it after either
+ * (`EventFacts`). The same rule the editor's box and the series edit read (`place.ts#placeShown`,
+ * §NNN): an older event with an English name of its own ("Tractor Park") and an address opens
+ * with "Tractor Park, Str. Turnului 5" in the English box, and saving that is not a new place.
+ */
 function placesByLanguage(event: EventChangeFacts, languages: readonly PlaceInLanguage[]): Map<string, string> {
-  const fallback = eventPlace(event);
-  return new Map(languages.map((language) => [language.locale, words(language.locationName) || fallback]));
+  return new Map(languages.map((language) => [language.locale, shownOnPage(event, language.locationName)]));
 }
 
 const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true;

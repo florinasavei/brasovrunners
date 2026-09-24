@@ -1,6 +1,7 @@
 "use client";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -8,7 +9,9 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { englishFollowsTyping, englishLeftBehind, mayCopyToEnglish } from "@/modules/events/domain/place";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
+import { fillIn } from "@/shared/forms/fill-in";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { ShownWhen } from "./OnlyForType";
@@ -37,8 +40,13 @@ type Props = {
     locationHelp: string;
     /** "Not published while the place is to be announced", under the boxes while the switch is on. */
     unpublished: string;
-    /** "Același nume și în engleză": copies the Romanian box into the English one. */
+    /** "Același nume și în engleză": copies the Romanian box into an empty English one. */
     copyToEnglish: string;
+    /**
+     * Under the English box when the Romanian place moved and the English name of its own did not:
+     * a catalogue template, `{place}` filled here with what the English box still says.
+     */
+    englishLeftBehind: string;
   };
   names: { ro: NameBox; en: NameBox };
   /** The map link's box, rendered by the server form as it always was, under the names. */
@@ -81,9 +89,19 @@ const UNSEEN = {
  * is known and announce it later with one save.
  *
  * "Același nume și în engleză" under the English box copies the Romanian text into it: a place's
- * name is often the same in both ("Stadionul Tineretului" is not translated). It is off while the
- * two boxes already say the same, and while there is nothing to copy; it never writes anywhere the
- * organizer is not looking — the box it fills is the one right above it.
+ * name is often the same in both ("Stadionul Tineretului" is not translated). It fills an **empty**
+ * English box only, and is off otherwise (§NNN, found by review): a thumb on the 44-pixel button
+ * right under a box holding "Tractorul Park" would replace it in one tap, past the browser's undo.
+ *
+ * **While the two boxes say the same place, the English follows the Romanian as it is typed**
+ * (`englishFollowsTyping`; found by review). An event saved before §NNN opens with the event's name
+ * in both boxes — its English page had no name of its own — and moving only the Romanian used to
+ * leave the old place in the English box, saved as that date's English name while a series save
+ * sent the new one to every other date. Now the English box moves with it, on the screen; the
+ * service applies the same rule to a save that did not come through here
+ * (`place.ts#englishNameAfterSave`). A name of its own in the English box is never written: when
+ * the Romanian moves away from it, a line under the box says the English still names the old
+ * place (`englishLeftBehind`), and the organizer decides.
  *
  * A client island because the `required` attribute is what changes, and MUI marks a required
  * label itself; a server-rendered box would ask for a place the server no longer wants. With
@@ -125,21 +143,36 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
   }, [later]);
 
   /*
-    The Romanian text into the English box, as if it had been typed there: through the input's own
-    value setter and an `input` event, so React's `onChange` runs (MUI lifts the label off the
-    text, `en` follows) and every watcher of the form reads the new value — the publish check
-    stops naming the English place.
+    Text into the English box, as if it had been typed there: through the input's own value setter
+    and an `input` event, so React's `onChange` runs (MUI lifts the label off the text, `en`
+    follows) and every watcher of the form reads the new value — the publish check stops naming
+    the English place. Only ever into an empty box or one that says what the Romanian said, so no
+    name of the organizer's is lost to it.
   */
-  const copyToEnglish = () => {
-    const input = enBox.current;
-    if (!input) return;
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, ro.trim());
+  const writeEnglish = (input: unknown, text: string) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, text);
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  const nothingToCopy = ro.trim() === "" || ro.trim() === en.trim();
+  const copyToEnglish = () => {
+    if (mayCopyToEnglish(ro, en)) writeEnglish(enBox.current, ro.trim());
+  };
+  // `ro` and `en` are the boxes as the last keystroke left them: linked while they say the same.
+  // The English box is found through the Romanian one's form, in the handler, not a ref read in render.
+  const onRomanian = (text: string, box: HTMLInputElement | HTMLTextAreaElement) => {
+    if (englishFollowsTyping(ro, en)) writeEnglish(box.form?.elements.namedItem(EN_NAME), text);
+    setRo(text);
+  };
+  const leftBehind = englishLeftBehind({ ro: names.ro.defaultValue, en: names.en.defaultValue }, { ro, en });
 
-  const nameBox = (name: string, language: string, value: NameBox, onChange: (text: string) => void, inputRef?: typeof enBox) => {
+  const nameBox = (
+    name: string,
+    language: string,
+    value: NameBox,
+    onChange: (text: string, box: HTMLInputElement | HTMLTextAreaElement) => void,
+    inputRef?: typeof enBox,
+  ) => {
     const required = later ? undefined : value.box.required;
     return (
       <RecallField
@@ -157,7 +190,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
         }
         defaultValue={value.defaultValue}
         fullWidth
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(event.target.value, event.target)}
         inputRef={inputRef}
         {...value.box}
         required={required}
@@ -209,9 +242,14 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
               {labels.meetingPoint}
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_NAME, labels.ro, names.ro, setRo)}</Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_NAME, labels.ro, names.ro, onRomanian)}</Box>
               <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
                 {nameBox(EN_NAME, labels.en, names.en, setEn, enBox)}
+                {leftBehind && (
+                  <Alert severity="warning" data-testid="place-english-left-behind">
+                    {fillIn(labels.englishLeftBehind, { place: en.trim() })}
+                  </Alert>
+                )}
                 {/* A thumb presses it on a phone: 44 pixels tall (BR-REQ-041-01 criterion 6). */}
                 <Button
                   type="button"
@@ -219,7 +257,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
                   size="small"
                   startIcon={<ContentCopyIcon />}
                   onClick={copyToEnglish}
-                  disabled={nothingToCopy}
+                  disabled={!mayCopyToEnglish(ro, en)}
                   data-testid="place-copy-to-english"
                   sx={{ ...TAP_TARGET, alignSelf: "flex-start", textTransform: "none" }}
                 >
