@@ -1121,7 +1121,7 @@
       "groups": {
         "event": "Evenimentul",
         "day": "Ziua evenimentului și participanții",
-        "details": "Traseu, legături și prezentare"
+        "details": "Parteneri și prezentare"
       },
       "publication": {
         "missingTitle": "Ce lipsește pentru publicare",
@@ -1201,7 +1201,8 @@
           "title": "Lista publică a participanților"
         },
         "status": {
-          "title": "Starea evenimentului"
+          "title": "Starea evenimentului",
+          "createNote": "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
         },
         "course": {
           "title": "Traseul"
