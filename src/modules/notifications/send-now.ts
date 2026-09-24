@@ -9,7 +9,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { type OutboxBatchSummary, processOutboxBatch } from "./outbox";
-import { renderOutboxMessage } from "./render";
+import { createOutboxRenderer } from "./render";
 import { readEmailVolumeToday } from "./volume";
 
 /**
@@ -72,7 +72,8 @@ export async function sendOutboxNow(
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
-      render: renderOutboxMessage,
+      // A renderer per batch, so each event's words are read once per batch (§373, email follow-up).
+      render: createOutboxRenderer(),
       now,
       // Never past what the day still allows: the counter is the ceiling, not a display.
       batchSize: Math.min(20, volume.remaining ?? 20),

@@ -261,8 +261,9 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
       db,
       OPENS_AT,
     );
-    // The other half repeats the words with the same title, as every bilingual message does (§96).
-    expect(message.subject).toBe("Înscrierile la Crosul s-au deschis / Registration for Crosul is open");
+    // The other half says it in its own language, the event's English title included (§96, §373
+    // email follow-up — it repeated the Romanian title until then).
+    expect(message.subject).toBe("Înscrierile la Crosul s-au deschis / Registration for The cross is open");
     expect(message.text).toContain("Parcul Tractorul");
     expect(message.text).toContain(`Înscrie-te: ${env.APP_BASE_URL}/ro/evenimente/${translation.slug}/inscriere`);
     expect(message.text).not.toMatch(/token/i);

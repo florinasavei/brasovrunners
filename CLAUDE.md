@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.83-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.84-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.83-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.84-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -249,6 +249,11 @@ sections and in `CHANGELOG.md`.
   the event's zone, the legal editor keeps its height (§369) · the backoffice works under `yarn dev` again: no element
   prop into a client component (a source-walk test in `yarn check`), no bare template lookup, `yarn test:e2e:dev` (§370) ·
   a save press paints "Se salvează…" first — every measured press under 200 ms at 4× CPU, `afterPaint` (§371).
+- **Batch 8 (2026-09-25, `BR-V1.84`):** the phone footer is one row from 320 px — every item on it, a lock glyph for the
+  privacy notice, RO and EN as flags with the current one ringed, 24-px targets below 360 and 28 up to `sm` (the owner's
+  choice; §372) · the email editor's placeholder legend and preview sample, the save guard on sample values, and a bilingual
+  email's second half entirely in its own language, the status in words (§373) · the dispatcher guards its own context,
+  `yarn ship` continues past a merged batch PR, a worktree-sweep card, a resumed branch still gets its review (§374).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
