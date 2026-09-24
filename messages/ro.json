@@ -1408,7 +1408,7 @@
           "done": "Pe acest mediu e setată o limită lunară, iar perioada curentă e confortabil sub ea.",
           "recommendedProduction": "Fără limită lunară pe producție, exact ce recomandă acest ecran acolo: o limită oprește tot site-ul chiar în clipa în care e atinsă, așa că alerta de cheltuieli din Neon e avertizarea mai sigură. Dacă totuși se pune una, doar cu bifa de confirmare.",
           "how": [
-            "În fila Costuri, deschide „Limitele bazei de date”: citește cifrele chiar de la Neon pentru mărimea calculului și limita perioadei, și scrie ambele înapoi la Neon (SETUP.md §40).",
+            "În fila Costuri, deschide „Limitele bazei de date”: citește cifrele chiar de la Neon pentru mărimea calculului și limita perioadei, și scrie ambele înapoi la Neon (SETUP.md §33).",
             "O limită are nevoie de o cheie care poate modifica proiectul, nu doar să-l citească (NEON_API_KEY cu rolul Editor) — cardul numește exact cheia necesară când cea setată nu poate scrie.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
           ]

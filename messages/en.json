@@ -1408,7 +1408,7 @@
           "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
           "recommendedProduction": "No monthly limit on production, which is what this same screen recommends there: a limit stops the whole site the moment it is reached, so Neon's own spending alert is the safer warning. Set one anyway only with the confirmation ticked.",
           "how": [
-            "On the Costuri tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §40).",
+            "On the Costuri tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §33).",
             "A limit needs a key that may modify the project, not only read it (NEON_API_KEY with the Editor right) — the card names the exact key when the one set cannot write.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
           ]
