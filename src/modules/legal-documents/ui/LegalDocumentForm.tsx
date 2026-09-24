@@ -125,6 +125,7 @@ export default async function LegalDocumentForm({
                 labels={{
                   heading: t("editor.heading"),
                   paragraph: t("editor.paragraph"),
+                  paragraphShort: t("editor.paragraphShort"),
                   link: t("editor.link"),
                   linkUrl: t("editor.linkUrl"),
                   linkApply: t("editor.linkApply"),
