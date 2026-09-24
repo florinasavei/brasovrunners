@@ -940,8 +940,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
   };
 
-  /** The soonest deadline this submission created, for the maintenance job (§NNN); none on a resend. */
-  let createdDeadline = undefined as Date | null | undefined;
+  /** The deadlines this submission created, for the maintenance job (§NNN); none on a resend. */
+  let createdDeadlines = undefined as (Date | null)[] | undefined;
 
   await db.transaction(async (tx) => {
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
@@ -1085,7 +1085,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           now,
         });
         if (restarted && !atTheDesk) await enqueueVerificationEmail(tx, participant, restarted, now);
-        createdDeadline = emailLinkLapses(now);
+        createdDeadlines = [emailLinkLapses(now)];
         return;
       }
 
@@ -1102,7 +1102,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
       const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), existing.id, now);
       await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
-      createdDeadline = allocated.holdExpiresAt;
+      // A hold, a place on the waiting list, or an offer made on the way to somebody else when
+      // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
+      createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now) : null];
       return;
     }
 
@@ -1153,11 +1155,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
-    createdDeadline = emailLinkLapses(now);
+    createdDeadlines = [emailLinkLapses(now)];
   });
 
   // A resend creates nothing; anything else may, and the job is told when it matters (§NNN).
-  if (createdDeadline !== undefined) wakeMaintenance(event, now, createdDeadline);
+  if (createdDeadlines !== undefined) wakeMaintenance(event, now, ...createdDeadlines);
 
   return { ok: true };
 }

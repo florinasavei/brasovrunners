@@ -27,8 +27,15 @@ import { readLastPing } from "./schedule-cache";
  *   hours sees a real run every two hours and reads `ok`, rather than being paged by its own
  *   throttle.
  *
- * The cache answering nothing — evicted, or a caller outside a request — leaves the last real
- * run as the last ping, which is the check exactly as it was before §NNN.
+ * When the cache answers nothing for the pings — a caller outside a request, a cache this
+ * function cannot reach, or ping slots evicted on their own — the last real run stands in for the
+ * last ping. That is not the check as it was before §NNN: real runs are now up to an hour apart
+ * by day, so a run fifty minutes old against the day's 35-minute threshold reads `stale` although
+ * the pinger may be calling every quarter of an hour. It is left that way on purpose. Trusting
+ * some other slot instead — "the plan is still cached, so the scheduler must be alive" — would
+ * read `ok` for up to the cap after a pinger that died right after a run, and a dead scheduler
+ * read as healthy is the one answer this check exists to refuse; an evicted ping slot costs one
+ * false `stale`, which the next ping's slot clears.
  *
  * ## `failing` (§322)
  *

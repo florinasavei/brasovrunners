@@ -61,6 +61,23 @@ export const SLOT_MINUTES = 5;
 const SLOT_MS = SLOT_MINUTES * 60_000;
 const MINUTE = 60_000;
 
+/**
+ * How much earlier than a whole number of minutes after the run the cap and the minimum interval
+ * end, so the pinger's own next call runs rather than skipping.
+ *
+ * `ranAt` is taken when the handler starts, after whatever cold start that invocation paid, and
+ * the next on-schedule ping lands a pinger period later give or take the same latency — a few
+ * hundred milliseconds either side of "exactly an hour". Without this, a ping that landed early
+ * read the old slot and skipped, and the next real run was a whole pinger period late: at night,
+ * with the hourly pinger, "at least once every sixty minutes" came out as every sixty *or* every
+ * hundred and twenty, at random, and an outbox retry could sit long enough for `/api/health` to
+ * call email stalled. Two minutes absorbs any latency the platform has and is well under one
+ * slot and one pinger period, so it never lets a ping that is really early through. Deadlines the
+ * work itself has (`nextWorkAt`) get no grace: before them there is genuinely nothing to do.
+ */
+export const PLAN_GRACE_MINUTES = 2;
+const GRACE_MS = PLAN_GRACE_MINUTES * MINUTE;
+
 /** The start of the slot `at` falls in, as the cache key names it. */
 export function slotStart(at: Date): Date {
   return new Date(Math.floor(at.getTime() / SLOT_MS) * SLOT_MS);
@@ -103,6 +120,8 @@ export type QuietPlan = {
  * - The cap is an hour — or the minimum interval, when the Administrator chose a longer one.
  * - A run that could not do everything (`failed`) promises nothing: the next ping tries again.
  *   The minimum interval still holds, because that is the Administrator's rule, not the job's.
+ * - The cap and the interval both end `PLAN_GRACE_MINUTES` early, so the ping a whole pinger
+ *   period after the run — early or late by its latency — is the one that runs.
  */
 export function planQuiet(input: {
   ranAt: Date;
@@ -111,13 +130,13 @@ export function planQuiet(input: {
   failed: boolean;
 }): QuietPlan {
   const ranAt = input.ranAt.getTime();
-  const capAt = ranAt + Math.max(NEXT_DUE_CAP_MINUTES, input.cadenceMinutes) * MINUTE;
+  const capAt = ranAt + Math.max(NEXT_DUE_CAP_MINUTES, input.cadenceMinutes) * MINUTE - GRACE_MS;
   const next = input.nextWorkAt === null ? capAt : Math.min(input.nextWorkAt.getTime(), capAt);
   const quietUntil = input.failed ? ranAt : Math.max(next, ranAt);
   return {
     ranAt: input.ranAt,
     quietUntil: new Date(quietUntil),
-    floorUntil: input.cadenceMinutes > 0 ? new Date(ranAt + input.cadenceMinutes * MINUTE) : null,
+    floorUntil: input.cadenceMinutes > 0 ? new Date(ranAt + input.cadenceMinutes * MINUTE - GRACE_MS) : null,
     cadenceMinutes: input.cadenceMinutes,
   };
 }

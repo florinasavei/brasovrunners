@@ -5,7 +5,7 @@ import { events } from "@/db/schema/events";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import { nextMaintenanceWork, nextOutboxWork } from "@/modules/jobs/next-work";
-import { planQuiet } from "@/modules/jobs/schedule";
+import { PLAN_GRACE_MINUTES, planQuiet } from "@/modules/jobs/schedule";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "@/modules/registrations/service";
@@ -108,7 +108,7 @@ describe("BR-REQ-090-03 criterion 8 the maintenance job's next work, duty by dut
     const next = await nextMaintenanceWork(db, NOW);
     expect(next).toBeNull();
     expect(planQuiet({ ranAt: NOW, nextWorkAt: next, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
-      new Date(NOW.getTime() + HOUR),
+      new Date(NOW.getTime() + HOUR - PLAN_GRACE_MINUTES * MINUTE),
     );
   });
 

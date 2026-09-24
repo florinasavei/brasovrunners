@@ -4,7 +4,9 @@ import {
   maintenanceDueFor,
   MAX_QUIET_MINUTES,
   NEXT_DUE_CAP_MINUTES,
+  PLAN_GRACE_MINUTES,
   planQuiet,
+  type QuietPlan,
   slotStart,
   slotsBack,
   slotsBetween,
@@ -17,6 +19,8 @@ import {
  */
 const RAN = new Date("2026-10-01T10:00:00.000Z");
 const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);
+/** Where a cap or an interval of `n` minutes ends: `PLAN_GRACE_MINUTES` early. */
+const ends = (n: number) => minutes(n - PLAN_GRACE_MINUTES);
 
 describe("§NNN the quiet a real run may promise", () => {
   it("promises quiet until the soonest work", () => {
@@ -27,12 +31,12 @@ describe("§NNN the quiet a real run may promise", () => {
 
   it("caps the quiet at an hour however far away the work is", () => {
     expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(180), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
-      minutes(NEXT_DUE_CAP_MINUTES),
+      ends(NEXT_DUE_CAP_MINUTES),
     );
   });
 
   it("caps the quiet at an hour when there is no work at all", () => {
-    expect(planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(minutes(60));
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(ends(60));
   });
 
   it("promises nothing for work already due, so the next ping runs", () => {
@@ -42,23 +46,72 @@ describe("§NNN the quiet a real run may promise", () => {
   it("promises nothing after a run that could not finish, but keeps the Administrator's interval", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 30, failed: true });
     expect(plan.quietUntil).toEqual(RAN);
-    expect(plan.floorUntil).toEqual(minutes(30));
+    expect(plan.floorUntil).toEqual(ends(30));
   });
 
   it("lets a minimum interval longer than the cap replace the cap", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 120, failed: false });
-    expect(plan.quietUntil).toEqual(minutes(120));
-    expect(plan.floorUntil).toEqual(minutes(120));
+    expect(plan.quietUntil).toEqual(ends(120));
+    expect(plan.floorUntil).toEqual(ends(120));
   });
 
   it("keeps a shorter interval as a floor under work that is due sooner", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: minutes(10), cadenceMinutes: 30, failed: false });
     expect(plan.quietUntil).toEqual(minutes(10));
-    expect(plan.floorUntil).toEqual(minutes(30));
+    expect(plan.floorUntil).toEqual(ends(30));
+  });
+
+  it("gives the work's own deadline no grace: before it there is nothing to do", () => {
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(59), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(ends(60));
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(45), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(minutes(45));
   });
 
   it("never promises longer than the longest quiet any choice allows", () => {
     expect(MAX_QUIET_MINUTES).toBe(120);
+  });
+
+  it("keeps the grace under one slot, so it never lets a genuinely early ping through", () => {
+    expect(PLAN_GRACE_MINUTES).toBeGreaterThan(0);
+    expect(PLAN_GRACE_MINUTES).toBeLessThan(5);
+  });
+});
+
+/**
+ * The pinger's next call, a whole period after the run, lands a few hundred milliseconds either
+ * side of the boundary depending on each invocation's cold start. It must run whichever side it
+ * lands on — or a sixty-minute interval under the hourly night pinger becomes sixty or a hundred
+ * and twenty at random, and an outbox retry waits long enough for `/api/health` to cry stalled.
+ */
+describe("§NNN the pinger's next call runs, early or late by its latency", () => {
+  const halfSecondBefore = (n: number) => new Date(minutes(n).getTime() - 500);
+
+  /** The verdict a ping at `now` reads from the slots `plan` wrote; `woken` drops the due slot, as `wakeJobs` does. */
+  function verdictAt(now: Date, plan: QuietPlan, woken = false) {
+    const due = woken
+      ? null
+      : { quietUntil: plan.quietUntil.toISOString(), ranAt: plan.ranAt.toISOString(), cadenceMinutes: plan.cadenceMinutes };
+    const floor = plan.floorUntil
+      ? { until: plan.floorUntil.toISOString(), ranAt: plan.ranAt.toISOString(), cadenceMinutes: plan.cadenceMinutes }
+      : null;
+    return decidePing(now, due, floor);
+  }
+
+  it("runs the call an hour after a run on demand, half a second early", () => {
+    const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false });
+    expect(verdictAt(halfSecondBefore(60), plan)).toEqual({ run: true });
+  });
+
+  it.each([15, 30, 60, 120] as const)("runs the call %i minutes after a run under that interval, half a second early", (cadence) => {
+    const idle = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: cadence, failed: false });
+    expect(verdictAt(halfSecondBefore(Math.max(cadence, NEXT_DUE_CAP_MINUTES)), idle)).toEqual({ run: true });
+    // Work due at once (a failed run, or a write path that woke the job): the interval alone decides.
+    const busy = planQuiet({ ranAt: RAN, nextWorkAt: minutes(1), cadenceMinutes: cadence, failed: true });
+    expect(verdictAt(halfSecondBefore(cadence), busy, true)).toEqual({ run: true });
+  });
+
+  it("still holds back a call a whole slot before the interval ends", () => {
+    const plan = planQuiet({ ranAt: RAN, nextWorkAt: minutes(1), cadenceMinutes: 30, failed: false });
+    expect(verdictAt(minutes(25), plan, true)).toMatchObject({ run: false, reason: "cadence" });
   });
 });
 

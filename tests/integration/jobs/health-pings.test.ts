@@ -98,4 +98,29 @@ describe("BR-REQ-090-03 criterion 10 email health allows for the Administrator's
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: ago(200) });
     expect((await checkEmailHealth(db, NOON)).status).toBe("ok");
   });
+
+  /*
+    The case the "past the hour" widening missed: sixty minutes at night. A retry due just after
+    an off-hour run at T waits out the interval, the hourly call at T+60 still falls inside it, and
+    the claim is at T+120 — some 110 minutes overdue against the ninety that already spend their
+    hour on the night pinger. The interval is added in full, so it reads ok.
+  */
+  it("does not call a retry 110 minutes overdue at night stalled under a sixty-minute interval", async () => {
+    const night = new Date("2026-10-01T00:30:00.000Z"); // 03:30 in Brașov, summer time
+    await db.insert(emailOutbox).values({
+      messageType: "VERIFY_REGISTRATION_EMAIL",
+      locale: "ro",
+      recipientEmail: "someone@example.ro",
+      payloadJson: {},
+      idempotencyKey: "retry-at-night",
+      status: "PENDING",
+      attemptCount: 1,
+      nextAttemptAt: new Date(night.getTime() - 110 * MINUTE),
+      createdAt: new Date(night.getTime() - 115 * MINUTE),
+    });
+    expect((await checkEmailHealth(db, night)).status).toBe("stalled");
+
+    await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 60 }, updatedAt: ago(600) });
+    expect((await checkEmailHealth(db, night)).status).toBe("ok");
+  });
 });

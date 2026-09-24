@@ -4,6 +4,7 @@ import { events } from "@/db/schema/events";
 import { jobRuns } from "@/db/schema/job-runs";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { registrations } from "@/db/schema/registrations";
+import { PLAN_GRACE_MINUTES } from "@/modules/jobs/schedule";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -20,6 +21,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-10-01T10:00:00.000Z");
 const MINUTE = 60_000;
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE);
+/** Where a cap or an interval of `minutes` ends: a little early, so the pinger's own next call runs. */
+const ends = (minutes: number) => at(minutes - PLAN_GRACE_MINUTES);
+/** Half a second before `minutes` — the pinger's call when this invocation started a touch sooner. */
+const justBefore = (minutes: number) => minutes - 0.5 / 60;
 const SECRET = "correct-job-secret-value";
 
 let db: TestDatabase;
@@ -93,7 +98,7 @@ describe("BR-REQ-090-03 criterion 7 a ping with nothing due answers without the 
   it("runs for real when nothing is cached, and leaves its plan for the pings after it", async () => {
     const first = await pingAt(0);
     expect(first.status).toBe(200);
-    expect(first.body).toMatchObject({ job: "registration-maintenance", ran: true, nextCheckAt: at(60).toISOString() });
+    expect(first.body).toMatchObject({ job: "registration-maintenance", ran: true, nextCheckAt: ends(60).toISOString() });
     expect(await realRuns()).toBe(1);
   });
 
@@ -105,7 +110,7 @@ describe("BR-REQ-090-03 criterion 7 a ping with nothing due answers without the 
       job: "registration-maintenance",
       ran: false,
       reason: "nothing-due",
-      nothingDueUntil: at(60).toISOString(),
+      nothingDueUntil: ends(60).toISOString(),
       lastRealRunAt: NOW.toISOString(),
     });
     // No `job_runs` row either: nothing ran.
@@ -116,6 +121,14 @@ describe("BR-REQ-090-03 criterion 7 a ping with nothing due answers without the 
     await pingAt(0);
     expect((await pingAt(45, { database: false })).body.ran).toBe(false);
     expect((await pingAt(60)).body.ran).toBe(true);
+    expect(await realRuns()).toBe(2);
+  });
+
+  it("runs the pinger's call an hour later even when it lands half a second before the hour", async () => {
+    // The night pinger is hourly: had this call skipped, the next real run would have been two
+    // hours after the last, not one.
+    await pingAt(0);
+    expect((await pingAt(justBefore(60))).body.ran).toBe(true);
     expect(await realRuns()).toBe(2);
   });
 
@@ -224,20 +237,21 @@ describe("BR-REQ-090-03 criterion 9 a write path that makes work sooner wakes th
 describe("BR-REQ-090-07 criterion 6 the Administrator's minimum interval", () => {
   it("holds a woken job back inside the interval, from the cache, with the pool refusing to open", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 30 }, updatedAt: NOW });
-    expect((await pingAt(0)).body).toMatchObject({ ran: true, notBefore: at(30).toISOString(), cadenceMinutes: 30 });
+    expect((await pingAt(0)).body).toMatchObject({ ran: true, notBefore: ends(30).toISOString(), cadenceMinutes: 30 });
 
     // New work arrives: the cached quiet is forgotten, the interval is not.
     wakeJobs("registration-maintenance");
     const held = await pingAt(10, { database: false });
-    expect(held.body).toMatchObject({ ran: false, reason: "cadence", notBefore: at(30).toISOString(), cadenceMinutes: 30 });
+    expect(held.body).toMatchObject({ ran: false, reason: "cadence", notBefore: ends(30).toISOString(), cadenceMinutes: 30 });
 
-    expect((await pingAt(31)).body.ran).toBe(true);
+    // The pinger's call thirty minutes later runs, even a touch early.
+    expect((await pingAt(justBefore(30))).body.ran).toBe(true);
   });
 
   it("replaces the hour-long cap when it is longer", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
-    expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: at(120).toISOString(), notBefore: at(120).toISOString() });
+    expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: ends(120).toISOString(), notBefore: ends(120).toISOString() });
     expect((await pingAt(75, { database: false })).body.ran).toBe(false);
-    expect((await pingAt(120)).body.ran).toBe(true);
+    expect((await pingAt(justBefore(120))).body.ran).toBe(true);
   });
 });

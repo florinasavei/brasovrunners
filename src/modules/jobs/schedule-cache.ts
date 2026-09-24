@@ -49,6 +49,24 @@ import {
  * reads check, so a slot written before it reads as missing *on that page* until the next run
  * writes fresh ones (the task board therefore falls back to the database, `jobs/ui`). Missing
  * always means "run": the conservative answer.
+ *
+ * ## A wake that races a run
+ *
+ * "Every write path that makes work sooner invalidates the promise" is true of the promises that
+ * already exist, not of one being written at the same moment. A real run reads the database for
+ * its plan (`nextWork`), then writes the slots, which land when its request ends. A write path
+ * that commits after that read and whose `revalidateTag` is applied before those slots land
+ * invalidates the *old* slots and not the new ones — and the new ones were computed without its
+ * work, so they keep promising the old quiet. Nothing re-checks: a per-job "woken at" marker the
+ * run could read before writing would be one more write-once slot with the same flush-at-request-
+ * end timing, and so the same race one step later.
+ *
+ * It is left as it is because it is bounded and safe. Bounded by the plan itself — the cap, an
+ * hour, or the Administrator's longer interval — after which a real run finds the work anyway;
+ * safe because nothing the job does is what keeps a place right (AGENTS.md §10.6: a lapsed hold
+ * or offer is lapsed on every read). The window is the few hundred milliseconds between a run's
+ * `nextWork` query and the end of its request, so what it costs in practice is a message or a
+ * hand-over that goes at the next real run rather than the next ping.
  */
 
 const TAG = "br-jobs";
@@ -110,7 +128,8 @@ export function insideJobRun<T>(job: JobName, work: () => Promise<T>): Promise<T
  *
  * Never throws and never waits: `revalidateTag` is queued and applied when the request ends,
  * after the transaction has committed; outside a request it is simply not there. A call this
- * misses, or a call site nobody wrote, costs at most the cap — an hour — never the work itself.
+ * misses, a call site nobody wrote, or a call that races a run's own slot writes (see "A wake
+ * that races a run" above) costs at most the cap — an hour — never the work itself.
  */
 export function wakeJobs(jobs: JobName | readonly JobName[], dueAt?: Date | null, now: Date = new Date()): void {
   if (dueAt && dueAt.getTime() - now.getTime() >= MAX_QUIET_MINUTES * 60_000) return;
