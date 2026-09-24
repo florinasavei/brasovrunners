@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -306,15 +307,20 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
     await hydrated(page);
 
     const phone = page.locator('[name="phone"]');
-    // E.164 is fifteen digits in all and Romania's code is two of them, so thirteen remain.
-    // Sixteen typed, thirteen kept — and the cap is per country, not one number for everybody.
+    // E.164 is fifteen digits in all and Romania's code is two of them, so thirteen remain for
+    // the number that is stored — and a typed trunk zero is dropped before storing, so it is not
+    // charged (§NNN). Sixteen typed, fourteen kept, grouped by the mask; the cap counts digits,
+    // never the mask's spaces, and it is per country, not one number for everybody.
     await phone.fill("0712345678999999");
-    await expect(phone).toHaveValue("0712345678999");
-    await expect(phone).toHaveAttribute("maxlength", "14");
+    await expect(phone).toHaveValue("0712 345 678 999 9");
+    // The browser's own ceiling is in characters, so it is the longest value the mask can make
+    // within the cap ("00 40 999 999 999 999 9") — shorter, and a paste would lose a digit.
+    await expect(phone).toHaveAttribute("maxlength", "23");
 
     // And the confirmation is the number itself, which is the only thing that proves the
-    // country beside it was understood.
-    await expect(page.getByText("+40712345678")).toBeVisible();
+    // country beside it was understood — the full fifteen digits the cap exists to allow,
+    // not merely a prefix of them.
+    await expect(page.getByText("+407123456789999")).toBeVisible();
   });
 
   test("gives the submit button and the required consent at least 44 pixels", async ({ page }) => {
@@ -380,6 +386,119 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
   });
 });
 
+test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag and a mask", () => {
+  /**
+   * `DECISIONS.md` §NNN — the owner, with another site's field: "I like the phone input with the
+   * mask". One outlined box: the country's flag at its start (the native select lying invisible
+   * over it), then the digits grouped as they are typed. What is stored does not move.
+   */
+  test("groups the number as it is typed, keeps the caret with its digit, and stores E.164", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    const phone = page.locator('[name="phone"]');
+    await phone.fill("");
+    // Key by key, the way a thumb types it — `fill` would paste the whole string at once.
+    await phone.pressSequentially("0752189098");
+    await expect(phone).toHaveValue("0752 189 098");
+
+    /*
+      The classic mask trap: the caret just after a space, Backspace. Deleting only the space
+      would have it put straight back and the key would look dead; the digit before it goes.
+      Then a digit typed there lands there — which it only does if the caret stayed with its
+      digit rather than being thrown to the end by the reformat.
+    */
+    await phone.press("End");
+    for (let step = 0; step < 3; step += 1) await phone.press("ArrowLeft");
+    await phone.press("Backspace");
+    await expect(phone).toHaveValue("0752 180 98");
+    await phone.press("9");
+    await expect(phone).toHaveValue("0752 189 098");
+
+    // The flag is the chosen country's, a picture inside the same outlined box as the digits.
+    const box = phone.locator("..");
+    const country = box.locator('select[name="phoneCountry"]');
+    await expect(box.locator('img[src="/flags/ro.svg"]')).toBeVisible();
+    // The invisible select is still the control: Playwright chooses through it, the flag follows,
+    // and the digits take the new country's grouping without losing one.
+    await country.selectOption("MD");
+    await expect(box.locator('img[src="/flags/md.svg"]')).toBeVisible();
+    await expect(phone).toHaveValue("075 218 909 8");
+    await country.selectOption("RO");
+    await expect(box.locator('img[src="/flags/ro.svg"]')).toBeVisible();
+    await expect(phone).toHaveValue("0752 189 098");
+    // A thumb's target (BR-REQ-041-01 criterion 6): the whole start of the box.
+    const target = await country.boundingBox();
+    expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(country).toHaveAttribute("aria-label", "Țara");
+
+    const email = await page.locator('[name="email"]').inputValue();
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    await expect(page.getByRole("heading", { name: /Aproape gata/ })).toBeVisible();
+
+    // The spaces were the box's; the number is the one a phone can dial (§84).
+    const registration = await registrationByEmail(email);
+    expect(await registrationPhones(registration.id)).toEqual({
+      phone: "+40752189098",
+      emergencyContactPhone: "+40722222222",
+    });
+  });
+
+  test("without JavaScript shows the select itself, since a flag that cannot follow it would lie", async ({ page, browser }) => {
+    // The event is opened with a script-running page; the form itself is then read without one.
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: page.viewportSize() ?? undefined });
+    try {
+      const noScript = await context.newPage();
+      await noScript.goto(registerPath);
+      const phone = noScript.locator('[name="phone"]');
+      const box = phone.locator("..");
+      await expect(box.locator('select[name="phoneCountry"]')).toHaveCSS("opacity", "1");
+      await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
+      // The mask's placeholder is in the server's HTML; the grouping itself needs the script.
+      await expect(phone).toHaveAttribute("placeholder", "0712 345 678");
+      // Never wider than the phone it is on.
+      const overflow = await noScript.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("a country restored before hydration is not lost — the flag, mask and verdict follow it (§NNN)", async ({ page }) => {
+    /*
+      What Firefox's own form restoration does on reload, and what a country picked in the
+      instant before React attaches its listener does too: the select's value changes with no
+      `change` event to tell this island. Set here the same way, directly on the DOM, before
+      `hydrated()` gives the client any time to run — a `change` event would defeat the point.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await page.locator('select[name="phoneCountry"]').evaluate((select) => {
+      (select as HTMLSelectElement).value = "MD";
+    });
+    await hydrated(page);
+
+    const phone = page.locator('[name="phone"]');
+    const box = phone.locator("..");
+    // The flag follows the select the browser changed, not the country the server rendered.
+    await expect(box.locator('img[src="/flags/md.svg"]')).toBeVisible();
+    await phone.fill("");
+    await phone.pressSequentially("69123456");
+    // Moldova's mask, not Romania's.
+    await expect(phone).toHaveValue("69 123 456");
+    await expect(page.getByText("+37369123456")).toBeVisible();
+  });
+});
+
 test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes there", () => {
   test("lands on the error summary and links to the field it names", async ({ page }) => {
     await signIn(page, "Dev Administrator");
@@ -428,10 +547,11 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
       country's code is bolted on to whatever was typed. Dropping the plus briefly turned a
       refused French number under Romania into a silently stored `+4033…`.
 
-      So this is `+40711111111` and not `40711111111` — if it ever fails again, the filter has
-      started eating the plus, which is a stored-number bug and not a test to adjust.
+      So this is `+40 711 111 111` and not `40 711 111 111` — if it ever fails again, the filter
+      has started eating the plus, which is a stored-number bug and not a test to adjust. The
+      spaces are the mask's (§NNN): the draft comes back through the same function the keys do.
     */
-    await expect(page.locator('[name="phone"]')).toHaveValue("+40711111111");
+    await expect(page.locator('[name="phone"]')).toHaveValue("+40 711 111 111");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
     expect(page.url()).not.toContain("Popescu");
   });

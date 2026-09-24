@@ -73,6 +73,21 @@ export function phoneCountryOrder(locale: string): string[] {
     .map((entry) => entry.code);
 }
 
+/**
+ * The reader's own name for every prefix, keyed by code — for the option text now that the box
+ * shows a flag rather than the select itself (`DECISIONS.md` §NNN): "🇷🇴 România (+40)".
+ *
+ * Computed on the server beside `phoneCountryOrder`, for the same reason: the name is drawn as
+ * plain data too, never recomputed from the browser's own ICU, which is what disagreed with
+ * Node's and cost the form its hydration (§324).
+ */
+export function phoneCountryLabels(locale: string): Readonly<Record<string, string>> {
+  const names = new Intl.DisplayNames([locale], { type: "region" });
+  const labels: Record<string, string> = {};
+  for (const code of PHONE_COUNTRY_CODES) labels[code] = names.of(code) ?? code;
+  return labels;
+}
+
 /** E.164: a plus, then at most fifteen digits. Exported for the field schema. */
 export const E164_PHONE = /^\+[1-9]\d{3,14}$/;
 const E164 = E164_PHONE;
@@ -80,9 +95,10 @@ const E164 = E164_PHONE;
 /**
  * Countries whose national numbers keep their leading zero in international form. Italy is
  * the one a Romanian club will meet; everywhere else a leading zero is the trunk prefix that
- * must go.
+ * must go. Exported for the mask (`phone-format.ts`), which has to read a typed zero the way
+ * this module will.
  */
-const KEEPS_LEADING_ZERO = new Set(["IT", "VA", "SM"]);
+export const KEEPS_LEADING_ZERO: ReadonlySet<string> = new Set(["IT", "VA", "SM"]);
 
 /**
  * Compose an international number from the country chosen and the digits typed, or return
