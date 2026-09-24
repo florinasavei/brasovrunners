@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.77-2026-09-24
+
+- **The event editor's first box holds the status, the course and the links.** "Ce fel de eveniment" now contains "Starea evenimentului", "Traseul" and "Linkuri și fișiere" as named cards, on the editor and on the create page, where the status is read-only "Programat". Its closed line reads like "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri". It turns amber with the count when people are registered, and says once, for a role that may only read, that the settings are not theirs. §358.
 ## BR-V1.76-2026-09-24
 
 - **The declaration names the risks the runner takes on — wild animals and dogs, falls, the weather and the dark, their own kit with a headlamp after dark — and no legal text or email hardcodes a club or event value any more.** Every "the organiser does not answer" line is limited by the law, and seeded and prefilled texts keep their placeholders. The club approves the new texts in /admin/legal, after a lawyer has read the declaration. §357.

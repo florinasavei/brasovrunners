@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -73,9 +73,28 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
     await hydrated(page);
-    await openEditorBox(page, "Traseul");
+    // "Traseul" is a card inside "Ce fel de eveniment" (§358); the helper opens the box first.
+    const course = await openEditorBox(page, "Traseul");
+    const firstBox = editorBox(page, "Ce fel de eveniment");
+    await expect(firstBox).toHaveAttribute("open", "");
+
+    // A route link the browser refuses, with the card and the box around it shut again: pressing
+    // Salvează must open both and put the cursor in the box, so a card inside a card is never a
+    // Save that silently does nothing (§350, §358).
+    await field("event.routeUrl").fill("www.traseu-fara-https.example");
+    await course.locator(":scope > summary").press("Enter");
+    await expect(course).not.toHaveAttribute("open", "");
+    await firstBox.locator(":scope > summary").press("Enter");
+    await expect(firstBox).not.toHaveAttribute("open", "");
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(field("event.routeUrl")).toBeFocused();
+    await expect(field("event.routeUrl")).toBeVisible();
+    await expect(firstBox).toHaveAttribute("open", "");
+    await expect(course).toHaveAttribute("open", "");
+    await expect(page).not.toHaveURL(/saved=event/);
+
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // "Linkuri și fișiere" is the box right after the course (§332, §350).
+    // "Linkuri și fișiere" is the card right after the course (§332, §350, §358).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
