@@ -739,7 +739,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
                         </GlyphButton>
-                        {/* A message of the organizer's own to this event's registrants (§NNN): bad
+                        {/* A message of the organizer's own to this event's registrants (§364): bad
                             weather, a changed start — its own page, with the preview and the history. */}
                         {canMessageParticipants(staffUser.role) && (
                           <GlyphButton

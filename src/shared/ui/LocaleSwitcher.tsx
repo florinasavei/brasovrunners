@@ -54,7 +54,7 @@ export default function LocaleSwitcher() {
       component="nav"
       aria-label={t("language")}
       /*
-        Side by side at every width since §NNN — RO and EN on one line, each 44px tall.
+        Side by side at every width since §365 — RO and EN on one line, each 44px tall.
 
         It was stacked on a phone, RO over EN, by the owner's instruction on 2026-09-17: side by
         side the pair is ~100px wide, stacked ~46px, and that difference is what let the first

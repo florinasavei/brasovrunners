@@ -9,7 +9,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
 /**
  * When this site was built — and, for the club's own people, the way in.
  *
- * **The last line of the footer's fold, since §NNN, and nowhere on screen until somebody opens
+ * **The last line of the footer's fold, since §365, and nowhere on screen until somebody opens
  * it.** It was fixed to the bottom-right corner from `md` and a label under the bar below that,
  * so every visitor on every page read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" — on a
  * phone as a third line of footer, 37 pixels under a bar that was already two. The owner,

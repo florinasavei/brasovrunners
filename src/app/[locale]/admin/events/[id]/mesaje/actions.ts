@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
 
 /**
- * "Trimite un mesaj participanților" (`DECISIONS.md` §NNN): the send and the live preview.
+ * "Trimite un mesaj participanților" (`DECISIONS.md` §364): the send and the live preview.
  *
  * Both ask the session who is asking and let the service decide whether they may
  * (`canMessageParticipants`, BR-REQ-060-01) — a POST replayed from anywhere never went past the

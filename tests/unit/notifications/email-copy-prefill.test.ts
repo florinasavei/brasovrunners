@@ -40,7 +40,7 @@ import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modu
  * include these placeholders!"
  */
 /**
- * Every message the club's words editor is under. Not the organizer's message (§NNN): it is written
+ * Every message the club's words editor is under. Not the organizer's message (§364): it is written
  * per send, on the event's page — the page draws no editor for it, the save refuses an entry for it
  * and the send ignores one — so its card is pinned below, on its own.
  */
@@ -393,7 +393,7 @@ describe("§359 a saved text with sample values is found in either language", ()
 
   it("feeds the closed card's marker and the card of cards from both languages, not only the one on screen", () => {
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
-    // Every message with words to edit — not the organizer's, written per send (§NNN).
+    // Every message with words to edit — not the organizer's, written per send (§364).
     expect(page).toContain("const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];");
     expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
     expect(page).toMatch(/sampleLanguages\.length > 0\s*\?\s*\{ sampleValues: t\("emails\.copy\.sampleMarker", \{ languages: sampleLanguages/);
@@ -564,11 +564,11 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
 });
 
 /*
-  The organizer's message beside §359 (§NNN): written per send, so its card on `/admin/emails`
+  The organizer's message beside §359 (§364): written per send, so its card on `/admin/emails`
   previews the one sample message — from the same constant as every other preview — and carries
   neither the words editor nor the sample-value marker.
 */
-describe("§NNN the organizer's message on the page of every email", () => {
+describe("§364 the organizer's message on the page of every email", () => {
   it("previews the sample message from the one sample constant, each half in its own language", () => {
     for (const locale of LOCALES) {
       const data = emailSampleData(locale);

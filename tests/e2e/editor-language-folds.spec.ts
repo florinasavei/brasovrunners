@@ -4,7 +4,7 @@ import { expectBarGlyphsVisible, floatingBar } from "./support/floating-bar";
 import { languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN — a fold inside a language tab keeps its state when the tab changes (the owner,
+ * §363 — a fold inside a language tab keeps its state when the tab changes (the owner,
  * 2026-09-24: "I would like to keep the expand/collapsed state while changing the language tab in
  * the event editor").
  *

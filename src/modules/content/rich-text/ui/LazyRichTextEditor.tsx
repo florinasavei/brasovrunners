@@ -28,7 +28,7 @@ import RichTextEditor from "./RichTextEditor";
  * required — the create page's "Creează și publică", for a summary publication needs — and then
  * the box the browser points its bubble at, since a hidden field cannot be pointed at.
  *
- * **Open in one language, open in the other** (§NNN; the owner: "I would like to keep the
+ * **Open in one language, open in the other** (§363; the owner: "I would like to keep the
  * expand/collapsed state while changing the language tab in the event editor"). The fold's state
  * is its strip's (`useTwinFold`), keyed by its name without the language, so the Romanian
  * description and the English one open and close together. The twin that opened behind a hidden
@@ -36,7 +36,7 @@ import RichTextEditor from "./RichTextEditor";
  * press would be §96's cost back, for a language nobody is looking at yet.
  *
  * **Once mounted, the editor stays** — a closed fold hides it, it does not unmount it. Before
- * §NNN closing the fold swapped the editor for the hidden field holding the stored document, so
+ * §363 closing the fold swapped the editor for the hidden field holding the stored document, so
  * text typed, then folded away, was quietly replaced by what the page was loaded with at the
  * save; with the twin closing along with it, that would have been a whole language's typing lost
  * to a click in the other one.

@@ -326,7 +326,7 @@ export function canReadRegistrations(role: StaffRole): boolean {
 }
 
 /**
- * **Writing to an event's participants in the club's own words (§NNN)** — "Trimite un mesaj
+ * **Writing to an event's participants in the club's own words (§364)** — "Trimite un mesaj
  * participanților": bad weather, a changed start, anything the organizer has to tell the people
  * registered for one event.
  *
@@ -336,7 +336,7 @@ export function canReadRegistrations(role: StaffRole): boolean {
  * either boundary moves this with it.
  *
  * **The Tehnic role is out on purpose — a narrowing of the §331 set, for the owner to confirm**
- * (§NNN). `DEV` outranks the Organizer and may save an event's fields, so it may send the §331
+ * (§364). `DEV` outranks the Organizer and may save an event's fields, so it may send the §331
  * update and cancellation notices, their free-text note included. Those ride on a change to the
  * event itself: the note sits under the platform's sentences, goes to everybody active, and only
  * with a save. This is a message on its own, of whatever was typed, to a group the sender picks

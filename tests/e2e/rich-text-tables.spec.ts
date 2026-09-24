@@ -3,7 +3,7 @@ import { signIn } from "./support/featured-event";
 import { expectBarGlyphsVisible, floatingBar } from "./support/floating-bar";
 
 /**
- * §NNN — the two floating bars show their glyphs, above the sticky toolbar, in the built page.
+ * §363 — the two floating bars show their glyphs, above the sticky toolbar, in the built page.
  *
  * The owner, 2026-09-24, with the bar over a selection on screen: "I can't see these buttons in
  * the rich text editor" — three empty buttons. §361's lift above the toolbar was passed to
@@ -11,7 +11,7 @@ import { expectBarGlyphsVisible, floatingBar } from "./support/floating-bar";
  * line puts the bar right over the toolbar, which is where it went missing. Both viewports: at
  * 320 pixels the toolbar is three rows tall and the bar over the first line sits on it.
  */
-test.describe("§NNN the floating bars show their glyphs", () => {
+test.describe("§363 the floating bars show their glyphs", () => {
   test("over a word selected on the first line, and over a table", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages/new");

@@ -9,7 +9,7 @@ import { createTwinFoldStore, type TwinFoldStore, twinFoldKey } from "@/shared/u
 import LocaleTabPanels, { TwinFoldProvider } from "@/shared/ui/LocaleTabPanels";
 
 /**
- * §NNN — a fold inside a language strip shares its open state with its twin in the other
+ * §363 — a fold inside a language strip shares its open state with its twin in the other
  * language (the owner, 2026-09-24: "I would like to keep the expand/collapsed state while changing
  * the language tab in the event editor").
  *
@@ -63,7 +63,7 @@ function strip(store: TwinFoldStore): string {
   return markup(renderToStaticMarkup(createElement("div", null, panel("ro", true), panel("en", false))));
 }
 
-describe("§NNN the key a fold shares with its twins", () => {
+describe("§363 the key a fold shares with its twins", () => {
   it("is the fold's name with the panel's language taken out", () => {
     expect(twinFoldKey("translations.ro.body", "ro")).toBe("translations.*.body");
     expect(twinFoldKey("translations.en.body", "en")).toBe("translations.*.body");
@@ -78,7 +78,7 @@ describe("§NNN the key a fold shares with its twins", () => {
   });
 });
 
-describe("§NNN the strip's store", () => {
+describe("§363 the strip's store", () => {
   it("answers nothing for a fold never touched, so the server's HTML decides", () => {
     expect(createTwinFoldStore().get("translations.*.body")).toBeUndefined();
   });
@@ -109,7 +109,7 @@ describe("§NNN the strip's store", () => {
   });
 });
 
-describe("§NNN a fold and its twin, rendered", () => {
+describe("§363 a fold and its twin, rendered", () => {
   it("are both closed while nothing opened them — the server's HTML is what it was", () => {
     const html = strip(createTwinFoldStore());
     expect(isOpen(foldTag(html, "translations.ro.body"))).toBe(false);

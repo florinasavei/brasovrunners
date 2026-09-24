@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
  * The build badge, part of the shared chrome (AGENTS.md §8; `shared/ui/BuildBadge.tsx`).
  *
  * It was a fixed label in the bottom-right corner from `md` and a line under the footer below
- * that, read by every visitor on every page. Since §NNN (the owner, 2026-09-24: "version shows
+ * that, read by every visitor on every page. Since §365 (the owner, 2026-09-24: "version shows
  * by default") it is the last line of the footer's "Despre club" fold: on screen at no width
  * until somebody opens it. So every test that presses it opens the fold first, the way a
  * person would.
@@ -89,7 +89,7 @@ test.describe("the build badge", () => {
   });
 
   test("is not on screen until the footer's fold is opened, in any environment", async ({ page }) => {
-    // §NNN: one rule at every width and on every deployment, so this local server shows what
+    // §365: one rule at every width and on every deployment, so this local server shows what
     // production does — nothing, until "Despre club" is opened.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await expect(badge(page)).toBeHidden();
@@ -178,7 +178,7 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
-    // it; it is in the fold now (§NNN), and on a phone the link is on the bar's second line,
+    // it; it is in the fold now (§365), and on a phone the link is on the bar's second line,
     // on screen at every scroll position. The privacy notice is on the bar since §323, so
     // nothing has to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();

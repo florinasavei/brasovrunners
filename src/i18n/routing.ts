@@ -140,7 +140,7 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/urgente": "/admin/events/[id]/urgente",
     /**
-     * "Trimite un mesaj participanților" (§NNN): the organizer writes to the people registered for
+     * "Trimite un mesaj participanților" (§364): the organizer writes to the people registered for
      * one event, in both languages, and sees what was sent before. One spelling in both locales,
      * like `urgente`: a backoffice address, read by the club.
      */

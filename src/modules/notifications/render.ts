@@ -194,7 +194,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     if (reason.other) data.cancellationReasonOther = reason.other;
   }
   /*
-    "Trimite un mesaj participanților" (§NNN): the organizer's subject and body, this registrant's
+    "Trimite un mesaj participanților" (§364): the organizer's subject and body, this registrant's
     language first and the other language's own words in the second half (§354). A row whose
     payload cannot be read goes with the platform's subject and framing sentence alone.
 
@@ -269,7 +269,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.
-  // The organizer's message too (§NNN): the one place a runner checks what the message is about.
+  // The organizer's message too (§364): the one place a runner checks what the message is about.
   if ((row.messageType === "EVENT_UPDATE_NOTICE" || row.messageType === "ORGANIZER_MESSAGE") && data.eventUrl) payloadActionUrl = data.eventUrl;
   // "Registration is open" (§146): no participant, no token; the action is the ordinary
   // registration page, which asks everything itself.

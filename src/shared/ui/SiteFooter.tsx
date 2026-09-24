@@ -28,7 +28,7 @@ const MARK_TARGET = 44;
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it
  * — two lines on a phone since §324, where the privacy notice, named as the notice, and the
- * language share the second (below). Both lines float, and nothing is under them (§NNN).
+ * language share the second (below). Both lines float, and nothing is under them (§365).
  *
  * Six things share the line, as one flex row that wraps. In the bottom-left corner, the
  * light/dark switch (§115: "the theme switcher should be in the bottom left corner" — it was
@@ -44,7 +44,7 @@ const MARK_TARGET = 44;
  * header, where a setting sits at the end of the row it is on, and this copy is
  * `display: none`, so exactly one "Limbă" navigation exists at every width.
  *
- * ## A phone's bar is two short lines, and nothing else (§NNN)
+ * ## A phone's bar is two short lines, and nothing else (§365)
  *
  * The owner, 2026-09-24, on a phone: "it now takes way too much space, and version shows by
  * default". What took the space was a third line and a tall second one, not the two §324 asked
@@ -119,7 +119,7 @@ export default async function SiteFooter() {
         mt: "auto",
         position: "sticky",
         // The whole bar at every scroll position, both lines on a phone: the privacy notice and
-        // the language are on the always-visible bar (BR-REQ-041-01 criterion 21, §323, §NNN).
+        // the language are on the always-visible bar (BR-REQ-041-01 criterion 21, §323, §365).
         bottom: 0,
         zIndex: 1000,
       }}
@@ -228,7 +228,7 @@ export default async function SiteFooter() {
                 {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
               </Typography>
             )}
-            {/* The build stamp and the staff entrance (§34), in the fold since §NNN: on screen
+            {/* The build stamp and the staff entrance (§34), in the fold since §365: on screen
                 only for whoever opens it, never by default. */}
             <BuildBadge />
           </Stack>
@@ -326,7 +326,7 @@ export default async function SiteFooter() {
         )}
 
         {/* The language, in the opposite corner and on a phone only (§262): the last item on the
-            second line, its own width, RO and EN side by side (§NNN). */}
+            second line, its own width, RO and EN side by side (§365). */}
         <Box
           sx={{
             display: { xs: "flex", sm: "none" },

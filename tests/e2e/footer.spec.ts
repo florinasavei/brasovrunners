@@ -15,7 +15,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * 393 the owner's phone, 640 and 768 the band where the marks used to land on the summary and
  * the badge, and 1280 a desktop, where the badge used to float in the corner.
  *
- * Since §NNN (the owner, 2026-09-24: "it now takes way too much space, and version shows by
+ * Since §365 (the owner, 2026-09-24: "it now takes way too much space, and version shows by
  * default") a phone's bar is two short lines and nothing under them: the language sits side by
  * side on the second line, beside the privacy notice, both on screen at every scroll position,
  * and the build stamp is the fold's last line — on screen at no width until the fold is opened.
@@ -120,7 +120,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       // And no third line: the bar is one or two tap targets tall, nothing more.
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(phone ? 90 : 46);
 
-      // §NNN: the build stamp is in the closed fold, on screen at no width.
+      // §365: the build stamp is in the closed fold, on screen at no width.
       await expect(badge).toBeHidden();
       expectDisjoint(boxes, width);
 
@@ -158,7 +158,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
       await expect(language).toBeVisible();
       boxes.push(["the language", await boxOf(language, "the language")]);
     }
-    // The build stamp is the panel's last line (§NNN), clear of everything else on the bar.
+    // The build stamp is the panel's last line (§365), clear of everything else on the bar.
     await expect(badge).toBeVisible();
     boxes.push(["the build stamp", await boxOf(badge, "the build stamp")]);
     expectDisjoint(boxes, page.viewportSize()?.width ?? 0);
@@ -166,7 +166,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
 
   for (const width of [320, 640, 1280] as const) {
     test(`at ${width}px the build stamp is on screen only once the fold is opened`, async ({ page }) => {
-      // §NNN, the owner: "version shows by default". It was a label under the bar below `md`
+      // §365, the owner: "version shows by default". It was a label under the bar below `md`
       // and floated in the bottom-right corner from `md`; now no visitor sees it unless they
       // open "Despre club", at any width and in any environment — so this local server says
       // what production does.
@@ -191,7 +191,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
 });
 
 /**
- * §NNN — the owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile…
+ * §365 — the owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile…
  * it now takes way too much space, and version shows by default."
  *
  * Measured at 320, 360 and 390 pixels wide on production builds, on a page three screens long:
@@ -206,7 +206,7 @@ test.describe("BR-REQ-041-01 the footer's one line", () => {
  * (BR-REQ-041-01 criterion 21, §323) and a phone's only language switch with it — a documented
  * rule, which this change does not move.
  */
-test.describe("§NNN the phone's footer is two short lines and nothing else", () => {
+test.describe("§365 the phone's footer is two short lines and nothing else", () => {
   test("at 320px both lines float at every scroll position, and nothing is under them", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });

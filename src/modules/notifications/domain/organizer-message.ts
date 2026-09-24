@@ -3,7 +3,7 @@ import { type BilingualText, isWrittenText, type TextLanguage } from "@/shared/f
 import { type EmailCopyPlaceholder, placeholdersIn } from "./email-copy";
 
 /**
- * "Trimite un mesaj participanților" (`DECISIONS.md` §NNN; the owner, 2026-09-24: "I also want
+ * "Trimite un mesaj participanților" (`DECISIONS.md` §364; the owner, 2026-09-24: "I also want
  * to be able to send custom emails to people, in case something happens, e.g. bad weather,
  * cancelled event, etc!") — the rules of the message itself, pure: who it can go to, what it may
  * say, and how its words are read back out of the outbox.

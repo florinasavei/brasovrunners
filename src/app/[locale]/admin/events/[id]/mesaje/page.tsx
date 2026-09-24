@@ -44,7 +44,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * "Trimite un mesaj participanților" (`DECISIONS.md` §NNN; the owner, 2026-09-24: "I also want to
+ * "Trimite un mesaj participanților" (`DECISIONS.md` §364; the owner, 2026-09-24: "I also want to
  * be able to send custom emails to people, in case something happens, e.g. bad weather, cancelled
  * event, etc!").
  *
@@ -59,7 +59,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * (BR-REQ-060-01), and the actions refuse them again.
  *
  * **One date of a series is one event**: the message goes to that date's registrants. Writing to
- * every date ahead at once is left out (§NNN says why) — each date's page has its own composer.
+ * every date ahead at once is left out (§364 says why) — each date's page has its own composer.
  */
 export default async function ParticipantMessagesPage({ params, searchParams }: Props) {
   const { locale, id } = await params;

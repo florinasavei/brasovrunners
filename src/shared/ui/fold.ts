@@ -80,7 +80,7 @@ export function openFoldsAround(node: FoldNode | null): number {
 export const REVEAL_EVENT = "br:reveal";
 
 /**
- * The name a fold shares with its twins in the other languages (§NNN; the owner, 2026-09-24: "I
+ * The name a fold shares with its twins in the other languages (§363; the owner, 2026-09-24: "I
  * would like to keep the expand/collapsed state while changing the language tab in the event
  * editor").
  *
@@ -100,7 +100,7 @@ export function twinFoldKey(name: string, locale: string): string {
 
 /**
  * Which folds of one strip are open, by `twinFoldKey`, for as long as the strip is on the page
- * (§NNN). Absent means never touched: the fold keeps what the server rendered.
+ * (§363). Absent means never touched: the fold keeps what the server rendered.
  *
  * A store with a subscription rather than React state in the strip, so a fold re-renders when its
  * own key changes and nothing else does — the strip re-renders on every keystroke that moves a

@@ -189,10 +189,10 @@ describe("§361 the pages' editor wears Material glyphs", () => {
     expect(source).not.toMatch(/function Control\b|<Control\b/);
   });
 
-  it("lifts both floating bars above the sticky toolbar, on the Paper it renders (§NNN)", () => {
+  it("lifts both floating bars above the sticky toolbar, on the Paper it renders (§363)", () => {
     // The table's bar sat under the toolbar's `zIndex: 2` whenever the table was at the top of
     // the body, and every table verb with it (§361); the bar over a selection on the first lines
-    // showed the bottoms of three empty buttons (§NNN). The order is on each bar's own `Paper`.
+    // showed the bottoms of three empty buttons (§363). The order is on each bar's own `Paper`.
     const source = read(RICH_TEXT);
     expect(source).toContain('const FLOATING_BAR_SX = { position: "relative", zIndex: 3 } as const;');
     const papers = [...source.matchAll(/<BubbleMenu\b[\s\S]*?<\/BubbleMenu>/g)].map(
@@ -203,7 +203,7 @@ describe("§361 the pages' editor wears Material glyphs", () => {
     expect(papers.map((paper) => paper.match(/data-floating-bar="(\w+)"/)?.[1])).toEqual(["table", "selection"]);
   });
 
-  it("gives BubbleMenu only the plugin's own props — the rest never reaches a production build (§NNN)", () => {
+  it("gives BubbleMenu only the plugin's own props — the rest never reaches a production build (§363)", () => {
     // Tiptap 3.31 copies `style`, `data-*` and `aria-*` onto the bar through a helper the
     // production minifier deletes as dead code: `style={{ zIndex: 3 }}` worked under `next dev`
     // and was nowhere in the built page. Whatever a bar needs goes on what it renders instead.

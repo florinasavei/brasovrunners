@@ -8,7 +8,7 @@ import type { EmailCopyPlaceholder } from "./email-copy";
  * The made-up runner at the made-up event every preview on `/admin/emails` is rendered with
  * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain. The
  * participant-message composer's preview is addressed to the same runner, and its help line names
- * her from here (§NNN): one sample, never a second copy of it beside this one.
+ * her from here (§364): one sample, never a second copy of it beside this one.
  *
  * ## Why the sample and the guard read one constant
  *
@@ -50,7 +50,7 @@ export type EmailSampleValues = {
   organizerNote: string;
   cancellationReason: string;
   /**
-   * "Trimite un mesaj participanților" (§NNN): a sample message, written per send, so its card
+   * "Trimite un mesaj participanților" (§364): a sample message, written per send, so its card
    * previews one — with a placeholder in each box, as the composer on the event's page would send
    * it. The organizer's words, like the note and the reason: never the club's copy, never refused.
    */
@@ -165,7 +165,7 @@ const EVERY_LOCALE: readonly EmailLocale[] = ["ro", "en"];
  * are found where the platform's own sentence carried them (`email-copy-fields.ts`), and so is the
  * inviter's former name (`EMAIL_SAMPLE_FORMER_INVITER`). Nor the organizer's note and the
  * cancellation reason: they are the platform's lines around the words, never part of the editor's
- * text. Nor the organizer's message (§NNN): it is written per send, has no editor on the page, and
+ * text. Nor the organizer's message (§364): it is written per send, has no editor on the page, and
  * its sample holds only placeholders and ordinary words.
  */
 export const EMAIL_SAMPLE_LITERALS: readonly EmailSampleLiteral[] = dedupe([

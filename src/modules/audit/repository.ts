@@ -117,7 +117,7 @@ export type AuditAction =
   /** "Detalii actualizate" queued (§331): which facts changed, the organizer's note and the count. */
   | "event.update_notice_sent"
   /**
-   * "Trimite un mesaj participanților" (§NNN): who sent it (the actor), to which part of the
+   * "Trimite un mesaj participanților" (§364): who sent it (the actor), to which part of the
    * event's registrants, how many real ones and how many test ones, the subject in both languages
    * and the send's own id — never who received it, and never the body (§12.12: no email body).
    * The event's "Mesaje trimise" history is read from these rows.

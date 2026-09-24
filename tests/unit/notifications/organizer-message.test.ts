@@ -20,7 +20,7 @@ import { canMessageParticipants, STAFF_ROLES } from "@/modules/staff-identity/do
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * `DECISIONS.md` §NNN — "Trimite un mesaj participanților": the organizer's own message to an
+ * `DECISIONS.md` §364 — "Trimite un mesaj participanților": the organizer's own message to an
  * event's registrants, in Română and English. The pure half: who can be chosen, what the words
  * may be, how they are read out of the outbox, what a send costs, and how the template renders
  * the two halves — each in its own language, from the organizer's own two texts.
@@ -34,7 +34,7 @@ const WORDS = {
   },
 };
 
-describe("§NNN who a message can go to", () => {
+describe("§364 who a message can go to", () => {
   it("offers everybody active and its three parts, and 'everybody' is exactly the §331 notices' set", () => {
     expect(PARTICIPANT_MESSAGE_AUDIENCES).toEqual(["ALL_ACTIVE", "CONFIRMED", "WAITLIST", "PENDING_DECLARATION"]);
     expect([...AUDIENCE_STATUSES.ALL_ACTIVE].sort()).toEqual([...EVENT_NOTICE_STATUSES].sort());
@@ -62,14 +62,14 @@ describe("§NNN who a message can go to", () => {
   });
 });
 
-describe("§NNN BR-REQ-060-01 who may write to an event's participants", () => {
+describe("§364 BR-REQ-060-01 who may write to an event's participants", () => {
   it("is the Organizer and up — never the volunteer, the Redactor or the Tehnic role", () => {
     const allowed = STAFF_ROLES.filter((role) => canMessageParticipants(role));
     expect(allowed).toEqual(["MODERATOR", "ADMIN", "SUPERADMIN"]);
   });
 });
 
-describe("§NNN the words: both languages, both texts, the closed placeholders", () => {
+describe("§364 the words: both languages, both texts, the closed placeholders", () => {
   it("accepts a message written in both languages, and keeps it as typed with one line ending", () => {
     const checked = checkOrganizerMessage({
       subject: { ro: "  Vreme rea\r\nazi ", en: "Bad weather\ntoday" },
@@ -128,7 +128,7 @@ describe("§NNN the words: both languages, both texts, the closed placeholders",
   });
 });
 
-describe("§NNN the words out of the outbox row", () => {
+describe("§364 the words out of the outbox row", () => {
   it("reads both languages of both texts, and nothing less", () => {
     expect(readOrganizerMessagePayload(WORDS)).toEqual(WORDS);
     expect(readOrganizerMessagePayload({ subject: WORDS.subject, body: { ro: "Doar română", en: "" } })).toBeNull();
@@ -137,7 +137,7 @@ describe("§NNN the words out of the outbox row", () => {
   });
 });
 
-describe("§NNN §100 §40 what a send costs, and what waits", () => {
+describe("§364 §100 §40 what a send costs, and what waits", () => {
   it("counts every real recipient with the club's copies, and every test one alone", () => {
     expect(organizerMessageCost({ real: 10, test: 2 }, 0)).toBe(12);
     expect(organizerMessageCost({ real: 10, test: 2 }, 2)).toBe(32);
@@ -152,7 +152,7 @@ describe("§NNN §100 §40 what a send costs, and what waits", () => {
   });
 });
 
-describe("§NNN §96 §354 the message as it arrives", () => {
+describe("§364 §96 §354 the message as it arrives", () => {
   const DATA: TemplateData = {
     participantName: "Ana Pop",
     eventTitle: "Crosul de toamnă",

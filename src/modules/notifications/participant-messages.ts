@@ -29,7 +29,7 @@ import { enqueueEmail } from "./outbox";
 import { renderBilingual, type TemplateData } from "./templates";
 
 /**
- * "Trimite un mesaj participanților" (`DECISIONS.md` §NNN): the organizer writes to the people
+ * "Trimite un mesaj participanților" (`DECISIONS.md` §364): the organizer writes to the people
  * registered for one event, in both languages, and chooses which of them hear it.
  *
  * The same kind of message as the §331 notices — operational, about the event the person
@@ -266,7 +266,7 @@ export type ParticipantMessagePreview = {
  * The same template the outbox renders with (`renderBilingual`), over the event's own facts read
  * now, in both languages, and the made-up runner every `/admin/emails` preview is addressed to —
  * her name and her number read from `EMAIL_SAMPLE`, the one constant the composer's help line
- * names her from too, so the line and the preview cannot disagree (§NNN). Nothing is queued and no
+ * names her from too, so the line and the preview cannot disagree (§364). Nothing is queued and no
  * token exists, so nothing in it can be acted on. Empty boxes preview as the platform's fallback
  * subject and an absent body, which is what a send would refuse.
  */

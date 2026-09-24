@@ -47,7 +47,7 @@ type Props = {
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
 
 /**
- * The organizer's message (§NNN) is written per send, on the event's page: its card previews the
+ * The organizer's message (§364) is written per send, on the event's page: its card previews the
  * sample one (`domain/email-sample.ts`) and says where it is written, with no words editor under
  * it and no sample-value warning over it.
  */
@@ -148,7 +148,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // what a participant will actually receive rather than what the platform ships.
     const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
     /*
-      The organizer's message has no stored words to read or warn about (§NNN): it is written per
+      The organizer's message has no stored words to read or warn about (§364): it is written per
       send, the save refuses an entry for it and the send ignores one, so a hand-made entry in the
       setting is neither shown nor flagged here — the card would be saying something untrue.
     */
@@ -258,7 +258,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // that changed is the first thing in view (§336).
             justSaved: copySaved && savedMessage === messageType,
             // The words, for whoever writes them (§103, §247). Under the preview it changes. The
-            // organizer's message has none to keep: it is written per send, on the event's page (§NNN).
+            // organizer's message has none to keep: it is written per send, on the event's page (§364).
             editor: perSend(messageType) ? (
               <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
                 {t("emails.perSend")}

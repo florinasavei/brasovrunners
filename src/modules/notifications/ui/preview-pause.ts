@@ -11,10 +11,10 @@ export type PreviewPause = {
 };
 
 /**
- * When "Trimite un mesaj participanților" asks the server for its preview (`DECISIONS.md` §NNN):
+ * When "Trimite un mesaj participanților" asks the server for its preview (`DECISIONS.md` §364):
  * after a pause in typing, and at once when a tab is picked.
  *
- * The review of §NNN: the pause used to remember the tab that was open when the key was pressed,
+ * The review of §364: the pause used to remember the tab that was open when the key was pressed,
  * and picking the other tab did not stop it — so typing in a box, then switching from "RO" to "EN"
  * within half a second, showed the English copy and then, when the pause ran out, the Romanian one
  * under the "EN" tab. The tab picked now cancels the pause (its own ask reads the boxes as they are,

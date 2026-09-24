@@ -6,7 +6,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * `DECISIONS.md` §NNN — "Trimite un mesaj participanților", end to end, on a phone and a desktop:
+ * `DECISIONS.md` §364 — "Trimite un mesaj participanților", end to end, on a phone and a desktop:
  * the editor's immediate actions lead to the composer; the groups show their live counts; a
  * message in one language is refused on the empty box with everything else kept; the preview
  * renders the real email for a Romanian and for an English registrant; Send asks "Trimiți mesajul
@@ -113,7 +113,7 @@ async function removeEvents(ids: readonly string[]): Promise<void> {
   });
 }
 
-test.describe("§NNN the organizer writes to an event's participants", () => {
+test.describe("§364 the organizer writes to an event's participants", () => {
   const created: string[] = [];
   test.afterAll(async () => removeEvents(created));
 

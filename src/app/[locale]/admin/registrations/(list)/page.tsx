@@ -670,7 +670,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
-          {/* With one event chosen, the organizer's own message to its registrants (§NNN) —
+          {/* With one event chosen, the organizer's own message to its registrants (§364) —
               the page lives under the event; this is the other door to it. */}
           {filters.eventId && canMessageParticipants(actor.role) && (
             <GlyphButton

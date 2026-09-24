@@ -5,7 +5,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-041-01 (§NNN) — the footer as the server sends it: the build stamp is a line of the
+ * BR-REQ-041-01 (§365) — the footer as the server sends it: the build stamp is a line of the
  * "Despre club" fold and nowhere else, RO and EN sit side by side, and a phone's bar keeps both
  * of its lines — the privacy notice and the language — on screen at every scroll position.
  *
@@ -83,7 +83,7 @@ function rulesOf(css: string, className: string): string {
   return [...css.matchAll(new RegExp(`(@media[^{]*\\{)?[^{}]*\\.${escaped}(?![\\w-])[^{]*\\{[^}]*\\}\\}?`, "g"))].map((match) => match[0]).join("\n");
 }
 
-describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's two lines", () => {
+describe("BR-REQ-041-01 §365 the footer's build stamp and the phone's two lines", () => {
   it("renders the build stamp once, as a line of the fold's panel, never on the bar", async () => {
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';
@@ -105,7 +105,7 @@ describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's two lines
   });
 
   it("is not rendered by the page's layout, beside the footer", () => {
-    // Before §NNN the layout rendered `<BuildBadge />` after `<SiteFooter />`: a fixed pill in
+    // Before §365 the layout rendered `<BuildBadge />` after `<SiteFooter />`: a fixed pill in
     // the corner from `md`, a third line under the bar on a phone.
     const layout = read("src/app/[locale]/layout.tsx");
     expect(layout).not.toMatch(/import BuildBadge/);
@@ -116,7 +116,7 @@ describe("BR-REQ-041-01 §NNN the footer's build stamp and the phone's two lines
     // BR-REQ-041-01 criterion 21 and §323: the privacy notice is on the always-visible bar, and
     // on a phone it and the only language switch share the bar's second line. A negative sticky
     // offset would float one line and leave both under the screen's edge while the page scrolls
-    // (the review of §NNN), so the bar sits on the edge at every width, with nothing to raise it.
+    // (the review of §365), so the bar sits on the edge at every width, with nothing to raise it.
     const html = await renderFooter();
     const markup = markupOnly(html);
     const bar = rulesOf(cssOnly(html), emotionClassOf(markup, "<footer"));

@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { previewPause, type PreviewLanguage } from "@/modules/notifications/ui/preview-pause";
 
 /**
- * `DECISIONS.md` §NNN — the composer's preview, asked after a pause in typing and at once when a tab
+ * `DECISIONS.md` §364 — the composer's preview, asked after a pause in typing and at once when a tab
  * is picked. The review: the pause kept the tab open when the key was pressed, and picking the other
  * tab did not cancel it, so "EN" could end up showing the Romanian copy.
  */
-describe("§NNN the preview's pause and the tabs", () => {
+describe("§364 the preview's pause and the tabs", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });

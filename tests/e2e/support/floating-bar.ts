@@ -3,7 +3,7 @@ import { expect, type Locator } from "@playwright/test";
 /**
  * A text editor's floating bar — over a selection, over a table (`RichTextEditor`, §273, §274) —
  * by the attribute its `Paper` wears. On the `Paper` and not on Tiptap's `BubbleMenu`, because
- * nothing passed to `BubbleMenu` beyond the plugin's own props reaches a production build (§NNN).
+ * nothing passed to `BubbleMenu` beyond the plugin's own props reaches a production build (§363).
  * Scoped to one editor, since each language's editor has bars of its own.
  */
 export function floatingBar(editor: Locator, kind: "selection" | "table"): Locator {
@@ -11,7 +11,7 @@ export function floatingBar(editor: Locator, kind: "selection" | "table"): Locat
 }
 
 /**
- * Every button on a floating bar shows its glyph (§NNN; the owner, 2026-09-24, of the bar over a
+ * Every button on a floating bar shows its glyph (§363; the owner, 2026-09-24, of the bar over a
  * selection: "I can't see these buttons in the rich text editor" — three empty buttons).
  *
  * The glyph is drawn (a box of its own), in a colour that is neither nothing nor the bar's own

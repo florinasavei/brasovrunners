@@ -22,7 +22,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — "Trimite un mesaj participanților": the organizer writes to the people
+ * `DECISIONS.md` §364 — "Trimite un mesaj participanților": the organizer writes to the people
  * registered for one event, in Română and English, to the group they choose.
  *
  * Every registration status is seeded, a test row among them, so each group's count and each
@@ -32,7 +32,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * language, carrying both languages of both texts; a second press of the same form queues
  * nothing; the audit row says who, the group, the counts and the subject — and no address.
  */
-describe("§NNN the organizer's message to an event's participants", () => {
+describe("§364 the organizer's message to an event's participants", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let organizer: StaffUser;

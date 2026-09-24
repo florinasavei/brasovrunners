@@ -92,7 +92,7 @@ type Words = Record<"subjectRo" | "subjectEn" | "bodyRo" | "bodyEn", string>;
 const PREVIEW_PAUSE_MS = 500;
 
 /**
- * "Trimite un mesaj participanților" (`DECISIONS.md` §NNN) — the composer: who, the words in both
+ * "Trimite un mesaj participanților" (`DECISIONS.md` §364) — the composer: who, the words in both
  * languages, the message as it will arrive, and Send behind a question.
  *
  * Inside `ActionForm`, so a refused send comes back with every box as typed (§315); the boxes are
@@ -269,7 +269,7 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
         </Stack>
       ))}
 
-      {/* The message as it will arrive (§NNN): the server renders it, the tabs pick whose copy. */}
+      {/* The message as it will arrive (§364): the server renders it, the tabs pick whose copy. */}
       <Box data-testid="participant-message-preview">
         <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
           {labels.preview}

@@ -272,7 +272,7 @@ export function renderBilingual(
     // absent only for a row queued with one text, which both halves then read as before.
     ...(data.organizerNoteOther ? { organizerNote: data.organizerNoteOther } : {}),
     ...(data.cancellationReasonOther ? { cancellationReason: data.cancellationReasonOther } : {}),
-    // The organizer's message (§NNN): its own words in the second half's language, and the event's
+    // The organizer's message (§364): its own words in the second half's language, and the event's
     // facts that its placeholders read — the title, what to bring — in that language too. Those two
     // for that message only, as `TemplateData` says: the page of every email renders all of them
     // from one sample, and every other message's second half still reads the registrant's (§354).
@@ -412,7 +412,7 @@ export type TemplateData = {
   /** The same reason in the other language, for the second half (§354); absent on an older row. */
   cancellationReasonOther?: string;
   /**
-   * "Trimite un mesaj participanților" (§NNN): the subject and the body the organizer wrote for
+   * "Trimite un mesaj participanților" (§364): the subject and the body the organizer wrote for
    * this send, in this half's language — plain text, placeholders still in it, filled here with
    * this half's facts. Absent only for a row whose payload cannot be read, which then goes with
    * the platform's own subject and framing sentence.
@@ -424,7 +424,7 @@ export type TemplateData = {
   organizerBodyOther?: string;
   /**
    * The event's title and "what to bring" in the other language, for the second half of the
-   * organizer's message, whose placeholders read them (§NNN). Set for that message only: every
+   * organizer's message, whose placeholders read them (§364). Set for that message only: every
    * other message's second half still reads the registrant's language, as §354 left it.
    */
   eventTitleOther?: string;
@@ -452,7 +452,7 @@ function organizerTextPart(label: string, text: string): EmailBodyPart {
 }
 
 /**
- * The organizer's own message (§NNN), after the platform's one framing sentence: the body they
+ * The organizer's own message (§364), after the platform's one framing sentence: the body they
  * typed, its placeholders filled with this half's facts, a blank line starting a paragraph and a
  * single line break kept. Escaped as plain text, and — like the note on an update (§331) — no
  * `**` or `__` read inside it: a pair of asterisks somebody typed prints as asterisks.
@@ -467,7 +467,7 @@ function organizerMessageParts(messageType: EmailMessageType, data: TemplateData
   }));
 }
 
-/** The subject the organizer wrote, filled with this half's facts (§NNN); the platform's own when a row carries none. */
+/** The subject the organizer wrote, filled with this half's facts (§364); the platform's own when a row carries none. */
 function organizerSubject(d: TemplateData, fallback: string): string {
   if (!d.organizerSubject) return fallback;
   return fillPlaceholders(d.organizerSubject, d as unknown as Record<string, unknown>) || fallback;
@@ -743,7 +743,7 @@ const T = {
       ],
     },
     /**
-     * "Trimite un mesaj participanților" (§NNN): the organizer's subject and body, written for this
+     * "Trimite un mesaj participanților" (§364): the organizer's subject and body, written for this
      * send; the platform adds only the facts line, one sentence saying who writes and why this
      * person receives it, the event's page as the button and the usual links. Nothing to act on.
      */
@@ -1184,7 +1184,7 @@ export function buildTemplateContent(
     state of a registration rather than about how the club likes to write, and a club that
     rewrote the confirmation would otherwise silently lose them.
   */
-  // The organizer's message is written per send (§NNN): there is no stored wording to apply, and a
+  // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
   const written = messageType === "ORGANIZER_MESSAGE" ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
@@ -1242,7 +1242,7 @@ export function buildTemplateContent(
           : entry.body(data)),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
-      // The organizer's message itself, after its one framing sentence (§NNN).
+      // The organizer's message itself, after its one framing sentence (§364).
       ...organizerMessageParts(messageType, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).

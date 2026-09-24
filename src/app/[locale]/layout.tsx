@@ -173,7 +173,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </Box>
                   <SiteHeader />
                   <Box sx={{ flex: 1 }}>{children}</Box>
-                  {/* The build stamp is the last line of the footer's fold (§NNN), not a label of its own. */}
+                  {/* The build stamp is the last line of the footer's fold (§365), not a label of its own. */}
                   <SiteFooter />
                 </Box>
               </IntlErrorHandling>

@@ -76,7 +76,7 @@ import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 
 /**
- * The two floating bars, above the sticky toolbar (§361, §NNN). Tiptap appends a bar to the
+ * The two floating bars, above the sticky toolbar (§361, §363). Tiptap appends a bar to the
  * writing area and positions it with no stacking order of its own, so the toolbar's `zIndex: 2`
  * painted over it: a table at the top of the body had its bar — every table verb — hidden behind
  * the toolbar it sat under, and a word selected on the first lines had the bar over it drawn

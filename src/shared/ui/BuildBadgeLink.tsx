@@ -14,7 +14,7 @@ const LONG_PRESS_MS = 600;
 /**
  * The badge as the staff entrance: a double-click, `Enter` when focused, or — on a phone, where a
  * double-tap is unreliable and zooms — a long press (the owner's ask, 2026-09-17). A single tap
- * still does nothing, so a tap that lands on it in the open fold stays inert (§NNN).
+ * still does nothing, so a tap that lands on it in the open fold stays inert (§365).
  */
 export default function BuildBadgeLink({
   href,
