@@ -99,7 +99,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
       </Stack>
 
       {/* The other half of this tab: every stored picture, and where each one is used. */}
-      <GallerySubNav active="albums" />
+      <GallerySubNav locale={locale} active="albums" />
 
       <Typography variant="body2" color="text.secondary">
         {t("gallery.intro")}

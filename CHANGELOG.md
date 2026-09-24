@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.79-2026-09-24
+
+- **Editor toolbars wear real icons.** Every button on the page, event and email text editor, and on the legal documents' editor (bold, lists, link, picture, gallery, film, the table's buttons, undo and redo), is now a crisp Material icon of one size and colour, with its name shown on hover or a long press, instead of the tiny emoji and arrow characters. "H2"/"H3" and the legal editor's new "Text" stay words, and the table's buttons no longer hide under the sticky toolbar. §361.
+## BR-V1.78-2026-09-24
+
+- **The email words start from the fields, never the preview's sample:** the editor on `/admin/emails` hands a Redactor `{eventTitle}` rather than "Crosul de toamnă", refuses to save a sample value, and flags a text already saved with one, in either language, with one press to put the fields back; a paragraph whose only fields are facts a message lacks (no number yet, no checklist, no desk code on the club's copy) is not sent. §359.
+- **The sub-tabs are tabs, not buttons.** The panels on the configuration and to-do screens, the gallery's Albume | Imagini and the email previews' language switch are one row of small text tabs under a thin line. The current one is blue, bold and underlined, with no filled buttons, shadows or glyphs. On a phone the row stays one line and scrolls sideways instead of wrapping into a second row of buttons. §360.
 ## BR-V1.77-2026-09-24
 
 - **The event editor's first box holds the status, the course and the links.** "Ce fel de eveniment" now contains "Starea evenimentului", "Traseul" and "Linkuri și fișiere" as named cards, on the editor and on the create page, where the status is read-only "Programat". Its closed line reads like "Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri". It turns amber with the count when people are registered, and says once, for a role that may only read, that the settings are not theirs. §358.

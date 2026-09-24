@@ -743,7 +743,9 @@
       "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all.",
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
-      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours."
+      "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours.",
+      "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
+      "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1634,6 +1636,7 @@
       "editor": {
         "heading": "Section heading",
         "paragraph": "Paragraph",
+        "paragraphShort": "Text",
         "link": "Link",
         "linkUrl": "Link address",
         "linkApply": "Apply link",
@@ -2599,13 +2602,27 @@
         "subject": "Subject",
         "paragraphs": "Paragraphs",
         "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
-        "placeholders": "You may use: {list}. A field this message does not carry is left empty — see the preview above.",
+        "placeholders": "You may use: {list}. A field this message does not carry is left empty. The race number, the desk code, “what to bring”, the hold's deadline, the signing time, the date and the place can be missing: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The preview above has every field.",
+        "placeholdersUsed": "The platform's text for this message uses: {used}. You may also use: {others}. A field this message does not carry is left empty. The race number, the desk code, “what to bring”, the hold's deadline, the signing time, the date and the place can be missing: a paragraph that names only these, and has none of them, is not sent at all — which is why each has a paragraph of its own. The preview above has every field.",
         "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
+        "samplesTitle": "The saved text holds sample values, not fields",
+        "samplePairWhere": "“{value}” — {where}; in its place: {replacement}",
+        "samplesHelp": "Every participant would receive exactly these words, whatever their event. “Replace with the fields” puts the right field in place of each value and saves the text; the preview above shows the result.",
+        "samplePair": "“{value}” → {replacement}",
+        "sampleWords": "“{words}”",
+        "sampleWhere": {
+          "subject": "in the subject",
+          "body": "in the text",
+          "both": "in the subject and the text"
+        },
+        "sampleMarker": "the saved text ({languages}) has sample values",
         "save": "Save the words",
         "saving": "Saving…",
         "reset": "Back to the platform's text",
+        "replace": "Replace with the fields",
         "saved": "The message's words are saved.",
-        "resetDone": "The message uses the platform's text again."
+        "resetDone": "The message uses the platform's text again.",
+        "samplesReplaced": "The fields are in place of the sample values, and the text is saved."
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
