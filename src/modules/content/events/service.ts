@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -2024,6 +2024,55 @@ export async function stopRepeat<T extends Record<string, unknown>>(
     .where(eq(events.id, input.eventId));
   // Without its rule the source is a one-off again, and a past one-off is history (§275).
   revalidatePublicContent("events");
+}
+
+/**
+ * Switch a running series' automatic publication on or off (`DECISIONS.md` §NNN): whether the
+ * dates the job makes from now on go live as they are made, or wait as drafts.
+ *
+ * The rule's `publish` flag was chosen once, with the tick under "Repetă evenimentul", and never
+ * again: a series started from a draft — or without the tick — made every future date a draft
+ * for good, and the only way out was to stop the series and start it again. The owner met the
+ * result as "Ciornă · 1 date" on the list and could not tell the site was missing a Monday.
+ *
+ * Only the flag changes; the cadence, the days and the end stay as they are, and the dates that
+ * already exist keep their state — publishing those is the list's bulk verb or each date's own
+ * editor, which pass the checks publication has. Switching it on asks what the first creation
+ * asked (`repeatEvent`): the role that publishes, and a published source — the copies of an
+ * unpublished event would be drafts anyway (`materializeSeries`), so a switch that could not
+ * take effect is refused rather than stored.
+ */
+export async function setRepeatPublish<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; publish: boolean; now?: Date },
+): Promise<void> {
+  if (!canCreateEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
+  }
+  const [source] = await db
+    .select({ id: events.id, repeatRule: events.repeatRule, editorialStatus: events.editorialStatus })
+    .from(events)
+    .where(eq(events.id, input.eventId))
+    .limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  const rule = readRepeatRule(source.repeatRule);
+  if (!rule) throw new DomainError("VALIDATION_ERROR", "this event does not repeat; a series is switched from its first event");
+  if (input.publish) {
+    if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+      throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
+    }
+    if (source.editorialStatus !== "PUBLISHED") {
+      throw new DomainError("VALIDATION_ERROR", "publish this event first: the dates of an unpublished event stay drafts");
+    }
+  }
+  // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing
+  // between the read above and this write would otherwise have this `{ ...rule, publish }` — the
+  // rule as it was before the stop — write the series back into existence. With the guard, that
+  // race makes this update match nothing, and the stopped series stays stopped.
+  await db
+    .update(events)
+    .set({ repeatRule: { ...rule, publish: input.publish }, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
+    .where(and(eq(events.id, source.id), isNotNull(events.repeatRule)));
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */
