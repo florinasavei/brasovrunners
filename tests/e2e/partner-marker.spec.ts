@@ -3,13 +3,17 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367) — an event held with a partner wears the
- * handshake on the listing card, on its page's overline and in the calendar; and a calendar entry
- * has one tooltip, never the browser's as well, never one inside another.
+ * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §NNN) — an event held with a
+ * partner wears the handshake on the listing card, on its page's overline and in the calendar;
+ * and a calendar entry has one tooltip, never the browser's as well, never one inside another.
  *
  * The owner, 2026-09-24: "I would like to have a special marker with this partnered event, so that
  * people know this is not a regular Brașov Runners group run — show like a handshake icon on the
- * card and in the calendar."
+ * card and in the calendar." And, amending §367 the same day: "For the partnership, I just need 1
+ * icon, I do not need to show the full partners list, there might be multiple partners." So the
+ * marker is a generic label — "Eveniment în parteneriat" / "Partnered event" — never the partner's
+ * name, though the event still carries a real partner to prove the marker reads `readCoHosts` and
+ * not a hardcoded flag.
  *
  * It creates and publishes its **own** event, the way `event-route.spec.ts` does, rather than
  * giving a seeded one a partner: other specs read and unpublish the seeded rows, and two projects
@@ -87,15 +91,16 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await page.waitForURL(/saved=PUBLISHED/);
   });
 
-  test("the listing card carries one chip with the handshake and the partner's name", async ({ page }) => {
+  test("the listing card carries one chip with the handshake and the generic label, never the partner's name", async ({ page }) => {
     await page.goto("/ro/evenimente");
     // Every fold open, so a card in "other events" is measured as a reader who opened it sees it.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const card = page.locator("li").filter({ has: page.getByRole("heading", { name: title }) });
-    const chip = card.locator(".MuiChip-root").filter({ hasText: `În parteneriat cu ${partner}` });
+    const chip = card.locator(".MuiChip-root").filter({ hasText: "Eveniment în parteneriat" });
     await expect(chip).toHaveCount(1);
+    await expect(chip).not.toContainText(partner);
     await expect(chip.locator(HANDSHAKE)).toHaveCount(1);
-    // At 320 pixels the name wraps inside the card rather than widening the page.
+    // At 320 pixels the label wraps inside the card rather than widening the page.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -103,27 +108,30 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await page.goto("/en/events");
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     const englishCard = page.locator("li").filter({ has: page.getByRole("heading", { name: englishTitle }) });
-    await expect(englishCard.locator(".MuiChip-root").filter({ hasText: `With ${partner}` })).toHaveCount(1);
+    await expect(englishCard.locator(".MuiChip-root").filter({ hasText: "Partnered event" })).toHaveCount(1);
     await expect(englishCard).not.toContainText("În parteneriat");
+    await expect(englishCard).not.toContainText(partner);
   });
 
-  test("the event page says it on the overline, in each language", async ({ page }) => {
+  test("the event page says it on the overline, in each language, never the partner's name", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
     const overline = page.getByTestId("overline-partner");
-    await expect(overline).toContainText(`În parteneriat cu ${partner}`);
+    await expect(overline).toContainText("Eveniment în parteneriat");
+    await expect(overline).not.toContainText(partner);
     await expect(overline.locator(HANDSHAKE)).toHaveCount(1);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
     await page.goto(`/en/events/${englishSlug}`);
-    await expect(page.getByTestId("overline-partner")).toContainText(`With ${partner}`);
+    await expect(page.getByTestId("overline-partner")).toContainText("Partnered event");
+    await expect(page.getByTestId("overline-partner")).not.toContainText(partner);
   });
 
-  test("the calendar's grid entry names the partner, carries no title attribute, and opens one tooltip", async ({ page }) => {
+  test("the calendar's grid entry carries the generic label, no title attribute, and opens one tooltip", async ({ page }) => {
     await page.goto(`/ro/calendar?month=${MONTH}`);
     const entry = page.locator(`#main [role=table] a[aria-label*="${title}"]`);
     await expect(entry).toHaveCount(1);
-    await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. În parteneriat cu ${partner}`);
+    await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. Eveniment în parteneriat`);
     await expect(entry.locator(HANDSHAKE)).toHaveCount(1);
     // The browser's own tooltip is a `title` attribute; no calendar entry carries one.
     await expect(page.locator("#main [role=table] a[title], #main [role=table] a [title]")).toHaveCount(0);
@@ -135,7 +143,8 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toHaveCount(1);
     await expect(tooltip).toContainText(`10:00 ${title}`);
-    await expect(tooltip).toContainText(`În parteneriat cu ${partner}`);
+    await expect(tooltip).toContainText("Eveniment în parteneriat");
+    await expect(tooltip).not.toContainText(partner);
     // On the mark itself — where the ⚠ opened a second tooltip over the first — still one.
     await entry.locator(HANDSHAKE).hover();
     await expect(page.getByRole("tooltip")).toHaveCount(1);
@@ -152,15 +161,15 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(entry).toBeFocused();
     const tooltip = page.getByRole("tooltip");
     await expect(tooltip).toHaveCount(1);
-    await expect(tooltip).toContainText(`În parteneriat cu ${partner}`);
+    await expect(tooltip).toContainText("Eveniment în parteneriat");
   });
 
-  test("the calendar's agenda puts the handshake beside the entry, named", async ({ page }) => {
+  test("the calendar's agenda puts the handshake beside the entry, named with the generic label", async ({ page }) => {
     await page.goto(`/ro/calendar?month=${MONTH}&view=list`);
     const entry = page.locator(`#main a[aria-label*="${title}"]`);
     await expect(entry).toHaveCount(1);
-    await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. În parteneriat cu ${partner}`);
-    await expect(entry.getByRole("img", { name: `În parteneriat cu ${partner}` })).toHaveCount(1);
+    await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. Eveniment în parteneriat`);
+    await expect(entry.getByRole("img", { name: "Eveniment în parteneriat" })).toHaveCount(1);
     await expect(entry.locator(HANDSHAKE)).toHaveCount(1);
     await expect(entry).not.toHaveAttribute("title", /.*/);
     await expect(entry.locator("[title], title")).toHaveCount(0);
@@ -169,13 +178,15 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     if (test.info().project.name === "mobile") return;
     await entry.locator(HANDSHAKE).hover();
     await expect(page.getByRole("tooltip")).toHaveCount(1);
-    await expect(page.getByRole("tooltip")).toHaveText(`În parteneriat cu ${partner}`);
+    await expect(page.getByRole("tooltip")).toHaveText("Eveniment în parteneriat");
   });
 
-  test("the English calendar names the partner in English", async ({ page }) => {
+  test("the English calendar carries the generic label in English", async ({ page }) => {
     await page.goto(`/en/calendar?month=${MONTH}`);
-    const entry = page.locator(`#main [role=table] a[aria-label*="${partner}"]`).filter({ has: page.locator(HANDSHAKE) });
+    // The English calendar's title is the English one — the Romanian title never appears there.
+    const entry = page.locator(`#main [role=table] a[aria-label*="${englishTitle}"]`).filter({ has: page.locator(HANDSHAKE) });
     await expect(entry).toHaveCount(1);
-    await expect(entry).toHaveAttribute("aria-label", new RegExp(`\\. With ${partner}$`));
+    await expect(entry).toHaveAttribute("aria-label", /\. Partnered event$/);
+    await expect(entry).not.toHaveAttribute("aria-label", new RegExp(partner));
   });
 });

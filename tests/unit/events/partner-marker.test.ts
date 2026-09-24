@@ -9,14 +9,20 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
- * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367) — the partner marker, and one tooltip per
- * calendar entry.
+ * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §NNN) — the partner marker, and
+ * one tooltip per calendar entry.
  *
  * The owner, 2026-09-24: "I would like to have a special marker with this partnered event, so that
  * people know this is not a regular Brașov Runners group run — show like a handshake icon on the
  * card and in the calendar." And, of a month-grid entry showing two tooltips at once — the entry's
  * own and the ⚠'s inside it — one tooltip, carrying the time, the title, the date's note and now
  * the partner.
+ *
+ * **Amended §NNN, 2026-09-24**: "For the partnership, I just need 1 icon, I do not need to show
+ * the full partners list, there might be multiple partners." The marker is now one glyph and a
+ * generic label, "Eveniment în parteneriat" / "Partnered event" — never a partner's name or a
+ * count, in every one of the four places it appears. The full list stays the event page's partner
+ * cards (§344), untouched here.
  *
  * `Tooltip` is replaced by a stub that writes its title into the markup, so what a tooltip would
  * say, and how many there are, can be read from a static render — the real one draws nothing until
@@ -63,59 +69,46 @@ function say(locale: "ro" | "en") {
 const partners = (...names: string[]) => names.map((name) => ({ name, links: [] }));
 const noPartner = { coHosts: null, coHostName: null, coHostUrl: null };
 
-describe("§367 partnerPhrase — the marker's words, in each language", () => {
-  it("names one partner, two partners, and the first of three with the rest counted", () => {
-    expect(partnerPhrase(say("ro"), "ro", ["Brașov Running Festival"])).toBe("În parteneriat cu Brașov Running Festival");
-    expect(partnerPhrase(say("ro"), "ro", ["Brașov Running Festival", "Salvamont"])).toBe("În parteneriat cu Brașov Running Festival și Salvamont");
-    expect(partnerPhrase(say("ro"), "ro", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"])).toBe(
-      "În parteneriat cu Brașov Running Festival și încă 2 parteneri",
-    );
-    expect(partnerPhrase(say("en"), "en", ["Brașov Running Festival"])).toBe("With Brașov Running Festival");
-    expect(partnerPhrase(say("en"), "en", ["Brașov Running Festival", "Salvamont"])).toBe("With Brașov Running Festival and Salvamont");
-    expect(partnerPhrase(say("en"), "en", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"])).toBe(
-      "With Brașov Running Festival and 2 more partners",
-    );
-  });
-
-  it("counts in Romanian's own forms, 'de' from twenty", () => {
-    const many = ["A", ...Array.from({ length: 20 }, (_, index) => `P${index}`)];
-    expect(partnerPhrase(say("ro"), "ro", many)).toBe("În parteneriat cu A și încă 20 de parteneri");
+describe("§367 partnerPhrase — the marker's words, amended §NNN: one generic label, never a name or a count", () => {
+  it("says the same generic sentence whether the event has one partner or several", () => {
+    expect(partnerPhrase(say("ro"), true)).toBe("Eveniment în parteneriat");
+    expect(partnerPhrase(say("en"), true)).toBe("Partnered event");
   });
 
   it("says nothing for an event with no partner", () => {
-    expect(partnerPhrase(say("ro"), "ro", [])).toBeNull();
-    expect(partnerPhrase(say("en"), "en", [])).toBeNull();
+    expect(partnerPhrase(say("ro"), false)).toBeNull();
+    expect(partnerPhrase(say("en"), false)).toBeNull();
   });
 });
 
-describe("§367 the listing card's chip", () => {
-  it("is a small outlined chip with the handshake and the partner's name, in both languages", async () => {
+describe("§367 the listing card's chip, amended §NNN: one glyph, a generic label, never a partner's name", () => {
+  it("is a small outlined chip with the handshake and the generic label, in both languages", async () => {
     currentLocale = "ro";
     const romanian = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
     expect(romanian).toContain('data-testid="HandshakeIcon"');
-    expect(romanian).toContain("În parteneriat cu Brașov Running Festival");
+    expect(romanian).toContain("Eveniment în parteneriat");
+    expect(romanian).not.toContain("Brașov Running Festival");
     expect(romanian).toContain("MuiChip-sizeSmall");
     expect(romanian).toContain("MuiChip-outlined");
     currentLocale = "en";
     const english = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
-    expect(english).toContain("With Brașov Running Festival");
-    expect(english).not.toContain("În parteneriat");
+    expect(english).toContain("Partnered event");
+    expect(english).not.toContain("Eveniment în parteneriat");
+    expect(english).not.toContain("Brașov Running Festival");
   });
 
-  it("says two partners by name and the third as a count, in both languages", async () => {
+  it("says the same generic label whether there is one partner or several, never a name or a count", async () => {
     const two = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont") } }));
-    expect(two).toContain("În parteneriat cu Brașov Running Festival și Salvamont");
     const three = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") } }));
-    expect(three).toContain("În parteneriat cu Brașov Running Festival și încă 2 parteneri");
-    expect(three).not.toContain("Clubul Alpin");
     currentLocale = "en";
     const twoEn = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont") } }));
-    expect(twoEn).toContain("With Brașov Running Festival and Salvamont");
     const threeEn = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") } }));
-    expect(threeEn).toContain("With Brașov Running Festival and 2 more partners");
-    expect(threeEn).not.toContain("Clubul Alpin");
-    // One chip, one handshake, whatever the count.
+    for (const html of [two, three]) expect(html).toContain("Eveniment în parteneriat");
+    for (const html of [twoEn, threeEn]) expect(html).toContain("Partnered event");
+    // One chip, one handshake — and never a partner's name, whatever the count.
     for (const html of [two, three, twoEn, threeEn]) {
+      expect(html).not.toContain("Salvamont");
+      expect(html).not.toContain("Clubul Alpin");
       expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
       expect(count(html, 'class="MuiChip-root ')).toBe(1);
     }
@@ -123,7 +116,8 @@ describe("§367 the listing card's chip", () => {
 
   it("reads the partners the one way every surface does — the legacy columns too", async () => {
     const legacy = renderToStaticMarkup(await PartnerChip({ event: { coHosts: null, coHostName: "Salvamont", coHostUrl: null } }));
-    expect(legacy).toContain("În parteneriat cu Salvamont");
+    expect(legacy).toContain("Eveniment în parteneriat");
+    expect(legacy).not.toContain("Salvamont");
   });
 
   it("is nothing at all for an event with no partner, or one whose partners were all removed", async () => {
@@ -131,7 +125,7 @@ describe("§367 the listing card's chip", () => {
     expect(renderToStaticMarkup(await PartnerChip({ event: { coHosts: [], coHostName: "Removed", coHostUrl: null } }))).toBe("");
   });
 
-  it("wraps rather than cutting the partner's name off at 320 pixels", () => {
+  it("wraps rather than being cut off at 320 pixels", () => {
     const source = readFileSync("src/modules/events/ui/PartnerChip.tsx", "utf8");
     expect(source).toMatch(/whiteSpace: "normal"/);
     expect(source).toMatch(/height: "auto"/);
@@ -155,26 +149,28 @@ describe("§367 the listing card's chip", () => {
   });
 });
 
-describe("§367 the event page's overline", () => {
+describe("§367 the event page's overline, amended §NNN: one glyph, a generic label", () => {
   const overline = async (locale: "ro" | "en", ...names: string[]) => {
     currentLocale = locale;
     const element = await PartnerOverline({ event: { ...noPartner, coHosts: partners(...names) } });
     return element ? renderToStaticMarkup(element) : "";
   };
 
-  it("carries the handshake and one, two or three partners' words, in both languages", async () => {
+  it("carries the handshake and the generic label, whatever the number of partners, in both languages", async () => {
     const cases: [locale: "ro" | "en", names: string[], words: string][] = [
-      ["ro", ["Brașov Running Festival"], "În parteneriat cu Brașov Running Festival"],
-      ["ro", ["Brașov Running Festival", "Salvamont"], "În parteneriat cu Brașov Running Festival și Salvamont"],
-      ["ro", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "În parteneriat cu Brașov Running Festival și încă 2 parteneri"],
-      ["en", ["Brașov Running Festival"], "With Brașov Running Festival"],
-      ["en", ["Brașov Running Festival", "Salvamont"], "With Brașov Running Festival and Salvamont"],
-      ["en", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "With Brașov Running Festival and 2 more partners"],
+      ["ro", ["Brașov Running Festival"], "Eveniment în parteneriat"],
+      ["ro", ["Brașov Running Festival", "Salvamont"], "Eveniment în parteneriat"],
+      ["ro", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "Eveniment în parteneriat"],
+      ["en", ["Brașov Running Festival"], "Partnered event"],
+      ["en", ["Brașov Running Festival", "Salvamont"], "Partnered event"],
+      ["en", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "Partnered event"],
     ];
     for (const [locale, names, words] of cases) {
       const html = await overline(locale, ...names);
       expect(html).toContain('data-testid="overline-partner"');
       expect(html).toContain(`<span>${words}</span>`);
+      expect(html).not.toContain("Brașov Running Festival");
+      expect(html).not.toContain("Salvamont");
       expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
       // Decorative beside its words, the overline's own size, the "·" before it unread.
       expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="HandshakeIcon"/);
@@ -219,7 +215,8 @@ function chip(values: Partial<Parameters<typeof CalendarEventChip>[0]> = {}) {
 }
 
 const MOVED = { kind: "moved" as const, text: "Nu în locul obișnuit: Stația de telecabină Tâmpa" };
-const PARTNER = "În parteneriat cu Brașov Running Festival";
+/** The generic marker's words (§367, amended §NNN): never a partner's name. */
+const PARTNER = "Eveniment în parteneriat";
 const count = (html: string, needle: string) => html.split(needle).length - 1;
 
 describe("§367 one tooltip per calendar entry", () => {
@@ -251,7 +248,7 @@ describe("§367 one tooltip per calendar entry", () => {
       const html = chip({ dense, note: MOVED, partner: PARTNER });
       const anchor = html.match(/<a [^>]*>/)?.[0] ?? "";
       expect(anchor).toContain(
-        'aria-label="18:30 Happy Monday – alergare ușoară cu Brașov Runners. Nu în locul obișnuit: Stația de telecabină Tâmpa. În parteneriat cu Brașov Running Festival"',
+        `aria-label="18:30 Happy Monday – alergare ușoară cu Brașov Runners. ${MOVED.text}. ${PARTNER}"`,
       );
       expect(anchor).not.toContain("aria-labelledby");
     }
@@ -310,17 +307,17 @@ describe("§367 the calendar, grid and agenda, wears the handshake beside a part
   ];
 
   for (const layout of ["grid", "list"] as const) {
-    it(`names the partner on the partnered entry and nowhere else (${layout})`, async () => {
+    it(`marks the partnered entry with the generic label and nowhere else, never a partner's name (${layout})`, async () => {
       currentLocale = "ro";
       const html = renderToStaticMarkup(await EventCalendar({ view: { kind: "month", month: { year: 2026, month: 9 } }, events: rows, now: NOW, layout }));
       const anchors = [...html.matchAll(/<a [^>]*aria-label="([^"]*)"[^>]*>/g)].map((match) => match[1]);
-      expect(anchors).toContain("10:00 Trail to Road cu Brașov Running Festival. În parteneriat cu Brașov Running Festival");
+      expect(anchors).toContain("10:00 Trail to Road cu Brașov Running Festival. Eveniment în parteneriat");
       expect(anchors).toContain("18:30 Happy Monday");
       expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
     });
   }
 
-  it("says it in English on the English calendar, two partners by name", async () => {
+  it("says it in English on the English calendar, whatever the number of partners", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(
       await EventCalendar({
@@ -330,20 +327,22 @@ describe("§367 the calendar, grid and agenda, wears the handshake beside a part
         layout: "grid",
       }),
     );
-    expect(html).toContain("10:00 Trail to Road cu Brașov Running Festival. With Brașov Running Festival and Salvamont");
-    expect(html).not.toContain("În parteneriat");
+    expect(html).toContain("10:00 Trail to Road cu Brașov Running Festival. Partnered event");
+    expect(html).not.toContain("Salvamont");
+    expect(html).not.toContain("Eveniment în parteneriat");
   });
 
-  it("names the first of three partners and counts the rest, in both languages", async () => {
+  it("says the same generic label for three partners as for one, in both languages, and never their names", async () => {
     const three = [row({ coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") })];
     for (const [locale, words] of [
-      ["ro", "În parteneriat cu Brașov Running Festival și încă 2 parteneri"],
-      ["en", "With Brașov Running Festival and 2 more partners"],
+      ["ro", "Eveniment în parteneriat"],
+      ["en", "Partnered event"],
     ] as const) {
       currentLocale = locale;
       for (const layout of ["grid", "list"] as const) {
         const html = renderToStaticMarkup(await EventCalendar({ view: { kind: "month", month: { year: 2026, month: 9 } }, events: three, now: NOW, layout }));
         expect(html).toContain(`aria-label="10:00 Trail to Road cu Brașov Running Festival. ${words}"`);
+        expect(html).not.toContain("Salvamont");
         expect(html).not.toContain("Clubul Alpin");
         expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
       }

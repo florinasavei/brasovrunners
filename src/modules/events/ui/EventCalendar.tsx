@@ -114,8 +114,9 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
-        // Held with a partner (§367): the handshake beside the entry, the words in its tooltip.
-        partner={partnerPhrase(tEvent, locale, readCoHosts(event).map((host) => host.name))}
+        // Held with a partner (§367, amended §NNN): the handshake beside the entry, the generic
+        // "Eveniment în parteneriat" in its tooltip — never a partner's name (there may be several).
+        partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}
         dense={dense}
       />
     );

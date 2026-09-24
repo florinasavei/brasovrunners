@@ -126,12 +126,12 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
   });
 });
 
-describe("BR-REQ-041-01 the route is one row of pills (§356)", () => {
-  it("distance, climb, difficulty, surface — in that order, each a small outlined chip with its glyph", async () => {
+describe("BR-REQ-041-01 the route is one row of pills (§356, amended §NNN)", () => {
+  it("surface, difficulty, distance, climb — in that order (the owner, 2026-09-24: \"terrain type, difficulty, distance, elevation\"), each a small outlined chip with its glyph", async () => {
     const html = await page();
     const route = row(html, "Traseu");
     const pills = chips(route.dd);
-    expect(pills.map((pill) => pill.label)).toEqual(["10 km", "300 m D+", "Ușor", "Asfalt"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -149,7 +149,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356)", () => {
   it("says the climb short in English too", async () => {
     currentLocale = "en";
     const html = await page();
-    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["10 km", "300 m climb", "Easy", "Asphalt"]);
+    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb"]);
   });
 
   it("lets a pill's words wrap rather than cut them with an ellipsis", async () => {
@@ -160,7 +160,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356)", () => {
 
   it("gives a pill only to what the club stated: no climb and no difficulty when there are none", async () => {
     const html = await page({ elevationGainMeters: null, difficulty: null });
-    expect(chips(row(html, "Traseu").dd).map((pill) => pill.label)).toEqual(["10 km", "Asfalt"]);
+    expect(chips(row(html, "Traseu").dd).map((pill) => pill.label)).toEqual(["Asfalt", "10 km"]);
     expect(html).not.toContain("D+");
   });
 
@@ -467,11 +467,14 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   it("writes when as one line: the date with its weekday, a clock, and the time — each piece whole", async () => {
     const html = await card();
     const when = line(html, "when").inner;
-    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·08:00");
-    expect(when).toContain('style="white-space:nowrap"');
+    // The event is within the coming twelve months (NOW is 2026-09-01, the event 2026-09-26), so
+    // the card carries both renderings of the date — CSS shows only one at a time (below).
+    expect(when).toContain("Sâmbătă, 26 sept. 2026");
+    expect(when).toContain("Sâmbătă, 26 sept.");
+    expect(when).toContain("white-space:nowrap");
     // The separator is hidden from a screen reader.
     expect(when).toMatch(/<span\b[^>]*aria-hidden="true"[^>]*>·<\/span>/);
-    // The clock sits between the date and the time, as big and as grey as the row's glyph.
+    // The clock sits after the date pieces and before the time, as big and as grey as the row's glyph.
     const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when)?.[0] ?? "";
     expect(clock).toContain('aria-hidden="true"');
     expect(when.indexOf("2026")).toBeLessThan(when.indexOf(clock));
@@ -482,16 +485,39 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
   });
 
-  it("puts a series card's «Următoarea:» on the date's own line, before it (§113)", async () => {
+  it("drops the year only on a phone, and only when the date is within the coming twelve months (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", async () => {
+    // Over a year out: `formatDay` is called once, with the year — no second rendering to toggle.
+    // January carries no DST (Europe/Bucharest is UTC+2 then, +3 in September).
+    const far = line(await card({ startsAt: new Date("2028-01-15T05:00:00Z") }), "when").inner;
+    expect(text(far)).toBe("Sâmbătă, 15 ian. 2028·07:00");
+    expect([...far.matchAll(/Sâmbătă, 15 ian\. 2028/g)]).toHaveLength(1);
+    // Within the year: both the full date and the short one (no year, still the weekday, §349)
+    // are in the markup, one hidden by width at a time — never two read together at once.
+    const near = line(await card(), "when").inner;
+    expect([...near.matchAll(/Sâmbătă, 26 sept\. 2026/g)]).toHaveLength(1);
+    expect([...near.matchAll(/Sâmbătă, 26 sept\.(?! 2026)/g)]).toHaveLength(1);
+    // The source says which is which: the full date reads at `sm` and up, the short one at `xs`.
+    const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
+    expect(source).toMatch(/display:\s*\{\s*xs:\s*"none",\s*sm:\s*"inline"\s*\}/);
+    expect(source).toMatch(/display:\s*\{\s*xs:\s*"inline",\s*sm:\s*"none"\s*\}/);
+    expect(source).toContain('year: false');
+  });
+
+  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), the row never wrapping (§366, amended §NNN)", async () => {
     const html = await card({}, { whenLead: "Următoarea:" });
-    expect(text(line(html, "when").inner)).toBe("Următoarea:Sâmbătă, 26 sept. 2026·08:00");
+    const when = line(html, "when").inner;
+    // The lead comes before the date, which comes before the time — the calendar glyph is first
+    // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row).
+    expect(when.indexOf("Următoarea:")).toBeGreaterThan(-1);
+    expect(when.indexOf("Următoarea:")).toBeLessThan(when.indexOf("Sâmbătă, 26 sept."));
+    expect(when.indexOf("Sâmbătă, 26 sept.")).toBeLessThan(when.indexOf("08:00"));
     // Not a line of its own above the facts.
     expect(lines(html)[0]?.key).toBe("when");
   });
 
-  it("draws the route and the cost as the page's small outlined pills — distance, climb, difficulty, surface, cost", async () => {
+  it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["10 km", "300 m D+", "Ușor", "Asfalt", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Gratuit"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -506,12 +532,12 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   it("in English too", async () => {
     currentLocale = "en";
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["10 km", "300 m climb", "Easy", "Asphalt", "Free"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Free"]);
   });
 
   it("draws no pill for what the club has not stated, and none at all when it stated nothing", async () => {
     const some = chips(line(await card({ elevationGainMeters: null, difficulty: null, costType: null }), "pills").inner);
-    expect(some.map((pill) => pill.label)).toEqual(["10 km", "Asfalt"]);
+    expect(some.map((pill) => pill.label)).toEqual(["Asfalt", "10 km"]);
     const none = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
     expect(lines(none).map((l) => l.key)).not.toContain("pills");
     expect(none).not.toContain("MuiChip-root");

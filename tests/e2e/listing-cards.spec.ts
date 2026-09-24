@@ -24,8 +24,8 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
  */
 
 /** Every event card on the listing, the folds opened so a phone's folded list is measured too. */
-async function cards(page: Page): Promise<Locator> {
-  await page.goto("/ro/evenimente");
+async function cards(page: Page, locale: "ro" | "en" = "ro"): Promise<Locator> {
+  await page.goto(locale === "ro" ? "/ro/evenimente" : "/en/events");
   const main = page.locator("#main");
   // The list streams in after the shell (§166): wait for a card before measuring any — in the
   // document first, since with more than four cards a phone folds them all (§78) and the first is
@@ -292,12 +292,14 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     }
   });
 
-  test("draw the route and the cost as pills, with no middle dots between them and no partner among them", async ({ page }) => {
+  test("draw the route and the cost as pills, in order — surface, difficulty, distance, elevation, cost — with no middle dots and no partner among them", async ({ page }) => {
     const list = await cards(page);
     // The seeded Tâmpa run: 14 km, 600 m of climb, moderate, on trail, free.
     const tampa = list.filter({ hasText: "Tură pe Tâmpa" }).first();
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
-    await expect(pills).toHaveText(["14 km", "600 m D+", "Mediu", "Trail", "Gratuit"]);
+    // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
+    // terrain type, difficulty, distance, elevation" (§366, amended §NNN); the cost pill follows.
+    await expect(pills).toHaveText(["Trail", "Mediu", "14 km", "600 m D+", "Gratuit"]);
     await expect(tampa.locator('[data-fact="pills"]')).not.toContainText("·");
     // The surface is said once on the card: as a pill, not also as a chip at the top.
     await expect(tampa.locator(".MuiChip-root", { hasText: /^Trail$/ })).toHaveCount(1);
@@ -364,5 +366,38 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     await cards(page);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  /**
+   * BR-REQ-041-01, amended §NNN — the owner, 2026-09-24, of the row "Următoarea: Luni, 28 sept.
+   * 2026 · 18:30" whose clock and time had wrapped to a second line: "This should be on a single
+   * line on a phone." The row is nowrap now, and within the coming twelve months a phone reads the
+   * date with no year (§349 keeps the weekday). Measured on every card the mobile project's 320
+   * pixels shows — a single event's own date row and, where the listing carries one, a series'
+   * "Următoarea:" — in both languages: one line tall, and nothing inside the row scrolls past it.
+   */
+  test("keeps the «when» row to one line at 320 pixels, in both languages", async ({ page }) => {
+    test.skip(test.info().project.name !== "mobile", "320 pixels is the mobile project's fixed viewport");
+    for (const locale of ["ro", "en"] as const) {
+      const list = await cards(page, locale);
+      const count = await list.count();
+      expect(count).toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        const when = list.nth(i).locator('[data-fact="when"]');
+        const measured = await when.evaluate((el) => {
+          const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.4;
+          const rect = el.getBoundingClientRect();
+          return { height: rect.height, lineHeight, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+        });
+        // One line tall — never two — and nothing inside the row overflows its own box.
+        expect.soft(measured.height, `card ${i} (${locale}): when row height`).toBeLessThanOrEqual(measured.lineHeight * 1.5);
+        expect.soft(measured.scrollWidth - measured.clientWidth, `card ${i} (${locale}): when row overflow`).toBeLessThanOrEqual(1);
+      }
+      // And the time itself is never cut off or hidden: still readable text on the row.
+      const times = list.locator('[data-fact="when"]');
+      await expect(times.first()).toContainText(/\d{2}:\d{2}/);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+    }
   });
 });

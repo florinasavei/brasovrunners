@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createTheme } from "@mui/material/styles";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
@@ -303,14 +304,26 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     // The clock comes after the date and before the time.
     expect(when.indexOf("2026")).toBeLessThan(when.indexOf('data-testid="ScheduleIcon"'));
     expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("10:00"));
-    expect(text(when)).toBe("Duminică, 27 sept. 2026·10:00");
+    // The event is within the coming twelve months of `NOW`, so the card carries both renderings
+    // of the date — the full one and the year dropped (§366, amended §NNN) — CSS shows one at a
+    // time by width; both are in the text a crude tag-strip reads.
+    expect(text(when)).toContain("Duminică, 27 sept. 2026");
+    expect(text(when)).toContain("10:00");
   });
 
-  it("draws the route and the cost as the page's pills, and says the surface once — as a pill, not also a chip at the top", async () => {
+  it("never wraps the when line onto a second line (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", () => {
+    // `flow`'s row is `nowrap` only for a card, and its glyphs and pieces never shrink, so the
+    // row cannot break between the lead, the date, the clock and the time.
+    const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
+    expect(source).toMatch(/flexWrap:\s*card\s*\?\s*"nowrap"\s*:\s*"wrap"/);
+    expect(source).toContain("flexShrink: 0");
+  });
+
+  it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "În parteneriat cu Brașov Running Festival", "8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
-    expect(chipLabels(fact(html, "pills"))).toEqual(["8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "Eveniment în parteneriat", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
     expect(text(fact(html, "pills"))).not.toContain("·");
     expect(html).not.toContain("diferență de nivel");
@@ -324,9 +337,9 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(block).not.toContain('data-testid="HandshakeIcon"');
   });
 
-  it("carries its marks at the top: special, cancelled", async () => {
+  it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §NNN)", async () => {
     const html = await single({ isSpecial: true, eventStatus: "CANCELLED" });
-    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "În parteneriat cu Brașov Running Festival", "Anulat"]);
+    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "Eveniment în parteneriat", "Anulat"]);
   });
 
   it("prints the summary with no link and the address as its host", async () => {
@@ -348,10 +361,10 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "With Brașov Running Festival", "8 km", "250 m climb", "Moderate", "Mixed", "Free"]);
+    expect(chipLabels(html)).toEqual(["Group run", "Partnered event", "Mixed", "Moderate", "8 km", "250 m climb", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
-    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026·10:00$/);
+    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sunday, 27 Sept?·10:00$/);
     expect(fact(html, "when")).toContain('data-testid="ScheduleIcon"');
   });
 });
@@ -366,7 +379,10 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
       "Happy Monday",
       "În fiecare luni, la 18:30",
       "O oră de alergare ușoară",
-      "Următoarea:Luni, 28 sept. 2026·18:30",
+      // The date is within the coming twelve months of `NOW`, so both renderings are in the
+      // markup — the full one, then the year dropped (§366, amended §NNN) — CSS shows one at a
+      // time by width.
+      "Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30",
       "Parcul Titulescu, la fântâna arteziană",
       "8 km",
       "Gratuit",
@@ -378,8 +394,10 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     // «Următoarea» is not a line of its own any more: it leads the date's line, and the clock the time.
     const when = fact(html, "when");
-    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026·18:30");
+    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30");
     expect(when).toContain('data-testid="ScheduleIcon"');
+    // The row never wraps: nowrap, and every glyph and piece kept whole (§366, amended §NNN).
+    expect(when).toContain("white-space:nowrap");
   });
 
   it("sets the rhythm a line's gap under the title — no nearer than the title's link reaches, so the line never sits on it (§366)", async () => {

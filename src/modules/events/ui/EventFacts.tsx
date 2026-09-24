@@ -22,7 +22,8 @@ import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
-import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph, type GlyphName } from "./glyphs";
+import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
+import { orderRoutePills, type Pill } from "./route-pills";
 
 /**
  * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
@@ -30,7 +31,7 @@ import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph, type GlyphName } from "./glyp
  * icons not consistent". One object, so a row cannot drift from the others; the unit test reads
  * the class Emotion gives it and finds the same one on every row.
  */
-const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1 } as const;
+const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
 
 /**
  * The clock in front of the time, inside the "când" line (§366; the owner, 2026-09-24, of a
@@ -58,9 +59,6 @@ const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-
  * A plain object in module scope, because it crosses to the client component (`GlyphChip`).
  */
 const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", py: 0.25 } } as const;
-
-/** A pill's content: its glyph by name, for `GlyphChip` to make on its own side of the boundary (§112), and its words. */
-type Pill = { glyph: GlyphName; label: string };
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -139,7 +137,31 @@ export default async function EventFacts({
   // local time regardless of where the page is opened.
   // The date starts its line, so it takes a capital (§349): "Sâmbătă, 21 nov. 2026".
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
-  const date = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  const dateLong = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  /**
+   * The card's "when" line must fit on one line at 320 and 360 pixels (§366, amended §NNN — the
+   * owner, 2026-09-24, of the row whose clock and time had wrapped to a second line: "This should
+   * be on a single line on a phone"). Measured (§366): with the year, the line never fits a
+   * phone's width once the calendar glyph, the clock and the time share it. When the date falls
+   * within the coming twelve months a phone drops the year — the weekday and the day-month stay
+   * (§349) — through `formatDay`'s own `year: false`, the smallest change that fits: never a
+   * second date format, only the one option this helper already carries. `sm` and up, and any
+   * date further out, keep the year; nothing is lost where there is room to read it.
+   */
+  const dateWithinYear = compact && event.startsAt.getTime() - now.getTime() >= 0 && event.startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
+  const dateShort = dateWithinYear ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
+  const date: ReactNode = dateShort ? (
+    <>
+      <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+        {dateLong}
+      </Box>
+      <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+        {dateShort}
+      </Box>
+    </>
+  ) : (
+    dateLong
+  );
 
   // A 44px target, like every other link on a phone (BR-REQ-041-01 criterion 6). `noopener`
   // and `noreferrer` stop the opened page reaching back through `window.opener` and stop it
@@ -317,31 +339,28 @@ export default async function EventFacts({
   const mentionsRegistration = takesRegistrations(event.type);
 
   /*
-    One wrapping line of short pieces: "Sâmbătă, 26 sept. 2026 · 08:00". The middle dot is hidden
-    from a screen reader and carried at the end of the piece before it, so a line that has to wrap
-    — a race's two named times on a phone — never starts with a separator; each piece is its own
-    flex item, so the line breaks between pieces before it breaks inside one.
+    One line of short pieces: "Sâmbătă, 26 sept. 2026 · 08:00". The middle dot is hidden from a
+    screen reader and carried at the end of the piece before it.
 
-    The card's form (§366) adds a `lead` — a series card's "Următoarea:" — which is a piece with no
-    dot after it, and keeps every piece whole, so the line breaks only between pieces: wherever the
-    card is wide enough, "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" is one line, and where it
-    is not, the line wraps whole pieces under whole pieces — never "2026" alone, never a dot at the
-    head of a line. Measured (§366): on a 320-pixel phone every card's line takes two lines — the
-    time goes under the date with its clock, or, on a series card whose weekday is long
-    ("Miercuri"), the date and the time go under "Următoarea:"; from 375 pixels it is one line on a
-    one-off card and on a series card with a short weekday. One line at 320 would need the short
-    weekday or no lead below a breakpoint — two renderings of one date, picked by width — for a
-    wrap that already falls between whole pieces; not taken.
+    The page's own row (`stacked`, no `card`) still wraps — a race's two named times may need a
+    second line there, and each piece is its own flex item so the break falls between pieces, never
+    inside one.
+
+    The card's form (§366, amended §NNN — the owner, 2026-09-24, of the row whose clock and time had
+    wrapped to a second line: "This should be on a single line on a phone") never wraps: `nowrap`
+    on the row, every piece and the lead (a series card's "Următoarea:") kept whole. What used to
+    make the line too wide at 320 pixels — the year in the date — is dropped there instead (`date`,
+    above); nothing here still relies on wrapping to fit.
   */
   const flow = (items: ReactNode[], card?: { lead?: string }) => (
-    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", columnGap: 0.75 }}>
+    <Box sx={{ display: "flex", flexWrap: card ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
       {card?.lead && (
-        <Box component="span" sx={{ color: "text.secondary" }}>
+        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0 }}>
           {card.lead}
         </Box>
       )}
       {items.map((item, index) => (
-        <span key={index} style={card ? { whiteSpace: "nowrap" } : undefined}>
+        <span key={index} style={card ? { whiteSpace: "nowrap", flexShrink: 0 } : undefined}>
           {item}
           {index < items.length - 1 && (
             <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: 0.75 }}>
@@ -363,16 +382,28 @@ export default async function EventFacts({
   );
 
   /*
-    The route's numbers as pills — the distance, the climb, how hard — in that order, each with its
-    glyph (§112), a pill only for what the club stated. The event page (§356) and the listing card
-    (§366) both start from these; each adds the surface and the cost its own way below.
+    The route's numbers as pills — surface, difficulty, distance, elevation, in that order (§366,
+    amended §NNN — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
+    should be: terrain type, difficulty, distance, elevation") — each with its glyph (§112), a pill
+    only for what the club stated. `orderRoutePills` decides the order once, for both the event
+    page (§356) and the listing card (§366), so neither can read them in a different order; a pill
+    absent on an event stays absent, never a gap where it would have been.
+
+    The surface is built here but not included by default: the event page (below) adds it to the
+    ordered set only when another route pill or link is already drawn, so a route with only a
+    surface (the overline already says it, BR-REQ-010-01) makes no "Traseu" row of its own; the
+    card (§366) always includes it, since the card's chips no longer repeat the surface.
   */
-  const routePills: Pill[] = [];
-  if (distance !== null) {
-    routePills.push({ glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) });
-  }
-  if (event.elevationGainMeters) routePills.push({ glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) });
-  if (event.difficulty) routePills.push({ glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) });
+  const distancePill: Pill | null =
+    distance !== null ? { glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) } : null;
+  const elevationPill: Pill | null = event.elevationGainMeters
+    ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
+    : null;
+  const difficultyPill: Pill | null = event.difficulty
+    ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
+    : null;
+  const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
+  let routePills = orderRoutePills({ difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
 
   if (compact) {
     /*
@@ -395,14 +426,14 @@ export default async function EventFacts({
       partner's mark on a card belongs to its chips, not to its facts.
     */
     /*
-      The pills: the page's route pills, then the surface — said here once, so the chips at the
-      top of the card no longer carry it (§366: the same word twice on one card was one of the
-      things the owner saw) — then the cost as the closed set's short word, "Gratuit", "Cu taxă",
-      "Donație" (§343: an amount and where to pay are the page's). No pill for what the club has
-      not stated: a null cost is unstated, not free (AGENTS.md §1.2).
+      The pills, in the one order (`orderRoutePills`, above): surface, difficulty, distance,
+      elevation — said here once, so the chips at the top of the card no longer carry the surface
+      (§366: the same word twice on one card was one of the things the owner saw) — then the cost
+      as the closed set's short word, "Gratuit", "Cu taxă", "Donație" (§343: an amount and where to
+      pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
+      free (AGENTS.md §1.2).
     */
-    const cardPills: Pill[] = [...routePills];
-    if (event.surface) cardPills.push({ glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) });
+    const cardPills: Pill[] = orderRoutePills({ surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
     if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
 
     /*
@@ -658,12 +689,12 @@ export default async function EventFacts({
   }
 
   /*
-    The route: one row of pills — the distance, the climb, how hard, what it is run on — in that
-    order, each with its glyph (§112), a pill only for what the club stated. The surface is the
-    course's (§350) and completes a route row, but never makes one on its own: the overline at the
-    top of the page already says it beside the type (BR-REQ-010-01), and a "Traseu" holding only
-    that word would be the overline again. Under the pills, the route's links. The first three pills
-    are `routePills`, built above for the card as well.
+    The route: one row of pills — surface, difficulty, distance, elevation, in the one order
+    (`orderRoutePills`, above), each with its glyph (§112), a pill only for what the club stated.
+    The surface is the course's (§350) and completes a route row, but never makes one on its own:
+    the overline at the top of the page already says it beside the type (BR-REQ-010-01), and a
+    "Traseu" holding only that word would be the overline again. Under the pills, the route's links.
+    `routePills` without the surface is built above, shared with the card.
   */
   const routeLinks: ReactNode[] = [];
   if (links && event.routeUrl) routeLinks.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
@@ -671,7 +702,7 @@ export default async function EventFacts({
   // The Facebook event (§144): where the club's people say "going".
   if (links && event.facebookEventUrl) routeLinks.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
   if (event.surface && (routePills.length > 0 || routeLinks.length > 0)) {
-    routePills.push({ glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) });
+    routePills = orderRoutePills({ surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill });
   }
   if (routePills.length > 0 || routeLinks.length > 0) {
     rows.push({
