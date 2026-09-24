@@ -62,8 +62,8 @@ export async function GET(
   if (Number.isNaN(from) || Number.isNaN(to)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
-  // Two A5 bibs per A4 page unless "one" is asked for — each alone in the upper half of its page
-  // (§NNN); anything else is the default, not an error.
+  // Two A5 bibs per A4 page unless "one" is asked for — each centred alone on its own page, no
+  // cut line (§79); anything else is the default, not an error.
   const layout = url.searchParams.get("layout") === "one" ? ("one" as const) : ("two" as const);
   // The only scope besides a range: the bibs nobody has printed yet (§264).
   const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;

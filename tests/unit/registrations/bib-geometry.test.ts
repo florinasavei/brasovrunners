@@ -39,10 +39,13 @@ describe("§NNN the bib's geometry", () => {
     }
   });
 
-  it("puts every bib alone in the upper half of its own page with `one`", () => {
+  it("centres every bib alone on its own page with `one`, not stacked in the upper half", () => {
     const slots = bibSheetSlots(3, "one");
     expect(slots.map((s) => s.page)).toEqual([0, 1, 2]);
-    expect(slots.every((s) => s.y === 0)).toBe(true);
+    // Centred vertically on the A4 page, not at the top: the same gap above the bib as below it.
+    const centred = (A4_PAGE.height - BIB_PAPER.height) / 2;
+    expect(slots.every((s) => s.y === centred)).toBe(true);
+    expect(centred).toBeGreaterThan(0);
     expect(slots.every((s) => s.width === BIB_PAPER.width && s.height === BIB_PAPER.height)).toBe(true);
   });
 

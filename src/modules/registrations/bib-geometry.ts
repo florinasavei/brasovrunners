@@ -54,9 +54,17 @@ export const BIB_LAYOUT = {
   /** The white lockup at the left of the band, at its own proportion. */
   logoWidth: 122,
   logoRatio: 2.424,
-  /** The race and its date at the right of the band. */
+  /**
+   * The race and its date at the right of the band, each at a fixed offset from the card's top
+   * rather than centred on the band as a group — `titleTop` when both show, `dateTop` for the
+   * date under a title, `dateTopAlone` for the date on its own. Both renderers place them at
+   * these same points, which is what keeps the preview the paper rather than a card sized by eye.
+   */
   titleSize: 13,
   dateSize: 10.5,
+  titleTop: 15,
+  dateTop: 34,
+  dateTopAlone: 22,
   /** The name: its size, the strip it takes above or below the number, and its offset in the strip. */
   nameSize: 24,
   nameBlock: 44,

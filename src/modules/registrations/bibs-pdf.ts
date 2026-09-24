@@ -74,13 +74,11 @@ export type BibSheetInput = {
 /**
  * `two`: two A5 bibs on each A4 page, the upper half and the lower — the sheet the club cuts.
  *
- * `one`: each bib alone on its A4 page, **in the upper half**, where it would have been on the
- * two-up sheet, with the same cut line under it (§NNN; §79 had it centred on the page). The club
- * prints on A4: an A5-sized PDF page would be scaled up to fill the A4 by most print dialogs, or
- * need A5 paper in a tray nobody has, while the upper half of an A4 comes out the size its twin in
- * the batch did — cut on the same line, or folded on it, which gives a club that pins the whole
- * page a bib of double thickness. It is the reprint of one creased number, and what the
- * registration's own "download the bib" asks for.
+ * `one`: the same A5-sized bib, centred one per A4 page, no cut line — for a printer that will
+ * not take a cut, or a club that pins the whole page (§79; BR-REQ-038-01 criterion 5). The bib
+ * itself does not grow: an A5 number on a shirt is the size that reads from the finish line, and
+ * `one` is a reprint of a single number or the registration's own "download the bib", never a
+ * reason to draw the paper's cut on a page that has nothing to cut from.
  */
 export type BibSheetLayout = "two" | "one";
 
@@ -90,15 +88,18 @@ export type BibSlot = { page: number; x: number; y: number; width: number; heigh
 /**
  * Where each bib of a sheet is printed, in order: two to a page, the upper half and then the
  * lower, so an odd count leaves the last page's lower half blank rather than printing half a bib;
- * or, with `one`, every bib in the upper half of a page of its own. Every box is `BIB_PAPER`:
+ * or, with `one`, every bib centred alone on a page of its own (§79). Every box is `BIB_PAPER`:
  * 595.28 × 420.945 points, A5 landscape, half of the A4 page exactly.
  */
 export function bibSheetSlots(count: number, layout: BibSheetLayout = "two"): BibSlot[] {
   const perPage = layout === "one" ? 1 : 2;
+  // `one` centres the A5 box on the A4 page rather than stacking it in the upper half — there is
+  // no cut on that page, so nothing marks where the upper half would have ended (§79).
+  const centred = (A4_PAGE.height - BIB_PAPER.height) / 2;
   return Array.from({ length: count }, (_, index) => ({
     page: Math.floor(index / perPage),
     x: 0,
-    y: (index % perPage) * BIB_PAPER.height,
+    y: layout === "one" ? centred : (index % perPage) * BIB_PAPER.height,
     width: BIB_PAPER.width,
     height: BIB_PAPER.height,
   }));
@@ -234,14 +235,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
           .font("bold")
           .fontSize(L.titleSize)
           .fillColor(bandText)
-          .text(input.eventTitle, headerLeft, top + 15, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
+          .text(input.eventTitle, headerLeft, top + L.titleTop, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
       }
       if (design.showDate) {
         doc
           .font("body")
           .fontSize(L.dateSize)
           .fillColor(bandText)
-          .text(input.eventDate, headerLeft, top + (design.showEventTitle ? 34 : 22), {
+          .text(input.eventDate, headerLeft, top + (design.showEventTitle ? L.dateTop : L.dateTopAlone), {
             width: headerWidth,
             align: "right",
             lineBreak: false,
@@ -330,8 +331,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   };
 
   /**
-   * The cut, on every page that has a bib — the upper bib's foot is the cut whether or not a
-   * second bib is under it: a dashed line across the page, exactly half-way down.
+   * The cut, on every two-up page — the upper bib's foot is the cut whether or not a second bib
+   * is under it: a dashed line across the page, exactly half-way down. Never drawn with `one`
+   * (§79): that page holds a single, centred A5 bib with nothing above or below it to cut from.
    *
    * With the club's cut marks (§249), a short solid rule at each end of it as well, from the
    * paper's edge across the margin — what a guillotine is lined up on, and still there when a
@@ -354,12 +356,13 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.moveTo(A4_PAGE.width - length, BIB_SHEET_CUT).lineTo(A4_PAGE.width, BIB_SHEET_CUT).stroke();
   };
 
+  const perPage = input.layout === "one" ? 1 : 2;
   const slots = bibSheetSlots(input.rows.length, input.layout);
   slots.forEach((slot, index) => {
     // The first bib of a page opens it; the second, if there is one, joins it below the cut.
-    if (slot.y === 0) {
+    if (index % perPage === 0) {
       doc.addPage();
-      drawCut();
+      if (perPage === 2) drawCut();
     }
     drawBib(input.rows[index], slot);
   });

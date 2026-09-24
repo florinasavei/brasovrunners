@@ -181,8 +181,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
               display: "flex",
               flexShrink: 0,
               height: px(L.bandHeight),
-              alignItems: "center",
-              justifyContent: "space-between",
+              position: "relative",
               padding: `0 ${px(L.inset)}px`,
               background: band,
             }}
@@ -194,29 +193,51 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                 alt=""
                 width={px(L.logoWidth)}
                 height={px(L.logoWidth / L.logoRatio)}
-                style={{ flexShrink: 0, objectFit: "contain" }}
+                style={{
+                  position: "absolute",
+                  left: px(L.inset),
+                  top: px((L.bandHeight - L.logoWidth / L.logoRatio) / 2),
+                  objectFit: "contain",
+                }}
               />
-            ) : (
-              <div style={{ display: "flex" }} />
+            ) : null}
+            {/*
+              The race and its date, each at the same fixed offset from the card's top the sheet
+              draws them at (`BIB_LAYOUT.titleTop`/`dateTop`/`dateTopAlone`) — not centred on the
+              band as a group, which is what let the preview drift from the paper it is meant to
+              be a picture of.
+            */}
+            {design.showEventTitle && (
+              <div
+                style={{
+                  ...ONE_LINE,
+                  position: "absolute",
+                  top: px(L.titleTop),
+                  right: px(L.inset),
+                  maxWidth: px(headerTextWidth),
+                  color: bandText,
+                  fontWeight: 700,
+                  fontSize: px(L.titleSize),
+                }}
+              >
+                {input.eventTitle}
+              </div>
             )}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                maxWidth: px(headerTextWidth),
-                color: bandText,
-              }}
-            >
-              {design.showEventTitle && (
-                <div style={{ ...ONE_LINE, maxWidth: px(headerTextWidth), fontWeight: 700, fontSize: px(L.titleSize) }}>
-                  {input.eventTitle}
-                </div>
-              )}
-              {design.showDate && (
-                <div style={{ ...ONE_LINE, maxWidth: px(headerTextWidth), fontSize: px(L.dateSize) }}>{input.eventDate}</div>
-              )}
-            </div>
+            {design.showDate && (
+              <div
+                style={{
+                  ...ONE_LINE,
+                  position: "absolute",
+                  top: px(design.showEventTitle ? L.dateTop : L.dateTopAlone),
+                  right: px(L.inset),
+                  maxWidth: px(headerTextWidth),
+                  color: bandText,
+                  fontSize: px(L.dateSize),
+                }}
+              >
+                {input.eventDate}
+              </div>
+            )}
           </div>
         )}
         {design.namePosition === "above" ? name : null}

@@ -168,8 +168,10 @@ describe("BR-REQ-038-01 the bib sheet", () => {
    * drop its last word onto a line of its own, 9 points lower: over the second line, or over the
    * cut edge. So the sheet centres each line itself and hands pdfkit no width to wrap in.
    *
-   * The partners are the review's own example: a footer whose first line fitted by the advance
-   * widths and not in pdfkit, because Roboto kerns "rt" apart.
+   * This fixture only needs to force the footer onto two lines at the sheet's 523.28-point
+   * measure; the kerning-at-the-limit case — a first line that fits by the advance widths and
+   * not in pdfkit, because Roboto kerns "rt" apart — is exercised by the randomised widths in
+   * `bib-footer.test.ts` instead.
    */
   it("draws each footer line centred on the bib and without a width, so pdfkit cannot wrap it", async () => {
     const input = {

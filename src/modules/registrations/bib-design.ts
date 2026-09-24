@@ -102,7 +102,7 @@ export const bibDesignSchema = z
     headerImageSrc: storedPicture,
     /** A strip of sponsors above the small print, or null. */
     sponsorImageSrc: storedPicture,
-    /** Corner marks on the sheet, for a club that takes it to a printer. */
+    /** Solid guide rules at each end of the cut line, for a club that takes the sheet to a printer. */
     cutMarks: z.boolean().catch(false),
     /*
       The footer, the club's to compose (§317; `bib-footer.ts` lays it out). Every default is
