@@ -85,6 +85,22 @@ const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 const FLOATING_BAR_STYLE = { zIndex: 3 } as const;
 
 /**
+ * The writing area's own box: a generous minimum, because a page body that looks like a one-line
+ * field invites a one-line page. One object for the two places that draw it — Tiptap's `.tiptap`
+ * and the stand-in shown until Tiptap has mounted — so the two are always the same height.
+ *
+ * **Why the stand-in** (found by CI on BR-V1.80, not by anything that batch changed). Tiptap
+ * builds its editor only in the browser, after hydration (`immediatelyRender: false`, below), and
+ * until then the writing area was an empty `div`, zero pixels tall. The moment it mounted, it
+ * grew to this box and pushed everything under it down — 272 pixels on `/admin/emails`, where
+ * "Salvează textul" and "Înlocuiește cu câmpurile" stand under each message's editor. A press in
+ * that first second landed on the gap the button had just left and did nothing: no request, no
+ * answer, the page as it was. With the stand-in the area has its height from the first paint, and
+ * the stand-in goes in the same render that brings Tiptap's element in, so nothing below moves.
+ */
+const WRITING_AREA_BOX = { minHeight: 240, p: 2 } as const;
+
+/**
  * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
  * the text should resemble microsoft word!"). They were the toolbar's first glyphs; since §361
  * every button wears one, from the same family.
@@ -911,11 +927,9 @@ function RichTextEditorIsland({
 
         <Box
           sx={{
-            // The writing area itself. A generous minimum, because a page body that looks like a
-            // one-line field invites a one-line page.
+            // The writing area itself (`WRITING_AREA_BOX`).
             "& .tiptap": {
-              minHeight: 240,
-              p: 2,
+              ...WRITING_AREA_BOX,
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
               // A floated picture at the end of the body would otherwise hang out of the
@@ -1154,6 +1168,8 @@ function RichTextEditorIsland({
               </Paper>
             </BubbleMenu>
           )}
+          {/* The writing area's height before Tiptap has mounted (`WRITING_AREA_BOX`): nothing to read, nothing to focus. */}
+          {!editor && <Box aria-hidden sx={WRITING_AREA_BOX} data-testid="rich-text-reserved" />}
           <EditorContent editor={editor} />
         </Box>
       </Box>
