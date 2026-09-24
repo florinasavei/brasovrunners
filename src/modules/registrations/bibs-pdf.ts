@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { COLOR } from "@/theme/brand";
+import { CLUB_NAME, COLOR } from "@/theme/brand";
 import {
   bandTextColour,
   type BibDesign,
@@ -167,7 +167,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     font: regular as unknown as string,
     info: {
       Title: `${input.eventTitle} — bibs`,
-      Author: "Brașov Runners",
+      Author: CLUB_NAME,
       CreationDate: input.generatedAt,
       ModDate: input.generatedAt,
     },

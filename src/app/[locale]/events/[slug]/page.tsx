@@ -2,7 +2,6 @@ import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
-import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -228,7 +227,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <Divider sx={{ my: 3 }} />
-      {/* One fact per line here (§168): the page is where they are read one at a time. */}
+      {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
+          the address under the place. */}
       <EventFacts event={event} now={now} stacked />
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
@@ -278,36 +278,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         />
       </Box>
 
-      {event.locationAddress && (
-        <Stack sx={{ mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            {t("address")}
-          </Typography>
-          <Typography variant="body1">
-            {/*
-              The address itself is the map link when the club has given one. One link rather
-              than an address followed by a second "open the map": the same destination twice
-              on one page is noise for a screen reader and for a crawler.
-
-              The URL is whatever the organizer pasted (AGENTS.md §8 forbids assembling one),
-              so it opens in a new tab with `rel="noopener noreferrer"` — the opened page can
-              then neither reach back through `window.opener` nor learn where it came from.
-            */}
-            {event.mapUrl ? (
-              <MuiLink
-                href={event.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-              >
-                {event.locationAddress}
-              </MuiLink>
-            ) : (
-              event.locationAddress
-            )}
-          </Typography>
-        </Stack>
-      )}
+      {/* The address is not repeated here: it is the second line of "Unde" in the facts above
+          (§356), under the place's name, which is the one link to the map. */}
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
           because most of them are the route again — the GPX, a map — and before the programme.

@@ -3,7 +3,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
-import { COLOR } from "@/theme/brand";
+import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
@@ -53,9 +53,15 @@ export type TemplateContent = {
   privacy?: { text: string; url: string };
 };
 
+/*
+  The club's everyday name is the platform's one constant (`CLUB_NAME`, §215), never a literal
+  in a message (§357; the owner: "I do not [want] hardcoded stuff in the document and emails
+  anymore!"): the sign-off, the banner's words, the invitation and the "my registrations" subject
+  all read it, so the name is written once, and a message says nothing a constant could not.
+*/
 const SIGN_OFF: Record<EmailLocale, string> = {
-  ro: "Echipa Brașov Runners",
-  en: "The Brașov Runners team",
+  ro: `Echipa ${CLUB_NAME}`,
+  en: `The ${CLUB_NAME} team`,
 };
 
 function escapeHtml(value: string): string {
@@ -179,7 +185,7 @@ function card(blocks: string[][]): string {
    * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
    * §8): no hostname is written in `src/`.
    */
-  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="Bra&#536;ov Runners" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="${escapeHtml(CLUB_NAME)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
   /**
    * The header is a **white banner**, and the message declares itself a light-scheme document
    * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
@@ -484,7 +490,8 @@ const T = {
           : "Un loc te așteaptă — semnează declarația",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`
+          ? // "When we remind you", never "a week before": the window is the event's own number (§104, §357).
+            `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim, înainte de start.`
           : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
         `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
       ],
@@ -536,7 +543,8 @@ const T = {
       subject: "Ne vedem în curând — detaliile pentru ziua cursei",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
+        // "Se apropie", not "peste două zile": a runner confirmed late gets this a day after confirming, nearer the start (§126, §357).
+        `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
@@ -607,9 +615,9 @@ const T = {
       ],
     },
     staffInvitation: {
-      subject: "Ești în echipa Brașov Runners",
+      subject: `Ești în echipa ${CLUB_NAME}`,
       body: (d: TemplateData) => [
-        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
+        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul ${CLUB_NAME}, ca ${d.staffRole ?? "membru al echipei"}.`,
         `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
         // What the club keeps about its own team (§323), said to the person it is kept about.
         "Pentru cont folosim Zitadel, cu numele și adresa ta; ce faci în backoffice rămâne în jurnalul clubului, cu numele tău, cel mult trei ani. Detalii în nota de confidențialitate.",
@@ -648,7 +656,7 @@ const T = {
       action: "Gestionează înscrierea",
     },
     profileManageLink: {
-      subject: "Înscrierile tale la Brașov Runners",
+      subject: `Înscrierile tale la ${CLUB_NAME}`,
       body: () => [
         "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
         "Linkul este valabil 14 zile și doar pentru tine.",
@@ -671,9 +679,10 @@ const T = {
       action: "Vezi pagina evenimentului",
     },
     eventCancelled: {
-      subject: (d: TemplateData) => `Evenimentul „${d.eventTitle ?? "Brașov Runners"}” a fost anulat`,
+      // Without a title the sentence names no event — never the club's name standing in for one (§357).
+      subject: (d: TemplateData) => (d.eventTitle ? `Evenimentul „${d.eventTitle}” a fost anulat` : "Evenimentul a fost anulat"),
       body: (d: TemplateData) => [
-        `Ne pare rău: evenimentul „${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
+        `Ne pare rău: evenimentul${d.eventTitle ? ` „${d.eventTitle}”` : ""}${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
         "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
         `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
@@ -746,7 +755,7 @@ const T = {
           : "A place is waiting — sign the declaration",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you a week before the start.`
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you before the start.`
           : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
         `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
       ],
@@ -770,7 +779,7 @@ const T = {
       subject: "See you soon — the details for race day",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
+        `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
         ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
@@ -836,9 +845,9 @@ const T = {
       ],
     },
     staffInvitation: {
-      subject: "You are on the Brașov Runners team",
+      subject: `You are on the ${CLUB_NAME} team`,
       body: (d: TemplateData) => [
-        `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
+        `${d.inviterName || "A colleague"} added you to the team that runs the ${CLUB_NAME} website, as ${d.staffRole ?? "a team member"}.`,
         `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
         "Your account is held by Zitadel, with your name and address; what you do in the backoffice stays in the club's log, under your name, for at most three years. Details in the privacy notice.",
       ],
@@ -902,7 +911,7 @@ const T = {
       action: "Manage your registration",
     },
     profileManageLink: {
-      subject: "Your registrations at Brașov Runners",
+      subject: `Your registrations at ${CLUB_NAME}`,
       body: () => [
         "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
         "The link is valid for 14 days and only for you.",
@@ -925,9 +934,9 @@ const T = {
       action: "See the event's page",
     },
     eventCancelled: {
-      subject: (d: TemplateData) => `“${d.eventTitle ?? "Brașov Runners"}” has been cancelled`,
+      subject: (d: TemplateData) => (d.eventTitle ? `“${d.eventTitle}” has been cancelled` : "The event has been cancelled"),
       body: (d: TemplateData) => [
-        `We are sorry: “${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+        `We are sorry: ${d.eventTitle ? `“${d.eventTitle}”` : "the event"}${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
         "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
         `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
       ],
@@ -1163,7 +1172,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
  * club's everyday name. Never a literal of the legal name: the repository is public (§98).
  */
 function controllerName(): string {
-  return env.CLUB_LEGAL_NAME ?? "Brașov Runners";
+  return env.CLUB_LEGAL_NAME ?? CLUB_NAME;
 }
 
 /** The privacy notice's address in one language, from `APP_BASE_URL` like every link here (§8). */
