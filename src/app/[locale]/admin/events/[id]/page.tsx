@@ -88,7 +88,7 @@ import {
 import { countForm } from "@/i18n/count-form";
 import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
 import { HORIZON_DAYS, readRepeatRule } from "@/modules/events/domain/repeat";
-import { toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -262,7 +262,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       ? t(ruleEnded ? "editor.repeatRuleEnded" : "editor.repeatRuleUntil", { sentence: ruleWords, until: untilWords })
       : t("editor.repeatRuleForever", { sentence: ruleWords })
     : null;
-  const startOfToday = new Date(now.getTime() - 86_400_000);
+  // Midnight today on the event's own clock, not "24 hours ago": that would list yesterday
+  // evening's run among the next dates.
+  const startOfToday = fromWallTimeInput(`${toWallTimeInput(now, event.timezone).slice(0, 10)}T00:00`, event.timezone) ?? now;
   const upcoming = seriesDates
     .filter((member) => member.startsAt.getTime() >= startOfToday.getTime())
     .slice(0, 5)
@@ -416,7 +418,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   is not an edit, and it carries only the event's version. */}
               {/* The state and the version are the chips under the page's heading, once: a second
                   copy here was two answers to one question on a phone's first screen. */}
-              <Panel collapsible openWhen={{ inUse: true }} id="box-publication" title={t("editor.publicationSection")}>
+              <Panel collapsible openWhen={{ primary: true }} id="box-publication" title={t("editor.publicationSection")}>
                 <Stack spacing={1.5}>
                   {live && <Alert severity="warning">{t("editor.liveWarning")}</Alert>}
                   {gapLines.length > 0 && (

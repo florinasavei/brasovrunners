@@ -171,3 +171,46 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await expect(field("translations.ro.slug")).toHaveValue(`fara-declaratie-${suffix}`);
   });
 });
+
+/*
+  §NNN, found by review: a box the chosen registration mode hides cannot stop the save.
+
+  The boxes of the other modes stay in the document, hidden, so switching back finds them — and
+  they keep their `pattern`. A link typed as "www.club.ro" under "Înscrieri la organizator" and
+  then hidden by a switch to "Fără înscrieri" made the browser refuse the press and then fail to
+  focus a box it could not show: "Creează evenimentul" did nothing and said nothing. Hidden boxes
+  are read-only now, which the browser does not check, and the service ignores what the mode hides
+  before its schema reads it.
+*/
+test.describe("§NNN a wrong value in a hidden registration mode", () => {
+  test("a link typed under 'la organizator', then 'Fără înscrieri', then create: the event is created", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await fillDateField(page, "Începutul evenimentului", "2027-06-27");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Noua");
+    await field("translations.ro.title").fill(`Mod ascuns ${suffix}`);
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Hidden mode ${suffix}`);
+    await expect(field("translations.en.slug")).toHaveValue(`hidden-mode-${suffix}`);
+
+    await openEditorBox(page, "Participare și înscrieri");
+    const mode = page.getByRole("combobox", { name: "Modul de înscriere" });
+    await mode.click();
+    await page.getByRole("option", { name: "Înscrieri la organizator" }).click();
+    await field("event.externalRegistrationUrl").fill("www.club.ro");
+    await mode.click();
+    await page.getByRole("option", { name: "Fără înscrieri" }).click();
+    await expect(field("event.externalRegistrationUrl")).toBeHidden();
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+    await expect(page.getByTestId("form-refusal")).toHaveCount(0);
+  });
+});

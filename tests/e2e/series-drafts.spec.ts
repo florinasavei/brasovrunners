@@ -108,7 +108,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
     await expect(tooltip).toContainText("publicarea automată e oprită");
-    await expect(tooltip).toHaveCSS("white-space", "pre-line");
+    // `role="tooltip"` is on MUI's Popper, the positioning shell; `TOOLTIP_TEXT_SX` is on the
+    // tooltip slot inside it (`slotProps.tooltip`), which is the box that holds the text.
+    await expect(tooltip.locator(".MuiTooltip-tooltip")).toHaveCSS("white-space", "pre-line");
 
     // The link is real: it opens the draft's own editor, where it is a draft and nothing else.
     await firstDraftLink.click();

@@ -18,6 +18,11 @@
  *   pull out of the pile (§311), messages waiting in the outbox, an allowance spent.
  * - **inUse** — the reader set something in it that is shaping the page right now: a filter
  *   narrowing the list, the language the previews are shown in.
+ * - **primary** — the fold is the page's own verb rather than one more setting, and stays open on
+ *   every arrival: the event editor's Publicare box (the transition the editor exists for, with
+ *   what is missing for it) and the Recurență box, on the create page and on a series' date
+ *   (BR-REQ-050-02 criterion 7: the repetition is asked first, and a series is run from there).
+ *   Rare by design — a page with three primary folds has none.
  *
  * A fold targeted by the address's `#fragment` opens too; that one is the browser's to know,
  * not the server's, so it is `OpenFoldFromHash` in the backoffice shell, over `openFoldsAround`
@@ -28,12 +33,13 @@ export type FoldOpenWhen = {
   saved?: boolean;
   attention?: boolean;
   inUse?: boolean;
+  primary?: boolean;
 };
 
 /** Whether a fold opens on arrival: closed unless one of the reasons above holds. */
 export function opensByItself(when: FoldOpenWhen | undefined): boolean {
   if (!when) return false;
-  return Boolean(when.refused || when.saved || when.attention || when.inUse);
+  return Boolean(when.refused || when.saved || when.attention || when.inUse || when.primary);
 }
 
 /**

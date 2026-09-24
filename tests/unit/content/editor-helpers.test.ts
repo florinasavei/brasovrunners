@@ -3,7 +3,7 @@ import ro from "../../../messages/ro.json";
 import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/RepeatRuleFields";
 import { followingIds, presetOf } from "@/modules/content/events/ui/SeriesScope";
 import { slugFromTitle } from "@/modules/content/events/ui/slug";
-import { normalizeForMode } from "@/modules/content/events/service";
+import { ignoreHiddenFields, normalizeForMode } from "@/modules/content/events/service";
 import { isBlankValue } from "@/shared/forms/blank-value";
 
 /**
@@ -110,5 +110,44 @@ describe("§NNN normalizeForMode — what the chosen mode hides is ignored, not 
     expect(external).toMatchObject({ confirmationOpensDaysBefore: 7, minAge: 16, bibStartNumber: 100 });
     const internal = normalizeForMode({ ...fields, registrationMode: "INTERNAL" } as typeof fields);
     expect(internal).toMatchObject({ capacity: 20, declarationDocumentId: "d", participantListVisibility: "NAMES", externalProvider: null });
+  });
+});
+
+describe("§NNN ignoreHiddenFields — what the type or mode hides is replaced before the schema reads it", () => {
+  const posted = {
+    type: "RACE",
+    registrationMode: "INTERNAL",
+    capacity: "50",
+    declarationDocumentId: "",
+    participantListVisibility: "NAMES",
+    externalProvider: "",
+    externalRegistrationUrl: "www.club.ro",
+    confirmationOpensDaysBefore: "99",
+  };
+
+  it("replaces a wrong link hidden by 'Pe site', and keeps what 'Pe site' shows and every mode keeps", () => {
+    expect(ignoreHiddenFields(posted)).toEqual({ ...posted, externalProvider: null, externalRegistrationUrl: null });
+  });
+
+  it("replaces the capacity, the declaration and the list under 'La organizator' and 'Fără'", () => {
+    for (const registrationMode of ["EXTERNAL", "NONE"]) {
+      expect(ignoreHiddenFields({ ...posted, registrationMode, capacity: "0" })).toMatchObject({
+        capacity: null,
+        declarationDocumentId: null,
+        participantListVisibility: "HIDDEN",
+        confirmationOpensDaysBefore: "99",
+      });
+    }
+  });
+
+  it("replaces the whole block on a group run, whatever mode its hidden select still posts", () => {
+    expect(ignoreHiddenFields({ ...posted, type: "GROUP_RUN", capacity: "lots" })).toMatchObject({ registrationMode: "NONE", capacity: null, externalRegistrationUrl: null });
+  });
+
+  it("adds no key the caller did not send, and leaves an unknown mode or a non-object to the schema", () => {
+    expect(ignoreHiddenFields({ registrationMode: "NONE", capacity: "0" })).toEqual({ registrationMode: "NONE", capacity: null });
+    expect(ignoreHiddenFields({ registrationMode: "SOMETIMES", capacity: "0" })).toEqual({ registrationMode: "SOMETIMES", capacity: "0" });
+    expect(ignoreHiddenFields(null)).toBeNull();
+    expect(ignoreHiddenFields("fields")).toBe("fields");
   });
 });

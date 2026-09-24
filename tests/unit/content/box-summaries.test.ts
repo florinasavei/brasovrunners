@@ -206,6 +206,19 @@ describe("§NNN the tabs' first-paint marks", () => {
     // Nobody wrote rules: no language is behind the other.
     expect(incompleteLocales(translations, "parity", BLANK.rules)).toEqual([]);
   });
+
+  it("applies parity to each field of the programme on its own, as the strip does while typing", () => {
+    // The notes in Romanian, the checklist in English: each language lacks one field the other
+    // has, so both tabs are marked on first paint — the same answer the live watch gives on the
+    // first keystroke (`names: ["schedule", "checklist"]`), not a mark that appears from nowhere.
+    const split = [language("ro", { scheduleJson: doc("09:00 start") }), language("en", { checklist: "Water" })];
+    expect(incompleteLocales(split, "parity", BLANK.programme)).toEqual(["ro", "en"]);
+    // Both fields in one language only: the other is behind; both in both: nobody is.
+    const oneSided = [language("ro", { scheduleJson: doc("09:00 start"), checklist: "Apă" }), language("en")];
+    expect(incompleteLocales(oneSided, "parity", BLANK.programme)).toEqual(["en"]);
+    const full = [language("ro", { scheduleJson: doc("09:00"), checklist: "Apă" }), language("en", { scheduleJson: doc("09:00"), checklist: "Water" })];
+    expect(incompleteLocales(full, "parity", BLANK.programme)).toEqual([]);
+  });
 });
 
 describe("§NNN every summary template, in both catalogues, fills without a stray placeholder", () => {

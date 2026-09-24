@@ -675,7 +675,6 @@
       "special": "A special edition",
       "specialHelp": "An edition apart — an anniversary, a charity run, a race the club joins somebody else at. Shown with a badge on the card and on the page. Any number of events may be special, including one date of a series; the mark does not travel to the other dates.",
       "saveEvent": "Save the event details",
-      "translationReadOnly": "The words are the Redactor’s or the Administrator’s — yours are the Settings: the date, the place, the route, the places, the registrations and race day. Ask the Administrator to change anything here.",
       "saveCoversSettingsOnly": "Your save changes the settings only; the texts are the editor's.",
       "version": "version {version}",
       "liveWarning": "Published: every save appears on the site at once, in both languages.",
@@ -705,7 +704,6 @@
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "tabIncomplete": "incomplete",
       "settingsSection": "Settings",
-      "contentSection": "Content",
       "save": "Save",
       "publicationSection": "Publication",
       "newTitle": "New event",
@@ -714,7 +712,6 @@
       "rulesEmpty": "(none yet — press to write)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "programmeSection": "Programme",
       "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
       "programmeRows": {
         "date": "Date",
@@ -734,7 +731,6 @@
       "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",
-      "timezoneHelp": "The zone the times below are typed in. For Brașov, Europe/Bucharest.",
       "endsAt": "Event end",
       "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
       "distanceMeters": "Distance",
@@ -758,7 +754,6 @@
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
-      "copySection": "Copy and removal",
       "duplicate": "Duplicate",
       "delete": "Delete",
       "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
@@ -774,7 +769,6 @@
       "notStated": "Not stated",
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
-      "repeatSection": "Repeat the event",
       "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next eight weeks are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
@@ -845,14 +839,12 @@
       "createdWithSeries": "The event and {dates} were created, as drafts. Tick them in the events list and publish them together.",
       "durationMinutes": "Duration (minutes)",
       "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
-      "coHostSection": "Partners",
       "coHostName": "Partner (another organization)",
       "coHostUrl": "Partner's page",
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner"
       },
-      "linksSection": "Links and files",
       "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional in each language: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
       "linkRows": {
         "kind": "Kind",
@@ -870,7 +862,6 @@
         "labelEnError": "Link {n}: the English label is at most {max} characters",
         "tooMany": "Links and files: at most {max} on one event"
       },
-      "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",
@@ -879,7 +870,6 @@
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
       "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
-      "seoSection": "Page address and search engines",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
@@ -950,7 +940,6 @@
         "teal": "Teal",
         "black": "Black"
       },
-      "confirmationWindowTitle": "Participation confirmation",
       "createAndPublish": "Create and publish",
       "publishing": "Publishing…",
       "notReadyToPublish": "Cannot publish yet — missing: {field}",
@@ -1130,7 +1119,8 @@
         },
         "recurrence": {
           "title": "Recurrence",
-          "none": "Does not repeat"
+          "none": "Does not repeat",
+          "on": "Repeats"
         },
         "summary": {
           "filled": "written",

@@ -7,6 +7,7 @@ import Panel from "@/shared/ui/Panel";
 import {
   addressSummary,
   BLANK,
+  type BlankTest,
   descriptionSummary,
   incompleteLocales,
   rulesSummary,
@@ -38,7 +39,7 @@ export async function LanguageTabs({
   idPrefix: string;
   languages: readonly LanguageEntry[];
   watch: TabWatch;
-  blank: (translation: SummaryTranslation) => boolean;
+  blank: BlankTest | readonly BlankTest[];
   render: (entry: LanguageEntry) => ReactNode;
 }) {
   const t = await getTranslations("Admin");

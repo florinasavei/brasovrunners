@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
-import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
   horizonEnd,
@@ -413,20 +413,22 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
  */
 function normalizeForType<T extends EventFieldsInput>(fields: T): T {
   if (takesRegistrations(fields.type)) return fields;
-  return {
-    ...fields,
-    // No programme rows on a turn-up type either (§111, §117).
-    scheduleRows: [],
-    registrationMode: "NONE",
-    capacity: null,
-    declarationDocumentId: null,
-    registrationOpensAtWallTime: "",
-    registrationClosesAtWallTime: "",
-    participantListVisibility: "HIDDEN",
-    externalProvider: null,
-    externalRegistrationUrl: null,
-  };
+  return { ...fields, ...TURN_UP_FIELDS };
 }
+
+/** What a turn-up type is written with, whatever the hidden block posted (§111). */
+const TURN_UP_FIELDS = {
+  // No programme rows on a turn-up type either (§111, §117).
+  scheduleRows: [],
+  registrationMode: "NONE",
+  capacity: null,
+  declarationDocumentId: null,
+  registrationOpensAtWallTime: "",
+  registrationClosesAtWallTime: "",
+  participantListVisibility: "HIDDEN",
+  externalProvider: null,
+  externalRegistrationUrl: null,
+} as const;
 
 /**
  * What the chosen registration mode hides is ignored, not refused (§NNN, extending §111's shape
@@ -441,17 +443,43 @@ function normalizeForType<T extends EventFieldsInput>(fields: T): T {
  * guarantee for anything that reaches the service another way.
  */
 export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
-  const normalized = { ...fields };
-  if (fields.registrationMode !== "INTERNAL") {
-    normalized.capacity = null;
-    normalized.declarationDocumentId = null;
-    normalized.participantListVisibility = "HIDDEN";
-  }
-  if (fields.registrationMode !== "EXTERNAL") {
-    normalized.externalProvider = null;
-    normalized.externalRegistrationUrl = null;
-  }
-  return normalized;
+  return { ...fields, ...hiddenByMode(fields.registrationMode) };
+}
+
+/** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
+const INTERNAL_ONLY_FIELDS = { capacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
+const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
+
+function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
+  return { ...(mode === "INTERNAL" ? {} : INTERNAL_ONLY_FIELDS), ...(mode === "EXTERNAL" ? {} : EXTERNAL_ONLY_FIELDS) };
+}
+
+/**
+ * The same two rules on the form **as posted**, before the schema reads it (§NNN, found by
+ * review). Applied only after parsing, "ignored, not refused" held for what was left blank and not
+ * for what was left wrong: a link typed as `www.club.ro` under "La organizator" and then hidden by
+ * a switch to "Pe site" still reached `httpsUrl`, and the refusal named a box that was not on the
+ * screen — the exact case the rules exist for. So a box the chosen type or mode hides is replaced
+ * by the value it would be stored as before anything checks it; what it held is never read.
+ *
+ * Only keys the caller sent are replaced, so a strict schema is never handed one it did not ask
+ * for, and an unknown type or mode is left alone for the schema to name. What both modes keep —
+ * the window's two days, the minimum age, the bib band — is checked as typed, because it is
+ * stored as typed; a refusal over one of those is brought on screen by the form (`OnlyForMode`).
+ */
+export function ignoreHiddenFields(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return raw;
+  const posted = raw as Record<string, unknown>;
+  const turnUp = (EVENT_TYPES as readonly unknown[]).includes(posted.type) && !takesRegistrations(posted.type as EventType);
+  const mode = posted.registrationMode;
+  const hidden: Record<string, unknown> = turnUp
+    ? TURN_UP_FIELDS
+    : mode === "NONE" || mode === "INTERNAL" || mode === "EXTERNAL"
+      ? hiddenByMode(mode)
+      : {};
+  const replaced = { ...posted };
+  for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
+  return replaced;
 }
 
 function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
@@ -1005,7 +1033,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
-  const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, input.fields)));
+  const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   assertCoherentRegistrationBlock(fields);
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
@@ -1396,7 +1424,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
   // while the organizer's browser is told what is wrong with it.
   const parsedEventFields =
-    input.fields === undefined ? undefined : normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, input.fields)));
+    input.fields === undefined ? undefined : normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   if (parsedEventFields) {
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
@@ -1552,7 +1580,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create an event`);
   }
 
-  const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, input.fields)));
+  const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   assertCoherentRegistrationBlock(parsed);
   const times = resolveTimes(parsed);
 
@@ -2094,10 +2122,11 @@ export async function stopRepeat<T extends Record<string, unknown>>(
  *
  * Only the flag changes; the cadence, the days and the end stay as they are, and the dates that
  * already exist keep their state — publishing those is the list's bulk verb or each date's own
- * editor, which pass the checks publication has. Switching it on asks what the first creation
- * asked (`repeatEvent`): the role that publishes, and a published source — the copies of an
- * unpublished event would be drafts anyway (`materializeSeries`), so a switch that could not
- * take effect is refused rather than stored.
+ * editor, which pass the checks publication has. Switching it on asks for the role that
+ * publishes, as the first creation did (`repeatEvent`). It does not ask for a published source:
+ * on a draft source the switch is stored and waits, because the copies of an unpublished event
+ * are drafts anyway (`materializeSeries`) — the dates go live as they are made once the source is
+ * live, and until then the Recurență box says the series is waiting for exactly that.
  */
 export async function setRepeatPublish<T extends Record<string, unknown>>(
   db: Database<T>,

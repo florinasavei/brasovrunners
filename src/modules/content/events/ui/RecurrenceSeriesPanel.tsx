@@ -64,7 +64,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
 
   return (
-    <Panel collapsible openWhen={{ inUse: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
+    <Panel collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
       <Stack spacing={1.5}>
         <Box>
           <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600 }}>
@@ -72,17 +72,17 @@ export default async function RecurrenceSeriesPanel(props: Props) {
           </Typography>
           <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
             {previous && (
-              <Link href={{ pathname: "/admin/events/[id]", params: { id: previous.id } }} style={{ display: "inline-block", padding: "10px 0" }}>
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: previous.id } }} style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
                 {t("editor.series.previous", { date: previous.label })}
               </Link>
             )}
             {next && (
-              <Link href={{ pathname: "/admin/events/[id]", params: { id: next.id } }} style={{ display: "inline-block", padding: "10px 0" }}>
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: next.id } }} style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
                 {t("editor.series.next", { date: next.label })}
               </Link>
             )}
             {sourceId !== eventId && (
-              <Link href={{ pathname: "/admin/events/[id]", params: { id: sourceId } }} style={{ display: "inline-block", padding: "10px 0" }}>
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: sourceId } }} style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
                 {t("editor.repeatOfLink")}
               </Link>
             )}
@@ -104,14 +104,14 @@ export default async function RecurrenceSeriesPanel(props: Props) {
                       {date.label} · {t("editor.scope.thisOne")}
                     </Typography>
                   ) : (
-                    <Link href={{ pathname: "/admin/events/[id]", params: { id: date.id } }} style={{ display: "inline-block", padding: "6px 0" }}>
+                    <Link href={{ pathname: "/admin/events/[id]", params: { id: date.id } }} style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
                       {date.label}
                     </Link>
                   )}
                 </li>
               ))}
             </Box>
-            <Link href="/admin" style={{ display: "inline-block", padding: "10px 0" }}>
+            <Link href="/admin" style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
               {t("editor.repeatAllInList", { count })}
             </Link>
           </Box>

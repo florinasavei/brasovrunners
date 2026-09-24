@@ -675,7 +675,6 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte — aniversară, caritabilă, o cursă la care ne alăturăm altcuiva. Apare cu un marcaj pe card și pe pagină. Oricâte evenimente pot fi speciale, inclusiv o singură ediție dintr-o serie; marcajul rămâne pe data aceea și nu se copiază pe celelalte.",
       "saveEvent": "Salvează detaliile evenimentului",
-      "translationReadOnly": "Textele le scrie Redactorul sau Administratorul — tu te ocupi de Setări: data, locul, traseul, locurile, înscrierile și ziua cursei. Ca să schimbi ceva aici, cere-i Administratorului.",
       "saveCoversSettingsOnly": "Salvarea ta schimbă doar setările; textele sunt ale redactorului.",
       "version": "versiunea {version}",
       "liveWarning": "Publicat: fiecare salvare apare imediat pe site, în ambele limbi.",
@@ -705,7 +704,6 @@
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "tabIncomplete": "incomplet",
       "settingsSection": "Setări",
-      "contentSection": "Conținut",
       "save": "Salvează",
       "publicationSection": "Publicare",
       "newTitle": "Eveniment nou",
@@ -714,7 +712,6 @@
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "programmeSection": "Program",
       "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
       "programmeRows": {
         "date": "Data",
@@ -734,7 +731,6 @@
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
-      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos. Pentru Brașov, Europe/Bucharest.",
       "endsAt": "Sfârșitul evenimentului",
       "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
       "distanceMeters": "Distanță",
@@ -758,7 +754,6 @@
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
-      "copySection": "Copiere și ștergere",
       "duplicate": "Duplică",
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
@@ -774,7 +769,6 @@
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
-      "repeatSection": "Repetă evenimentul",
       "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele opt săptămâni se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
@@ -845,14 +839,12 @@
       "createdWithSeries": "Evenimentul și {dates} au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
       "durationMinutes": "Durata (minute)",
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
-      "coHostSection": "Parteneri",
       "coHostName": "Partener (altă organizație)",
       "coHostUrl": "Pagina partenerului",
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul"
       },
-      "linksSection": "Linkuri și fișiere",
       "linksHelp": "Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul foto, rezultatele — un link către locul unde e fișierul: Google Drive, Dropbox, OneDrive, Strava, Garmin. Partajează fișierul cu „Oricine are linkul”, altfel alergătorii dau de o cerere de acces. Eticheta e opțională în fiecare limbă: fără ea, pagina arată tipul („Traseul (GPX)”) în limba cititorului, iar sub etichetă apare site-ul pe care se deschide linkul. Linkurile se copiază pe toate datele unei serii, ca traseul.",
       "linkRows": {
         "kind": "Tip",
@@ -870,7 +862,6 @@
         "labelEnError": "Linkul {n}: eticheta în engleză are cel mult {max} de caractere",
         "tooMany": "Linkuri și fișiere: cel mult {max} pe un eveniment"
       },
-      "coHostHelp": "Opțional. Organizațiile alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — una pe rând, cu pagina lor dacă au una. Apar ca „Împreună cu A, B și C” pe pagină și pe card, și sunt trecute ca organizatori după club pentru Google. Partenerii se copiază pe toate datele unei serii.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "facebookEventUrl": "Link către evenimentul Facebook",
@@ -879,7 +870,6 @@
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
       "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
-      "seoSection": "Adresa paginii și motoarele de căutare",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
@@ -950,7 +940,6 @@
         "teal": "Turcoaz",
         "black": "Negru"
       },
-      "confirmationWindowTitle": "Confirmarea participării",
       "createAndPublish": "Creează și publică",
       "publishing": "Se publică…",
       "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
@@ -1130,7 +1119,8 @@
         },
         "recurrence": {
           "title": "Recurență",
-          "none": "Nu se repetă"
+          "none": "Nu se repetă",
+          "on": "Se repetă"
         },
         "summary": {
           "filled": "completat",

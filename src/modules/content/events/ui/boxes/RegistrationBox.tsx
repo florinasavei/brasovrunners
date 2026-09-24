@@ -66,8 +66,9 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * the five cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
  * takes no registration at all (§111): its sentence replaces everything under the cost. Every
  * hidden field stays in the document — hidden, not removed — so switching back finds what was
- * typed, and the service ignores what the mode hides (`normalizeForMode`). No mode-dependent box
- * carries a browser `required`: the server decides.
+ * typed, and the service ignores what the mode hides (`ignoreHiddenFields`, before its schema). No
+ * mode-dependent box carries a browser `required`: the server decides; and while hidden, the boxes
+ * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
  *
  * Where later fields go (the round that merges them): the cost's amount and payment or donation
  * link sit with the cost, at the top (`feat/cost-amount-and-donation`); the waiting list's length

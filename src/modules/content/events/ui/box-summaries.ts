@@ -108,21 +108,32 @@ const docBlank = (value: unknown) => value === null || value === undefined || is
 const summaryBlank = (translation: SummaryTranslation) =>
   docBlank(translation.excerptJson) && (translation.excerpt ?? "").trim() === "";
 
+/** Whether one language's value for a box, or for one field of it, is blank. */
+export type BlankTest = (translation: SummaryTranslation) => boolean;
+
 /**
  * Which languages a box marks "· incomplet" on first paint (the strip re-reads as it is typed):
  * `required` — a watched value blank here; `parity` — blank here while another language has it.
+ *
+ * A box that watches several fields passes one test per field, and the rule applies to each field
+ * on its own — exactly what `LocaleTabPanels` does as it re-reads `watch.names` — so the first
+ * paint and the first keystroke agree: a programme with the notes in Romanian and the checklist in
+ * English marks both tabs from the start, not only once somebody types.
  */
 export function incompleteLocales(
   translations: readonly SummaryTranslation[],
   rule: "required" | "parity",
-  blank: (translation: SummaryTranslation) => boolean,
+  blank: BlankTest | readonly BlankTest[],
 ): string[] {
+  const tests = typeof blank === "function" ? [blank] : blank;
   return translations
-    .filter((translation) => {
-      if (!blank(translation)) return false;
-      if (rule === "required") return true;
-      return translations.some((other) => other.locale !== translation.locale && !blank(other));
-    })
+    .filter((translation) =>
+      tests.some((test) => {
+        if (!test(translation)) return false;
+        if (rule === "required") return true;
+        return translations.some((other) => other.locale !== translation.locale && !test(other));
+      }),
+    )
     .map((translation) => translation.locale);
 }
 
@@ -131,7 +142,11 @@ export const BLANK = {
   titleSummary: (translation: SummaryTranslation) => translation.title.trim() === "" || summaryBlank(translation),
   description: (translation: SummaryTranslation) => docBlank(translation.bodyJson),
   place: (translation: SummaryTranslation) => (translation.locationName ?? "").trim() === "",
-  programme: (translation: SummaryTranslation) => docBlank(translation.scheduleJson) && (translation.checklist ?? "").trim() === "",
+  // One test per field the strip watches (`schedule`, `checklist`), in that order.
+  programme: [
+    (translation: SummaryTranslation) => docBlank(translation.scheduleJson),
+    (translation: SummaryTranslation) => (translation.checklist ?? "").trim() === "",
+  ],
   rules: (translation: SummaryTranslation) => docBlank(translation.rulesJson),
   address: (translation: SummaryTranslation) => translation.slug.trim() === "",
 } as const;

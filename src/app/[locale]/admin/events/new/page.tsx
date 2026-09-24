@@ -19,7 +19,7 @@ import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
-import CreateDraftLine from "@/modules/content/events/ui/CreateDraftLine";
+import CreateDraftLine, { TickedLine } from "@/modules/content/events/ui/CreateDraftLine";
 import EventEditorLayout, { EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
 import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
 import { MissingForPublishCount, MissingForPublishList } from "@/modules/content/events/ui/MissingForPublish";
@@ -160,7 +160,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
               {/* S2 — recurrence first (BR-REQ-050-02 criterion 7): open, and a single switch
                   until it is ticked. The copies are drafts like the event itself, or live with it. */}
-              <Panel collapsible openWhen={{ inUse: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={t("editor.boxes.recurrence.none")}>
+              <Panel collapsible openWhen={{ primary: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={<TickedLine name="repeat.on" off={t("editor.boxes.recurrence.none")} on={t("editor.boxes.recurrence.on")} />}>
                 <Stack spacing={1.5}>
                   <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
                     <RepeatFields prefix="repeat." draftSource />

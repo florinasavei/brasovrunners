@@ -13,6 +13,14 @@ import type { EditableTranslation } from "../repository";
 import OnlyForType from "./OnlyForType";
 
 /**
+ * The rich-text editor's control names, read once here for the four text boxes that mount it: the
+ * catalogue's dotted namespace in one place rather than once per box.
+ */
+async function editorLabels() {
+  return richTextEditorLabels(await getTranslations("Admin.richText"));
+}
+
+/**
  * One language's text, split by the box of the event editor that asks for it (§NNN).
  *
  * The editor used to hold a language in one tab of one "Conținut" panel — the title, the place's
@@ -131,7 +139,6 @@ export function TranslationHiddenFields({ translation }: { translation: Translat
  */
 export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
-  const rt = await getTranslations("Admin.richText");
   const name = named(translation);
   if (!mayEdit) {
     return (
@@ -154,7 +161,7 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.excerptEmpty")}
         initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
         accessibleSuffix={translation.locale.toUpperCase()}
-        labels={richTextEditorLabels(rt)}
+        labels={await editorLabels()}
       />
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.excerptHelp")}
@@ -170,7 +177,6 @@ export async function TitleSummaryFields({ translation, mayEdit }: PieceProps) {
  */
 export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
-  const rt = await getTranslations("Admin.richText");
   const name = named(translation);
   if (!mayEdit) {
     return (
@@ -189,7 +195,7 @@ export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.bodyEmpty")}
         initialBody={translation.bodyJson}
         accessibleSuffix={translation.locale.toUpperCase()}
-        labels={richTextEditorLabels(rt)}
+        labels={await editorLabels()}
       />
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.bodyHelp")}
@@ -231,7 +237,6 @@ export async function PlaceNameField({ translation, mayEdit }: PieceProps) {
  */
 export async function ProgrammeTextFields({ translation, mayEdit, eventType }: PieceProps & { eventType: EventType }) {
   const t = await getTranslations("Admin");
-  const rt = await getTranslations("Admin.richText");
   const name = named(translation);
   if (!mayEdit) {
     return (
@@ -252,7 +257,7 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
           emptyHint={t("editor.bodyEmpty")}
           initialBody={translation.scheduleJson}
           accessibleSuffix={translation.locale.toUpperCase()}
-          labels={richTextEditorLabels(rt)}
+          labels={await editorLabels()}
         />
       </OnlyForType>
       <RecallField
@@ -272,7 +277,6 @@ export async function ProgrammeTextFields({ translation, mayEdit, eventType }: P
  */
 export async function RulesFields({ translation, mayEdit }: PieceProps) {
   const t = await getTranslations("Admin");
-  const rt = await getTranslations("Admin.richText");
   const name = named(translation);
   if (!mayEdit) {
     return (
@@ -291,7 +295,7 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
         emptyHint={t("editor.rulesEmpty")}
         initialBody={translation.rulesJson}
         accessibleSuffix={translation.locale.toUpperCase()}
-        labels={richTextEditorLabels(rt)}
+        labels={await editorLabels()}
       />
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.rulesHelp")}

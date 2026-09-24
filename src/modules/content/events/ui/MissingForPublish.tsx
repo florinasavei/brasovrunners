@@ -76,7 +76,7 @@ export function MissingForPublishList({
                 href={`#${fieldId(gap.name)}`}
                 variant="body2"
                 onClick={() => revealField(document.getElementById(fieldId(gap.name)))}
-                sx={{ display: "inline-block", py: 0.75 }}
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
               >
                 {publishGapLabel(gap, labels)}
               </Link>
@@ -98,7 +98,7 @@ export function RevealLink({ name, children }: { name: string; children: string 
       href={`#${fieldId(name)}`}
       variant="body2"
       onClick={() => revealField(document.getElementById(fieldId(name)))}
-      sx={{ display: "inline-block", py: 0.75 }}
+      sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
     >
       {children}
     </Link>
