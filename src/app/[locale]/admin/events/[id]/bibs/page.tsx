@@ -8,6 +8,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
+import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -88,8 +89,8 @@ export default async function EventBibsPage({ params }: Props) {
                 component="img"
                 src={`/api/admin/events/${id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
                 alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
-                width={900}
-                height={600}
+                width={BIB_IMAGE.width}
+                height={BIB_IMAGE.height}
                 loading="lazy"
                 sx={{ width: "100%", height: "auto", display: "block", borderRadius: 1 }}
               />

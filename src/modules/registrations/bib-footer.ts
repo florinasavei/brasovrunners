@@ -1,4 +1,5 @@
 import type { BibDesign } from "./bib-design";
+import { BIB_FOOTER_LINE } from "./bib-geometry";
 
 /**
  * The small print at the foot of a race number, composed by the club and laid out once for both
@@ -12,16 +13,18 @@ import type { BibDesign } from "./bib-design";
  *
  * ## One layout, decided here, drawn twice
  *
- * `bibs-pdf.ts` prints A4 with pdfkit and `bib-image.tsx` draws the 900×600 picture with
- * `next/og`, and the picture is the club's preview of the paper (§180). A footer that wraps in
+ * `bibs-pdf.ts` prints the A5 bibs two to an A4 page with pdfkit and `bib-image.tsx` draws the
+ * 990×700 picture of one with `next/og`, and the picture is the club's preview of the paper (§180,
+ * §NNN). A footer that wraps in
  * one and not in the other is a preview of a different bib, so neither renderer wraps anything:
  * both ask `bibFooterLines` which lines to draw and draw exactly those, each on its own line
  * with wrapping off — the sheet hands pdfkit no width at all, because pdfkit wraps any text it
  * is given a width for, whatever `lineBreak` says.
  *
  * What makes that possible is measuring in **ems of the footer's own type** rather than in points
- * or pixels. The sheet's footer is 503.28 points of line set at 8 points — 62.91 ems — and the
- * picture sets its footer at whatever size makes its 836 pixels of line the same 62.91 ems. The
+ * or pixels. The sheet's footer is 523.28 points of line set at 8 points — 65.41 ems — and the
+ * picture draws the same line and the same size multiplied by one factor (`bib-geometry.ts`), so
+ * its 870 pixels of line are the same 65.41 ems. The
  * widths come from the font both renderers embed, `src/theme/pdf/Roboto-Regular.ttf`, read out
  * of it once and kept below as two tables: each character's advance width, and every pair of
  * characters the font kerns *apart*. Roboto does both — it sets some 6,250 pairs of these
@@ -33,7 +36,8 @@ import type { BibDesign } from "./bib-design";
  * the font, glyph by glyph and pair by pair, and holds random lines rich in the widening pairs to
  * pdfkit's own measurement — measured, not guessed.
  *
- * Pure, and importing nothing but a type: the same discipline as `bib-design.ts`.
+ * Pure, and importing nothing but a type and the geometry beside it (`bib-geometry.ts`, which
+ * imports nothing): the same discipline as `bib-design.ts`.
  */
 
 /** Between two pieces of the footer: two spaces, a middle dot, two spaces — today's separator. */
@@ -46,11 +50,12 @@ export const BIB_FOOTER_TEXT_MAX = 120;
 export const BIB_FOOTER_MAX_LINES = 2;
 
 /**
- * How wide one footer line is, in ems of the footer's type: the A4 sheet's 503.28 points of line
- * (the bib's width less 18 points each side) at 8 points. The picture derives its footer size
- * from this, which is what makes its lines the paper's lines.
+ * How wide one footer line is, in ems of the footer's type: the A5 bib's 523.28 points of line
+ * (the paper less its 18-point margin and the card's 18-point inset, each side) at 8 points —
+ * 65.41 (§NNN; 62.91 while the bib was a 539-point card inside the A4 page's margins, §317). The
+ * picture's footer size is derived from this, which is what makes its lines the paper's lines.
  */
-export const BIB_FOOTER_EMS = 62.91;
+export const BIB_FOOTER_EMS = BIB_FOOTER_LINE.width / BIB_FOOTER_LINE.size;
 
 /** What the facts of a footer are made from. Nothing about a participant is among them. */
 export type BibFooterFacts = {

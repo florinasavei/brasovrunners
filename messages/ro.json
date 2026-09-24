@@ -1941,9 +1941,8 @@
       "backToEvent": "← Înapoi la eveniment",
       "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
-      "page": "Pagina {n} din {total}",
-      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
-      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere de format A5 pe pagină A4, unul deasupra celuilalt cu o linie de tăiere între ele, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
       "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
     },

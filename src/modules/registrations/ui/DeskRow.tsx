@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
+import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -238,8 +239,8 @@ export default async function DeskRow({
               <img
                 src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
                 alt={t("desk.bibAlt", { number: number.value })}
-                width={900}
-                height={600}
+                width={BIB_IMAGE.width}
+                height={BIB_IMAGE.height}
                 loading="lazy"
                 decoding="async"
                 style={{ display: "block", width: "100%", maxWidth: 360, height: "auto", border: "1px solid #ddd", borderRadius: 4 }}
