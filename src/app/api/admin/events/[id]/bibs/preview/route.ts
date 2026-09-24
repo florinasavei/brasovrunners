@@ -13,6 +13,7 @@ import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 
 /**
  * The name on a sample bib. Not a translation: a bib carries a name as typed, and this one is
@@ -57,11 +58,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!canWorkTheDesk(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const url = new URL(request.url);
   const locale = url.searchParams.get("locale") ?? routing.defaultLocale;
   const sample = url.searchParams.get("sample") === "1";
   const registrationId = url.searchParams.get("registration") ?? "";
-  if (!hasLocale(routing.locales, locale) || (!sample && !/^[0-9a-f-]{36}$/i.test(registrationId))) {
+  if (!hasLocale(routing.locales, locale) || (!sample && !isUuid(registrationId))) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
 
