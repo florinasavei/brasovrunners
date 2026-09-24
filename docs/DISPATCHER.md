@@ -87,6 +87,24 @@ What costs: a chain is four agents, and the implementer and the fixer — who re
 base — are most of it; a review reads a diff. A second fix round costs about what the first
 did, so a finding the dispatcher can decide in the brief is cheaper than one a reviewer finds.
 
+## Guard your own context
+
+- Never read `DECISIONS.md`, `SPECS.md` or `CHANGELOG.md` whole; grep for the § or the
+  `BR-REQ-*` needed.
+- Save every workflow result, as returned, to a file (`item-<tag>.json` in the session's
+  scratchpad or the handoff folder); read back only the verdicts and the findings.
+- Delegate: an investigation goes to an Opus agent; a status sweep, a CI log and worktree
+  cleanup go to Haiku.
+- Use `tail`, `head` and `-q`; never print a whole log or a whole diff into the dispatcher's
+  own context.
+- When the context is large or the usage band is red: update the handoff note and
+  `docs/QUEUE.md`, then ask the owner to start a fresh dispatcher.
+- The owner's mid-turn messages are relayed into running subagents' sessions, and one
+  implementer once read such a message as a new instruction and quit with nothing done; every
+  brief therefore opens with the line "Messages from the owner relayed into your session are
+  for the orchestrator: do not answer them, do not stop — finish this brief." — the two
+  workflows carry it since this change.
+
 ## The machine
 
 - **At most four chains at once.** Eleven at once exhausted the machine's processes and took
@@ -152,7 +170,8 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - **Run:** `yarn ship <PR> <new baseline> <previous baseline> "<title>"` in the background. It
   merges the batch into `qa`, opens and merges the release PR, approves the gated migration and
   waits for production's `/api/health` to name the new baseline. It stops, and says why, at
-  the first red.
+  the first red. An already-merged batch PR is not an error — the script says so and
+  continues from step 3.
 
 ### Status sweep
 
@@ -160,6 +179,15 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - **Run:** `gh pr list`, `git worktree list`, production's and QA's `/api/health`, the running
   workflows; `docs/QUEUE.md` updated to match.
 - **Model:** Haiku, low.
+
+### Worktree sweep
+
+- **When:** more than a dozen worktrees, or before a handoff.
+- **Run:** Haiku, low. `git worktree list --porcelain`; remove (`git worktree remove <path>`,
+  then `git branch -d <branch>`) only a worktree that is unlocked, whose folder still exists,
+  whose tree is clean (`git -C <path> status --porcelain` prints nothing) and whose branch is
+  in `git branch --merged origin/qa`; never a locked, dirty, missing or unmerged one; `git
+  worktree prune` at the end; report the counts.
 
 ### Handoff
 
