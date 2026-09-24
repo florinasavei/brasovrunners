@@ -51,6 +51,8 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await fillDateField(page, "Începutul evenimentului", DATE);
     await fillTimeField(page, "Ora", "10:00");
     await field("event.locationName").fill("Piața Sfatului");
+    // The meeting point is asked once per language since §362, both required.
+    await field("event.locationNameEn").fill("Piața Sfatului (Council Square)");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
     await languageTab(page, "title", "en").click();

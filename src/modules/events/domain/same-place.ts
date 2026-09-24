@@ -14,11 +14,14 @@ import { CLUB_LOCALITY } from "./place";
  * runs in, without its "ș" — was a move.
  *
  * **What is compared** is the name the reader's page shows, in the reader's language: a public row's
- * `locationName` is already that language's own name, else the event's (`PUBLIC_COLUMNS`), so the
- * Romanian calendar compares Romanian names and the English one English names; the backoffice,
- * which has no reader's language, compares the event's own name. The street address an older event
- * still carries (`location_address`, no longer asked for since §36's follow-up) is **not**
- * compared: a save that clears it would otherwise "move" that date away from the dates that keep it.
+ * `locationName` is already that language's own name, else the event's (`PUBLIC_COLUMNS`, the rule
+ * `place.ts#placeNameIn` states, §362), so the Romanian calendar compares Romanian names and the
+ * English one English names; the backoffice, which has no reader's language, compares the event's
+ * own name — the Romanian box's since §362. The street address an older event still carries
+ * (`location_address`, no longer asked for since §36's follow-up) is **not** compared, although
+ * `place.ts#placeShown` folds it in: that answers "did this save move this event", one row before
+ * and after, where this answers "is this date where the others meet" — and a date saved since,
+ * whose address the save cleared, would otherwise be "moved" away from the dates that keep it.
  *
  * Two places are the same when **either** of these holds, and in no other case:
  *
