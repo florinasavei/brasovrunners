@@ -40,7 +40,7 @@ type Face =
 
 /**
  * One button on a text editor's toolbar, on the bar over a selection, or on a table's bar — the
- * pages' editor and the legal documents' editor alike (§NNN; the owner, of `/admin/legal`'s
+ * pages' editor and the legal documents' editor alike (§361; the owner, of `/admin/legal`'s
  * toolbar, 2026-09-24: "I hate this image icon!").
  *
  * The toolbars drew their buttons from characters — "🔗", "🖼", "↶", "⊞", "+↓" — and an emoji is

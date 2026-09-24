@@ -76,7 +76,7 @@ import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 
 /**
- * The two floating bars' own element, above the sticky toolbar (§NNN). Tiptap appends a bar to
+ * The two floating bars' own element, above the sticky toolbar (§361). Tiptap appends a bar to
  * the writing area and positions it with no stacking order of its own, so the toolbar's
  * `zIndex: 2` painted over it: a table at the top of the body had its bar — every table verb —
  * hidden behind the toolbar it sat under. One above the toolbar, and far below MUI's app bar and
@@ -86,7 +86,7 @@ const FLOATING_BAR_STYLE = { zIndex: 3 } as const;
 
 /**
  * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
- * the text should resemble microsoft word!"). They were the toolbar's first glyphs; since §NNN
+ * the text should resemble microsoft word!"). They were the toolbar's first glyphs; since §361
  * every button wears one, from the same family.
  */
 const ALIGN_ICON = {
@@ -114,7 +114,7 @@ const ALIGN_ICON = {
  * still carries the body it was given, so a save writes the text back unchanged rather than
  * blanking somebody's page.
  *
- * ## The toolbar wears Material glyphs (§NNN)
+ * ## The toolbar wears Material glyphs (§361)
  *
  * It had words and characters on it — "B", "•—", "⊞", "🔗", "↶", "Imagine" — because the picture
  * emoji rendered as a broken box on the owner's machine (2026-09-18), and a character is whatever
@@ -224,7 +224,7 @@ function RichTextEditorIsland({
     imageNoAltMany: string;
     imageFromGallery: string;
     /**
-     * The words the three media buttons wore until §NNN, like `alignShort` and `previewShort`
+     * The words the three media buttons wore until §361, like `alignShort` and `previewShort`
      * before them: every button wears a glyph now and says its long label. Not drawn; kept while
      * the catalogue still has them.
      */
@@ -734,7 +734,7 @@ function RichTextEditorIsland({
           {/*
             A picture from the phone or the computer is the picture with a plus; one already
             uploaded is the library of them; a film is the play mark. They were words (2026-09-18)
-            because the picture emoji rendered as a broken box; a Material glyph cannot (§NNN).
+            because the picture emoji rendered as a broken box; a Material glyph cannot (§361).
             The play mark and not YouTube's own logo: Material's brand glyphs were refused (§90).
           */}
           {features.media !== false && (
@@ -1010,7 +1010,7 @@ function RichTextEditorIsland({
             >
               <Paper elevation={3} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}>
               {/* A row is the rows glyph and a column the columns glyph; the corner says whether
-                  the press adds one or deletes the one the caret is in (§NNN). */}
+                  the press adds one or deletes the one the caret is in (§361). */}
               <ToolbarButton
                 label={labels.tableAddRow}
                 icon={TableRowsIcon}
@@ -1532,7 +1532,7 @@ const TableStyle = Extension.create({
 });
 
 /**
- * What the borders control shows: the state it is in, in Material's three border glyphs (§NNN)
+ * What the borders control shows: the state it is in, in Material's three border glyphs (§361)
  * — the solid grid, the rows alone, and the dotted grid of a table that draws no lines. They
  * replaced the box-drawing characters "▦", "▤" and "▢", which a font draws as it likes.
  */

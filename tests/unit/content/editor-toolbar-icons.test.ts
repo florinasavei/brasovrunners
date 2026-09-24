@@ -11,7 +11,7 @@ import LegalBodyEditor from "@/modules/legal-documents/ui/LegalBodyEditor";
 import ToolbarButton, { TOOLBAR_GLYPH_PX } from "@/shared/ui/ToolbarButton";
 
 /**
- * BR-REQ-050-03 criterion 17 and BR-REQ-053-02 criterion 23 (§NNN) — every button on the two
+ * BR-REQ-050-03 criterion 17 and BR-REQ-053-02 criterion 23 (§361) — every button on the two
  * text editors' toolbars wears a Material glyph, one size and one colour, with its full name as
  * its accessible name and its tooltip. The owner, of `/admin/legal`'s "🖼": "I hate this image
  * icon!"
@@ -31,7 +31,7 @@ const RICH_TEXT = "src/modules/content/rich-text/ui/RichTextEditor.tsx";
 const LEGAL = "src/modules/legal-documents/ui/LegalBodyEditor.tsx";
 
 /**
- * What the toolbars drew before §NNN. A character is whatever the reader's font makes of it: an
+ * What the toolbars drew before §361. A character is whatever the reader's font makes of it: an
  * emoji is a tiny grey picture, a broken box on one machine, and an arrow or a box-drawing
  * character reads as noise.
  */
@@ -130,7 +130,7 @@ function expectGlyphFaces(rendered: RenderedButton[], html: string) {
   expect(rule).not.toMatch(/(^|;)color:/);
 }
 
-describe("§NNN the pages' editor wears Material glyphs", () => {
+describe("§361 the pages' editor wears Material glyphs", () => {
   it("draws every toolbar button as a glyph, except the two heading levels", () => {
     const html = renderRichText();
     const rendered = buttons(html);
@@ -191,14 +191,14 @@ describe("§NNN the pages' editor wears Material glyphs", () => {
 
   it("lifts both floating bars above the sticky toolbar", () => {
     // The table's bar sat under the toolbar's `zIndex: 2` whenever the table was at the top of
-    // the body, and every table verb with it (§NNN).
+    // the body, and every table verb with it (§361).
     const source = read(RICH_TEXT);
     expect(source).toContain("const FLOATING_BAR_STYLE = { zIndex: 3 } as const;");
     expect(source.match(/<BubbleMenu\b[^>]*?style=\{FLOATING_BAR_STYLE\}/g)).toHaveLength(2);
   });
 });
 
-describe("§NNN the legal documents' editor wears Material glyphs", () => {
+describe("§361 the legal documents' editor wears Material glyphs", () => {
   it("draws the link, the picture, undo and redo as glyphs, and the heading and the paragraph as words", () => {
     const html = renderLegal();
     const rendered = buttons(html);
@@ -225,7 +225,7 @@ describe("§NNN the legal documents' editor wears Material glyphs", () => {
   });
 });
 
-describe("§NNN one button, one family of glyphs", () => {
+describe("§361 one button, one family of glyphs", () => {
   it("wraps every button in a non-interactive tooltip that says its name", () => {
     // Non-interactive, so a tooltip over the next button in a wrapped row never takes its click.
     expect(read("src/shared/ui/ToolbarButton.tsx")).toMatch(/<Tooltip title=\{label\} disableInteractive>/);

@@ -67,7 +67,7 @@ function LegalBodyEditorIsland({
   labels: {
     heading: string;
     paragraph: string;
-    /** The word on the paragraph button (§NNN): "Text", beside "H2". */
+    /** The word on the paragraph button (§361): "Text", beside "H2". */
     paragraphShort: string;
     link: string;
     linkUrl: string;
@@ -161,7 +161,7 @@ function LegalBodyEditorIsland({
       </Typography>
       <Paper variant="outlined" sx={{ p: 1 }}>
         {/*
-          Material glyphs, one face for all (§NNN; the owner, of the picture's emoji: "I hate this
+          Material glyphs, one face for all (§361; the owner, of the picture's emoji: "I hate this
           image icon!"). The heading and the paragraph keep words — "H2" and "Text" are the pair
           every word processor's style list offers — because the glyphs Material has for "a block
           of text" are lines of text, which is what "align left" looks like in the pages' editor.
