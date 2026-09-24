@@ -1,11 +1,13 @@
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
+import { identicalInBothLanguages, isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { fillIn } from "@/shared/forms/fill-in";
-import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { readEventLinks } from "@/modules/events/domain/links";
+import { hasOneLanguageCoHostDescription, hasOneLanguageCoHostLabel, readCoHosts } from "@/modules/events/domain/co-hosts";
+import { hasOneLanguageLabel, readEventLinks } from "@/modules/events/domain/links";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import type { EditableEvent } from "../repository";
+import { storedTextValue } from "./publish-check";
 
 /**
  * The line each box of the event editor shows while it is shut (§350; the owner asked for the
@@ -22,6 +24,11 @@ import type { EditableEvent } from "../repository";
  * Dates are the site's short form (`src/i18n/dates.ts`, §350 weekday on every date) — `Sâm., 21
  * nov. 2026, 09:00` / `Sat, 21 Nov 2026, 09:00` — in the reader's language and the event's own
  * time zone, never the server's or the browser's clock; times are 24-hour.
+ *
+ * **Bilingual everywhere** (§354): an optional text is both languages or neither, so a closed line
+ * names a text stored in one language — "de scris și în EN", "etichetă într-o singură limbă" — as
+ * the one the next save will refuse; and a long text whose English says exactly what its Romanian
+ * does is named too — "EN identic cu RO" — as a question, never a refusal.
  */
 
 /** A counted noun, as `countForm` names its three forms. */
@@ -32,9 +39,11 @@ export type SummaryWords = {
   empty: string;
   nothing: string;
   separator: string;
+  /** "de scris și în {language} (ambele limbi sau niciuna)": an optional text written in the other language only (§354). */
+  oneLanguage: string;
+  /** "{language} identic cu {source}": the same words in both languages (§354). */
+  identical: string;
   titleSummary: { missingTitle: string; missingSummary: string; untitled: string };
-  description: { fallback: string };
-  rules: { none: string };
   when: { none: string; raceStart: string; duration: string };
   timezone: { home: string };
   place: { tba: string; map: string; none: string; inLanguage: string };
@@ -61,10 +70,10 @@ export type SummaryWords = {
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
   course: { route: string; km: string; elevation: string };
-  links: { strava: string; facebook: string; files: CountWords; none: string };
+  links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
-  address: { locked: string; none: string };
+  address: { locked: string; none: string; seoOneLanguage: string };
 };
 
 function counted(words: CountWords, count: number, locale: string): string {
@@ -106,6 +115,9 @@ export type SummaryTranslation = {
   scheduleJson: unknown;
   checklist: string | null;
   locationName: string | null;
+  /** The two search-engine overrides (box 14), when the caller has them — the editor always does. */
+  seoTitle?: string | null;
+  seoDescription?: string | null;
 };
 
 const code = (locale: string) => locale.toUpperCase();
@@ -165,29 +177,57 @@ export function titleSummarySummary(words: SummaryWords, translations: readonly 
     ...(translation.title.trim() === "" ? [fillIn(words.titleSummary.missingTitle, { language: code(translation.locale) })] : []),
     ...(summaryBlank(translation) ? [fillIn(words.titleSummary.missingSummary, { language: code(translation.locale) })] : []),
   ]);
-  return join(words, [...titles, ...missing]);
+  // The summary is the long text here (§354); two identical titles may honestly be a name.
+  return join(words, [...titles, ...missing, ...identicalMarks(words, translations, ["excerptBody"])]);
 }
 
-/** Boxes 3 and 7: `RO: completat · EN: gol — …` with what the empty language's page shows. */
+/**
+ * The languages after the first whose text, for any of `posted` (the names its boxes post after
+ * `translations.<locale>.`), is the first language's word for word (§354, bilingual everywhere):
+ * what a strip marks on the English tab and a closed line names. `identicalInBothLanguages`
+ * decides, so a short text never counts.
+ */
+export function identicalLocales(translations: readonly SummaryTranslation[], posted: readonly string[]): string[] {
+  const [first, ...rest] = translations;
+  if (!first) return [];
+  return rest
+    .filter((translation) => posted.some((name) => identicalInBothLanguages(storedTextValue(first, name), storedTextValue(translation, name))))
+    .map((translation) => translation.locale);
+}
+
+/** `EN identic cu RO`, for each copying language, or nothing. */
+function identicalMarks(words: SummaryWords, translations: readonly SummaryTranslation[], posted: readonly string[]): string[] {
+  const source = translations[0];
+  if (!source) return [];
+  return identicalLocales(translations, posted).map((locale) => fillIn(words.identical, { language: code(locale), source: code(source.locale) }));
+}
+
+/**
+ * Boxes 3 and 7: `RO: completat · EN: gol — de scris și în EN (ambele limbi sau niciuna)`.
+ *
+ * A text written in one language only is the one the next save refuses (§352, both or neither),
+ * so the line says which language still owes it rather than what the empty page would fall back
+ * to — nothing falls back any more. Then `EN identic cu RO` when both say the same words.
+ */
 function perLanguageText(
   words: SummaryWords,
   translations: readonly SummaryTranslation[],
   blank: (translation: SummaryTranslation) => boolean,
-  whenEmpty: string,
+  posted: string,
 ): string {
   const states = translations.map((translation) => `${code(translation.locale)}: ${blank(translation) ? words.empty : words.filled}`);
   const anyFilled = translations.some((translation) => !blank(translation));
   const emptyOnes = translations.filter(blank);
-  const tail = anyFilled && emptyOnes.length > 0 ? ` — ${emptyOnes.map((translation) => fillIn(whenEmpty, { language: code(translation.locale) })).join(", ")}` : "";
-  return `${join(words, states)}${tail}`;
+  const tail = anyFilled && emptyOnes.length > 0 ? ` — ${emptyOnes.map((translation) => fillIn(words.oneLanguage, { language: code(translation.locale) })).join(", ")}` : "";
+  return join(words, [`${join(words, states)}${tail}`, ...identicalMarks(words, translations, [posted])]);
 }
 
 export function descriptionSummary(words: SummaryWords, translations: readonly SummaryTranslation[]): string {
-  return perLanguageText(words, translations, BLANK.description, words.description.fallback);
+  return perLanguageText(words, translations, BLANK.description, "body");
 }
 
 export function rulesSummary(words: SummaryWords, translations: readonly SummaryTranslation[]): string {
-  return perLanguageText(words, translations, BLANK.rules, words.rules.none);
+  return perLanguageText(words, translations, BLANK.rules, "rules");
 }
 
 type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStartsAt" | "timezone">;
@@ -226,7 +266,11 @@ export function placeSummary(words: SummaryWords, event: PlaceEvent | null, tran
 
 type ProgrammeEvent = Pick<EditableEvent, "scheduleItems" | "timezone">;
 
-/** Box 6: `4 momente, 08:00–12:30 · ce să aduci: RO, EN`, or a group run's own words. */
+/**
+ * Box 6: `4 momente, 08:00–12:30 · ce să aduci: RO, EN`, or a group run's own words — then, for
+ * the notes and what to bring (§354), the language that still owes one of them, and
+ * `EN identic cu RO` when either says the same words in both.
+ */
 export function programmeSummary(
   words: SummaryWords,
   event: ProgrammeEvent | null,
@@ -245,7 +289,15 @@ export function programmeSummary(
     const last = summaryTime(new Date(lastItem.endsAt ?? lastItem.startsAt), event.timezone, locale);
     rows = `${counted(words.programme.moments, items.length, locale)}${first === last ? `, ${first}` : `, ${fillIn(words.programme.range, { from: first, to: last })}`}`;
   }
-  return join(words, [rows, checklist.length > 0 ? fillIn(words.programme.checklist, { languages: checklist.join(", ") }) : null]);
+  // Each field on its own, as the strip's marks read them (`BLANK.programme`); a group run keeps
+  // no notes (§111), so only what to bring counts there.
+  const owed = incompleteLocales(translations, "parity", hasProgramme ? BLANK.programme : [BLANK.programme[1]]);
+  return join(words, [
+    rows,
+    checklist.length > 0 ? fillIn(words.programme.checklist, { languages: checklist.join(", ") }) : null,
+    ...owed.map((owing) => fillIn(words.oneLanguage, { language: code(owing) })),
+    ...identicalMarks(words, translations, hasProgramme ? ["schedule", "checklist"] : ["checklist"]),
+  ]);
 }
 
 type RegistrationEvent = Pick<
@@ -352,17 +404,22 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl">;
 
-/** Box 10: `Trail · Mediu · 12 km · +450 m · traseu`, or `Nimic completat`. */
+/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
+function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {
+  const km = distanceMeters ? Math.round(distanceMeters / 100) / 10 : null;
+  return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
+}
+
+/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · traseu`, or `Nimic completat`. */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
   labels: { surface: string | null; difficulty: string | null },
 ): string {
-  const km = event?.distanceMeters ? Math.round(event.distanceMeters / 100) / 10 : null;
   const line = join(words, [
     labels.surface,
     labels.difficulty,
-    km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null,
+    distanceWords(words, event?.distanceMeters),
     event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
     event?.routeUrl ? words.course.route : null,
   ]);
@@ -371,7 +428,41 @@ export function courseSummary(
 
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
 
-/** Box 11: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link`. */
+/**
+ * Box 1, "Ce fel de eveniment", with its three cards inside it (§350, §358): `Alergare de grup ·
+ * Programat · Asfalt · Ușor · 10 km · 2 linkuri`. The type, then a word or two from each card — the
+ * status, the course's surface, difficulty and distance, and how many links the event carries
+ * (Strava and Facebook counted with the rows) — so the closed box still reads as the top of the
+ * fact sheet. Each card's own line says the rest: the climb, the route, which kinds of links.
+ *
+ * The one warning a card's line carries is repeated here, `etichetă într-o singură limbă` (§354):
+ * the links card is folded inside this folded box, and a label in one language only is what the
+ * next save refuses, so the organizer has to see it without opening two folds.
+ */
+export function kindSummary(
+  words: SummaryWords,
+  event: (CourseEvent & LinksEvent) | null,
+  labels: { type: string; status: string; surface: string | null; difficulty: string | null },
+  locale: string,
+): string {
+  const rows = readEventLinks(event?.links ?? null);
+  const links = rows.length + (event?.stravaEventUrl ? 1 : 0) + (event?.facebookEventUrl ? 1 : 0);
+  return join(words, [
+    labels.type,
+    labels.status,
+    labels.surface,
+    labels.difficulty,
+    distanceWords(words, event?.distanceMeters),
+    links > 0 ? counted(words.links.files, links, locale) : null,
+    rows.some(hasOneLanguageLabel) ? words.links.labelOneLanguage : null,
+  ]);
+}
+
+/**
+ * Sub-card 1.3: `Strava · Facebook · 3 fișiere (GPX, Hartă, Rezultate)`, or `Niciun link` — and
+ * `etichetă într-o singură limbă` when a row carries a label in one language only (§354): the
+ * page shows the kind's own word for it in both languages, and the next save will refuse it.
+ */
 export function linksSummary(
   words: SummaryWords,
   event: LinksEvent | null,
@@ -385,6 +476,7 @@ export function linksSummary(
     rows.length > 0
       ? `${counted(words.links.files, rows.length, locale)} (${[...new Set(rows.map((row) => kindLabels[row.kind] ?? row.kind))].join(", ")})`
       : null,
+    rows.some(hasOneLanguageLabel) ? words.links.labelOneLanguage : null,
   ]);
   return line || words.links.none;
 }
@@ -397,7 +489,9 @@ type CoHostEvent = Parameters<typeof readCoHosts>[0];
  * The links are counted across every card; the description (§352) is one word — "cu descriere"
  * when a card carries it in both languages — and says "descriere într-o singură limbă" instead
  * whenever a card holds half a pair, because that card is the one the next save will refuse and
- * the closed line is where the organizer sees it first.
+ * the closed line is where the organizer sees it first. A partner's link with its label in one
+ * language only is named the same way, "etichetă într-o singură limbă" (§354, bilingual
+ * everywhere), and a description whose English is its Romanian word for word, `EN identic cu RO`.
  */
 export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, locale: string): string {
   const hosts = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null });
@@ -406,12 +500,15 @@ export function coHostsSummary(words: SummaryWords, event: CoHostEvent | null, l
     names: new Intl.ListFormat(locale === "ro" ? "ro" : "en", { type: "conjunction" }).format(hosts.map((host) => host.name)),
   });
   const links = hosts.reduce((count, host) => count + host.links.length, 0);
-  const oneLanguage = hosts.some((host) => (host.descriptionRo === null) !== (host.descriptionEn === null));
+  const oneLanguage = hosts.some(hasOneLanguageCoHostDescription);
   const described = hosts.some((host) => host.descriptionRo !== null && host.descriptionEn !== null);
+  const copied = hosts.some((host) => identicalInBothLanguages(host.descriptionRo, host.descriptionEn));
   return join(words, [
     names,
     links > 0 ? counted(words.links.files, links, locale) : null,
+    hosts.some((host) => host.links.some(hasOneLanguageCoHostLabel)) ? words.links.labelOneLanguage : null,
     oneLanguage ? words.coHosts.describedOneLanguage : described ? words.coHosts.described : null,
+    copied ? fillIn(words.identical, { language: "EN", source: "RO" }) : null,
   ]);
 }
 
@@ -421,7 +518,11 @@ export function promotionSummary(words: SummaryWords, event: Pick<EditableEvent,
   return line || words.promotion.none;
 }
 
-/** Box 14: `/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare`. */
+/**
+ * Box 14: `/ro/evenimente/crosul-tampei · /en/events/tampa-cross · blocată după publicare` — and
+ * `SEO într-o singură limbă` when a search-engine override is written in one language only (§354),
+ * the text the next save refuses.
+ */
 export function addressSummary(
   words: SummaryWords,
   translations: readonly SummaryTranslation[],
@@ -431,5 +532,10 @@ export function addressSummary(
   const addresses = translations.map((translation) =>
     translation.slug.trim() === "" ? `${code(translation.locale)}: ${words.address.none}` : `${paths[translation.locale] ?? ""}/${translation.slug}`,
   );
-  return join(words, [...addresses, locked ? words.address.locked : null]);
+  const [ro, en] = [translations.find((row) => row.locale === "ro"), translations.find((row) => row.locale === "en")];
+  const seoOneLanguage =
+    ro !== undefined &&
+    en !== undefined &&
+    (["seoTitle", "seoDescription"] as const).some((field) => missingLanguage({ ro: ro[field], en: en[field] }, isWrittenText) !== null);
+  return join(words, [...addresses, locked ? words.address.locked : null, seoOneLanguage ? words.address.seoOneLanguage : null]);
 }

@@ -114,11 +114,11 @@ describe("the club's own wording (§247)", () => {
   });
 
   /*
-    §NNN — no sample value is stored. The owner, 2026-09-24: the editor offered "Ai început
+    §359 — no sample value is stored. The owner, 2026-09-24: the editor offered "Ai început
     înscrierea la Crosul de toamnă", the page's sample event, and a save would have sent that title
     to every participant of every event.
   */
-  it("refuses a sample value, naming the box, the value and its field, and changes nothing (§NNN)", async () => {
+  it("refuses a sample value, naming the box, the value and its field, and changes nothing (§359)", async () => {
     const author = await staff("COPYWRITER");
     await updateEmailCopy(db, author, { messageType: "REGISTRATION_CANCELLED", locale: "ro", entry: words }, NOW);
     const attempt = updateEmailCopy(
@@ -149,7 +149,7 @@ describe("the club's own wording (§247)", () => {
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "email_copy.changed"))).toHaveLength(1);
   });
 
-  it("replaces the sample values with their fields for the Redactor, audited like a save, and refuses the Organizer (§NNN)", async () => {
+  it("replaces the sample values with their fields for the Redactor, audited like a save, and refuses the Organizer (§359)", async () => {
     const sampled = { subject: "Anulat: Crosul de toamnă", paragraphs: ["Salut Ana Popescu.", "Numărul tău de concurs: **42**."] };
     await expect(
       updateEmailCopy(db, await staff("MODERATOR"), { messageType: "EVENT_REMINDER", locale: "ro", entry: sampled, replaceSampleValues: true }, NOW),
@@ -173,7 +173,7 @@ describe("the club's own wording (§247)", () => {
     });
   });
 
-  it("still reads and sends a text saved with sample values before the guard, and says which (§NNN)", async () => {
+  it("still reads and sends a text saved with sample values before the guard, and says which (§359)", async () => {
     // Written the way the old editor let a Redactor write it: straight into the setting.
     const stale = { subject: "Anulat: Crosul de toamnă", paragraphs: ["Înscrierea ta la Crosul de toamnă a fost anulată."] };
     await db.insert(platformSettings).values({ key: EMAIL_COPY_SETTING_KEY, value: { [KEY]: stale }, updatedAt: NOW });
@@ -189,7 +189,7 @@ describe("the club's own wording (§247)", () => {
       .values({ messageType: "REGISTRATION_CANCELLED", locale: "ro", recipientEmail: "ana@example.ro", payloadJson: {}, idempotencyKey: "stale-one", createdAt: NOW })
       .returning();
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
-    // Exactly what it said before §NNN: the guard is the save's, never the send's.
+    // Exactly what it said before §359: the guard is the save's, never the send's.
     expect(message.subject).toContain("Anulat: Crosul de toamnă");
   });
 

@@ -99,7 +99,7 @@ export function fillPlaceholders(
 }
 
 /**
- * The facts the platform writes a sentence around **only when the message has them** (§NNN): the
+ * The facts the platform writes a sentence around **only when the message has them** (§359): the
  * number (`...(d.bibNumber ? [...] : [])`), the desk code, what to bring, the hold's deadline, the
  * time of signing, the start and the place (`templates.ts`). The other fields — the runner's name,
  * the event's title, the status, the colleague's role and inviter — are on every message that
@@ -117,7 +117,7 @@ export const EMAIL_COPY_CONDITIONAL_FACTS: ReadonlySet<string> = new Set<EmailCo
 ]);
 
 /**
- * A paragraph of the club's words that this message leaves out (§NNN): it names at least one
+ * A paragraph of the club's words that this message leaves out (§359): it names at least one
  * field, and every field it names is one of the conditional facts above that this message lacks.
  *
  * The platform's own text never writes such a sentence: "Numărul tău de concurs: …" is added only

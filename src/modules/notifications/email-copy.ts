@@ -99,7 +99,7 @@ function parsedEntry(key: string, value: unknown): EmailCopyEntry {
  * map posted at once would make the audit row unreadable and a concurrent edit destructive.
  * `null` removes the override — "revino la textul platformei" — and is what a cleared form does.
  *
- * **No sample value is saved (§NNN).** A subject or paragraph still holding a value of the page's
+ * **No sample value is saved (§359).** A subject or paragraph still holding a value of the page's
  * sample — "Crosul de toamnă", "Ana Popescu", "EXAMPL", the sample's date — is refused, naming the
  * box and the value, because every participant would receive it as written. Checked here and not in
  * the setting's schema: the schema also reads what is already stored, and a stored text with a
@@ -154,7 +154,7 @@ export async function updateEmailCopy<T extends Record<string, unknown>>(
       entityId: EMAIL_COPY_SETTING_ENTITY_ID,
       // The one message that changed, from and to — not the whole map, which would make every
       // row in the trail unreadable and hide which words actually moved. "Înlocuiește cu
-      // câmpurile" says so, and which sample values it replaced (§NNN).
+      // câmpurile" says so, and which sample values it replaced (§359).
       metadata: { key, from: before.copy[key] ?? null, to: entry, ...(replaced ? { replacedSampleValues: replaced } : {}) },
       now,
     });

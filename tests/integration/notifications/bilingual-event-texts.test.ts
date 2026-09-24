@@ -144,7 +144,7 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     expect(romanian).toContain(RO.title);
     expect(romanian).toContain(`Ce să aduci: ${RO.checklist}`);
     expect(romanian).toContain(RO.place);
-    expect(english).toContain(`${EN.title} is two days away.`);
+    expect(english).toContain(`${EN.title} is coming up.`);
     expect(english).toContain(`What to bring: ${EN.checklist}`);
     expect(english).toContain(EN.place);
     for (const romanianWords of [RO.title, RO.checklist, RO.place]) expect(english).not.toContain(romanianWords);
@@ -158,7 +158,7 @@ describe("§NNN each half of a bilingual message reads its own language's event 
 
     expect(english).toContain(`What to bring: ${EN.checklist}`);
     expect(english).toContain(EN.place);
-    expect(romanian).toContain(`${RO.title} este peste două zile.`);
+    expect(romanian).toContain(`${RO.title} se apropie.`);
     expect(romanian).toContain(`Ce să aduci: ${RO.checklist}`);
     expect(romanian).toContain(RO.place);
     for (const englishWords of [EN.title, EN.checklist, EN.place]) expect(romanian).not.toContain(englishWords);
@@ -196,9 +196,9 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     const message = await renderOutboxMessage(await queue(event.id, "en", "EVENT_REMINDER"), db, NOW);
     const [english, romanian] = halves(message);
     // The English registrant's own half falls back to the only text there is, as it always did.
-    expect(english).toContain(`${RO.title} is two days away.`);
+    expect(english).toContain(`${RO.title} is coming up.`);
     expect(english).toContain(`What to bring: ${RO.checklist}`);
-    expect(romanian).toContain(`${RO.title} este peste două zile.`);
+    expect(romanian).toContain(`${RO.title} se apropie.`);
     expect(romanian).toContain(RO.place);
   });
 

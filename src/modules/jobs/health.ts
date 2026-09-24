@@ -27,6 +27,15 @@ import { readLastPing } from "./schedule-cache";
  *   hours sees a real run every two hours and reads `ok`, rather than being paged by its own
  *   throttle.
  *
+ * Since §355 both end on the pinger's slots rather than a fixed time after the run, and neither
+ * threshold moved. The cap ends on the latest top of the hour within sixty minutes of the run —
+ * never later than before. A minimum interval ends on a boundary of its own length, up to
+ * `ALIGN_STRETCH_MINUTES` — one pinger period — past the interval while it gets there, so the
+ * stretch, one missed call after it and the grace (32 minutes) still fit inside twice the fastest
+ * pinger plus five, and one slow run still never flips the check;
+ * `tests/unit/jobs/schedule-alignment.test.ts` walks a day of runs, by day and by night, with and
+ * without a dropped call, against this very threshold.
+ *
  * When the cache answers nothing for the pings — a caller outside a request, a cache this
  * function cannot reach, or ping slots evicted on their own — the last real run stands in for the
  * last ping. That is not the check as it was before §334: real runs are now up to an hour apart

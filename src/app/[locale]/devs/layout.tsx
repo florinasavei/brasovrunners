@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { BACKOFFICE_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
@@ -38,9 +39,14 @@ export default async function DevsLayout({ children, params }: Props) {
   }
   if (!canSeeDiagnostics(staffUser.role)) notFound();
 
+  const messages = await getMessages({ locale });
+
   return (
-    <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
-      {children}
-    </BackofficeShell>
+    // The same nested provider as `/admin`'s layout (§353): the shell and its islands are the same.
+    <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
+      <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
+        {children}
+      </BackofficeShell>
+    </NextIntlClientProvider>
   );
 }

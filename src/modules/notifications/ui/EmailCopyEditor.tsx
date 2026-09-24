@@ -30,10 +30,10 @@ type Props = {
   written: EmailCopyEntry | null;
   /**
    * The platform's text for this message, shown as the starting point: its words with the fields
-   * written as placeholders, never the preview's sample values (§NNN, `email-copy-fields.ts`).
+   * written as placeholders, never the preview's sample values (§359, `email-copy-fields.ts`).
    */
   shipped: EmailCopyPrefill;
-  /** The sample values the club's saved words still hold (§NNN); empty when there are none. */
+  /** The sample values the club's saved words still hold (§359); empty when there are none. */
   samples: readonly EmailSampleHit[];
 };
 
@@ -45,7 +45,7 @@ type Props = {
  * back to the platform's text. The preview above is the result, and pressing Save re-renders the
  * page with the new words in it.
  *
- * **The box starts from the platform's words with the fields in them** (§NNN): "Ai început
+ * **The box starts from the platform's words with the fields in them** (§359): "Ai început
  * înscrierea la {eventTitle}", never the preview's "…la Crosul de toamnă". It used to start from
  * the preview itself, and a Redactor who saved it stored the sample's title for every participant.
  * A saved text that still holds a sample value is said so in amber, naming each value and its
@@ -133,7 +133,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
           /*
             What is in the box: the club's own document if it wrote one, otherwise its plain
             paragraphs turned into one, otherwise the platform's words with the fields. One block
-            per paragraph and the platform's `**bold**` as bold (§NNN): the old conversion put every
+            per paragraph and the platform's `**bold**` as bold (§359): the old conversion put every
             paragraph in one block, which an email's HTML ran together.
           */
           initialBody={written ? (written.body ?? emailDocFromParagraphs(written.paragraphs)) : shipped.body}

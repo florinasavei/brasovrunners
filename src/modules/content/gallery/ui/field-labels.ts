@@ -7,9 +7,12 @@ export async function albumFormFieldLabels(): Promise<Record<string, string>> {
   const labels: Record<string, string> = { takenOn: t("fields.takenOn"), eventId: t("fields.event") };
   for (const locale of routing.locales) {
     const language = t(`language.${locale}`);
-    for (const field of ["title", "slug", "description"] as const) {
+    for (const field of ["title", "slug"] as const) {
       labels[`translations.${locale}.${field}`] = `${language}: ${t(`fields.${field}`)}`;
     }
+    // Both languages or neither (§354, bilingual everywhere): the refusal names only the empty
+    // side, so its line says what that side needs — the box's own help is replaced by "check this".
+    labels[`translations.${locale}.description`] = `${language}: ${t("fields.description")} — ${t("bothOrNeither")}`;
   }
   return labels;
 }

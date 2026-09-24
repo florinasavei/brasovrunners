@@ -109,10 +109,20 @@ export function readEventLinks(value: unknown): EventLink[] {
  * word in the reader's language ("Traseul (GPX)" / "Route (GPX)"), so a link needs no
  * translation to be published. Never the other language's label: an English page does not show
  * Romanian the club typed for the Romanian one (BR-REQ-040-02's rule for every other word).
+ *
+ * **Both or neither** (§354, bilingual everywhere — `coHostDescription`'s rule for a label): the
+ * save refuses a label in one language only, and a row stored before that rule, with a label in
+ * one language, answers null in **both**, so both pages show the kind's own word rather than the
+ * club's label on one page and the default on the other. The editor reads `labelRo`/`labelEn`
+ * themselves, so the half is still there to be completed.
  */
 export function eventLinkLabel(link: Pick<EventLink, "labelRo" | "labelEn">, locale: "ro" | "en"): string | null {
-  return (locale === "ro" ? link.labelRo : link.labelEn) ?? null;
+  if (!link.labelRo || !link.labelEn) return null;
+  return locale === "ro" ? link.labelRo : link.labelEn;
 }
+
+/** A row the next save will refuse: a label of the club's in one language and not the other (§354). */
+export const hasOneLanguageLabel = (link: Pick<EventLink, "labelRo" | "labelEn">): boolean => !link.labelRo !== !link.labelEn;
 
 /**
  * Where the link goes, as the host a runner recognises — "drive.google.com", "dropbox.com" —

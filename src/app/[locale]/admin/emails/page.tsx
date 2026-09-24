@@ -130,7 +130,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const cards = types.map((messageType) => {
     /*
       The sample the preview is rendered with (§91) — one constant, `domain/email-sample.ts`, which
-      is also what the save refuses to store (§NNN), so the preview and the guard cannot drift. Each
+      is also what the save refuses to store (§359), so the preview and the guard cannot drift. Each
       half in its own language's sample, and without the fields this message never carries (§NNN,
       email follow-up: the legend under the editor dims them, and the preview says the same).
     */
@@ -141,7 +141,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
     const own = copyFor(written.copy, messageType, emailLocale);
     /*
-      A saved text that still holds a value of the sample (§NNN): saved from the editor before it
+      A saved text that still holds a value of the sample (§359): saved from the editor before it
       started from the fields, every participant would read "Crosul de toamnă" whatever their event.
       Said on the card, closed or open, to whoever may write the words — nobody else can act on it.
     */
@@ -226,7 +226,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           label: t(`emails.lang.${candidate}`),
           active: candidate === emailLocale,
         }))}
-        // A saved text holding sample values, in either language, opens the card to whoever may fix it (§NNN).
+        // A saved text holding sample values, in either language, opens the card to whoever may fix it (§359).
         openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
         messages={cards.map(({ messageType, content, own, samples, sampleLanguages }) => {
           return {
@@ -252,7 +252,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                 messageType={messageType}
                 written={own}
                 /* The platform's own words with the fields in them, never the preview's sample
-                   values (§NNN): what the box starts from while the club has written nothing. */
+                   values (§359): what the box starts from while the club has written nothing. */
                 shipped={emailCopyPrefill(messageType, emailLocale)}
                 samples={samples}
               />

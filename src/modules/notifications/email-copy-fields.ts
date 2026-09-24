@@ -33,7 +33,7 @@ import {
 import { buildTemplateContent, platformWords, type TemplateData } from "./templates";
 
 /**
- * The club's words and the page's sample kept apart (`DECISIONS.md` §NNN; the owner, 2026-09-24:
+ * The club's words and the page's sample kept apart (`DECISIONS.md` §359; the owner, 2026-09-24:
  * "all emails text must include these placeholders!").
  *
  * Four things live here, all about the editor under each preview on `/admin/emails`:
@@ -110,10 +110,14 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     staffEmail: sample.staffEmail,
     signInUrl: `${base}/${locale}/EXAMPLE`,
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
-    // organizer's note, and a reason — read only by those two messages' templates.
+    // organizer's note, and a reason — read only by those two messages' templates. Each in both
+    // languages, as the organizer now writes them (§354, bilingual everywhere): the previewed
+    // language's half first, the other half's own words after the rule, never the same text twice.
     updateChanges: ["place", "time"],
     organizerNote: sample.organizerNote,
+    organizerNoteOther: other.organizerNote,
     cancellationReason: sample.cancellationReason,
+    cancellationReasonOther: other.cancellationReason,
   };
 }
 
@@ -124,7 +128,7 @@ export function emailSampleActionUrl(locale: EmailLocale): string {
 
 /**
  * Every field of the closed set standing for itself — the data the editor's starting text is
- * built from. Decided per field and per sentence (§NNN):
+ * built from. Decided per field and per sentence (§359):
  *
  * - **every field of the set is present**, so every sentence the platform writes around one is in
  *   the text with its placeholder — the bib, the desk code, the checklist, the hold's deadline and
@@ -182,7 +186,7 @@ export type EmailCopyPrefill = {
 /**
  * One platform paragraph as the starting text's paragraphs: a new one starts at each later sentence
  * that names a fact the platform writes only when the message has it (`EMAIL_COPY_CONDITIONAL_FACTS`),
- * and what follows that sentence goes with it (§NNN).
+ * and what follows that sentence goes with it (§359).
  *
  * So the sentence the platform tacks on only when there is a hold's deadline, a desk code or a
  * number — "Dacă se formează lista de așteptare, locul îți este ținut până la …", "…sau spunând
@@ -391,7 +395,7 @@ function sampleSentencesOf(messageType: EmailMessageType, locale: EmailLocale): 
 
 /**
  * Every value the page's sample has given a field, today's first: the start as it read before
- * §349 changed its form on the same day as this, and the inviter's former name (§NNN). The hold's
+ * §349 changed its form on the same day as this, and the inviter's former name (§359). The hold's
  * deadline and the time of signing have one since the email follow-up (§NNN) — no old starting
  * text carried them, and a text written since that holds the sample's is found all the same.
  */
@@ -450,7 +454,7 @@ export function sampleValuesIn(
 }
 
 /**
- * "Înlocuiește cu câmpurile" (§NNN): every sample value of a text rewritten to its field — the
+ * "Înlocuiește cu câmpurile" (§359): every sample value of a text rewritten to its field — the
  * platform's own sentences whole first (which is how the bib and the status are caught), then each
  * sample value wherever else it stands.
  *
@@ -493,7 +497,7 @@ const EMAIL_LOCALES: readonly EmailLocale[] = ["ro", "en"];
 
 /**
  * The languages whose saved words for this message still hold a sample value — both, whichever one
- * the page is showing (§NNN). Every message goes out in both languages (§96), so an English text
+ * the page is showing (§359). Every message goes out in both languages (§96), so an English text
  * holding the sample's title is read under every Romanian message too: the closed card says so on
  * either tab, naming the language, while the warning and "Înlocuiește cu câmpurile" stay with the
  * language being edited.

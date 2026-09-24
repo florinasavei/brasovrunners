@@ -497,6 +497,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           working" and this one answers "what do we still owe", which are two halves of one
           question the club asks together. */}
       <SubNav
+        label={t("title")}
         items={[
           ...TASK_PANELS.map((name) => ({
             href: name === "todo" ? tasksPath : `${tasksPath}?panel=${name}`,

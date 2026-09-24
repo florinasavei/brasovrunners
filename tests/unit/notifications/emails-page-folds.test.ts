@@ -153,7 +153,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
   });
 
   /*
-    §NNN: a saved text still holding a value of the page's sample ("Crosul de toamnă") is what every
+    §359: a saved text still holding a value of the page's sample ("Crosul de toamnă") is what every
     participant would read. The card says so while closed, and opens by itself — `attention` — so
     the Redactor who opens the page finds it without opening twenty cards.
   */
@@ -185,14 +185,14 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).toMatch(/const types = \[\s*\.\.\.\(emailMessageType\.enumValues/);
     expect(page).toMatch(/filter\(\(type\) => !NEVER_QUEUED\.has\(type\)\)[\s\S]*?filter\(\(type\) => NEVER_QUEUED\.has\(type\)\)/);
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
-    // Through `cards`, which is `types` with each message's preview and saved words (§NNN).
+    // Through `cards`, which is `types` with each message's preview and saved words (§359).
     expect(page).toMatch(/const cards = types\.map\(/);
     expect(page).toMatch(/messages=\{cards\.map\(/);
     expect(page).toMatch(/languages=\{routing\.locales\.map\(/);
     // No preview or switch is drawn on the page outside the card any more.
     expect(page).not.toContain('component="details"');
     expect(page).not.toContain("<SubNav");
-    // And for whoever may write the words, when a saved text still holds a sample value (§NNN) —
+    // And for whoever may write the words, when a saved text still holds a sample value (§359) —
     // in either language, whichever tab is open; the editor's warning stays with the one on screen.
     expect(page).toMatch(/openWhen=\{\{ saved: copySaved, inUse: lang !== undefined, attention: anySamples \}\}/);
     expect(page).toMatch(/const samples = mayWrite && own \? sampleValuesIn\(own, messageType, emailLocale\) : \[\];/);

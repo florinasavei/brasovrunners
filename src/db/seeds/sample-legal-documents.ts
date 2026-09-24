@@ -45,13 +45,13 @@ import {
  */
 
 const SAMPLE_BANNER_RO = [
-  "TEXT DE EXEMPLU. Acest document NU a fost aprobat încă de Brașov Runners, nu este consultanță juridică și nu produce efecte juridice.",
+  "TEXT DE EXEMPLU. Acest document NU a fost aprobat încă de club, nu este consultanță juridică și nu produce efecte juridice.",
   "Există pentru ca fluxul de înscriere să poată fi încercat pe un sistem de test. Textul este complet și descrie exact ce face platforma; datele clubului (denumirea juridică, sediul, numărul de înregistrare, adresa de contact) sunt lăsate între paranteze unghiulare — <AȘA> — și se completează de club la aprobare.",
   "În producție, clubul îl aprobă în /admin/legal (Documente legale, Versiune nouă, „pornește de la textul platformei”) după ce l-a citit și a completat cele patru date.",
 ];
 
 const SAMPLE_BANNER_EN = [
-  "SAMPLE TEXT. This document has NOT been approved yet by Brașov Runners, is not legal advice, and has no legal effect.",
+  "SAMPLE TEXT. This document has NOT been approved yet by the club, is not legal advice, and has no legal effect.",
   "It exists so the registration flow can be tried on a test system. The text is complete and describes exactly what the platform does; the club's own facts (legal name, registered address, registration number, contact address) are left in angle brackets — <LIKE THIS> — and are filled in by the club when it approves.",
   "In production the club approves it in /admin/legal (Legal documents, New version, “start from the platform's text”) after reading it and filling in the four facts.",
 ];
@@ -66,7 +66,16 @@ const REVIEW_NOTE_EN = [
   "The approved version is written and approved in /admin/legal; from that moment the text is fixed, and a correction is the next version.",
 ];
 
-/** The platform's text, wrapped: the banner first, the review note last (both tests). */
+/**
+ * The platform's text, wrapped: the banner first, the review note last (both tests).
+ *
+ * The template's sections go in **as they are** — never through `fillClubFacts`, never through
+ * a merge. The owner, 2026-09-24: "when I seed a document I must have the placeholders as well!"
+ * So every `{{field}}` the template carries is still a field in the seeded version (filled only
+ * when the declaration is shown, signed or printed for one person at one event), and every club
+ * fact is still its `<PLACEHOLDER>` (a sample must not look approved, §132).
+ * `tests/integration/legal/sample-seed.test.ts` fails if either is ever lost (§357).
+ */
 function sample(key: LegalDocumentKey, locale: "ro" | "en"): LegalDocumentTranslationInput {
   const template = LEGAL_TEMPLATES[key][locale];
   return {

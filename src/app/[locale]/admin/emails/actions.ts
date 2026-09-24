@@ -155,7 +155,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
  * words. The service asserts that again, validates every placeholder, and records the one
  * message that changed. "Revino la textul platformei" is the same form's second button — it
  * posts `reset`, and the service reads that as "no override". "Înlocuiește cu câmpurile" is a
- * third, drawn only while the saved text holds sample values (§NNN): it posts `replace`, and the
+ * third, drawn only while the saved text holds sample values (§359): it posts `replace`, and the
  * service rewrites them to their fields before it saves. A text that still holds one is refused,
  * naming the value and its field.
  */
@@ -191,7 +191,7 @@ function emailCopyEntryFrom(subject: string, body: string): { subject: string; p
 }
 
 /**
- * The refusal of words that still hold sample values (§NNN), as the form's state: the boxes named
+ * The refusal of words that still hold sample values (§359), as the form's state: the boxes named
  * as for any refusal, and the sentence filled with the value and what goes in its place — the one
  * value, or each of them — in the backoffice's language.
  */
@@ -214,7 +214,7 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
   const back = `${path}?lang=${lang}`;
   const posted = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
   const reset = form.get("reset") === "1";
-  // "Înlocuiește cu câmpurile" (§NNN): a third submit on the same form, saving what is in the boxes
+  // "Înlocuiește cu câmpurile" (§359): a third submit on the same form, saving what is in the boxes
   // with every sample value rewritten to its field — the same gate and audit row as a save.
   const replace = !reset && form.get("replace") === "1";
 

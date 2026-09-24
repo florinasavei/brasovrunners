@@ -21,7 +21,7 @@ export type ParticipantEmailCard = {
    */
   neverSent?: string;
   /**
-   * "textul salvat (EN) are valori de exemplu" (§NNN): the club's saved words for this message, in
+   * "textul salvat (EN) are valori de exemplu" (§359): the club's saved words for this message, in
    * the languages named, still hold a value of the page's sample, which every participant would
    * receive as written. Said in the closed card's summary on either language's tab, and the card
    * opens, for whoever may write the words; absent otherwise.
@@ -77,7 +77,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
         </Typography>
-        <SubNav items={languages} />
+        <SubNav label={languageLabel} items={languages} />
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
