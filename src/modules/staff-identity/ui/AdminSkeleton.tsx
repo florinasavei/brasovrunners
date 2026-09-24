@@ -30,6 +30,33 @@ import { shimmerOffForReducedMotion } from "@/theme/motion";
  */
 const WAVE = shimmerOffForReducedMotion;
 
+/**
+ * The rule between the table's rows, drawn by CSS on the row after each row — never
+ * `<Stack divider={<Box … />}>` (§NNN).
+ *
+ * That is what it was, and under `next dev` it answered **500 on every backoffice list** — the
+ * events, registrations, legal texts, pages, gallery, team and to-do screen, every route whose
+ * `loading.tsx` renders this skeleton — with React's "Element type is invalid … got: undefined",
+ * while the production build served them all. No import was undefined. This file is a Server
+ * Component and `Stack` is a client one, so the divider element crossed the boundary **as a
+ * prop**. In development every element in the payload also carries its owner and its stack, and
+ * when one of those rows is still waiting on another React's Flight client hands the element over
+ * as a lazy wrapper rather than an element (`react-server-dom-turbopack`, the `0 < deps` branch). A
+ * lazy child renders fine, but `Stack` does not render its divider — it calls
+ * `React.cloneElement(divider, { key })` between each pair of rows, and cloning a lazy wrapper
+ * yields an element with neither props nor a type. Production payloads carry no owners or
+ * stacks, so the divider always arrived whole there, and whether it arrived whole in development
+ * depended on the order the rows streamed in: the first render after a compile usually passed,
+ * the next ones failed.
+ *
+ * It is the defect `CheckboxField` and `GlyphChip` document, in a third prop. The rule is the
+ * same — nothing but strings, numbers, plain objects and children crosses into a client
+ * component — and `tests/unit/shared/server-element-props.test.ts` now holds every Server
+ * Component to it. A selector needs no element at all: the same one-pixel line, under every row
+ * but the first, which is where `joinChildren` put the separators.
+ */
+const ROW_RULES = { "& > * + *": { borderTop: 1, borderColor: "divider" } } as const;
+
 type LabelProps = {
   /** Already translated by the caller — a skeleton must not wait on a catalogue lookup. */
   label: string;
@@ -69,13 +96,13 @@ export function AdminListSkeleton({ label, rows = 8 }: LabelProps & { rows?: num
 
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
         <Skeleton variant="rectangular" height={48} animation="wave" sx={{ ...WAVE, bgcolor: "action.hover" }} />
-        <Stack divider={<Box sx={{ borderBottom: 1, borderColor: "divider" }} />}>
+        <Box sx={ROW_RULES}>
           {Array.from({ length: rows }, (_, index) => (
             <Box key={index} sx={{ px: 2, py: 1.5 }}>
               <Skeleton variant="text" width={`${70 - ((index * 7) % 30)}%`} animation="wave" sx={WAVE} />
             </Box>
           ))}
-        </Stack>
+        </Box>
       </Box>
     </Stack>
   );

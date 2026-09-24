@@ -702,7 +702,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             pendingLabel={t("editor.saving")}
                             icon="save"
                             incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
-                            incompleteHintNamed={t("forms.incompleteFirst")}
+                            incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                             size="medium"
                           />
                         </Box>

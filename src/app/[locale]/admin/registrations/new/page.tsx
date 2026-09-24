@@ -241,7 +241,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                 label={t("registrations.create")}
                 pendingLabel={t("editor.saving")}
                 icon="addPerson"
-                incompleteHintNamed={t("forms.incompleteFirst")}
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                 size="medium"
               />
             </Box>

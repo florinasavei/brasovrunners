@@ -595,7 +595,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   label={t("registrations.eraseAction")}
                   pendingLabel={t("registrations.erasePending")}
                   icon="erase"
-                  incompleteHintNamed={t("forms.incompleteFirst")}
+                  incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                   color="error"
                   variant="contained"
                 />
