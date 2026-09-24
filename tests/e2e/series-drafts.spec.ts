@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { formatDay } from "../../src/i18n/dates";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §341, §351 — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
@@ -27,7 +27,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -53,6 +53,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await fillDateField(page, "Începutul evenimentului", ymd(first));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Un cros lunar, pentru seria de ciorne.");

@@ -32,6 +32,10 @@ async function editorLabels() {
  * inputs; it never omits them: a language the person may edit posts every one of its fields, or
  * the save would write "" over what a hidden box held.
  *
+ * The place's name is no longer one of them (§362): it is asked once per language in the Locul
+ * box, beside the other language's, and saved with the event's fields — the Organizer's, not the
+ * words' (`PlaceBox`, `PlaceToBeAnnounced`).
+ *
  * A language the person may not edit renders no inputs at all — not the hidden ids either
  * (`TranslationHiddenFields` is not rendered for it) — so a save posts nothing for that language
  * and the server has nothing to refuse (BR-REQ-060-01): short fields as text, rich texts as
@@ -201,32 +205,6 @@ export async function DescriptionFields({ translation, mayEdit }: PieceProps) {
         {t("editor.bodyHelp")}
       </Typography>
     </Stack>
-  );
-}
-
-/**
- * Box 5, "Locul", its tabs: the place's name in this language (migration `0058`) — optional, and
- * blank means the meeting point typed once above them, which the help says.
- */
-export async function PlaceNameField({ translation, mayEdit }: PieceProps) {
-  const t = await getTranslations("Admin");
-  const name = named(translation);
-  if (!mayEdit) {
-    return (
-      <Stack spacing={1}>
-        <ReadOnlyLine label={t("editor.locationNameInLanguage")} value={translation.locationName || t("editor.boxes.summary.empty")} />
-        <TextsReadOnly />
-      </Stack>
-    );
-  }
-  return (
-    <RecallField
-      name={name("locationName")}
-      label={t("editor.locationNameInLanguage")}
-      helperText={t("editor.locationNameInLanguageHelp")}
-      defaultValue={translation.locationName ?? ""}
-      {...box("locationName")}
-    />
   );
 }
 

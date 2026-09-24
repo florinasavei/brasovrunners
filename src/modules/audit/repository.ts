@@ -117,6 +117,13 @@ export type AuditAction =
   /** "Detalii actualizate" queued (§331): which facts changed, the organizer's note and the count. */
   | "event.update_notice_sent"
   /**
+   * "Trimite un mesaj participanților" (§364): who sent it (the actor), to which part of the
+   * event's registrants, how many real ones and how many test ones, the subject in both languages
+   * and the send's own id — never who received it, and never the body (§12.12: no email body).
+   * The event's "Mesaje trimise" history is read from these rows.
+   */
+  | "event.participant_message_sent"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with

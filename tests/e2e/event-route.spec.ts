@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { editorBox, languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -58,6 +58,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -110,7 +111,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // language's own panel, because the hidden one carries the same fold.
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };

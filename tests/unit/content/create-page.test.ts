@@ -181,19 +181,27 @@ describe("the time is picked, always on the 24-hour clock", () => {
   });
 });
 
-describe("the place's name in each language", () => {
-  it("is asked in the Locul box, in its own tabs, under the meeting point — hidden with it while to be announced", () => {
+describe("the place's name in each language (§362)", () => {
+  it("is asked once per language in the Locul box, beside each other — hidden with the map link while to be announced", () => {
     const place = read("src/modules/content/events/ui/boxes/PlaceBox.tsx");
-    // The tabs are the island's children: `PlaceToBeAnnounced` hides them with the map link.
-    expect(place.indexOf("<PlaceToBeAnnounced")).toBeLessThan(place.indexOf("{tabs}"));
-    expect(place.indexOf("{tabs}")).toBeLessThan(place.indexOf("</PlaceToBeAnnounced>"));
-    expect(place).toContain("<PlaceNameField");
-    expect(TRANSLATION_FIELDS).toContain('name={name("locationName")}');
+    const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
+    // No tabs and no second, shared box: the island holds the two names and the map link.
+    expect(place).not.toContain("<LanguageTabs");
+    expect(place).not.toContain("PlaceNameField");
+    expect(TRANSLATION_FIELDS).not.toContain('name={name("locationName")}');
+    expect(island).toContain('const RO_NAME = "event.locationName"');
+    expect(island).toContain('const EN_NAME = "event.locationNameEn"');
+    // Side by side from `sm`, stacked on a phone.
+    expect(island).toContain('direction={{ xs: "column", sm: "row" }}');
+    // Both inside the block the switch hides, with the map link after them.
+    expect(island.indexOf("<ShownWhen")).toBeLessThan(island.indexOf("nameBox(RO_NAME"));
+    expect(island.indexOf("nameBox(EN_NAME")).toBeLessThan(island.indexOf("{children}"));
     for (const [file, messages] of MESSAGES) {
-      expect(messages.Admin.editor.locationNameInLanguage, file).toBeTruthy();
-      expect(messages.Admin.editor.locationNameInLanguageHelp, file).not.toContain("{panel}");
+      expect(messages.Admin.editor.locationCopyToEnglish, file).toBeTruthy();
+      expect(messages.Admin.editor.locationNameInLanguage, file).toBeUndefined();
     }
-    expect(read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx")).toContain('name="event.locationName"');
+    // The action reads the English box by the name the island posts, and only when it was posted.
+    expect(ACTIONS).toContain('locationNameEn: form.has("event.locationNameEn") ? value("locationNameEn") : undefined');
   });
 });
 

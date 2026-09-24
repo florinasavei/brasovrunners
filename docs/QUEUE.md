@@ -11,18 +11,17 @@ decision or a click only the club can make · **released** — on production, wi
 
 ## Building
 
+Since the evening of 2026-09-24 at most four changes are built at once: eleven in parallel exhausted the development machine and every run had to be recovered.
+
 | Item | Branch | Notes |
 | --- | --- | --- |
 | The public listing's cards: one structure, the title a blue link, no empty bands, the place linked to its map, a clock by the time, route and cost as the event page's pills — **the owner's first priority** | `feat/listing-cards-spacing` | then a round for the title link, the map link and the clock |
-| The phone footer in at most two short rows, RO \| EN side by side, the build badge hidden from visitors — **second priority** | `fix/mobile-footer` | |
 | A handshake marker on partnered events (card, calendar, event page); one tooltip per calendar event; a same place never flagged "Nu în locul obișnuit" | `feat/partner-marker-calendar` | |
 | The primary buttons respond within 200 ms (INP) — measured before and after at 4× CPU | `perf/inp-submit` | Vercel flagged 352 ms |
 | Leftover literal club names (email sender name, PDF metadata, Zitadel invitation, legend example), a donation event's structured data, the queue panel's times in the event's zone | `chore/no-hardcoded-leftovers` | |
 | `yarn dev` answers 500 on `/admin/tasks` and `/admin/gallery` (production is fine) — root cause and a guard | `fix/dev-ssr-invalid-element` | |
 | The email editor's placeholder legend like the documents' (code chip, meaning, example; this message's fields first), the preview sample with every field, precise sample-value matching, and a bilingual email's second half in its own language (title, what to bring, place) | `feat/email-followup` | on top of `BR-V1.78` |
-| The meeting point once per language — Română and English side by side, both required unless "to be announced", "Același nume și în engleză" | `feat/place-one-name-per-language` | no migration: shared column = Romanian, each translation its own |
 | "Termene": every participant-facing deadline a club setting — confirmation link, declaration hold, waiting-list offer, reminder (with a per-event override), self check-in, race week, series horizon — and every number in emails, pages and legal texts follows it | `feat/deadlines-config` | one expand-only migration (the per-event reminder); new values apply to new holds and offers only |
-| "Trimite un mesaj participanților": a bilingual free-form message (bad weather, a change, a cancellation) to an event's participants by state, previewed, counted against the day's allowance, sent through the outbox, audited, with a send history | `feat/custom-participant-email` | one expand-only migration (a new message type) |
 
 ## Ready for the next release
 
@@ -59,6 +58,8 @@ decision or a click only the club can make · **released** — on production, wi
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.81` | **hotfix** — the rich-text editor's selection and table bars show their buttons again (Tiptap's production build dropped their stacking order); a fold opened in one language tab stays open in the other; closing a fold no longer loses what was typed · "Trimite un mesaj participanților": a bilingual message to an event's participants by group, previewed, sent through the outbox, audited (migration `0068`) · the phone footer floats one line and rests two, RO \| EN side by side, the build stamp in the "Despre club" fold |
+| `BR-V1.80` | the meeting point once per language — Română and English side by side, both required unless to be announced, "Același nume și în engleză" for an empty English box; every page, email, calendar file and the declaration name the place in the reader's language |
 | `BR-V1.79` | both text editors' toolbars wear Material icons with tooltips, one shared button — no more 🖼 🔗 ↶ ↷ ¶ |
 | `BR-V1.78` | the email editor starts from the placeholders, never the preview's sample values; saving a sample value is refused; texts already saved with sample values are flagged, with "Înlocuiește cu câmpurile"; every backoffice sub-navigation is one row of secondary tabs |
 | `BR-V1.77` | the editor's first card "Ce fel de eveniment" holds "Starea evenimentului", "Traseul" and "Linkuri și fișiere" as named cards, create and edit alike (the create page shows Programat, read-only); the third group is "Parteneri și prezentare" |

@@ -12,6 +12,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
+import { PLACE_NAME_FIELD } from "@/modules/events/domain/place";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -49,6 +50,7 @@ import {
   canEditEventFields,
   canEditTranslation,
   canManageRegistrations,
+  canMessageParticipants,
   canReadContent,
   canReadRegistrations,
   canManageTestRegistrations,
@@ -184,8 +186,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const live = isLiveContent(event.editorialStatus);
   const slugLocked = event.publishedAt !== null;
   const incomplete = describeIncompleteLocales(translations);
-  // The meeting point is the event's now, not each language's (`DECISIONS.md` §36).
-  const missingOnEvent = missingPublicEventFields(event);
+  // The meeting point in every language, asked in the Locul box (`DECISIONS.md` §36, §362).
+  const missingOnEvent = missingPublicEventFields(event, translations);
   const maySaveSettings = canEditEventFields(staffUser.role);
   const mayChangeSeries = canCreateEvent(staffUser.role);
 
@@ -297,7 +299,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.tabMissing")}`, name: `translations.${entry.locale}.title` };
       }),
     ),
-    ...missingOnEvent.map(() => ({ label: `${t("editor.boxes.place.title")} › ${t("editor.fields.locationName")}`, name: "event.locationName" })),
+    // "Locul › English › Punct de întâlnire": the language whose box is empty (§362).
+    ...missingOnEvent.map((field) => {
+      const language = field === PLACE_NAME_FIELD.en ? "en" : "ro";
+      return { label: `${t("editor.boxes.place.title")} › ${languageName(language)} › ${t("editor.fields.locationName")}`, name: `event.${field}` };
+    }),
   ];
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
   /*
@@ -733,6 +739,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
                         </GlyphButton>
+                        {/* A message of the organizer's own to this event's registrants (§364): bad
+                            weather, a changed start — its own page, with the preview and the history. */}
+                        {canMessageParticipants(staffUser.role) && (
+                          <GlyphButton
+                            icon="announce"
+                            href={getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: event.id } } })}
+                            variant="outlined"
+                            size="small"
+                            sx={{ minHeight: 44 }}
+                            data-testid="participant-message-link"
+                          >
+                            {t("participantMessages.link")}
+                          </GlyphButton>
+                        )}
                         {/* The emergency sheet (§322): the Organizer is the one on the course with it. */}
                         <GlyphButton
                           icon="emergency"

@@ -253,12 +253,13 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (�
     expect((await translationsOf(event.id)).find((row) => row.locale === "ro")?.checklist).toBe("Apă.");
   });
 
-  it("leaves the summary and a language's own place name to their own rules: a draft may be half-written there", async () => {
+  it("leaves the summary to its own rule, and takes an English place that says something else", async () => {
     const event = await createEvent(db, { actor: admin, fields: { ...POSTED, translations: TRANSLATIONS }, now: NOW });
-    // The summary is required in both before publication (§28), not at every draft save; and
-    // "Tractorul Park" on the English page alone is what a language's own place name is for.
-    await save(event.id, {}, { ro: { excerpt: "Duminică." }, en: { excerpt: "", locationName: "Council Square" } });
-    const en = (await translationsOf(event.id)).find((row) => row.locale === "en");
-    expect(en?.locationName).toBe("Council Square");
+    // The summary is required in both before publication (§28), not at every draft save; and the
+    // place is asked in both languages by the event's own schema (§362), each in its own words.
+    await save(event.id, { locationNameEn: "Council Square" }, { ro: { excerpt: "Duminică." }, en: { excerpt: "" } });
+    const rows = await translationsOf(event.id);
+    expect(rows.find((row) => row.locale === "en")?.locationName).toBe("Council Square");
+    expect(rows.find((row) => row.locale === "ro")?.locationName).toBe("Piața Sfatului");
   });
 });

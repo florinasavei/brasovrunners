@@ -744,6 +744,8 @@
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person was entered but could not be confirmed: the last place went at that very moment, and the waiting list had no room either. Their registration stays unconfirmed and no email was sent to them. Confirm it on paper once a place frees up; otherwise it lapses on its own after 48 hours.",
+      "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
+      "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field the platform can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
       "SAMPLE_VALUES_IN_EMAIL": "The text contains sample values, not fields: {found}. Use the fields in their place."
     },
@@ -755,11 +757,11 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
-      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The shared name, filled in once; if the place goes by another name in English, write that one below, on the language's tab.",
-      "locationNameInLanguage": "The place's name (in this language)",
-      "locationNameInLanguageHelp": "Optional. What the meeting point is called on this language's page — “Tractorul Park” on the English one, for instance. Leave it empty and the page uses the meeting point above.",
+      "locationHelp": "The place, as you would tell a friend: a name, a street, or both — in Romanian and in English, each for its own language's page. If it is called the same in both, press “Same name in English”: while the two say the same, what you type in Romanian is written in English too.",
+      "locationCopyToEnglish": "Same name in English",
+      "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
       "placeToBeAnnounced": "Location to be announced",
-      "placeToBeAnnouncedHelp": "Turn it on when the place is not settled yet. The event can be published anyway: the page, the cards, the calendar, the share picture and the emails say “Location to be announced soon”, and the place, the address, the map and the programme's places appear nowhere. What you fill in below — and the place's name on each language's tab — is kept, unpublished. When you announce the place, turn the switch off and save — it appears everywhere at once.",
+      "placeToBeAnnouncedHelp": "Turn it on when the place is not settled yet. The event can be published anyway: the page, the cards, the calendar, the share picture and the emails say “Location to be announced soon”, and the place, the address, the map and the programme's places appear nowhere. What you fill in below, in both languages, is kept, unpublished. When you announce the place, turn the switch off and save — it appears everywhere at once.",
       "placeUnpublished": "Not published while the location is to be announced.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
@@ -2507,7 +2509,8 @@
         "REGISTRATION_OPENED": "Registration is open",
         "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed",
         "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
-        "EVENT_CANCELLED": "Event cancelled"
+        "EVENT_CANCELLED": "Event cancelled",
+        "ORGANIZER_MESSAGE": "Message from the organizers"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -2529,7 +2532,8 @@
         "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form.",
         "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
-        "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link."
+        "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link.",
+        "ORGANIZER_MESSAGE": "Only when an organizer writes and sends a message from the event's page → “Send a message to participants” — bad weather or a last-minute change, for instance. The subject and the text are written for each send, in Romanian and English; the preview here uses a sample text. To the group chosen — confirmed, on the waiting list, with the declaration unsigned, or all — each in their own language. No token and no attachment: the button leads to the event's page."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -2551,7 +2555,8 @@
         "REGISTRATION_OPENED": "when registration opens",
         "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
         "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
-        "EVENT_CANCELLED": "when the event is cancelled, if ticked"
+        "EVENT_CANCELLED": "when the event is cancelled, if ticked",
+        "ORGANIZER_MESSAGE": "only when an organizer writes a message"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -2683,7 +2688,8 @@
         "saved": "The contact form's recipients have been saved.",
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
       },
-      "neverSent": "not sent any more"
+      "neverSent": "not sent any more",
+      "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here."
     },
     "guide": {
       "title": "How to use the platform",
@@ -2752,6 +2758,7 @@
             "The words — the title, the summary, the description, the rules, the programme — are the Redactor's or the Administrator's. You can read them and cannot save them; if a text is wrong, tell the Administrator.",
             "Publishing: you press “Submit for review”. “Publish” is the Administrator's, as are taking a live event down and archiving one. Both languages go live together; an incomplete language blocks publishing.",
             "Registrations (Organizer, not Tehnic): you see the whole list, each registration with its history, the export (Excel or CSV), the race numbers and the signed declarations. You cannot cancel, erase, rename or resend an email — those are the Administrator's.",
+            "A message to the participants (Organizer, not Tehnic): the event's page → “Registrations received” → “Send a message to participants” — bad weather, a last-minute change, a cancellation. You choose who receives it (everyone registered, only the confirmed, the waiting list or those who have not signed the declaration) and see how many they are; you write the subject and the message in Romanian and in English; you see the email exactly as it goes out, for someone registered in Romanian and for someone registered in English; you confirm. It goes through the email queue, to each in their own language; under the form stay the “Messages sent”, with the date, the subject, the group, how many and who sent it.",
             "Race numbers: “Assign numbers”, on the event page, is the Administrator's. The sheet is yours to download: “Download the sheet (PDF)” — two per A4, with the logo — from the event page or from “Registrations”. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
             "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
             "Race numbers: at confirmation everyone gets one at random. A preferential number: the registration's page → “Race number” — the free numbers are listed beside the field, type one, save; the participant gets the number by email, with the QR code. A number somebody else already wears is refused.",
@@ -2832,6 +2839,74 @@
       "keptConflict": "What you typed is still in the boxes — copy what you need, then reload the page.",
       "keptExceptConfirmation": "What you typed is still in the boxes, except the confirmation, which is asked again.",
       "incompleteFirst": "Fill in first: {field}"
+    },
+    "participantMessages": {
+      "link": "Send a message to participants",
+      "title": "Send a message to participants",
+      "event": "{event} · {date}",
+      "intro": "An email you write, in Romanian and English, to the people registered for this event — bad weather, a last-minute change or a cancellation, for instance. Each receives it in the language they registered in, with the other language below and with the link to the event's page. It goes through the email queue, like every other message.",
+      "backToEvent": "← Back to the event",
+      "compose": "New message",
+      "audience": "Who receives it",
+      "audienceHelp": "Cancelled or lapsed registrations and unconfirmed email addresses receive nothing. The number beside each group is the registrations as they are now.",
+      "audiences": {
+        "ALL_ACTIVE": "Everyone registered: confirmed, on the waiting list and those who have not signed the declaration yet",
+        "CONFIRMED": "Only the confirmed",
+        "WAITLIST": "Only the waiting list (and those offered a place)",
+        "PENDING_DECLARATION": "Only those registered who have not signed the declaration yet"
+      },
+      "audiencesShort": {
+        "ALL_ACTIVE": "Everyone registered",
+        "CONFIRMED": "Confirmed",
+        "WAITLIST": "Waiting list",
+        "PENDING_DECLARATION": "Declaration not signed"
+      },
+      "recipients": {
+        "one": "{count} recipient",
+        "few": "{count} recipients",
+        "other": "{count} recipients"
+      },
+      "nobody": "Nobody is in the chosen group right now.",
+      "nobodyYet": "Nobody is registered for this event right now, so there is nobody to receive the message.",
+      "noRegistrationHere": "This event takes no registrations on the site, so there is nobody to message from here.",
+      "testLine": "Test registrations, which receive it too and are counted nowhere: {test}.",
+      "cost": "Emails, the club's copies included: {messages} — taken from the Mailgun allowance ({allowance}).",
+      "waiting": "{waiting} already waiting in the queue",
+      "deferredDay": "{now} of them can go today; the other {deferred} stay in the queue and go by themselves after midnight (UTC), when the daily allowance comes back. None is lost.",
+      "deferredMonth": "{now} of them can go this month; the other {deferred} stay in the queue and go by themselves when the monthly allowance comes back. None is lost.",
+      "subject": "Subject",
+      "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
+      "body": "Message",
+      "bodyHelp": "In both languages, required, plain text, at most {max} characters each. A blank line starts a new paragraph. Fields filled in for each participant: {list} — the race number shows only for those who already have one. The event's date and place, the button to its page and the usual links come under the message by themselves.",
+      "preview": "How the email looks",
+      "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
+      "previewRo": "Registered in Romanian",
+      "previewEn": "Registered in English",
+      "previewLoading": "Preparing the preview…",
+      "previewUnavailable": "The preview is not available right now. The message can still be sent.",
+      "previewUnknown": "Unknown fields: {names}. The message cannot be sent with them — use only the fields listed under the boxes.",
+      "send": "Send the message",
+      "confirmTitle": {
+        "one": "Send the message to {count} participant?",
+        "few": "Send the message to {count} participants?",
+        "other": "Send the message to {count} participants?"
+      },
+      "confirmBody": "The email goes now, through the email queue, to each in their own language, and cannot be withdrawn.",
+      "confirmSend": "Send",
+      "sent": {
+        "one": "Message queued for {count} participant. It goes out in a few minutes.",
+        "few": "Message queued for {count} participants. It goes out in a few minutes.",
+        "other": "Message queued for {count} participants. It goes out in a few minutes."
+      },
+      "sentTest": "Plus test registrations: {test}.",
+      "duplicate": "This message had already been sent, so nothing was queued a second time.",
+      "cancelledNote": "The event is cancelled. The message still goes if you send it — to announce a new date, for instance.",
+      "seriesNote": "This event is part of a series: the message goes only to those registered for this date. For another date, open it from the editor and send from there.",
+      "history": "Messages sent",
+      "historyEmpty": "No message sent from here for this event yet.",
+      "historyWhen": "Sent {date} by {sender}",
+      "historyNoSender": "a removed account",
+      "historyTest": "test registrations: {test}"
     }
   },
   "NotFound": {

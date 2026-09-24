@@ -30,7 +30,7 @@ import { journeyOf } from "@/modules/registrations/domain/journey";
 import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
-import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import {
@@ -670,6 +670,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
+          {/* With one event chosen, the organizer's own message to its registrants (§364) —
+              the page lives under the event; this is the other door to it. */}
+          {filters.eventId && canMessageParticipants(actor.role) && (
+            <GlyphButton
+              icon="announce"
+              href={getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: filters.eventId } } })}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+            >
+              {t("participantMessages.link")}
+            </GlyphButton>
+          )}
           {/* An access request arrives as an address, and this list searches by name (§322):
               the Administrator's own page for "everything held about this person". */}
           {mayManage && (

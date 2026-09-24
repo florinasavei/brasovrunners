@@ -54,19 +54,21 @@ export default function LocaleSwitcher() {
       component="nav"
       aria-label={t("language")}
       /*
-        Stacked on a phone — RO over EN — by the owner's instruction on 2026-09-17: side by side
-        the pair is ~94px wide, stacked it is ~46px, and that difference is what lets the first
-        section of the site sit on the header row beside the menu at 320px. Two 22px lines make
-        the same 44px the row had. The current language is the upper line and the link the
-        lower, whichever they are, and the link's tap target stays 44px tall through the
-        pseudo-element below, which extends its hit area up over the stated language — a label
-        that is not a control, so nothing is stolen from it.
+        Side by side at every width since §365 — RO and EN on one line, each 44px tall.
+
+        It was stacked on a phone, RO over EN, by the owner's instruction on 2026-09-17: side by
+        side the pair is ~100px wide, stacked ~46px, and that difference is what let the first
+        section of the site sit on the header row beside the menu at 320px. Since §262 a phone's
+        switcher is not on the header row at all — the header's copy is `display: none` below
+        `sm` — but the footer's second line, beside the privacy notice, where 100 pixels are
+        free. Stacked there, the pair read as two lines of a footer that was already too tall
+        (the owner, 2026-09-24), and it needed a pseudo-element to stretch a 22px link to 44.
       */
       sx={{
         display: "flex",
-        flexDirection: { xs: "column", sm: "row" },
-        alignItems: { xs: "stretch", sm: "center" },
-        gap: { xs: 0, sm: 0.25 },
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 0.25,
         flexShrink: 0,
       }}
     >
@@ -84,13 +86,11 @@ export default function LocaleSwitcher() {
           display: "inline-flex",
           alignItems: "center",
           gap: 0.5,
-          fontSize: { xs: "0.75rem", sm: "0.8125rem" },
-          // 44px is the minimum tap target (BR-REQ-041-01 criterion 6) from `sm` up, where the
-          // pair sits side by side. Stacked on a phone, each line is 22px and the link's hit
-          // area is extended to the full 44px stack by `::before`.
-          minHeight: { xs: 22, sm: 44 },
+          fontSize: "0.8125rem",
+          // 44px is the minimum tap target (BR-REQ-041-01 criterion 6), at every width.
+          minHeight: 44,
           lineHeight: 1,
-          px: { xs: 0.5, sm: 0.75 },
+          px: 0.75,
         } as const;
 
         return isActive ? (
@@ -105,23 +105,7 @@ export default function LocaleSwitcher() {
             href={`/api/locale?to=${locale}&from=${encodeURIComponent(pathname)}`}
             rel="nofollow"
             aria-label={t(`languageName.${locale}`)}
-            sx={{
-              ...sx,
-              fontWeight: 500,
-              position: "relative",
-              // Always the lower line of the stack, whichever language is current, so the hit
-              // area below extends upward over the label and never below the header.
-              order: { xs: 2, sm: 0 },
-              // The whole 44px stack taps as this link on a phone; nothing above it is a control.
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                top: { xs: -22, sm: 0 },
-              },
-            }}
+            sx={{ ...sx, fontWeight: 500 }}
           >
             {content}
           </Link>
