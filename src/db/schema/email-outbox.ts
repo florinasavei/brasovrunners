@@ -28,7 +28,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   "REGISTRATION_MANAGE_LINK",
   "PROFILE_MANAGE_LINK",
   "REGISTRATION_STATE_NOTICE",
-  /** 48 hours before the start, to every confirmed participant, once (`DECISIONS.md` §81). */
+  /** The reminder lead before the start — the event's or the club's, two days unset (§NNN) — to every confirmed participant, once (`DECISIONS.md` §81). */
   "EVENT_REMINDER",
   /** After the race, by hand, once per event, to everyone who was checked in (§82). */
   "EVENT_THANKS",

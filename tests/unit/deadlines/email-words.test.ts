@@ -1,0 +1,65 @@
+import { describe, expect, it } from "vitest";
+import { EMAIL_COPY_PLACEHOLDERS, emailCopySchema } from "@/modules/notifications/domain/email-copy";
+import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+
+/**
+ * §NNN — the emails say the club's numbers. Each half of a bilingual message words the deadlines
+ * it is handed in its own language; the club's own copy (§247) may name them through four
+ * placeholders that fill in number and noun together; and a message rendered without the numbers
+ * — a fixture — reads today's constants rather than a blank.
+ */
+const base: TemplateData = { participantName: "Ana Popescu", eventTitle: "Crosul de toamnă" };
+const timings = { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 72, confirmationOpensDays: 10, linkDays: 14 };
+
+const text = (content: ReturnType<typeof buildTemplateContent>) =>
+  content.paragraphs.map((part) => (typeof part === "string" ? part : part.text.join("\n"))).join("\n");
+
+describe("§NNN the emails word the club's deadlines", () => {
+  it("says the event's reminder lead, in each half's language", () => {
+    const both = renderBilingual("EVENT_REMINDER", "ro", { ...base, timings }, "https://example.test/x");
+    expect(both.text).toContain("Crosul de toamnă este peste 3 zile.");
+    expect(both.text).toContain("Crosul de toamnă is 3 days away.");
+    expect(both.text).not.toContain("două zile");
+  });
+
+  it("says the event is coming, with no lead, when it sends no reminder (a reminder resent by hand)", () => {
+    const content = buildTemplateContent("EVENT_REMINDER", "ro", { ...base, timings: { ...timings, reminderHours: 0 } }, undefined);
+    expect(text(content)).toContain("Crosul de toamnă se apropie.");
+  });
+
+  it("says when the participation window opens, from the event's own days", () => {
+    const content = buildTemplateContent("COMPLETE_DECLARATION", "ro", { ...base, confirmLater: true, holdExpiresAtFormatted: "vineri, 9 oct.", timings }, "https://example.test/x");
+    expect(text(content)).toContain("când îți reamintim, cu 10 zile înainte de start.");
+    const week = buildTemplateContent("COMPLETE_DECLARATION", "en", { ...base, confirmLater: true, timings: { ...timings, confirmationOpensDays: 7 } }, "https://example.test/x");
+    expect(text(week)).toContain("or when we remind you one week before the start.");
+  });
+
+  it("says how long the 'my registrations' link lives, from the constant it is minted with", () => {
+    expect(text(buildTemplateContent("PROFILE_MANAGE_LINK", "ro", { ...base, timings }, "https://example.test/x"))).toContain("Linkul este valabil 14 zile");
+    expect(text(buildTemplateContent("PROFILE_MANAGE_LINK", "en", base, "https://example.test/x"))).toContain("The link is valid for 14 days");
+  });
+
+  it("reads today's constants when a caller hands no numbers — never a blank where a duration belongs", () => {
+    expect(text(buildTemplateContent("EVENT_REMINDER", "ro", base, undefined))).toContain("este peste 2 zile.");
+  });
+
+  it("fills the four deadline placeholders in the club's own words, number and noun together, per half", () => {
+    expect(EMAIL_COPY_PLACEHOLDERS).toEqual(expect.arrayContaining(["confirmationHours", "holdMinutes", "offerHours", "reminderHours"]));
+    const copy = emailCopySchema.parse({
+      "VERIFY_REGISTRATION_EMAIL:ro": {
+        subject: "Confirmă în {confirmationHours}",
+        paragraphs: ["Locul e ținut {holdMinutes}; o ofertă stă {offerHours}; reminderul pleacă cu {reminderHours} înainte."],
+      },
+      "VERIFY_REGISTRATION_EMAIL:en": {
+        subject: "Confirm within {confirmationHours}",
+        paragraphs: ["A place is held {holdMinutes}; an offer stands {offerHours}; the reminder goes {reminderHours} before."],
+      },
+    });
+    const ro = buildTemplateContent("VERIFY_REGISTRATION_EMAIL", "ro", { ...base, timings }, "https://example.test/x", copy);
+    expect(ro.subject).toBe("Confirmă în 12 ore");
+    expect(text(ro)).toContain("Locul e ținut o oră; o ofertă stă 6 ore; reminderul pleacă cu 3 zile înainte.");
+    const en = buildTemplateContent("VERIFY_REGISTRATION_EMAIL", "en", { ...base, timings }, "https://example.test/x", copy);
+    expect(en.subject).toBe("Confirm within 12 hours");
+    expect(text(en)).toContain("A place is held one hour; an offer stands 6 hours; the reminder goes 3 days before.");
+  });
+});

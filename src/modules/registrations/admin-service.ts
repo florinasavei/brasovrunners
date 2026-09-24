@@ -361,7 +361,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
         The last place and the last slot in the line taken between the entry above and this
         confirmation (§348) — two transactions, so a window, however small. The entry stands,
         unconfirmed, with its audit row, and no email went to the person (`atTheDesk`); it lapses
-        in 48 hours like any unconfirmed registration, or the desk confirms it on paper once a slot
+        when its link does, like any unconfirmed registration (§NNN), or the desk confirms it on paper once a slot
         opens. The desk is told exactly that rather than the "nothing changed" of a refusal at the
         entry itself.
       */
