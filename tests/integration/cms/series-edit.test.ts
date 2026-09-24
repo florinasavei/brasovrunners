@@ -135,7 +135,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
       translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: wordsFor(ro, changes.ro) }],
       scope,
       // A save that cancels says why (§331); nobody is registered here, so nobody is told.
-      ...(changes.fields?.eventStatus === "CANCELLED" ? { cancellation: { reason: "Ploaie torențială.", notify: false } } : {}),
+      ...(changes.fields?.eventStatus === "CANCELLED" ? { cancellation: { reason: { ro: "Ploaie torențială.", en: "Torrential rain." }, notify: false } } : {}),
       now: NOW,
     });
   }

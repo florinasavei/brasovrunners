@@ -7,8 +7,13 @@ export async function pageFormFieldLabels(): Promise<Record<string, string>> {
   const labels: Record<string, string> = { navOrder: t("navOrder") };
   for (const locale of routing.locales) {
     const language = t(`language.${locale}`);
-    for (const field of ["title", "slug", "body", "seoTitle", "seoDescription"] as const) {
+    for (const field of ["title", "slug", "body"] as const) {
       labels[`translations.${locale}.${field}`] = `${language}: ${t(`fields.${field}`)}`;
+    }
+    // Both languages or neither (§NNN, bilingual everywhere): the refusal names only the empty
+    // side, so its line says what that side needs — the box's own help is replaced by "check this".
+    for (const field of ["seoTitle", "seoDescription"] as const) {
+      labels[`translations.${locale}.${field}`] = `${language}: ${t(`fields.${field}`)} — ${t("bothOrNeither")}`;
     }
   }
   return labels;

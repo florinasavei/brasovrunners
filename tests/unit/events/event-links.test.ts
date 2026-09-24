@@ -10,6 +10,7 @@ import {
   type EventLinkKind,
   eventLinkHost,
   eventLinkLabel,
+  hasOneLanguageLabel,
   readEventLinks,
 } from "@/modules/events/domain/links";
 import EventLinks from "@/modules/events/ui/EventLinks";
@@ -78,12 +79,32 @@ describe("BR-REQ-011-01 criterion 20 reading a stored list of links", () => {
 
 describe("BR-REQ-011-01 criterion 20 the label when the club wrote none", () => {
   it("is the club's own label in the reader's language, and never the other language's", () => {
-    const link = { labelRo: "Traseul de 21 km", labelEn: null };
+    const link = { labelRo: "Traseul de 21 km", labelEn: "The 21 km route" };
     expect(eventLinkLabel(link, "ro")).toBe("Traseul de 21 km");
-    // The English page does not borrow the Romanian words (BR-REQ-040-02's rule): the caller
-    // shows the kind's English word instead.
-    expect(eventLinkLabel(link, "en")).toBeNull();
-    expect(eventLinkLabel({ labelRo: null, labelEn: "Extended rules" }, "en")).toBe("Extended rules");
+    expect(eventLinkLabel(link, "en")).toBe("The 21 km route");
+    expect(hasOneLanguageLabel(link)).toBe(false);
+  });
+
+  it("is null in both languages for a label stored in one language only — both or neither (§NNN)", () => {
+    // Saved before the rule: neither page shows the club's label, both show the kind's own word,
+    // so the Romanian page never says something the English one does not.
+    const romanianOnly = { labelRo: "Traseul de 21 km", labelEn: null };
+    expect(eventLinkLabel(romanianOnly, "ro")).toBeNull();
+    expect(eventLinkLabel(romanianOnly, "en")).toBeNull();
+    const englishOnly = { labelRo: null, labelEn: "Extended rules" };
+    expect(eventLinkLabel(englishOnly, "en")).toBeNull();
+    expect(eventLinkLabel(englishOnly, "ro")).toBeNull();
+    expect(hasOneLanguageLabel(romanianOnly)).toBe(true);
+    expect(hasOneLanguageLabel(englishOnly)).toBe(true);
+    expect(hasOneLanguageLabel({ labelRo: null, labelEn: null })).toBe(false);
+  });
+
+  it("renders the kind's word on both pages for a row whose label is in one language only (§NNN)", () => {
+    const stored = [{ kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null }];
+    expect(render(stored, "ro")).toContain("Traseul (GPX)");
+    expect(render(stored, "ro")).not.toContain("Traseul de 21 km");
+    expect(render(stored, "en")).toContain("Route (GPX)");
+    expect(render(stored, "en")).not.toContain("Traseul de 21 km");
   });
 
   it("has a word for every kind in both catalogues, and a glyph for every kind", () => {
@@ -110,7 +131,7 @@ describe("BR-REQ-011-01 criterion 20 the label when the club wrote none", () => 
 describe("BR-REQ-011-01 criterion 20 the block on the event page", () => {
   it("lists each link under #links with its label and host, opening in a new tab", () => {
     const html = render([
-      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: null },
+      { kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "The 21 km route" },
       { kind: "DOCUMENT", url: PDF, labelRo: null, labelEn: null },
     ]);
     expect(html).toContain('id="links"');
