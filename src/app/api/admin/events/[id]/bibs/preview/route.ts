@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { hasLocale } from "next-intl";
-import { getFormatter } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { registrations } from "@/db/schema/registrations";
@@ -68,8 +68,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
-  const format = await getFormatter({ locale });
-  const eventDate = format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" });
+  // The bib's own line, in the language it is drawn for and the event's zone (§349, §317).
+  const eventDate = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
   // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of
   // the paper; which of them print is the design's to say.
   const partners = event.coHosts.map((host) => host.name);

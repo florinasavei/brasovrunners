@@ -1,5 +1,6 @@
 import Alert from "@mui/material/Alert";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Resilient } from "../last-good";
 
 /**
@@ -20,11 +21,11 @@ export default async function LastGoodNotice({ read }: { read: Pick<Resilient<un
   if (read.freshness === "live") return null;
 
   const t = await getTranslations("Offline");
-  const format = await getFormatter();
+  const locale = await getLocale();
 
   return (
     <Alert severity="warning" sx={{ mb: 3 }}>
-      {t("stale", { when: format.dateTime(read.takenAt, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "long", hourCycle: "h23" }) })}
+      {t("stale", { when: formatDay(read.takenAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }) })}
     </Alert>
   );
 }

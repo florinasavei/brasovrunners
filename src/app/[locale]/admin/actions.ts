@@ -28,6 +28,7 @@ import {
   addTestRegistrations,
   removeTestRegistrations,
 } from "@/modules/registrations/test-registrations";
+import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import {
   assertDevStaffSwitcherEnabled,
   type DevIdentityKey,
@@ -117,7 +118,7 @@ const eventFormFieldNames = (error: DomainError) => error.fields.map(eventFormFi
  * turns "" into "not stated" and refuses the rest.
  *
  * The names are namespaced `event.*` because the editor is one form carrying the event row and
- * both languages together (`EventFieldsForm`, `TranslationFieldsForm`).
+ * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
  */
 function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
@@ -207,7 +208,7 @@ function eventFieldsFrom(form: FormData) {
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
-    // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
+    // No box for it any more (the Locul box); the field is folded into the meeting point.
     locationAddress: null,
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
     // the state every event was in before the switch existed.
@@ -228,6 +229,9 @@ function eventFieldsFrom(form: FormData) {
     isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    // The waiting list's length (§348), only when the form carried its box: an empty box is "no
+    // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
+    waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*
@@ -260,7 +264,7 @@ function eventFieldsFrom(form: FormData) {
 }
 
 /**
- * One language's fields, as `TranslationFieldsForm` posts them — the one reader for the save
+ * One language's fields, as `ui/TranslationFields.tsx` posts them from its boxes — the one reader for the save
  * and the create, so the two cannot drift in what they read (`eventFieldsFrom`'s sibling).
  * Every value stays a string here; `fields.ts` turns "" into "not stated" and refuses the rest.
  */
@@ -592,7 +596,14 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
       repeat: repeats
-        ? { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null }
+        ? {
+            cadence: cadence as RepeatCadence,
+            weekdays: weekdaysFrom(form),
+            until: text(form, "repeat.until") || null,
+            // "Publică datele noi automat" (§350), ticked by default: the rule stores it, and the
+            // dates go live only while the event is live too.
+            publish: form.get("repeat.publish") === "on",
+          }
         : null,
     });
     createdId = result.event.id;
@@ -689,8 +700,12 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
 
 /**
  * The series' automatic publication, on or off (§341): whether the dates made from now on go
- * live as they are made. The button posts which way it switches; the role and the published
- * source are the service's to assert.
+ * live as they are made. Posted from the Recurență box on any date of the series (§350, the
+ * editor's boxes): the tick "Publică datele noi automat" is the rule's new flag — ticked posts
+ * `publish=on`, unticked posts nothing — and "Salvează setarea" sends it. The service resolves the
+ * date to the series' source and asserts the role (switching it on asks for the role that
+ * publishes); a draft source is not refused — the switch is stored and waits until the source is
+ * live (`setRepeatPublish`).
  */
 export async function setRepeatPublishAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
@@ -820,17 +835,25 @@ export async function addTestRegistrationsAction(_previous: FormOutcome | null, 
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
+  let stoppedAt: number | null = null;
   try {
     const actor = await requireStaffRole("ADMIN");
-    await addTestRegistrations(getDb(), actor, {
+    const result = await addTestRegistrations(getDb(), actor, {
       eventId,
       count: Number(text(form, "count")),
       locale,
     });
+    if (result.stoppedAtWaitlistLimit) stoppedAt = result.created;
   } catch (error) {
-    return refused(error, form);
+    // The places and the waiting list full before the first row (§348): said as such, the count
+    // still in its box — the marker is a rule about the event, not a box the summary could name.
+    const full = waitlistRefusalCode(error);
+    const refusal = refused(error, form);
+    return full ? { ...refusal, error: full, fields: [] } : refusal;
   }
 
+  // Stopped part-way at the waiting list's limit (§348): how many went in, and why the rest did not.
+  if (stoppedAt !== null) backTo(path, { saved: "testRegistrationsStopped", created: String(stoppedAt) });
   backTo(path, { saved: "testRegistrationsAdded" });
 }
 

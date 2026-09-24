@@ -14,7 +14,7 @@ import { confirmEmailAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; eventOff?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; eventOff?: string; full?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -36,8 +36,24 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, eventOff } = await searchParams;
+  const { done, invalid, eventOff, full } = await searchParams;
   const t = await getTranslations("Registrations");
+
+  // No place and the waiting list full (§348): nothing was confirmed and the link was not spent,
+  // so the page says why and that the same link can be opened again. `closed` is an event with no
+  // waiting list at all, said without mentioning one.
+  if (full) {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("confirm.title")}
+        </Typography>
+        <Alert severity="warning" data-testid="confirm-waitlist-full">
+          {full === "closed" ? t("confirm.noWaitlist") : t("confirm.waitlistFull")}
+        </Alert>
+      </Container>
+    );
+  }
 
   // The link was good, but the event was cancelled or is over (§331): nothing was allocated and
   // nothing sent, and the page says why rather than "confirmed, now sign".

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * `DECISIONS.md` §343 — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
@@ -25,7 +26,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const excerpt = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
@@ -38,14 +39,15 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await field("translations.ro.title").fill(`Alergare cu donație ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await excerpt("ro", "Alergare fără taxă, cu o donație opțională pentru Wings for Life.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Donation run ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await excerpt("en", "A free run, with an optional donation for Wings for Life.");
 
-    // Before a kind is chosen, the two extra boxes are not on screen. `EventFieldsForm`'s panels
-    // sit beside `TranslationFieldsForm`'s language tabs, not inside them, so which tab is open
-    // does not matter here.
+    // The cost is the first thing in "Participare și înscrieri" (§350, the editor's boxes), with
+    // its two extra boxes under it. Before a kind is chosen, those are not on screen.
+    await openEditorBox(page, "Participare și înscrieri");
     await expect(field("event.costUrl")).toBeHidden();
     await expect(field("event.costAmount")).toBeHidden();
 

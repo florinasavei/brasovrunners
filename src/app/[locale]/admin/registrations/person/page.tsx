@@ -7,7 +7,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -46,7 +47,6 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
 
   const { q, error } = await searchParams;
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const now = new Date();
   const canonicalEmail = q ? openPersonLookup(q, now) : null;
   const data = canonicalEmail ? await viewPersonData(getDb(), actor, canonicalEmail, now) : null;
@@ -55,7 +55,9 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
   /** One stored value as text: dates in the reader's format, objects as JSON, empties as a dash. */
   const show = (value: unknown): string => {
     if (value === null || value === undefined || value === "") return "—";
-    if (value instanceof Date) return format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" });
+    // A timestamp in the short form with its time (§349); a birth date is a stored string and
+    // is shown as it is stored.
+    if (value instanceof Date) return formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
     if (typeof value === "object") return JSON.stringify(value);
     return String(value);
   };

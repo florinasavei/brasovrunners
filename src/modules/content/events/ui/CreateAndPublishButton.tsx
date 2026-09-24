@@ -5,58 +5,31 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { VALIDITY_PROXY_ATTRIBUTE } from "@/shared/forms/ValidityProxy";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import RunnerLoader from "@/shared/ui/RunnerLoader";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { THEN_FIELD, THEN_PUBLISH } from "../form-names";
+import { missingForPublish, type PublishGap, publishGapLabel, type PublishGapLabels } from "./publish-check";
 
 type Props = {
   label: string;
   pendingLabel: string;
   /** "Cannot publish yet — missing: {field}", with the placeholder. */
   notReadyHint: string;
-  /** The languages the public page needs, each with its own name. */
-  locales: readonly { locale: string; name: string }[];
-  /** The labels of the four things publication requires, as the editor's alert names them. */
-  labels: { title: string; slug: string; excerpt: string; locationName: string };
+  /** The languages the public page needs. */
+  locales: readonly string[];
+  /** The words a gap is named by — the box, the language, the field (§350). */
+  labels: PublishGapLabels;
 };
 
-/** One unmet publication requirement: the box's `name` and the words the sentence uses. */
-type Gap = { name: string; label: string };
-
 /**
- * What publication would refuse, read off the form as it stands — the same rule the server
- * applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): the meeting
- * point unless the place is to be announced, and a title, an address and a summary in every
- * language. In the order the sentence names them.
+ * What publication would refuse, read off the form as it stands (`missingForPublish`, the same
+ * check the Publicare box's list runs, so the button and the list never disagree).
  */
-function publicationGaps(form: HTMLFormElement, locales: Props["locales"], labels: Props["labels"]): Gap[] {
+function publicationGaps(form: HTMLFormElement, locales: readonly string[]): PublishGap[] {
   const data = new FormData(form);
-  const text = (name: string) => String(data.get(name) ?? "").trim();
-  const emptyDocument = (name: string) => {
-    const raw = text(name);
-    if (raw === "") return true;
-    try {
-      return isRichTextEmpty(readRichText(JSON.parse(raw)));
-    } catch {
-      return true;
-    }
-  };
-
-  const gaps: Gap[] = [];
-  // No meeting point is a gap only while the place is announced (§328): with the switch on, the
-  // server publishes without one and every surface says it is to be announced.
-  const announcedLater = data.get("event.locationToBeAnnounced") === "on";
-  if (!announcedLater && text("event.locationName") === "") gaps.push({ name: "event.locationName", label: labels.locationName });
-  for (const { locale, name } of locales) {
-    const field = (box: string) => `translations.${locale}.${box}`;
-    if (text(field("title")) === "") gaps.push({ name: field("title"), label: `${name}: ${labels.title}` });
-    if (text(field("slug")) === "") gaps.push({ name: field("slug"), label: `${name}: ${labels.slug}` });
-    if (emptyDocument(field("excerptBody"))) gaps.push({ name: field("excerptBody"), label: `${name}: ${labels.excerpt}` });
-  }
-  return gaps;
+  return missingForPublish((name) => String(data.get(name) ?? ""), locales);
 }
 
 /**
@@ -90,7 +63,10 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
     const form = ref.current?.form;
     if (!form) return;
 
-    const measure = () => setMissing(publicationGaps(form, locales, labels)[0]?.label ?? null);
+    const measure = () => {
+      const first = publicationGaps(form, locales)[0];
+      setMissing(first ? publishGapLabel(first, labels) : null);
+    };
     // The editor writes its document into a hidden field after the keystroke it answers, so the
     // measure is deferred a tick; the observer catches the write itself, whichever comes first.
     const deferred = () => setTimeout(measure, 0);
@@ -136,7 +112,7 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
           if (!form) return;
           // The click runs before the browser validates the form it submits: a summary that is
           // empty is made required for exactly this pass, and let go of straight after it.
-          for (const gap of publicationGaps(form, locales, labels)) {
+          for (const gap of publicationGaps(form, locales)) {
             if (!gap.name.endsWith(".excerptBody")) continue;
             const proxy = form.querySelector<HTMLInputElement>(`[${VALIDITY_PROXY_ATTRIBUTE}="${gap.name}"]`);
             if (!proxy) continue;

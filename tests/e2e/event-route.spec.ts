@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -49,6 +50,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     // BR-REQ-010-01 criterion 1, on the way past: the type defaults to a group run, and the
     // surface is chosen here so the public page can be checked for both labels below.
+    // The surface is the course's, in "Traseul" — folded, all optional (§350).
+    await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
     // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §345).
@@ -58,8 +61,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
     await field("translations.ro.slug").fill(slug);
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Route race ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`route-race-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
@@ -68,7 +72,11 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // it is actually waiting for. A bare `saved=` matches the URL that is already in the bar and
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
+    await hydrated(page);
+    await openEditorBox(page, "Traseul");
     await field("event.routeUrl").fill(ROUTE_LINK);
+    // "Linkuri și fișiere" is the box right after the course (§332, §350).
+    await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
     // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§347).
@@ -82,13 +90,14 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // fold — which is what mounts the editor — then click into it and type. Scoped to the
     // language's own panel, because the hidden one carries the same fold.
     const excerpt = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
+    await openEditorBox(page, "Titlu și rezumat");
     await excerpt("ro", "Cursă de probă pentru traseu.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await excerpt("en", "A trial race for the route link.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
@@ -161,7 +170,10 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // every "Cursa cu traseu …" an earlier run left behind, and `.first()` would pick one of
     // those rather than the row this spec just published.
     await page.goto(editorUrl);
+    await hydrated(page);
+    await openEditorBox(page, "Traseul");
     await page.locator('[name="event.routeUrl"]').fill("");
+    await openEditorBox(page, "Linkuri și fișiere");
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".
     await expect(page.locator('[name="event.links[0].url"]')).toHaveValue(GPX_LINK);

@@ -45,6 +45,37 @@ describe("§334, §221 the throttle card's sentence about email", () => {
     expect(html).not.toContain(ro.Admin.tasks.jobCadence.emails.immediate);
   });
 
+  /*
+    §350 weekday on every date: the card's times are platform timestamps, so they are read in the
+    club's zone, with the weekday, and inside the line after a colon the weekday keeps Romanian's
+    lower case — the helper's words, not a bare "24 sept. 2026, 10:15".
+  */
+  it("says each time with its weekday, in the club's zone, through the one date helper", async () => {
+    const html = renderToStaticMarkup(
+      (await JobCadencePanel({
+        locale: "ro",
+        cadence: { minutes: 60, updatedAt: new Date("2026-09-24T07:00:00Z") },
+        jobs: [
+          {
+            job: "registration-maintenance",
+            lastRealRunAt: new Date("2026-09-24T07:15:00Z"),
+            nextCheckAt: new Date("2026-09-24T08:15:00Z"),
+            waitingFor: "cadence",
+            source: "cache",
+            lastPingAt: new Date("2026-09-24T07:30:00Z"),
+            lastPingRan: false,
+          },
+        ],
+        mayEdit: false,
+        emailTiming: "immediate",
+      })) as ReactElement,
+    ).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    expect(html).toContain("ultima rulare reală: joi, 24 sept. 2026, 10:15");
+    expect(html).toContain("următoarea, cel târziu: joi, 24 sept. 2026, 11:15 (intervalul tău)");
+    expect(html).toContain("ultimul ping: joi, 24 sept. 2026, 10:30, sărit fără bază de date");
+    expect(html).toContain("Setat joi, 24 sept. 2026, 10:00.");
+  });
+
   it("keeps email out of the line that holds in every case, in both languages", () => {
     for (const messages of [ro, en]) {
       expect(messages.Admin.tasks.jobCadence.safe).not.toMatch(/email/i);

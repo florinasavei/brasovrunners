@@ -56,7 +56,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // projects register real people against this same shared event, so the taken count is
     // whatever it is by the time this test runs, never a fixed one. Romanian puts "de" before
     // the noun from twenty on ("20 de înscriși"), so both forms must be accepted here
-    // (`src/i18n/number-form.ts`). And the two lines are one number read twice: taken plus free
+    // (`src/i18n/count-form.ts`). And the two lines are one number read twice: taken plus free
     // is the event's fifty places.
     const fill = hero.getByTestId("registration-fill");
     await expect(fill).toHaveText(/\d+ (de )?înscri(s|și) din 50 de locuri/);

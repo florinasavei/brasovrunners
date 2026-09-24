@@ -6,7 +6,7 @@ import RecallField from "@/shared/forms/recall";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { useSelectedValue } from "./OnlyForType";
 
-/** The two boxes' constraints as `EventFieldsForm` read them off the schema (§315): plain data, never zod. */
+/** The two boxes' constraints as the registration box reads them off the schema (§315): plain data, never zod. */
 type BoxProps = ReturnType<typeof textFieldConstraints>;
 
 /**

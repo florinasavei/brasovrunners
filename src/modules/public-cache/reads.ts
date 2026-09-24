@@ -35,10 +35,10 @@ import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-che
 import {
   countAnonymousStartListEntries,
   countPublicStartList,
-  listOfferExpiries,
+  listPlaceCountInstants,
   listPublicStartList,
 } from "@/modules/registrations/repository";
-import { readPublicAvailability } from "@/modules/registrations/service";
+import { readPublicPlaces } from "@/modules/registrations/service";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { type PublicContent, publicRead } from "./cache";
@@ -186,33 +186,55 @@ function groupById<T extends { locale: Locale; slug: string }>(
  *
  * Not a copy of the count and not a recent one: every registration that moves expires it
  * (`repository.ts#transitionRegistration` and the few writes beside it), an event save expires
- * it, and the one input that changes with the clock — a waiting-list offer lapsing — is in the
+ * it, and the inputs that change with the clock — a waiting-list offer lapsing, and on an event
+ * whose line has a limit a declaration hold lapsing (`listPlaceCountInstants`) — are in the
  * key. So the number served is the number the formula gives for this instant. It is still a
  * page render and not a decision: the form and the allocator count again, under the lock.
  *
- * It carries the event's own number of places beside the free ones (§346 public fill count):
- * "12 înscriși din 50 de locuri" is the same count read against the capacity of the very row the
- * formula counted, so the two lines beside the button come from one internal read and one cache
- * entry — never a second formula, and never a query per visitor.
+ * One entry carries everything the door says about places, so every line beside the button comes
+ * from one internal read and one cache entry — never a second formula, and never a query per
+ * visitor:
+ * - `available`: the free places (`readPublicPlaces`, the allocator's formula);
+ * - `capacity`: the event's own number of places, off the very row the formula counted, for
+ *   "12 înscriși din 50 de locuri" (§346 public fill count);
+ * - `waitlistRoom`: how many more the waiting list takes (§350 waiting-list length), `null` when
+ *   it has no limit, counted from the same two counts as the places — an offer lapsing, the key's
+ *   clock, frees a slot in the line exactly when it frees a place;
+ * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all.
  *
- * `null` for an uncapped event, and for one that no longer exists.
+ * `null` for an uncapped event, which shows no number and never waitlists anybody, and for one
+ * that no longer exists.
  */
 export async function cachedPublicAvailability(eventId: string, now: Date): Promise<PublicAvailability | null> {
-  const expiries = await publicRead(["places.offer-expiries", eventId], ["places", "events"], () =>
-    listOfferExpiries(getDb(), eventId),
+  const instants = await publicRead(["places.count-instants", eventId], ["places", "events"], () =>
+    listPlaceCountInstants(getDb(), eventId),
   );
-  const window = clockWindow(expiries, now, "reached");
+  const window = clockWindow(instants, now, "reached");
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
     if (!event || event.capacity === null) return null;
-    const available = await readPublicAvailability(db, event, now);
-    return available === null ? null : { available, capacity: event.capacity };
+    const places = await readPublicPlaces(db, event, now);
+    if (places.availablePlaces === null) return null;
+    return {
+      available: places.availablePlaces,
+      capacity: event.capacity,
+      waitlistRoom: places.waitlistRoom,
+      waitlistCapacity: event.waitlistCapacity,
+    };
   });
 }
 
-/** What `cachedPublicAvailability` answers for a capped event: its free places, and its size. */
-export type PublicAvailability = { available: number; capacity: number };
+/**
+ * What `cachedPublicAvailability` answers for a capped event: its free places, its size, and the
+ * waiting list's room and limit (§346, §350 waiting-list length).
+ */
+export type PublicAvailability = {
+  available: number;
+  capacity: number;
+  waitlistRoom: number | null;
+  waitlistCapacity: number | null;
+};
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */
 export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number }> {

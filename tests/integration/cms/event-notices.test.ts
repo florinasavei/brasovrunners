@@ -12,6 +12,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { queueEventUpdateNotices } from "@/modules/notifications/event-notices";
+import { formatDay } from "@/i18n/dates";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -332,7 +333,8 @@ describe("§331 the participants hear about a change when the organizer asks", (
 
     const [row] = await queued("EVENT_UPDATE_NOTICE");
     const message = await renderOutboxMessage(row, db, NOW);
-    expect(message.text).toMatch(/Data și ora sunt acum: duminică, 11 octombrie 2026(,| la) 09:00; startul cursei la 10:00\./);
+    // Inside the sentence, with its weekday, in lower case (§349).
+    expect(message.text).toContain("Data și ora sunt acum: duminică, 11 oct. 2026, 09:00; startul cursei la 10:00.");
     expect(message.text).toContain("Programul actualizat:");
     expect(message.text).toContain("Ridicarea kiturilor");
   });
@@ -517,6 +519,6 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const dan = notices.find((row) => row.locale === "en")!;
     const message = await renderOutboxMessage(dan, db, NOW);
     expect(message.text).toContain("The meeting point is now: Poiana Brașov.");
-    expect(message.text).toContain(new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeZone: ZONE }).format(third.startsAt));
+    expect(message.text).toContain(formatDay(third.startsAt, { locale: "en", timeZone: ZONE, style: "long" }));
   });
 });

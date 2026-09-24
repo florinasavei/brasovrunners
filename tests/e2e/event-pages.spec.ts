@@ -59,9 +59,9 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const body = await page.locator("body").innerText();
     // The seeded meeting points, as words on the page.
     expect(body).toContain("Tâmpa");
-    // A Romanian date with its weekday, formatted in the event's timezone (the hero spells
-    // the month out; a card abbreviates it).
-    expect(body).toMatch(/\b(luni|marți|miercuri|joi|vineri|sâmbătă|duminică), \d{1,2} [\w.]+ \d{4}/);
+    // A Romanian date with its weekday, formatted in the event's timezone — capitalised where
+    // it starts the facts, the month abbreviated (§349).
+    expect(body).toMatch(/(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}/);
     // A start time, not only a date.
     expect(body).toMatch(/\b\d{2}:\d{2}\b/);
   });

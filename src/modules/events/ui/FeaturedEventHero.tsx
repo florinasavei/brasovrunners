@@ -2,7 +2,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { raceWeek } from "../domain/race-week";
 import type { PublicEvent } from "../repository";
@@ -35,7 +36,7 @@ export default async function FeaturedEventHero({
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
-  const format = await getFormatter();
+  const locale = await getLocale();
   // The last seven days (`DECISIONS.md` §78): a countdown line, counted on the event's own
   // calendar, above the button — the one thing a visitor wants to know that week.
   const week = raceWeek(event, now);
@@ -97,12 +98,8 @@ export default async function FeaturedEventHero({
         >
           {t(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
             days: week.days,
-            when: format.dateTime(event.startsAt, {
-              timeZone: event.timezone,
-              weekday: "long",
-              hour: "2-digit",
-              minute: "2-digit", hourCycle: "h23",
-            }),
+            // "În 3 zile, sâmbătă, 21 nov. 2026, 10:00" — after the comma, lower case (§349).
+            when: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
           })}
         </Typography>
       )}

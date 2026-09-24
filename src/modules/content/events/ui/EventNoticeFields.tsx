@@ -25,35 +25,7 @@ export type EventNoticeLabels = {
   cancelNotifyHelp: string;
 };
 
-/**
- * Beside the editor's save button: whether the participants hear about this save (`DECISIONS.md`
- * §331; the owner: "I want to know exactly when and if participants get email alerts").
- *
- * Two blocks, and at most one of them, chosen by what the status select says *now*:
- *
- * - **Scheduled** — "Anunță participanții despre schimbare", unticked on every page load, and
- *   under it, once ticked, a short note. Unticked, the save emails nobody; ticked, the service
- *   decides whether there is anything to tell (a new place, start or programme, or a note).
- * - **Cancelled, on an event that was not** — the reason, required, and "tell the participants",
- *   ticked. Rendered only while the select says "Anulat", so the browser's `required` is honest:
- *   a hidden required box would refuse every ordinary save with a message pointing at nothing.
- *   The service asks for the reason again whatever the browser did (BR-REQ-060-01).
- *
- * Completed, or cancelled already: neither — nothing is sent about an event that is over.
- *
- * The note stays in the form while its tick is off, hidden rather than removed, so unticking by
- * mistake does not lose what was typed; the service ignores a note nobody asked to send. After a
- * refused submit every box comes back as it was posted (§315) — except a block the refused form
- * never drew, which starts as it would on a fresh page: "tell them" ticked.
- */
-export default function EventNoticeFields({
-  statusSelectName,
-  initialStatus,
-  wasCancelled,
-  offerNotice,
-  maxLength,
-  labels,
-}: {
+type NoticeProps = {
   statusSelectName: string;
   /** The status the page rendered with. */
   initialStatus: string;
@@ -66,7 +38,47 @@ export default function EventNoticeFields({
   offerNotice: boolean;
   maxLength: number;
   labels: EventNoticeLabels;
-}) {
+};
+
+/**
+ * Whether the participants hear about this save (`DECISIONS.md` §331; the owner: "I want to know
+ * exactly when and if participants get email alerts") — two blocks, and at most one of them,
+ * chosen by what the status select says *now*, each in the box of the editor it belongs to
+ * (§350):
+ *
+ * - **Cancelled, on an event that was not** (`EventCancelFields`, in "Starea evenimentului",
+ *   beside the select that cancels) — the reason, required, and "tell the participants", ticked.
+ *   Rendered only while the select says "Anulat", so the browser's `required` is honest: a hidden
+ *   required box would refuse every ordinary save with a message pointing at nothing. The service
+ *   asks for the reason again whatever the browser did (BR-REQ-060-01).
+ * - **Scheduled** (`EventNoticeUpdateFields`, in "Salvare", beside the button, because it is a
+ *   decision made at the moment of the press) — "Anunță participanții despre schimbare",
+ *   unticked on every page load, and under it, once ticked, a short note. Unticked, the save
+ *   emails nobody; ticked, the service decides whether there is anything to tell.
+ *
+ * Completed, or cancelled already: neither — nothing is sent about an event that is over.
+ *
+ * The note stays in the form while its tick is off, hidden rather than removed, so unticking by
+ * mistake does not lose what was typed; the service ignores a note nobody asked to send. After a
+ * refused submit every box comes back as it was posted (§315) — except a block the refused form
+ * never drew, which starts as it would on a fresh page: "tell them" ticked.
+ */
+export function EventNoticeUpdateFields({ statusSelectName, initialStatus, offerNotice, maxLength, labels }: NoticeProps) {
+  const status = useSelectedValue(statusSelectName, initialStatus);
+  const recall = useRecall();
+  if (status !== "SCHEDULED" || !offerNotice) return null;
+  return (
+    <NotifyToggle
+      key={recall.generation}
+      on={recall.has ? recall.value("notice.notify") === "on" : false}
+      maxLength={maxLength}
+      labels={labels}
+    />
+  );
+}
+
+/** The cancellation's reason and its "tell them", while "Anulat" is chosen (see above). */
+export function EventCancelFields({ statusSelectName, initialStatus, wasCancelled, offerNotice, maxLength, labels }: NoticeProps) {
   const status = useSelectedValue(statusSelectName, initialStatus);
   const recall = useRecall();
 
@@ -117,16 +129,7 @@ export default function EventNoticeFields({
       </Alert>
     );
   }
-
-  if (status !== "SCHEDULED" || !offerNotice) return null;
-  return (
-    <NotifyToggle
-      key={recall.generation}
-      on={recall.has ? recall.value("notice.notify") === "on" : false}
-      maxLength={maxLength}
-      labels={labels}
-    />
-  );
+  return null;
 }
 
 function NotifyToggle({ on: initialOn, maxLength, labels }: { on: boolean; maxLength: number; labels: EventNoticeLabels }) {

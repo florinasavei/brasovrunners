@@ -21,7 +21,8 @@ import { buildInfo } from "@/shared/config/build-info";
  * to do with email, and the tab would learn nothing.
  *
  * So this route exists, and its only virtue is what it does not do. The import list is the
- * proof: `build-info.ts`, which imports nothing at all and reads three inlined strings. No
+ * proof: `build-info.ts`, which imports only the import-free `i18n/dates.ts` and reads three
+ * inlined strings. No
  * `db/client`, no session, no `env` — nothing transitively reachable from here can open a
  * connection or read a cookie.
  *

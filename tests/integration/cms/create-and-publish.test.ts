@@ -185,6 +185,39 @@ describe("BR-REQ-050-02 create and publish in one press (§315)", () => {
     expect((await rowOf(result.event.id)).repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: true });
   });
 
+  /*
+    §350 — the create page's "Publică datele noi automat" (`repeat.publish`), ticked by default.
+    The rule stores what was asked; the dates go live only while the source is live too.
+  */
+  it("stores the create page's publish choice on the rule, even for a draft, and the copies wait", async () => {
+    const draft = await createEventAndPublish(db, {
+      actor: admin,
+      fields: COMPLETE,
+      publish: false,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null, publish: true },
+      now: NOW,
+    });
+    expect(draft.published).toBe(false);
+    expect((await rowOf(draft.event.id)).repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: true });
+    const copies = await db.select().from(events).where(eq(events.repeatOf, draft.event.id));
+    expect(copies.length).toBeGreaterThan(0);
+    expect(copies.every((copy) => copy.editorialStatus === "DRAFT")).toBe(true);
+  });
+
+  it("keeps the new dates drafts when the tick is off, even with the source published at once", async () => {
+    const result = await createEventAndPublish(db, {
+      actor: admin,
+      fields: COMPLETE,
+      publish: true,
+      repeat: { cadence: "WEEKLY", weekdays: [], until: null, publish: false },
+      now: NOW,
+    });
+    expect(result.published).toBe(true);
+    expect((await rowOf(result.event.id)).repeatRule).toMatchObject({ publish: false });
+    const copies = await db.select().from(events).where(eq(events.repeatOf, result.event.id));
+    expect(copies.every((copy) => copy.editorialStatus === "DRAFT")).toBe(true);
+  });
+
   it("keeps the series in draft when its source could not be published", async () => {
     const result = await createEventAndPublish(db, {
       actor: admin,

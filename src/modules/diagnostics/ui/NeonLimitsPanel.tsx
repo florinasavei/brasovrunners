@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { updateNeonLimitsAction } from "@/app/[locale]/admin/tasks/actions";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import {
   describeNeonLimits,
@@ -63,8 +64,9 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
   const hours = (value: number) => format.number(value, { maximumFractionDigits: 1 });
   const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const usdPerHour = (value: number) => format.number(value, { maximumFractionDigits: 3 });
-  const day = (value: Date) =>
-    new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Bucharest" }).format(value);
+  // The period's end, with its weekday, inside the sentence ("până pe luni, 12 oct. 2026"), in
+  // the club's zone (§350 weekday on every date).
+  const day = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" });
   const production = appEnv === "production";
   const rate = NEON_PLANS.LAUNCH.usdPerCuHour;
 

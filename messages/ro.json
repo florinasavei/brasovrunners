@@ -204,6 +204,13 @@
         "other": "{count} de locuri"
       },
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline.",
+      "fullNoWaitlist": "Toate locurile au fost ocupate, așa că înscrierile s-au închis.",
+      "waitlistRoom": {
+        "one": "Mai este {count} loc pe lista de așteptare",
+        "few": "Mai sunt {count} locuri pe lista de așteptare",
+        "other": "Mai sunt {count} de locuri pe lista de așteptare"
+      },
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
       "openUntilShort": "Înscrieri deschise până pe {date}",
@@ -301,7 +308,7 @@
       "saving": "Se salvează…",
       "savedOn": "Verificarea anti-bot este pornită.",
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
-      "updatedAt": "Modificat la {when}.",
+      "updatedAt": "Modificat {when}.",
       "honeypot": {
         "on": "Honeypot pornit: un câmp ascuns, pe care oamenii nu îl văd, dar roboții îl completează.",
         "off": "Honeypot oprit. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
@@ -508,7 +515,7 @@
         "none": "—",
         "health": "Notă medicală",
         "healthNone": "Nicio notă",
-        "healthConsented": "acord dat la {date}",
+        "healthConsented": "acord dat {date}",
         "hide": "Ascunde",
         "viewed": "Deschiderea a fost înregistrată în jurnal."
       },
@@ -537,8 +544,8 @@
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
         "pickedUp": "a ridicat nr. {number}",
-        "cancelledAt": "Anulată la {date}",
-        "expiredAt": "Expirată la {date}",
+        "cancelledAt": "Anulată {date}",
+        "expiredAt": "Expirată {date}",
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși",
@@ -633,7 +640,7 @@
       "seriesDraftsMany": "{dates} în ciornă — nu apar pe site:",
       "seriesDraftsMore": "și încă {count}",
       "seriesDraftsAlways": "O dată în ciornă nu e pe site: nimeni n-o vede și nimeni nu se poate înscrie la ea. O singură dată o publici din editorul ei — datele de pe acest rând îl deschid. Toate deodată: bifează seria în listă (bifa ei le cuprinde pe toate datele) și apasă „{button}” — se publică fiecare dată a seriei care nu e încă publicată.",
-      "seriesDraftsWhyOff": "Motivul: la această serie publicarea automată e oprită, așa că fiecare dată nouă pornește ca ciornă. Ca să nu mai fie nevoie s-o faci pentru fiecare dată, deschide evenimentul sursă al seriei și, la „{section}”, apasă „{button}”.",
+      "seriesDraftsWhyOff": "Motivul: la această serie publicarea automată e oprită, așa că fiecare dată nouă pornește ca ciornă. Ca să nu mai fie nevoie s-o faci pentru fiecare dată, deschide oricare dată a seriei și, în caseta „{section}”, bifează „{tick}” și apasă „{button}”.",
       "seriesDraftsWhySource": "Motivul: sursa seriei nu e publicată acum, iar datele unei surse nepublicate rămân ciorne oricare ar fi setarea. Publică mai întâi evenimentul sursă.",
       "bulkSelectAll": "Toate",
       "bulkSelected": "Bifate: {count}",
@@ -660,7 +667,7 @@
       "cancelRegistrationTitle": "Anulezi înscrierea?",
       "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
       "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
-      "repeatTitle": "Creezi edițiile?",
+      "repeatTitle": "Creezi datele?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
@@ -687,7 +694,10 @@
       "NEON_BUSY": "Neon lucra la altă schimbare pe proiect și nu a primit-o pe aceasta. Încearcă din nou peste un minut; cifrele de deasupra formularului sunt ce are Neon acum.",
       "NEON_REFUSED": "Neon a refuzat valorile trimise. Cifrele de deasupra formularului sunt ce are Neon acum; dacă mărimea aleasă e peste ce permite planul, alege una mai mică.",
       "NEON_UNREACHABLE": "Neon nu a răspuns (sau a răspuns ceva ce pagina nu poate citi). Cifrele de deasupra formularului sunt ce are Neon acum; încearcă din nou peste un minut.",
-      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nu s-a schimbat nimic: scoaterea limitei de pe producție cere aceeași bifă de confirmare — fără limită, producția nu mai are niciun plafon de cheltuieli."
+      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nu s-a schimbat nimic: scoaterea limitei de pe producție cere aceeași bifă de confirmare — fără limită, producția nu mai are niciun plafon de cheltuieli.",
+      "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
+      "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
+      "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură în 48 de ore."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -697,9 +707,9 @@
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
-      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. Numele comun, completat o dată; dacă locul se numește altfel în engleză, scrii numele acela la „Conținut”, pe fila limbii.",
+      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. Numele comun, completat o dată; dacă locul se numește altfel în engleză, scrii numele acela mai jos, pe fila limbii.",
       "locationNameInLanguage": "Denumirea locului (în această limbă)",
-      "locationNameInLanguageHelp": "Opțional. Cum se numește punctul de întâlnire pe pagina în această limbă — „Tractorul Park” pe cea în engleză, de exemplu. Lasă gol și pagina folosește numele de la „{panel}”.",
+      "locationNameInLanguageHelp": "Opțional. Cum se numește punctul de întâlnire pe pagina în această limbă — „Tractorul Park” pe cea în engleză, de exemplu. Lasă gol și pagina folosește punctul de întâlnire de mai sus.",
       "placeToBeAnnounced": "Locația se anunță mai târziu",
       "placeToBeAnnouncedHelp": "Pornește-l dacă locul nu e încă stabilit. Evenimentul se poate publica și așa: pe pagină, pe carduri, în calendar, pe imaginea de distribuire și în emailuri scrie „Locația se anunță în curând”, iar locul, adresa, harta și locurile din program nu apar nicăieri. Ce completezi mai jos — și denumirea locului pe fila fiecărei limbi — se păstrează nepublicat. Când anunți locul, oprești comutatorul și salvezi — apare peste tot deodată.",
       "placeUnpublished": "Nepublicat cât timp locația se anunță mai târziu.",
@@ -708,11 +718,9 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte — aniversară, caritabilă, o cursă la care ne alăturăm altcuiva. Apare cu un marcaj pe card și pe pagină. Oricâte evenimente pot fi speciale, inclusiv o singură ediție dintr-o serie; marcajul rămâne pe data aceea și nu se copiază pe celelalte.",
       "saveEvent": "Salvează detaliile evenimentului",
-      "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
-      "translationReadOnly": "Textele le scrie Redactorul sau Administratorul — tu te ocupi de Setări: data, locul, traseul, locurile, înscrierile și ziua cursei. Ca să schimbi ceva aici, cere-i Administratorului.",
-      "saveCoversSettingsOnly": "Salvarea de mai jos acoperă Setările evenimentului. Textele din „Conținut” nu se salvează de aici, pentru că nu sunt ale rolului tău.",
+      "saveCoversSettingsOnly": "Salvarea ta schimbă doar setările; textele sunt ale redactorului.",
       "version": "versiunea {version}",
-      "liveWarning": "Evenimentul este publicat. Modificările devin publice în momentul salvării.",
+      "liveWarning": "Publicat: fiecare salvare apare imediat pe site, în ambele limbi.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
       "acknowledgeLiveHint": "Bifează că ai înțeles că modifici conținut publicat ca să poți salva.",
       "saving": "Se salvează…",
@@ -745,25 +753,17 @@
         "scheduleNotes": "Note sub program"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
-      "contentHelp": "Același eveniment, în două limbi. Aici se schimbă textul — și denumirea locului, dacă în engleză se numește altfel; ora, harta, dificultatea și costul sunt mai jos, o singură dată, comune amândurora.",
       "tabIncomplete": "incomplet",
       "settingsSection": "Setări",
-      "contentSection": "Conținut",
       "save": "Salvează",
       "publicationSection": "Publicare",
-      "noTransitions": "Rolul tău nu poate muta acest eveniment din starea în care se află.",
-      "incompleteForPublication": "Ambele limbi trebuie completate înainte ca evenimentul să poată fi publicat. Lipsesc: {detail}.",
       "newTitle": "Eveniment nou",
-      "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Evenimentul se creează ca ciornă; totul se poate schimba și după, din pagina lui.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "scheduleHelp": "Programul propriu-zis sunt rândurile cu ore de la „{panel}” → „{section}”, comune ambelor limbi. Aici scrii, în această limbă, ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Pe pagina evenimentului apare sub rânduri; emailul de reamintire repetă rândurile și trimite aici.",
-      "programmeSection": "Program",
       "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
-      "programmeNotesHint": "Ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp — se scrie la „{panel}”, în fiecare limbă, la „{fold}”; apare pe pagină sub aceste rânduri.",
       "programmeRows": {
         "date": "Data",
         "time": "Ora",
@@ -782,7 +782,6 @@
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
-      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos. Pentru Brașov, Europe/Bucharest.",
       "endsAt": "Sfârșitul evenimentului",
       "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
       "distanceMeters": "Distanță",
@@ -794,11 +793,13 @@
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
       "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte 24 h fiecare.",
+      "waitlistCapacity": "Lungimea maximă a listei de așteptare",
+      "waitlistCapacityHelp": "Lasă gol pentru nelimitat. 0 înseamnă fără listă de așteptare: când locurile se termină, înscrierile se opresc. Contează doar cu un număr de locuri. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni de pe listă — doar nu mai primește alții.",
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Se alege dintre versiunile aprobate. Textul nu se editează niciodată aici — o versiune nouă vine printr-o migrare.",
+      "declarationDocumentHelp": "Se alege dintre versiunile aprobate; textul nu se editează aici. O versiune nouă se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -806,7 +807,6 @@
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
-      "copySection": "Copiere și ștergere",
       "duplicate": "Duplică",
       "delete": "Șterge",
       "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
@@ -823,24 +823,19 @@
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
-      "repeatSection": "Repetă evenimentul",
       "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele opt săptămâni se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
-      "repeatRuleTitle": "Evenimentul se repetă",
-      "repeatRuleForever": "{sentence} — la nesfârșit. Următoarele opt săptămâni sunt create mereu; datele sunt în listă.",
-      "repeatRuleUntil": "{sentence} — până la {until}. Datele sunt în listă.",
-      "repeatRuleEnded": "{sentence} — s-a încheiat pe {until}.",
-      "repeatStop": "Oprește seria",
-      "repeatStopHelp": "Nu se mai creează date noi; cele existente rămân (bifează-le în listă ca să le ștergi).",
+      "repeatRuleForever": "{sentence} — la nesfârșit",
+      "repeatRuleUntil": "{sentence} — până la {until}",
+      "repeatRuleEnded": "{sentence} — seria s-a încheiat pe {until}",
+      "repeatStop": "Oprește recurența",
+      "repeatStopHelp": "Nu se mai creează date noi; cele deja create rămân — le ștergi din lista de evenimente.",
       "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
       "repeatPublishOn": "Datele noi ale seriei se publică automat: sursa e publicată, așa că fiecare dată nouă pornește deja publicată.",
       "repeatPublishWaiting": "Publicarea automată e pornită, dar așteaptă: sursa nu e publicată acum, așa că datele noi pornesc ca ciornă până se publică din nou.",
       "repeatPublishOff": "Datele noi ale seriei pornesc ca ciornă — publicarea automată e oprită. Le publici tu, din listă sau din editorul fiecăreia.",
-      "repeatPublishTurnOff": "Oprește publicarea automată",
-      "repeatPublishTurnOn": "Publică datele noi automat",
       "repeatPublishPending": "Se schimbă…",
-      "repeatPublishNeedsLive": "Publică mai întâi acest eveniment — datele seriei se pot publica automat doar dintr-o sursă publicată.",
       "repeatPublishStarted": "Publicarea automată a fost pornită: de acum, datele noi ale seriei se publică de la sine.",
       "repeatPublishStopped": "Publicarea automată a fost oprită: datele noi ale seriei rămân ciorne până le publici tu.",
       "savedSeriesOne": "Salvat — și pe încă {dates} a seriei.",
@@ -856,18 +851,21 @@
         "following": "Această dată și următoarele",
         "all": "Toate datele seriei",
         "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă.",
-        "chosen": "această dată și încă {count} alese sus",
-        "selectAll": "Toate",
-        "selectNone": "Niciuna",
-        "open": "Deschide data de {date}"
+        "countThis": "Salvarea schimbă doar această dată.",
+        "countFollowing": "Salvarea schimbă {dates}: {first} și următoarele {rest}, până la {last}.",
+        "countRange": "Salvarea schimbă {dates}, de la {first} până la {last}.",
+        "countTail": "O dată mutată sau anulată separat rămâne cum e.",
+        "custom": "Alese de mână ({count})",
+        "whyTitle": "De ce doar ce ai schimbat",
+        "thisOne": "data deschisă",
+        "openShort": "deschide"
       },
-      "repeatOfNote": "Salvarea ajunge, din start, pe toate datele seriei — bifele de sus și caseta de la Salvează arată exact pe care. O anulare, alt loc sau altă oră rămân doar aici dacă le debifezi pe celelalte.",
       "series": {
         "kicker": "Seria „{title}”",
-        "editing": "Editezi data de {date}",
-        "position": "Data {position} din {count} ale seriei. Bifează datele pe care ajunge salvarea; săgeata deschide data.",
         "previous": "← Data dinainte: {date}",
-        "next": "Data următoare: {date} →"
+        "next": "Data următoare: {date} →",
+        "positionShort": "data {position} din {count}",
+        "headerChip": "Data {position} din {count} · {title}"
       },
       "repeatOfLink": "Deschide seria",
       "repeatCadence": "Interval",
@@ -878,13 +876,11 @@
         "MONTHLY": "Lunar"
       },
       "repeatCount": "Câte ediții",
-      "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
-      "repeat": "Creează edițiile",
+      "repeat": "Creează datele",
       "timeOfDay": "Ora",
       "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
       "repeatWeekdaysHelp": "Ziua acestui eveniment este mereu în serie; bifează și celelalte — de exemplu miercuri, pentru o tură de duminică. Se creează doar zilele de după acest eveniment. Nimic bifat: doar ziua evenimentului, la intervalul ales.",
-      "repeatOnCreateHelp": "Opțional. Bifează și alege intervalul: datele din următoarele opt săptămâni se creează odată cu evenimentul, iar platforma le creează singură pe cele care urmează, mereu opt săptămâni înainte, până la data aleasă sau la nesfârșit. Fiecare dată e un eveniment al ei, cu adresa zilei; sunt ciorne dacă nu bifezi publicarea.",
       "weekdays": {
         "1": "Lu",
         "2": "Ma",
@@ -897,7 +893,6 @@
       "createdWithSeries": "Evenimentul și {dates} au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
       "durationMinutes": "Durata (minute)",
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
-      "coHostSection": "Parteneri",
       "coHostRows": {
         "add": "Adaugă un partener",
         "remove": "Șterge partenerul",
@@ -924,7 +919,6 @@
         "tooManyLinksGeneric": "Un partener poate avea cel mult {max} linkuri",
         "tooMany": "Parteneri: cel mult {max} pe un eveniment"
       },
-      "linksSection": "Linkuri și fișiere",
       "linksHelp": "Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul foto, rezultatele — un link către locul unde e fișierul: Google Drive, Dropbox, OneDrive, Strava, Garmin. Partajează fișierul cu „Oricine are linkul”, altfel alergătorii dau de o cerere de acces. Eticheta e opțională în fiecare limbă: fără ea, pagina arată tipul („Traseul (GPX)”) în limba cititorului, iar sub etichetă apare site-ul pe care se deschide linkul. Linkurile se copiază pe toate datele unei serii, ca traseul.",
       "linkRows": {
         "kind": "Tip",
@@ -942,7 +936,6 @@
         "labelEnError": "Linkul {n}: eticheta în engleză are cel mult {max} de caractere",
         "tooMany": "Linkuri și fișiere: cel mult {max} pe un eveniment"
       },
-      "coHostHelp": "Opțional. Organizațiile alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — una pe card, cu oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu A, B și C” pe card, iar pagina evenimentului le listează pe fiecare cu linkurile ei; sunt trecute ca organizatori după club pentru Google (cu site-ul, dacă are unul). Partenerii se copiază pe toate datele unei serii.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "facebookEventUrl": "Link către evenimentul Facebook",
@@ -951,20 +944,14 @@
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
       "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
-      "panels": {
-        "when": "Când și unde",
-        "registration": "Înscrieri",
-        "details": "Traseu și detalii"
-      },
-      "seoSection": "Adresa paginii și motoarele de căutare",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
-        "RACE": "Cursă: înscriere, declarație, numere de concurs și program al zilei.",
+        "RACE": "Concurs: înscriere, declarație, numere de concurs și program al zilei.",
         "HIKE": "Drumeție: poate avea înscriere și program, dacă locurile sunt limitate.",
-        "COFFEE": "Cafea: poate avea înscriere, pentru rezervarea mesei. Fără program.",
+        "COFFEE": "Cafea: poate avea înscriere, pentru rezervarea mesei, și program.",
         "GEAR_TEST": "Testare de echipament: poate avea înscriere și program.",
-        "MEETUP": "Eveniment special: ediția aparte, cu un partener sau cu o ocazie. Poate avea înscriere și program.",
+        "MEETUP": "Alt eveniment: ediția aparte, cu un partener sau cu o ocazie. Poate avea înscriere și program.",
         "EXTERNAL": "Eveniment extern: e al altcuiva, iar înscrierea se face pe pagina organizatorului."
       },
       "repeatOn": "Repetă evenimentul",
@@ -1027,7 +1014,6 @@
         "teal": "Turcoaz",
         "black": "Negru"
       },
-      "confirmationWindowTitle": "Confirmarea participării",
       "createAndPublish": "Creează și publică",
       "publishing": "Se publică…",
       "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
@@ -1061,6 +1047,269 @@
           "cancelledNobody": "Evenimentul a fost anulat. Nu primește înscrieri pe site, așa că nu a fost nimeni de anunțat prin email. Motivul este în jurnalul de audit."
         },
         "countTest": "Înscrieri de test, care primesc și ele emailul și nu sunt numărate nicăieri: {test}."
+      },
+      "untitled": "(fără titlu)",
+      "immediateActions": "Acțiuni imediate — nu trec prin „Salvează”",
+      "groupRunNoRegistration": "O alergare de grup nu are înscrieri — oricine vine direct. Schimbă tipul în „Ce fel de eveniment” ca să primești înscrieri.",
+      "groupRunNoProgramme": "O alergare de grup nu are program.",
+      "modeNoneSentence": "Pagina spune că nu e nevoie de înscriere.",
+      "repeatPublishAuto": "Publică datele noi automat",
+      "repeatPublishOffHelp": "Oprit: datele noi se creează ca ciorne; le publici tu din lista de evenimente.",
+      "repeatPublishDraftSource": "Cât timp evenimentul e ciornă, și datele noi sunt ciorne.",
+      "repeatNextDates": "Datele următoare",
+      "repeatRenewal": "Platforma ține mereu create următoarele opt săptămâni; ultima creată: {date}.",
+      "repeatPublishSave": "Salvează setarea",
+      "repeatAdminOnly": "Doar un administrator poate porni sau opri recurența.",
+      "repeatAllInList": "Toate datele ({count}) în lista de evenimente",
+      "repeatRuleLiveForever": " — la nesfârșit.",
+      "repeatRuleLiveUntil": " — până la {until}.",
+      "repeatRuleLiveHorizon": "Se creează acum datele din următoarele opt săptămâni.",
+      "groups": {
+        "event": "Evenimentul",
+        "day": "Ziua evenimentului și participanții",
+        "details": "Traseu, legături și prezentare"
+      },
+      "publication": {
+        "missingTitle": "Ce lipsește pentru publicare",
+        "createDraft": "Se creează ca ciornă: nimic nu apare pe site până la publicare.",
+        "adminOnly": "Publicarea o face un Administrator.",
+        "createSummary": "Ciornă nouă · lipsesc {count} pentru publicare",
+        "createReady": "Ciornă nouă · gata de publicat",
+        "nothingMissing": "Nu lipsește nimic: evenimentul poate fi publicat.",
+        "preview": "Previzualizare:"
+      },
+      "risk": {
+        "chip": {
+          "one": "{count} înscris",
+          "few": "{count} înscriși",
+          "other": "{count} de înscriși"
+        },
+        "when": "Înscrieri la această dată: {count}, pentru {date}. O dată nouă nu le anulează înscrierea; reamintirea de 48 de ore, fereastra de confirmare și intrarea din calendar o urmează. Ca să afle, bifează „Anunță participanții” la Salvare.",
+        "place": "Înscrieri: {count}, care știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
+        "programme": "Reamintirea de 48 de ore repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
+        "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
+        "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși ({count}) cu motivul scris aici."
+      },
+      "boxes": {
+        "summaryLabel": "Rezumat",
+        "textsReadOnly": "Textele le scrie un Redactor sau un Administrator.",
+        "settingsReadOnly": "Setările le schimbă un Organizator sau un Administrator.",
+        "kind": {
+          "title": "Ce fel de eveniment",
+          "changes": "Tipul decide ce întreabă celelalte casete: o alergare de grup nu are înscrieri și nu are program — cele două casete de mai jos o spun.",
+          "groupRunWarning": "Are înscrieri ({count}) — o alergare de grup nu primește înscrieri, iar lista lor dispare de pe pagină."
+        },
+        "titleSummary": {
+          "title": "Titlu și rezumat"
+        },
+        "description": {
+          "title": "Descrierea evenimentului"
+        },
+        "when": {
+          "title": "Data și ora",
+          "timezone": "Fus orar",
+          "timezoneHelp": "Schimbi doar pentru un eveniment în alt fus orar. Orele de mai sus sunt scrise în acest fus.",
+          "series": "Pe celelalte date ale seriei, ora nouă se pune la aceeași oră în ziua fiecăreia."
+        },
+        "place": {
+          "title": "Locul"
+        },
+        "programme": {
+          "title": "Programul zilei și ce să aduci"
+        },
+        "rules": {
+          "title": "Regulamentul"
+        },
+        "registration": {
+          "title": "Participare și înscrieri"
+        },
+        "registrationWindow": {
+          "title": "Perioada de înscriere",
+          "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
+        },
+        "conditions": {
+          "title": "Condiții de participare și declarația",
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
+        },
+        "confirmation": {
+          "title": "Fereastra de confirmare",
+          "dates": "Pentru {date}: cerută din {opens}, termen {due}."
+        },
+        "bibs": {
+          "title": "Numere de concurs (BIB)",
+          "startChange": "Numerele date rămân; o primă cifră nouă se aplică doar numerelor date de acum încolo."
+        },
+        "bibPrint": {
+          "title": "Alocare și tipărire",
+          "unprinted": "Netipărite încă: {count}."
+        },
+        "startList": {
+          "title": "Lista publică a participanților"
+        },
+        "status": {
+          "title": "Starea evenimentului"
+        },
+        "course": {
+          "title": "Traseul"
+        },
+        "links": {
+          "title": "Linkuri și fișiere"
+        },
+        "coHosts": {
+          "title": "Parteneri — „Împreună cu”",
+          "note": "Opțional. Un card pentru fiecare organizație alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — cu oricâte linkuri: site-ul ei, evenimentul ei, înscrierea la ea, Facebook, Instagram, Strava sau altceva. Apar ca „Împreună cu …” pe pagină, fiecare cu linkurile ei, și, dacă bifezi Partenerii în Subsol, pe numărul de concurs. Partenerii se copiază pe toate datele unei serii."
+        },
+        "promotion": {
+          "title": "Evidențiere pe site"
+        },
+        "address": {
+          "title": "Adresa paginii și motoarele de căutare"
+        },
+        "save": {
+          "title": "Salvare",
+          "createDraft": "Se creează ca ciornă",
+          "createWithSeries": "și datele seriei din următoarele opt săptămâni."
+        },
+        "pickDates": {
+          "title": "Alege datele una câte una"
+        },
+        "received": {
+          "title": "Înscrierile primite",
+          "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}"
+        },
+        "queue": {
+          "title": "Coada de înscrieri",
+          "waiting": "pe lista de așteptare: {waiting}"
+        },
+        "thanks": {
+          "title": "Mulțumiri după cursă"
+        },
+        "testRegs": {
+          "title": "Înscrieri de test"
+        },
+        "copyDelete": {
+          "title": "Duplică sau șterge evenimentul",
+          "summary": "Duplică ca ciornă · ștergerea doar fără înscrieri"
+        },
+        "recurrence": {
+          "title": "Recurență",
+          "none": "Nu se repetă",
+          "on": "Se repetă"
+        },
+        "summary": {
+          "filled": "completat",
+          "empty": "gol",
+          "nothing": "Nimic completat",
+          "separator": " · ",
+          "titleSummary": {
+            "missingTitle": "lipsește titlul ({language})",
+            "missingSummary": "lipsește rezumatul ({language})",
+            "untitled": "fără titlu"
+          },
+          "description": {
+            "fallback": "pagina {language} arată rezumatul"
+          },
+          "rules": {
+            "none": "pagina {language} nu are regulament"
+          },
+          "when": {
+            "none": "Data nu e aleasă încă",
+            "raceStart": "startul cursei {time}",
+            "duration": "{minutes} min"
+          },
+          "timezone": {
+            "home": "{zone} — ora României"
+          },
+          "place": {
+            "tba": "Se anunță mai târziu",
+            "map": "hartă",
+            "none": "Punctul de întâlnire lipsește",
+            "inLanguage": "{language}: {name}"
+          },
+          "programme": {
+            "moments": {
+              "one": "{count} moment",
+              "few": "{count} momente",
+              "other": "{count} de momente"
+            },
+            "range": "{from}–{to}",
+            "groupRun": "Fără program (alergare de grup)",
+            "none": "Fără program",
+            "checklist": "ce să aduci: {languages}"
+          },
+          "registration": {
+            "groupRun": "Alergare de grup — fără înscrieri",
+            "none": "Fără înscrieri",
+            "noneInvite": "Fără înscrieri — deschide ca să primești înscrieri pe site",
+            "internal": "Pe site",
+            "places": {
+              "one": "{count} loc",
+              "few": "{count} locuri",
+              "other": "{count} de locuri"
+            },
+            "unlimited": "locuri nelimitate",
+            "minAge": "de la {age} ani",
+            "declaration": "declarația v{version}",
+            "noDeclaration": "lipsește declarația",
+            "listHidden": "lista ascunsă",
+            "listShown": "lista publică",
+            "external": "La organizator: {provider}",
+            "externalUnnamed": "La organizator"
+          },
+          "window": {
+            "range": "{from} – {to}",
+            "fromPublication": "De la publicare",
+            "untilStart": "până la start"
+          },
+          "conditions": {
+            "noDeclaration": "Lipsește declarația — obligatorie pentru înscrierea pe site"
+          },
+          "confirmation": {
+            "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte"
+          },
+          "bibs": {
+            "from": "De la {number}",
+            "clubColour": "culoarea clubului",
+            "allocated": "alocate: {count}",
+            "toPrint": "de tipărit: {count}"
+          },
+          "bibDesign": {
+            "parts": "{parts}",
+            "footer": "subsol: {parts}"
+          },
+          "startList": {
+            "hidden": "Ascunsă",
+            "shown": "Publică — doar numele celor confirmați care au ales să apară"
+          },
+          "course": {
+            "route": "traseu",
+            "km": "{km} km",
+            "elevation": "+{m} m"
+          },
+          "links": {
+            "strava": "Strava",
+            "facebook": "Facebook",
+            "files": {
+              "one": "{count} link",
+              "few": "{count} linkuri",
+              "other": "{count} de linkuri"
+            },
+            "none": "Niciun link"
+          },
+          "coHosts": {
+            "with": "Împreună cu {names}",
+            "none": "Fără parteneri"
+          },
+          "promotion": {
+            "featured": "Eveniment principal",
+            "special": "Ediție specială",
+            "none": "Nimic în evidență"
+          },
+          "address": {
+            "locked": "blocată după publicare",
+            "none": "fără adresă"
+          }
+        }
       }
     },
     "preview": {
@@ -1147,9 +1396,11 @@
       "holds": "Rezervate",
       "free": "Libere",
       "waiting": "În așteptare",
-      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc, când se înscrie cineva pe care lista de așteptare nu îl mai poate primi, sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul; cât lista de așteptare e plină, publicul vede liber și locul unei rezervări expirate, pentru că următorul înscris îl primește.",
       "lineTitle": "Lista de așteptare ({count})",
+      "lineTitleLimited": "Lista de așteptare ({count} din {limit})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
+      "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
       "offered": "ofertă până la {until}",
       "since": "din {when}",
@@ -1166,7 +1417,12 @@
       "explanation": "Participanți sintetici, pe adrese rezervate @test.invalid, care nu pot primi niciodată e-mail. Trec prin același flux de trimitere și confirmare ca oricine, deci ocupă locuri și umplu lista de așteptare exact ca oamenii reali — și sunt excluse din exportul CSV și marcate peste tot unde apar. Indisponibile în producție.",
       "count": "Câte",
       "add": "Adaugă înscrieri de test",
-      "remove": "Șterge toate înscrierile de test"
+      "remove": "Șterge toate înscrierile de test",
+      "stoppedAtLimit": {
+        "one": "A fost adăugată {created} înscriere de test; restul au fost refuzate, pentru că locurile și lista de așteptare s-au umplut — exact ca o înscriere reală.",
+        "few": "Au fost adăugate {created} înscrieri de test; restul au fost refuzate, pentru că locurile și lista de așteptare s-au umplut — exact ca o înscriere reală.",
+        "other": "Au fost adăugate {created} de înscrieri de test; restul au fost refuzate, pentru că locurile și lista de așteptare s-au umplut — exact ca o înscriere reală."
+      }
     },
     "legal": {
       "title": "Documente legale",
@@ -1261,8 +1517,8 @@
       "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
       "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "withdrawn": "Retrasă",
-      "withdrawnOn": "Retrasă la {date}",
-      "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
+      "withdrawnOn": "Retrasă pe {date}",
+      "withdrawnNotice": "Versiunea a fost retrasă pe {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
       "showWithdrawn": "Arată și versiunile retrase ({count})",
       "hideWithdrawn": "Ascunde versiunile retrase",
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
@@ -1361,7 +1617,7 @@
           "setting": "Neon nu a spus planul (cheia NEON_API_KEY lipsește sau Neon nu a răspuns), așa că se folosește planul ales mai jos."
         },
         "estimate": "Cifrele sunt estimări din consumul citit de la Neon; factura o face Neon, cu spațiul și istoricul de restaurare în plus.",
-        "updatedAt": "Setat la {when}. Notă: {note}",
+        "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul de rezervă, când Neon nu răspunde",
         "fieldHelp": "Tarifele și limitele din consola Neon și de pe neon.com/pricing, verificate pe {checkedOn}. Contul are amândouă proiectele (QA și producția); setarea se face pe fiecare mediu în parte.",
         "option": {
@@ -1437,7 +1693,7 @@
       },
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
-        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure la {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure pe {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje care nu au putut fi trimise în ultimele 7 zile: {count} — motivul dat de Mailgun: „{reason}”. Deschide Mailgun → Sending → Logs; dacă domeniul sau cheia s-au schimbat, actualizează variabilele MAILGUN_* în Vercel.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
@@ -1791,7 +2047,7 @@
         "nextPing": "următoarea: la următorul ping",
         "lastPingRan": "ultimul ping: {when}, a rulat",
         "lastPingSkipped": "ultimul ping: {when}, sărit fără bază de date",
-        "updatedAt": "Setat la {when}.",
+        "updatedAt": "Setat {when}.",
         "readOnly": "Intervalul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",
         "field": "Cel mult o dată la",
         "fieldHelp": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut. „La nevoie” înseamnă doar regula „când e ceva de făcut” și verificarea de siguranță de {cap} min.",
@@ -2238,7 +2494,7 @@
           "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
           "none": "Nicio adresă: declarațiile semnate nu se trimit nicăieri, se păstrează doar în aplicație."
         },
-        "updatedAt": "Modificat la {when}.",
+        "updatedAt": "Modificat {when}.",
         "declarationsTo": "Declarațiile semnate merg la",
         "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
         "declarationsCc": "Copie vizibilă (Cc)",
@@ -2298,7 +2554,7 @@
           "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
           "none": "Planul {plan}: fără limită. Trimise azi: {sent}; în coadă: {waiting}."
         },
-        "updatedAt": "Setat la {when}. Notă: {note}",
+        "updatedAt": "Setat {when}. Notă: {note}",
         "field": "Planul pe care e contul Mailgun",
         "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
         "option": "{name} — {ceiling}, {price}",
@@ -2331,7 +2587,7 @@
           "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
-        "updatedAt": "Setat la {when}.",
+        "updatedAt": "Setat {when}.",
         "to": "Către (adrese despărțite prin virgulă)",
         "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
         "cc": "Copie – Cc (adrese despărțite prin virgulă)",
@@ -2577,7 +2833,8 @@
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
-      "tooFastResend": "Trimite din nou înscrierea"
+      "tooFastResend": "Trimite din nou înscrierea",
+      "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular."
     },
     "sections": {
       "about": "Despre tine",
@@ -2776,7 +3033,9 @@
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
-      "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic."
+      "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
+      "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
+      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil 48 de ore de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -2786,6 +3045,8 @@
       "privacyLink": "Nota de confidențialitate",
       "doneConfirmed": "Înscrierea a fost confirmată.",
       "changed": "Declarația a fost actualizată în timp ce o citeai. Nu s-a înregistrat nimic. Mai jos este textul actual — te rugăm să îl citești și să semnezi din nou.",
+      "waitlistFull": "Termenul pentru semnare trecuse, iar locul revine cuiva de pe lista de așteptare. Nu te-am putut pune înapoi pe listă, pentru că și ea este plină, așa că semnătura nu a fost înregistrată.",
+      "noWaitlist": "Termenul pentru semnare trecuse, iar locul revine cuiva care îl aștepta. Evenimentul nu are listă de așteptare și nu mai are locuri libere, așa că semnătura nu a fost înregistrată.",
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
@@ -3183,7 +3444,7 @@
       "usedLaunch": "Ore de calcul în perioada aceasta: {used} ore-CU; cost estimat: {usd} $ ({rate} $/oră-CU).",
       "estimate": "Estimare, nu factură: Neon adaugă spațiul și istoricul de restaurare ({restoreRate} $/GB-lună) pe toată perioada și rotunjește la final.",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
-      "period": "Perioada se încheie la {date}",
+      "period": "Perioada se încheie pe {date}",
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
@@ -3191,8 +3452,8 @@
     "sentThisMonth": "Trimise luna aceasta",
     "emailPlanLabel": "Plan Mailgun",
     "jobSchedule": {
-      "quiet": "pingurile așteaptă până la {when} (nimic de făcut; {source})",
-      "floor": "pingurile așteaptă până la {when} (intervalul minim; {source})",
+      "quiet": "pingurile așteaptă până {when} (nimic de făcut; {source})",
+      "floor": "pingurile așteaptă până {when} (intervalul minim; {source})",
       "fromCache": "din cache",
       "fromDatabase": "recalculat din bază",
       "nextPing": "următorul ping rulează",
@@ -3268,7 +3529,7 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Offline": {
-    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, de la {when}. Unele detalii pot fi între timp schimbate.",
+    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, din {when}. Unele detalii pot fi între timp schimbate.",
     "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
     "capacityRetry": "Încearcă din nou"
   }

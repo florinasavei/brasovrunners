@@ -14,8 +14,11 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
+import { cachedPublicAvailability } from "@/modules/public-cache/reads";
+import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
+import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
@@ -192,6 +195,34 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * an event with no minimum, whatever a typed-in address says: "the minimum age is 0" is no rule.
    */
   const tooYoung = event.minAge > 0 && (fields ?? "").split(",").includes(UNDER_MINIMUM_AGE);
+  /**
+   * No place, and the waiting list full — or no waiting list at all (§348). A rule about the
+   * event, like the throttle's marker: read from the raw parameter, matched against the two
+   * literals it may be, and said with the event page's own sentence.
+   */
+  const refusedMarkers = (fields ?? "").split(",");
+  const waitlistRefusal = refusedMarkers.includes(NO_WAITLIST)
+    ? NO_WAITLIST
+    : refusedMarkers.includes(WAITLIST_FULL)
+      ? WAITLIST_FULL
+      : null;
+  /*
+    The same, said before anybody types (§348): somebody who reached this form by its address —
+    the event page offers no button then — reads why it would refuse, above the first field. The
+    form stays, so a slot that opens a minute later is still one press away, and so a refusal can
+    keep what was typed. The cached read the event page makes; optional, so a failure says nothing.
+  */
+  let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
+  if (!submitted && !error) {
+    try {
+      const places = await cachedPublicAvailability(event.id, now);
+      if (places?.available === 0) {
+        fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : null;
+      }
+    } catch (failure) {
+      unstable_rethrow(failure);
+    }
+  }
 
   /*
     BR-REQ-031-04 criterion 4 and the minimum age (§321), expressed where the browser can enforce
@@ -254,11 +285,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // What they are signing up for, on the form itself (§102): the date, the place, and the
   // event's page, its rules and the two legal texts as links — the owner: "show the race date,
   // details and TOS on the sign-up form as links". Formatted in the event's own zone.
-  const whenLabel = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short", hourCycle: "h23",
-    timeZone: event.timezone,
-  }).format(event.startsAt);
+  // The long form with the time (§349): capitalised where it starts the line, and in lower case
+  // inside the sentence of the screen after the form ("…locul la Crosul, sâmbătă, 21 nov.").
+  const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
+  const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
   /*
     What is being paid for, and where (§343), the same short phrase the event page's facts say
@@ -386,7 +416,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         */
         <CheckYourEmail
           eventTitle={event.title}
-          whenLabel={whenLabel}
+          whenLabel={whenInSentence}
           eventHref={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}
           slug={slug}
           facts={submittedFacts}
@@ -440,7 +470,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 the one rejection that is about nothing they typed, so it is said first and on
                 its own, and the catalogue already had the sentence for it.
               */}
-              {captchaFailed ? (
+              {waitlistRefusal ? (
+                /*
+                  No place and nothing to join (§348): the event page's own sentence, and that
+                  nothing was registered or sent. Everything typed is still in the boxes below,
+                  for the moment a slot opens — the refusal is about the event, not the form.
+                */
+                <>
+                  {waitlistRefusal === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
+                  <Box sx={{ mt: 0.5 }}>{t("errors.waitlistFullNothingSent")}</Box>
+                </>
+              ) : captchaFailed ? (
                 t("errors.captcha")
               ) : throttled ? (
                 // Their own address, their own count: this tells them about themselves and
@@ -485,6 +525,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               ) : (
                 t("errors.generic")
               )}
+            </Alert>
+          )}
+
+          {fullNotice && (
+            <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
+              {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
             </Alert>
           )}
 

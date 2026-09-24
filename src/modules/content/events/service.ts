@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
-import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
   horizonEnd,
@@ -294,11 +294,19 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
 ): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
-    if (fields.capacity !== null || fields.declarationDocumentId !== null) {
+    // The waiting list's length is the places' kin (§348): nothing queues on an event that takes
+    // no registrations here, so a number left in its box is refused with the capacity's sentence.
+    const waitlistCapacitySet = fields.waitlistCapacity !== undefined && fields.waitlistCapacity !== null;
+    if (fields.capacity !== null || waitlistCapacitySet || fields.declarationDocumentId !== null) {
       throw new DomainError(
         "VALIDATION_ERROR",
-        "capacity and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
-        ["registrationMode", ...(fields.capacity !== null ? ["capacity"] : []), ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : [])],
+        "capacity, a waiting-list length and a declaration belong to an event that takes registrations here; set the mode to INTERNAL or clear them",
+        [
+          "registrationMode",
+          ...(fields.capacity !== null ? ["capacity"] : []),
+          ...(waitlistCapacitySet ? ["waitlistCapacity"] : []),
+          ...(fields.declarationDocumentId !== null ? ["declarationDocumentId"] : []),
+        ],
       );
     }
   } else if (fields.declarationDocumentId === null) {
@@ -408,6 +416,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    // The waiting list's length (§348), by the partners' discipline: a caller that said nothing
+    // about it — a fixture, a caller from before it existed — writes nothing, so no save lifts a
+    // limit the organizer set just by not mentioning it. The editor and the create form post it.
+    ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
     // The race's band (§173): where its numbers start and what colour they print. Both were
     // parsed and validated by `fields.ts` from the day they were added and then dropped here,
     // so the editor's two controls posted into nothing — caught by review (§177).
@@ -444,19 +456,95 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
  */
 function normalizeForType<T extends EventFieldsInput>(fields: T): T {
   if (takesRegistrations(fields.type)) return fields;
-  return {
-    ...fields,
-    // No programme rows on a turn-up type either (§111, §117).
-    scheduleRows: [],
-    registrationMode: "NONE",
-    capacity: null,
-    declarationDocumentId: null,
-    registrationOpensAtWallTime: "",
-    registrationClosesAtWallTime: "",
-    participantListVisibility: "HIDDEN",
-    externalProvider: null,
-    externalRegistrationUrl: null,
-  };
+  return keepUnsentWaitlist(fields, { ...fields, ...TURN_UP_FIELDS });
+}
+
+/**
+ * The waiting list's length is written only by a caller that sent it (§350, the waiting-list
+ * cap): a hidden block stores null in its place when the form posted the box, and nothing at all
+ * when it did not — so a save that never mentioned the limit never lifts it.
+ */
+function keepUnsentWaitlist<T extends EventFieldsInput>(fields: T, normalized: T): T {
+  return fields.waitlistCapacity === undefined ? { ...normalized, waitlistCapacity: undefined } : normalized;
+}
+
+/** What a turn-up type is written with, whatever the hidden block posted (§111). */
+const TURN_UP_FIELDS = {
+  // No programme rows on a turn-up type either (§111, §117).
+  scheduleRows: [],
+  registrationMode: "NONE",
+  capacity: null,
+  // A turn-up event queues nobody (§350, the waiting-list cap).
+  waitlistCapacity: null,
+  declarationDocumentId: null,
+  registrationOpensAtWallTime: "",
+  registrationClosesAtWallTime: "",
+  participantListVisibility: "HIDDEN",
+  externalProvider: null,
+  externalRegistrationUrl: null,
+} as const;
+
+/**
+ * What the chosen registration mode hides is ignored, not refused (§350, extending §111's shape
+ * to the mode): the editor's "Participare și înscrieri" box shows only the fields of the chosen
+ * mode (`OnlyForMode`) and keeps the others in the document, hidden, so switching back finds what
+ * was typed. A capacity left behind a switch to "Fără înscrieri" is a box the organizer can no
+ * longer see — refusing the save over it would name a field that is not on the screen.
+ *
+ * So: not here → no capacity, no waiting-list length, no declaration, no public list; not
+ * elsewhere → no organizer's name or link. The window, the confirmation days, the minimum age and
+ * the bib band are kept whatever the mode, so a switch back restores them.
+ * `assertCoherentRegistrationBlock` stays as the guarantee for anything that reaches the service
+ * another way.
+ */
+export function normalizeForMode<T extends EventFieldsInput>(fields: T): T {
+  return keepUnsentWaitlist(fields, { ...fields, ...hiddenByMode(fields.registrationMode) });
+}
+
+/** What "Pe site" alone shows, and what "La organizator" alone shows — as the values stored in their place. */
+const INTERNAL_ONLY_FIELDS = { capacity: null, waitlistCapacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN" } as const;
+const EXTERNAL_ONLY_FIELDS = { externalProvider: null, externalRegistrationUrl: null } as const;
+
+function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
+  return { ...(mode === "INTERNAL" ? {} : INTERNAL_ONLY_FIELDS), ...(mode === "EXTERNAL" ? {} : EXTERNAL_ONLY_FIELDS) };
+}
+
+/**
+ * The same two rules on the form **as posted**, before the schema reads it (§350, found by
+ * review). Applied only after parsing, "ignored, not refused" held for what was left blank and not
+ * for what was left wrong: a link typed as `www.club.ro` under "La organizator" and then hidden by
+ * a switch to "Pe site" still reached `httpsUrl`, and the refusal named a box that was not on the
+ * screen — the exact case the rules exist for. So a box the chosen type or mode hides is replaced
+ * by the value it would be stored as before anything checks it; what it held is never read.
+ *
+ * Only keys the caller sent are replaced, so a strict schema is never handed one it did not ask
+ * for, and an unknown type or mode is left alone for the schema to name. What both modes keep —
+ * the window's two days, the minimum age, the bib band — is checked as typed, because it is
+ * stored as typed; a refusal over one of those is brought on screen by the form (`OnlyForMode`).
+ */
+export function ignoreHiddenFields(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return raw;
+  const posted = raw as Record<string, unknown>;
+  const turnUp = (EVENT_TYPES as readonly unknown[]).includes(posted.type) && !takesRegistrations(posted.type as EventType);
+  const mode = posted.registrationMode;
+  const hidden: Record<string, unknown> = turnUp
+    ? TURN_UP_FIELDS
+    : mode === "NONE" || mode === "INTERNAL" || mode === "EXTERNAL"
+      ? hiddenByMode(mode)
+      : {};
+  const replaced = { ...posted };
+  for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
+  /*
+    The place behind "Locația se anunță mai târziu" (§328; §350, the editor's boxes, found by
+    re-review): hidden with the switch on, and kept — a venue and a map link typed before the
+    switch went on are saved as typed, never published. But a map link that is not one cannot be
+    stored, and refusing the save over it names a box the switch hides: it is written as no link,
+    exactly as a blank box would be. Switched off, the box is on screen and checked as typed.
+  */
+  if (posted.locationToBeAnnounced === true && "mapUrl" in replaced && !eventFieldsSchema.shape.mapUrl.safeParse(replaced.mapUrl).success) {
+    replaced.mapUrl = "";
+  }
+  return replaced;
 }
 
 function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
@@ -1010,7 +1098,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
-  const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
+  const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, fields, now);
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
@@ -1122,6 +1210,9 @@ const SERIES_COLUMNS = [
   "elevationGainMeters",
   "registrationMode",
   "capacity",
+  // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
+  // raising it offers nobody anything, and lowering it removes nobody already waiting.
+  "waitlistCapacity",
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
@@ -1403,7 +1494,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
   // while the organizer's browser is told what is wrong with it.
   const parsedEventFields =
-    input.fields === undefined ? undefined : normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
+    input.fields === undefined ? undefined : normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   if (parsedEventFields) {
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
@@ -1559,7 +1650,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create an event`);
   }
 
-  const parsed = normalizeForType(parseOrThrow(newEventSchema, input.fields));
+  const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
 
@@ -1613,7 +1704,7 @@ export type CreateAndPublishResult = {
  * The repeat rule the create form asks for (§64, §170). No `publish` of its own: the series goes
  * live exactly when its source does (§122), which is only known once the publication has run.
  */
-export type NewEventRepeatRule = Omit<RepeatEventInput["rule"], "publish">;
+export type NewEventRepeatRule = Omit<RepeatEventInput["rule"], "publish"> & { publish?: boolean };
 
 /**
  * A new event, and — when asked — published in the same transaction (`DECISIONS.md` §315; the
@@ -1653,9 +1744,10 @@ export async function createEventAndPublish<T extends Record<string, unknown>>(
     const { event, published, refusal } = await publishNewEvent(tx, input.actor, created, input.publish, now);
     if (!input.repeat) return { event, published, refusal, repeated: 0 };
 
-    // The series, as drafts — or live, when the source has just gone live: the rule's own
-    // `publish` flag is what §122 already does for a published source.
-    const rule = { ...input.repeat, publish: published };
+    // The series, as drafts — or live, when the source has just gone live and the rule asks for it
+    // (§350): the create page's "Publică datele noi automat", ticked by default. A caller that
+    // does not say keeps the old answer — live exactly when the source went live.
+    const rule = { ...input.repeat, publish: input.repeat.publish ?? published };
     const series = await namedUnder("repeat", () => repeatEvent(tx, { actor: input.actor, eventId: event.id, rule, now }));
     return { event, published, refusal, repeated: series.created };
   });
@@ -1804,6 +1896,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // Wednesday another club's race passes through — and the copy is a different one.
     isSpecial: false,
     capacity: source.capacity,
+    // The waiting list's length goes with the places it queues for (§348): a copy, and every
+    // date of a series, queue as many as the source does.
+    waitlistCapacity: source.waitlistCapacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
@@ -1902,11 +1997,18 @@ export async function repeatEvent<T extends Record<string, unknown>>(
     input.rule.cadence === "MONTHLY" || (input.rule.weekdays ?? []).length === 0
       ? []
       : [...new Set([...(input.rule.weekdays ?? []), ownWeekday])].sort((a, b) => a - b);
+  /*
+    The rule stores what was **asked** — "publish the new dates by themselves" — and each date made
+    goes live only while the source is live too (`materializeSeries`). It used to store the
+    effective answer, so a series started from a draft with the box ticked came out "off" for good
+    and made a draft every week after the source was published (§350; the create page's
+    `repeat.publish` is ticked by default now, and a new event is a draft).
+  */
   const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
-  if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+  if (input.rule.publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
-  const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish });
+  const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish: input.rule.publish });
   if (!rule.success) throw new DomainError("VALIDATION_ERROR", "until: a date, or nothing for a series without an end", ["until"]);
   const end = untilEnd(rule.data, source.timezone);
   if (end && end.getTime() <= source.startsAt.getTime()) {
@@ -2043,6 +2145,28 @@ export async function materializeStandingRepeats<T extends Record<string, unknow
   return { sources: sources.length, created };
 }
 
+/**
+ * The series' first event — the one that holds the rule — from any of its dates: the date itself
+ * when it is not a copy, the event it was copied from otherwise (`repeat_of`, one level deep: a
+ * copy is never copied, `repeatEvent` refuses a date that is part of a series).
+ */
+async function seriesSourceOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
+  const [row] = await db
+    .select({ id: events.id, repeatOf: events.repeatOf })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!row) throw new DomainError("NOT_FOUND", "no such event");
+  const sourceId = row.repeatOf ?? row.id;
+  const [source] = await db
+    .select({ id: events.id, repeatRule: events.repeatRule, editorialStatus: events.editorialStatus })
+    .from(events)
+    .where(eq(events.id, sourceId))
+    .limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  return source;
+}
+
 /** Stop a series: no further occurrences are made; the ones that exist stay (the bulk verbs remove them). */
 export async function stopRepeat<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2051,12 +2175,13 @@ export async function stopRepeat<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  const [source] = await db.select({ id: events.id }).from(events).where(eq(events.id, input.eventId)).limit(1);
-  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  // From any date of the series (§350): the rule lives on the source, and the Recurență box offers
+  // "Oprește recurența" on every date, so a copied date's id is resolved to its source.
+  const source = await seriesSourceOf(db, input.eventId);
   await db
     .update(events)
     .set({ repeatRule: null, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
-    .where(eq(events.id, input.eventId));
+    .where(eq(events.id, source.id));
   // Without its rule the source is a one-off again, and a past one-off is history (§275).
   revalidatePublicContent("events");
 }
@@ -2072,10 +2197,11 @@ export async function stopRepeat<T extends Record<string, unknown>>(
  *
  * Only the flag changes; the cadence, the days and the end stay as they are, and the dates that
  * already exist keep their state — publishing those is the list's bulk verb or each date's own
- * editor, which pass the checks publication has. Switching it on asks what the first creation
- * asked (`repeatEvent`): the role that publishes, and a published source — the copies of an
- * unpublished event would be drafts anyway (`materializeSeries`), so a switch that could not
- * take effect is refused rather than stored.
+ * editor, which pass the checks publication has. Switching it on asks for the role that
+ * publishes, as the first creation did (`repeatEvent`). It does not ask for a published source:
+ * on a draft source the switch is stored and waits, because the copies of an unpublished event
+ * are drafts anyway (`materializeSeries`) — the dates go live as they are made once the source is
+ * live, and until then the Recurență box says the series is waiting for exactly that.
  */
 export async function setRepeatPublish<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -2084,30 +2210,40 @@ export async function setRepeatPublish<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
   }
-  const [source] = await db
-    .select({ id: events.id, repeatRule: events.repeatRule, editorialStatus: events.editorialStatus })
-    .from(events)
-    .where(eq(events.id, input.eventId))
-    .limit(1);
-  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  // From any date of the series (§350): the Recurență box offers the switch on every date.
+  const source = await seriesSourceOf(db, input.eventId);
   const rule = readRepeatRule(source.repeatRule);
-  if (!rule) throw new DomainError("VALIDATION_ERROR", "this event does not repeat; a series is switched from its first event");
-  if (input.publish) {
-    if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
-      throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
-    }
-    if (source.editorialStatus !== "PUBLISHED") {
-      throw new DomainError("VALIDATION_ERROR", "publish this event first: the dates of an unpublished event stay drafts");
-    }
+  if (!rule) throw new DomainError("VALIDATION_ERROR", "this series does not repeat any more; start it again from its first event");
+  /*
+    Switching it on while the source is a draft is stored and waits (§350, amending the hints
+    branch's refusal): the rule says what was asked, and the dates go live only while the source
+    is live too (`materializeSeries`) — the editor says "waiting" for exactly that state, and the
+    create page's own tick stores the same thing for a new draft.
+  */
+  if (input.publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
   // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing
   // between the read above and this write would otherwise have this `{ ...rule, publish }` — the
   // rule as it was before the stop — write the series back into existence. With the guard, that
   // race makes this update match nothing, and the stopped series stays stopped.
-  await db
-    .update(events)
-    .set({ repeatRule: { ...rule, publish: input.publish }, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
-    .where(and(eq(events.id, source.id), isNotNull(events.repeatRule)));
+  const now = input.now ?? new Date();
+  await db.transaction(async (tx) => {
+    const written = await tx
+      .update(events)
+      .set({ repeatRule: { ...rule, publish: input.publish }, updatedAt: now, updatedByStaffUserId: input.actor.id })
+      .where(and(eq(events.id, source.id), isNotNull(events.repeatRule)))
+      .returning({ id: events.id });
+    if (written.length === 0 || rule.publish === input.publish) return;
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "event.repeat_publish_changed",
+      entityType: "event",
+      entityId: source.id,
+      metadata: { from: rule.publish, to: input.publish, ...(input.eventId !== source.id ? { fromDate: input.eventId } : {}) },
+      now,
+    });
+  });
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

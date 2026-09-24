@@ -50,22 +50,23 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
 /**
  * `costRule` (`content/events/fields.ts`) names `event.costAmount` only for a `PAID` event and
  * `event.costUrl` only for a `DONATION` one, so each has one real label — never the raw name a
- * caller sees when `ActionForm.labelOf` finds none (§343).
+ * caller sees when `ActionForm.labelOf` finds none (§343). Since the editor's boxes (§350) every
+ * label starts with the title of the box that holds it, so the summary says which box to open.
  */
 describe("the cost amount and the donation link are named, not left as their own path", () => {
   it("gives «Suma» and «Link pentru donație» in Romanian", async () => {
     catalogue = ro;
     locale = "ro";
     const labels = await eventFormFieldLabels();
-    expect(labels["event.costAmount"]).toBe("Suma");
-    expect(labels["event.costUrl"]).toBe("Link pentru donație");
+    expect(labels["event.costAmount"]).toBe("Participare și înscrieri › Suma");
+    expect(labels["event.costUrl"]).toBe("Participare și înscrieri › Link pentru donație");
   });
 
   it("gives «Amount» and «Donation link» in English", async () => {
     catalogue = en;
     locale = "en";
     const labels = await eventFormFieldLabels();
-    expect(labels["event.costAmount"]).toBe("Amount");
-    expect(labels["event.costUrl"]).toBe("Donation link");
+    expect(labels["event.costAmount"]).toBe("Taking part and registration › Amount");
+    expect(labels["event.costUrl"]).toBe("Taking part and registration › Donation link");
   });
 });

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languageTab } from "./support/fold";
 
 /**
  * BR-REQ-050-02 criteria 11 and 12 (`DECISIONS.md` §113, §114) — a repeated event is one row,
@@ -29,8 +30,9 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
       // One language per tab on the create form too, as on the editor.
       await field("translations.ro.title").fill(title);
       await field("translations.ro.slug").fill(`serie-de-proba-${suffix}-${index}`);
-      await page.getByRole("tab", { name: /English/ }).click();
+      await languageTab(page, "title", "en").click();
       await field("translations.en.title").fill(`Trial series ${suffix}`);
+      await languageTab(page, "address", "en").click();
       await field("translations.en.slug").fill(`trial-series-${suffix}-${index}`);
       await page.getByRole("button", { name: "Creează evenimentul" }).click();
       await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);

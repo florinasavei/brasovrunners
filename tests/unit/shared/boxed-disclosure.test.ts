@@ -1,7 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { type ComponentProps, createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { BOXED_DISCLOSURE_SX, DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import Panel from "@/shared/ui/Panel";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -127,10 +130,13 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     // the guide; the desk's how-to and its bib picture; the tasks' steps; the series dates on
     // the events list; and `Panel` itself. The email previews were a fold the page drew by hand
     // until §336 made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
-    expect(folds.length).toBeGreaterThanOrEqual(14);
+    // Since the editor's boxes (§350) every box and card of the event editor — the bib design
+    // among them — is a `Panel`, counted as `Panel`; the series scope's two folds are its own.
+    expect(folds.length).toBeGreaterThanOrEqual(10);
     expect(folds).toContain("src/shared/ui/Panel.tsx");
     expect(folds).toContain("src/modules/content/rich-text/ui/LazyRichTextEditor.tsx");
-    expect(folds).toContain("src/modules/content/events/ui/BibDesignPanel.tsx");
+    expect(folds).toContain("src/modules/content/events/ui/SeriesScope.tsx");
+    expect(read("src/modules/content/events/ui/BibDesignPanel.tsx")).toContain("<Panel collapsible level={4}");
     // The card of messages draws no fold of its own: every card in it is `Panel`.
     expect(read("src/modules/notifications/ui/ParticipantEmailsPanel.tsx")).not.toMatch(FOLD);
   });
@@ -165,5 +171,49 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     for (const file of PUBLIC) {
       expect(read(file), file).not.toMatch(/\bBOXED_DISCLOSURE_SX\b/);
     }
+  });
+});
+
+/**
+ * §350 — the event editor's boxes: cards within cards, named properly (the owner), so `Panel`
+ * takes a heading level, a tone, a badge and a frame that never folds. Rendered the way the
+ * server sends it.
+ */
+describe("§350 Panel's levels, tones, badge and static frame", () => {
+  const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+  const panel = (props: Record<string, unknown>) =>
+    markup(renderToStaticMarkup(createElement(Panel, { title: "Numere de concurs (BIB)", ...props } as unknown as ComponentProps<typeof Panel>, "corpul")));
+
+  it("puts an h2, h3 or h4 inside the summary, so the heading list has the shape of the screen", () => {
+    expect(panel({ collapsible: true })).toMatch(/<summary[^>]*><h2/);
+    expect(panel({ collapsible: true, level: 3 })).toMatch(/<summary[^>]*><h3/);
+    expect(panel({ collapsible: true, level: 4 })).toMatch(/<summary[^>]*><h4/);
+  });
+
+  it("draws the badge as a chip beside the title, readable while the fold is shut", () => {
+    const html = panel({ collapsible: true, badge: "23 înscriși" });
+    expect(html).toContain("23 înscriși");
+    expect(html).toMatch(/MuiChip/);
+  });
+
+  it("renders a static box as a section with a heading and no toggle at all", () => {
+    const html = panel({ collapsible: true, static: true });
+    expect(html).not.toContain("<details");
+    expect(html).not.toContain("<summary");
+    expect(html).toMatch(/<section[^>]*>[\s\S]*<h2/);
+  });
+
+  it("colours a risk box amber and a danger box red, in theme tokens, on the same box", () => {
+    const source = read("src/shared/ui/Panel.tsx");
+    expect(source).toMatch(/tone === "risk"\) return \{ borderColor: "warning\.main"/);
+    expect(source).toMatch(/tone === "danger"\) return \{ borderColor: "error\.main"/);
+    // A risk box and a plain one render different classes: the tone reaches the frame.
+    expect(panel({ collapsible: true, tone: "risk" })).not.toBe(panel({ collapsible: true }));
+  });
+
+  it("pads a nested card a step narrower on a phone, so three levels still fit at 320 pixels", () => {
+    const source = read("src/shared/ui/Panel.tsx");
+    expect(source).toContain("const NESTED_PADDING = { xs: 1.5, sm: 2 } as const;");
+    expect(source).toContain('mx: { xs: -1.5, sm: -2 }');
   });
 });

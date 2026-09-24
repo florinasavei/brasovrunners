@@ -3,7 +3,8 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -61,7 +62,6 @@ export default async function AlbumPage({ params }: Props) {
   if (!album) notFound();
 
   const t = await getTranslations("Gallery");
-  const format = await getFormatter();
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -74,7 +74,7 @@ export default async function AlbumPage({ params }: Props) {
         {album.title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
-        {format.dateTime(album.takenOn, { dateStyle: "long" })} · {t("photoCount", { count: album.photoCount })}
+        {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
         {album.event && (
           <>
             {" · "}

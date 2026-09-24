@@ -5,7 +5,8 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
@@ -56,7 +57,6 @@ export default async function DeskPage({ params, searchParams }: Props) {
 
   const { eventId: requestedEventId, q = "", saved, error } = await searchParams;
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const db = getDb();
   const now = new Date();
 
@@ -133,7 +133,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.title ?? event.id} ·{" "}
-                    {format.dateTime(event.startsAt, { timeZone: event.timezone, day: "numeric", month: "short" })}
+                    {formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })}
                   </option>
                 ))}
               </TextField>

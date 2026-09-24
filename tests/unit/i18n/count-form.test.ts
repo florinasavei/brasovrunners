@@ -38,3 +38,61 @@ describe("§341 countForm — which of Romanian's three plural forms a count tak
     expect(countForm(2, "fr")).toBe("other");
   });
 });
+
+/*
+  §346's fill line ("12 înscriși din 20 de locuri") had its own helper, which asked
+  `Intl.PluralRules` rather than writing the rule out; the two answered alike and one is kept.
+  Its fixed points follow, and the agreement it stood for is checked number by number.
+*/
+describe("§346 countForm — Romanian", () => {
+  it("is singular for one, and for nothing else", () => {
+    expect(countForm(1, "ro")).toBe("one");
+  });
+
+  it("reads nought with the plural — '0 înscriși', not a fourth wording", () => {
+    expect(countForm(0, "ro")).toBe("few");
+  });
+
+  it("takes the 'no de' plural from two to nineteen", () => {
+    for (const n of [2, 3, 12, 19]) expect(countForm(n, "ro"), String(n)).toBe("few");
+  });
+
+  it("takes the 'de' plural from twenty up", () => {
+    for (const n of [20, 21, 50, 100]) expect(countForm(n, "ro"), String(n)).toBe("other");
+  });
+
+  it("falls back under twenty for the hundreds whose last two digits do — '101 înscriși'", () => {
+    expect(countForm(101, "ro")).toBe("few");
+    expect(countForm(119, "ro")).toBe("few");
+  });
+
+  it("takes the 'de' plural again once the last two digits reach twenty — '120 de locuri'", () => {
+    expect(countForm(120, "ro")).toBe("other");
+    expect(countForm(121, "ro")).toBe("other");
+  });
+});
+
+describe("§346 countForm — English", () => {
+  it("is singular for one and plural for everything else, including nought", () => {
+    expect(countForm(1, "en")).toBe("one");
+    expect(countForm(0, "en")).toBe("other");
+    expect(countForm(2, "en")).toBe("other");
+    expect(countForm(20, "en")).toBe("other");
+  });
+
+  it("never returns 'few' — the catalogues keep the key only because both locales share it", () => {
+    for (const n of [0, 1, 2, 3, 11, 20, 100, 101]) expect(countForm(n, "en")).not.toBe("few");
+  });
+});
+
+describe("§341/§346 countForm agrees with CLDR", () => {
+  it("picks the key Intl.PluralRules names, collapsed to the three the catalogues carry, for 0–1000", () => {
+    for (const locale of ["ro", "en"]) {
+      const rule = new Intl.PluralRules(locale);
+      for (let n = 0; n <= 1000; n++) {
+        const category = rule.select(n);
+        expect(countForm(n, locale), `${locale} ${n}`).toBe(category === "one" || category === "few" ? category : "other");
+      }
+    }
+  });
+});

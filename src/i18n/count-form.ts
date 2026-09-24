@@ -19,7 +19,9 @@
  * the site's only other language.
  *
  * Pure and tiny on purpose: `Intl.PluralRules` gives the same answer, but a rule this small
- * written out is one a reader can check against the examples above without knowing CLDR.
+ * written out is one a reader can check against the examples above without knowing CLDR. The
+ * public fill line (§346) had a second helper that asked `Intl.PluralRules` instead; one rule
+ * is enough, so it went, and a test now holds this one to CLDR for every number up to 1 000.
  */
 export type CountForm = "one" | "few" | "other";
 

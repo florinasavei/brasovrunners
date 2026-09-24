@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { JOURNEY_STEPS, type Journey, type JourneyStep } from "@/modules/registrations/domain/journey";
 import { JOURNEY_STEP_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 
@@ -26,14 +27,17 @@ type Props = {
   variant: "full" | "compact";
 };
 
-const DATE = { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" } as const;
-
 export default async function StaffJourney({ journey, bibNumber, variant }: Props) {
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
+  const locale = await getLocale();
 
   const label = JOURNEY_STEP_LABEL;
-  const when = (value: Date | null | undefined) => (value ? format.dateTime(value, DATE) : null);
+  // The timeline's short form with the time (§349): inside a step's words ("până la …") in lower
+  // case, and capitalised where it starts a step's caption.
+  const when = (value: Date | null | undefined) =>
+    value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
+  const whenStart = (value: Date | null | undefined) =>
+    value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null;
   const now = new Date();
 
   /** The words a step adds beside its name; null when it has nothing to add. */
@@ -110,7 +114,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
           const active = step.state === "current";
           const skipped = step.state === "skipped";
           const detail = detailOf(step);
-          const date = done || active ? when(step.at) : null;
+          const date = done || active ? whenStart(step.at) : null;
           const caption = [date, detail].filter((part) => part !== null).join(" · ");
 
           return (
