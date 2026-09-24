@@ -1,5 +1,6 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_NAME } from "@/theme/brand";
 import type { DeclarationLabels } from "./signed-declaration";
 
 /**
@@ -14,7 +15,8 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
   signedOnPaper: string;
 }> = {
   ro: {
-    organization: "Brașov Runners",
+    // The club's name in the PDF's footer and metadata is the platform's constant (§215), not a literal (§NNN).
+    organization: CLUB_NAME,
     whereupon: "DREPT PENTRU CARE SEMNEZ,",
     whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
     signature: "Semnătura",
@@ -33,7 +35,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     attesterRemoved: "un membru al echipei (cont șters)",
   },
   en: {
-    organization: "Brașov Runners",
+    organization: CLUB_NAME,
     whereupon: "IN WITNESS WHEREOF, I SIGN,",
     whereuponTogether: "IN WITNESS WHEREOF, WE SIGN,",
     signature: "Signature",
