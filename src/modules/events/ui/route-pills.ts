@@ -4,7 +4,7 @@ import type { GlyphName } from "./glyphs";
 export type Pill = { glyph: GlyphName; label: string };
 
 /**
- * The route's pills, in one fixed order (§366, amended §NNN — the owner, 2026-09-24, of the
+ * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
  * cost pill after them wherever a caller adds one.

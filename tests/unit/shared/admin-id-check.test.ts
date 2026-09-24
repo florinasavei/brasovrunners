@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * Every admin `/…/[id]/…` route reads `params.id` and hands it to a repository function that
  * runs `WHERE id = $1` against a `uuid` column. A malformed id — `/admin/events/nope`, a typed
  * address, a truncated one — used to reach PostgreSQL and come back as a 500 (found during the
- * dev-SSR investigation, §NNN); `isUuid` (`shared/ids.ts`) is the one shared check, and this
+ * dev-SSR investigation, §376); `isUuid` (`shared/ids.ts`) is the one shared check, and this
  * suite reads every `page.tsx` and `route.ts` under a `[id]` segment of `src/app/[locale]/admin`,
  * `src/app/[locale]/preview` and `src/app/api/admin`, and asserts each one imports it, calls it,
  * and calls it *before* it opens a database connection to look the id up — rather than trusting

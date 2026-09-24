@@ -53,7 +53,7 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
 
   const staffUser = await requireStaff();
   if (!canHardDeleteEvent(staffUser.role)) notFound();
-  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§NNN).
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
 
   const plan = await readEventErasurePlan(getDb(), id);

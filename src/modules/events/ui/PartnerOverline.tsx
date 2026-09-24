@@ -5,7 +5,7 @@ import { partnerPhrase } from "./counted-phrases";
 import { GLYPHS } from "./glyphs";
 
 /**
- * The partner marker on the event page's overline (§367, amended §NNN — the owner, 2026-09-24:
+ * The partner marker on the event page's overline (§367, amended §375 — the owner, 2026-09-24:
  * "For the partnership, I just need 1 icon, I do not need to show the full partners list, there
  * might be multiple partners"): after the type and the surface, a "·", the handshake and a
  * generic "Eveniment în parteneriat" — the words the listing card's chip and the calendar entry

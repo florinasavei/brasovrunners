@@ -16,7 +16,7 @@ const PARTNER_CHIP_SX = {
 } as const;
 
 /**
- * The partner marker on a listing card (§367, amended §NNN — the owner, 2026-09-24: "For the
+ * The partner marker on a listing card (§367, amended §375 — the owner, 2026-09-24: "For the
  * partnership, I just need 1 icon, I do not need to show the full partners list, there might be
  * multiple partners"): one small outlined chip in the card's chips row, the handshake and a
  * generic "Eveniment în parteneriat" — the size and the colour of the surface chip beside it, so

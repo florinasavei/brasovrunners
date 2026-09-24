@@ -66,7 +66,7 @@ export default async function EventCard({
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
-          {/* Held with a partner (§367, amended §NNN): the handshake and the generic "Eveniment în parteneriat" / "Partnered event". */}
+          {/* Held with a partner (§367, amended §375): the handshake and the generic "Eveniment în parteneriat" / "Partnered event". */}
           <PartnerChip event={event} />
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}

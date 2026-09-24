@@ -208,7 +208,7 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     await expect(facts).not.toContainText("•");
 
     // The seeded Tâmpa run — 14 km, 600 m of climb, moderate, on trail — as four pills, in order:
-    // surface, difficulty, distance, elevation (§366, amended §NNN — the owner, 2026-09-24: "The
+    // surface, difficulty, distance, elevation (§366, amended §375 — the owner, 2026-09-24: "The
     // order of this should be: terrain type, difficulty, distance, elevation").
     await expect(value("Traseu").locator(".MuiChip-root")).toHaveText(["Trail", "Mediu", "14 km", "600 m D+"]);
     // Free, in a row of its own rather than among the route's pills.

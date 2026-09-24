@@ -305,16 +305,16 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(when.indexOf("2026")).toBeLessThan(when.indexOf('data-testid="ScheduleIcon"'));
     expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("10:00"));
     // The event is within the coming twelve months of `NOW`, so the card carries both renderings
-    // of the date — the full one and the year dropped (§366, amended §NNN) — CSS shows one at a
+    // of the date — the full one and the year dropped (§366, amended §375) — CSS shows one at a
     // time by width; both are in the text a crude tag-strip reads.
     expect(text(when)).toContain("Duminică, 27 sept. 2026");
     expect(text(when)).toContain("10:00");
   });
 
-  it("never wraps the when line onto a second line, except a race's two named times (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", () => {
+  it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {
     // `flow`'s row is `nowrap` only for a card, and only while it is not a race's two named
     // times (`card.wrap`, which stays `wrap` so a race's start time cannot be clipped, §366
-    // amended §NNN) — and its glyphs and pieces never shrink, so the row cannot break inside a
+    // amended §375) — and its glyphs and pieces never shrink, so the row cannot break inside a
     // piece, only between whole ones.
     const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
     expect(source).toMatch(/flexWrap:\s*card\s*&&\s*!card\.wrap\s*\?\s*"nowrap"\s*:\s*"wrap"/);
@@ -372,7 +372,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(block).not.toContain('data-testid="HandshakeIcon"');
   });
 
-  it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §NNN)", async () => {
+  it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §375)", async () => {
     const html = await single({ isSpecial: true, eventStatus: "CANCELLED" });
     expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "Eveniment în parteneriat", "Anulat"]);
   });
@@ -415,7 +415,7 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
       "În fiecare luni, la 18:30",
       "O oră de alergare ușoară",
       // The date is within the coming twelve months of `NOW`, so both renderings are in the
-      // markup — the full one, then the year dropped (§366, amended §NNN) — CSS shows one at a
+      // markup — the full one, then the year dropped (§366, amended §375) — CSS shows one at a
       // time by width.
       "Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30",
       "Parcul Titulescu, la fântâna arteziană",
@@ -431,7 +431,7 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
     const when = fact(html, "when");
     expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30");
     expect(when).toContain('data-testid="ScheduleIcon"');
-    // The row never wraps: nowrap, and every glyph and piece kept whole (§366, amended §NNN).
+    // The row never wraps: nowrap, and every glyph and piece kept whole (§366, amended §375).
     expect(when).toContain("white-space:nowrap");
   });
 

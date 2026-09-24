@@ -79,7 +79,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
   */
   const actor = await requireStaff();
   if (!canReadContent(actor.role)) notFound();
-  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§NNN).
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
   const mayWrite = canManageStaff(actor.role);
 

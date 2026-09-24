@@ -47,7 +47,7 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
- * The partner marker's words (§367, amended §NNN — the owner, 2026-09-24: "For the partnership,
+ * The partner marker's words (§367, amended §375 — the owner, 2026-09-24: "For the partnership,
  * I just need 1 icon, I do not need to show the full partners list, there might be multiple
  * partners"): "Eveniment în parteneriat" / "Partnered event" — the same generic label everywhere
  * the marker appears: the listing card's chip, the calendar entry's tooltip and accessible name,

@@ -425,7 +425,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     const tampa = list.filter({ hasText: "Tură pe Tâmpa" }).first();
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
-    // terrain type, difficulty, distance, elevation" (§366, amended §NNN); the cost pill follows.
+    // terrain type, difficulty, distance, elevation" (§366, amended §375); the cost pill follows.
     await expect(pills).toHaveText(["Trail", "Mediu", "14 km", "600 m D+", "Gratuit"]);
     await expect(tampa.locator('[data-fact="pills"]')).not.toContainText("·");
     // The surface is said once on the card: as a pill, not also as a chip at the top.
@@ -496,7 +496,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   });
 
   /**
-   * BR-REQ-041-01, amended §NNN — the owner, 2026-09-24, of the row "Următoarea: Luni, 28 sept.
+   * BR-REQ-041-01, amended §375 — the owner, 2026-09-24, of the row "Următoarea: Luni, 28 sept.
    * 2026 · 18:30" whose clock and time had wrapped to a second line: "This should be on a single
    * line on a phone." Within the coming twelve months a phone reads the date with no year (§349
    * keeps the weekday), and the row stays whole between pieces — never breaking a piece's own

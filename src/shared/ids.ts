@@ -1,6 +1,6 @@
 /**
  * Whether a string is shaped like a value the `uuid` columns in `src/db/schema/*.ts` accept
- * (found during the dev-SSR investigation, §NNN): every admin `/…/[id]` route passed its
+ * (found during the dev-SSR investigation, §376): every admin `/…/[id]` route passed its
  * `params.id` straight into a `WHERE id = $1` against such a column, so a typed or malformed
  * address — `/admin/events/nope`, a stray space, a truncated id — reached PostgreSQL, which
  * refuses the value with `invalid input syntax for type uuid` and turned into a 500 rather than

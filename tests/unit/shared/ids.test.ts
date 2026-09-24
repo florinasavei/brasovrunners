@@ -3,7 +3,7 @@ import { isUuid } from "@/shared/ids";
 
 /**
  * `isUuid` is the one shape check every admin `/…/[id]` route runs before handing `params.id`
- * to a `uuid` column (found during the dev-SSR investigation, §NNN): a malformed id used to
+ * to a `uuid` column (found during the dev-SSR investigation, §376): a malformed id used to
  * reach PostgreSQL and come back as a 500 rather than the 404 an unknown id already gets.
  */
 describe("isUuid", () => {

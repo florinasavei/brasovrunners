@@ -52,7 +52,7 @@ const CLOCK_SX = { ...ROW_ICON_SX, mr: 0.5 } as const;
 const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 } as const;
 
 /**
- * A series card's «Următoarea:» / «Next:» lead, on the date's own line (§366, amended §NNN — a
+ * A series card's «Următoarea:» / «Next:» lead, on the date's own line (§366, amended §375 — a
  * review, 2026-09-24, of the row hiding the lead below 600 pixels: "every phone loses the lead,
  * not only the 320-px ones; the owner's row keeps the lead where it fits"). When the row is
  * short of room, the lead gives way, never the time.
@@ -171,7 +171,7 @@ export default async function EventFacts({
   const time = (at: Date) => formatTime(at, { locale, timeZone: event.timezone });
   const dateLong = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
   /**
-   * The card's "when" line must fit on one line at 320 and 360 pixels (§366, amended §NNN — the
+   * The card's "when" line must fit on one line at 320 and 360 pixels (§366, amended §375 — the
    * owner, 2026-09-24, of the row whose clock and time had wrapped to a second line: "This should
    * be on a single line on a phone"). Measured (§366): with the year, the line never fits a
    * phone's width once the calendar glyph, the clock and the time share it. When the date falls
@@ -387,7 +387,7 @@ export default async function EventFacts({
     second line there, and each piece is its own flex item so the break falls between pieces, never
     inside one.
 
-    The card's form (§366, amended §NNN — the owner, 2026-09-24, of the row whose clock and time had
+    The card's form (§366, amended §375 — the owner, 2026-09-24, of the row whose clock and time had
     wrapped to a second line: "This should be on a single line on a phone") is `nowrap` on the row,
     every piece kept whole — except where `card.wrap` says the row may need a second line, and there
     it breaks between whole pieces exactly as the page does. Two cases set it: a race's two named
@@ -399,7 +399,7 @@ export default async function EventFacts({
 
     A series card's own lead ("Următoarea:") is the other width the amendment measured: with the
     year already dropped (`date`, above) the lead does not fit next to the widest date, the clock
-    and the time below 368 pixels. A review, 2026-09-24, amended §NNN once more: MUI's `sm` (600
+    and the time below 368 pixels. A review, 2026-09-24, amended §375 once more: MUI's `sm` (600
     pixels) hid the lead on every phone, not only the ones too narrow for it; a second review
     found the first measured breakpoint (345, from one Monday) too narrow for a Sunday.
     `WHEN_LEAD_HIDDEN_BELOW_376`, above, carries the measurement of every weekday and month. The
@@ -438,7 +438,7 @@ export default async function EventFacts({
 
   /*
     The route's numbers as pills — surface, difficulty, distance, elevation, in that order (§366,
-    amended §NNN — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
+    amended §375 — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
     should be: terrain type, difficulty, distance, elevation") — each with its glyph (§112), a pill
     only for what the club stated. `orderRoutePills` decides the order once, for both the event
     page (§356) and the listing card (§366), so neither can read them in a different order; a pill
@@ -551,7 +551,7 @@ export default async function EventFacts({
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
-            than be clipped (§366, amended §NNN). */}
+            than be clipped (§366, amended §375). */}
         {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
@@ -595,7 +595,7 @@ export default async function EventFacts({
        cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
        This is the hero's line; the event page (§356) and the listing card (§366) draw pills.
 
-       Same order as `orderRoutePills` (§366, amended §NNN — the owner, 2026-09-24, of "8 km · 250 m
+       Same order as `orderRoutePills` (§366, amended §375 — the owner, 2026-09-24, of "8 km · 250 m
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and

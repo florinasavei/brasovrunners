@@ -126,7 +126,7 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
   });
 });
 
-describe("BR-REQ-041-01 the route is one row of pills (§356, amended §NNN)", () => {
+describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", () => {
   it("surface, difficulty, distance, climb — in that order (the owner, 2026-09-24: \"terrain type, difficulty, distance, elevation\"), each a small outlined chip with its glyph", async () => {
     const html = await page();
     const route = row(html, "Traseu");
@@ -318,7 +318,7 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
-  it("orders the hero's route the same way as the card's and the page's pills — difficulty before distance and elevation (§366, amended §NNN)", async () => {
+  it("orders the hero's route the same way as the card's and the page's pills — difficulty before distance and elevation (§366, amended §375)", async () => {
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation". The hero has no surface pill of its own.
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
@@ -496,7 +496,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(rule).toContain("color:rgba(0, 0, 0, 0.6)");
   });
 
-  it("drops the year only on a phone, and only when the date is within the coming twelve months (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", async () => {
+  it("drops the year only on a phone, and only when the date is within the coming twelve months (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", async () => {
     // Over a year out: `formatDay` is called once, with the year — no second rendering to toggle.
     // January carries no DST (Europe/Bucharest is UTC+2 then, +3 in September).
     const far = line(await card({ startsAt: new Date("2028-01-15T05:00:00Z") }), "when").inner;
@@ -514,13 +514,13 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(source).toContain('year: false');
   });
 
-  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), and visually hides it below its own breakpoint so the row fits at 320 pixels — never MUI's `sm`, which would hide it on every phone (§366, amended §NNN)", async () => {
+  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), and visually hides it below its own breakpoint so the row fits at 320 pixels — never MUI's `sm`, which would hide it on every phone (§366, amended §375)", async () => {
     const html = await card({}, { whenLead: "Următoarea:" });
     const when = line(html, "when").inner;
     // The lead comes before the date, which comes before the time — the calendar glyph is first
     // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row). It is always in
     // the markup — a screen reader reads it — even where a narrow phone does not show it beside
-    // the date, the clock and the time (below): measured (§366, amended §NNN) over every day of a
+    // the date, the clock and the time (below): measured (§366, amended §375) over every day of a
     // year, the widest row with the lead ("Următoarea: Duminică, 27 sept. · 18:30") needs 274
     // pixels and a card leaves the row the viewport less 94, so the row's own breakpoint is 376
     // (368 and eight to spare) — below `sm` (600), not at it: a review, 2026-09-24, found `sm`
@@ -545,7 +545,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(mediaRule).not.toContain("display:none");
   });
 
-  it("lets a race's two named times wrap onto their own line rather than have the card clip the start time (§366, amended §NNN)", async () => {
+  it("lets a race's two named times wrap onto their own line rather than have the card clip the start time (§366, amended §375)", async () => {
     const withTwoTimes = await card({ raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const when = line(withTwoTimes, "when").inner;
     // Both times are whole in the markup — the gathering time and the race's own start.

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §366, amended §NNN) — the route's pills read in one fixed order,
+ * BR-REQ-041-01 (`DECISIONS.md` §366, amended §375) — the route's pills read in one fixed order,
  * on the listing card and the event page alike.
  *
  * The owner, 2026-09-24, of the card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order

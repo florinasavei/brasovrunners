@@ -144,7 +144,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const staffUser = await requireStaff();
   // The volunteer's backoffice is the desk (§103): the editor is not theirs to read.
   if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin" }));
-  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§NNN).
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
   const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued } = await searchParams;
   // What the save told the participants (§331), matched against the words there are — the query

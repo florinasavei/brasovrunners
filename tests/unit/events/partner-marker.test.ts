@@ -9,7 +9,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
- * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §NNN) — the partner marker, and
+ * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367, amended §375) — the partner marker, and
  * one tooltip per calendar entry.
  *
  * The owner, 2026-09-24: "I would like to have a special marker with this partnered event, so that
@@ -18,7 +18,7 @@ import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
  * own and the ⚠'s inside it — one tooltip, carrying the time, the title, the date's note and now
  * the partner.
  *
- * **Amended §NNN, 2026-09-24**: "For the partnership, I just need 1 icon, I do not need to show
+ * **Amended §375, 2026-09-24**: "For the partnership, I just need 1 icon, I do not need to show
  * the full partners list, there might be multiple partners." The marker is now one glyph and a
  * generic label, "Eveniment în parteneriat" / "Partnered event" — never a partner's name or a
  * count, in every one of the four places it appears. The full list stays the event page's partner
@@ -69,7 +69,7 @@ function say(locale: "ro" | "en") {
 const partners = (...names: string[]) => names.map((name) => ({ name, links: [] }));
 const noPartner = { coHosts: null, coHostName: null, coHostUrl: null };
 
-describe("§367 partnerPhrase — the marker's words, amended §NNN: one generic label, never a name or a count", () => {
+describe("§367 partnerPhrase — the marker's words, amended §375: one generic label, never a name or a count", () => {
   it("says the same generic sentence whether the event has one partner or several", () => {
     expect(partnerPhrase(say("ro"), true)).toBe("Eveniment în parteneriat");
     expect(partnerPhrase(say("en"), true)).toBe("Partnered event");
@@ -81,7 +81,7 @@ describe("§367 partnerPhrase — the marker's words, amended §NNN: one generic
   });
 });
 
-describe("§367 the listing card's chip, amended §NNN: one glyph, a generic label, never a partner's name", () => {
+describe("§367 the listing card's chip, amended §375: one glyph, a generic label, never a partner's name", () => {
   it("is a small outlined chip with the handshake and the generic label, in both languages", async () => {
     currentLocale = "ro";
     const romanian = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
@@ -149,7 +149,7 @@ describe("§367 the listing card's chip, amended §NNN: one glyph, a generic lab
   });
 });
 
-describe("§367 the event page's overline, amended §NNN: one glyph, a generic label", () => {
+describe("§367 the event page's overline, amended §375: one glyph, a generic label", () => {
   const overline = async (locale: "ro" | "en", ...names: string[]) => {
     currentLocale = locale;
     const element = await PartnerOverline({ event: { ...noPartner, coHosts: partners(...names) } });
@@ -215,7 +215,7 @@ function chip(values: Partial<Parameters<typeof CalendarEventChip>[0]> = {}) {
 }
 
 const MOVED = { kind: "moved" as const, text: "Nu în locul obișnuit: Stația de telecabină Tâmpa" };
-/** The generic marker's words (§367, amended §NNN): never a partner's name. */
+/** The generic marker's words (§367, amended §375): never a partner's name. */
 const PARTNER = "Eveniment în parteneriat";
 const count = (html: string, needle: string) => html.split(needle).length - 1;
 

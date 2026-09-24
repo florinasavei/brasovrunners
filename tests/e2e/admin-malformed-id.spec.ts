@@ -4,7 +4,7 @@ import { signIn } from "./support/featured-event";
 /**
  * A malformed id in an admin `/…/[id]` route used to reach PostgreSQL and come back as a 500,
  * because the id was handed straight to a `uuid` column's `WHERE` clause (found during the
- * dev-SSR investigation, §NNN, true on production too). `isUuid` (`shared/ids.ts`) now answers
+ * dev-SSR investigation, §376, true on production too). `isUuid` (`shared/ids.ts`) now answers
  * the same 404 an id that is shaped right but names nothing already got.
  *
  * Desktop only: this is about the response the server gives, not the layout at a width.
