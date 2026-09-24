@@ -6,7 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-07 criterion 6 (§NNN) — the owner's throttle: `platform_settings.jobCadence`, the
+ * BR-REQ-090-07 criterion 7 (§NNN) — the owner's throttle: `platform_settings.jobCadence`, the
  * minimum minutes between two real runs of each job. Built like the Neon plan beside it: the
  * Administrator's, asserted on the server, audited from and to, a value this code cannot read
  * falling back to the default — and on save every cached schedule is forgotten, so the next ping
@@ -50,7 +50,7 @@ async function refusal(promise: Promise<unknown>): Promise<string> {
   throw new Error("expected a refusal");
 }
 
-describe("BR-REQ-090-07 criterion 6 the minimum interval between two real runs", () => {
+describe("BR-REQ-090-07 criterion 7 the minimum interval between two real runs", () => {
   it("is 'only when something is due' when nobody has set it, and when the value cannot be read", async () => {
     expect(await readJobCadence(db)).toEqual({ minutes: 0, updatedAt: null });
     await db.insert(platformSettings).values({ key: JOB_CADENCE_SETTING_KEY, value: { minutes: 45 }, updatedAt: NOW });

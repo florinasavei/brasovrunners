@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-090-03 criterion 9 (§NNN) — the drain after a request tells the outbox job about what it
+ * BR-REQ-090-03 criterion 11 (§NNN) — the drain after a request tells the outbox job about what it
  * could not send.
  *
  * The request that queues a message drains the outbox once, after its response (§68). Whatever it
@@ -58,7 +58,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("BR-REQ-090-03 criterion 9 the drain wakes the outbox job only for what it leaves behind", () => {
+describe("BR-REQ-090-03 criterion 11 the drain wakes the outbox job only for what it leaves behind", () => {
   it("tells nobody when it emptied the queue", async () => {
     expect(await drain()).toEqual([]);
   });

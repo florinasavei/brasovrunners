@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-090-03 criterion 7 (§NNN) — the two properties of the cache slots that nothing else
+ * BR-REQ-090-03 criterion 9 (§NNN) — the two properties of the cache slots that nothing else
  * would catch until a production build did.
  *
  * `unstable_cache` keys an entry on its function's source text as well as the key parts. An
@@ -34,7 +34,7 @@ beforeEach(() => {
   seen.sources.length = 0;
 });
 
-describe("BR-REQ-090-03 criterion 7 the cache slots", () => {
+describe("BR-REQ-090-03 criterion 9 the cache slots", () => {
   it("key every slot on a function whose text is the same in every bundle", async () => {
     await recordPing("email-outbox", NOW, false);
     await readPingVerdict("email-outbox", NOW);

@@ -10,7 +10,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criteria 7, 9 and 10; BR-REQ-090-07 criterion 6 (§NNN) — a job ping with nothing
+ * BR-REQ-090-03 criteria 9, 11 and 12; BR-REQ-090-07 criterion 7 (§NNN) — a job ping with nothing
  * to do answers from Next's data cache and never opens a connection.
  *
  * The route handlers themselves, end to end, with the data cache kept in memory
@@ -88,7 +88,7 @@ beforeEach(async () => {
   vi.setSystemTime(NOW);
 });
 
-describe("BR-REQ-090-03 criterion 7 a ping with nothing due answers without the database", () => {
+describe("BR-REQ-090-03 criterion 9 a ping with nothing due answers without the database", () => {
   it("checks the secret before it reads anything, the cache included", async () => {
     const response = await maintenance(ping(null));
     expect(response.status).toBe(401);
@@ -139,7 +139,7 @@ describe("BR-REQ-090-03 criterion 7 a ping with nothing due answers without the 
   });
 });
 
-describe("BR-REQ-090-03 criterion 9 a write path that makes work sooner wakes the job", () => {
+describe("BR-REQ-090-03 criterion 11 a write path that makes work sooner wakes the job", () => {
   async function approvePrivacyNotice() {
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -234,7 +234,7 @@ describe("BR-REQ-090-03 criterion 9 a write path that makes work sooner wakes th
   });
 });
 
-describe("BR-REQ-090-07 criterion 6 the Administrator's minimum interval", () => {
+describe("BR-REQ-090-07 criterion 7 the Administrator's minimum interval", () => {
   it("holds a woken job back inside the interval, from the cache, with the pool refusing to open", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 30 }, updatedAt: NOW });
     expect((await pingAt(0)).body).toMatchObject({ ran: true, notBefore: ends(30).toISOString(), cadenceMinutes: 30 });

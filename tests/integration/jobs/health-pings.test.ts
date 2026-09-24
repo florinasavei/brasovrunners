@@ -5,7 +5,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criterion 10 (§NNN) — the health check does not cry wolf once a ping with
+ * BR-REQ-090-03 criterion 12 (§NNN) — the health check does not cry wolf once a ping with
  * nothing to do writes no `job_runs` row.
  *
  * `/api/health` answers 503 for anything but `ok`, and cron-job.org emails the owner on a 503
@@ -41,7 +41,7 @@ async function realRun(minutesAgo: number, jobName = "registration-maintenance")
   await db.insert(jobRuns).values({ jobName, startedAt: ago(minutesAgo), finishedAt: ago(minutesAgo) });
 }
 
-describe("BR-REQ-090-03 criterion 10 liveness is measured against the pings", () => {
+describe("BR-REQ-090-03 criterion 12 liveness is measured against the pings", () => {
   it("stays ok while pings every fifteen minutes all skip", async () => {
     await realRun(55);
     for (const minutesAgo of [40, 25, 10]) await recordPing("registration-maintenance", ago(minutesAgo), false);
@@ -80,7 +80,7 @@ describe("BR-REQ-090-03 criterion 10 liveness is measured against the pings", ()
   });
 });
 
-describe("BR-REQ-090-03 criterion 10 email health allows for the Administrator's interval", () => {
+describe("BR-REQ-090-03 criterion 12 email health allows for the Administrator's interval", () => {
   it("does not call a retry stalled while the chosen interval may still reach it", async () => {
     await db.insert(emailOutbox).values({
       messageType: "VERIFY_REGISTRATION_EMAIL",

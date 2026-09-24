@@ -12,7 +12,7 @@ import { confirmEmail, type EventForRegistration, submitRegistration } from "@/m
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criterion 8 (§NNN) — each real run works out, from the database it already has
+ * BR-REQ-090-03 criterion 10 (§NNN) — each real run works out, from the database it already has
  * awake, the earliest instant its job will next have work. One case per duty the maintenance job
  * performs, each alone on an empty database so the instant is that duty's and nobody else's, and
  * the outbox's own. "Nothing at all" is null, which the plan turns into the hour-long cap.
@@ -103,7 +103,7 @@ async function register(event: EventForRegistration, changes: Partial<typeof reg
   return row.id;
 }
 
-describe("BR-REQ-090-03 criterion 8 the maintenance job's next work, duty by duty", () => {
+describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by duty", () => {
   it("is nothing on an empty database, which the plan caps at an hour", async () => {
     const next = await nextMaintenanceWork(db, NOW);
     expect(next).toBeNull();
@@ -195,7 +195,7 @@ describe("BR-REQ-090-03 criterion 8 the maintenance job's next work, duty by dut
   });
 });
 
-describe("BR-REQ-090-03 criterion 8 the outbox's next work", () => {
+describe("BR-REQ-090-03 criterion 10 the outbox's next work", () => {
   async function queue(row: Partial<typeof emailOutbox.$inferInsert>) {
     await db.insert(emailOutbox).values({
       messageType: "VERIFY_REGISTRATION_EMAIL",

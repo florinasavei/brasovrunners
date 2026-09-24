@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-090-07 criterion 6 (§NNN) — "Cât de des verifică platforma": the owner's throttle, on
+ * BR-REQ-090-07 criterion 7 (§NNN) — "Cât de des verifică platforma": the owner's throttle, on
  * `/admin/tasks` → Costuri beside the Neon plan.
  *
  * One round trip, on the page a unit test cannot see: the card says what a longer interval costs
