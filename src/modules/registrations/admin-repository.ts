@@ -761,6 +761,8 @@ export type DeskRegistration = {
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
+  /** The event's own zone, which the desk reads its date in (§349). */
+  eventTimezone: string;
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */
   provisionalBibNumber: number | null;
@@ -795,6 +797,7 @@ const DESK_COLUMNS = {
   eventId: registrations.eventId,
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,
+  eventTimezone: events.timezone,
   bibNumber: registrations.bibNumber,
   provisionalBibNumber: registrations.provisionalBibNumber,
   bibPrintedAt: registrations.bibPrintedAt,

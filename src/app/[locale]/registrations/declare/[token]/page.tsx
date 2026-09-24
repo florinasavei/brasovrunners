@@ -14,6 +14,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -37,7 +38,7 @@ import { signDeclarationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string }>;
 };
 
 /*
@@ -137,10 +138,28 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, changed } = await searchParams;
+  const { done, invalid, changed, full } = await searchParams;
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
+
+  /*
+    The hold had lapsed at the press and the place went on down the line, and the line was full
+    too (§348): the allocator refused to queue this registration, the refusal rolled everything
+    back — the token spend included — and nothing was signed. Said as that, never as a dead link.
+  */
+  if (full) {
+    return (
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("declare.title")}
+        </Typography>
+        <Alert severity="warning" data-testid="declare-waitlist-full">
+          {full === "closed" ? t("declare.noWaitlist") : t("declare.waitlistFull")}
+        </Alert>
+      </Container>
+    );
+  }
 
   if (done) {
     return (
@@ -249,11 +268,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
    */
   const deadline =
     registration?.holdExpiresAt && eventDetails
-      ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-          dateStyle: "medium",
-          timeStyle: "short", hourCycle: "h23",
-          timeZone: eventDetails.timezone,
-        }).format(registration.holdExpiresAt)
+      ? formatDay(registration.holdExpiresAt, { locale, timeZone: eventDetails.timezone, style: "long", withTime: true, position: "inline" })
       : undefined;
   /**
    * "The deadline has passed, but the place is still yours" — and only where that is true.
@@ -406,7 +421,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ...(registration ? identityDocumentValues(registration.guardianName, {}) : {}),
               event: eventDetails?.title,
               eventDate: eventDetails
-                ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
+                ? formatDay(eventDetails.startsAt, { locale, timeZone: eventDetails.timezone, style: "long", position: "inline" })
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,

@@ -7,6 +7,7 @@ import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { getTranslations } from "next-intl/server";
 import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/emails/actions";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { OutboxQueue } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -36,12 +37,8 @@ type Props = {
  */
 export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
-  const when = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "short",
-    timeStyle: "short",
-    hourCycle: "h23",
-    timeZone: "Europe/Bucharest",
-  });
+  // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
+  const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
 
   return (
     <Panel

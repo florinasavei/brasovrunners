@@ -1,6 +1,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import DateField from "@/shared/forms/pickers/DateField";
@@ -34,12 +35,12 @@ export default async function AlbumFieldsForm({
   /** `YYYY-MM-DD`, or "" on the create form. */
   takenOn: string;
   eventId: string | null;
-  events: readonly { id: string; title: string; startsAt: Date }[];
+  events: readonly { id: string; title: string; startsAt: Date; timezone: string }[];
   translations: readonly EditableAlbumTranslation[];
   slugLocked: boolean;
 }) {
   const t = await getTranslations("Admin.gallery");
-  const format = await getFormatter();
+  const uiLocale = await getLocale();
   const box = (field: Parameters<typeof albumTranslationConstraints>[0]) => textFieldConstraints(albumTranslationConstraints(field));
 
   return (
@@ -64,7 +65,7 @@ export default async function AlbumFieldsForm({
           <MenuItem value="">{t("noEvent")}</MenuItem>
           {events.map((event) => (
             <MenuItem key={event.id} value={event.id}>
-              {format.dateTime(event.startsAt, { dateStyle: "medium" })} · {event.title}
+              {formatDay(event.startsAt, { locale: uiLocale, timeZone: event.timezone, style: "short" })} · {event.title}
             </MenuItem>
           ))}
         </RecallField>
@@ -72,6 +73,7 @@ export default async function AlbumFieldsForm({
 
       {/* One tab per language, as every other editor has (§259). */}
       <LocaleTabPanels
+        idPrefix="locale"
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;

@@ -21,7 +21,8 @@ import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/p
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
@@ -64,7 +65,6 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const fromDesk = back === "desk";
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Registration");
-  const format = await getFormatter();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
   // The event the form opens on: the one the desk or the list came from, when it takes entries.
   const selectedEventId = events.find((event) => event.id === eventId)?.id ?? events[0]?.id ?? "";
@@ -140,12 +140,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               defaultValue={selectedEventId}
               events={events.map((event) => ({
                 id: event.id,
-                label: `${event.title ?? event.id} · ${format.dateTime(event.startsAt, {
-                  timeZone: event.timezone,
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}${event.minAge > 0 ? ` · ${event.minAge}+` : ""}`,
+                label: `${event.title ?? event.id} · ${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" })}${event.minAge > 0 ? ` · ${event.minAge}+` : ""}`,
               }))}
             />
 

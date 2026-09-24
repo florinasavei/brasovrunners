@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
@@ -425,6 +425,12 @@ export type OccupiedCountsRow = {
   confirmed: number;
   pendingDeclarationHolds: number;
   unexpiredWaitlistOfferedHolds: number;
+  /**
+   * Of `pendingDeclarationHolds`, the ones past their deadline (§160): still occupying, and
+   * counted in `computeOccupied` like any other, but a place a newcomer the waiting list cannot
+   * take is given (§348, `domain/waitlist.ts#occupiedForNewcomer`).
+   */
+  lapsedDeclarationHolds: number;
 };
 
 /**
@@ -445,30 +451,46 @@ export async function countOccupied<T extends Record<string, unknown>>(
       confirmed: sql<number>`count(*) filter (where ${registrations.status} = 'CONFIRMED')::int`,
       pendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and ${registrations.holdExpiresAt} > ${now})::int`,
+      lapsedDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now})::int`,
     })
     .from(registrations)
     .where(eq(registrations.eventId, eventId));
 
-  return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0 };
+  return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0, lapsedDeclarationHolds: 0 };
 }
 
 /**
- * When each open waiting-list offer of one event lapses — the one thing the clock changes about
- * `countOccupied` (`DECISIONS.md` §333).
+ * The instants at which the clock alone changes what the event page is told about places
+ * (`DECISIONS.md` §333, and §350 waiting-list length): when each open waiting-list offer lapses,
+ * and — on an event whose waiting list has a limit — when each declaration hold does.
  *
- * An offer occupies its place while `hold_expires_at > now` and not a moment after, so between
- * two of these instants the free-place count cannot change without a write. The public cache
- * keys the count by the stretch `now` is in (`public-cache/clock.ts`), which is what lets a
- * cached count be the allocator's own answer for this instant rather than a recent one.
+ * An offer occupies its place while `hold_expires_at > now` and not a moment after. A declaration
+ * hold occupies its place past its deadline too (§160), but once the line has a limit a lapsed
+ * one is a place the next newcomer is given when the line cannot take them
+ * (`domain/waitlist.ts#occupiedForNewcomer`), so its deadline changes the count as well; without a
+ * limit it changes nothing, and is left out rather than splitting the cache for no reason. Both
+ * fall on the `reached` side of the instant (`hold_expires_at > now`, `hold_expires_at <= now`).
+ * Between two of these instants the count cannot change without a write. The public cache keys the
+ * count by the stretch `now` is in (`public-cache/clock.ts`), which is what lets a cached count be
+ * the allocator's own answer for this instant rather than a recent one.
  */
-export async function listOfferExpiries<T extends Record<string, unknown>>(
+export async function listPlaceCountInstants<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
 ): Promise<Date[]> {
   const rows = await db
     .select({ holdExpiresAt: registrations.holdExpiresAt })
     .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLIST_OFFERED")));
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        or(
+          eq(registrations.status, "WAITLIST_OFFERED"),
+          and(eq(registrations.status, "PENDING_DECLARATION"), isNotNull(events.waitlistCapacity)),
+        ),
+      ),
+    );
   return rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : []));
 }
 
@@ -539,11 +561,19 @@ export type EventForExpiry = {
  * With nobody waiting, or with free places enough for everybody who waits, nothing is
  * released: the rows stay `PENDING_DECLARATION`, keep occupying their places (`countOccupied`)
  * and can still be signed online or on paper at the desk.
+ *
+ * `wanting` is anybody else who wants a place and is not in the line (§348): the registration
+ * the allocator is deciding, when the waiting list's limit leaves no room for it — on an event
+ * with no waiting list, every newcomer once the places are gone. Nobody would ever be
+ * `WAITLISTED` there to want the place, so without this a runner who never signed would keep it
+ * until the race while everybody after them was turned away. Counted like one more person
+ * waiting: one newcomer, one hold, the oldest deadline first.
  */
 async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
+  wanting: number,
 ): Promise<string[]> {
   const lapsed = await db
     .select({ id: registrations.id })
@@ -560,7 +590,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
 
   if (event.eventStatus !== "SCHEDULED" || event.startsAt <= now) return lapsed.map((row) => row.id);
 
-  const waiting = await countEligibleWaitlisted(db, event.id);
+  const waiting = (await countEligibleWaitlisted(db, event.id)) + wanting;
   if (waiting === 0) return [];
   const free =
     event.capacity === null
@@ -581,11 +611,15 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * `lapsedDeclarationHoldsToRelease` above decides, and `DECISIONS.md` §160 says why. Both run
  * under the caller's event lock, so a waiting-list entry arriving at the same moment is
  * serialised against this decision rather than racing it.
+ *
+ * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
+ * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForExpiry,
   now: Date,
+  { wanting = 0 }: { wanting?: number } = {},
 ): Promise<void> {
   // The offers first: each one released is a place the queue can have without touching a
   // kept declaration hold, and the count below must see it as free.
@@ -602,7 +636,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
     )
     .returning({ id: registrations.id });
 
-  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now);
+  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
   if (releasing.length > 0) {
     await db
       .update(registrations)

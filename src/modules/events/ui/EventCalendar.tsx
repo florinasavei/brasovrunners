@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { fadeInSoft } from "@/theme/motion";
 import {
   type CalendarDay,
@@ -73,8 +73,10 @@ export default async function EventCalendar({
 
   const today = dayKey(now, CLUB_TIME_ZONE);
 
-  const time = (event: PublicEvent) =>
-    format.dateTime(event.startsAt, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  // The grid and the agenda already say the day: the weekday is the column's header (or the
+  // label over the day's number), the month and the year the heading — so a cell carries the
+  // time alone, and is the one place a date goes without its year (§349).
+  const time = (event: PublicEvent) => formatTime(event.startsAt, { locale, timeZone: event.timezone });
 
   // A date unlike its series' others (§122) — read against the dates on view, which is the
   // series as the reader sees it here; a lone cancelled event is marked too.

@@ -4,7 +4,8 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -44,7 +45,6 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
   const { saved, error } = current;
   const rows = await listAlbumsForAdmin(getDb(), locale);
   const t = await getTranslations("Admin");
-  const format = await getFormatter();
   const query = parseListQuery(current, { sortable: [], defaultSort: "takenOn", defaultPerPage: 100 });
 
   const columns: readonly AdminColumn<AlbumListRow>[] = [
@@ -59,7 +59,8 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
     {
       key: "takenOn",
       label: t("gallery.columnTakenOn"),
-      render: (row) => format.dateTime(row.takenOn, { dateStyle: "medium" }),
+      // A calendar day stored at noon UTC (the album form): read as the day it names (§349).
+      render: (row) => formatCalendarDay(row.takenOn, { locale, style: "short" }),
     },
     {
       key: "status",

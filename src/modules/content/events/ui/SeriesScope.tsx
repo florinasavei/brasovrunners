@@ -1,38 +1,56 @@
 "use client";
 
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Link from "@mui/material/Link";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import Stack from "@mui/material/Stack";
+import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { countForm } from "@/i18n/count-form";
 import EditionMark from "@/modules/events/ui/EditionMark";
 import type { SeriesDate } from "@/modules/events/ui/SeriesDates";
+import { fillIn } from "@/shared/forms/fill-in";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * Which dates of a series a save reaches (`DECISIONS.md` §134; the owner, on the header's
- * chips: "here I should have a select all", and on the three radios: "they should be
- * radios … does not make sense").
+ * Which dates of a series a save reaches (`DECISIONS.md` §134, §350).
  *
- * The header's chips are the choice: a press ticks a date, the arrow opens it, "Toate" ticks
- * every one. The box above Save says the same choice in words and offers the three presets
- * — this date, this and the following, all — as one exclusive control that sets the ticks.
- * Both read one piece of state, held here, so the two never disagree; the ticked ids reach
- * the form as hidden `dates` inputs inside it (`SeriesScopeBox`), and the service applies the
- * save to exactly those (`SeriesEditScope`). The date the page is about is always in and
- * cannot be unticked.
+ * **Three words, in the Salvare box** (§350; the design the owner asked to have implemented):
+ * "Doar această dată / Această dată și următoarele / Toate datele seriei", one radio group,
+ * beside the button — with the individual dates folded underneath for the exceptions, and a
+ * sentence saying how many dates the save will change. The wall of date chips in the header, and
+ * the header's own copy of the choice, are gone (§134's chips): two controls for one choice was
+ * one too many, and on a phone the chips were a screen of their own.
+ *
+ * **"This and the following" is the default** — reversing §240's "all". A weekly run is one event
+ * repeated, which is why §240 widened the default at all; but the dates that already happened are
+ * history, and a save that rewrites last Monday's description, place or programme rewrites what
+ * the people who ran it were told. From here on is what an organizer means by "the series" nine
+ * times in ten, and "Toate datele seriei" is one press away for the tenth.
+ *
+ * One piece of state, held here, so the radios, the sentence and the ticks never disagree; the
+ * ticked ids reach the form as hidden `dates` inputs inside it (`SeriesScopeBox`), and the service
+ * applies the save to exactly those (`SeriesEditScope`) — that contract is unchanged. The date the
+ * page is about is always in and has no box. A hand-picked set shows as a fourth, read-only radio,
+ * "Alese de mână (N)".
  */
 
 type Preset = "this" | "following" | "all";
 
+/**
+ * A date of the series, with its day as the sentence reads it ("mie., 30 sept. 2026") — written
+ * on the server by `src/i18n/dates.ts` (§350 weekday on every date) and handed here as a string,
+ * so this island formats no date itself (§324).
+ */
+export type ScopeDate = SeriesDate & { day: string };
+
 type ScopeState = {
-  dates: readonly SeriesDate[];
+  dates: readonly ScopeDate[];
   currentId: string;
   ticked: ReadonlySet<string>;
   toggle: (id: string) => void;
@@ -43,43 +61,33 @@ type ScopeState = {
 
 const ScopeContext = createContext<ScopeState | null>(null);
 
-function followingIds(dates: readonly SeriesDate[], currentId: string): string[] {
+export function followingIds(dates: readonly { id: string }[], currentId: string): string[] {
   const position = dates.findIndex((date) => date.id === currentId);
   return position < 0 ? [] : dates.slice(position + 1).map((date) => date.id);
 }
 
-export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly SeriesDate[]; currentId: string; children: ReactNode }) {
-  /*
-    Every other date is ticked when the editor opens (§240; the owner: "by default when I
-    edit a repeated event, I wanna edit all!").
+/** Which preset a set of ticks amounts to, or null for a hand-made set. */
+export function presetOf(dates: readonly { id: string }[], currentId: string, ticked: ReadonlySet<string>): Preset | null {
+  const others = dates.filter((date) => date.id !== currentId).map((date) => date.id);
+  const following = followingIds(dates, currentId);
+  const same = (ids: readonly string[]) => ids.length === ticked.size && ids.every((id) => ticked.has(id));
+  if (ticked.size === 0) return "this";
+  if (same(following)) return "following";
+  if (same(others)) return "all";
+  return null;
+}
 
-    It opened on "just this date", which is what a calendar does — and which is wrong for
-    what this club actually edits. A weekly run is one event repeated: the description, the
-    place, the rules and the programme are the series, not the date. Fixing a typo on one
-    Monday and leaving it on the other seven is the mistake that is easy to make and hard to
-    notice, and the club has eight Mondays on the board.
-
-    The reverse mistake is louder, which is the reason this is the safer default: the ticks
-    are in the header, above the save, and the box over the button says in words how many
-    dates the save reaches. Somebody who means one date unticks the rest, or presses
-    "Niciuna", and is told what they chose before they press Save.
-
-    What travels is still only what was changed, and a date moved or cancelled on its own
-    stays that way — the scope widens, the merge rules do not (§131).
-  */
-  const [ticked, setTicked] = useState<ReadonlySet<string>>(
-    () => new Set(dates.filter((date) => date.id !== currentId).map((date) => date.id)),
-  );
+export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly ScopeDate[]; currentId: string; children: ReactNode }) {
+  // "This and the following" when the editor opens (§350, reversing §240's "all").
+  const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set(followingIds(dates, currentId)));
   const value = useMemo<ScopeState>(() => {
     const others = dates.filter((date) => date.id !== currentId).map((date) => date.id);
     const following = followingIds(dates, currentId);
-    const same = (ids: readonly string[]) => ids.length === ticked.size && ids.every((id) => ticked.has(id));
-    const preset: Preset | null = ticked.size === 0 ? "this" : same(others) ? "all" : same(following) ? "following" : null;
     return {
       dates,
       currentId,
       ticked,
-      preset,
+      preset: presetOf(dates, currentId, ticked),
       toggle: (id) =>
         setTicked((was) => {
           const next = new Set(was);
@@ -99,112 +107,104 @@ function useScope(): ScopeState {
   return scope;
 }
 
-/** The header's chips: tick to include, the arrow to open, "Toate" for every date. */
-export function SeriesScopeChips() {
-  const t = useTranslations("Admin");
-  const { dates, currentId, ticked, toggle, setPreset, preset } = useScope();
-  const router = useRouter();
-  const everyOther = preset === "all";
-  return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
-      {dates.length > 1 && (
-        <Chip
-          clickable
-          variant={everyOther ? "filled" : "outlined"}
-          color={everyOther ? "primary" : "default"}
-          icon={everyOther ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
-          label={everyOther ? t("editor.scope.selectNone") : t("editor.scope.selectAll")}
-          onClick={() => setPreset(everyOther ? "this" : "all")}
-          size="small"
-        />
-      )}
-      {dates.map((date) => {
-        const current = date.id === currentId;
-        const on = current || ticked.has(date.id);
-        return (
-          <Chip
-            key={date.id}
-            clickable={!current}
-            role={current ? undefined : "checkbox"}
-            aria-checked={current ? undefined : on}
-            aria-label={current ? undefined : date.label}
-            aria-current={current ? "page" : undefined}
-            variant={on ? "filled" : "outlined"}
-            color={on ? "primary" : "default"}
-            icon={
-              /*
-                The date being edited wears no box (§175; the owner: "e ciudat că aici nu pot
-                deselecta ediția curentă, e un pic redundant sincer").
-
-                He is right: a tick that cannot be untied is not a choice, it is a picture of
-                one, and offering it invites the press that does nothing. The save always
-                reaches the date whose editor is open — that is what §134 decided and it has
-                not changed — so this chip says "this one" by being filled and current, and the
-                boxes are on the dates where ticking is a decision.
-              */
-              <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, ml: 0.5 }}>
-                {current ? null : on ? <CheckBoxIcon fontSize="small" /> : <CheckBoxOutlineBlankIcon fontSize="small" />}
-                {date.note && <EditionMark note={date.note} size={16} />}
-              </Box>
-            }
-            label={date.label}
-            onClick={current ? undefined : () => toggle(date.id)}
-            onDelete={current ? undefined : () => router.push(date.href)}
-            deleteIcon={<OpenInNewIcon aria-label={t("editor.scope.open", { date: date.label })} />}
-            size="small"
-            sx={{
-              ...(date.note?.kind === "cancelled" && !on ? { textDecoration: "line-through", color: "text.secondary" } : {}),
-            }}
-          />
-        );
-      })}
-    </Box>
-  );
-}
-
 /**
- * The box above Save: what the ticks amount to, the three presets as one exclusive control,
- * the explanation folded away (the owner: "more boxed and collapsible, it looks ugly on
- * mobile"). Inside the form, so the hidden inputs travel with it.
+ * "Salvează pentru", in the Salvare box: the radios, the sentence, why only what changed travels
+ * (folded), and 15.1 "Alege datele una câte una" (folded unless the ticks are hand-picked). Inside
+ * the save form, so the hidden inputs travel with it.
  */
-export function SeriesScopeBox() {
+export function SeriesScopeBox({ locale }: { locale: string }) {
   const t = useTranslations("Admin");
-  const { ticked, preset, setPreset } = useScope();
+  const tEvent = useTranslations("Event");
+  const { dates, currentId, ticked, preset, setPreset, toggle } = useScope();
+
+  // Every date the save reaches, the current one included, in the series' order.
+  const reached = dates.filter((date) => date.id === currentId || ticked.has(date.id));
+  const current = dates.find((date) => date.id === currentId);
+  const count = reached.length;
+  const datesWords = tEvent(`series.count.${countForm(count, locale)}`, { count });
   const sentence =
-    preset === "this"
-      ? t("editor.scope.this")
-      : preset === "following"
-        ? `${t("editor.scope.following")} (${ticked.size})`
-        : preset === "all"
-          ? `${t("editor.scope.all")} (${ticked.size})`
-          : t("editor.scope.chosen", { count: String(ticked.size) });
+    count <= 1
+      ? t("editor.scope.countThis")
+      : preset === "following" && current
+        ? fillIn(t.raw("editor.scope.countFollowing") as string, {
+            dates: datesWords,
+            first: current.day,
+            rest: String(count - 1),
+            last: reached[reached.length - 1]?.day ?? "",
+          })
+        : fillIn(t.raw("editor.scope.countRange") as string, {
+            dates: datesWords,
+            first: reached[0]?.day ?? "",
+            last: reached[reached.length - 1]?.day ?? "",
+          });
+
   return (
-    <Box component="details" sx={BOXED_DISCLOSURE_SX}>
-      <Typography component="summary" variant="body2">
-        {t("editor.scope.title")}{" "}
-        <Box component="strong" sx={{ fontWeight: 600 }}>
-          {sentence}
-        </Box>
-      </Typography>
+    <Stack spacing={1.5} data-testid="series-scope">
       {[...ticked].map((id) => (
         <input key={id} type="hidden" name="dates" value={id} />
       ))}
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        orientation="horizontal"
-        value={preset}
-        onChange={(_event, next: Preset | null) => next && setPreset(next)}
-        aria-label={t("editor.scope.title")}
-        sx={{ mb: 1, flexWrap: "wrap", "& .MuiToggleButton-root": { textTransform: "none", minHeight: 44 } }}
-      >
-        <ToggleButton value="this">{t("editor.scope.this")}</ToggleButton>
-        <ToggleButton value="following">{t("editor.scope.following")}</ToggleButton>
-        <ToggleButton value="all">{t("editor.scope.all")}</ToggleButton>
-      </ToggleButtonGroup>
-      <Typography variant="caption" color="text.secondary" component="p">
-        {t("editor.scope.help")}
+      <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+        <Typography component="legend" variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {t("editor.scope.title")}
+        </Typography>
+        <RadioGroup
+          value={preset ?? "custom"}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (next === "this" || next === "following" || next === "all") setPreset(next);
+          }}
+        >
+          {(["this", "following", "all"] as const).map((value) => (
+            <FormControlLabel key={value} value={value} control={<Radio />} label={t(`editor.scope.${value}`)} sx={TAP_TARGET} />
+          ))}
+          {preset === null && (
+            <FormControlLabel value="custom" control={<Radio />} label={t("editor.scope.custom", { count: ticked.size })} disabled sx={TAP_TARGET} />
+          )}
+        </RadioGroup>
+      </Box>
+      <Typography variant="body2" data-testid="series-scope-count" role="status">
+        {sentence} {count > 1 ? t("editor.scope.countTail") : ""}
       </Typography>
-    </Box>
+      <Box component="details" sx={BOXED_DISCLOSURE_SX}>
+        <Typography component="summary" variant="body2">
+          {t("editor.scope.whyTitle")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("editor.scope.help")}
+        </Typography>
+      </Box>
+      {/* 15.1 — the exceptions, one date at a time; open while the ticks are hand-picked. */}
+      <Box component="details" open={preset === null || undefined} sx={BOXED_DISCLOSURE_SX} data-testid="series-pick-dates">
+        <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
+          {t("editor.boxes.pickDates.title")}
+        </Typography>
+        <Stack>
+          {dates.map((date) => {
+            const isCurrent = date.id === currentId;
+            return (
+              <Stack key={date.id} direction="row" spacing={1} sx={{ alignItems: "center", minHeight: 44, flexWrap: "wrap" }}>
+                {isCurrent ? (
+                  <Typography variant="body2" sx={{ pl: 1.5, fontWeight: 600 }}>
+                    {date.label} · {t("editor.scope.thisOne")}
+                  </Typography>
+                ) : (
+                  <FormControlLabel
+                    control={<Checkbox checked={ticked.has(date.id)} onChange={() => toggle(date.id)} sx={CHECKBOX_TAP_TARGET} />}
+                    label={date.label}
+                    sx={date.note?.kind === "cancelled" ? { textDecoration: "line-through", color: "text.secondary" } : undefined}
+                  />
+                )}
+                {date.note && <EditionMark note={date.note} size={16} />}
+                {!isCurrent && (
+                  <Link href={date.href} variant="body2" sx={{ display: "inline-block", py: 1 }}>
+                    {t("editor.scope.openShort")}
+                  </Link>
+                )}
+              </Stack>
+            );
+          })}
+        </Stack>
+      </Box>
+    </Stack>
   );
 }

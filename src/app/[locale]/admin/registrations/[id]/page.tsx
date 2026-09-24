@@ -10,7 +10,8 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallDetails } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { emailMessageType } from "@/db/schema/email-outbox";
@@ -94,8 +95,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
 
   const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
-  const format = await getFormatter();
-  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+  // The timeline's short form with the time (§349): a value beside its label, so capitalised;
+  // `dtInline` inside a sentence.
+  const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
+  const dtInline = (value: Date | null) =>
+    value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
 
   /*
     The emergency details (§322): the phone, the emergency contact and the health note — what
@@ -315,7 +319,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </Box>
                   {emergency.healthConsentAt && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                      {tr("registrations.emergency.healthConsented", { date: dt(emergency.healthConsentAt) ?? "" })}
+                      {tr("registrations.emergency.healthConsented", { date: dtInline(emergency.healthConsentAt) ?? "" })}
                     </Typography>
                   )}
                 </>

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
+import { formatDay } from "@/i18n/dates";
 import { readRepeatRule, type RepeatRule } from "../domain/repeat";
 import { type EditionDifference, recurrenceOf } from "../domain/series";
 import type { EditionNote } from "./EditionMark";
@@ -37,12 +38,22 @@ export async function ruleSentence(rule: RepeatRule, source: { startsAt: Date },
   const wall = toWallTimeInput(source.startsAt, timeZone);
   if (rule.cadence === "MONTHLY") return t("series.monthly", { day: Number(wall.slice(8, 10)) });
   const weekdays = rule.weekdays.length > 0 ? [...rule.weekdays].sort((a, b) => a - b) : [wallClockWeekday(source.startsAt, timeZone)];
-  const weekdayName = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" });
-  // Any week's Monday plus the offset names the day; 2024-01-01 is a Monday.
-  const names = weekdays.map((weekday) => weekdayName.format(new Date(Date.UTC(2024, 0, weekday, 12))));
+  const named = weekdayNames(locale);
+  const names = weekdays.map((weekday) => named[String(weekday)]);
   const days = new Intl.ListFormat(locale, { type: "conjunction" }).format(names);
   const sentence = rule.cadence === "WEEKLY" ? t("series.weekly", { days }) : t("series.fortnightly", { days });
   return t("series.atTime", { sentence, time: wall.slice(11, 16) });
+}
+
+/**
+ * The seven weekday names by ISO number (1 = Monday) — "luni" … "duminică" / "Monday" … "Sunday"
+ * — as `ruleSentence` writes them. Also handed, as strings, to the Recurență box's live sentence
+ * (`RepeatRuleFields`), so that client island never formats a date itself (§324).
+ */
+export function weekdayNames(locale: string): Record<string, string> {
+  const weekdayName = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" });
+  // Any week's Monday plus the offset names the day; 2024-01-01 is a Monday.
+  return Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((weekday) => [String(weekday), weekdayName.format(new Date(Date.UTC(2024, 0, weekday, 12)))]));
 }
 
 export async function recurrenceSentence(
@@ -58,7 +69,8 @@ export async function recurrenceSentence(
     return t("series.dates", {
       // "12 date", "20 de date", "1 dată" (§341): the count picks the catalogue's phrasing.
       dates: t(`series.count.${countForm(members.length, locale)}`, { count: members.length }),
-      last: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone }).format(last.startsAt),
+      // "12 date, până pe duminică, 14 dec. 2026": inside the sentence, lower case (§349).
+      last: formatDay(last.startsAt, { locale, timeZone, style: "long", position: "inline" }),
     });
   }
 

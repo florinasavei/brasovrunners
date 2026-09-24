@@ -1,5 +1,6 @@
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
@@ -50,7 +51,6 @@ export async function GET(
   // Romanian declaration downloaded from the English backoffice is still a Romanian document.
   const t = await getTranslations({ locale, namespace: "Admin" });
   const site = await getTranslations({ locale, namespace: "Site" });
-  const format = await getFormatter({ locale });
   const now = new Date();
 
   const pdf = await renderLegalDocumentPdf({
@@ -66,10 +66,10 @@ export async function GET(
       organization: site("name"),
       version: t("legal.pdf.version", { version: document.version }),
       effectiveFrom: t("legal.pdf.effectiveFrom", {
-        date: format.dateTime(document.effectiveAt, { dateStyle: "long" }),
+        date: formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
       }),
       draftNotice: document.isApproved ? "" : t("legal.pdf.draftNotice"),
-      generatedOn: t("legal.pdf.generatedOn", { date: format.dateTime(now, { dateStyle: "medium" }) }),
+      generatedOn: t("legal.pdf.generatedOn", { date: formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }) }),
       page: (n, total) => t("legal.pdf.page", { n, total }),
     },
   });

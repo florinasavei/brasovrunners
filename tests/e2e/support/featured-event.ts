@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { openEditorBox } from "./fold";
 
 /**
  * Getting the seeded featured event into a state a registration journey can be walked against.
@@ -129,15 +130,19 @@ export async function ensureRegistrationIsOpen(page: Page) {
     await page.goto("/ro/admin");
     await page.getByRole("link", { name: FEATURED.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
+    await hydrated(page);
 
+    // Everything about registration is one box of the editor now (§350), shut on arrival.
+    await openEditorBox(page, "Participare și înscrieri");
     if ((await modeSelect(page).textContent()) === "Înscrieri pe site") return;
 
     await modeSelect(page).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await page.locator('[name="event.capacity"]').fill("50");
 
-    // The approved declaration a participant signs. Chosen, never written: the first real
-    // option after "Niciuna" is the sample version the legal seed approved.
+    // The approved declaration a participant signs, in its own card. Chosen, never written: the
+    // first real option after "Niciuna" is the sample version the legal seed approved.
+    await openEditorBox(page, "Condiții de participare și declarația");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
 

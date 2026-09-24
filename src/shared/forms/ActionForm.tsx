@@ -4,10 +4,22 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
-import { type ReactNode, useActionState, useEffect, useRef, useState } from "react";
-import { openFoldsAround } from "@/shared/ui/fold";
+import { type FormEvent, type ReactNode, useActionState, useEffect, useRef, useState } from "react";
+import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
+
+/**
+ * Bring a box into view wherever it sits (§350): every closed fold around it opened, and the
+ * language tab that holds it — if any — brought forward by the strip itself (`REVEAL_EVENT`
+ * bubbles up to it). The event editor puts a box three folds and a tab deep, and a box the reader
+ * cannot see is a box the browser cannot focus.
+ */
+export function revealField(element: HTMLElement | null): void {
+  if (!element) return;
+  openFoldsAround(element);
+  element.dispatchEvent(new CustomEvent(REVEAL_EVENT, { bubbles: true }));
+}
 
 /** What the summary says, already translated: a Server Component passes strings, never `t`. */
 export type RefusalMessages = {
@@ -94,12 +106,26 @@ export default function ActionForm({
   const summary = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!state?.error) return;
-    // The folds around the form first (§336): backoffice folds start closed, and an element in
+    // The boxes the refusal names first, in order — a strip answers the first of a pass, so the
+    // first named box's tab is the one on top (§350): the event editor's boxes start closed, and
+    // a named box the reader cannot see is a refusal they cannot act on.
+    for (const name of state.fields) revealField(document.getElementById(fieldId(name, scope)));
+    // The folds around the form (§336): backoffice folds start closed, and an element in
     // a closed `<details>` cannot take focus. Normally the person opened it to press and it is
     // still open; this is for whatever closed it in between.
     openFoldsAround(summary.current);
     summary.current?.focus();
-  }, [state]);
+  }, [state, scope]);
+
+  /*
+    A required box inside a closed fold or behind a hidden tab (§350): the browser fires
+    `invalid` on each box it refuses and then focuses the first — which it cannot do while the box
+    is out of view. Caught here, during the event, before the browser looks for something to
+    focus: the same moment `LocaleTabPanels` has always used for its own tabs.
+  */
+  const onInvalidCapture = (event: FormEvent<HTMLFormElement>) => {
+    revealField(event.target as HTMLElement);
+  };
 
   // The label under the exact name, then unindexed (`event.schedule[].date`), then the panel
   // the name belongs to (`event.bibDesign` for `event.bibDesign.numberScale`), then the name.
@@ -116,7 +142,7 @@ export default function ActionForm({
   };
 
   return (
-    <form action={formAction} {...formProps}>
+    <form action={formAction} {...formProps} onInvalidCapture={onInvalidCapture}>
       <RecallProvider
         value={{
           values: state?.values ?? null,
@@ -145,7 +171,13 @@ export default function ActionForm({
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                 {state.fields.map((name) => (
                   <li key={name}>
-                    <Link href={`#${fieldId(name, scope)}`} color="inherit">
+                    <Link
+                      href={`#${fieldId(name, scope)}`}
+                      color="inherit"
+                      // The box may be folded away or behind a tab: open its way before the
+                      // browser scrolls to the fragment (§350).
+                      onClick={() => revealField(document.getElementById(fieldId(name, scope)))}
+                    >
                       {labelOf(name)}
                     </Link>
                   </li>

@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { setRepeatPublish } from "@/modules/content/events/service";
+import { setRepeatPublish, stopRepeat } from "@/modules/content/events/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -13,8 +14,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * A series begun without the tick under "Repetă evenimentul" — or from a draft — made every
  * date the standing job created a draft for good, with no way back short of stopping and
  * restarting the series. This is the switch: only the rule's `publish` flag moves, the cadence,
- * weekdays and end stay exactly as chosen, and turning it on asks the same two questions the
- * first creation asked (`repeatEvent`, §122) — a role that may publish, and a published source.
+ * weekdays and end stay exactly as chosen, and turning it on asks for a role that may publish.
+ * A draft source's "on" is stored and waits (the editor's redesign, §350): the dates go live only
+ * while the source is live too. It is switched from any date of the series.
  */
 describe("§341 setRepeatPublish — the running series' publish switch", () => {
   let db: TestDatabase;
@@ -88,12 +90,37 @@ describe("§341 setRepeatPublish — the running series' publish switch", () => 
     expect(await ruleOf(source.id)).toEqual(weekly(false));
   });
 
-  it("refuses to turn publication on while the source itself is not published", async () => {
+  it("stores publication on while the source is a draft — it waits for the source (§350)", async () => {
+    // The rule says what was asked; `materializeSeries` publishes a date only while the source is
+    // live too, and the editor says "waiting" for exactly this state. The create page's own
+    // "Publică datele noi automat" stores the same thing for a new draft.
     const source = await seedSource({ published: false, rule: weekly(false) });
-    const refused = await setRepeatPublish(db, { actor: admin, eventId: source.id, publish: true }).catch((e: unknown) => e);
-    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
-    // Refused, not silently ignored: the rule is untouched.
-    expect(await ruleOf(source.id)).toEqual(weekly(false));
+    await setRepeatPublish(db, { actor: admin, eventId: source.id, publish: true });
+    expect(await ruleOf(source.id)).toEqual(weekly(true));
+  });
+
+  it("switches the source's rule from any date of the series, and the trail says who (§350)", async () => {
+    const source = await seedSource({ published: true, rule: weekly(false) });
+    const [copy] = await db
+      .insert(events)
+      .values({
+        type: "GROUP_RUN",
+        startsAt: new Date("2026-10-18T08:00:00+03:00"),
+        timezone: "Europe/Bucharest",
+        locationName: "Parcul Tractorul",
+        repeatOf: source.id,
+      })
+      .returning();
+    await setRepeatPublish(db, { actor: admin, eventId: copy.id, publish: true });
+    expect(await ruleOf(source.id)).toEqual(weekly(true));
+    expect(await ruleOf(copy.id)).toBeNull();
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.repeat_publish_changed"));
+    expect(trail).toHaveLength(1);
+    expect(trail[0]).toMatchObject({ actorStaffUserId: admin.id, entityId: source.id, metadataJson: { from: false, to: true, fromDate: copy.id } });
+
+    // And "Oprește recurența" from the same copy stops the source's rule.
+    await stopRepeat(db, { actor: admin, eventId: copy.id });
+    expect(await ruleOf(source.id)).toBeNull();
   });
 
   it("lets the switch go off even while the source is not published", async () => {

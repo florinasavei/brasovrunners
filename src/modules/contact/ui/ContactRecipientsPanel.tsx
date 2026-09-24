@@ -11,6 +11,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
 import type { ContactRecipientsState } from "@/modules/contact/recipients";
 import type { Locale } from "@/i18n/routing";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
@@ -69,12 +70,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       {recipients.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
           {t("emails.contacts.updatedAt", {
-            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-              dateStyle: "medium",
-              timeStyle: "short",
-              hourCycle: "h23",
-              timeZone: "Europe/Bucharest",
-            }).format(recipients.updatedAt),
+            when: formatDay(recipients.updatedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
           })}
         </Typography>
       )}

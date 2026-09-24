@@ -21,7 +21,7 @@ describe("DECISIONS.md §247 the club's own wording", () => {
   const sample: TemplateData = {
     participantName: "Ana Popescu",
     eventTitle: "Crosul de toamnă",
-    eventStartsAtFormatted: "duminică, 4 octombrie 2026, 09:00",
+    eventStartsAtFormatted: "duminică, 4 oct. 2026, 09:00",
     bibNumber: 42,
     checkinCode: "EXAMPL",
     checkinQrUrl: "https://example.test/qr.png",

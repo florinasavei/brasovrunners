@@ -13,8 +13,8 @@ const DATA: TemplateData = {
   participantName: "Ana Pop",
   eventTitle: "Crosul de toamnă",
   eventLocationName: "Poiana Brașov, la telecabină",
-  eventStartsAtFormatted: "duminică, 11 octombrie 2026, 09:00",
-  eventStartsAtFormattedOther: "Sunday 11 October 2026, 09:00",
+  eventStartsAtFormatted: "duminică, 11 oct. 2026, 09:00",
+  eventStartsAtFormattedOther: "Sunday, 11 Oct 2026, 09:00",
   eventUrl: "https://example.test/ro/evenimente/crosul-de-toamna",
   contactUrl: "https://example.test/ro/contact",
   eventsUrl: "https://example.test/ro/evenimente",
@@ -28,9 +28,9 @@ describe("§331 the update notice", () => {
     const email = build("EVENT_UPDATE_NOTICE", { updateChanges: ["place", "time"] }, DATA.eventUrl);
     expect(email.subject).toBe("Detalii actualizate pentru Crosul de toamnă / Updated details for Crosul de toamnă");
     expect(email.text).toContain("Locul de întâlnire este acum: Poiana Brașov, la telecabină.");
-    expect(email.text).toContain("Data și ora sunt acum: duminică, 11 octombrie 2026, 09:00.");
+    expect(email.text).toContain("Data și ora sunt acum: duminică, 11 oct. 2026, 09:00.");
     expect(email.text).toContain("The meeting point is now: Poiana Brașov, la telecabină.");
-    expect(email.text).toContain("The date and time are now: Sunday 11 October 2026, 09:00.");
+    expect(email.text).toContain("The date and time are now: Sunday, 11 Oct 2026, 09:00.");
     expect(email.text).not.toContain("Programul actualizat");
     expect(email.text).toContain(`Vezi pagina evenimentului: ${DATA.eventUrl}`);
   });
@@ -41,7 +41,7 @@ describe("§331 the update notice", () => {
       eventRaceStartsAtFormatted: "10:00",
       eventProgramme: ["09:00 Ridicarea kiturilor (Cort)"],
     });
-    expect(email.text).toContain("Data și ora sunt acum: duminică, 11 octombrie 2026, 09:00; startul cursei la 10:00.");
+    expect(email.text).toContain("Data și ora sunt acum: duminică, 11 oct. 2026, 09:00; startul cursei la 10:00.");
     expect(email.text).toContain("Programul actualizat: 09:00 Ridicarea kiturilor (Cort).");
   });
 

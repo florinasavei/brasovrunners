@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languageTab, openEditorBox } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344) — a partner is a card of
@@ -30,10 +31,14 @@ test("the editor adds a partner with two links, and the preview shows both under
   await field("event.locationName").fill("Parcul Tractorul");
   await field("translations.ro.title").fill(`Cros parteneri ${suffix}`);
   await field("translations.ro.slug").fill(`cros-parteneri-${suffix}`);
-  await page.getByRole("tab", { name: /English/ }).click();
+  await languageTab(page, "title", "en").click();
   await field("translations.en.title").fill(`Partners cross ${suffix}`);
+  await languageTab(page, "address", "en").click();
   await field("translations.en.slug").fill(`partners-cross-${suffix}`);
-  await page.getByRole("tab", { name: /Română/ }).click();
+
+  // The partners' cards live in their own box, "Parteneri — „Împreună cu”" (§350, the editor's
+  // boxes), folded until it is opened.
+  await openEditorBox(page, "Parteneri");
 
   // The partner's card: its own name box, and its links — the first row is the spare line,
   // the second comes from "Adaugă un link". Scoped to the partners' own container, whose id

@@ -29,6 +29,13 @@ type Props = {
    * actions behind one set of fields.
    */
   formAction?: (formData: FormData) => void | Promise<void>;
+  /**
+   * The id of the form this button submits, when it sits inside another one (§350): the event
+   * editor's "Alocă numerele" is drawn in the bib card of the save form, and posts the small form
+   * rendered after it — HTML forms cannot nest, and the `form` attribute is how a control belongs
+   * to a form it is not inside.
+   */
+  form?: string;
 };
 
 /**
@@ -56,6 +63,7 @@ export default function ConfirmSubmitButton({
   variant = "outlined",
   size = "small",
   icon,
+  form,
 }: Props) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
@@ -71,6 +79,7 @@ export default function ConfirmSubmitButton({
       <Button
         ref={anchor}
         type="submit"
+        form={form}
         formAction={formAction}
         variant={variant}
         color={color}

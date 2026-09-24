@@ -5,6 +5,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
@@ -37,6 +38,12 @@ type Props = {
 
 /** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
+
+/** The sample event's start — Sunday 4 October 2026, 09:00 in Brașov — as a message writes it. */
+const SAMPLE_STARTS_AT = new Date("2026-10-04T06:00:00Z");
+function sampleWhen(locale: EmailLocale): string {
+  return formatDay(SAMPLE_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
+}
 
 /**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
@@ -122,8 +129,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     participantName: tRo ? "Ana Popescu" : "Ana Popescu",
     eventTitle: tRo ? "Crosul de toamnă" : "The autumn cross",
     eventLocationName: tRo ? "Stația de telecabină Tâmpa" : "Tâmpa cable-car station",
-    eventStartsAtFormatted: tRo ? "duminică, 4 octombrie 2026, 09:00" : "Sunday, 4 October 2026, 09:00",
-    eventStartsAtFormattedOther: tRo ? "Sunday, 4 October 2026, 09:00" : "duminică, 4 octombrie 2026, 09:00",
+    // Through the one helper the send path uses (§349), so the preview cannot drift from the mail.
+    eventStartsAtFormatted: sampleWhen(emailLocale),
+    eventStartsAtFormattedOther: sampleWhen(tRo ? "en" : "ro"),
     currentStatus: tRo ? "confirmată" : "confirmed",
     checkinCode: "EXAMPL",
     checkinQrUrl: `${env.APP_BASE_URL}/api/registrations/qr/EXAMPL.png`,

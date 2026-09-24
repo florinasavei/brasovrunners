@@ -3,6 +3,7 @@ import type { EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
@@ -152,11 +153,10 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
   // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
   if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
-    data.holdExpiresAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-      dateStyle: "long",
-      timeStyle: "short",
-      timeZone: eventDetails?.timezone ?? "Europe/Bucharest",
-    }).format(registration.holdExpiresAt);
+    // Each half of the bilingual message in its own words (§96, §349).
+    const holdZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    data.holdExpiresAtFormatted = formatInSentence(registration.holdExpiresAt, holdZone, locale);
+    data.holdExpiresAtFormattedOther = formatInSentence(registration.holdExpiresAt, holdZone, otherLocale(locale));
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
@@ -172,10 +172,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     const note = readEventNoticeText((row.payloadJson as { note?: unknown } | null)?.note);
     if (note) data.organizerNote = note;
     if (updateChanges.includes("time") && eventDetails?.raceStartsAt) {
-      data.eventRaceStartsAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-        timeStyle: "short",
-        timeZone: eventDetails.timezone,
-      }).format(eventDetails.raceStartsAt);
+      data.eventRaceStartsAtFormatted = formatTime(eventDetails.raceStartsAt, { locale, timeZone: eventDetails.timezone });
     }
   }
   // "{event} a fost anulat" (§331): the reason the organizer typed, and nothing to act on.
@@ -399,11 +396,11 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
         : undefined;
       // Beside the calendar file, never instead of it: the confirmation carries both (§174).
       if (pdf) attachments = [...(attachments ?? []), { filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }];
-      data.signedAtFormatted = new Intl.DateTimeFormat(signed.locale === "ro" ? "ro-RO" : "en-GB", {
-        dateStyle: "long",
-        timeStyle: "short",
-        timeZone: eventDetails?.timezone ?? "Europe/Bucharest",
-      }).format(signed.acceptedAt);
+      // In the message's language — the registration's — and the other half in its own (§349);
+      // the PDF beside it is in the declaration's.
+      const signedZone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+      data.signedAtFormatted = formatInSentence(signed.acceptedAt, signedZone, locale);
+      data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
     }
   }
 
@@ -441,12 +438,22 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   });
 };
 
-/** "duminică, 11 octombrie 2026, 09:00" / "Sunday 11 October 2026, 09:00", in the event's zone. */
+/**
+ * "duminică, 11 oct. 2026, 09:00" / "Sunday, 11 Oct 2026, 09:00", in the event's zone (§349).
+ *
+ * In the language's own case: nearly every template sets it inside a sentence ("programat
+ * duminică, …"); the one line it starts — the facts under the heading — capitalises it there.
+ */
 function formatEventStart(event: { startsAt: Date; timezone: string } | undefined, locale: Locale): string | undefined {
   if (!event) return undefined;
-  return new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: event.timezone,
-  }).format(event.startsAt);
+  return formatInSentence(event.startsAt, event.timezone, locale);
+}
+
+/** The long form with its time, inside a sentence of a message (§349). */
+function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
+  return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
+}
+
+function otherLocale(locale: Locale): Locale {
+  return locale === "ro" ? "en" : "ro";
 }

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.71-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.73-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.71-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.73-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14050,3 +14050,91 @@ This section records what changed when they landed together, on a `qa` that alre
 - The whole Playwright suite ran on both projects with one worker, against a production build and a fresh, isolated database: 309 passed, none failed. The 13 skipped are tests that run on one viewport by design.
 
 Baseline `BR-V1.71-2026-09-24`.
+
+## 348. An event may cap its waiting list
+
+The owner: "for the waiting list, I also need to set a queue length". A long line nobody at its tail will ever leave costs the club emails (Mailgun's allowance is tight) and promises it cannot keep.
+
+**The column.** `events.waitlist_capacity`, nullable, `CHECK >= 0`: null is no limit (every existing event unchanged), 0 is no waiting list at all. Expand-only migration (0066 on the branch, renumbered at integration). It only counts on a capped event; an uncapped one never waitlists anybody.
+
+**What the line is.** `WAITLISTED` plus every offer still open, which is the line the queue panel already shows (§92). An offered person holds a place for 24 hours and has not taken it, so an offer frees its slot when it is accepted, declined or lapses, not when it is made. An offer past its deadline is not counted, the same way `countOccupied` stops counting its place. `TEST` rows stand in the line like real ones (`AGENTS.md` §12.6).
+
+**Where it is decided.** `allocateOrWaitlist` refuses with `waitlistFullError` when there is no place and the line is at its limit. It counts under the same event lock that decides the place, so two registrations can never both take the last slot (`tests/concurrency/capacity.test.ts`). Every door into the queue goes through it: the email confirmation, a restart, the desk's paper confirmation, a late signature. The refusal rolls the whole transaction back, the token spend included, so the same link works once a slot opens. `submitRegistration` refuses the same way before anything is written or the throttle spent, and before the participant is looked up, so the answer cannot say whether an address is registered (§19.4). The limit is read off the locked row only (`withLockedRow`), never the caller's copy. Lowering it removes nobody; it refuses the next person.
+
+**§160 amended: a full line gives a lapsed hold to the newcomer.** §160 keeps a declaration hold past its deadline until somebody wants the place, and "somebody" used to be only a person in the line. On an event with no waiting list, or one whose line is full, nobody can ever become that person. A runner who never signed would then keep the place until the race while every newcomer was turned away, and the event page would say "full" over a place nobody was going to use. So a newcomer the line has no room for counts as one person wanting a place. The allocator releases one lapsed hold for them, the oldest deadline first, under the same lock (`expireStaleHolds`' `wanting`), and gives them the place directly. One newcomer, one hold. The other lapsed holds stay, and can still be signed online or on paper. Where the line has room, nothing changes: the count says full, the newcomer joins the line, and the kept hold is released and offered to them at once, as before. The form's pre-check and the event page count with the same rule (`domain/waitlist.ts#occupiedForNewcomer`), so they offer the button exactly when the allocator would give the place. The public cache adds declaration-hold deadlines to its clock on an event whose line has a limit (`listPlaceCountInstants`), because there a hold lapsing changes the count.
+
+**Public.** The event page says "Mai sunt N locuri pe lista de așteptare" under the button while the line has room. It says "Locurile și lista de așteptare sunt pline." with no button when the line is full. An event with no line is closed as full without mentioning one. The form says the same before anybody types, and refuses with it while keeping what was typed. The confirmation and declaration pages explain a refusal.
+
+**Backoffice.** The editor and the create page have "Lungimea maximă a listei de așteptare" beside the places, with bounds from the Zod schema (§315); absent means not edited. It is refused on an event that takes no registrations here, cleared on a group run, and carried by a repeat, a duplicate and a series edit. The queue panel shows "7 din 10", counted from the rows it lists. Staff entry, the desk walk-in and the desk's paper confirmation are refused with their own sentence; there is no bypass (§15.11). A walk-in whose row went in and whose confirmation, a moment later, found the line full is told that the row stands unconfirmed. Giving a queued person a free place is unaffected. A batch of test rows stops at the limit and says how many went in, as a counted phrase.
+
+Baseline `BR-V1.72-2026-09-24`.
+
+## 349. Every date a person reads carries its day of the week
+
+**Asked by the owner, 2026-09-24:** "I want all dates to show the day of the week as well, like 'Sâmbătă, 17 Jan, 2027'." About a hundred call sites formatted dates their own way: `dateStyle: "medium"` here, `"full"` there, a weekday on a few, the month spelled out on some and abbreviated on others.
+
+**Decided: one helper writes every date a person reads.** `src/i18n/dates.ts` imports nothing beyond `Intl`, so a Server Component, an email, a PDF and the share pictures all use the same code. It has two styles:
+
+- **long**, for event pages, emails, the declaration, headings, facts, share pictures and the bib: "Sâmbătă, 16 ian. 2027" / "Saturday, 16 Jan 2027";
+- **short**, for tables, list rows, chips, the desk, the timeline and backoffice panels: "Sâm., 16 ian. 2027" / "Sat, 16 Jan 2027".
+
+`withTime` adds ", 09:30". The time is always on a 24-hour clock and never AM/PM.
+
+**Composed, not one `Intl` pattern.** The weekday, the day-month-year and the time are formatted separately and joined with ", " by our code. ICU versions disagree on the comma after an English weekday, so one pattern could print the same date two ways on two machines.
+
+**Capitalisation follows the position.** `position: "start"` is the default and capitalises the first letter, for a label, line, cell or heading. `"inline"` keeps Romanian's lower case inside a sentence, as in "se deschid pe joi, 1 oct. 2026, 18:00". English weekdays are capitalised either way. Where a Romanian sentence had "la" in front of a date, it now says "pe", because the date starts with a weekday. That covers the emails and the legal PDF, and the declaration PDF's "Generat pe", "Semnat electronic pe" and "înregistrat de … pe".
+
+**The caller names the zone.** An event date is written in the event's own zone, and a platform timestamp in `CLUB_TIME_ZONE`, which is defined once, in the helper; the scheduler's quiet hours read the same constant. A calendar day with no time, such as a `date` column or an album's `takenOn` stored at noon UTC, goes through `formatCalendarDay`, which has no zone to get wrong.
+
+**The language is the reader's.** A page uses its own locale. An email uses the registration's language, and each half of a bilingual email writes its dates in its own language; the hold deadline and the signing time used to be in the first half's. The declaration PDF uses the declaration's language, and the bib and share pictures use the picture's.
+
+The same formats are also registered as next-intl `formats.dateTime` (`dayLong`, `dayShort`, `dayLongTime`, `dayShortTime`, `time`), so a message can carry `{when, date, dayLong}`.
+
+**Kept as they were:** birth dates, where a weekday means nothing; the date and time inputs (the pickers' 30.09.2026 / 19:00, §303); the build stamp; and every machine format: CSV and xlsx exports, JSON, the calendar file's DTSTART/DTEND, the sitemap, URLs and the ISO text of `<time dateTime>`. The month and year calendar grids keep their layout: the column header is the weekday and the heading names the month and year, so a cell carries only the time.
+
+**Guards.** `tests/unit/i18n/dates.test.ts` fails on any `dateStyle` or `timeStyle` in `src/`, and on any `Intl.DateTimeFormat` built with a display locale outside the helper. It also fails on any client island that formats a date itself: the browser's ICU is not the server's, so an island is handed the server's string (§324).
+
+**Verification:** BR-REQ-040-03 criteria 4–6: `tests/unit/i18n/dates.test.ts`, `tests/unit/events/weekday-dates.test.ts`; criterion 1 through the helper in `tests/unit/i18n/formats.test.ts`.
+
+Integrated over the third batch (§341–§347) and the waiting-list length (§349). The weekday branch predated both, so every date they added was routed through `src/i18n/dates.ts` and the guard (`tests/unit/i18n/dates.test.ts`) passes on the whole tree:
+- **The job cadence card (§334):** the last real run, the next check at the latest, the last ping and "Setat {when}" are platform timestamps. They read in the club's zone, in the short form with the time and inline after the colon: "ultima rulare reală: joi, 24 sept. 2026, 10:15". "Setat la {when}" lost its "la", as every other "Setat {when}" line did.
+- **The Neon limits card (§335):** the period's end reads long and inline: "perioada se încheie pe joi, 1 oct. 2026".
+- **The backoffice list's series draft chips (§341):** the short form, capitalised because each starts its link ("Vin., 9 oct. 2026").
+- **The list's repeat-horizon banner:** read in the club's zone, since it belongs to no single event.
+- **The series sentence:** keeps §341's counted phrase and writes its last date with the weekday ("12 date, până pe duminică, 14 dec. 2026").
+
+On the event page, the door reads one cached entry (§333). That entry carries the free places, the event's size, the waiting list's room and its limit. The fill line (§346), "Mai sunt N locuri pe lista de așteptare" and the "full" sentences all come from it, never from a query per visitor. The merge dropped the weekday branch's leftover direct read.
+
+Baseline `BR-V1.72-2026-09-24`.
+
+## 350. The event editor as one page of boxes, create and edit alike
+
+The owner asked for the event editor to read like the event's fact sheet, and for create and edit to stop drifting apart. Both pages now render one `EventEditorLayout`. On a phone the side column (Publicare, Recurență) comes first; from `md` up it is pinned on the right. The main column holds fourteen boxes in three labelled groups: "Evenimentul", "Ziua evenimentului și participanții", and "Traseu, legături și prezentare", followed by the always-open Salvare. Each box answers one question and shows its answer while shut (`box-summaries.ts`, ro-RO dates in the event's zone), so the editor opens as a fact sheet and one opens only the box to change.
+
+- **Languages per box.** Every box with per-language text has its own Română | English tabs with an "· incomplet" mark. The mark on first paint and the live mark use the same rule: a required text missing here, or, for parity texts, each field on its own written in another language and not here. There is no page-wide language switch, so a shared setting never hides behind a language tab.
+- **Registration is one box.** It holds named cards: the period, the conditions and declaration, the confirmation window (§104), the race numbers with the bib design (§173, §249; now on create too) and allocation and printing, and the public list. Only the chosen mode's fields show (`OnlyForMode`, the twin of §111's `OnlyForType`).
+- **A hidden box never blocks the save** (extending §111; found by review). Hidden boxes stay in the document so switching back finds what was typed, but they keep their `min`, `max` and `pattern`. A link typed as `www.club.ro` under "La organizator", then hidden by a switch to "Pe site", made the browser refuse the press and then fail to focus a box with `display: none`: Salvează did nothing and said nothing.
+  - In the browser, every box of a hidden block is read-only while hidden (`ShownWhen`). The standard skips read-only controls when it validates and still posts their values.
+  - In the service, `ignoreHiddenFields` replaces what the type or mode hides before the schema reads the form. `normalizeForType` and `normalizeForMode` still run after it.
+  - What every mode keeps (the confirmation days, the minimum age, the bib band) is checked as typed, because it is stored as typed. A refusal over one of those shows its hidden block until the mode changes.
+- **Salvare asks which dates of a series a save reaches**: "Doar această dată / Această dată și următoarele / Toate datele", as radios. "This and the following" is the default (reversing §240), with a count sentence and the dates one by one folded under it. The header chips of §134 are removed.
+- **Recurență works from any date of a series**: the rule, the next five dates (from midnight today in the event's zone), the renewal, the publish switch with its own save, and "Oprește recurența" resolved to the source. Switching publication on for a draft source is stored and waits until the source is live. The create page's box follows its tick in its closed line.
+- **Folds.** They start closed (§336) and open for a named reason. This adds one reason, `primary`: the page's own verb stays open on every arrival. That is the editor's Publicare box and the Recurență box (BR-REQ-050-02 criterion 7). It is rare by design.
+- **Warnings once people have registered.** The five boxes a change reaches (date, place, programme, registration, status) turn amber and show the count of real registrations.
+- **Refusals reach the box.** A refusal, or the browser's own, opens every fold and tab around the box it names (`ActionForm`, `revealField`, `REVEAL_EVENT`). Links to a box are at least 44px tall.
+
+Field names are unchanged, so the §315 kept form, its summary and its recall read the same names, now labelled with the box that holds them.
+
+**Integrated with the third and fourth batches (§341–§347 and the waiting-list cap / the weekday on every date).** The one-page editor absorbs what those branches added to the deleted `EventFieldsForm`, and resurrects none of it. Each field keeps its name, its island and its refusal, in the box that answers its question. The cost's amount and its payment or donation link (§343, `CostFields`) sit under the cost select, which now offers `DONATION`, at the top of "Participare și înscrieri". The partners' cards with typed links (§344, `CoHostRowsEditor`) are box 12's content. The waiting list's length sits beside the places in `capacity-row`, inside "Pe site". Both pages render every box once, and `eventFieldsFrom` reads every field once. Refusal labels name the box first ("Participare și înscrieri › Suma"), and a partner's link is named by card and row ("Partenerul 2, linkul 3: …").
+
+**The waiting list's length follows the capacity when the mode hides it.** The fourth batch refused a length on an event that takes no registrations here "as the capacity is refused". Since this editor, the capacity is not refused there: the mode hides it, and what the mode hides is ignored (§111 extended to the mode). So the length is ignored the same way and stored as none. A caller that never posts the box writes nothing, so a save that did not mention the limit never lifts it. `assertCoherentRegistrationBlock` still refuses the combination for anything that reaches the service another way.
+
+**Dates in the editor are the site's dates.** Box summaries, the risk sentences, the confirmation card's three days, the series' dates, the Salvare sentence, the rule's end, the renewal horizon and "thanks sent on" all go through `src/i18n/dates.ts`. They use the short form, in the reader's language and the event's own zone, capitalised where they start a line and in lower case inside a sentence. This replaces the ro-RO numeric dates with a two-letter weekday. The series' dates reach the Salvare island as server-written strings (§324). The Recurență box's live sentence is handed the seven weekday names by the server (`series-sentence.ts#weekdayNames`). While the end date is being typed, that sentence echoes it in the pickers' `DD.MM.YYYY` (§303). Once saved, the rule is written on the server with its weekday.
+
+**The drafts hint follows the switch to its new place.** The list's explanation of a series' draft dates (§341 hints) named the old form's "Evenimentul se repetă" and its button. It now says: on any date of the series, in the "Recurență" box, tick "Publică datele noi automat" and press "Salvează setarea". Those are the words of the controls that are actually there.
+
+**A place to be announced hides its boxes without guarding them (re-review).** With "Locația se anunță mai târziu" on, the place block was hidden but the map link kept its https pattern. A link typed as `www.harta.ro` before the switch went on made the browser refuse Salvează over a box it could not show, and nothing was said. The block is now a `ShownWhen`: its boxes are read-only while hidden, so the browser does not check them, and they are still posted and kept. The service does the same half. While the switch is on, a map link that cannot be stored is written as no link rather than refused over a box nobody can see. A valid hidden link is saved as typed, and once the place is announced the box is on screen and checked as typed.
+
+**Two small corrections.** A block revealed by a refusal stays shown only while the answer it was revealed under holds: changing the type or mode clears the reveal, so switching back later hides the block again. The create page's "Titlu și rezumat" opens as a `primary` fold, because it is the first thing a new event is asked. It no longer opens as `attention`, which is kept for something inside that asks for action.
+
+Baseline `BR-V1.72-2026-09-24`.

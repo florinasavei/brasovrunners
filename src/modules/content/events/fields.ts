@@ -612,6 +612,13 @@ export const eventFieldsSchema = z
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
     /**
+     * How long the waiting list may grow (§348): empty is no limit, zero is no waiting list at
+     * all, and the bounds are the database's CHECK said again so the box carries `min` (§315).
+     * Optional, and absent means "this caller is not editing it" — the service writes nothing
+     * then, so a save from anything that does not post the box keeps the limit the organizer set.
+     */
+    waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
+    /**
      * The race's own band (§173): where its numbers start, and the colour the sheet prints
      * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
      * blue, and a volunteer sorting envelopes can tell them apart across a table.

@@ -6,7 +6,8 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -86,7 +87,7 @@ export default async function GalleryPage({ params }: Props) {
  */
 async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSummary[]> }) {
   const t = await getTranslations("Gallery");
-  const format = await getFormatter();
+  const locale = await getLocale();
   const albums = await pending;
 
   return (
@@ -122,7 +123,7 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
                     {album.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {format.dateTime(album.takenOn, { dateStyle: "long" })} · {t("photoCount", { count: album.photoCount })}
+                    {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
                   </Typography>
                 </CardContent>
               </CardLink>

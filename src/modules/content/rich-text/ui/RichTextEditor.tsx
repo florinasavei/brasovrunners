@@ -24,7 +24,7 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
-import { type ComponentProps, useCallback, useRef, useState, type ReactNode } from "react";
+import { type ComponentProps, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import {
@@ -233,6 +233,19 @@ function RichTextEditorIsland({
   const showOverTable = useCallback(({ editor: current }: { editor: Editor }) => current.isActive("table"), []);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
+  /*
+    The hidden value is written by React, which fires no event a form can hear, so every write is
+    announced with a bubbling `input` from the hidden box itself (§350): the event editor's tab
+    marks ("· incomplet") and the "missing for publication" list re-read the form on `input`.
+    Not on mount — nothing was typed yet.
+  */
+  const hiddenValue = useRef<HTMLInputElement>(null);
+  const announced = useRef(value);
+  useEffect(() => {
+    if (announced.current === value) return;
+    announced.current = value;
+    hiddenValue.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [value]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
   const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
@@ -574,7 +587,7 @@ function RichTextEditorIsland({
       </Dialog>
 
       {/* The value the form posts. Present and correct even before the editor has loaded. */}
-      <input type="hidden" name={name} value={value} readOnly />
+      <input ref={hiddenValue} type="hidden" name={name} value={value} readOnly />
 
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
         <Stack

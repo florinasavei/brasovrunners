@@ -6,7 +6,8 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { CLUB_TIME_ZONE, formatCalendarDay, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -131,7 +132,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
-  const format = await getFormatter();
 
   const db = getDb();
   const now = new Date();
@@ -191,8 +191,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const basePath = getPathname({ locale, href: "/admin" });
 
-  const shortDate = (event: EditableEvent) =>
-    format.dateTime(event.startsAt, { timeZone: event.timezone, day: "numeric", month: "short", year: "numeric" });
+  // A table cell: the short form, with its weekday (§349).
+  const shortDate = (event: EditableEvent) => formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" });
 
   // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
   const datesWords = (count: number) => tEvent(`series.count.${countForm(count, locale)}`, { count });
@@ -244,7 +244,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               return (
                 <Typography variant="body2" color="text.secondary">
                   {renewal.until
-                    ? t("events.seriesRenewsUntil", { weeks, until: format.dateTime(new Date(`${renewal.until}T12:00:00`), { dateStyle: "long" }) })
+                    ? t("events.seriesRenewsUntil", { weeks, until: formatCalendarDay(renewal.until, { locale, style: "long", position: "inline" }) })
                     : t("events.seriesRenewsForever", { weeks })}
                 </Typography>
               );
@@ -264,7 +264,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                         href={{ pathname: "/admin/events/[id]", params: { id: member.event.id } }}
                         style={notes.get(member.event.id)?.kind === "cancelled" ? { textDecoration: "line-through" } : undefined}
                       >
-                        {format.dateTime(member.event.startsAt, { timeZone: member.event.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                        {formatDay(member.event.startsAt, { locale, timeZone: member.event.timezone, style: "short", withTime: true })}
                       </Link>
                       {notes.has(member.event.id) && <EditionMark note={notes.get(member.event.id) as EditionNote} size={16} />}
                       <Chip
@@ -352,7 +352,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 }
                 dates={drafts.slice(0, DRAFT_LINKS).map((draft) => ({
                   id: draft.id,
-                  label: format.dateTime(draft.startsAt, { timeZone: draft.timezone, weekday: "short", day: "numeric", month: "short" }),
+                  label: formatDay(draft.startsAt, { locale, timeZone: draft.timezone, style: "short" }),
                   href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: draft.id } } }),
                 }))}
                 more={drafts.length > DRAFT_LINKS ? t("events.seriesDraftsMore", { count: drafts.length - DRAFT_LINKS }) : null}
@@ -360,11 +360,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   // The words of the real controls, read from the catalogue rather than retyped,
                   // so the hint names exactly the button and the heading the reader will find:
                   // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
-                  // under the source's "Evenimentul se repetă" (§341 hints).
+                  // in the source's "Recurență" box — its tick and its own save (§341 hints,
+                  // moved by the editor's boxes, §350).
                   always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
                   autoPublishOff: t("events.seriesDraftsWhyOff", {
-                    section: t("editor.repeatRuleTitle"),
-                    button: t("editor.repeatPublishTurnOn"),
+                    section: t("editor.boxes.recurrence.title"),
+                    tick: t("editor.repeatPublishAuto"),
+                    button: t("editor.repeatPublishSave"),
                   }),
                   sourceNotPublished: t("events.seriesDraftsWhySource"),
                 })}
@@ -380,12 +382,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       hideBelow: "md",
       render: ({ members }) =>
         members.length > 1
-          ? format.dateTimeRange(members[0].event.startsAt, members[members.length - 1].event.startsAt, {
-              timeZone: members[0].event.timezone,
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
+          ? formatDayRange(members[0].event.startsAt, members[members.length - 1].event.startsAt, { locale, timeZone: members[0].event.timezone, style: "short" })
           : shortDate(members[0].event),
     },
     {
@@ -436,7 +433,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           <Alert severity="success">
             {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
               dates: datesWords(countOf(created)),
-              until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
+              // Inside the sentence, in the club's zone (§350 weekday on every date).
+              until: formatDay(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
             })}
           </Alert>
         )}

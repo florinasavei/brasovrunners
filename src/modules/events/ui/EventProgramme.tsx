@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { getFormatter, getLocale } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 import { Fragment } from "react";
+import { formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -27,13 +28,12 @@ export default async function EventProgramme({
   heading: string;
 }) {
   const locale = (await getLocale()) as Locale;
-  const format = await getFormatter();
   const rows = localizedSchedule(readScheduleItems(scheduleItems), locale);
   const prose = !isRichTextEmpty(readRichText(scheduleJson));
   if (rows.length === 0 && !prose) return null;
 
   const days = [...new Set(rows.map((row) => dayKey(row.startsAt, timeZone)))];
-  const time = (at: Date) => format.dateTime(at, { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const time = (at: Date) => formatTime(at, { locale, timeZone });
 
   return (
     <Box component="section" id="schedule" sx={{ mt: 4 }}>
@@ -45,8 +45,10 @@ export default async function EventProgramme({
           {days.map((day) => (
             <Fragment key={day}>
               {days.length > 1 && (
-                <Typography component="div" variant="subtitle2" sx={{ gridColumn: "1 / -1", mt: 1, textTransform: "capitalize" }}>
-                  {format.dateTime(rows.find((row) => dayKey(row.startsAt, timeZone) === day)?.startsAt ?? new Date(), { timeZone, weekday: "long", day: "numeric", month: "long" })}
+                /* The day heading in the one long form (§349), its capital from the helper: CSS's
+                   `capitalize` would have capitalised the month as well. */
+                <Typography component="div" variant="subtitle2" sx={{ gridColumn: "1 / -1", mt: 1 }}>
+                  {formatDay(rows.find((row) => dayKey(row.startsAt, timeZone) === day)?.startsAt ?? new Date(), { locale, timeZone, style: "long" })}
                 </Typography>
               )}
               {rows

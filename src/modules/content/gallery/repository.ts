@@ -278,9 +278,9 @@ export async function findPublishedAlbumSiblingSlug<T extends Record<string, unk
 export async function listEventsForAlbumSelect<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
-): Promise<Array<{ id: string; title: string; startsAt: Date }>> {
+): Promise<Array<{ id: string; title: string; startsAt: Date; timezone: string }>> {
   return db
-    .select({ id: events.id, title: eventTranslations.title, startsAt: events.startsAt })
+    .select({ id: events.id, title: eventTranslations.title, startsAt: events.startsAt, timezone: events.timezone })
     .from(events)
     .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
     .orderBy(desc(events.startsAt))

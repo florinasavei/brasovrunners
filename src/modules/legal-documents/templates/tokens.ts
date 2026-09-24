@@ -34,9 +34,9 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
   { token: "{{participantIdDocument}}", messageKey: "participantIdDocument", example: "CI XB 654321" },
   { token: "{{guardianIdDocument}}", messageKey: "guardianIdDocument", example: "CI XB 123456" },
   { token: "{{event}}", messageKey: "event", example: "Crosul aniversar Brașov Runners" },
-  { token: "{{eventDate}}", messageKey: "eventDate", example: "21 noiembrie 2026" },
+  { token: "{{eventDate}}", messageKey: "eventDate", example: "sâmbătă, 21 nov. 2026" },
   { token: "{{eventLocation}}", messageKey: "eventLocation", example: "Parcul Nicolae Titulescu" },
-  { token: "{{signedAt}}", messageKey: "signedAt", example: "20 septembrie 2026, 19:42" },
+  { token: "{{signedAt}}", messageKey: "signedAt", example: "duminică, 20 sept. 2026, 19:42" },
 ];
 
 /** Which tokens a body already uses — what the legend marks as "in this text". */

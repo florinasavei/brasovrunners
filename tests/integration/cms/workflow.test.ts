@@ -1040,19 +1040,20 @@ describe("BR-REQ-051-01 editorial workflow", () => {
    * seed used to be the only way to set.
    */
   describe("the registration block", () => {
-    it("refuses capacity and a declaration on an event that does not register here", async () => {
+    it("ignores a capacity the chosen mode hides, rather than refusing a box nobody can see (§350)", async () => {
+      // The editor keeps the "Pe site" fields in the document behind "Fără înscrieri"
+      // (`OnlyForMode`), so a capacity typed before the switch still posts: it is saved as none.
       const { event } = await seedEvent();
 
-      expect(
-        await codeOf(
-          saveEventFields(db, {
-            actor: editor,
-            eventId: event.id,
-            expectedVersion: event.version,
-            fields: { ...EVENT_FIELDS, registrationMode: "NONE", capacity: "20" },
-          }),
-        ),
-      ).toBe("VALIDATION_ERROR");
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, registrationMode: "NONE", capacity: "20" },
+      });
+      expect(saved.registrationMode).toBe("NONE");
+      expect(saved.capacity).toBeNull();
+      expect(saved.declarationDocumentId).toBeNull();
     });
 
     it("refuses an internal event with no declaration to sign", async () => {
@@ -1070,7 +1071,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ).toBe("VALIDATION_ERROR");
     });
 
-    it("refuses an external event with no link, and a link on any other mode", async () => {
+    it("refuses an external event with no link, and ignores a link behind any other mode (§350)", async () => {
       const { event } = await seedEvent();
       const link = ["https:/", "entries.example.test", "race"].join("/");
 
@@ -1085,16 +1086,16 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         ),
       ).toBe("VALIDATION_ERROR");
 
-      expect(
-        await codeOf(
-          saveEventFields(db, {
-            actor: editor,
-            eventId: event.id,
-            expectedVersion: event.version,
-            fields: { ...EVENT_FIELDS, registrationMode: "NONE", externalRegistrationUrl: link },
-          }),
-        ),
-      ).toBe("VALIDATION_ERROR");
+      // The organizer's link stays in the document behind "Fără înscrieri" and posts; it is
+      // saved as none, and switching back to "La organizator" is typing it again or not at all.
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, registrationMode: "NONE", externalRegistrationUrl: link, externalProvider: "Asociația X" },
+      });
+      expect(saved.externalRegistrationUrl).toBeNull();
+      expect(saved.externalProvider).toBeNull();
     });
 
     it("saves an external event with its provider and link", async () => {

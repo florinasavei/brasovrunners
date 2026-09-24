@@ -6,7 +6,12 @@
  * configuration a deployment must get right, validated with zod and fatal when wrong. These
  * are build facts nobody types, and a missing one is a badge that says "dev", never a
  * deployment that refuses to start.
+ *
+ * Its one import is `i18n/dates.ts`, which imports nothing itself — so nothing reachable from
+ * here can open a connection or read a cookie (`api/build-id` depends on that).
  */
+
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 
 export type BuildInfo = {
   /** The documentation baseline, e.g. `BR-V1.16-2026-09-04`, or empty when unknown. */
@@ -96,13 +101,6 @@ export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): 
   const date = new Date(info.committedAt);
   if (Number.isNaN(date.getTime())) return null;
 
-  return new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-    timeZone: "Europe/Bucharest",
-  }).format(date);
+  // A chip on /devs: the short form with the time (§349).
+  return formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
 }
