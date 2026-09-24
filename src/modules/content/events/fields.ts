@@ -6,6 +6,7 @@ import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { MAX_CO_HOSTS, isCoHostUrl } from "@/modules/events/domain/co-hosts";
+import { EVENT_COST_TYPES, type EventCostType, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -253,6 +254,26 @@ function placeRule(fields: { locationName: string | null; locationToBeAnnounced:
 }
 
 /**
+ * What each cost kind needs, and only that (`DECISIONS.md` §NNN): a paid event has to say how
+ * much, a donation has to say where. Named on the box the kind actually requires, so the
+ * refusal summary links the right one (§315) — the same shape as `placeRule` above. Absent
+ * (`undefined`) means this caller is not editing the cost fields at all, the discipline `links`
+ * and `bibDesign` follow, and is never a reason to refuse: only a caller that *is* editing them
+ * and left the required one blank is refused.
+ */
+function costRule(
+  fields: { costType: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
+  ctx: z.RefinementCtx,
+): void {
+  if (fields.costType === "PAID" && fields.costAmount !== undefined && !fields.costAmount) {
+    ctx.addIssue({ code: "custom", path: ["costAmount"], message: "a paid event must say how much" });
+  }
+  if (fields.costType === "DONATION" && fields.costUrl !== undefined && !fields.costUrl) {
+    ctx.addIssue({ code: "custom", path: ["costUrl"], message: "a donation needs the link where it is made, starting with https://" });
+  }
+}
+
+/**
  * One link row as the editor posts it (`DECISIONS.md` §332): a kind from the select, the
  * address, and a label in each language. Every box a string, empty allowed here; the list
  * below decides what a row means. Exported so the editor reads the boxes' ceilings and the
@@ -387,7 +408,21 @@ export const eventFieldsSchema = z
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
-    costType: optionalEnum(["FREE", "PAID"]),
+    costType: optionalEnum(EVENT_COST_TYPES),
+    /**
+     * What a paid event costs, or what a donation suggests (§NNN): free text, at most 60
+     * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input
+     * — absent means this caller is not editing the cost fields, the discipline `links` and
+     * `bibDesign` follow — but the editor always posts it, so a blank box while `PAID` is chosen
+     * is refused there, not silently accepted.
+     */
+    costAmount: optionalText(MAX_EVENT_COST_AMOUNT).optional(),
+    /**
+     * Where a paid event is settled, or where a donation is made (§NNN): https, like every other
+     * pasted link. Required by `costRule` below when `costType` is `DONATION`; optional on
+     * `PAID`. Same absent-means-not-editing discipline as `costAmount`.
+     */
+    costUrl: httpsUrl("a cost link must start with https://").optional(),
     mapUrl: httpsUrl("a map link must start with https://"),
     // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
     // and never a file: media storage is deferred (`AGENTS.md` §17).
@@ -543,7 +578,8 @@ export const eventFieldsSchema = z
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
   .strict()
-  .superRefine(placeRule);
+  .superRefine(placeRule)
+  .superRefine(costRule);
 
 export type EventFieldsInput = z.infer<typeof eventFieldsSchema>;
 

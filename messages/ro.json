@@ -200,8 +200,13 @@
     },
     "costValues": {
       "FREE": "Gratuit",
-      "PAID": "Cu taxă"
+      "PAID": "Cu taxă",
+      "DONATION": "Donație"
     },
+    "costPaidAmount": "Taxă: {amount}",
+    "costPaidWhere": "plata pe {host}",
+    "costDonation": "Donație: pe {host}",
+    "costDonationSuggested": "sugerat {amount}",
     "series": {
       "weekly": "În fiecare {days}",
       "fortnightly": "O dată la două săptămâni, {days}",
@@ -678,7 +683,15 @@
       "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
       "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
-      "costHelp": "Text liber: „Gratuit”, „50 lei”. Lasă gol dacă nu s-a stabilit un cost.",
+      "costHelp": "Ce plătește un participant. Platforma nu încasează bani — taxa sau donația se fac direct, la organizator sau la linkul de mai jos. Lasă „Nespecificat” dacă nu s-a stabilit încă.",
+      "costAmount": "Suma",
+      "costAmountHelp": "De exemplu „50 lei”. Obligatoriu la un eveniment cu taxă.",
+      "costPaidUrl": "Unde se plătește (opțional)",
+      "costPaidUrlHelp": "Linkul unde se face plata. Trebuie să înceapă cu https://.",
+      "costDonationUrl": "Link pentru donație",
+      "costDonationUrlHelp": "Obligatoriu. Linkul unde se face donația, pe alt site. Trebuie să înceapă cu https://.",
+      "costDonationAmount": "Suma sugerată (opțional)",
+      "costDonationAmountHelp": "De exemplu „50 lei”.",
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
@@ -768,7 +781,8 @@
       },
       "costValues": {
         "FREE": "Gratuit",
-        "PAID": "Cu taxă"
+        "PAID": "Cu taxă",
+        "DONATION": "Donație (pe alt site)"
       },
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",

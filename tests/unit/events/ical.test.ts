@@ -230,6 +230,18 @@ describe("the calendar file", () => {
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
   });
 
+  it("carries a paid event's amount and where it is paid, and a donation's host and suggested amount (§NNN)", () => {
+    const paid = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsRo);
+    expect(paid).toContain("Taxă: 50 lei · plata pe revolut.me");
+    const paidEn = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsEn);
+    expect(paidEn).toContain("Fee: 50 lei · payment on revolut.me");
+    const donation = calendarDescription(
+      { ...full, costType: "DONATION", costAmount: "50 lei", costUrl: "https://www.wingsforlifeworldrun.com/en/donate" },
+      labelsRo,
+    );
+    expect(donation).toContain("Donație: pe wingsforlifeworldrun.com · sugerat 50 lei");
+  });
+
   it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
     const three = calendarDescription(
       {

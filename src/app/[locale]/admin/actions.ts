@@ -201,6 +201,8 @@ function eventFieldsFrom(form: FormData) {
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,
     costType: value("costType") || null,
+    costAmount: value("costAmount"),
+    costUrl: value("costUrl"),
     mapUrl: value("mapUrl"),
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),

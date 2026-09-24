@@ -44,3 +44,26 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
     expect(labels["event.links"]).toBe("Links and files: at most 12 on one event");
   });
 });
+
+/**
+ * `costRule` (`content/events/fields.ts`) names `event.costAmount` only for a `PAID` event and
+ * `event.costUrl` only for a `DONATION` one, so each has one real label — never the raw name a
+ * caller sees when `ActionForm.labelOf` finds none (§NNN).
+ */
+describe("the cost amount and the donation link are named, not left as their own path", () => {
+  it("gives «Suma» and «Link pentru donație» in Romanian", async () => {
+    catalogue = ro;
+    locale = "ro";
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.costAmount"]).toBe("Suma");
+    expect(labels["event.costUrl"]).toBe("Link pentru donație");
+  });
+
+  it("gives «Amount» and «Donation link» in English", async () => {
+    catalogue = en;
+    locale = "en";
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.costAmount"]).toBe("Amount");
+    expect(labels["event.costUrl"]).toBe("Donation link");
+  });
+});

@@ -117,6 +117,10 @@ const PUBLIC_COLUMNS = {
   locationToBeAnnounced: events.locationToBeAnnounced,
   difficulty: events.difficulty,
   costType: events.costType,
+  // What a paid event costs, or what a donation suggests, and where either is paid (§NNN) —
+  // free text and an https link, read only through the phrase each surface builds from them.
+  costAmount: events.costAmount,
+  costUrl: events.costUrl,
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,

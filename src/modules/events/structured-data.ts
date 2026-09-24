@@ -183,13 +183,21 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // because `organizer` is one value there and an array of one reads as a list of one.
     organizer: organizers(event, organizationName),
     /**
-     * Brașov Runners events are free (the owner, 2026-09-19: "state somewhere that Brașov
-     * Runners events are always free — this also helps us pass the Google verifications").
-     * Google's event result wants an offer with a price; a club event that has not been
-     * marked PAID is offered at zero, in lei, at its own page.
+     * Whether a runner needs their wallet (§NNN, reversing part of the owner's 2026-09-19 "state
+     * somewhere that Brașov Runners events are always free"): true for `FREE` and for an event
+     * that has not said, which is what most club events still are and what the owner's sentence
+     * was written for; false for `PAID` and `DONATION` alike — a donation is still something a
+     * runner may choose to pay, and schema.org has no third state for "optional". Only `PAID`
+     * and `DONATION` ever carry a real `offers.url`, and only when the club gave an https link:
+     * no price is parsed out of the free text `cost_amount`, which schema.org's `price` cannot
+     * represent honestly ("50 lei" is not a number, "sugerat 50 lei" is not a price at all).
      */
-    ...(event.costType !== "PAID"
+    ...(event.costType === "PAID" || event.costType === "DONATION"
       ? {
+          isAccessibleForFree: false,
+          ...(event.costUrl ? { offers: { "@type": "Offer", url: event.costUrl, availability: "https://schema.org/InStock" } } : {}),
+        }
+      : {
           isAccessibleForFree: true,
           offers: {
             "@type": "Offer",
@@ -199,8 +207,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
             availability: "https://schema.org/InStock",
             validFrom: toOffsetIsoString(event.publishedAt ?? event.startsAt, event.timezone),
           },
-        }
-      : {}),
+        }),
     location: eventPlace(event),
     sport: "Running",
     /*

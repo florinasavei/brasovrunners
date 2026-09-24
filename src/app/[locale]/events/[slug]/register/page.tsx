@@ -11,6 +11,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -20,6 +21,7 @@ import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
 import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import { costUrlHost } from "@/modules/events/domain/cost";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
@@ -258,6 +260,39 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     timeZone: event.timezone,
   }).format(event.startsAt);
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  /*
+    What is being paid for, and where (§NNN), the same short phrase the event page's facts say
+    (`EventFacts`) — never a raw URL, only the host a runner recognises ("Linkuri și fișiere",
+    §332). Null for an event whose cost has not been stated, which is not the same as free.
+  */
+  const costHost = event.costUrl ? costUrlHost(event.costUrl) : null;
+  const costLine: ReactNode = (() => {
+    if (event.costType === "PAID") {
+      const main = event.costAmount ? tEvent("costPaidAmount", { amount: event.costAmount }) : tEvent("costValues.PAID");
+      if (!event.costUrl || !costHost) return main;
+      return (
+        <>
+          {main} ·{" "}
+          <MuiLink href={event.costUrl} target="_blank" rel="noopener noreferrer">
+            {tEvent("costPaidWhere", { host: costHost })}
+          </MuiLink>
+        </>
+      );
+    }
+    if (event.costType === "DONATION") {
+      if (!event.costUrl || !costHost) return tEvent("costValues.DONATION");
+      return (
+        <>
+          <MuiLink href={event.costUrl} target="_blank" rel="noopener noreferrer">
+            {tEvent("costDonation", { host: costHost })}
+          </MuiLink>
+          {event.costAmount ? ` · ${tEvent("costDonationSuggested", { amount: event.costAmount })}` : ""}
+        </>
+      );
+    }
+    if (event.costType === "FREE") return tEvent("costValues.FREE");
+    return null;
+  })();
   // The third step of the wizard (§104): "confirm a week before" only while that week is ahead.
   const window = confirmationWindow(event);
   const stepsWindow =
@@ -279,6 +314,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               as the event page; the query withholds the typed place itself. */}
           {event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}` : event.locationName ? ` · ${event.locationName}` : ""}
         </Typography>
+        {/* What a participant pays, and where (§NNN) — the same short phrase the event page's
+            own facts say (`EventFacts`), so the two never disagree. */}
+        {costLine && (
+          <Typography variant="body2" color="text.secondary">
+            {costLine}
+          </Typography>
+        )}
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <Link href={{ pathname: "/events/[slug]", params: { slug } }} style={factLink}>
             {t("facts.details")}

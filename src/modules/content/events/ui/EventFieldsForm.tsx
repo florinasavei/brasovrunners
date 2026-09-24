@@ -6,6 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
@@ -18,6 +19,7 @@ import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { type EventFieldName, eventInputConstraints } from "../constraints";
 import { eventLinkRowSchema } from "../fields";
 import CoHostRowsEditor from "./CoHostRowsEditor";
+import CostFields from "./CostFields";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
 import LinkRowsEditor from "./LinkRowsEditor";
@@ -589,11 +591,34 @@ export default async function EventFieldsForm({
               defaultValue={event?.costType ?? ""}
               options={[
                 { value: "", label: t("editor.notStated") },
-                ...(["FREE", "PAID"] as const).map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
+                ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
               ]}
               sx={{ flex: 1 }}
             />
           </Stack>
+
+          {/*
+            "Suma" and "Unde se plătește" for a paid event, "Link pentru donație" and "Suma
+            sugerată" for a donation (§NNN; the owner: "Cu taxă" showed no box for the money, and
+            usually nothing is paid — the exception is Wings for Life, where a donation is made
+            on another site). One pair of columns, relabelled by `CostFields` rather than posted
+            twice; shown only while the chosen kind needs one of them, values kept otherwise.
+          */}
+          <CostFields
+            initialCostType={event?.costType ?? ""}
+            costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
+            costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}
+            labels={{
+              paidAmount: t("editor.costAmount"),
+              paidAmountHelp: t("editor.costAmountHelp"),
+              paidUrl: t("editor.costPaidUrl"),
+              paidUrlHelp: t("editor.costPaidUrlHelp"),
+              donationUrl: t("editor.costDonationUrl"),
+              donationUrlHelp: t("editor.costDonationUrlHelp"),
+              donationAmount: t("editor.costDonationAmount"),
+              donationAmountHelp: t("editor.costDonationAmountHelp"),
+            }}
+          />
 
           {/*
             The course, and a separate question from the meeting point above: where a runner

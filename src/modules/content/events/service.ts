@@ -371,6 +371,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationToBeAnnounced: fields.locationToBeAnnounced,
     difficulty: fields.difficulty,
     costType: fields.costType,
+    // Absent means this caller is not editing the cost fields (§NNN), the discipline `links`
+    // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
+    // is in the boxes even while the chosen kind does not need one of them.
+    ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
+    ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
@@ -1085,6 +1090,8 @@ const SERIES_COLUMNS = [
   "locationToBeAnnounced",
   "difficulty",
   "costType",
+  "costAmount",
+  "costUrl",
   "distanceMeters",
   "elevationGainMeters",
   "registrationMode",
@@ -1762,6 +1769,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
     costType: source.costType,
+    costAmount: source.costAmount,
+    costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
