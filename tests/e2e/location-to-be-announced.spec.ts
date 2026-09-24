@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
@@ -31,8 +31,8 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
       await page.keyboard.type(text);
     };
 
-    await field("event.startsAtDate").fill("2027-06-12");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-06-12");
+    await fillTimeField(page, "Ora", "09:00");
 
     // The browser asks for a meeting point until the switch says it is to be announced (§315).
     await expect(field("event.locationName")).toHaveAttribute("required", "");

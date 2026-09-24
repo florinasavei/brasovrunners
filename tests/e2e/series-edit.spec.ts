@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-050-02 criteria 7, 15, 16 and 17 (`DECISIONS.md` §128, §130, §131, §134) — a series
@@ -34,8 +34,8 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     // The tabs switch with React state: a click before hydration is discarded when React
     // takes over, the English panel stays hidden, and a hidden box cannot be filled.
     await hydrated(page);
-    await field("event.startsAtDate").fill(ymd(first));
-    await field("event.startsAtTime").fill("08:00");
+    await fillDateField(page, "Începutul evenimentului", ymd(first));
+    await fillTimeField(page, "Ora", "08:00");
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     // One language per tab on the create form too, as on the editor.
     await field("translations.ro.title").fill(title);
@@ -57,7 +57,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await expect(sunday).toBeChecked();
     await expect(sunday).toBeDisabled();
     await main.getByRole("checkbox", { name: "Mi" }).check();
-    await field("until").fill(ymd(plus(28)));
+    await fillDateField(page, "Până la (opțional)", ymd(plus(28)));
     await main.getByRole("button", { name: "Creează edițiile" }).click();
     const dialog = page.getByRole("dialog", { name: "Creezi edițiile?" });
     await dialog.getByRole("button", { name: "Creează edițiile" }).click();
@@ -82,7 +82,7 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     // 08:50 for this date and the following ones (§130, §134): the box opens on the whole
     // series (§240) and the preset narrows it to the seven dates after this one; the one
     // before it — the source Sunday — is unticked by the same press.
-    await field("event.startsAtTime").fill("08:50");
+    await fillTimeField(page, "Ora", "08:50");
     const scopeBox = main.locator("details").filter({ hasText: "Salvează pentru" });
     await expect(scopeBox.locator("summary")).toContainText("Toate datele seriei (8)");
     await scopeBox.locator("summary").click();

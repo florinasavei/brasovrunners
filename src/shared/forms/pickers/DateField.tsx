@@ -15,8 +15,16 @@ export type DateFieldProps = {
   /** What the form posts, unchanged: `event.startsAtDate`, `repeat.until`, `takenOn`… */
   name: string;
   label: string;
-  /** `YYYY-MM-DD`, or "" for an empty box. A refused submit's value wins over it (§315). */
+  /** `YYYY-MM-DD`, or "" for an empty box. A refused submit's value wins over it (§315). Ignored when `value` is given. */
   defaultValue?: string;
+  /**
+   * A controlled value, for a box a parent must be able to move from outside a press —
+   * `ScheduleRowsEditor`'s rows following the event's start date (`shiftProgrammeDates`). When
+   * given, the box's own refusal lookup is skipped: the caller already seeded it from the same
+   * refusal (`recalledRows`), and a stale posted value under this row's *current* index would
+   * otherwise shadow a shift that happened after the press.
+   */
+  value?: string;
   required?: boolean;
   helperText?: string;
   size?: "small" | "medium";
@@ -43,11 +51,11 @@ export type DateFieldProps = {
  *
  * Needs `PickerProvider` above it — the backoffice's layout mounts it once.
  */
-export default function DateField({ name, label, defaultValue = "", required = false, helperText, size, sx, onValueChange }: DateFieldProps) {
+export default function DateField({ name, label, defaultValue = "", value, required = false, helperText, size, sx, onValueChange }: DateFieldProps) {
   const recall = useRecall();
   const t = useTranslations("Admin");
   const running = useIslandRunning();
-  const initial = recall.value(name) ?? defaultValue;
+  const initial = value !== undefined ? value : (recall.value(name) ?? defaultValue);
   const named = recall.named(name);
   const id = recall.idOf(name);
   const help = named && recall.fieldError ? recall.fieldError : helperText;
@@ -124,6 +132,21 @@ export function DatePickerInput({
   const [refused, setRefused] = useState(false);
   const field = useRef<HTMLInputElement>(null);
   const hidden = useRef<HTMLInputElement>(null);
+
+  // Follows a controlled `initial` (`DateField`'s `value`) moved from outside the picker — the
+  // programme's rows shifting with the event's start date. Adjusted during render rather than in
+  // an effect (react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-
+  // changes): an effect would commit the stale value for one frame and cascade a second render
+  // on every keystroke, where this resolves before the box ever paints. A pick made *here* has
+  // already set `picked` (and, through `onValueChange`, the caller's own `initial` for the next
+  // render) to the same value, so the two agree and nothing below fires; only a genuinely
+  // external move — never one this box just reported — does.
+  const [trackedInitial, setTrackedInitial] = useState(initial);
+  if (initial !== trackedInitial) {
+    setTrackedInitial(initial);
+    if (initial !== postedDate(picked)) setPicked(pickerDate(initial));
+  }
+
   const posted = postedDate(picked);
   usePickerAsNativeBox({ field, posted, hidden, refused, refusal });
 

@@ -104,20 +104,32 @@ describe("no film box", () => {
   });
 });
 
-describe("the time is picked, not typed", () => {
-  it("makes every time box a native time input, which posts HH:MM whatever face it shows", () => {
-    // The typed box is gone with its placeholder and its pattern; the comments may still say
-    // "HH:MM", because that is what the input posts.
-    expect(WALL_TIME).toContain('type="time"');
-    expect(WALL_TIME).not.toContain('type="text"');
-    expect(WALL_TIME).not.toContain('placeholder="HH:MM"');
-    expect(WALL_TIME).not.toContain("pattern:");
-    expect(ROWS.match(/type="time"/g)).toHaveLength(2);
-    expect(ROWS).not.toContain('placeholder="HH:MM"');
-    expect(ROWS).not.toContain("pattern:");
-    // No picker library: the browser's clock does the job (AGENTS.md §1.5).
+describe("the time is picked, always on the 24-hour clock", () => {
+  const TIME_FIELD = read("src/shared/forms/pickers/TimeField.tsx");
+  const WALL_VALUES = read("src/shared/forms/pickers/wall-values.ts");
+
+  it("makes every time box MUI's picker, never a native input the browser's own locale could show as AM/PM", () => {
+    // §303's native `<input type="time">` still showed the OS's own clock face — "07:00 PM" on
+    // an English-language Chrome — which is the defect the picker replaced it for
+    // (`DECISIONS.md` §NNN, the owner: "vreau ca timpul să fie mereu în format de 24H"). The
+    // file's own doc comment still names the old markup as history, so the check is for what is
+    // actually rendered rather than for the substring's total absence from the file.
+    const rendered = WALL_TIME.slice(WALL_TIME.indexOf("export default function WallTimeField"));
+    expect(rendered).not.toContain('type="time"');
+    expect(rendered).not.toContain('type="date"');
+    expect(WALL_TIME).toContain("<DateField");
+    expect(WALL_TIME).toContain("<TimeField");
+    expect(ROWS).not.toContain('type="time"');
+    expect(ROWS).toContain("<DateField");
+    expect(ROWS.match(/<TimeField/g)).toHaveLength(2);
+    // Pinned to 24 hours in the picker itself, not left to the browser or the OS.
+    expect(TIME_FIELD).toContain("ampm={false}");
+    expect(WALL_VALUES).toContain('TIME_DISPLAY_FORMAT = "HH:mm"');
+    // The picker library the owner asked for, pinned to an exact version (`CLAUDE.md`
+    // "Pin exact versions"), not a caret or a tilde a routine install could quietly move.
     const pkg = JSON.parse(read("package.json"));
-    expect(pkg.dependencies["@mui/x-date-pickers"]).toBeUndefined();
+    expect(pkg.dependencies["@mui/x-date-pickers"]).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(pkg.dependencies.dayjs).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
 

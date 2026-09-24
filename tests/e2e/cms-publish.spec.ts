@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -146,9 +146,9 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
-    // A date and a time, two fields, each with the browser's own picker (`DECISIONS.md` §70).
-    await field("event.startsAtDate").fill("2027-05-01");
-    await field("event.startsAtTime").fill("09:00");
+    // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §NNN).
+    await fillDateField(page, "Începutul evenimentului", "2027-05-01");
+    await fillTimeField(page, "Ora", "09:00");
     // The meeting point is asked once, in Settings: it is the same place whichever language the
     // page is read in (`DECISIONS.md` §36).
     await field("event.locationName").fill("Parcul Tractorul");
@@ -185,8 +185,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await field("event.startsAtDate").fill("2027-05-02");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-02");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
     const romanian = page.locator("#locale-panel-ro");
@@ -202,8 +202,10 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // one programme row, one partner, and the repeat tick with a cadence that is not the default.
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Alt eveniment" }).click();
-    await field("event.schedule[0].date").fill("2027-05-02");
-    await field("event.schedule[0].time").fill("10:00");
+    // "Ora" also labels the event's own time-of-day, already filled above — the second one in
+    // the accessibility tree is the programme row's.
+    await fillDateField(page, "Data", "2027-05-02");
+    await fillTimeField(page, "Ora", "10:00", 1);
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
     await field("event.coHosts[0].name").fill("Clubul Prietenilor");
@@ -277,8 +279,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const wednesday = page.locator('[name="weekday"][value="3"]');
 
-    await field("event.startsAtDate").fill("2027-05-04");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-04");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -292,7 +294,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     await field("repeat.on").check();
     await field("repeat.cadence").selectOption("FORTNIGHTLY");
-    await field("repeat.until").fill("2027-05-01");
+    await fillDateField(page, "Până la (opțional)", "2027-05-01");
     await wednesday.check();
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -339,8 +341,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
       await page.keyboard.type(text);
     };
 
-    await field("event.startsAtDate").fill("2027-05-03");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-03");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Dintr-un foc ${suffix}`);
     await field("translations.ro.slug").fill(slug);

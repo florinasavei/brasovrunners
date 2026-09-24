@@ -9,6 +9,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
+import DateField from "@/shared/forms/pickers/DateField";
+import TimeField from "@/shared/forms/pickers/TimeField";
 import { useRecall } from "@/shared/forms/recall";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
@@ -53,7 +55,7 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
 /**
  * The programme's rows in the editor (`DECISIONS.md` §117): when, what in both languages,
  * where — one line each, in order. A client island for the two things a form cannot do by
- * itself, add a row and remove one; every box is an ordinary uncontrolled input named
+ * itself, add a row and remove one; every box posts under a name of its own,
  * `event.schedule[i].<box>`, which `admin/actions.ts#eventFieldsFrom` gathers by index. A row
  * left blank is the spare line and is dropped on save; a half-filled one is refused with its
  * number, so the organizer is told which line, not just that one is wrong.
@@ -139,42 +141,22 @@ function ScheduleRowsEditorIsland({
             sx={{ alignItems: { md: "flex-start" }, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1 }}
           >
             <Stack direction="row" spacing={1}>
-              <TextField
+              {/* Controlled, unlike the rest of the row: this is the one box the start-date
+                  effect above moves by hand, and a stale posted value under this row's *current*
+                  index (after an earlier row was removed) must never win over that move
+                  (`DateField`'s `value` prop skips its own refusal lookup for exactly this). */}
+              <DateField
                 name={name("date")}
-                id={recall.idOf(name("date"))}
-                error={recall.named(name("date"))}
-                type="date"
                 label={labels.date}
                 value={value.date}
-                onChange={(event) => setDate(key, event.target.value)}
+                onValueChange={(posted) => setDate(key, posted)}
                 size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ width: 150 }}
               />
-              {/* Picked, not typed, like the start time (`WallTimeField`): the browser's own
-                  clock, posting `HH:MM` whatever face it shows. */}
-              <TextField
-                name={name("time")}
-                id={recall.idOf(name("time"))}
-                error={recall.named(name("time"))}
-                type="time"
-                label={labels.time}
-                defaultValue={value.time}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ width: 120 }}
-              />
-              <TextField
-                name={name("endTime")}
-                id={recall.idOf(name("endTime"))}
-                error={recall.named(name("endTime"))}
-                type="time"
-                label={labels.endTime}
-                defaultValue={value.endTime}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ width: 120 }}
-              />
+              {/* Picked, not typed, like the start time (`WallTimeField`): MUI's own 24-hour
+                  clock, posting `HH:mm` in either language of the backoffice. */}
+              <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" sx={{ width: 120 }} />
+              <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" sx={{ width: 120 }} />
             </Stack>
             <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
