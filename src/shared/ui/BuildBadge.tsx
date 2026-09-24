@@ -9,16 +9,15 @@ import BuildBadgeLink from "./BuildBadgeLink";
 /**
  * When this site was built — and, for the club's own people, the way in.
  *
- * **The last line of the footer's fold, since §365, and nowhere on screen until somebody opens
- * it.** It was fixed to the bottom-right corner from `md` and a label under the bar below that,
- * so every visitor on every page read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" — on a
- * phone as a third line of footer, 37 pixels under a bar that was already two. The owner,
- * 2026-09-24: "version shows by default". Nobody the public site is for has a use for it; the
- * people who do — the owner checking a release, a developer, staff looking for the door — open
- * "Despre club" once, and `/api/health` and `/devs` report the same values exactly. One rule at
- * every width and in every environment: QA says it is QA in words above the header
- * (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only place that fact was
- * read, and a rule keyed on the environment would need a production build to test at all.
+ * **The fold's own line below `md`, and pinned to the bar's own bottom-right corner from `md`
+ * (`SiteFooter`, §NNN).** On a phone the stamp stays inside "Despre club": §365 took it off the bar
+ * after it had become a third line of footer under a bar that was already two, and nobody the
+ * public site is for has a use for it there. On a desktop the owner asked for it back in the bar's
+ * corner (2026-09-24), where it costs nothing — the bar is one line with room to spare. So the rule
+ * is split by width, `display: { xs: "flex", md: "none" }` on the fold's copy and the reverse on
+ * the pinned one, and `/api/health` and `/devs` report the same values exactly. QA says it is QA in
+ * words above the header (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only
+ * place that fact was read.
  *
  * The visible text is deliberately short: which deployment this is, and when the code behind it
  * last changed. The exact build — the baseline and the commit — is in the `title` and the
@@ -26,8 +25,8 @@ import BuildBadgeLink from "./BuildBadgeLink";
  *
  * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a
  * phone, or `Enter` when it has focus, opens it (`BuildBadgeLink`, §34). That replaced a "Staff"
- * link in the footer — a permanent invitation on a page every visitor reads — and in the fold it
- * is one step further out of a visitor's way. Where `STAFF_AUTH_MODE=disabled` there is no door
+ * link in the footer — a permanent invitation on a page every visitor reads — and, below `md`, the fold
+ * keeps it one step further out of a visitor's way. Where `STAFF_AUTH_MODE=disabled` there is no door
  * at all, so the stamp is a label with `pointerEvents: "none"`.
  *
  * A Server Component either way: the values are inlined at build time and never change while
@@ -56,10 +55,11 @@ export default async function BuildBadge() {
   const text = parts.join(" · ");
 
   /**
-   * A quiet line of the panel, not a pill over the page: small, muted, as wide as its words
-   * (`alignSelf`, so a press beside it on the panel is not a press on it) and wrapping rather
-   * than cut when a phone is narrower than the stamp. 44 pixels tall, like everything else in
-   * the panel, because a long press is aimed at it (BR-REQ-041-01 criterion 6).
+   * A quiet line, not a pill over the page: small, muted, as wide as its words (`alignSelf`, so
+   * a press beside it — on the panel, or on the bar's corner from `md` — is not a press on it)
+   * and wrapping rather than cut when a phone is narrower than the stamp. 44 pixels tall, like
+   * everything else in the panel below `md`, because a long press is aimed at it (BR-REQ-041-01
+   * criterion 6).
    */
   const sx = {
     alignSelf: "flex-start",
