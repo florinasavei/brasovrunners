@@ -16,7 +16,7 @@ import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from
  * The same gate as the Neon plan beside it (`canManageRegistrations`, §280's follow-up),
  * asserted here, where the change is made, whatever the page showed. The rules the form states —
  * one of six ceilings, a new or changed limit above what is spent plus a margin, a ticked
- * confirmation for a new or changed limit on production — are checked against a fresh read,
+ * confirmation for a new, changed or removed limit on production — are checked against a fresh read,
  * never against the figures the page rendered a minute ago; the limit Neon holds, posted back
  * untouched, is kept to the second and meets neither rule.
  */
@@ -31,6 +31,7 @@ export const NEON_LIMITS_ENTITY_ID = "00000000-0000-4000-8000-00000000e007";
 export const NEON_LIMITS_REFUSAL_CODES = [
   "NEON_QUOTA_BELOW_USAGE",
   "NEON_QUOTA_UNCONFIRMED",
+  "NEON_QUOTA_REMOVAL_UNCONFIRMED",
   "NEON_UNCONFIGURED",
   "NEON_KEY_FORBIDDEN",
   "NEON_BUSY",

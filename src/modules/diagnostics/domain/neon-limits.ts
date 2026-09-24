@@ -233,7 +233,8 @@ export function parseNeonLimitsRequest(raw: unknown): { ok: true; request: NeonL
 export type NeonLimitsRuleRefusal =
   | { code: "VALIDATION_ERROR"; field: "maxCu" }
   | { code: "NEON_QUOTA_BELOW_USAGE"; field: "quotaCuHours" }
-  | { code: "NEON_QUOTA_UNCONFIRMED"; field: "confirmSuspension" };
+  | { code: "NEON_QUOTA_UNCONFIRMED"; field: "confirmSuspension" }
+  | { code: "NEON_QUOTA_REMOVAL_UNCONFIRMED"; field: "confirmSuspension" };
 
 /**
  * The rules a request meets against what Neon says right now, in the order they are told:
@@ -243,12 +244,16 @@ export type NeonLimitsRuleRefusal =
  *    database on saving.
  * 3. A new or changed limit on production without the ticked confirmation — the site stops when
  *    it is reached.
+ * 4. Removing the limit production holds ("Fără limită") without the same ticked confirmation —
+ *    production then has no cap at all, which the owner refused ("not ok to leave to unlimited",
+ *    §327). The same box as 3, because it is the same act: changing production's cap.
  *
  * A limit Neon already holds, posted back to the second (`quotaBoxValue`), is neither new nor
- * changed: 2 and 3 are about what this save does, and keeping the limit in force does nothing.
+ * changed: 2, 3 and 4 are about what this save does, and keeping the limit in force does nothing.
  * So throttling the size alone on production, with the quota box untouched, needs no
  * confirmation — and it is not refused when the period is already close to the limit, which is
- * exactly when somebody reaches for the size.
+ * exactly when somebody reaches for the size. "No limit" posted where there was none is no change
+ * either, and asks nothing.
  */
 export function checkNeonLimits(
   request: NeonLimitsRequest,
@@ -263,6 +268,9 @@ export function checkNeonLimits(
     if (context.appEnv === "production" && !request.confirmSuspension) {
       return { code: "NEON_QUOTA_UNCONFIRMED", field: "confirmSuspension" };
     }
+  }
+  if (request.quotaCuHours === null && quotaChanges && context.appEnv === "production" && !request.confirmSuspension) {
+    return { code: "NEON_QUOTA_REMOVAL_UNCONFIRMED", field: "confirmSuspension" };
   }
   return null;
 }

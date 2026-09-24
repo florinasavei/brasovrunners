@@ -634,7 +634,8 @@
       "NEON_KEY_FORBIDDEN": "Neon refused the change: the key in NEON_API_KEY reads the project but may not modify it — most likely a personal key whose owner may only view the project. A project-scoped key may: in Neon, the organization's Settings → API keys → Create new → Project-scoped, on this environment's project — an organization Admin creates it, and Neon gives it Editor access to that one project. A personal key works only if its owner is an Admin of the organization or an Editor on the project. Put the key in NEON_API_KEY on the environment's Vercel project and redeploy. The figures above the form are what Neon holds now.",
       "NEON_BUSY": "Neon was working on another change to the project and did not take this one. Try again in a minute; the figures above the form are what Neon holds now.",
       "NEON_REFUSED": "Neon refused the values sent. The figures above the form are what Neon holds now; if the size chosen is above what the plan allows, choose a smaller one.",
-      "NEON_UNREACHABLE": "Neon did not answer (or answered with something the page cannot read). The figures above the form are what Neon holds now; try again in a minute."
+      "NEON_UNREACHABLE": "Neon did not answer (or answered with something the page cannot read). The figures above the form are what Neon holds now; try again in a minute.",
+      "NEON_QUOTA_REMOVAL_UNCONFIRMED": "Nothing changed: removing production's limit needs the same confirmation box ticked — with no limit, production has no spending cap at all."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1316,15 +1317,15 @@
         "warningTitle": "A monthly limit switches the site off",
         "warning": "When the limit is reached, Neon SUSPENDS the database until the next billing period ({end}), and it does not wake at the next connection. Until then the site does not work: no registrations, no race-day desk, no emails. This page needs the database too, so a limit that has stopped it can only be lifted in the Neon console.",
         "recommend": "Recommended: a monthly limit with room — {hours} CU-hours on this environment (SETUP.md §40; production spent about 4 CU-hours a day even on days of heavy testing) — together with the spending notification on Neon's Billing page as the early warning.",
-        "recommendConfirm": "On production, a new or changed limit needs the confirmation box below: when it is reached, the site stops.",
+        "recommendConfirm": "On production, a new, changed or removed limit needs the confirmation box below ticked: reached, the limit stops the site; removed, production is left with no cap.",
         "quotaMode": "Monthly limit (CU-hours)",
         "quotaModeNone": "No limit",
         "quotaModeLimit": "With a limit — the number below",
         "quotaCuHours": "CU-hours per period, with a limit",
         "quotaCuHoursHelp": "A new limit: at least {smallest}. Ignored with “No limit”.",
         "floor": "Spent this period: {used} CU-hours. A new limit must be at least {smallest} CU-hours (the spend plus a margin of {margin}): a smaller one would stop the database the moment it is saved. The limit in force, left as it is, stays exactly as Neon holds it.",
-        "confirmField": "The stop confirmation",
-        "confirm": "I understand: when the limit is reached, the production database stops and the site does not work until {end}.",
+        "confirmField": "Confirming the limit change",
+        "confirm": "I understand what I am changing on production's limit: with a limit, the database stops when it is reached and the site does not work until {end}; “No limit” leaves production with no spending cap at all.",
         "writeNote": "Saving sends the size to the database's compute and to the project's default (so a compute created again inherits it), and the limit to the project — only what differs from Neon's figures — then the page reads Neon again. The key in NEON_API_KEY needs the right to modify the project, which a project-scoped key has.",
         "save": "Save the limits",
         "saving": "Sending to Neon…",

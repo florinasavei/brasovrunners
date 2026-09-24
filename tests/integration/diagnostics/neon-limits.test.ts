@@ -122,10 +122,16 @@ describe("BR-REQ-090-07 updateNeonLimits", () => {
     expect(patches.length).toBeGreaterThan(0);
     expect(patches.some((call) => JSON.stringify(call.body).includes("compute_time_seconds"))).toBe(false);
 
-    // Removing the limit needs none either: it can only keep the site up.
+    // Removing production's limit asks for the same box (§327: production stays capped unless
+    // somebody says, in so many words, that it should not) — refused untouched, taken ticked.
+    neon.calls.length = 0;
     await expect(
-      updateNeonLimits(db, admin, { maxCu: "0.25", quotaMode: "none" }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch }),
-    ).resolves.toMatchObject({ changed: true });
+      updateNeonLimits(db, admin, { maxCu: "0.5", quotaMode: "none" }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch }),
+    ).rejects.toMatchObject({ reason: "NEON_QUOTA_REMOVAL_UNCONFIRMED", fields: ["confirmSuspension"] });
+    expect(neon.calls.filter((call) => call.method === "PATCH")).toHaveLength(0);
+    await expect(
+      updateNeonLimits(db, admin, { maxCu: "0.25", quotaMode: "none", confirmSuspension: true }, { env: PRODUCTION, now: NOW, fetchImpl: neon.fetch }),
+    ).resolves.toMatchObject({ changed: true, after: { quotaCuHours: null } });
   });
 
   it("keeps a quota Neon holds in odd seconds exactly, when the box comes back as the card filled it", async () => {

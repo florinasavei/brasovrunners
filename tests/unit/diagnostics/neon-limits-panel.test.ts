@@ -92,7 +92,7 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     expect(html).toContain('data-testid="neon-limits-recommendation"');
     expect(words).toContain("Recomandat: o limită lunară cu rezervă — 30 ore-CU pe acest mediu");
     expect(words).toContain("notificarea de cheltuieli de pe pagina Billing din Neon");
-    expect(words).not.toContain("Pe producție, o limită nouă sau schimbată cere bifa");
+    expect(words).not.toContain("Pe producție, o limită nouă, schimbată sau scoasă cere bifa");
     expect(html).not.toContain('name="confirmSuspension"');
   });
 
@@ -102,7 +102,9 @@ describe("BR-REQ-090-07 the database's limits card", () => {
     // The owner capped production (2026-09-23): the advice is production's own 100 CU-hours plus
     // Neon's spending notification, and nothing on the card advises against a limit.
     expect(words).toContain("Recomandat: o limită lunară cu rezervă — 100 ore-CU pe acest mediu");
-    expect(words).toContain("Pe producție, o limită nouă sau schimbată cere bifa de confirmare de mai jos");
+    // Setting, changing and removing production's limit all ask for the one box (§327: never left uncapped by a click).
+    expect(words).toContain("Pe producție, o limită nouă, schimbată sau scoasă cere bifa de confirmare de mai jos");
+    expect(words).toContain("„Fără limită” lasă producția fără niciun plafon de cheltuieli");
     expect(words).not.toContain("fără limită pe producție");
     expect(html).toContain('name="confirmSuspension"');
     // A limit in force is said above the form, and chosen in it.

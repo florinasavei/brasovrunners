@@ -119,11 +119,21 @@ describe("BR-REQ-090-07 the rules against what Neon says now", () => {
     expect(checkNeonLimits(request(100, true), production)).toBeNull();
     // Changing a limit in force is a new limit too.
     expect(checkNeonLimits(request(150), { ...production, quotaCuHours: 100 })).toEqual({ code: "NEON_QUOTA_UNCONFIRMED", field: "confirmSuspension" });
-    // No limit, no confirmation: removing one is never a stop.
+    // "No limit" where there was none changes nothing and asks nothing.
     expect(checkNeonLimits(request(null), production)).toBeNull();
     expect(checkNeonLimits(request(100), { ...production, appEnv: "qa" })).toBeNull();
     // The usage rule comes first: a confirmed limit that would stop the site at once is still refused.
     expect(checkNeonLimits(request(3, true), production)).toEqual({ code: "NEON_QUOTA_BELOW_USAGE", field: "quotaCuHours" });
+  });
+
+  it("asks production for the same confirmation before removing its limit — the owner kept production capped (§327)", () => {
+    const capped = { usedCuHours: 40, quotaCuHours: 100, plan: "LAUNCH" as const, appEnv: "production" as const };
+    expect(checkNeonLimits(request(null), capped)).toEqual({ code: "NEON_QUOTA_REMOVAL_UNCONFIRMED", field: "confirmSuspension" });
+    expect(checkNeonLimits(request(null, true), capped)).toBeNull();
+    // With the size changed at the same press, the removal still asks.
+    expect(checkNeonLimits(request(null, false, 0.5), capped)).toEqual({ code: "NEON_QUOTA_REMOVAL_UNCONFIRMED", field: "confirmSuspension" });
+    // QA removes its limit freely: the guard is production's.
+    expect(checkNeonLimits(request(null), { ...capped, appEnv: "qa" })).toBeNull();
   });
 
   it("leaves the limit Neon holds alone: posted back to the second, it needs no confirmation and meets no usage rule", () => {

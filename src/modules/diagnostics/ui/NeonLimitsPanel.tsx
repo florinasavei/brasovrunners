@@ -32,8 +32,8 @@ type Props = {
   reading: { ok: true; limits: NeonLimitsReading } | { ok: false; failure: NeonFailure };
   /**
    * Which limit the card recommends (`recommendedNeonQuotaCuHours`, `SETUP.md` §40), and whether a
-   * new or changed limit asks for the ticked confirmation — production's guard, because reaching
-   * the limit suspends the site (§NNN).
+   * new, changed or removed limit asks for the ticked confirmation — production's guard, because
+   * reaching the limit suspends the site and removing it leaves production uncapped (§NNN, §327).
    */
   appEnv: AppEnvironment;
   /** The Administrator's form; `updateNeonLimits` refuses anybody else whatever this says (§291). */

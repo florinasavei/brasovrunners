@@ -401,59 +401,86 @@ export const envSchema = z
    * someone forgot the variable, and a default of `disabled` would mean every developer and
    * the end-to-end suite must set it before they can sign in at all.
    */
-  .transform((value) => ({
-    ...value,
-    STAFF_AUTH_MODE:
-      value.STAFF_AUTH_MODE ??
-      (value.APP_ENV === "local" || value.APP_ENV === "test"
-        ? ("dev-switcher" as const)
-        : ("disabled" as const)),
-    /**
-     * `E2E_DISABLE_NEON` blanks both regardless of what `.env.local` set (its own comment,
-     * above), so every reader of `env.NEON_API_KEY`/`env.NEON_PROJECT_ID` — there is no second
-     * copy to keep in sync — sees the end-to-end run as an environment with no Neon key at all.
-     */
-    NEON_API_KEY: value.E2E_DISABLE_NEON ? undefined : value.NEON_API_KEY,
-    NEON_PROJECT_ID: value.E2E_DISABLE_NEON ? undefined : value.NEON_PROJECT_ID,
-    /**
-     * Derived, never set: `local` writes under `.media/` on a developer's disk and `fake`
-     * keeps objects in memory for tests, so neither environment needs a bucket; `r2` when
-     * the five variables are all present, and `unconfigured` when a deployed environment has
-     * not got them yet — the gallery then refuses uploads with a sentence and `/admin/tasks`
-     * says what to create. Deriving it from the variables is what makes "is the bucket wired"
-     * a fact the task board can read rather than a mode somebody remembers to flip.
-     */
-    STORAGE_MODE:
-      value.APP_ENV === "local"
-        ? ("local" as const)
-        : value.APP_ENV === "test"
-          ? ("fake" as const)
-          : value.R2_ENDPOINT &&
-              value.R2_ACCESS_KEY_ID &&
-              value.R2_SECRET_ACCESS_KEY &&
-              value.R2_BUCKET &&
-              value.R2_PUBLIC_BASE_URL
-            ? ("r2" as const)
-            : ("unconfigured" as const),
-    /**
-     * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
-     * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
-     * when the sender and its password exist, and is `off` otherwise, which the contact page
-     * renders as "write to us at …" rather than a form that fails.
-     *
-     * The recipients are deliberately not part of this since §164: they live in
-     * `platform_settings.contactRecipients`, which a startup-time derivation cannot see, and
-     * `CONTACT_FORM_TO` is only their fallback. So this says whether the deployment can send
-     * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
-     * needs both, and either one missing shows the club's address instead.
-     */
-    CONTACT_FORM_MODE:
-      value.APP_ENV === "local" || value.APP_ENV === "test"
-        ? ("capture" as const)
-        : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
-          ? ("smtp" as const)
-          : ("off" as const),
-  }));
+  .transform((value) => {
+    const neonSwitchedOff = e2eNeonSwitchOff(value);
+    return {
+      ...value,
+      E2E_DISABLE_NEON: neonSwitchedOff,
+      STAFF_AUTH_MODE:
+        value.STAFF_AUTH_MODE ??
+        (value.APP_ENV === "local" || value.APP_ENV === "test"
+          ? ("dev-switcher" as const)
+          : ("disabled" as const)),
+      /**
+       * `E2E_DISABLE_NEON` blanks both regardless of what `.env.local` set (its own comment,
+       * above), so every reader of `env.NEON_API_KEY`/`env.NEON_PROJECT_ID` — there is no second
+       * copy to keep in sync — sees the end-to-end run as an environment with no Neon key at all.
+       * Never on production (`e2eNeonSwitchOff`).
+       */
+      NEON_API_KEY: neonSwitchedOff ? undefined : value.NEON_API_KEY,
+      NEON_PROJECT_ID: neonSwitchedOff ? undefined : value.NEON_PROJECT_ID,
+      /**
+       * Derived, never set: `local` writes under `.media/` on a developer's disk and `fake`
+       * keeps objects in memory for tests, so neither environment needs a bucket; `r2` when
+       * the five variables are all present, and `unconfigured` when a deployed environment has
+       * not got them yet — the gallery then refuses uploads with a sentence and `/admin/tasks`
+       * says what to create. Deriving it from the variables is what makes "is the bucket wired"
+       * a fact the task board can read rather than a mode somebody remembers to flip.
+       */
+      STORAGE_MODE:
+        value.APP_ENV === "local"
+          ? ("local" as const)
+          : value.APP_ENV === "test"
+            ? ("fake" as const)
+            : value.R2_ENDPOINT &&
+                value.R2_ACCESS_KEY_ID &&
+                value.R2_SECRET_ACCESS_KEY &&
+                value.R2_BUCKET &&
+                value.R2_PUBLIC_BASE_URL
+              ? ("r2" as const)
+              : ("unconfigured" as const),
+      /**
+       * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
+       * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
+       * when the sender and its password exist, and is `off` otherwise, which the contact page
+       * renders as "write to us at …" rather than a form that fails.
+       *
+       * The recipients are deliberately not part of this since §164: they live in
+       * `platform_settings.contactRecipients`, which a startup-time derivation cannot see, and
+       * `CONTACT_FORM_TO` is only their fallback. So this says whether the deployment can send
+       * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
+       * needs both, and either one missing shows the club's address instead.
+       */
+      CONTACT_FORM_MODE:
+        value.APP_ENV === "local" || value.APP_ENV === "test"
+          ? ("capture" as const)
+          : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
+            ? ("smtp" as const)
+            : ("off" as const),
+    };
+  });
+
+/**
+ * Whether `E2E_DISABLE_NEON` takes effect — everywhere but production (§NNN, Neon limits).
+ *
+ * The flag exists for the end-to-end suite's own server, so it never calls the real Neon API.
+ * On production it would switch off exactly what the owner asked to keep: the 80% quota warning
+ * on `/api/health`, the limits card and the task-board row — the one early alarm before Neon
+ * suspends the site at its cap (§327). So a production process ignores it and says so once, at
+ * startup, in the log. Ignored rather than refused: a stray variable must not be able to stop
+ * the site from booting either, and ignoring it leaves production exactly as it would be
+ * without it.
+ */
+function e2eNeonSwitchOff(value: { E2E_DISABLE_NEON: boolean; APP_ENV: string }): boolean {
+  if (!value.E2E_DISABLE_NEON) return false;
+  if (value.APP_ENV === "production") {
+    console.warn(
+      "[env] E2E_DISABLE_NEON is set on production and is ignored: production always reads its Neon quota (the 80% warning on /api/health). Remove the variable from this environment.",
+    );
+    return false;
+  }
+  return true;
+}
 
 export type Env = z.infer<typeof envSchema>;
 
