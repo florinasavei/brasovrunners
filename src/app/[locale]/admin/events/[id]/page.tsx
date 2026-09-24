@@ -154,10 +154,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const now = new Date();
   // "1 dată", "7 date", "20 de date" (§NNN), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.
-  const datesWords = (raw: string | undefined) => {
-    const count = Number.isFinite(Number(raw)) ? Number(raw) : 0;
-    return tEvent(`series.count.${countForm(count, locale)}`, { count });
-  };
+  const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
+  const datesWords = (raw: string | undefined) => tEvent(`series.count.${countForm(countOf(raw), locale)}`, { count: countOf(raw) });
   /*
     The minor's paper form (§330) only where the declaration in effect, in the language the form
     prints in, asks the minor to sign: under an older text the parent signs a minor's paper alone,
@@ -373,7 +371,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             same constant the service used a moment ago; a minute's drift cannot move the day. */}
         {saved === "eventsRepeated" && (
           <Alert severity="success">
-            {t("events.eventsRepeated", {
+            {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
               dates: datesWords(created),
               until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
             })}
@@ -386,7 +384,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
         {saved === "eventSeries" && (
           <Alert severity="success">
-            {offered ? t("editor.savedSeriesOffered", { dates: datesWords(applied), offered }) : t("editor.savedSeries", { dates: datesWords(applied) })}
+            {offered
+              ? t(countOf(applied) === 1 ? "editor.savedSeriesOfferedOne" : "editor.savedSeriesOfferedMany", { dates: datesWords(applied), offered })
+              : t(countOf(applied) === 1 ? "editor.savedSeriesOne" : "editor.savedSeriesMany", { dates: datesWords(applied) })}
           </Alert>
         )}
         {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}

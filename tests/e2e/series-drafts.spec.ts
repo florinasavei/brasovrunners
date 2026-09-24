@@ -91,7 +91,18 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
 
     // The "?" carries the reason this series makes drafts, reachable without hovering (it is
     // also the button's accessible name).
-    await expect(row.getByRole("button", { name: /publicarea automată e oprită/ })).toBeVisible();
+    const hint = row.getByRole("button", { name: /publicarea automată e oprită/ });
+    await expect(hint).toBeVisible();
+
+    // The tooltip itself opens, not merely its accessible name: both sentences are there, on
+    // their own lines (`TOOLTIP_TEXT_SX`'s `pre-line`), not collapsed into one run-on paragraph —
+    // the defect the owner reported this whole feature over.
+    await hint.hover();
+    const tooltip = page.getByRole("tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
+    await expect(tooltip).toContainText("publicarea automată e oprită");
+    await expect(tooltip).toHaveCSS("white-space", "pre-line");
 
     // The link is real: it opens the draft's own editor, where it is a draft and nothing else.
     await firstDraftLink.click();

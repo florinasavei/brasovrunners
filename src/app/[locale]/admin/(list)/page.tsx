@@ -196,6 +196,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   // "1 dată", "2 date", "20 de date" (§NNN): the count picks the catalogue's phrasing.
   const datesWords = (count: number) => tEvent(`series.count.${countForm(count, locale)}`, { count });
+  // A hand-edited query string is not a number; unguarded, `Number(raw)` is `NaN` and the banner
+  // reads "NaN date" (the editor page's own `datesWords` guards the same param the same way).
+  const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
 
   const columns: readonly AdminColumn<ListRow>[] = [
     {
@@ -424,8 +427,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         )}
         {saved === "eventsRepeated" && (
           <Alert severity="success">
-            {t("events.eventsRepeated", {
-              dates: datesWords(Number(created ?? "0")),
+            {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
+              dates: datesWords(countOf(created)),
               until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
             })}
           </Alert>

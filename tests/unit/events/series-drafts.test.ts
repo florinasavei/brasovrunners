@@ -23,7 +23,7 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
     });
   });
 
-  it("orders the drafts still ahead soonest first, and the past ones latest first, ahead before past", () => {
+  it("orders the drafts still ahead soonest first, and leaves the past ones out entirely", () => {
     const members = [
       source({ cadence: "WEEKLY", weekdays: [], until: null, publish: true }),
       child("2025-12-18", "DRAFT"), // past, earlier
@@ -32,15 +32,20 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
       child("2025-12-25", "DRAFT"), // past, later than the first
     ];
     const { drafts } = seriesDrafts(members, new Date("2026-01-05"));
+    // Nothing left to publish about a date whose day already came and went — a past draft
+    // reads as an ask nobody can act on, so it is not named at all (§NNN).
     expect(drafts.map((d) => d.startsAt.toISOString().slice(0, 10))).toEqual([
       "2026-01-08", // ahead, soonest first
       "2026-01-15",
-      "2025-12-25", // past, latest first
-      "2025-12-18",
     ]);
   });
 
-  it("names 'autoPublishOff' when the rule would not publish", () => {
+  it("finds no draft and no reason when every draft is in the past", () => {
+    const members = [source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false }), child("2025-12-18", "DRAFT")];
+    expect(seriesDrafts(members, new Date("2026-01-05"))).toEqual({ drafts: [], reason: null });
+  });
+
+  it("names 'autoPublishOff' when the source is published but the rule would not publish", () => {
     const members = [source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false }), child("2026-01-08", "DRAFT")];
     expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBe("autoPublishOff");
   });
@@ -48,6 +53,19 @@ describe("§NNN seriesDrafts — the dates a series is missing from the site", (
   it("names 'sourceNotPublished' when the rule would publish but its source is not published", () => {
     const members = [
       { editorialStatus: "DRAFT" as const, startsAt: new Date("2026-01-01"), repeatRule: { cadence: "WEEKLY", weekdays: [], until: null, publish: true } },
+      child("2026-01-08", "DRAFT"),
+    ];
+    expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBe("sourceNotPublished");
+  });
+
+  it("names 'sourceNotPublished' — not 'autoPublishOff' — for a draft source whose rule also has publish:false", () => {
+    // The common case: a series started from the new-event form's "creează ca ciornă" (§NNN).
+    // `repeatEvent` always stores `publish: false` on the rule when the source is not published,
+    // whatever the tick said, so the flag cannot be trusted to mean "the tick is off" here — the
+    // source being unpublished is the real, actionable reason, and the only one with a switch a
+    // draft source's editor actually shows.
+    const members = [
+      { editorialStatus: "DRAFT" as const, startsAt: new Date("2026-01-01"), repeatRule: { cadence: "WEEKLY", weekdays: [], until: null, publish: false } },
       child("2026-01-08", "DRAFT"),
     ];
     expect(seriesDrafts(members, new Date("2026-01-01")).reason).toBe("sourceNotPublished");

@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -2023,10 +2023,14 @@ export async function setRepeatPublish<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "publish this event first: the dates of an unpublished event stay drafts");
     }
   }
+  // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing
+  // between the read above and this write would otherwise have this `{ ...rule, publish }` — the
+  // rule as it was before the stop — write the series back into existence. With the guard, that
+  // race makes this update match nothing, and the stopped series stays stopped.
   await db
     .update(events)
     .set({ repeatRule: { ...rule, publish: input.publish }, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
-    .where(eq(events.id, source.id));
+    .where(and(eq(events.id, source.id), isNotNull(events.repeatRule)));
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

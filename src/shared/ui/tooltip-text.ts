@@ -16,8 +16,11 @@
  * - Body text, not MUI's 11 px caption: these are paragraphs somebody reads to the end, often
  *   on a phone, and a comfortable line height separates the items without list markup.
  *
- * No list markup inside: MUI's tooltip is a single text node by design, and the text is also
- * the button's accessible name, which a screen reader reads as it reads the tooltip.
+ * No list markup inside: not because MUI's `Tooltip` refuses one — `title` takes any
+ * `ReactNode` — but because the text crosses from a Server Component into the client island
+ * (`Hint`, `InfoTip`) as a plain string, and that same string doubles as the button's accessible
+ * name; a string is what both of those need, so a list is written as `\n– item` lines instead
+ * of markup.
  */
 export const TOOLTIP_TEXT_SX = {
   whiteSpace: "pre-line",
