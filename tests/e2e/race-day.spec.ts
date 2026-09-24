@@ -105,6 +105,54 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
   });
 
   /**
+   * §324 — a walk-in of fifteen, entered with a birth date. The staff form asks for the parent
+   * once the date says under eighteen (§108), as the public form does, and its date box stops at
+   * the latest birth date still fourteen on the chosen event's day (§321).
+   */
+  test("a walk-in under eighteen is entered with the parent's name, and the date box stops at fourteen", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+
+    await page.goto("/ro/admin/checkin");
+    const option = page.locator('select[name="eventId"] option', { hasText: FEATURED.title });
+    const eventId = (await option.getAttribute("value")) as string;
+    await page.goto(`/ro/admin/registrations/new?eventId=${eventId}&back=desk`);
+    await hydrated(page);
+
+    // The seeded race is three weeks away: fourteen on its day is born a little after today,
+    // fourteen years ago — never later than two months after that, never before it.
+    const shift = (years: number, days = 0) => {
+      const at = new Date();
+      at.setUTCFullYear(at.getUTCFullYear() - years);
+      at.setUTCDate(at.getUTCDate() + days);
+      return at.toISOString().slice(0, 10);
+    };
+    const birthDate = page.locator('[name="birthDate"]');
+    const max = (await birthDate.getAttribute("max")) as string;
+    expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(max >= shift(14)).toBe(true);
+    expect(max <= shift(14, 60)).toBe(true);
+
+    // An adult: no parent asked. Fifteen: the box is there.
+    const guardian = page.locator('[name="guardianName"]');
+    await birthDate.fill("1990-05-17");
+    await expect(guardian).toBeHidden();
+    await birthDate.fill(shift(15));
+    await expect(guardian).toBeVisible();
+
+    const suffix = `${test.info().project.name}-minor-${Date.now().toString(36)}`;
+    await page.locator('[name="firstName"]').fill("Minor");
+    await page.locator('[name="lastName"]').fill(suffix);
+    await guardian.fill(`Părinte ${suffix}`);
+    await page.locator('[name="email"]').fill(`minor-${suffix}@test.invalid`);
+    await page.getByRole("checkbox", { name: /a cerut/ }).check();
+    await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+
+    await expect(page).toHaveURL(/\/ro\/admin\/checkin\?.*eventId=/, { timeout: 30_000 });
+    await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
+  });
+
+  /**
    * §311 — a printed bib of a cancelled entry is void, and the desk is where that must not be a
    * surprise. The owner: "trebuie sa avem mare grija cu cele anulate, mai ales daca BID-ul a fost
    * deja printat!"

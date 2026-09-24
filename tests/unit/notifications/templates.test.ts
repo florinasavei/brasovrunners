@@ -197,3 +197,38 @@ describe("§239 the links every message carries", () => {
     expect((content.links ?? []).some((link) => link.url === WITH_URLS.contactUrl)).toBe(false);
   });
 });
+
+/**
+ * BR-REQ-011-01 criterion 20 (`DECISIONS.md` §332) — "Linkuri și fișiere" in the two emails a
+ * participant keeps: one line on the confirmation and the reminder pointing at `#links`, only
+ * when the event has links, and nowhere else.
+ */
+describe("§332 the links line on the confirmation and the reminder", () => {
+  const LINKS = "https://example.test/ro/evenimente/cros#links";
+  const WITH_LINKS: TemplateData = { ...DATA, eventUrl: "https://example.test/ro/evenimente/cros", eventLinksUrl: LINKS };
+
+  it("adds one line in each language, deep-linking #links", () => {
+    for (const messageType of ["REGISTRATION_CONFIRMED", "EVENT_REMINDER"] as const) {
+      const ro = buildTemplateContent(messageType, "ro", WITH_LINKS, undefined);
+      expect(ro.links?.filter((link) => link.url === LINKS), messageType).toEqual([
+        { label: "Linkuri și fișiere: pe pagina evenimentului", url: LINKS },
+      ]);
+      const en = buildTemplateContent(messageType, "en", WITH_LINKS, undefined);
+      expect(en.links?.filter((link) => link.url === LINKS), messageType).toEqual([
+        { label: "Links and files: on the event's page", url: LINKS },
+      ]);
+    }
+  });
+
+  it("says nothing when the event has no links", () => {
+    const content = buildTemplateContent("REGISTRATION_CONFIRMED", "ro", { ...WITH_LINKS, eventLinksUrl: undefined }, undefined);
+    expect((content.links ?? []).some((link) => link.url.endsWith("#links"))).toBe(false);
+  });
+
+  it("stays off every other message", () => {
+    for (const messageType of ["VERIFY_REGISTRATION_EMAIL", "COMPLETE_DECLARATION", "BIB_ASSIGNED", "REGISTRATION_OPENED"] as const) {
+      const content = buildTemplateContent(messageType, "ro", WITH_LINKS, undefined);
+      expect((content.links ?? []).some((link) => link.url === LINKS), messageType).toBe(false);
+    }
+  });
+});

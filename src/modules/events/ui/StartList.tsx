@@ -9,6 +9,7 @@ import {
   listPublicStartList,
 } from "@/modules/registrations/repository";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import type { PublicEvent } from "../repository";
 import { confirmedPhrase } from "./counted-phrases";
@@ -94,7 +95,8 @@ export default async function StartList({
         borderColor: "divider",
         borderRadius: 2,
         px: 2,
-        "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
+        "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+        ...DISCLOSURE_OPEN_ARROW,
       }}
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>

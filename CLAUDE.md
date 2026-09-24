@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.68-2026-09-23`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.69-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -120,6 +120,9 @@ sections and in `CHANGELOG.md`.
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
   feed of every published event (§107). Race week: countdown, "come to the desk with the QR"
   (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66).
+  A place may be **"to be announced"** — withheld in SQL from every public surface and email until
+  the switch goes off (§328); **"Linkuri și fișiere"**, up to twelve labelled links per event (a GPX on
+  Drive, a PDF, an album) under `#links` (§332).
 - The header lockup (§58); the kit-face wordmark at the head of the listing, the calendar and the contact page (§292), never in the header
   (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
   dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph; every backoffice button's glyph by name from `shared/ui/action-icons.ts` through the admin-only `GlyphButton` / `GlyphSubmitButton` / `GlyphButtonLink`, never on a public page, and the club's runner on the public send buttons (§318).
@@ -136,7 +139,7 @@ sections and in `CHANGELOG.md`.
   that grants nothing (§48); `FEATURE_DISPLAY_NAME` (off) hides nicknames (§95); the event's
   date, place and links to its page, its rules, the terms and the privacy notice on the form
   (§102); an optional **socials** section — Strava link, Instagram username (§106); a parent
-  registers a **minor**: the guardian's name, required under eighteen (§108); nobody under **14 on the race day**, counted in the race's own zone, at every door (§321).
+  registers a **minor**: the guardian's name, required under eighteen (§108); nobody under **the event's own minimum age** (default 14, 0 for none) on the race day, counted in the race's own zone, at every door (§321, §329).
 - The flow in five steps on the form and the event page (§91): form → email link (48 h) →
   the declaration → confirmed (QR, race number) → race day. **A free race is confirmed a week
   before**: for an event further away than its participation window (per event, default asked
@@ -153,7 +156,7 @@ sections and in `CHANGELOG.md`.
   `{{signedAt}}` — the identity document typed at signing and never scanned, the signature in
   a hand, the signed PDF emailed back and rendered per event, the blank paper form; retention
   three years, the document and the health note seven days after the event (§85–§87, §95).
-  The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99), the identity document masked (§320).
+  A **minor's declaration is signed by the minor and the parent**, each with their own identity document, once the declaration in force names `{{participantIdDocument}}` — until the club approves such a text, the parent signs alone as before (§330). The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99), the identity document masked (§320).
 - Race numbers in registration order from the event's own first number (§173, reversing §94),
   never reused; a picture of every bib, a bib
   sheet, and the small print the club composes per event — one or two lines, the same on the paper and the preview (§317); a preferential number typed by hand among the free ones, emailed to the runner
@@ -162,7 +165,7 @@ sections and in `CHANGELOG.md`.
 
 **Email**
 
-- Eighteen message types (`email_outbox.email_message_type`), bilingual by default, one branded
+- Twenty message types (`email_outbox.email_message_type`) — the organizer's **update notice**, sent only when they tick "Anunță participanții", and the **cancellation** with its reason are the newest; a cancelled event goes quiet (§331) — bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
@@ -252,7 +255,11 @@ it is the authority, this is the summary):
 7. ~~The anti-bot check~~ — done 2026-09-19: the widget `brasovrunners-site`, both keys on
    both Vercel projects, the box shows on the QA form (`SETUP.md` §36). The row turns green
    on each project's next deployment.
-8. **The three legal texts** approved on production from the platform's templates
+8. **The three legal texts** approved on production from the platform's templates — **again, since
+   2026-09-24**: the templates now carry the GDPR rewrite (§322–§324), the per-event minimum age
+   (§329) and the minor's own signature (§330); the texts in effect say none of it until the club
+   approves new versions, and the minor's second signature stays off until it does (§330). Approved
+   on production from the platform's templates
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
    the same item as 4, with the texts now written.
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
@@ -277,6 +284,11 @@ it is the authority, this is the summary):
     were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
     in; the two the club alone can decide are marked there (how many places, and how many days
     before the race a confirmation is asked and owed).
+13. **The monitors' cadence, for Neon's bill** (`SETUP.md` §40, 2026-09-23): on cron-job.org
+    the production health monitor hourly at minute 0, QA's at 0/6/12/18; the four job monitors
+    unchanged; after the release that lets an idle ping skip the database, QA's
+    „Cât de des verifică platforma" on `/admin/tasks` → Costuri set to 2 hours. The Neon limits
+    themselves are set (production 100 CU-hours a month, QA 30).
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
@@ -293,7 +305,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22, and **which plan the pages read against is a setting** — `platform_settings.neonPlan`, set once per environment on `/admin/tasks` → Costuri, Free when unset; `/devs` and the cost table follow it (`DECISIONS.md` §280, §306) |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; **the pages read the plan from Neon's own answer** (the project row's `owner.subscription_type`), and `platform_settings.neonPlan` is only the fallback without a key (`DECISIONS.md` §280, §306, §326). **Capped since 2026-09-23**: production 0.25–1 CU and 100 CU-hours a month, QA 0.25 CU and 30 — a project that reaches its limit is suspended until the next period (`SETUP.md` §40) |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |

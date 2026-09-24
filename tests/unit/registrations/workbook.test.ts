@@ -26,6 +26,7 @@ const row = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRow => 
   stravaUrl: "",
   instagramHandle: "",
   guardianName: "",
+  guardianIdDocument: "",
   submittedAt: new Date("2026-09-04T10:00:00.000Z"),
   confirmedAt: new Date("2026-09-05T08:30:00.000Z"),
   bibNumber: 17,

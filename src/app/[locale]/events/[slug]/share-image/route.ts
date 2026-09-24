@@ -22,6 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   const image = await eventShareImage(event, known, shape, {
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
+    locationToBeAnnounced: t("locationToBeAnnounced"),
     distanceKm: (km) => t("distanceKm", { km }),
     elevationM: (m) => t("elevationM", { m }),
   });

@@ -421,6 +421,48 @@
       "when": 1790145893598,
       "tag": "0059_translation_location_name",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790188107970,
+      "tag": "0060_location_to_be_announced",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790196609979,
+      "tag": "0061_event_min_age",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790197748364,
+      "tag": "0062_minor_signs_with_a_parent",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790198571074,
+      "tag": "0063_list_opt_out_default",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790199636663,
+      "tag": "0064_event_notices",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790212278911,
+      "tag": "0065_event_links",
+      "breakpoints": true
     }
   ]
 }

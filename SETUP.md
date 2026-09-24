@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.68-2026-09-23 -->
+<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.68-2026-09-23`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.69-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1059,9 +1059,12 @@ only worth it once the `r2.dev` address in the gallery's image URLs bothers some
 Two minutes, optional, read-only (BR-REQ-090-07). Launch bills CU-hours instead of suspending the
 project at Free's former 100-hour allowance, and the figure lives in Neon's console, which no
 organizer opens. With these two variables `/devs` reads CU-hours, active hours and the billing
-period. **Which plan the figures are read against is a setting** (`DECISIONS.md` §306): an
-Administrator picks Free or Launch once per environment on `/admin/tasks` → Costuri → „Planul Neon
-(baza de date)"; unset reads as Free. Neon's API gives consumption, never the plan or the invoice.
+period. **Which plan the figures are read against is Neon's own answer** (`DECISIONS.md` §326,
+correcting §306): the project row the page already reads names the owning account's plan
+(`owner.subscription_type`, `launch_v3` since 2026-09-22). The Administrator's choice on
+`/admin/tasks` → Costuri → „Planul Neon (baza de date)" is only the fallback for an environment
+without the key, or a Neon that did not answer; unset, it reads as Free. The limits set on each
+project are §40.
 
 1. Neon console → your avatar → **Account settings** → **API keys** → **Create API key**, name
    `brasovrunners-devs-readonly`. Copy it once. (Neon API keys are account-wide; this one is only
@@ -1403,3 +1406,53 @@ the internet.
 The capacity and the two window numbers (the club's own call), the rules text, the programme,
 the meeting point and its map link, and the bib band colour. Nothing else is asked for, and
 nothing here needs a developer.
+
+## 40. Neon's limits and the monitors' cadence — set 2026-09-23
+
+**Why.** The owner, with Neon's billing page open: "$1 in two days — I need to throttle", then
+"QA cheaper, and production capped, not unlimited". Measured the same night from Neon's
+operations log: the bill is **time awake**, not size. Both computes averaged 0.26 CU while awake,
+and on Launch a compute sleeps only after **5 idle minutes, a figure Launch does not let anybody
+lower** — so every request that touches the database costs at least 5 minutes at 0.25 CU.
+Production was awake 25 h of the first 37 h: about 75 wakes from the job and health monitors at
+:00/:15/:30/:45, about 64 from visitors, crawlers, staff and deployments. `DECISIONS.md` §327.
+
+**What is set, on Neon itself (read back after each change):**
+
+```text
+                      max size        monthly limit (compute_time_seconds)
+production            0.25–1 CU       100 CU-hours  (360000)  ≈ $10.60 at most
+QA                    0.25 CU fixed    30 CU-hours  (108000)  ≈  $3.20 at most
+```
+
+Together they sit under the $15 spending notification on Neon's Billing page (organisation-wide,
+kept). **A project that reaches its limit is suspended by Neon until the next billing period
+starts** — on production that is the site down: registrations, the desk, the emails. So the
+limit leaves room (production used 6.3 CU-hours in the first 37 hours, most of it two people
+testing all day), and `/admin/tasks` → Costuri shows the month's hours. To raise a limit before
+it bites, the same call that set it, with the project's id and an API key allowed to change the
+project:
+
+```text
+PATCH https://console.neon.tech/api/v2/projects/<project id>
+{ "project": { "settings": { "quota": { "compute_time_seconds": <CU-hours × 3600> } } } }
+```
+
+The size ceiling is `PATCH …/projects/<id>/endpoints/<endpoint id>` with
+`{"endpoint":{"autoscaling_limit_max_cu":1}}`, and the same values in the project's
+`default_endpoint_settings` so a recreated compute inherits them.
+
+**The monitors — the owner's part, on cron-job.org** (the job monitors are §26, the health
+monitors §36):
+
+1. **Production health monitor** (`GET /api/health` on the `.com`): Schedule → Custom → every
+   day, every hour, minute **0** only — no longer 0 and 30. Notifications on failure stay on.
+2. **QA health monitor** (`GET /api/health` on `qa.`): Custom → every day, hours **0, 6, 12,
+   18**, minute **0**.
+3. **The four job monitors stay as they are.** From the release that makes a ping with nothing due
+   answer without the database, a frequent ping costs nothing.
+4. **After that release:** on QA, `/admin/tasks` → Costuri → „Cât de des verifică platforma" →
+   **2 ore**; production stays on „La nevoie".
+
+Steps 1 and 2 change nothing the health check measures — it times the *job* runs, not its own —
+so they are safe on any day. Step 4 waits for the release because the card does not exist before it.

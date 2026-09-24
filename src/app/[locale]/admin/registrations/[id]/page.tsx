@@ -15,14 +15,17 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
+import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import {
   findRegistrationDetailForAdmin,
   listDeclarationAcceptances,
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
+import { readEmergencyDetails } from "@/modules/registrations/admin-service";
+import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -44,12 +47,13 @@ import {
   deleteRegistrationAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  withdrawConsentAction,
 } from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -74,18 +78,47 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
+    /*
+      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
+      declaration in effect in this registration's language — the one the press binds to — asks
+      the minor to sign. Read only for a minor; an adult's paper carries one signature anyway.
+    */
+    registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date()) : false,
   ]);
 
-  const { resent, saved, error } = await searchParams;
+  const { resent, saved, error, health } = await searchParams;
   const tr = await getTranslations("Admin");
   const format = await getFormatter();
   const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
+
+  /*
+    The emergency details (§322): the phone, the emergency contact and the health note — what
+    the form collected "for race day" and nothing here could show. Read only when asked for
+    (`?health=1`, a plain link, so no prefetch opens it on somebody's behalf), and each read is
+    recorded before the values come back (`readEmergencyDetails`), because the trail is how the
+    club answers "who has seen my health note". The gate is the page's own — whoever may read
+    the registrations — asserted again in the service. Never on the desk (§15.11).
+  */
+  const emergency = health === "1" ? await readEmergencyDetails(db, actor, registration.id, new Date()) : null;
+  const detailPath = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registration.id } } });
+  // Everything held about this person, one link away for the Administrator (§322) — the address
+  // sealed, never written into the URL (`person-data.ts`).
+  const personLookup = mayManage ? sealPersonLookup(registration.participantCanonicalEmail, new Date()) : null;
+  const personHref = personLookup
+    ? `${getPathname({ locale, href: "/admin/registrations/person" })}?q=${encodeURIComponent(personLookup)}`
+    : null;
+  // What the withdrawal panel can clear (§322): the groups this row still holds, as booleans.
+  const withdrawable = {
+    health: registration.holdsHealthNote,
+    socials: registration.stravaUrl !== null || registration.instagramHandle !== null,
+    results: registration.resultsNameConsent,
+  };
 
   /*
     The form filled again with the same address (§312), out of the trail and into the timeline,
@@ -246,7 +279,70 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </GlyphButton>
           </form>
         )}
+        {personHref && (
+          <GlyphButton icon="personData" href={personHref} variant="text" sx={{ minHeight: 44 }}>
+            {tr("registrations.personThis")}
+          </GlyphButton>
+        )}
       </Stack>
+
+      {/*
+        Emergency and health (§322): for the people they are for, and only when asked. Folded
+        behind a plain link rather than rendered with the page, so opening a registration to fix
+        a name does not read — and record reading — somebody's health note.
+      */}
+      <Box component="section" id="emergency" sx={{ scrollMarginTop: 16 }}>
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.emergency.title")}
+        </Typography>
+        {emergency ? (
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              {tr("registrations.emergency.phone")}: {emergency.phone ?? tr("registrations.emergency.none")}
+            </Typography>
+            <Typography variant="body2">
+              {tr("registrations.emergency.contact")}:{" "}
+              {emergency.emergencyContactName || emergency.emergencyContactPhone
+                ? [emergency.emergencyContactName, emergency.emergencyContactPhone].filter(Boolean).join(" · ")
+                : tr("registrations.emergency.none")}
+            </Typography>
+            <Typography variant="body2" component="div">
+              {tr("registrations.emergency.health")}:{" "}
+              {emergency.healthNotes ? (
+                <>
+                  <Box component="span" sx={{ whiteSpace: "pre-wrap" }}>
+                    {emergency.healthNotes}
+                  </Box>
+                  {emergency.healthConsentAt && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {tr("registrations.emergency.healthConsented", { date: dt(emergency.healthConsentAt) ?? "" })}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                tr("registrations.emergency.healthNone")
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.emergency.viewed")}
+            </Typography>
+            <Box>
+              <GlyphButton icon="dismiss" href={`${detailPath}#emergency`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                {tr("registrations.emergency.hide")}
+              </GlyphButton>
+            </Box>
+          </Stack>
+        ) : (
+          <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+            <GlyphButton icon="emergency" href={`${detailPath}?health=1#emergency`} variant="outlined" sx={{ minHeight: 44 }}>
+              {tr("registrations.emergency.show")}
+            </GlyphButton>
+            <Typography variant="caption" color="text.secondary">
+              {tr("registrations.emergency.showHelp")}
+            </Typography>
+          </Stack>
+        )}
+      </Box>
 
       <Divider />
 
@@ -270,6 +366,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
                   {tr("desk.fastTrackHelp")}
+                  {/* A minor's paper is signed by the minor and the parent, and the press attests both
+                      (§330) — where the declaration in effect asks the minor to sign. */}
+                  {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
                 </Typography>
               </Stack>
             </form>
@@ -477,6 +576,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               <RecallField
                 name="reason"
                 label={tr("registrations.cancelReason")}
+                // The reason is kept in the trail for three years (§322): it says why, never who.
+                helperText={tr("registrations.reasonNoIdentity")}
                 size="small"
                 required
                 slotProps={{ htmlInput: { maxLength: 500 } }}
@@ -501,6 +602,55 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>
+        </Box>
+      )}
+
+      {/*
+        Withdraw consent (§322; `AGENTS.md` §15.11): the staff verb for the person who wrote to
+        the club instead of pressing the button on their own link. The Administrator's, like
+        every verb that changes a registration (§289) — an Organizer reads the health note above
+        and has no control here — and asserted again in the service. Only the groups the row
+        still holds are offered; the status, the place and the number do not move.
+      */}
+      {mayManage && (
+        <Box component="section">
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+            {tr("registrations.withdraw.title")}
+          </Typography>
+          {withdrawable.health || withdrawable.socials || withdrawable.results ? (
+            <form action={withdrawConsentAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Stack spacing={1.5}>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.withdraw.help")}
+                </Typography>
+                <Box>
+                  {withdrawable.health && <CheckboxField name="health">{tr("registrations.withdraw.health")}</CheckboxField>}
+                  {withdrawable.socials && <CheckboxField name="socials">{tr("registrations.withdraw.socials")}</CheckboxField>}
+                  {withdrawable.results && <CheckboxField name="results">{tr("registrations.withdraw.results")}</CheckboxField>}
+                </Box>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
+                  <RecallField
+                    name="reason"
+                    label={tr("registrations.withdraw.reason")}
+                    helperText={tr("registrations.reasonNoIdentity")}
+                    size="small"
+                    required
+                    slotProps={{ htmlInput: { maxLength: 500 } }}
+                    sx={{ flex: 1 }}
+                  />
+                  <GlyphButton icon="delete" type="submit" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+                    {tr("registrations.withdraw.action")}
+                  </GlyphButton>
+                </Stack>
+              </Stack>
+            </form>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {tr("registrations.withdraw.nothing")}
+            </Typography>
+          )}
         </Box>
       )}
 
@@ -532,7 +682,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 <Typography variant="body2" color="text.secondary">
                   {tr("registrations.deleteHelp")}
                 </Typography>
-                <RecallField name="reason" label={tr("registrations.deleteReason")} required slotProps={{ htmlInput: { maxLength: 500 } }} />
+                {/* What the erase cannot reach (§322), read before the press as well as after it. */}
+                <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+                  {tr("registrations.eraseLeftovers")}
+                </Typography>
+                {/* The one line that outlives the erasure (§322): why, never who. */}
+                <RecallField
+                  name="reason"
+                  label={tr("registrations.deleteReason")}
+                  helperText={tr("registrations.reasonNoIdentity")}
+                  required
+                  slotProps={{ htmlInput: { maxLength: 500 } }}
+                />
                 <CheckboxField name="confirm" required>
                   {tr("registrations.deleteConfirm")}
                 </CheckboxField>
@@ -593,14 +754,38 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {label}: {value}
             </Typography>
           ))}
-        {acceptances.map((acceptance, index) => (
+        {acceptances.map((acceptance, index) => {
+          /*
+            A minor's declaration is signed by two (§330): the minor's signature and document, then
+            the parent's — each in the hand, each named. An adult's, and a minor's signed before two
+            signatures were asked, read as they always did.
+          */
+          const twoSigners = Boolean(registration.guardianName) && acceptance.minorTypedName !== null;
+          const hand = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" };
+          return (
           <Typography key={index} variant="body2">
             {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
-            <Box component="span" sx={{ fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" }}>
+            {twoSigners && (
+              <>
+                <Box component="span" sx={hand}>
+                  {acceptance.minorTypedName}
+                </Box>{" "}
+                ({tr("registrations.signedByMinor")}) ·{" "}
+              </>
+            )}
+            <Box component="span" sx={hand}>
               {acceptance.typedName}
             </Box>{" "}
+            {twoSigners && <>({tr("registrations.signedByGuardian")}) </>}
             (v{acceptance.declarationVersion})
-            {acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`}
+            {twoSigners ? (
+              <>
+                {acceptance.minorIdDocument && ` — ${tr("desk.idDocumentMinor")}: ${acceptance.minorIdDocument}`}
+                {acceptance.idDocument && ` — ${tr("desk.idDocumentGuardian")}: ${acceptance.idDocument}`}
+              </>
+            ) : (
+              acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`
+            )}
             {index === 0 && (
               <>
                 {" — "}
@@ -612,7 +797,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>
-        ))}
+          );
+        })}
       </Stack>
 
       {staffTrail.length > 0 && (
