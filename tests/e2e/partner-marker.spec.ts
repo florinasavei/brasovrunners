@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §NNN) — an event held with a partner wears the
@@ -69,7 +69,9 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     // Publication counts the short description in both languages (`AGENTS.md` §11.2).
     const excerpt = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      // Idempotent: the fold is shared across the language tabs since BR-V1.81, so the English
+      // one is already open once the Romanian is, and a second click would close it.
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
