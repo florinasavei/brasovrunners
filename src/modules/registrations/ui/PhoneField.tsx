@@ -325,11 +325,43 @@ function PhoneFieldIsland({
    * Cleared the moment the numbers differ, or the control would stay refused for ever.
    */
   const inputRef = useRef<HTMLInputElement>(null);
+  /** The native select underneath the flag (§NNN) — read once, on mount, below. */
+  const selectRef = useRef<HTMLSelectElement>(null);
   useEffect(() => {
     const input = inputRef.current;
     if (!input) return;
     input.setCustomValidity(sameAsOther ? (mustDifferLabel ?? "") : "");
   }, [sameAsOther, mustDifferLabel]);
+
+  /**
+   * The country a browser can put in the select before this island ever ran (§NNN).
+   *
+   * The select stays native so it works before hydration (see the component's own comment) —
+   * but that cuts both ways. A country picked in that window, or one Firefox refills from its
+   * own form-restore on reload, lands in the DOM with no `change` event to tell React about it,
+   * because restoration sets the property directly. `country` would then sit at `initialCountry`
+   * forever while the select itself posts something else — the flag, the mask and the live
+   * verdict all wrong in exactly the way the component's own comment says they "can never" be.
+   *
+   * Read once, right after mount, the same way the select's own `onChange` handles a change it
+   * did see: reformat what the box already holds under the country the DOM actually carries, and
+   * let state catch up to the screen rather than the other way around (§211).
+   */
+  useEffect(() => {
+    const select = selectRef.current;
+    const input = inputRef.current;
+    if (!select || !input) return;
+    const restored = select.value;
+    if (!restored || restored === initialCountry) return;
+    setCountry(restored);
+    const reformatted = formatNationalNumber(restored, input.value);
+    if (input.value !== reformatted) input.value = reformatted;
+    lastValue.current = reformatted;
+    setNational(reformatted);
+    // Once, right after mount: `initialCountry` is this render's own value and does not change
+    // underneath the effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /*
     The list the phone opens: flag, name and code — "🇷🇴 România (+40)" (§NNN, superseding
@@ -358,6 +390,7 @@ function PhoneFieldIsland({
         <ArrowDropDownIcon sx={{ fontSize: 20, color: "action.active" }} />
       </span>
       <select
+        ref={selectRef}
         name={`${name}Country`}
         aria-label={countryLabel}
         defaultValue={initialCountry}
@@ -484,10 +517,17 @@ function PhoneFieldIsland({
             **Escaped, because browsers compile `pattern` with the `v` flag** (§NNN), and under
             it an unescaped `(`, `)`, `/` or `-` inside a class is a syntax error. The pattern
             this replaced, `[0-9+()./\s-]`, was therefore invalid, and a browser ignores an
-            invalid pattern outright — it had been enforcing nothing. The upper bound follows
-            `maxLength`, so the mask's own spaces can never make a number too long for it.
+            invalid pattern outright — it had been enforcing nothing.
+
+            **No upper bound in the pattern itself.** A refused draft is deliberately brought
+            back with every digit it had, uncapped (`initialNational`, above) — a no-JS entrant
+            who typed past the cap must still be refused with this field's own words, never the
+            browser's generic "match the requested format" for a pattern their own draft is
+            longer than. `minLength` still asks for four characters and `composePhone` on the
+            server has the final word either way; `maxLength` alone bounds what somebody can
+            still type or paste from here on.
           */
-          pattern: `[0-9+.\\(\\)\\/\\s\\-]{4,${maxLength}}`,
+          pattern: `[0-9+.\\(\\)\\/\\s\\-]{4,}`,
           minLength: 4,
           maxLength,
         },

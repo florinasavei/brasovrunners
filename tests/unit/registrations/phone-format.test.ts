@@ -78,7 +78,18 @@ describe("§NNN the mask, per country", () => {
     expect(formatNationalNumber("RO", "+407")).toBe("+40 7");
     // The same plus `composePhone` sees: after the separators it tolerates, and nowhere else.
     expect(formatNationalNumber("RO", " (+40) 752")).toBe("+40 752");
-    expect(formatNationalNumber("RO", "0752+189")).toBe("0752 189");
+    // A `+` anywhere but the front is exactly what `composePhone` refuses (§NNN) — formatting
+    // it into something that looks clean would be the one thing a refused draft must never
+    // become, so it comes back untouched instead.
+    expect(composePhone("RO", "0752+189")).toBeNull();
+    expect(formatNationalNumber("RO", "0752+189")).toBe("0752+189");
+  });
+
+  it("leaves a draft composePhone would refuse exactly as it was typed, never cleaned into one that would pass (§NNN)", () => {
+    for (const typed of ["0752a189098", "0752/189/098", "07521+89+098", "b"]) {
+      expect(composePhone("RO", typed), typed).toBeNull();
+      expect(formatNationalNumber("RO", typed), typed).toBe(typed);
+    }
   });
 
   it("shows the 00 prefix and the code typed without a plus the way composePhone reads them", () => {
@@ -303,6 +314,11 @@ describe("§NNN one box, rendered on the server", () => {
     // Too many digits comes back with all of them: cutting one could make a refused number pass.
     expect(render({ draft: { country: "RO", national: "07123456789999999" } })).toContain('value="0712 345 678 999 999 9"');
     expect(render({ draft: { country: "RO", national: "12" } })).toContain('value="12"');
+  });
+
+  it("brings a no-JS draft composePhone refused back exactly as typed, not cleaned into a number that would pass (§NNN)", () => {
+    expect(composePhone("RO", "0752+189 098")).toBeNull();
+    expect(render({ draft: { country: "RO", national: "0752+189 098" } })).toContain('value="0752+189 098"');
   });
 
   it("masks a shared-code prefill with the plan it belongs to", () => {

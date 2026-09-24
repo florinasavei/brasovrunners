@@ -318,8 +318,9 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
     await expect(phone).toHaveAttribute("maxlength", "23");
 
     // And the confirmation is the number itself, which is the only thing that proves the
-    // country beside it was understood.
-    await expect(page.getByText("+40712345678")).toBeVisible();
+    // country beside it was understood — the full fifteen digits the cap exists to allow,
+    // not merely a prefix of them.
+    await expect(page.getByText("+407123456789999")).toBeVisible();
   });
 
   test("gives the submit button and the required consent at least 44 pixels", async ({ page }) => {
@@ -469,6 +470,32 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     } finally {
       await context.close();
     }
+  });
+
+  test("a country restored before hydration is not lost — the flag, mask and verdict follow it (§NNN)", async ({ page }) => {
+    /*
+      What Firefox's own form restoration does on reload, and what a country picked in the
+      instant before React attaches its listener does too: the select's value changes with no
+      `change` event to tell this island. Set here the same way, directly on the DOM, before
+      `hydrated()` gives the client any time to run — a `change` event would defeat the point.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await page.locator('select[name="phoneCountry"]').evaluate((select) => {
+      (select as HTMLSelectElement).value = "MD";
+    });
+    await hydrated(page);
+
+    const phone = page.locator('[name="phone"]');
+    const box = phone.locator("..");
+    // The flag follows the select the browser changed, not the country the server rendered.
+    await expect(box.locator('img[src="/flags/md.svg"]')).toBeVisible();
+    await phone.fill("");
+    await phone.pressSequentially("69123456");
+    // Moldova's mask, not Romania's.
+    await expect(phone).toHaveValue("69 123 456");
+    await expect(page.getByText("+37369123456")).toBeVisible();
   });
 });
 

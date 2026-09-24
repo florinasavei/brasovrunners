@@ -75,6 +75,24 @@ function readTyped(typed: string): { plus: boolean; digits: string } {
   return { plus: typed.replace(/[\s().\-]/g, "").startsWith("+"), digits: typed.replace(/\D/g, "") };
 }
 
+/**
+ * Whether `typed` holds nothing `composePhone` would refuse outright on sight: only digits, the
+ * separators it tolerates, and a leading `+` (§NNN).
+ *
+ * `formatNationalNumber` below keeps only digits and a leading `+`, dropping everything else —
+ * which is exactly right for a keystroke, where the mask only ever *adds* spaces to a value it
+ * built itself. It is the wrong answer for a draft nobody typed through the mask: a no-JS
+ * submission refused by `composePhone` for a stray letter or a second `+` would come back from
+ * this function looking clean and valid, which is the one thing `PhoneField`'s own comment says
+ * a refused number must never become. Reformatting only what this admits leaves such a draft
+ * showing exactly what was refused.
+ */
+function looksComposable(typed: string): boolean {
+  const stripped = typed.replace(/[\s().-]/g, "");
+  const rest = stripped.startsWith("+") ? stripped.slice(1) : stripped.startsWith("00") ? stripped.slice(2) : stripped;
+  return /^\d*$/.test(rest);
+}
+
 /** Digits cut into the pattern's groups; whatever is left over carries on in threes. */
 function group(digits: string, groups: readonly number[]): string {
   const parts: string[] = [];
@@ -120,9 +138,16 @@ function international(countryCode: string, digits: string): string {
  * Spaces only, and only digits and a leading `+` survive — anything else a person pastes is
  * dropped, as the box has dropped it since §223. Idempotent: formatting a formatted value
  * changes nothing, which is what lets the browser run it on every keystroke.
+ *
+ * **Unless `typed` already carries something `composePhone` would refuse** (`looksComposable`,
+ * above) — a stray letter, a misplaced `+`, a separator neither of them tolerates — in which case
+ * `typed` comes back exactly as it was. Only a draft nobody typed through the mask can reach this
+ * function looking like that (a keystroke is filtered before it gets here), and such a draft must
+ * be shown refused, never quietly cleaned into something that looks like it would be accepted.
  */
 export function formatNationalNumber(countryCode: string, typed: string): string {
   const country = countryCode.toUpperCase();
+  if (!looksComposable(typed)) return typed;
   const { plus, digits } = readTyped(typed);
   if (plus) return `+${international(country, digits)}`;
   if (digits.startsWith("00")) {
