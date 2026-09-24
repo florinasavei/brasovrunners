@@ -1,6 +1,7 @@
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { REPEAT_CADENCES } from "@/modules/events/domain/repeat";
+import { calendarDayWords } from "@/i18n/dates";
 import { weekdayNames } from "@/modules/events/ui/series-sentence";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
@@ -52,6 +53,7 @@ export default async function RepeatFields({
     until: t.raw("editor.repeatRuleLiveUntil") as string,
     horizon: t("editor.repeatRuleLiveHorizon"),
     weekdayNames: weekdayNames(locale),
+    untilDay: calendarDayWords(locale),
   };
 
   return (

@@ -144,6 +144,48 @@ export function formatTime(date: Date, options: { locale: string; timeZone: stri
 }
 
 /**
+ * The words of a short, inline calendar day — "mie., 30 sept. 2026" / "Wed, 30 Sept 2026" — for a
+ * client island that echoes a date while it is typed (the Recurență box's live sentence, §350).
+ * The island may not format a date itself (§324), so the server hands it these strings and it
+ * joins them with `composeCalendarDay`: the seven short weekday names (index 0 is Monday) and, per
+ * month, the day-month-year as this helper writes it with `{day}` and `{year}` left open — the
+ * language's own order and punctuation, read off the same formatter `formatCalendarDay` uses.
+ */
+export type CalendarDayWords = { weekdays: readonly string[]; months: readonly string[] };
+
+export function calendarDayWords(locale: string): CalendarDayWords {
+  const intl = intlLocale(locale);
+  const weekday = formatter(intl, { weekday: "short", timeZone: "UTC" });
+  const dayMonthYear = formatter(intl, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  return {
+    // 2024-01-01 is a Monday.
+    weekdays: [0, 1, 2, 3, 4, 5, 6].map((offset) => weekday.format(new Date(Date.UTC(2024, 0, 1 + offset, 12)))),
+    months: Array.from({ length: 12 }, (_, month) =>
+      dayMonthYear
+        .formatToParts(new Date(Date.UTC(2024, month, 15, 12)))
+        .map((part) => (part.type === "day" ? "{day}" : part.type === "year" ? "{year}" : part.value))
+        .join(""),
+    ),
+  };
+}
+
+/**
+ * "mie., 30 sept. 2026" from a `YYYY-MM-DD` and the server's `calendarDayWords` — the same text
+ * `formatCalendarDay` writes in the short style, inline — or "" for anything that is not a real
+ * day. No `Intl` here: this is the island's half (§324).
+ */
+export function composeCalendarDay(ymd: string, words: CalendarDayWords): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (!match) return "";
+  const [, year, month, day] = match;
+  const noon = new Date(`${ymd}T12:00:00Z`);
+  // "2026-02-31" is no day: an invalid date, or one that rolled into March.
+  if (Number.isNaN(noon.getTime()) || noon.getUTCDate() !== Number(day)) return "";
+  const template = words.months[Number(month) - 1] ?? "";
+  return `${words.weekdays[(noon.getUTCDay() + 6) % 7]}, ${template.replace("{day}", String(Number(day))).replace("{year}", year)}`;
+}
+
+/**
  * Two days as one span: "Sâm., 16 ian. 2027 – dum., 17 ian. 2027". The second day continues the
  * first, so it keeps the language's own case; the first follows `position`.
  */

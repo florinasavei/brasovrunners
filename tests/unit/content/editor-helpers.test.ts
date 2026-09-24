@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import ro from "../../../messages/ro.json";
+import { calendarDayWords } from "@/i18n/dates";
 import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/RepeatRuleFields";
 import { followingIds, presetOf } from "@/modules/content/events/ui/SeriesScope";
 import { slugFromTitle } from "@/modules/content/events/ui/slug";
@@ -70,6 +71,7 @@ describe("§350 the rule in one live sentence", () => {
     horizon: ro.Admin.editor.repeatRuleLiveHorizon,
     // Written on the server (`series-sentence.ts#weekdayNames`) and handed to the island (§324).
     weekdayNames: weekdayNames("ro"),
+    untilDay: calendarDayWords("ro"),
   };
 
   it("hands the island the seven weekday names, ISO-numbered, in the reader's language", () => {
@@ -82,7 +84,7 @@ describe("§350 the rule in one live sentence", () => {
       "În fiecare luni și miercuri, la 18:30 — la nesfârșit. Se creează acum datele din următoarele opt săptămâni.",
     );
     expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [1], time: "18:30", day: "", until: "2026-12-20" }, "ro")).toContain(
-      "— până la 20.12.2026.",
+      "— până la dum., 20 dec. 2026.",
     );
     expect(ruleSentenceFrom(words, { cadence: "MONTHLY", weekdays: [], time: "09:00", day: "11", until: "" }, "ro")).toMatch(/^Lunar, pe 11, la 09:00/);
   });

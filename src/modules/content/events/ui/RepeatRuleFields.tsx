@@ -6,6 +6,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
+import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
 import { useRecall } from "@/shared/forms/recall";
 import { fillIn } from "@/shared/forms/fill-in";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
@@ -33,14 +34,16 @@ export type RuleSentenceWords = {
    * every date).
    */
   weekdayNames: Readonly<Record<string, string>>;
+  /** The end date's words, written on the server the same way (`dates.ts#calendarDayWords`). */
+  untilDay: CalendarDayWords;
 };
 
 /**
  * "Se repetă săptămânal, lunea și miercurea, la 18:30 — la nesfârșit." — the rule, in words,
  * from the boxes as they stand (§350). Pure: the caller reads the form.
  *
- * The end is echoed as the date box shows it while it is typed (`30.09.2026`, the pickers'
- * format, §303); once saved, the Recurență box writes the rule on the server, with its weekday.
+ * The end reads as the Recurență box writes it once saved — "până la mie., 30 sept. 2026", its
+ * weekday first (§349) — joined from the server's words, not formatted here (§324).
  */
 export function ruleSentenceFrom(
   words: RuleSentenceWords,
@@ -55,7 +58,7 @@ export function ruleSentenceFrom(
       ? fillIn(words.monthly, { day: rule.day })
       : fillIn(rule.cadence === "FORTNIGHTLY" ? words.fortnightly : words.weekly, { days });
   const timed = rule.time ? fillIn(words.atTime, { sentence: base, time: rule.time }) : base;
-  const untilText = /^\d{4}-\d{2}-\d{2}$/.test(rule.until) ? rule.until.split("-").reverse().join(".") : "";
+  const untilText = composeCalendarDay(rule.until, words.untilDay);
   return `${timed}${untilText ? fillIn(words.until, { until: untilText }) : words.forever} ${words.horizon}`;
 }
 

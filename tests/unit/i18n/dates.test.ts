@@ -3,8 +3,10 @@ import { join, relative } from "node:path";
 import { createFormatter } from "next-intl";
 import { describe, expect, it } from "vitest";
 import {
+  calendarDayWords,
   capitalizeFirst,
   CLUB_TIME_ZONE,
+  composeCalendarDay,
   DATE_FORMATS,
   formatCalendarDay,
   formatDay,
@@ -173,6 +175,21 @@ describe("no date is formatted outside the helper", () => {
     rendered can disagree with it and throw the page away on hydration. Every island that shows a
     date — the series chips, the scope selector — is handed the server's string instead.
   */
+  it("hands an island words that join into exactly the helper's short inline day (§350's live sentence)", () => {
+    for (const locale of ["ro", "en"]) {
+      const words = calendarDayWords(locale);
+      for (let month = 1; month <= 12; month++) {
+        for (const day of [1, 9, 28]) {
+          const ymd = `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          expect(composeCalendarDay(ymd, words)).toBe(formatCalendarDay(ymd, { locale, style: "short", position: "inline" }));
+        }
+      }
+    }
+    expect(composeCalendarDay("2026-09-30", calendarDayWords("ro"))).toBe("mie., 30 sept. 2026");
+    expect(composeCalendarDay("2026-02-31", calendarDayWords("ro"))).toBe("");
+    expect(composeCalendarDay("30.09.2026", calendarDayWords("ro"))).toBe("");
+  });
+
   it("leaves no client island to format a date itself", () => {
     const islands = files.filter((file) => /^\s*["']use client["']/.test(readFileSync(file, "utf8")));
     expect(islands.length).toBeGreaterThan(0);

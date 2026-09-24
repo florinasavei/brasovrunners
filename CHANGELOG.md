@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.73-2026-09-24
+
+- **The Recurență box's live sentence names the end's day of the week too.** Typing an end date on the create page now reads "— până la mie., 30 sept. 2026." / "— until Wed, 30 Sept 2026.", exactly as the box writes the rule once it is saved, instead of echoing the picker's 30.09.2026. The island still formats no date itself (§324): the server hands it the short weekday and month words from `dates.ts#calendarDayWords`, it joins them with `composeCalendarDay`, and a test holds the join to `formatCalendarDay` for every month in both languages. `src/i18n/dates.ts`, `RepeatRuleFields.tsx`, `RepeatFields.tsx`; §349, §350.
+
 ## BR-V1.72-2026-09-24
 
 - **The waiting list can have a length.** "Lungimea maximă a listei de așteptare" beside the places: empty is no limit, 0 is no waiting list. The event page says how many slots are left in the line, and says "full" with no button once they are gone. Every door, staff and desk included, refuses a registration past the limit, and lowering it removes nobody. When the line is full, a place whose declaration deadline has passed goes to the next person to register instead of staying blocked until the race. §348.
