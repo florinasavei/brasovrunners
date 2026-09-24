@@ -77,27 +77,64 @@ export function presetOf(dates: readonly { id: string }[], currentId: string, ti
   return null;
 }
 
+/** The dates a preset ticks, the open one never among them. */
+export function presetIds(preset: Preset, dates: readonly { id: string }[], currentId: string): string[] {
+  if (preset === "this") return [];
+  if (preset === "all") return dates.filter((date) => date.id !== currentId).map((date) => date.id);
+  return followingIds(dates, currentId);
+}
+
+/**
+ * The radio to show: the preset the organiser pressed, while the ticks are still exactly that
+ * preset's; otherwise whatever the ticks amount to.
+ *
+ * Deriving it from the ticks alone made "Toate datele seriei" look dead on the series' first date
+ * (the owner, 2026-09-24: "acest selector nu funcționează"): there "all the others" and "the ones
+ * after this" are the same dates, `presetOf` answers "following" first, and the pressed radio
+ * jumped straight back to "Această dată și următoarele" — the save was right, the control lied.
+ * The same happened to "Această dată și următoarele" on the last date, where it ticks nothing and
+ * reads as "Doar această dată". Ticking a date by hand clears the pressed preset (`chosen` null).
+ */
+export function shownPreset(
+  chosen: Preset | null,
+  dates: readonly { id: string }[],
+  currentId: string,
+  ticked: ReadonlySet<string>,
+): Preset | null {
+  if (chosen) {
+    const ids = presetIds(chosen, dates, currentId);
+    if (ids.length === ticked.size && ids.every((id) => ticked.has(id))) return chosen;
+  }
+  return presetOf(dates, currentId, ticked);
+}
+
 export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly ScopeDate[]; currentId: string; children: ReactNode }) {
   // "This and the following" when the editor opens (§350, reversing §240's "all").
   const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set(followingIds(dates, currentId)));
-  const value = useMemo<ScopeState>(() => {
-    const others = dates.filter((date) => date.id !== currentId).map((date) => date.id);
-    const following = followingIds(dates, currentId);
-    return {
+  // The radio the organiser pressed last, or null once a date was ticked by hand (`shownPreset`).
+  const [chosen, setChosen] = useState<Preset | null>("following");
+  const value = useMemo<ScopeState>(
+    () => ({
       dates,
       currentId,
       ticked,
-      preset: presetOf(dates, currentId, ticked),
-      toggle: (id) =>
+      preset: shownPreset(chosen, dates, currentId, ticked),
+      toggle: (id) => {
+        setChosen(null);
         setTicked((was) => {
           const next = new Set(was);
           if (next.has(id)) next.delete(id);
           else next.add(id);
           return next;
-        }),
-      setPreset: (next) => setTicked(new Set(next === "this" ? [] : next === "all" ? others : following)),
-    };
-  }, [dates, currentId, ticked]);
+        });
+      },
+      setPreset: (next) => {
+        setChosen(next);
+        setTicked(new Set(presetIds(next, dates, currentId)));
+      },
+    }),
+    [dates, currentId, ticked, chosen],
+  );
   return <ScopeContext.Provider value={value}>{children}</ScopeContext.Provider>;
 }
 

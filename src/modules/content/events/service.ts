@@ -6,7 +6,7 @@ import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
+import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { queueEventCancelledNotices, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
 import {
@@ -43,7 +43,7 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { isBlankValue } from "@/shared/forms/blank-value";
-import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
+import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import {
   type EventFieldsInput,
@@ -909,11 +909,17 @@ export async function transitionEvent<T extends Record<string, unknown>>(
 
 // --- Telling the participants (§331) --------------------------------------------------------
 
-/** "Anunță participanții despre schimbare", as the editor's save posts it: the box, and the optional note. */
-export type EventNoticeRequest = { notify: boolean; note?: string | null };
+/**
+ * One of the organizer's texts as the form posts it: a box per language (§354, bilingual
+ * everywhere), either of which may be missing from a caller that did not draw it.
+ */
+export type EventNoticeTextInput = { ro?: string | null; en?: string | null };
 
-/** Why the event is being cancelled, and whether its participants are told (the box starts ticked). */
-export type EventCancellationRequest = { reason: string; notify: boolean };
+/** "Anunță participanții despre schimbare", as the editor's save posts it: the box, and the optional note in both languages. */
+export type EventNoticeRequest = { notify: boolean; note?: EventNoticeTextInput | null };
+
+/** Why the event is being cancelled, in both languages, and whether its participants are told (the box starts ticked). */
+export type EventCancellationRequest = { reason: EventNoticeTextInput; notify: boolean };
 
 /**
  * What the save told the participants, for the banner that follows it. Absent when the save was
@@ -937,12 +943,38 @@ export type EventNoticeOutcome =
 
 type NoticeRequest = {
   notify: boolean;
-  note: string | null;
-  cancellation: { reason: string; notify: boolean } | null;
+  note: BilingualText | null;
+  cancellation: { reason: BilingualText; notify: boolean } | null;
 };
+
+/** The posted box of each language: `notice.noteRo`, `cancel.reasonEn`. */
+const noticeBox = (prefix: "notice.note" | "cancel.reason", language: TextLanguage) => `${prefix}${language === "ro" ? "Ro" : "En"}`;
+
+/**
+ * One of the organizer's texts, each language read by the notice rule on its own (plain text, at
+ * most five hundred characters). A language over the ceiling is refused on its own box; the two
+ * are returned as read, `""` for a box left empty.
+ */
+function readNoticeTexts(prefix: "notice.note" | "cancel.reason", posted: EventNoticeTextInput | null | undefined): Record<TextLanguage, string> {
+  const read = {} as Record<TextLanguage, string>;
+  const tooLong: string[] = [];
+  for (const language of ["ro", "en"] as const) {
+    const parsed = eventNoticeTextSchema.safeParse(posted?.[language] ?? "");
+    if (parsed.success) read[language] = parsed.data;
+    else tooLong.push(noticeBox(prefix, language));
+  }
+  if (tooLong.length > 0) throw new DomainError("VALIDATION_ERROR", `${tooLong.join(", ")}: at most ${EVENT_NOTICE_TEXT_MAX} characters`, tooLong);
+  return read;
+}
 
 /**
  * The notice and the cancellation, checked before any row is locked (§331).
+ *
+ * **Both languages** (§354, bilingual everywhere; the owner: "I want multi-lingual, always").
+ * Every registrant is written to in their own language, so the note and the reason are typed
+ * twice, Română and English side by side. The note is optional in both at once: written in both,
+ * or in neither — one side only is refused on the empty box, the rest of the form kept (§315). The
+ * reason was required, so it is required in both: each empty box is named.
  *
  * **Cancelling asks why.** A save that moves the event to `CANCELLED` must carry a reason: it
  * goes to the participants when they are told, and into the audit trail whether or not they are
@@ -966,21 +998,26 @@ function readNoticeRequest(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not tell an event's participants about it`);
   }
 
-  let note: string | null = null;
+  // Only a note somebody asked to send is read: unticked, the boxes are ignored, as before.
+  let note: BilingualText | null = null;
   if (notify && notice?.note) {
-    const parsed = eventNoticeTextSchema.safeParse(notice.note);
-    if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "notice.note: at most 500 characters", ["notice.note"]);
-    note = parsed.data === "" ? null : parsed.data;
+    const texts = readNoticeTexts("notice.note", notice.note);
+    const missing = missingLanguage(texts, isWrittenText);
+    if (missing) {
+      const box = noticeBox("notice.note", missing);
+      throw new DomainError("VALIDATION_ERROR", `${box}: the note is written in one language only; write both languages or neither`, [box]);
+    }
+    note = isWrittenText(texts.ro) ? { ro: texts.ro, en: texts.en } : null;
   }
 
   let cancelled: NoticeRequest["cancellation"] = null;
   if (cancelling) {
-    const parsed = eventNoticeTextSchema.safeParse(cancellation?.reason ?? "");
-    if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "cancel.reason: at most 500 characters", ["cancel.reason"]);
-    if (parsed.data === "") {
-      throw new DomainError("VALIDATION_ERROR", "cancel.reason: say why the event is cancelled", ["cancel.reason"]);
+    const texts = readNoticeTexts("cancel.reason", cancellation?.reason);
+    const empty = (["ro", "en"] as const).filter((language) => !isWrittenText(texts[language])).map((language) => noticeBox("cancel.reason", language));
+    if (empty.length > 0) {
+      throw new DomainError("VALIDATION_ERROR", `${empty.join(", ")}: say why the event is cancelled, in both languages`, empty);
     }
-    cancelled = { reason: parsed.data, notify: cancellation?.notify === true };
+    cancelled = { reason: { ro: texts.ro, en: texts.en }, notify: cancellation?.notify === true };
   }
   return { notify, note, cancellation: cancelled };
 }
