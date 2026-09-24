@@ -163,7 +163,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
   });
 
-  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID or DONATION (§121, §343)", () => {
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121, §343, §369)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);
     expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
@@ -173,9 +173,11 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     const paid = parsed(sportsEventJsonLd(baseEvent({ costType: "PAID" }), URL, "Brașov Runners"));
     expect(paid.isAccessibleForFree).toBe(false);
     expect(paid.offers).toBeUndefined();
+    // A donation is given, not paid for the place (§369): the event is free to attend.
     const donation = parsed(sportsEventJsonLd(baseEvent({ costType: "DONATION" } as Partial<PublicEvent>), URL, "Brașov Runners"));
-    expect(donation.isAccessibleForFree).toBe(false);
-    expect(donation.offers).toBeUndefined();
+    expect(donation.isAccessibleForFree).toBe(true);
+    expect(donation.offers).toEqual(free.offers);
+    expect(donation.potentialAction).toBeUndefined();
   });
 
   it("offers the club's own cost link, never a price parsed out of the free text amount (§343)", () => {
@@ -199,7 +201,24 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
         "Brașov Runners",
       ),
     );
-    expect(donation.offers).toEqual({ "@type": "Offer", url: donationUrl, availability: "https://schema.org/InStock" });
+    // Free to attend, the zero offer at the event's own page, and the donation link as schema.org's
+    // own verb for it — never the offer's url, which would read as "free tickets, over there" (§369).
+    expect(donation.isAccessibleForFree).toBe(true);
+    expect(donation.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
+    expect(donation.offers.url).not.toBe(donationUrl);
+    expect(donation.potentialAction).toEqual({ "@type": "DonateAction", target: donationUrl });
+    // A suggested amount is words, and stays out of the block like a price does.
+    const suggested = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "DONATION", costAmount: "sugerat 50 lei", costUrl: donationUrl } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(suggested.offers.price).toBe("0");
+    expect(JSON.stringify(suggested)).not.toContain("50 lei");
+    // A free event carries no donation verb, whatever a stale link column holds.
+    expect(parsed(sportsEventJsonLd(baseEvent({ costUrl: donationUrl } as Partial<PublicEvent>), URL, "Brașov Runners")).potentialAction).toBeUndefined();
   });
 
   it("references the club @id as organizer", () => {

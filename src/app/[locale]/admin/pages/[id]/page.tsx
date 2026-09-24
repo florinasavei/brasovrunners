@@ -161,7 +161,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
                 label={t("editor.save")}
                 pendingLabel={t("editor.saving")}
                 icon="save"
-                incompleteHintNamed={t("forms.incompleteFirst")}
+                incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
                 size="medium"
               />
             </Box>

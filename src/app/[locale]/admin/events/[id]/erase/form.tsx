@@ -50,7 +50,7 @@ export default async function EraseEventForm({ locale, eventId, expected }: { lo
             icon="erase"
             label={t("erase.action")}
             pendingLabel={t("erase.action")}
-            incompleteHintNamed={t("forms.incompleteFirst")}
+            incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
             color="error"
             size="medium"
           />

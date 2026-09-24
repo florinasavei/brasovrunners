@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { useRecall } from "@/shared/forms/recall";
 import { fillIn } from "@/shared/forms/fill-in";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
@@ -109,19 +110,25 @@ export default function RepeatRuleFields({
       const data = new FormData(form);
       const text = (name: string) => String(data.get(name) ?? "");
       if (followDateName) setLiveDate(text(followDateName));
-      setRule({
+      const next = {
         cadence: text(`${prefix}cadence`) || "WEEKLY",
         time: startTime ?? text("event.startsAtTime"),
         until: text(`${prefix}until`),
-      });
+      };
+      // The same rule keeps the same object, so a keystroke elsewhere in the form renders nothing here.
+      setRule((current) => (current.cadence === next.cadence && current.time === next.time && current.until === next.until ? current : next));
     };
-    const deferred = () => setTimeout(read, 0);
+    // The whole form is read, so after the frame the keystroke or the press leads to, once for a
+    // burst (§371) — never inside the press of a save button, whose `change` on the box it leaves
+    // used to pay this before "Se salvează…" could paint.
+    const scheduler = paintedScheduler(read);
     read();
-    form.addEventListener("change", deferred);
-    form.addEventListener("input", deferred);
+    form.addEventListener("change", scheduler.schedule);
+    form.addEventListener("input", scheduler.schedule);
     return () => {
-      form.removeEventListener("change", deferred);
-      form.removeEventListener("input", deferred);
+      form.removeEventListener("change", scheduler.schedule);
+      form.removeEventListener("input", scheduler.schedule);
+      scheduler.cancel();
     };
   }, [prefix, followDateName, startTime]);
 

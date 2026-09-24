@@ -115,9 +115,62 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
           missing.push(`${path.relative(process.cwd(), file)}: ${namespaces.join("|")}.${key}`);
         }
       }
+      // And `t.raw("key")`, which the pattern above does not see: a template the client fills
+      // itself (§370, below), or a list or a sub-tree (`desk.how`, `guide.sections`).
+      for (const match of text.matchAll(/\bt\w*\.raw\(\s*["']([\w.]+)["']\s*\)/g)) {
+        const key = match[1];
+        const resolves = namespaces.some(
+          (ns) => `${ns}.${key}` in roFlat || Object.keys(roFlat).some((known) => known.startsWith(`${ns}.${key}.`)),
+        );
+        if (!resolves) {
+          missing.push(`${path.relative(process.cwd(), file)}: ${namespaces.join("|")}.${key} (raw)`);
+        }
+      }
     }
 
     expect(missing, "message keys used in src/ but absent from the catalogues").toEqual([]);
+  });
+
+  /**
+   * §370 — a message with an argument is either formatted with its values or read raw, never
+   * looked up bare.
+   *
+   * `t("forms.incompleteFirst")` — "Completează mai întâi: {field}", a template `SubmitButton`
+   * fills in the browser with the first empty field's label — worked on production and on QA by
+   * accident of next-intl's fast path: a production build returns a message unformatted when no
+   * values are passed. A development build compiles it anyway, to report missing arguments, finds
+   * `{field}` without a value, logs a FORMATTING_ERROR and returns the key. So under `yarn dev`
+   * every backoffice form's hint read "Admin.forms.incompleteFirst" and could never name the
+   * field, and the gallery's upload counter read "Admin.gallery.uploaded" — which is why the
+   * gallery spec failed against `next dev` and passed against a build. `t.raw` is the lookup
+   * that means "the template itself", and says so in both builds.
+   *
+   * A tag is the same trap: `Devs.neon.unavailable` said `--project-id <id>`, which a production
+   * build printed as written and a development build refused as an unclosed tag, showing
+   * "Devs.neon.unavailable" on `/devs`. A literal angle bracket is written `'<id>'`, ICU's quote,
+   * which both builds print as `<id>`.
+   */
+  it("never looks up a message that has an argument or a tag without passing its values", () => {
+    const bare: string[] = [];
+
+    for (const file of sourceFiles(path.join(process.cwd(), "src"))) {
+      const text = readFileSync(file, "utf8");
+      const namespaces = [
+        ...[...text.matchAll(/(?:getTranslations|useTranslations)\(\s*["'`](\w+)["'`]/g)].map((m) => m[1]),
+        ...[...text.matchAll(/namespace:\s*["'`](\w+)["'`]/g)].map((m) => m[1]),
+      ];
+
+      for (const match of text.matchAll(/\bt\w*\(\s*["']([\w.]+)["']\s*\)/g)) {
+        for (const ns of namespaces) {
+          const message = roFlat[`${ns}.${match[1]}`];
+          if (message !== undefined && /\{\w|(?<!')</.test(message)) {
+            bare.push(`${path.relative(process.cwd(), file)}: ${ns}.${match[1]} = ${JSON.stringify(message)}`);
+          }
+        }
+      }
+    }
+
+    expect(bare, "pass the values, or read the template with t.raw(…) when the client fills it").toEqual([]);
   });
 
   it("resolves the dynamic event type and surface keys for every value in each enum", async () => {

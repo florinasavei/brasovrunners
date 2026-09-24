@@ -6,6 +6,7 @@ import { type RegistrationWindowInput, registrationState } from "./domain/regist
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * The environment on a calendar name and on every entry, QA only (§174; the owner: "the QA
@@ -127,7 +128,22 @@ export type CalendarEvent = {
   updatedAt: Date | null;
 };
 
-const PRODID = "-//Brasov Runners//events//RO";
+/**
+ * The club's name without its diacritics (the ș as an s) for the two places a calendar
+ * carries it that machines read as well as people: the product id every calendar file opens
+ * with, and the feed's file name. Both from the platform's one constant (§215, §357), never the
+ * name written in again; folded to ASCII so the product id stays the byte string calendar apps
+ * have seen from the start.
+ */
+const CLUB_NAME_ASCII = CLUB_NAME.normalize("NFD").replace(/\p{M}/gu, "");
+
+const PRODID = `-//${CLUB_NAME_ASCII}//events//RO`;
+
+/** The feed's file name in one language: "brasov-runners-ro.ics". */
+export function calendarFeedFileName(locale: string): string {
+  const stem = CLUB_NAME_ASCII.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return `${stem}-${locale}.ics`;
+}
 
 /**
  * How much of the long description the entry carries (§159): the page has the whole; the

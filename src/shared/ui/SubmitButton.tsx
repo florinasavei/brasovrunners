@@ -7,7 +7,8 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import { type ComponentType, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import RunnerLoader from "./RunnerLoader";
+import { paintedScheduler } from "@/shared/forms/after-paint";
+import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
 
@@ -181,11 +182,16 @@ export default function SubmitButton({
       setFirstMissing(text ? (language ? `${language}: ${text}` : text) : null);
     };
     measure();
-    form.addEventListener("input", measure);
-    form.addEventListener("change", measure);
+    // Behind the frame the keystroke leads to, once per frame (§371): the scan reads every box of
+    // the form, and the event editor has a few hundred — inside the keystroke it was paid before
+    // the letter appeared, and a `change` on leaving a box put it inside the press of this button.
+    const scheduler = paintedScheduler(measure);
+    form.addEventListener("input", scheduler.schedule);
+    form.addEventListener("change", scheduler.schedule);
     return () => {
-      form.removeEventListener("input", measure);
-      form.removeEventListener("change", measure);
+      form.removeEventListener("input", scheduler.schedule);
+      form.removeEventListener("change", scheduler.schedule);
+      scheduler.cancel();
     };
   }, [watches, incompleteHint]);
 
@@ -326,6 +332,14 @@ export default function SubmitButton({
         aria-disabled={pending}
         aria-busy={pending}
         aria-describedby={dimmed && hint ? hintId : undefined}
+        /*
+          No ink under the finger (§371): the press answers with "Se salvează…" and the runner in
+          the same frame, which is the feedback, and the ripple was the costliest thing in it — MUI
+          mounts it on the first press, measures the button (a forced layout), and on a page whose
+          first press this is, writes its styles into the layered sheet: a whole-page
+          recalculation inside the press. The keyboard's focus ripple stays.
+        */
+        disableTouchRipple
         sx={{
           ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
           ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
@@ -368,6 +382,16 @@ export default function SubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
+      {/*
+        The runner's styles, drawn with the page, so the press adds none (§371). The guarantee
+        assumes the button already has a start icon at rest — a verb's glyph or the runner. A
+        button with neither (the pages list's ↑ ↓, the registrations list's compact "Retrimite",
+        the desk's `ConfirmOnArrival`, which presses itself) mounts MUI's start-icon slot for the
+        first time on the press, and its styles may be written then if nothing else on the page
+        drew that slot at that size. Accepted: those are one-line forms, not the heavy ones this
+        was measured on, and each one's missing glyph is deliberate where it is written.
+      */}
+      <RunnerLoaderStyles size={GLYPH_PX[size]} color="inherit" />
       {dimmed && hint && (
         <Typography id={hintId} variant="body2" color="text.secondary" role="status">
           {hint}

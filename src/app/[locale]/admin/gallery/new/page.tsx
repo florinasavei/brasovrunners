@@ -61,7 +61,7 @@ export default async function NewAlbumPage({ params, searchParams }: Props) {
               label={t("gallery.create")}
               pendingLabel={t("editor.saving")}
               icon="add"
-              incompleteHintNamed={t("forms.incompleteFirst")}
+              incompleteHintNamed={t.raw("forms.incompleteFirst") as string}
               size="medium"
             />
           </Box>

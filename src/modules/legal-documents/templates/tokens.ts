@@ -1,3 +1,5 @@
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
  *
@@ -14,29 +16,64 @@
  *
  * The list is here rather than in the message catalogue because it is a fact about the
  * substitution in `signed-declaration.ts`, not a translation: a token added there and not here
- * would be a token nobody is told about. `example` is what one signature actually produced.
+ * would be a token nobody is told about. `example` is what one signature actually produced, in
+ * each language the declaration is written in (§97): the form writes both texts on one screen,
+ * and "sâmbătă, 21 nov. 2026" is not what the English text will read.
+ *
+ * The example event is a made-up one, never the club's name (§357, §369): the legend sits
+ * beside a text that serves every event, and an example naming the club reads as a value the
+ * text may carry. The two dates are written by the helper that writes the real ones (§349).
  */
+export type TokenLocale = "ro" | "en";
+
 export type DeclarationToken = {
   /** The token as it is typed into the text, braces and all. */
   token: string;
   /** The message key under `Admin.legal.tokens` that says what it becomes. */
   messageKey: string;
-  /** A real-looking value, so a reader sees the shape rather than a description of it. */
-  example: string;
+  /** A real-looking value per language, so a reader sees the shape rather than a description of it. */
+  example: Readonly<Record<TokenLocale, string>>;
 };
 
+/** The made-up event's start (Saturday 21 November 2026, 10:00 in Brașov) and the signature's instant. */
+export const TOKEN_EXAMPLE_EVENT_STARTS_AT = new Date("2026-11-21T08:00:00Z");
+export const TOKEN_EXAMPLE_SIGNED_AT = new Date("2026-09-20T16:42:00Z");
+
+const same = (value: string): Record<TokenLocale, string> => ({ ro: value, en: value });
+const inBoth = (write: (locale: TokenLocale) => string): Record<TokenLocale, string> => ({ ro: write("ro"), en: write("en") });
+
 export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
-  { token: "{{participant}}", messageKey: "participant", example: "Ana Popescu" },
-  { token: "{{declarant}}", messageKey: "declarant", example: "Mihai Popescu (părinte)" },
-  { token: "{{guardian}}", messageKey: "guardian", example: "Mihai Popescu" },
-  { token: "{{idDocument}}", messageKey: "idDocument", example: "CI XB 123456" },
+  { token: "{{participant}}", messageKey: "participant", example: same("Ana Popescu") },
+  {
+    token: "{{declarant}}",
+    messageKey: "declarant",
+    // `declarantValues` for a minor: the parent, with the relationship spelled out.
+    example: {
+      ro: "Mihai Popescu (părinte/tutore legal al minorului Ana Popescu)",
+      en: "Mihai Popescu (parent/legal guardian of the minor Ana Popescu)",
+    },
+  },
+  { token: "{{guardian}}", messageKey: "guardian", example: same("Mihai Popescu") },
+  { token: "{{idDocument}}", messageKey: "idDocument", example: same("CI XB 123456") },
   // Each signer's own document (§330): a minor's declaration is signed by the minor and the parent.
-  { token: "{{participantIdDocument}}", messageKey: "participantIdDocument", example: "CI XB 654321" },
-  { token: "{{guardianIdDocument}}", messageKey: "guardianIdDocument", example: "CI XB 123456" },
-  { token: "{{event}}", messageKey: "event", example: "Crosul aniversar Brașov Runners" },
-  { token: "{{eventDate}}", messageKey: "eventDate", example: "sâmbătă, 21 nov. 2026" },
-  { token: "{{eventLocation}}", messageKey: "eventLocation", example: "Parcul Nicolae Titulescu" },
-  { token: "{{signedAt}}", messageKey: "signedAt", example: "duminică, 20 sept. 2026, 19:42" },
+  { token: "{{participantIdDocument}}", messageKey: "participantIdDocument", example: same("CI XB 654321") },
+  { token: "{{guardianIdDocument}}", messageKey: "guardianIdDocument", example: same("CI XB 123456") },
+  { token: "{{event}}", messageKey: "event", example: { ro: "Crosul de toamnă", en: "The autumn cross" } },
+  {
+    token: "{{eventDate}}",
+    messageKey: "eventDate",
+    example: inBoth((locale) =>
+      formatDay(TOKEN_EXAMPLE_EVENT_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+    ),
+  },
+  { token: "{{eventLocation}}", messageKey: "eventLocation", example: same("Parcul Nicolae Titulescu") },
+  {
+    token: "{{signedAt}}",
+    messageKey: "signedAt",
+    example: inBoth((locale) =>
+      formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
+    ),
+  },
 ];
 
 /** Which tokens a body already uses — what the legend marks as "in this text". */

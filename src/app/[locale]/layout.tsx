@@ -17,6 +17,7 @@ import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
+import { CLUB_NAME } from "@/theme/brand";
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700", "900"],
@@ -82,13 +83,12 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Site" });
+export async function generateMetadata(): Promise<Metadata> {
   return {
     // BR-REQ-101-02: every absolute URL derives from APP_BASE_URL.
     metadataBase: new URL(env.APP_BASE_URL),
-    title: { default: t("name"), template: `%s · ${t("name")}` },
+    // The club's name from its one constant (§369): a proper name, the same in both languages.
+    title: { default: CLUB_NAME, template: `%s · ${CLUB_NAME}` },
     // The large card on X and everywhere that reads Twitter tags; Facebook reads `og:*`, which
     // the `opengraph-image.tsx` files write (`DECISIONS.md` §90).
     twitter: { card: "summary_large_image" },

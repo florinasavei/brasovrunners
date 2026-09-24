@@ -1,4 +1,5 @@
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
+import { CLUB_NAME } from "@/theme/brand";
 import { z } from "zod";
 import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
 
@@ -203,9 +204,14 @@ export const envSchema = z
      * `noreply@<MAILGUN_DOMAIN>`, which is valid on a sandbox from the moment the account
      * exists. The club's real sender name and address are an owner decision (`BUSINESS.md`
      * §9) and can be filled in whenever they are made.
+     *
+     * The name's default is the platform's one constant (`CLUB_NAME`, §215, §357), never the
+     * name written in again here: the From line of every message and the contact form's
+     * sender read it, so a renamed club is renamed in one place. `EMAIL_FROM_NAME` still wins
+     * when it is set.
      */
     EMAIL_FROM_ADDRESS: z.email().optional(),
-    EMAIL_FROM_NAME: z.string().min(1).max(120).default("Brașov Runners"),
+    EMAIL_FROM_NAME: z.string().min(1).max(120).default(CLUB_NAME),
     /**
      * Absent means a reply goes to the from address, which for `noreply@` means nowhere.
      * Setting this to a mailbox the club actually reads is the whole of "people can reply".

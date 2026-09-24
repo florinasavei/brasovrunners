@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { revealField } from "@/shared/forms/ActionForm";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { fieldId } from "@/shared/forms/outcome";
 import { fillIn } from "@/shared/forms/fill-in";
 import {
@@ -25,8 +26,10 @@ import {
  *
  * The rich-text fields announce their hidden value with a bubbling `input`, and the "to be
  * announced" switch re-sends `change` once its box has lost `required`, so listening on the form
- * is enough; the measure is deferred a tick because the editor writes after the keystroke it
- * answers.
+ * is enough; the measure waits because the editor writes after the keystroke it answers — and it
+ * waits for the frame, once for a burst of keystrokes (§371), because it reads the whole form
+ * and a keystroke is owed its letter first. The list is replaced only when it changed, so a
+ * keystroke that closes no gap re-renders nothing.
  */
 export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: readonly string[]): PublishGap[] {
   const [gaps, setGaps] = useState<PublishGap[]>([]);
@@ -35,18 +38,25 @@ export function usePublishGaps(anchor: RefObject<HTMLElement | null>, locales: r
     if (!form) return;
     const measure = () => {
       const data = new FormData(form);
-      setGaps(missingForPublish((name) => String(data.get(name) ?? ""), locales));
+      const next = missingForPublish((name) => String(data.get(name) ?? ""), locales);
+      setGaps((current) => (sameNames(current, next) ? current : next));
     };
-    const deferred = () => setTimeout(measure, 0);
+    const scheduler = paintedScheduler(measure);
     measure();
-    form.addEventListener("input", deferred);
-    form.addEventListener("change", deferred);
+    form.addEventListener("input", scheduler.schedule);
+    form.addEventListener("change", scheduler.schedule);
     return () => {
-      form.removeEventListener("input", deferred);
-      form.removeEventListener("change", deferred);
+      form.removeEventListener("input", scheduler.schedule);
+      form.removeEventListener("change", scheduler.schedule);
+      scheduler.cancel();
     };
   }, [anchor, locales]);
   return gaps;
+}
+
+/** Whether two lists name the same boxes in the same order: a gap or a copy is its box's name. */
+function sameNames(a: readonly { name: string }[], b: readonly { name: string }[]): boolean {
+  return a.length === b.length && a.every((item, index) => item.name === b[index].name);
 }
 
 /**
@@ -61,15 +71,18 @@ function useIdenticalTexts(anchor: RefObject<HTMLElement | null>, locales: reado
     if (!form || !on) return;
     const measure = () => {
       const data = new FormData(form);
-      setFound(identicalTexts((name) => String(data.get(name) ?? ""), locales));
+      const next = identicalTexts((name) => String(data.get(name) ?? ""), locales);
+      setFound((current) => (sameNames(current, next) ? current : next));
     };
-    const deferred = () => setTimeout(measure, 0);
+    // After the frame, once for a burst, and a new list only when it changed — as the gaps (§371).
+    const scheduler = paintedScheduler(measure);
     measure();
-    form.addEventListener("input", deferred);
-    form.addEventListener("change", deferred);
+    form.addEventListener("input", scheduler.schedule);
+    form.addEventListener("change", scheduler.schedule);
     return () => {
-      form.removeEventListener("input", deferred);
-      form.removeEventListener("change", deferred);
+      form.removeEventListener("input", scheduler.schedule);
+      form.removeEventListener("change", scheduler.schedule);
+      scheduler.cancel();
     };
   }, [anchor, locales, on]);
   return found;
