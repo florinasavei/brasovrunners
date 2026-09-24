@@ -35,8 +35,8 @@ export const termsRo: LegalDocumentBody = {
       heading: "4. Reguli de participare",
       paragraphs: [
         "Participi pe propria răspundere, declarându-te sănătos, pregătit pentru distanță și teren și conștient de limitele tale. Respecți indicațiile organizatorilor și ale voluntarilor, urmezi traseul marcat, respecți regulile de circulație și nu lași nimic în urmă; cine nu o face, pune pe cineva în pericol sau nu mai poate continua poate fi oprit sau exclus pe loc, fără despăgubire.",
-        "Poți participa de la 14 ani împliniți în ziua evenimentului; o înscriere cu o dată a nașterii care arată mai puțin este refuzată. Un minor (14–17 ani) este înscris de părinte sau de tutorele legal, cu datele copilului; părintele semnează declarația în locul lui, dă consimțămintele și răspunde pentru el.",
-        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al părintelui) și nu se cedează. Nu se acordă premii în bani. Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni.",
+        "Un eveniment poate cere o vârstă minimă de participare; când o cere, ea este afișată pe pagina evenimentului și trebuie să o ai împlinită în ziua lui, iar o înscriere cu o dată a nașterii care arată mai puțin este refuzată. Un minor (sub 18 ani) este înscris de părinte sau de tutorele legal, cu datele copilului; declarația o semnează amândoi, minorul și părintele, fiecare cu actul lui de identitate, iar părintele dă consimțămintele și răspunde pentru el.",
+        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al minorului sau al părintelui ori tutorelui) și nu se cedează. Nu se acordă premii în bani. Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni.",
       ],
     },
     {
@@ -55,7 +55,7 @@ export const termsRo: LegalDocumentBody = {
     {
       heading: "7. Numele tău, rezultatele, fotografiile",
       paragraphs: [
-        "Numele tău poate apărea pe lista publică de participanți a unui eveniment doar dacă clubul o pornește pentru acel eveniment și ai bifat la înscriere că vrei să apari, și în rezultatele publicate doar dacă ai bifat acordul la înscriere; pe listă și în rezultate apare numele de pe formular (sau numele de afișare, dacă e permis) și clubul, nimic altceva. Amândouă se retrag oricând din pagina înscrierii tale, fără să piardă înscrierea.",
+        "Numele tău poate apărea pe lista publică de participanți a unui eveniment doar dacă clubul o pornește pentru acel eveniment și ai bifat la înscriere că vrei să apari; pe listă apare numele de pe formular (sau numele de afișare, dacă e permis) și clubul, nimic altceva. Rezultate cu nume nu publicăm încă; când o vom face, te vom întreba separat. Acordul pentru listă îl retragi oricând din „Înscrierile mele” sau din legătura din emailul de confirmare, fără să pierzi înscrierea.",
         "Textele, fotografiile, traseele, sigla și numele clubului sunt protejate de Legea nr. 8/1996 privind dreptul de autor și drepturile conexe: le poți citi, descărca pentru uz personal și distribui prin legături; orice altă folosire cere acordul nostru scris.",
         "Clubul poate publica fotografii și filmări de la evenimente în galerie și pe canalele sale, în interesul său legitim (GDPR, articolul 6 alineatul (1) litera (f)) și cu respectarea dreptului tău la propria imagine (Codul civil, articolele 73–75). Te poți opune oricând, fără motiv: spune-ne care fotografie și o scoatem în cel mult o lună.",
       ],
@@ -113,8 +113,8 @@ export const termsEn: LegalDocumentBody = {
       heading: "4. Rules for taking part",
       paragraphs: [
         "You take part on your own responsibility, declaring yourself healthy, fit for the distance and terrain and aware of your limits. You follow the organisers' and volunteers' instructions, keep to the marked course, obey the rules of the road and leave nothing behind; whoever does not, endangers anybody or cannot continue may be stopped or excluded on the spot, without compensation.",
-        "You may take part from the age of 14 on the day of the event; a registration whose date of birth gives less is refused. A minor (14 to 17) is registered by a parent or legal guardian with the child's details; the parent signs the declaration for the child, gives the consents and answers for them.",
-        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the parent's) and are not passed on. No prize money is awarded. An event page may add rules that form part of these terms.",
+        "An event may set a minimum age to take part; where it does, the age is shown on the event's page and must be reached by the day of the event, and a registration whose date of birth gives less is refused. A minor (under 18) is registered by a parent or legal guardian with the child's details; the minor and the parent both sign the declaration, each with their own identity document, and the parent gives the consents and answers for them.",
+        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the minor's or the parent's or guardian's) and are not passed on. No prize money is awarded. An event page may add rules that form part of these terms.",
       ],
     },
     {
@@ -133,7 +133,7 @@ export const termsEn: LegalDocumentBody = {
     {
       heading: "7. Your name, the results, the photographs",
       paragraphs: [
-        "Your name appears on an event's public participant list only if the club switches that list on for the event and you ticked that you want to when registering, and in published results only if you ticked that consent when registering; the list and the results show the name from the form (or the display name, where allowed) and the club, nothing else. Both are withdrawn at any time from your registration's page, without losing the registration.",
+        "Your name appears on an event's public participant list only if the club switches that list on for the event and you ticked that you want to when registering; the list shows the name from the form (or the display name, where allowed) and the club, nothing else. We do not publish results with names yet; when we do, we will ask you separately. You withdraw your agreement to the list at any time from “My registrations”, or from the link in your confirmation email, without losing the registration.",
         "The club's texts, photographs, routes, logo and name are protected by Law no. 8/1996 on copyright and related rights: read them, download them for personal use, share links; any other use needs our written permission.",
         "The club may publish event photographs and video in its gallery and on its channels, in its legitimate interest (GDPR, article 6(1)(f)) and respecting your right to your own image (Civil Code, articles 73–75). You may object at any time, without a reason: tell us which photograph and it comes down within a month.",
       ],

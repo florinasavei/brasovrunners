@@ -7,19 +7,33 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import ContactLink from "@/shared/ui/ContactLink";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { getFormatter } from "next-intl/server";
+import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { cancelRegistrationAction, selfCheckInAction, setListConsentFromManageAction } from "./actions";
+import {
+  cancelRegistrationAction,
+  selfCheckInAction,
+  setListConsentFromManageAction,
+  withdrawFromManageAction,
+} from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; started?: string; here?: string; list?: string }>;
+  searchParams: Promise<{
+    done?: string;
+    invalid?: string;
+    started?: string;
+    here?: string;
+    list?: string;
+    withdrawn?: string;
+  }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -35,7 +49,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn } = await searchParams;
   const t = await getTranslations("Registrations");
   const format = await getFormatter();
 
@@ -85,7 +99,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
         <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <Stack spacing={3}>
-          {confirmed?.registration.checkinCode && (
+          {/* The race will not run (§331): said first, and no race-day block under it. */}
+          {live?.eventCancelled && <Alert severity="info">{t("mine.eventCancelled")}</Alert>}
+          {confirmed?.registration.checkinCode && !confirmed.eventCancelled && (
             <Box component="section">
               <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
                 {t("manage.raceDayTitle")}
@@ -175,6 +191,61 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             </Box>
           )}
 
+          {/*
+            What was given on consent, withdrawn from here (§322; art. 7(3) GDPR: as easy as it
+            was to give). A button only for what the row still holds — never the value itself on
+            the page — each its own POST, the link read and not spent, so cancel below still works.
+            The outcome stays shown after the button that caused it has gone.
+          */}
+          {live && (holdsOptionalData(live.registration, "health") || holdsOptionalData(live.registration, "socials") || (withdrawn !== undefined && withdrawn !== "")) && (
+            <Box component="section" id="consent">
+              <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                {t("withdraw.title")}
+              </Typography>
+              {withdrawn === "health" && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {t("withdraw.healthDone")}
+                </Alert>
+              )}
+              {withdrawn === "socials" && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {t("withdraw.socialsDone")}
+                </Alert>
+              )}
+              {withdrawn === "0" && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {t("withdraw.failed")}
+                </Alert>
+              )}
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("withdraw.help")}
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: "flex-start" }}>
+                {holdsOptionalData(live.registration, "health") && (
+                  <form action={withdrawFromManageAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="token" value={token} />
+                    <input type="hidden" name="field" value="health" />
+                    <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                      {t("withdraw.health")}
+                    </Button>
+                  </form>
+                )}
+                {holdsOptionalData(live.registration, "socials") && (
+                  <form action={withdrawFromManageAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="token" value={token} />
+                    <input type="hidden" name="field" value="socials" />
+                    <Button type="submit" variant="outlined" sx={TAP_TARGET}>
+                      {t("withdraw.socials")}
+                    </Button>
+                  </form>
+                )}
+              </Stack>
+              <Divider sx={{ mt: 3 }} />
+            </Box>
+          )}
+
           {/* `#cancel` is where "I can't make it any more" in the email lands (§96). */}
           <form action={cancelRegistrationAction} id="cancel">
             <input type="hidden" name="locale" value={locale} />
@@ -183,6 +254,10 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
             <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
               {t("manage.action")}
             </Button>
+            {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {t.rich("cancelKeepsRecord", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
+            </Typography>
           </form>
         </Stack>
       )}

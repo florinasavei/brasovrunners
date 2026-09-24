@@ -2,7 +2,9 @@ import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter"
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { COLOR } from "@/theme/brand";
+import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 
 /**
@@ -43,6 +45,11 @@ export type TemplateContent = {
   closing: string;
   /** "Reply to this email with questions" — on every message when the club has a reply address. */
   footer?: string;
+  /**
+   * Who sends this and where the privacy notice is (§323) — the last line of every participant
+   * message: the sentence, then the notice's address in the message's language as a link.
+   */
+  privacy?: { text: string; url: string };
 };
 
 const SIGN_OFF: Record<EmailLocale, string> = {
@@ -80,6 +87,9 @@ export function renderContent(
     content.closing,
     SIGN_OFF[locale],
     ...(content.footer ? ["", content.footer] : []),
+    // The address last, with nothing after it: a text client that links it could take a
+    // trailing full stop into the link (review nit). The HTML part keeps the sentence's stop.
+    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}`] : []),
   ];
 
   /**
@@ -137,6 +147,11 @@ export function renderContent(
       : []),
     paragraph(`${escapeHtml(content.closing)}<br>${escapeHtml(SIGN_OFF[locale])}`),
     ...(content.footer ? [`<p style="margin:0;color:${COLOR.inkMuted};font-size:13px">${escapeHtml(content.footer)}</p>`] : []),
+    ...(content.privacy
+      ? [
+          `<p style="margin:${content.footer ? "8px" : "0"} 0 0;color:${COLOR.inkMuted};font-size:13px">${escapeHtml(content.privacy.text)} <a href="${content.privacy.url}" style="color:${COLOR.blueInk}">${escapeHtml(content.privacy.url)}</a>.</p>`,
+        ]
+      : []),
   ];
 
   return { html: card([htmlParts]), text: textLines.join("\n"), htmlParts, textLines };
@@ -240,6 +255,7 @@ export function renderBilingual(
   const otherData: TemplateData = {
     ...data,
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
+    ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
@@ -274,9 +290,16 @@ export type TemplateData = {
   bibProvisional?: boolean;
   eventTitle?: string;
   eventLocationName?: string;
+  /**
+   * The place in the other language's words, for the bilingual message's second half — set only
+   * while the place is to be announced (§328), when the "place" is a sentence and not a name.
+   */
+  eventLocationNameOther?: string;
   eventStartsAtFormatted?: string;
   /** The same instant in the other language's words, for the bilingual message's second half (§96). */
   eventStartsAtFormattedOther?: string;
+  /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
+  eventRaceStartsAtFormatted?: string;
   currentStatus?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
@@ -302,6 +325,8 @@ export type TemplateData = {
   eventRulesUrl?: string;
   /** The programme on that page, when there is one (§96). */
   eventScheduleUrl?: string;
+  /** "Linkuri și fișiere" on that page (`#links`), when the event has any (§332); on the confirmation and the reminder. */
+  eventLinksUrl?: string;
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
@@ -329,12 +354,43 @@ export type TemplateData = {
    */
   eventsUrl?: string;
   contactUrl?: string;
+  /**
+   * The privacy notice (§323), in the language of the half being built. Set by
+   * `buildTemplateContent` itself — each half of a bilingual message points at its own
+   * language's notice — so whatever a caller put here is replaced.
+   */
+  privacyUrl?: string;
   /** The staff invitation (§141): who is invited, as what, by whom, and where to sign in. */
   staffRole?: string;
   inviterName?: string;
   staffEmail?: string;
   signInUrl?: string;
+  /**
+   * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
+   * programme, the event on again. The values are the event's as it stands at send time, in the
+   * fields above; this says which of them to name as new.
+   */
+  updateChanges?: readonly EventChangeKind[];
+  /** The organizer's own words on that message, plain text, at most 500 characters. */
+  organizerNote?: string;
+  /** Why the event was cancelled, as the organizer typed it (§331). */
+  cancellationReason?: string;
 };
+
+/**
+ * The organizer's own words — the note on an update, the reason for a cancellation — as a block
+ * of its own (§331): a bold label, then the text escaped, its line breaks kept, and **no**
+ * emphasis markers read inside it. The platform's sentences may carry `**` and `__` (§189,
+ * §309); a note typed in the backoffice is not the platform's sentence, and a stray pair of
+ * asterisks in it must print as asterisks.
+ */
+function organizerTextPart(label: string, text: string): EmailBodyPart {
+  const lines = text.split("\n");
+  return {
+    html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5"><strong>${escapeHtml(label)}</strong><br>${lines.map(escapeHtml).join("<br>")}</p>`,
+    text: [label, ...lines],
+  };
+}
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
 function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
@@ -448,6 +504,8 @@ const T = {
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+        // One line for the links (§332), never the links themselves: they live on the page.
+        ...(d.eventLinksUrl ? [{ label: "Linkuri și fișiere: pe pagina evenimentului", url: d.eventLinksUrl }] : []),
         ...(d.declarationPdfUrl ? [{ label: "Declarația pe care ai semnat-o (PDF)", url: d.declarationPdfUrl }] : []),
       ],
     },
@@ -470,6 +528,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Linkuri și fișiere: pe pagina evenimentului", url: d.eventLinksUrl }] : []),
       ],
     },
     eventThanks: {
@@ -529,8 +588,11 @@ const T = {
       body: (d: TemplateData) => [
         `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
         `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
+        // What the club keeps about its own team (§323), said to the person it is kept about.
+        "Pentru cont folosim Zitadel, cu numele și adresa ta; ce faci în backoffice rămâne în jurnalul clubului, cu numele tău, cel mult trei ani. Detalii în nota de confidențialitate.",
       ],
       action: "Intră în backoffice",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -576,6 +638,36 @@ const T = {
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} are starea: ${d.currentStatus ?? "necunoscută"}.`,
       ],
     },
+    eventUpdateNotice: {
+      subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Organizatorii au actualizat detaliile pentru ${d.eventTitle ?? "evenimentul"} la care ești înscris.`,
+        "Înscrierea ta rămâne așa cum era și nu trebuie să faci nimic. Pagina evenimentului are mereu detaliile la zi.",
+      ],
+      action: "Vezi pagina evenimentului",
+    },
+    eventCancelled: {
+      subject: (d: TemplateData) => `Evenimentul „${d.eventTitle ?? "Brașov Runners"}” a fost anulat`,
+      body: (d: TemplateData) => [
+        `Ne pare rău: evenimentul „${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
+        "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
+        `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
+      ],
+    },
+    /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
+    noticeWords: {
+      place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
+      time: (d: TemplateData) =>
+        d.eventStartsAtFormatted
+          ? `Data și ora sunt acum: ${d.eventStartsAtFormatted}${d.eventRaceStartsAtFormatted ? `; startul cursei la ${d.eventRaceStartsAtFormatted}` : ""}.`
+          : "Data sau ora s-au schimbat — le găsești pe pagina evenimentului.",
+      programme: (d: TemplateData) =>
+        d.eventProgramme?.length ? `Programul actualizat: ${d.eventProgramme.join("; ")}.` : "Programul s-a schimbat — îl găsești pe pagina evenimentului.",
+      reinstated: () => "Evenimentul nu mai este anulat: are loc.",
+      noteLabel: "Mesajul organizatorilor:",
+      reasonLabel: "Motivul:",
+    },
     closing: "Alergare plăcută,",
     /**
      * In front of a message re-sent because the form was filled in again (§235, §286).
@@ -600,6 +692,11 @@ const T = {
       subject: "[Copie club] ",
       note: "Copie pentru club a mesajului trimis participantului. Legăturile personale, codul QR și atașamentele au fost scoase.",
     },
+    /** Who sends it, and the notice (§323); the address follows the sentence. */
+    privacyFooter: (club: string) => `Primești acest mesaj de la ${club} pentru înscrierea ta. Cum folosim datele tale:`,
+    /** The same for "registration is open" (§146), which answers a request, not a registration. */
+    privacyFooterInterest: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -663,6 +760,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Links and files: on the event's page", url: d.eventLinksUrl }] : []),
       ],
     },
     eventThanks: {
@@ -719,8 +817,10 @@ const T = {
       body: (d: TemplateData) => [
         `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
         `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
+        "Your account is held by Zitadel, with your name and address; what you do in the backoffice stays in the club's log, under your name, for at most three years. Details in the privacy notice.",
       ],
       action: "Open the backoffice",
+      links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -759,6 +859,7 @@ const T = {
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+        ...(d.eventLinksUrl ? [{ label: "Links and files: on the event's page", url: d.eventLinksUrl }] : []),
         ...(d.declarationPdfUrl ? [{ label: "The declaration you signed (PDF)", url: d.declarationPdfUrl }] : []),
       ],
     },
@@ -791,6 +892,35 @@ const T = {
         `Your registration for ${d.eventTitle ?? "the event"} currently has this status: ${d.currentStatus ?? "unknown"}.`,
       ],
     },
+    eventUpdateNotice: {
+      subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `The organizers have updated the details of ${d.eventTitle ?? "the event"}, which you are registered for.`,
+        "Your registration stays as it was and there is nothing you need to do. The event's page always has the latest details.",
+      ],
+      action: "See the event's page",
+    },
+    eventCancelled: {
+      subject: (d: TemplateData) => `“${d.eventTitle ?? "Brașov Runners"}” has been cancelled`,
+      body: (d: TemplateData) => [
+        `We are sorry: “${d.eventTitle ?? "Brașov Runners"}”${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+        "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
+        `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
+      ],
+    },
+    noticeWords: {
+      place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
+      time: (d: TemplateData) =>
+        d.eventStartsAtFormatted
+          ? `The date and time are now: ${d.eventStartsAtFormatted}${d.eventRaceStartsAtFormatted ? `; the race starts at ${d.eventRaceStartsAtFormatted}` : ""}.`
+          : "The date or the time has changed — it is on the event's page.",
+      programme: (d: TemplateData) =>
+        d.eventProgramme?.length ? `The updated programme: ${d.eventProgramme.join("; ")}.` : "The programme has changed — it is on the event's page.",
+      reinstated: () => "The event is no longer cancelled: it is going ahead.",
+      noteLabel: "A message from the organizers:",
+      reasonLabel: "The reason:",
+    },
     closing: "Happy running,",
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
     alreadyRegistered: (bib?: number | null) =>
@@ -805,6 +935,8 @@ const T = {
       subject: "[Club copy] ",
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
     },
+    privacyFooter: (club: string) => `This message comes from ${club} about your registration. How we use your data:`,
+    privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
   },
 } as const;
 
@@ -827,7 +959,32 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
+  EVENT_UPDATE_NOTICE: "eventUpdateNotice",
+  EVENT_CANCELLED: "eventCancelled",
 };
+
+/**
+ * The sentences the update and the cancellation add after the body (§331) — machinery, like the
+ * provisional-number line (§237), so a club that rewrote the message's words (§247) still sends
+ * the new place and the reason: they are statements about the event, not about how the club
+ * likes to write. One line per kind the save changed, in the order a runner reads a morning — on
+ * again, where, when, the programme — then the organizer's note, or the reason.
+ */
+function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: TemplateData): (string | EmailBodyPart)[] {
+  const words = T[locale].noticeWords;
+  if (messageType === "EVENT_CANCELLED") {
+    return data.cancellationReason ? [organizerTextPart(words.reasonLabel, data.cancellationReason)] : [];
+  }
+  if (messageType !== "EVENT_UPDATE_NOTICE") return [];
+  const changes = new Set(data.updateChanges ?? []);
+  return [
+    ...(changes.has("reinstated") ? [words.reinstated()] : []),
+    ...(changes.has("place") ? [words.place(data)] : []),
+    ...(changes.has("time") ? [words.time(data)] : []),
+    ...(changes.has("programme") ? [words.programme(data)] : []),
+    ...(data.organizerNote ? [organizerTextPart(words.noteLabel, data.organizerNote)] : []),
+  ];
+}
 
 /**
  * Every message type's content, for one locale, given the data the renderer looked up.
@@ -838,11 +995,14 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
 export function buildTemplateContent(
   messageType: EmailMessageType,
   locale: EmailLocale,
-  data: TemplateData,
+  given: TemplateData,
   actionUrl: string | undefined,
   /** The club's own wording for this message, when it has written some (§247). */
   overrides?: EmailCopy | null,
 ): TemplateContent {
+  // The notice in this half's own language (§323): the Romanian half links /ro/…, the English /en/….
+  const privacyUrl = privacyNoticeUrl(locale);
+  let data: TemplateData = { ...given, privacyUrl };
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
   /*
@@ -931,6 +1091,8 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.map(fill)
           : entry.body(data)),
+      // What changed and the organizer's own words, after the body and whoever wrote it (§331).
+      ...noticeParts(messageType, locale, data),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -950,7 +1112,40 @@ export function buildTemplateContent(
     })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
+    // Not on the club's copy either (§320, §324): "this message comes to you about your
+    // registration" is addressed to the participant, and the copy lands in the club's mailbox.
+    privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
+      ? undefined
+      : {
+          text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
+          url: privacyUrl,
+        },
   };
+}
+
+/**
+ * The messages that are not to a participant about their own data (§323), and so carry no
+ * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
+ * and the staff invitation says what it keeps about the team in its own body.
+ */
+const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
+  "DECLARATION_ARCHIVE",
+  "CLUB_CONFIRMATION_NOTICE",
+  "STAFF_INVITATION",
+]);
+
+/**
+ * Who the controller is, as the privacy line names it (§323): the club's legal name from the
+ * environment (`CLUB_LEGAL_NAME`, the same fact the legal templates are filled with), else the
+ * club's everyday name. Never a literal of the legal name: the repository is public (§98).
+ */
+function controllerName(): string {
+  return env.CLUB_LEGAL_NAME ?? "Brașov Runners";
+}
+
+/** The privacy notice's address in one language, from `APP_BASE_URL` like every link here (§8). */
+function privacyNoticeUrl(locale: EmailLocale): string {
+  return `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
 }
 
 export function buildOutgoingEmail(params: {

@@ -77,12 +77,18 @@ export async function findRegistrationByEventAndParticipant<T extends Record<str
 }
 
 /**
- * This participant's most recent registration that is still live, across every event.
+ * This participant's most recent registration that is still live, across every event that will
+ * still be run.
  *
  * For the participant-facing link request (§19.4), where the person has an address and a
  * problem — "nothing arrived" — and not necessarily the event in hand. Ordered by creation
  * rather than by event date so that the answer is the thing they most recently did, which is
  * what somebody asking for a link again is almost always asking about.
+ *
+ * Scheduled events only (§331): a cancelled event hands out no link, and a finished one has
+ * nothing left to link to. Filtered here rather than after the pick, so a runner whose newest
+ * registration is on a race that was called off still gets the link for the one they are going
+ * to run, instead of nothing.
  */
 export async function findLatestActiveRegistrationForParticipant<
   T extends Record<string, unknown>,
@@ -90,15 +96,17 @@ export async function findLatestActiveRegistrationForParticipant<
   const [row] = await db
     .select()
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
         eq(registrations.participantId, participantId),
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+        eq(events.eventStatus, "SCHEDULED"),
       ),
     )
     .orderBy(desc(registrations.createdAt))
     .limit(1);
-  return row;
+  return row?.registrations;
 }
 
 /** The event row locked for the length of the caller's transaction — the serialization point
@@ -491,8 +499,9 @@ export type EventForExpiry = {
  * The whole of `DECISIONS.md` §160 is here. A hold past its deadline is released only when
  * the place it is holding is actually wanted, and then only as many holds as are wanted:
  *
- * - the event has started, or will never be run (`CANCELLED`) — every hold is over, because
- *   nobody may be left holding a place on a race that has begun or that will not happen;
+ * - the event has started, or is over (`COMPLETED`) — every hold is over, because nobody may
+ *   be left holding a place on a race that has begun. A `CANCELLED` event never reaches here
+ *   any more: `fillAvailableSpots` and the job leave its registrations as they stood (§331);
  * - otherwise, the waiting list wants `waiting - free` places, where `free` is what the event
  *   has without touching any hold. One person joining the queue releases one hold, the oldest
  *   deadline first — never the whole event's worth of kept places, which would silently evict
@@ -595,11 +604,11 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
 }
 
 /**
- * Every event with a registration the maintenance job (AGENTS.md §16.2) needs to look at: an
- * offer past its deadline, a lapsed declaration hold that somebody is waiting for or that
- * stands on a cancelled event (§160 — with nobody waiting and the race still to be run the
- * hold is kept, and the job would lock the event to do nothing, on every run until the race),
- * or a hold or waiting-list entry left open on an event that has started.
+ * Every scheduled event with a registration the maintenance job (AGENTS.md §16.2) needs to
+ * look at: an offer past its deadline, a lapsed declaration hold that somebody is waiting for
+ * (§160 — with nobody waiting the hold is kept, and the job would lock the event to do
+ * nothing, on every run until the race), a hold or waiting-list entry left open on an event
+ * that has started, or numbers to settle. Never a cancelled or completed event (§331, §82).
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
  * expiry messages and retry delivery, not to make capacity correct, so missing an event here
@@ -622,17 +631,19 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        // A completed event is over: the job leaves it alone (§82). Cancelled ones still
-        // expire their holds and their offers, so nobody is left holding a place on a race
-        // that will not run — the one case §160's lenience does not cover.
-        sql`${events.eventStatus} <> 'COMPLETED'`,
+        /*
+          Only an event that will still be run (§331). A completed event is over: the job
+          leaves it alone (§82). A cancelled one is left alone too, since §331: its
+          registrations stay as they were when it was cancelled — the record of who had
+          entered, which the participants were told in so many words — so nothing about it is
+          expired, offered, settled or numbered, and a race put back on finds its queue where it
+          left it. It used to be selected so its lapsed holds would expire (§160); that was a
+          silent status change on a race nobody can take a place in, and it sent nothing either.
+        */
+        sql`${events.eventStatus} = 'SCHEDULED'`,
         or(
           and(eq(registrations.status, "WAITLIST_OFFERED"), lte(registrations.holdExpiresAt, now)),
-          and(
-            eq(registrations.status, "PENDING_DECLARATION"),
-            lte(registrations.holdExpiresAt, now),
-            or(somebodyWaits, sql`${events.eventStatus} <> 'SCHEDULED'`),
-          ),
+          and(eq(registrations.status, "PENDING_DECLARATION"), lte(registrations.holdExpiresAt, now), somebodyWaits),
           and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
           /*
             An event whose registration has closed and whose numbers have not been settled
@@ -689,6 +700,9 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     locale: Locale;
     typedName: string;
     idDocument?: string | null;
+    /** A minor's own signature and document, beside the parent's (§330); omitted for an adult. */
+    minorTypedName?: string | null;
+    minorIdDocument?: string | null;
     acceptedAt: Date;
     /** `PAPER` with the staff id that recorded it; omitted for the email link (BR-REQ-037-07). */
     method?: "EMAIL_LINK" | "PAPER";
@@ -703,6 +717,8 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     locale: input.locale,
     typedName: input.typedName,
     idDocument: input.idDocument ?? null,
+    minorTypedName: input.minorTypedName ?? null,
+    minorIdDocument: input.minorIdDocument ?? null,
     acceptedAt: input.acceptedAt,
     method: input.method ?? "EMAIL_LINK",
     attestedByStaffUserId: input.attestedByStaffUserId ?? null,

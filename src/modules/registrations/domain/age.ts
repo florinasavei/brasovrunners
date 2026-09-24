@@ -9,22 +9,58 @@
  *
  * Two thresholds live here and they are counted against different days, on purpose:
  * - **eighteen, on the day of submission** (`isMinorOn`, §108) — whether a parent registers;
- * - **fourteen, on the day of the event** (`MIN_PARTICIPANT_AGE`, §321) — whether anybody can.
+ * - **the event's own minimum, on the day of the event** (`events.min_age`, §321 and §329) —
+ *   whether anybody can. Fourteen unless the organizer set another number.
  */
 
 /**
- * The youngest a participant may be **on the day of the event**, in whole years (§321; the
- * owner, 2026-09-23: "Min age must be 14").
+ * The club's minimum age, **as a default** (§321; the owner, 2026-09-23: "Min age must be 14",
+ * then the same day: "actually this min age must be set at event level!", §329).
  *
- * The day of the event and not the day of submission because that is when the person runs, and
- * it is the day the form already counts age categories against ("Categoriile de vârstă se
- * calculează la data cursei"). Somebody who turns fourteen on race morning may enter today.
- *
- * The catalogues repeat the number in words (`Registration.ageRule`, `errors.tooYoung`,
- * `birthDateHelp`, `Admin.errors.UNDER_MINIMUM_AGE`) because Romanian grammar changes at twenty
- * ("14 ani", "20 de ani"); `tests/unit/registrations/minimum-age.test.ts` holds the two together.
+ * The rule is the event's own `events.min_age`, counted on the day of the event — that is when
+ * the person runs, and the day the form already counts age categories against ("Categoriile de
+ * vârstă se calculează la data cursei"); somebody who turns fourteen on race morning may enter
+ * today. This constant is what the column defaults to, what the editor offers a new event, and
+ * what a partial `EventForRegistration` built without the column is read with. It is never the
+ * rule on an event that has its own number.
  */
 export const MIN_PARTICIPANT_AGE = 14;
+
+/** From here a person registers themselves (§108); under it, a parent or legal guardian does. */
+export const ADULT_AGE = 18;
+
+/**
+ * "14 ani", "20 de ani", "101 ani" — a number of years as a sentence says it (§329).
+ *
+ * The catalogues interpolate the event's minimum as `{age}`, and ICU plurals are not used in this
+ * codebase, so the one grammatical rule is here. Romanian puts "de" between a number and its noun
+ * when the number's last two digits are 00 or 20 to 99 — "20 de ani", "100 de ani", "120 de ani",
+ * but "19 ani" and "101 ani" — and says "1 an" in the singular. English says "1 year" and
+ * "N years". Any other locale is read as English, which is the site's only other language.
+ */
+export function yearsPhrase(years: number, locale: string): string {
+  if (locale === "ro") {
+    if (years === 1) return "1 an";
+    const lastTwo = years % 100;
+    const takesDe = years >= 20 && (lastTwo === 0 || lastTwo >= 20);
+    return `${years} ${takesDe ? "de " : ""}ani`;
+  }
+  return `${years} ${years === 1 ? "year" : "years"}`;
+}
+
+/**
+ * Which sentence says who may enter an event with this minimum age (§329) — the intro line of the
+ * form and the event page's age fact:
+ * - `minimumAndGuardian` — a minimum under eighteen: "from 14; under 18, a parent registers them";
+ * - `minimumOnly` — eighteen or more: nobody who may enter needs a parent, so no guardian sentence;
+ * - `guardianOnly` — no minimum (zero): only the guardian sentence, and never "from 0 years".
+ */
+export type AgeRuleVariant = "minimumAndGuardian" | "minimumOnly" | "guardianOnly";
+
+export function ageRuleVariant(minAge: number): AgeRuleVariant {
+  if (minAge <= 0) return "guardianOnly";
+  return minAge >= ADULT_AGE ? "minimumOnly" : "minimumAndGuardian";
+}
 
 /** The day a birth date names, at UTC midnight, or null for anything that is not a date. */
 function dayAt(day: string): Date | null {
@@ -44,7 +80,7 @@ function birthday(birth: Date, years: number): Date {
 export function isMinorOn(birthDate: string, on: Date): boolean {
   const birth = dayAt(birthDate);
   if (!birth) return false;
-  return on.getTime() < birthday(birth, 18).getTime();
+  return on.getTime() < birthday(birth, ADULT_AGE).getTime();
 }
 
 /**
@@ -95,4 +131,17 @@ export function latestBirthDateFor(years: number, day: string): string {
       ? candidate
       : new Date(Date.UTC(on.getUTCFullYear() - years, on.getUTCMonth() + 1, 0));
   return latest.toISOString().slice(0, 10);
+}
+
+/**
+ * The age in whole years on a given day — the race's, for the spreadsheet's category column
+ * (§322). The club has defined no age bands, so the column is the age itself, which is what a
+ * band is computed from the day it has some. `ageOn` on the event's own calendar day (§321), so
+ * the column, the minimum age and the minor rule can never disagree about who is seventeen.
+ * Null for no date, one that cannot be read, or one after the race.
+ */
+export function ageOnRaceDay(birthDate: string | null, startsAt: Date, timeZone: string): number | null {
+  if (!birthDate) return null;
+  const age = ageOn(birthDate, dayIn(startsAt, timeZone));
+  return age === null || age < 0 ? null : age;
 }

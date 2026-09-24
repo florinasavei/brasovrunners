@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
+import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -60,6 +61,7 @@ export default async function DeskRow({
   q,
   showEvent = false,
   readOnly = false,
+  minorSigns,
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -70,6 +72,12 @@ export default async function DeskRow({
   showEvent?: boolean;
   /** A completed event (§82): the row reads, and offers no button. */
   readOnly?: boolean;
+  /**
+   * Whether the declaration in effect asks a minor to sign beside the parent, per language
+   * (`declarationAsksMinorToSignByLocale`, §330): read once by the page, looked up here by the
+   * row's own language — the translation "Confirmă pe hârtie" binds to.
+   */
+  minorSigns: Readonly<Record<Locale, boolean>>;
 }) {
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -91,6 +99,8 @@ export default async function DeskRow({
   */
   const terminal = isTerminalStatus(row.status);
   const voidedAt = row.status === "CANCELLED" ? row.cancelledAt : row.expiredAt;
+  // Whose document is whose (§330): the minor's and the parent's on a minor's declaration.
+  const documents = identityDocumentsOf(row);
   const printedVoid = terminal && row.bibPrintedAt !== null && row.bibNumber !== null;
 
   const hidden = (
@@ -241,11 +251,30 @@ export default async function DeskRow({
               {row.checkinCode}
             </Typography>
           )}
-          {/* The document the kit is handed out against (§95): what the volunteer compares the card to. */}
-          {row.idDocument && (
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {t("desk.idDocument")}: {row.idDocument}
-            </Typography>
+          {/*
+            The document the kit is handed out against (§95): what the volunteer compares the card
+            to. A minor's declaration carries two (§330) — the minor's and the parent's, to whom the
+            kit goes (§108) — each shown the way one always was, and each labelled whose it is.
+          */}
+          {row.guardianName ? (
+            <>
+              {documents.participant && (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {t("desk.idDocumentMinor")}: {documents.participant}
+                </Typography>
+              )}
+              {documents.guardian && (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {t("desk.idDocumentGuardian")}: {documents.guardian}
+                </Typography>
+              )}
+            </>
+          ) : (
+            documents.participant && (
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {t("desk.idDocument")}: {documents.participant}
+              </Typography>
+            )
           )}
         </Box>
 
@@ -257,6 +286,30 @@ export default async function DeskRow({
                 {t("desk.confirmHere")}
               </GlyphButton>
             </form>
+          )}
+          {/*
+            A minor's paper is signed by two (§330) where the declaration in effect asks the minor
+            to sign: the minor and the parent or guardian, each with their own document. The press
+            records exactly that — both names on the row, the volunteer as the one who saw the
+            paper — so the row says it before the press, and offers the form with both lines for a
+            runner who arrived without one. Under an older text the parent signs alone, on the
+            ordinary form, and the row says nothing more than it always did.
+          */}
+          {!readOnly && canConfirm && row.guardianName && minorSigns[row.locale] && (
+            <>
+              <Typography variant="body2" color="text.secondary" sx={{ flexBasis: "100%" }}>
+                {t("desk.confirmMinorNote", { guardian: row.guardianName })}
+              </Typography>
+              <GlyphButton
+                icon="print"
+                href={`/api/admin/events/${row.eventId}/declaration-form?locale=${locale}&for=minor`}
+                variant="text"
+                size="small"
+                sx={{ minHeight: 44 }}
+              >
+                {t("desk.minorForm")}
+              </GlyphButton>
+            </>
           )}
           {!readOnly && row.status === "WAITLISTED" && (
             <form action={promoteRegistrationAction}>
