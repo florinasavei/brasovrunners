@@ -174,7 +174,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
         {t("pictures.title")}
       </Typography>
 
-      <GallerySubNav active="pictures" />
+      <GallerySubNav locale={locale} active="pictures" />
 
       <Typography variant="body2" color="text.secondary">
         {t("pictures.intro")}

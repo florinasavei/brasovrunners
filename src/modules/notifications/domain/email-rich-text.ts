@@ -6,7 +6,7 @@ import {
   type RichTextDoc,
   type RichTextText,
 } from "@/modules/content/rich-text/domain/schema";
-import { fillPlaceholders, placeholdersIn } from "./email-copy";
+import { fillPlaceholders, onlyMissingFacts, placeholdersIn } from "./email-copy";
 
 /**
  * The club's own words for a message, written in the rich-text editor (`DECISIONS.md` §270; the
@@ -222,8 +222,33 @@ export type EmailBodyPart = { html: string; text: string[] };
 /** The club's body as those parts, in order. */
 export function emailBodyParts(doc: RichTextDoc, data: Facts): EmailBodyPart[] {
   return emailBlocksOf(doc)
+    .map((block) => (data === null ? block : sentOf(block, data)))
+    .filter((block): block is EmailBodyBlock => block !== null)
     .map((block) => ({ html: blockHtml(block, data), text: blockText(block, data) }))
     .filter((part) => part.html !== "");
+}
+
+/**
+ * The block as this message sends it (§359): without the paragraphs whose only fields are facts the
+ * message lacks (`onlyMissingFacts`) — a heading or a paragraph whole, a list without those items,
+ * a quote without those paragraphs — and nothing when nothing is left. Only when filling: the
+ * stored plain paragraphs keep every word as typed.
+ */
+function sentOf(block: EmailBodyBlock, data: Record<string, unknown>): EmailBodyBlock | null {
+  switch (block.type) {
+    case "paragraph":
+    case "heading":
+      return onlyMissingFacts(textOf(block), data) ? null : block;
+    case "bulletList":
+    case "orderedList": {
+      const content = block.content.filter((item) => !onlyMissingFacts(item.content.map((p) => textOf(p)).join("\n"), data));
+      return content.length > 0 ? { ...block, content } : null;
+    }
+    case "blockquote": {
+      const content = block.content.filter((p) => !onlyMissingFacts(textOf(p), data));
+      return content.length > 0 ? { ...block, content } : null;
+    }
+  }
 }
 
 /**
@@ -261,4 +286,122 @@ export function emailBodyToParagraphs(doc: RichTextDoc): string[] {
   return renderEmailBody(doc, null)
     .textLines.map((line) => line.trim())
     .filter((line) => line !== "");
+}
+
+type ParagraphBlock = Extract<RichTextBlock, { type: "paragraph" }>;
+
+/** `**like this**` as a bold run, the rest as plain runs — the platform's one marker (§189) as the editor's mark. */
+function runsOf(text: string): RichTextText[] {
+  const runs: RichTextText[] = [];
+  let last = 0;
+  for (const match of text.matchAll(/\*\*([^*]+)\*\*/g)) {
+    const at = match.index ?? 0;
+    if (at > last) runs.push({ type: "text", text: text.slice(last, at) });
+    runs.push({ type: "text", text: match[1], marks: [{ type: "bold" }] });
+    last = at + match[0].length;
+  }
+  if (last < text.length) runs.push({ type: "text", text: text.slice(last) });
+  return runs;
+}
+
+/**
+ * Plain paragraphs as the document the editor opens with (§359): **one paragraph block per
+ * paragraph**, and the platform's `**bold**` as the editor's bold.
+ *
+ * It was `fromPlainText(paragraphs.join("\n\n"))` — one paragraph holding every paragraph, blank
+ * lines inside its one run. The editor draws those blank lines, so the box looked right, and a save
+ * stored a single block: the email's HTML half then ran every paragraph into one, because a newline
+ * inside a `<p>` is a space. And the asterisks stayed asterisks, printed in the message, because
+ * the club's document is rendered by its marks and never by the platform's markers.
+ *
+ * Built this way, the platform's own text saved unchanged renders exactly as the platform's own
+ * message does — the same `<p>`, the same `<strong>`, the same plain lines
+ * (`tests/unit/notifications/email-copy-prefill.test.ts`).
+ */
+export function emailDocFromParagraphs(paragraphs: readonly string[]): RichTextDoc {
+  const blocks: ParagraphBlock[] = paragraphs
+    .map((text) => text.trim())
+    .filter((text) => text !== "")
+    .map((text) => ({ type: "paragraph", content: runsOf(text) }));
+  return { type: "doc", content: blocks };
+}
+
+/**
+ * Each paragraph block that holds blank lines, split into one block per paragraph — what the
+ * editor showed and what a document saved from the old starting text (above) did not store.
+ * A paragraph without a blank line comes back as it was.
+ */
+export function splitBlankLineParagraphs(doc: RichTextDoc): RichTextDoc {
+  return {
+    ...doc,
+    content: (doc.content ?? []).flatMap((block): RichTextBlock[] => {
+      if (block.type !== "paragraph") return [block];
+      const groups: RichTextText[][] = [[]];
+      for (const node of block.content ?? []) {
+        node.text.split(/\s*\n\s*\n\s*/).forEach((piece, index) => {
+          if (index > 0) groups.push([]);
+          if (piece !== "") groups[groups.length - 1].push({ ...node, text: piece });
+        });
+      }
+      const split = groups.filter((runs) => runs.length > 0).map((runs): ParagraphBlock => ({ ...block, content: runs }));
+      return split.length > 0 ? split : [block];
+    }),
+  };
+}
+
+/**
+ * Every run of text in the document through `rewrite`, marks and structure kept; a run left empty
+ * is dropped, since a document may not hold one. What "Înlocuiește cu câmpurile" (§359) does to a
+ * formatted text: the sample value inside a run becomes its field, and the bold around it stays.
+ */
+export function mapEmailDocText(doc: RichTextDoc, rewrite: (text: string) => string): RichTextDoc {
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) {
+      return node
+        .map(walk)
+        .filter((child) => !(child && typeof child === "object" && (child as { type?: unknown }).type === "text" && (child as { text?: unknown }).text === ""));
+    }
+    if (node && typeof node === "object") {
+      const record = node as Record<string, unknown>;
+      if (record.type === "text" && typeof record.text === "string") return { ...record, text: rewrite(record.text) };
+      return Array.isArray(record.content) ? { ...record, content: walk(record.content) } : record;
+    }
+    return node;
+  };
+  return walk(doc) as RichTextDoc;
+}
+
+/**
+ * `**like this**` inside a run as a bold run, its other marks kept — the platform's marker (§189)
+ * as it reached a document through the old starting text, where it printed as two asterisks.
+ */
+export function emphasisMarkersToBold(doc: RichTextDoc): RichTextDoc {
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) {
+      return node.flatMap((child) => {
+        const record = child as Record<string, unknown> | null;
+        if (!(record && record.type === "text" && typeof record.text === "string" && /\*\*[^*]+\*\*/.test(record.text))) return [walk(child)];
+        const marks = (record.marks as RichTextText["marks"]) ?? [];
+        return runsOf(record.text).map((run) => {
+          const bold = run.marks !== undefined;
+          const merged = bold && !marks.some((mark) => mark.type === "bold") ? [...marks, { type: "bold" as const }] : marks;
+          return merged.length > 0 ? { ...record, text: run.text, marks: merged } : { type: "text", text: run.text };
+        });
+      });
+    }
+    if (node && typeof node === "object") {
+      const record = node as Record<string, unknown>;
+      return Array.isArray(record.content) ? { ...record, content: walk(record.content) } : record;
+    }
+    return node;
+  };
+  return walk(doc) as RichTextDoc;
+}
+
+/** The document without the top-level paragraphs whose words (trimmed) are one of `texts`. */
+export function withoutParagraphs(doc: RichTextDoc, texts: ReadonlySet<string>): RichTextDoc {
+  return {
+    ...doc,
+    content: (doc.content ?? []).filter((block) => !(block.type === "paragraph" && texts.has(textOf(block).trim()))),
+  };
 }

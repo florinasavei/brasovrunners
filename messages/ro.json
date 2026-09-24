@@ -745,7 +745,9 @@
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
       "WALK_IN_LEFT_UNCONFIRMED": "Persoana a fost înscrisă, dar nu a mai putut fi confirmată: chiar atunci s-a ocupat ultimul loc, iar pe lista de așteptare nu mai era loc. Înscrierea ei a rămas neconfirmată și nu i s-a trimis niciun email. Confirm-o pe hârtie când se eliberează un loc; altfel expiră singură în 48 de ore.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
-      "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete."
+      "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care platforma îl poate completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
+      "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
+      "SAMPLE_VALUES_IN_EMAIL": "Textul conține valori de exemplu, nu câmpuri: {found}. Folosește câmpurile în locul lor."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1636,6 +1638,7 @@
       "editor": {
         "heading": "Titlu de secțiune",
         "paragraph": "Paragraf",
+        "paragraphShort": "Text",
         "link": "Link",
         "linkUrl": "Adresa linkului",
         "linkApply": "Pune linkul",
@@ -2604,13 +2607,27 @@
         "subject": "Subiect",
         "paragraphs": "Paragrafe",
         "paragraphsHelp": "Un rând gol între paragrafe. **Îngroșat** se scrie între două steluțe.",
-        "placeholders": "Poți folosi: {list}. Un câmp pe care mesajul acesta nu îl are rămâne gol — vezi previzualizarea de mai sus.",
+        "placeholders": "Poți folosi: {list}. Un câmp pe care mesajul nu îl are rămâne gol. Numărul de concurs, codul de la masă, „ce să aduci”, termenul locului, ora semnării, data și locul pot lipsi: un paragraf care numește doar dintre acestea și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Previzualizarea de mai sus are toate câmpurile.",
+        "placeholdersUsed": "Textul platformei pentru acest mesaj folosește: {used}. Mai poți folosi: {others}. Un câmp pe care mesajul nu îl are rămâne gol. Numărul de concurs, codul de la masă, „ce să aduci”, termenul locului, ora semnării, data și locul pot lipsi: un paragraf care numește doar dintre acestea și nu are niciunul nu se trimite deloc — de aceea fiecare stă în paragraful lui. Previzualizarea de mai sus are toate câmpurile.",
         "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân ale platformei: ele duc token-uri și fișiere, nu cuvinte.",
+        "samplesTitle": "Textul salvat conține valori de exemplu, nu câmpuri",
+        "samplePairWhere": "„{value}” — {where}; în locul ei: {replacement}",
+        "samplesHelp": "Fiecare participant ar primi exact aceste cuvinte, oricare i-ar fi evenimentul. „Înlocuiește cu câmpurile” pune câmpul potrivit în locul fiecărei valori și salvează textul; previzualizarea de mai sus arată rezultatul.",
+        "samplePair": "„{value}” → {replacement}",
+        "sampleWords": "„{words}”",
+        "sampleWhere": {
+          "subject": "în subiect",
+          "body": "în text",
+          "both": "în subiect și în text"
+        },
+        "sampleMarker": "textul salvat ({languages}) are valori de exemplu",
         "save": "Salvează textul",
         "saving": "Se salvează…",
         "reset": "Revino la textul platformei",
+        "replace": "Înlocuiește cu câmpurile",
         "saved": "Am salvat textul mesajului.",
-        "resetDone": "Mesajul folosește din nou textul platformei."
+        "resetDone": "Mesajul folosește din nou textul platformei.",
+        "samplesReplaced": "Am pus câmpurile în locul valorilor de exemplu și am salvat textul."
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",

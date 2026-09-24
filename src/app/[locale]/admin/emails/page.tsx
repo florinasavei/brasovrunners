@@ -5,11 +5,18 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
-import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { renderBilingual } from "@/modules/notifications/templates";
+import {
+  emailCopyPrefill,
+  emailSampleActionUrl,
+  emailSampleData,
+  placeholdersUsedBy,
+  sampleLanguagesOf,
+  sampleValuesIn,
+} from "@/modules/notifications/email-copy-fields";
 import { getDb } from "@/db/client";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
@@ -39,45 +46,14 @@ type Props = {
 /** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
 
-/** The sample event's start — Sunday 4 October 2026, 09:00 in Brașov — as a message writes it. */
-const SAMPLE_STARTS_AT = new Date("2026-10-04T06:00:00Z");
-function sampleWhen(locale: EmailLocale): string {
-  return formatDay(SAMPLE_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" });
+/**
+ * The organizer's message (§NNN) is written per send, on the event's page: its card previews the
+ * sample one (`domain/email-sample.ts`) and says where it is written, with no words editor under
+ * it and no sample-value warning over it.
+ */
+function perSend(messageType: EmailMessageType): boolean {
+  return messageType === "ORGANIZER_MESSAGE";
 }
-
-/**
- * The sample organizer's note and cancellation reason, written in both languages the way the
- * editor now asks for them (§354, bilingual everywhere), so each half of a preview reads its own.
- */
-const SAMPLE_NOTE: Record<EmailLocale, string> = {
-  ro: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
-  en: "We meet at the Livada Poștei entrance, by the map board.",
-};
-const SAMPLE_REASON: Record<EmailLocale, string> = {
-  ro: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
-  en: "An orange weather warning for Tâmpa: the route is not safe.",
-};
-
-/**
- * The organizer's message (§NNN) is written per send, so its card previews a sample one — both
- * languages, with a placeholder in each, as the composer on the event's page would send it.
- */
-const SAMPLE_ORGANIZER_SUBJECT: Record<EmailLocale, string> = {
-  ro: "Vreme rea la {eventTitle}: startul se mută la 10:00",
-  en: "Bad weather at {eventTitle}: the start moves to 10:00",
-};
-const SAMPLE_ORGANIZER_BODY: Record<EmailLocale, string> = {
-  ro: [
-    "Salut, {participantName}!",
-    "Prognoza anunță furtună până la 9:00, așa că mutăm startul la 10:00. Masa de înscrieri se deschide la 9:15, în același loc.",
-    "Aduceți o haină de ploaie.",
-  ].join("\n\n"),
-  en: [
-    "Hi, {participantName}!",
-    "The forecast says storms until 9:00, so we are moving the start to 10:00. The registration desk opens at 9:15, in the same place.",
-    "Bring a rain jacket.",
-  ].join("\n\n"),
-};
 
 /**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
@@ -117,7 +93,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
   ];
   // Which message's words were just saved (§336): the save names it, and only a real type counts.
-  const copySaved = saved === "emailCopy" || saved === "emailCopyReset";
+  const copySaved = saved === "emailCopy" || saved === "emailCopyReset" || saved === "emailCopySamples";
   const savedMessage = types.find((candidate) => candidate === message);
 
   // The plan and the counts (§100), above the messages: what can still go out is the first
@@ -158,53 +134,41 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
 
   const t = await getTranslations("Admin");
   const emailsPath = getPathname({ locale, href: "/admin/emails" });
-  const tRo = emailLocale === "ro";
-  const sample: TemplateData = {
-    participantName: tRo ? "Ana Popescu" : "Ana Popescu",
-    eventTitle: tRo ? "Crosul de toamnă" : "The autumn cross",
-    eventLocationName: tRo ? "Stația de telecabină Tâmpa" : "Tâmpa cable-car station",
-    // Through the one helper the send path uses (§349), so the preview cannot drift from the mail.
-    eventStartsAtFormatted: sampleWhen(emailLocale),
-    eventStartsAtFormattedOther: sampleWhen(tRo ? "en" : "ro"),
-    currentStatus: tRo ? "confirmată" : "confirmed",
-    checkinCode: "EXAMPL",
-    checkinQrUrl: `${env.APP_BASE_URL}/api/registrations/qr/EXAMPL.png`,
-    bibNumber: 42,
-    eventMapUrl: `${env.APP_BASE_URL}/#map`,
-    eventChecklist: tRo ? "Apă, o haină de ploaie, bună dispoziție" : "Water, a rain jacket, good spirits",
-    replyTo: env.EMAIL_REPLY_TO ?? undefined,
-    thanksUrl: `${env.APP_BASE_URL}/#results`,
-    declarationPdfUrl: `${env.APP_BASE_URL}/api/registrations/declaration/EXAMPLE`,
-    eventUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event`,
-    eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
-    eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
-    // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
-    eventLinksUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#links`,
-    manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
-    // The public list's switch on the confirmation (§143): the sample runner is on the list.
-    listConsentUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-list`,
-    listed: true,
-    // The staff invitation (§141): a made-up colleague, added by a made-up administrator.
-    staffRole: "Organizator",
-    inviterName: "Florin",
-    staffEmail: "ana.popescu@example.org",
-    signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
-    // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
-    // organizer's note, and a reason — read only by those two messages' templates. Each in both
-    // languages, as the organizer now writes them (§354, bilingual everywhere): the previewed
-    // language's half first, the other half's own words after the rule, never the same text twice.
-    updateChanges: ["place", "time"],
-    organizerNote: SAMPLE_NOTE[emailLocale],
-    organizerNoteOther: SAMPLE_NOTE[tRo ? "en" : "ro"],
-    cancellationReason: SAMPLE_REASON[emailLocale],
-    cancellationReasonOther: SAMPLE_REASON[tRo ? "en" : "ro"],
-    // "Trimite un mesaj participanților" (§NNN): a sample message, both languages, read only by its template.
-    organizerSubject: SAMPLE_ORGANIZER_SUBJECT[emailLocale],
-    organizerSubjectOther: SAMPLE_ORGANIZER_SUBJECT[tRo ? "en" : "ro"],
-    organizerBody: SAMPLE_ORGANIZER_BODY[emailLocale],
-    organizerBodyOther: SAMPLE_ORGANIZER_BODY[tRo ? "en" : "ro"],
-  };
-  const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
+  /*
+    The sample the previews are rendered with (§91) — one constant, `domain/email-sample.ts`, which
+    is also what the save refuses to store (§359), so the preview and the guard cannot drift.
+  */
+  const sample = emailSampleData(emailLocale);
+  const actionUrl = emailSampleActionUrl(emailLocale);
+  const mayWrite = canEditTexts(staff.role);
+
+  const cards = types.map((messageType) => {
+    // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
+    // and through the club's own words where it has written some (§247), so the preview is
+    // what a participant will actually receive rather than what the platform ships.
+    const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
+    /*
+      The organizer's message has no stored words to read or warn about (§NNN): it is written per
+      send, the save refuses an entry for it and the send ignores one, so a hand-made entry in the
+      setting is neither shown nor flagged here — the card would be saying something untrue.
+    */
+    const own = perSend(messageType) ? null : copyFor(written.copy, messageType, emailLocale);
+    /*
+      A saved text that still holds a value of the sample (§359): saved from the editor before it
+      started from the fields, every participant would read "Crosul de toamnă" whatever their event.
+      Said on the card, closed or open, to whoever may write the words — nobody else can act on it.
+    */
+    const samples = mayWrite && own ? sampleValuesIn(own, messageType, emailLocale) : [];
+    /*
+      And in which languages — both, whichever tab is open: every message goes out in both (§96),
+      so an English text holding the sample's title reaches every Romanian participant too. The
+      closed card names the language to switch to; the warning and the button above stay with the
+      language being edited.
+    */
+    const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];
+    return { messageType, content, own, samples, sampleLanguages };
+  });
+  const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
 
   return (
     <Stack spacing={3}>
@@ -216,6 +180,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
         {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
+        {saved === "emailCopySamples" && <Alert severity="success">{t("emails.copy.samplesReplaced")}</Alert>}
       </Box>
 
       {/*
@@ -274,20 +239,18 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           label: t(`emails.lang.${candidate}`),
           active: candidate === emailLocale,
         }))}
-        openWhen={{ saved: copySaved, inUse: lang !== undefined }}
-        messages={types.map((messageType) => {
-          // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
-          // and through the club's own words where it has written some (§247), so the preview is
-          // what a participant will actually receive rather than what the platform ships.
-          const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
-          // The platform's own text for this message, as the editor's starting point.
-          const shipped = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
+        // A saved text holding sample values, in either language, opens the card to whoever may fix it (§359).
+        openWhen={{ saved: copySaved, inUse: lang !== undefined, attention: anySamples }}
+        messages={cards.map(({ messageType, content, own, samples, sampleLanguages }) => {
           return {
             type: messageType,
             name: t(`emails.types.${messageType}`),
             whenShort: t(`emails.whenShort.${messageType}`),
             // The three types nothing queues any more are said to be so on the closed card (§331).
             ...(NEVER_QUEUED.has(messageType) ? { neverSent: t("emails.neverSent") } : {}),
+            ...(sampleLanguages.length > 0
+              ? { sampleValues: t("emails.copy.sampleMarker", { languages: sampleLanguages.map((language) => language.toUpperCase()).join(", ") }) }
+              : {}),
             when: t(`emails.when.${messageType}`),
             subjectLine: `${t("emails.subject")}: ${content.subject}`,
             html: content.html,
@@ -296,23 +259,21 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             justSaved: copySaved && savedMessage === messageType,
             // The words, for whoever writes them (§103, §247). Under the preview it changes. The
             // organizer's message has none to keep: it is written per send, on the event's page (§NNN).
-            editor: messageType === "ORGANIZER_MESSAGE" ? (
+            editor: perSend(messageType) ? (
               <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
                 {t("emails.perSend")}
               </Alert>
-            ) : canEditTexts(staff.role) ? (
+            ) : mayWrite ? (
               <EmailCopyEditor
                 locale={locale}
                 emailLocale={emailLocale}
                 messageType={messageType}
-                written={copyFor(written.copy, messageType, emailLocale)}
-                /* The platform's own text is plain sentences — the rich parts in this list only ever
-                 come from something the club wrote, and this is the fallback for when it has
-                 not (§270). */
-                shipped={{
-                  subject: shipped.subject,
-                  paragraphs: shipped.paragraphs.filter((part): part is string => typeof part === "string"),
-                }}
+                written={own}
+                /* The platform's own words with the fields in them, never the preview's sample
+                   values (§359): what the box starts from while the club has written nothing. */
+                shipped={emailCopyPrefill(messageType, emailLocale)}
+                used={placeholdersUsedBy(messageType, emailLocale)}
+                samples={samples}
               />
             ) : undefined,
           };
