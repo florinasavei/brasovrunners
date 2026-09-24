@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-041-01 (§366) — the listing's cards, measured in a browser at 320 pixels (the mobile
@@ -55,7 +55,8 @@ async function publishSeries(page: Page): Promise<string> {
   const field = (name: string) => page.locator(`[name="${name}"]`);
   const summary = async (locale: "ro" | "en", words: string) => {
     const panel = languagePanel(page, "title", locale);
-    await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+    // A fold opened in one language stays open in the other (§363): open it only if it is closed.
+    await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
     await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
     await page.keyboard.type(words);
   };
