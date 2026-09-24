@@ -14,10 +14,9 @@ decision or a click only the club can make · **released** — on production, wi
 | Item | Branch | Notes |
 | --- | --- | --- |
 | Both rich-text toolbars (the content editor with its table and bubble menus, the legal document editor) use Material icons with tooltips instead of text characters and emoji (🖼 🔗 ↶ ↷ ¶ ❝ ⊞) | `fix/editor-toolbar-icons` | the owner: "I hate this image icon!" |
-| The email editor starts from the placeholders (`{eventTitle}`…), never the preview's sample values; saving a sample value is refused; overrides already saved with sample values are flagged with one-click "Înlocuiește cu câmpurile" | `fix/email-copy-placeholders` | the owner: "all emails text must include these placeholders" |
+| The email editor's placeholder legend like the documents' (code chip, meaning, example; this message's fields first), the preview sample with every field, precise sample-value matching, and a bilingual email's second half in its own language (title, what to bring, place) | `feat/email-followup` | on top of `BR-V1.78` |
 | The meeting point once per language — Română and English side by side, both required unless "to be announced", "Același nume și în engleză" | `feat/place-one-name-per-language` | no migration: shared column = Romanian, each translation its own |
 | "Termene": every participant-facing deadline a club setting — confirmation link, declaration hold, waiting-list offer, reminder (with a per-event override), self check-in, race week, series horizon — and every number in emails, pages and legal texts follows it | `feat/deadlines-config` | one expand-only migration (the per-event reminder); new values apply to new holds and offers only |
-| The backoffice sub-navigation (Configurație, De făcut, the gallery) as secondary tabs — text with an underline on the active one — instead of pill buttons | `fix/admin-subtabs` | one shared component |
 | "Trimite un mesaj participanților": a bilingual free-form message (bad weather, a change, a cancellation) to an event's participants by state, previewed, counted against the day's allowance, sent through the outbox, audited, with a send history | `feat/custom-participant-email` | one expand-only migration (a new message type) |
 
 ## Ready for the next release
@@ -30,8 +29,6 @@ decision or a click only the club can make · **released** — on production, wi
 
 | Item | Waits for |
 | --- | --- |
-| The email editor lists its placeholders like the documents' legend — each field as a code chip, what it is, an example — the ones this message uses first | `fix/email-copy-placeholders` (same files) |
-| A bilingual email's second half reads the other language's event title, "what to bring" and place name (a Romanian registrant's English half shows the English ones) | the same |
 
 ## Waiting on the owner
 
@@ -57,6 +54,7 @@ decision or a click only the club can make · **released** — on production, wi
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.78` | the email editor starts from the placeholders, never the preview's sample values; saving a sample value is refused; texts already saved with sample values are flagged, with "Înlocuiește cu câmpurile"; every backoffice sub-navigation is one row of secondary tabs |
 | `BR-V1.77` | the editor's first card "Ce fel de eveniment" holds "Starea evenimentului", "Traseul" and "Linkuri și fișiere" as named cards, create and edit alike (the create page shows Programat, read-only); the third group is "Parteneri și prezentare" |
 | `BR-V1.76` | the declaration names the risks the runner takes on (wild animals and dogs, falls, weather and the dark, own equipment incl. a headlamp after dark, own pace, belongings, protected areas), and no legal text or email carries a hardcoded club, place or date; the sample re-seeded on QA; the jobs' safety check on the hour, together with the health check — one database wake per idle hour; the event page's facts grouped by question — "Când" on one line, the address under the place, the route and the cost as pills; this queue |
 | `BR-V1.75` | lighter public pages (the listing 119 → 39 KB on the wire) and a real 308 at `/ro`; bilingual everywhere — the organizer's note and the cancellation reason in both languages, page SEO and album descriptions both or neither, the same words in both languages warned; the series scope radio; `db:reset:local` in a worktree |
