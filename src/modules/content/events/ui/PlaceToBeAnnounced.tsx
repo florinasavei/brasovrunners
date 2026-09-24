@@ -100,17 +100,26 @@ function Island({ initial, labels, locationName, children }: Props & { initial: 
         </Typography>
       </Stack>
 
-      <RecallField
-        name="event.locationName"
-        label={labels.locationName}
-        helperText={later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
-        defaultValue={locationName.defaultValue}
-        {...box}
-        required={required}
-        slotProps={{ ...box.slotProps, htmlInput: { ...box.slotProps.htmlInput, required } }}
-      />
+      {/*
+        The place's boxes are hidden while the place is to be announced (the owner, 2026-09-24:
+        "if the location is announced later, we should hide these fields"), and kept mounted: a
+        venue typed before the switch went on is still posted, still saved, never published, and
+        back in its box the moment the switch goes off (§328). `hidden` keeps them out of the
+        accessibility tree as well as out of sight; nothing is required while they are hidden.
+      */}
+      <Stack spacing={2} hidden={later} data-place-details sx={{ display: later ? "none" : undefined }}>
+        <RecallField
+          name="event.locationName"
+          label={labels.locationName}
+          helperText={later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
+          defaultValue={locationName.defaultValue}
+          {...box}
+          required={required}
+          slotProps={{ ...box.slotProps, htmlInput: { ...box.slotProps.htmlInput, required } }}
+        />
 
-      {children}
+        {children}
+      </Stack>
     </Stack>
   );
 }
