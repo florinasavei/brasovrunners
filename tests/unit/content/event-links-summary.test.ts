@@ -34,6 +34,8 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
     expect(labels["event.links[0].kind"]).toBe("Linkul 1: alege tipul din listă");
     // The whole list, for "more than twelve".
     expect(labels["event.links"]).toBe("Linkuri și fișiere: cel mult 12 pe un eveniment");
+    // A partner's link, named by both the card and the row.
+    expect(labels["event.coHosts[1].links[2].url"]).toBe("Partenerul 2, linkul 3: adresa trebuie să înceapă cu https://");
   });
 
   it("names them in English on the English backoffice", async () => {

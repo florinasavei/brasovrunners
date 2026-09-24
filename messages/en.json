@@ -125,6 +125,17 @@
         "OTHER": "Link"
       }
     },
+    "coHostLinks": {
+      "kinds": {
+        "SITE": "Partner's site",
+        "EVENT": "Partner's event",
+        "REGISTRATION": "Register with partner",
+        "FACEBOOK": "Facebook",
+        "INSTAGRAM": "Instagram",
+        "STRAVA": "Strava",
+        "OTHER": "Link"
+      }
+    },
     "openMap": "Open the map",
     "address": "Address",
     "locationToBeAnnounced": "Location to be announced soon",
@@ -862,11 +873,30 @@
       "durationMinutes": "Duration (minutes)",
       "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
       "coHostSection": "Partners",
-      "coHostName": "Partner (another organization)",
-      "coHostUrl": "Partner's page",
       "coHostRows": {
         "add": "Add a partner",
-        "remove": "Remove partner"
+        "remove": "Remove partner",
+        "moveUp": "Move up partner",
+        "moveDown": "Move down partner",
+        "partnerNew": "New partner",
+        "name": "Partner's name",
+        "kind": "Kind",
+        "url": "Address (https://…)",
+        "labelRo": "Label in Romanian (optional)",
+        "labelEn": "Label in English (optional)",
+        "addLink": "Add a link",
+        "removeLink": "Remove link",
+        "moveLinkUp": "Move up link",
+        "moveLinkDown": "Move down link",
+        "link": "Link",
+        "nameError": "Partner {p}: a partner needs a name",
+        "kindError": "Partner {p}, link {l}: choose the kind from the list",
+        "urlError": "Partner {p}, link {l}: the address must start with https://",
+        "labelRoError": "Partner {p}, link {l}: the Romanian label is at most {max} characters",
+        "labelEnError": "Partner {p}, link {l}: the English label is at most {max} characters",
+        "tooManyLinks": "Partner {p}: at most {max} links on one partner",
+        "tooManyLinksGeneric": "A partner can carry at most {max} links",
+        "tooMany": "Partners: at most {max} on one event"
       },
       "linksSection": "Links and files",
       "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional in each language: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
@@ -886,7 +916,7 @@
         "labelEnError": "Link {n}: the English label is at most {max} characters",
         "tooMany": "Links and files: at most {max} on one event"
       },
-      "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
+      "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per card, with as many links as it has: its site, its event, registering with it, Facebook, Instagram, Strava or something else. Shown as “Together with A, B, and C” on the card, and the event page lists each partner with its links; they are named as organizers after the club to Google (with its site, if it has one). Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",

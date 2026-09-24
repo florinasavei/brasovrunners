@@ -103,6 +103,30 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
+  it("takes a partner's url from its SITE link even when a different kind was listed first (§NNN)", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          coHosts: [
+            {
+              name: "Brașov Marathon",
+              links: [
+                { kind: "FACEBOOK", url: "https://facebook.com/bm", labelRo: null, labelEn: null },
+                { kind: "SITE", url: "https://bm.example.test", labelRo: null, labelEn: null },
+              ],
+            },
+          ],
+        } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(block.organizer).toEqual([
+      { "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" },
+      { "@type": "Organization", name: "Brașov Marathon", url: "https://bm.example.test" },
+    ]);
+  });
+
   it("keeps one organizer object, not a list of one, when the club hosts alone", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
