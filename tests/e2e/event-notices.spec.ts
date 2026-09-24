@@ -33,6 +33,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await fillDateField(page, "Începutul evenimentului", day);
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
+    await field("event.locationNameEn").fill(`Tractorul Park ${suffix}`);
     // Everything about registration is one box, and the declaration is in its own card (§350).
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
@@ -89,6 +90,10 @@ test.describe("§331 the participants hear about a change when the organizer ask
     const place = await openEditorBox(page, "Locul");
     await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
+    // The English box still says the old place until it is told (§NNN): one press copies the new one.
+    await expect(field("event.locationNameEn")).toHaveValue(`Tractorul Park ${suffix}`);
+    await place.getByTestId("place-copy-to-english").click();
+    await expect(field("event.locationNameEn")).toHaveValue(`Poiana Brașov ${suffix}`);
     await field("notice.note").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("notice-outcome")).toContainText("Emailuri „Detalii actualizate” puse la coadă: 1", { timeout: 30_000 });

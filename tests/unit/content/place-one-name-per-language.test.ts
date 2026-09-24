@@ -1,0 +1,242 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { type ComponentProps, createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import ro from "../../../messages/ro.json";
+import { eventInputConstraints } from "@/modules/content/events/constraints";
+import { eventFieldsSchema, newEventSchema } from "@/modules/content/events/fields";
+import { eventFormFieldName } from "@/modules/content/events/form-names";
+import { placeSummary, type SummaryTranslation, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
+import PlaceToBeAnnounced from "@/modules/content/events/ui/PlaceToBeAnnounced";
+import { eventChangesToAnnounce, type EventChangeFacts } from "@/modules/events/domain/event-changes";
+import { PLACE_NAME_FIELD, placeInBox, placeNameIn } from "@/modules/events/domain/place";
+import { textFieldConstraints } from "@/shared/forms/constraints";
+import { RecallProvider } from "@/shared/forms/recall";
+
+/**
+ * BR-REQ-011-01 criterion 29 (`DECISIONS.md` §NNN) — "Punct de întâlnire", once per language.
+ *
+ * The owner, 2026-09-24, with a screenshot of the Locul box: "There is some redundance on this
+ * meeting spot location". The shared meeting point and each language's "Denumirea locului" are
+ * one question asked twice; they are now two boxes side by side, Română and English, both
+ * required unless the place is to be announced (§328), with a button that copies the Romanian
+ * name into the English box. The pure halves are here; the save, the readers and the series are
+ * `tests/integration/cms/location-name-per-language.test.ts`.
+ */
+const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
+
+const BASE = {
+  type: "RACE",
+  surface: "",
+  eventStatus: "SCHEDULED",
+  timezone: "Europe/Bucharest",
+  startsAtWallTime: "2026-11-21T09:00",
+  endsAtWallTime: "",
+  raceStartsAtWallTime: "",
+  locationName: "Parcul Tractorul",
+  locationNameEn: "Tractorul Park",
+  locationAddress: "",
+  difficulty: "",
+  costType: "",
+  mapUrl: "",
+  routeUrl: "",
+  distanceMeters: "",
+  elevationGainMeters: "",
+  featured: false,
+  registrationMode: "NONE",
+  capacity: "",
+  registrationOpensAtWallTime: "",
+  registrationClosesAtWallTime: "",
+  declarationDocumentId: "",
+  externalProvider: "",
+  externalRegistrationUrl: "",
+  participantListVisibility: "HIDDEN",
+} as const;
+
+const refusedPaths = (value: unknown) => eventFieldsSchema.safeParse(value).error?.issues.map((issue) => issue.path.join(".")) ?? [];
+
+describe("BR-REQ-011-01 criterion 29 the schema: a meeting point in each language", () => {
+  it("takes both names, trimmed", () => {
+    const parsed = eventFieldsSchema.safeParse({ ...BASE, locationName: " Parcul Tractorul ", locationNameEn: " Tractorul Park " });
+    expect(parsed.data).toMatchObject({ locationName: "Parcul Tractorul", locationNameEn: "Tractorul Park" });
+  });
+
+  it("refuses a blank one, naming that language's box — both when both are blank", () => {
+    expect(refusedPaths({ ...BASE, locationNameEn: "  " })).toEqual(["locationNameEn"]);
+    expect(refusedPaths({ ...BASE, locationName: "" })).toEqual(["locationName"]);
+    expect(refusedPaths({ ...BASE, locationName: "", locationNameEn: "" })).toEqual(["locationName", "locationNameEn"]);
+  });
+
+  it("asks for neither while the place is to be announced, and keeps what was typed", () => {
+    const later = eventFieldsSchema.safeParse({ ...BASE, locationToBeAnnounced: true, locationName: "", locationNameEn: "Sports Hall" });
+    expect(later.success).toBe(true);
+    expect(later.data).toMatchObject({ locationName: null, locationNameEn: "Sports Hall" });
+  });
+
+  it("does not refuse a caller that posts no English box at all: it is not editing the English name", () => {
+    const { locationNameEn: _english, ...older } = BASE;
+    void _english;
+    const parsed = eventFieldsSchema.safeParse(older);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.locationNameEn).toBeUndefined();
+  });
+
+  it("holds the English name to the Romanian one's ceiling, and is the create form's rule too", () => {
+    expect(refusedPaths({ ...BASE, locationNameEn: "x".repeat(201) })).toEqual(["locationNameEn"]);
+    const language = { slug: "crosul", title: "Crosul", excerpt: "Rezumat." };
+    const fields = { ...BASE, translations: { ro: language, en: { ...language, slug: "the-cross" } } };
+    expect(newEventSchema.safeParse(fields).success).toBe(true);
+    expect(newEventSchema.safeParse({ ...fields, locationNameEn: "" }).success).toBe(false);
+  });
+
+  it("gives both boxes the same browser rule, read off the schema (§315)", () => {
+    expect(eventInputConstraints("locationNameEn")).toEqual(eventInputConstraints("locationName"));
+    expect(eventInputConstraints("locationNameEn")).toMatchObject({ required: true, maxLength: 200 });
+  });
+
+  it("names each box by the name the form posts it under, for the refusal summary", () => {
+    expect(PLACE_NAME_FIELD).toEqual({ ro: "locationName", en: "locationNameEn" });
+    expect(eventFormFieldName("locationNameEn")).toBe("event.locationNameEn");
+    const labels = read("src/modules/content/events/ui/field-labels.ts");
+    expect(labels).toContain('"event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`)');
+  });
+});
+
+describe("BR-REQ-011-01 criterion 29 what each language's page shows", () => {
+  it("reads the language's own name, else the event's — never the other language's", () => {
+    expect(placeNameIn({ locationName: "Parcul Tractorul" }, "Tractorul Park")).toBe("Tractorul Park");
+    expect(placeNameIn({ locationName: "Parcul Tractorul" }, "  ")).toBe("Parcul Tractorul");
+    expect(placeNameIn({ locationName: "Parcul Tractorul" }, null)).toBe("Parcul Tractorul");
+    expect(placeNameIn({ locationName: " " }, null)).toBeNull();
+  });
+
+  it("opens the box of an event saved before with what its page shows, the address folded in", () => {
+    const older = { locationName: "Parcul Tractorul", locationAddress: "Str. Turnului 5" };
+    expect(placeInBox(older, null)).toBe("Parcul Tractorul, Str. Turnului 5");
+    expect(placeInBox(older, "Tractorul Park")).toBe("Tractorul Park, Str. Turnului 5");
+    expect(placeInBox({ locationName: "Parcul Tractorul", locationAddress: null }, undefined)).toBe("Parcul Tractorul");
+    expect(placeInBox({ locationName: null, locationAddress: null }, null)).toBe("");
+  });
+});
+
+describe("BR-REQ-011-01 criterion 29 the closed Locul box", () => {
+  const words = ro.Admin.editor.boxes.summary as SummaryWords;
+  const language = (locale: string, locationName: string | null): SummaryTranslation => ({
+    locale,
+    title: "",
+    slug: "",
+    excerpt: null,
+    excerptJson: null,
+    bodyJson: null,
+    rulesJson: null,
+    scheduleJson: null,
+    checklist: null,
+    locationName,
+  });
+  const event = { locationName: "Parcul Tractorul", locationAddress: null, locationToBeAnnounced: false, mapUrl: null };
+
+  it("says the Romanian name, and the English one only when it says something else", () => {
+    expect(placeSummary(words, event, [language("ro", "Parcul Tractorul"), language("en", "Tractorul Park")])).toBe("Parcul Tractorul (EN: Tractorul Park)");
+    expect(placeSummary(words, event, [language("ro", "Parcul Tractorul"), language("en", "Parcul Tractorul")])).toBe("Parcul Tractorul");
+    // An event saved before: the English row empty, the English page showing the event's name.
+    expect(placeSummary(words, event, [language("ro", null), language("en", null)])).toBe("Parcul Tractorul");
+  });
+});
+
+describe("BR-REQ-011-01 criterion 29 the two boxes and the copy button", () => {
+  const box = textFieldConstraints(eventInputConstraints("locationName"));
+  const labels = {
+    toggle: "Locația se anunță mai târziu",
+    toggleHelp: "Ajutor.",
+    meetingPoint: "Punct de întâlnire",
+    ro: "Română",
+    en: "English",
+    locationHelp: "Locul.",
+    unpublished: "Nepublicat.",
+    copyToEnglish: "Același nume și în engleză",
+  };
+  const render = (roName: string, enName: string, values: Record<string, string[]> | null = null) =>
+    renderToStaticMarkup(
+      createElement(
+        RecallProvider,
+        { value: { values, fields: [], generation: values ? 1 : 0, fieldError: "Verifică acest câmp." } } as unknown as ComponentProps<typeof RecallProvider>,
+        createElement(
+          PlaceToBeAnnounced,
+          { defaultChecked: false, labels, names: { ro: { defaultValue: roName, box }, en: { defaultValue: enName, box } } } as ComponentProps<typeof PlaceToBeAnnounced>,
+          createElement("input", { name: "event.mapUrl" }),
+        ),
+      ),
+    );
+  const copyButton = (html: string) => /<button[^>]*data-testid="place-copy-to-english"[^>]*>/.exec(html)?.[0] ?? "";
+
+  it("puts the two names under one heading, each labelled by its language and read out with the heading", () => {
+    const html = render("Parcul Tractorul", "Tractorul Park");
+    expect(html).toContain("<legend");
+    expect(html).toContain(">Punct de întâlnire</");
+    expect(html).toMatch(/<input[^>]*name="event\.locationName"[^>]*value="Parcul Tractorul"/);
+    expect(html).toMatch(/<input[^>]*name="event\.locationNameEn"[^>]*value="Tractorul Park"/);
+    // The label's text is "Punct de întâlnire (English)" to a screen reader and to the save
+    // button's "completează întâi: …"; on the screen, under the heading, "English".
+    expect(html).toMatch(/Punct de întâlnire \(<\/span>English<span[^>]*>\)/);
+  });
+
+  it("offers the copy while the English box says something else, and not when there is nothing to copy", () => {
+    expect(copyButton(render("Stadionul Tineretului", ""))).not.toMatch(/\bdisabled\b/);
+    expect(copyButton(render("Stadionul Tineretului", "Youth Stadium"))).not.toMatch(/\bdisabled\b/);
+    expect(copyButton(render("Stadionul Tineretului", "Stadionul Tineretului"))).toMatch(/\bdisabled\b/);
+    expect(copyButton(render("", ""))).toMatch(/\bdisabled\b/);
+    expect(render("a", "")).toContain(labels.copyToEnglish);
+  });
+
+  it("reads the boxes back after a refusal, the copy button with them", () => {
+    const html = render("", "", { "event.locationName": ["Piața Sfatului"], "event.locationNameEn": ["Piața Sfatului"] });
+    expect(html).toMatch(/<input[^>]*name="event\.locationNameEn"[^>]*value="Piața Sfatului"/);
+    expect(copyButton(html)).toMatch(/\bdisabled\b/);
+  });
+
+  it("is a thumb's size, and fills the box through the input's own setter so every watcher sees it", () => {
+    const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
+    expect(island).toContain("sx={{ ...TAP_TARGET, alignSelf: \"flex-start\", textTransform: \"none\" }}");
+    expect(island).toContain('Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, ro.trim())');
+    expect(island).toContain('input.dispatchEvent(new Event("input", { bubbles: true }))');
+    // The unseen half of each label is one pixel, not MUI's `1` (100%): a label-wide span pushed a
+    // 320-pixel page sideways.
+    expect(island).toContain('width: "1px"');
+    expect(island).not.toMatch(/width: 1,/);
+  });
+});
+
+describe("BR-REQ-011-01 criterion 29 the participants' notice (§331)", () => {
+  const before: EventChangeFacts = {
+    eventStatus: "SCHEDULED",
+    startsAt: new Date("2026-10-11T05:00:00.000Z"),
+    raceStartsAt: null,
+    locationName: "Parcul Tractorul",
+    locationAddress: "Str. Turnului 5",
+    mapUrl: null,
+    scheduleItems: null,
+  };
+
+  it("counts no change when a first save writes the pages' own names into the columns", () => {
+    const after = { ...before, locationName: "Parcul Tractorul, Str. Turnului 5", locationAddress: null };
+    const languagesBefore = [
+      { locale: "ro", locationName: null },
+      { locale: "en", locationName: null },
+    ];
+    const languagesAfter = [
+      { locale: "ro", locationName: "Parcul Tractorul, Str. Turnului 5" },
+      { locale: "en", locationName: "Parcul Tractorul, Str. Turnului 5" },
+    ];
+    expect(eventChangesToAnnounce(before, after, languagesBefore, languagesAfter)).toEqual([]);
+  });
+
+  it("counts a place moved in English alone", () => {
+    const languages = [
+      { locale: "ro", locationName: "Parcul Tractorul" },
+      { locale: "en", locationName: "Tractorul Park" },
+    ];
+    const moved = [languages[0], { locale: "en", locationName: "Tractorul Park, main gate" }];
+    expect(eventChangesToAnnounce(before, before, languages, moved)).toEqual(["place"]);
+  });
+});

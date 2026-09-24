@@ -20,8 +20,8 @@ import { type LanguageEntry, summaryWords } from "./box-kit";
 
 /**
  * The four boxes of the event editor that are only words (§350): the title and summary, the
- * description, the rules, the page address. Each has its own Română | English tabs — six strips on
- * one page, so each carries its box's `idPrefix` — and each tab says "· incomplet" by its own rule:
+ * description, the rules, the page address. Each has its own Română | English tabs — five strips on
+ * one page with the programme's, so each carries its box's `idPrefix` — and each tab says "· incomplet" by its own rule:
  * a required text missing here (the title, the summary, the address), or an optional one written
  * in the other language and not in this one (the description, the rules).
  */

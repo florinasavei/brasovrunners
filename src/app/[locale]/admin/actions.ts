@@ -209,8 +209,11 @@ function eventFieldsFrom(form: FormData) {
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
-    // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
+    // "Punct de întâlnire", once per language (§NNN): the Romanian box, which is also the event's
+    // own meeting point (§36), and the English one — only when the form carried it, so a form
+    // without the box reads as "not editing the English name" rather than as a blank one.
     locationName: value("locationName"),
+    locationNameEn: form.has("event.locationNameEn") ? value("locationNameEn") : undefined,
     // No box for it any more (the Locul box); the field is folded into the meeting point.
     locationAddress: null,
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
@@ -282,8 +285,8 @@ function translationInputFrom(form: FormData, locale: Locale) {
     body: value("body"),
     rules: value("rules"),
     schedule: value("schedule"),
-    // The place's name in this language, or "" for the event's own (migration `0058`).
-    locationName: value("locationName"),
+    // No place name here: it is asked once per language in the Locul box and read with the
+    // event's fields (`eventFieldsFrom`, §NNN).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
   };

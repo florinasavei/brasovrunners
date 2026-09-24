@@ -84,7 +84,10 @@ const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true
  *   wants to say why writes the note, which goes on its own.
  * - announced by the save (hidden before, shown after) — always, whether or not the words behind
  *   the switch changed at the same press: to the runner the place is new.
- * - shown before and after — when the place, the map link or a language's own name differs.
+ * - shown before and after — when the map link differs, or the place a language's page shows.
+ *   With the languages in hand, the place is read per language only (§NNN): the first save of an
+ *   older event writes the Romanian page's own name into the event's column, which changes the
+ *   column and not what any page says. Without them, the event's own place is what is compared.
  */
 function placeChanged(
   before: EventChangeFacts,
@@ -94,8 +97,8 @@ function placeChanged(
 ): boolean {
   if (hidden(after)) return false;
   if (hidden(before)) return true;
-  if (eventPlace(before) !== eventPlace(after)) return true;
   if (words(before.mapUrl) !== words(after.mapUrl)) return true;
+  if (languagesBefore.length === 0 || languagesAfter.length === 0) return eventPlace(before) !== eventPlace(after);
   const was = placesByLanguage(before, languagesBefore);
   const now = placesByLanguage(after, languagesAfter);
   for (const [locale, place] of now) {

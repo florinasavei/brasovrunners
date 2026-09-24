@@ -36,6 +36,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await fillDateField(page, "Începutul evenimentului", "2027-05-08");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Alergare cu donație ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await excerpt("ro", "Alergare fără taxă, cu o donație opțională pentru Wings for Life.");

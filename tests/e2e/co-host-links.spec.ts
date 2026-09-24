@@ -35,6 +35,7 @@ test("the editor adds a partner with its description and three links, refuses th
   await fillDateField(page, "Începutul evenimentului", "2027-06-01");
   await fillTimeField(page, "Ora", "09:00");
   await field("event.locationName").fill("Parcul Tractorul");
+  await field("event.locationNameEn").fill("Parcul Tractorul");
   await field("translations.ro.title").fill(`Cros parteneri ${suffix}`);
   await field("translations.ro.slug").fill(`cros-parteneri-${suffix}`);
   await languageTab(page, "title", "en").click();
