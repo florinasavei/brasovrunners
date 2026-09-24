@@ -1484,6 +1484,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     /** Hand back each touched date as it was and as it was written, for its participants' notice (§331). */
     collect?: boolean;
     now: Date;
+    /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§NNN). */
+    deadlines: Deadlines;
   },
 ): Promise<{ applied: number; offered: number; dates: SavedDate[] }> {
   const { before, after, now } = input;
@@ -1612,7 +1614,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
           capacity: changes.capacity ?? null,
         })
       ) {
-        offered += await offerRaisedCapacity(tx, member.id, now);
+        offered += await offerRaisedCapacity(tx, member.id, now, input.deadlines);
       }
     }
     if (translationChanges.length > 0) {
@@ -1669,8 +1671,15 @@ function capacityRaised(
  * commit together or not at all, and after the event row is locked, the serialization point
  * every capacity-changing decision takes (AGENTS.md §10.6). `fillAvailableSpots` is the one
  * thing that offers; this only asks it, with the row as it now stands. Returns the offers made.
+ * `deadlines` is the club's setting, read by the caller before its transaction (§NNN), so nothing
+ * here reads `platform_settings` while the event row is locked.
  */
-async function offerRaisedCapacity<T extends Record<string, unknown>>(tx: Transaction<T>, eventId: string, now: Date): Promise<number> {
+async function offerRaisedCapacity<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  eventId: string,
+  now: Date,
+  deadlines: Deadlines,
+): Promise<number> {
   const event = await lockEventForCapacity(tx, eventId);
   if (!event) return 0;
   return fillAvailableSpots(
@@ -1689,6 +1698,7 @@ async function offerRaisedCapacity<T extends Record<string, unknown>>(tx: Transa
       publishedAt: event.publishedAt,
     },
     now,
+    deadlines,
   );
 }
 
@@ -1732,6 +1742,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
+  /*
+    The club's deadlines the offers of a raised capacity are made with (§NNN), read here, before the
+    transaction: inside it the event row is locked, and a stale memo would otherwise read
+    `platform_settings` while that lock is held.
+  */
+  const deadlines = await currentDeadlines(db);
 
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
@@ -1806,7 +1822,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
 
     // More places than before: the difference goes to the waiting list at once (§147), here,
     // where the row is already locked by the guarded update and the number is not yet committed.
-    let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now) : 0;
+    let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now, deadlines) : 0;
 
     /*
       This date's languages as they now stand: the rows a text save wrote back (which already carry
@@ -1833,6 +1849,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         translationsAfter,
         collect: announcing,
         now,
+        deadlines,
       });
       appliedTo = series.applied;
       offered += series.offered;

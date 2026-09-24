@@ -1,8 +1,13 @@
 import { asc, eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { PgTransaction } from "drizzle-orm/pg-core";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { platformSettings } from "@/db/schema/platform-settings";
+import { DEADLINES_SETTING_KEY } from "@/modules/deadlines/deadlines";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { repeatEvent, saveEventAndTranslations, type SeriesEditScope } from "@/modules/content/events/service";
@@ -13,6 +18,24 @@ import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistr
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/*
+  Every read of the club's deadlines, noted with whether it went through a transaction: a raise
+  must not read `platform_settings` inside the save's transaction, which holds the event row lock
+  (§NNN) — the editor reads the setting before it opens.
+*/
+const deadlineReads = vi.hoisted(() => ({ insideTransaction: 0, outside: 0 }));
+vi.mock("@/modules/deadlines/deadlines", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/modules/deadlines/deadlines")>();
+  return {
+    ...original,
+    currentDeadlines: (db: Parameters<typeof original.currentDeadlines>[0]) => {
+      if (db instanceof PgTransaction) deadlineReads.insideTransaction += 1;
+      else deadlineReads.outside += 1;
+      return original.currentDeadlines(db);
+    },
+  };
+});
 
 /**
  * BR-REQ-034-02 criterion 5 (`DECISIONS.md` §147) — a higher capacity saved in the editor
@@ -273,6 +296,26 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     // Criterion 3: the offer holds a place, so 1 is below the two places taken.
     expect(await refusalOf(saveCapacity(row.id, "1", new Date(raisedAt.getTime() + 2000)))).toBe("VALIDATION_ERROR");
     expect((await reload(row.id)).capacity).toBe(2);
+  });
+
+  it("offers with the club's offer hours, read before the save's transaction — never inside it, with the event row locked (§NNN)", async () => {
+    const row = await seedEvent(1);
+    await enter(row, "Ana", NOW, true);
+    const bogdan = await enter(row, "Bogdan", new Date(NOW.getTime() + 1000));
+    await db.insert(platformSettings).values({ key: DEADLINES_SETTING_KEY, value: { ...DEFAULT_DEADLINES, offerHours: 6 }, updatedAt: NOW });
+
+    // The memo gone, as on an instance whose minute has run out: the setting must be read afresh.
+    forgetCachedDeadlines();
+    deadlineReads.insideTransaction = 0;
+    deadlineReads.outside = 0;
+    const raisedAt = new Date(NOW.getTime() + 60_000);
+    expect(await saveCapacity(row.id, "2", raisedAt)).toMatchObject({ offered: 1 });
+
+    const offered = (await registrationsOf(row.id)).find((r) => r.id === bogdan.id)!;
+    expect(offered.status).toBe("WAITLIST_OFFERED");
+    expect(offered.holdExpiresAt).toEqual(new Date(raisedAt.getTime() + 6 * HOUR));
+    expect(deadlineReads.insideTransaction).toBe(0);
+    expect(deadlineReads.outside).toBeGreaterThan(0);
   });
 
   it("a save that is not a raise never reaches the allocator: a lapsed offer stays for the job, the next in line stays waiting", async () => {

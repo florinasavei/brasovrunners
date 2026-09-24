@@ -424,9 +424,10 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
   /**
-   * The club's deadlines (§NNN), when the caller has them — every path in this file does. The
-   * editor's capacity raise and the maintenance job leave it out and it is read here: from the
-   * instance's minute-long memo, which the job has just refreshed at the start of its run.
+   * The club's deadlines (§NNN), when the caller has them — every path in this file does, and so
+   * does the editor's capacity raise, which reads them before its transaction locks the event. The
+   * maintenance job leaves it out and it is read here: from the instance's minute-long memo, which
+   * the job has just refreshed at the start of its run.
    */
   settings?: Deadlines,
 ): Promise<number> {

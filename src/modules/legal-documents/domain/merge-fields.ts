@@ -12,7 +12,8 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  *
  * **The reminder is a clause, not a number** (`reminderClause`): the club may send none by default
  * (zero), and "un memento cu 0 ore înainte" would promise a message that never goes. So the field
- * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte" — and, when
+ * carries the whole clause with its leading comma — ", un memento cu 2 zile înainte (sau cât alege
+ * evenimentul)", hedged because an event may choose its own — and, when
  * the default is none, a clause with no number that still covers an event sending its own
  * (`reminderClause` below): "confirmări, legături, lista de așteptare{{reminderClause}} și cel
  * mult o mulțumire…". A field given "" is still left out cleanly (`OMITTABLE_MERGE_FIELDS`).
@@ -27,26 +28,30 @@ export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offer
 export const OMITTABLE_MERGE_FIELDS: ReadonlySet<string> = new Set(["reminderClause"]);
 
 /**
- * The reminder as the clause the legal texts take, in one language: ", un memento cu 2 zile
- * înainte" / ", a reminder 2 days before" when the club's default sends one.
+ * The reminder as the clause the legal texts take, in one language. Each event may pick its own
+ * reminder — 24, 48 or 72 hours, or none — so the club's default is never stated as a promise a
+ * single event can break: an approved notice serves every event.
  *
- * When the club's default is none (zero) the clause does **not** disappear, because each event
- * may still pick its own reminder (24, 48 or 72 hours) — a notice listing no reminder among the
- * messages "we send only" would be a claim one event breaks. It then says, with no number and no
- * single-event promise, ", un memento înainte de start, dacă evenimentul trimite unul" / ", a
- * reminder before the start where the event sends one" — never "0 ore", never a dotted blank.
+ * - A default above zero names the lead and hedges it for the event's own choice: ", un memento cu
+ *   2 zile înainte (sau cât alege evenimentul)" / ", a reminder 2 days before (or as the event
+ *   chooses)".
+ * - A default of none (zero) does **not** drop the clause — a notice listing no reminder among the
+ *   messages "we send only" would be a claim one event breaks — and says, with no number,
+ *   ", un memento înainte de start, dacă evenimentul trimite unul" / ", a reminder before the start
+ *   where the event sends one" — never "0 ore", never a dotted blank.
  */
 export function reminderClause(locale: string, reminderHours: number): string {
   if (reminderHours <= 0) {
     return locale === "en" ? ", a reminder before the start where the event sends one" : ", un memento înainte de start, dacă evenimentul trimite unul";
   }
   const lead = leadPhrase(locale, reminderHours);
-  return locale === "en" ? `, a reminder ${lead} before` : `, un memento cu ${lead} înainte`;
+  return locale === "en" ? `, a reminder ${lead} before (or as the event chooses)` : `, un memento cu ${lead} înainte (sau cât alege evenimentul)`;
 }
 
 /**
  * The four deadline fields' values in one language: the same words the emails and the pages use
- * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", ", un memento cu 2 zile înainte".
+ * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", ", un memento cu 2 zile
+ * înainte (sau cât alege evenimentul)".
  */
 export function deadlineMergeValues(
   locale: string,

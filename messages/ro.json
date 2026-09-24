@@ -1623,7 +1623,7 @@
         "confirmationHours": "Cât e valabil linkul de confirmare a adresei, din „Termene”",
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
-        "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene” — nimic când clubul nu trimite reminder implicit"
+        "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",

@@ -63,7 +63,7 @@ describe("§NNN the deadlines as legal merge fields", () => {
     expect(isMergeField("reminderHours")).toBe(false);
     const text = "Confirmi în {{confirmationHours}}; locul e ținut {{holdMinutes}}; oferta, {{offerHours}}; mesaje: legături{{reminderClause}} și o mulțumire.";
     expect(mergeText(text, deadlineMergeValues("ro", { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 72 }))).toBe(
-      "Confirmi în 12 ore; locul e ținut o oră; oferta, 6 ore; mesaje: legături, un memento cu 3 zile înainte și o mulțumire.",
+      "Confirmi în 12 ore; locul e ținut o oră; oferta, 6 ore; mesaje: legături, un memento cu 3 zile înainte (sau cât alege evenimentul) și o mulțumire.",
     );
     expect(mergeText("within {{confirmationHours}}", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe("within 48 hours");
   });
@@ -86,15 +86,18 @@ describe("§NNN the deadlines as legal merge fields", () => {
     }
   });
 
-  it("with a default above zero the reminder clause keeps the lead, in both languages", () => {
+  it("with a default above zero the reminder clause keeps the lead, hedged for the event's own choice, in both languages", () => {
+    // An event may pick 24/48/72 h or none, so the club's lead is never a promise for every event.
     expect(mergeText("the waiting list{{reminderClause}} and a thank-you", deadlineMergeValues("en", DEFAULT_DEADLINES))).toBe(
-      "the waiting list, a reminder 2 days before and a thank-you",
+      "the waiting list, a reminder 2 days before (or as the event chooses) and a thank-you",
     );
     expect(mergeText("lista de așteptare{{reminderClause}} și o mulțumire", deadlineMergeValues("ro", DEFAULT_DEADLINES))).toBe(
-      "lista de așteptare, un memento cu 2 zile înainte și o mulțumire",
+      "lista de așteptare, un memento cu 2 zile înainte (sau cât alege evenimentul) și o mulțumire",
     );
-    expect(deadlineMergeValues("ro", { ...DEFAULT_DEADLINES, reminderHours: 24 }).reminderClause).toBe(", un memento cu o zi înainte");
-    expect(deadlineMergeValues("en", { ...DEFAULT_DEADLINES, reminderHours: 72 }).reminderClause).toBe(", a reminder 3 days before");
+    expect(deadlineMergeValues("ro", { ...DEFAULT_DEADLINES, reminderHours: 24 }).reminderClause).toBe(
+      ", un memento cu o zi înainte (sau cât alege evenimentul)",
+    );
+    expect(deadlineMergeValues("en", { ...DEFAULT_DEADLINES, reminderHours: 72 }).reminderClause).toBe(", a reminder 3 days before (or as the event chooses)");
   });
 
   it("an omittable field given nothing leaves nothing behind", () => {
@@ -113,6 +116,14 @@ describe("§NNN the deadlines as legal merge fields", () => {
       const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, off))).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder before the start where the event sends one" : "un memento înainte de start, dacă evenimentul trimite unul");
       expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
+      expect(all).not.toContain("…………");
+    }
+  });
+
+  it("the platform's privacy notice, merged with the club's default lead, names it hedged for the event's own choice, in either language", () => {
+    for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, DEFAULT_DEADLINES))).join(" ");
+      expect(all).toContain(locale === "en" ? "a reminder 2 days before (or as the event chooses)" : "un memento cu 2 zile înainte (sau cât alege evenimentul)");
       expect(all).not.toContain("…………");
     }
   });

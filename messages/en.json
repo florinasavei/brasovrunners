@@ -1623,7 +1623,7 @@
         "confirmationHours": "How long the address confirmation link is valid, from “Deadlines”",
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
-        "reminderClause": "The reminder as a clause with its comma, from “Deadlines” — nothing at all when the club sends no reminder by default"
+        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2732,7 +2732,7 @@
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
-          "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Participation and registration”.",
+          "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it."
