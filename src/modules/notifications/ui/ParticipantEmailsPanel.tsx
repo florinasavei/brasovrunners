@@ -77,7 +77,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
         </Typography>
-        <SubNav items={languages} />
+        <SubNav label={languageLabel} items={languages} />
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
