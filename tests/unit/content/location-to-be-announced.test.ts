@@ -115,8 +115,8 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
 
   it("reads `required` and the ceiling off the schema, so the browser refuses what the server refuses", () => {
     expect(eventInputConstraints("locationName")).toMatchObject({ required: true, maxLength: 200 });
-    // The form hands the island the schema's own box, never a second list.
-    expect(read("src/modules/content/events/ui/EventFieldsForm.tsx")).toContain('box: box("locationName")');
+    // The Locul box hands the island the schema's own box, never a second list (§NNN).
+    expect(read("src/modules/content/events/ui/boxes/PlaceBox.tsx")).toContain('box: textFieldConstraints(eventInputConstraints("locationName"))');
   });
 
   it("asks for the place while the switch is off", () => {
@@ -144,12 +144,13 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
   });
 
   it("is on both pages, and the create button's gap follows it", () => {
-    // One `EventFieldsForm` for the editor and the create page (§303).
-    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<EventFieldsForm");
-    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<EventFieldsForm");
-    const button = read("src/modules/content/events/ui/CreateAndPublishButton.tsx");
-    expect(button).toContain('data.get("event.locationToBeAnnounced") === "on"');
-    expect(button).toMatch(/!announcedLater && text\("event\.locationName"\) === ""/);
+    // One Locul box for the editor and the create page (§303, §NNN).
+    expect(read("src/app/[locale]/admin/events/new/page.tsx")).toContain("<PlaceBox");
+    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("<PlaceBox");
+    // The create button and the Publicare list ask the one shared check, which follows the switch.
+    expect(read("src/modules/content/events/ui/CreateAndPublishButton.tsx")).toContain("missingForPublish(");
+    const check = read("src/modules/content/events/ui/publish-check.ts");
+    expect(check).toContain('read("event.locationToBeAnnounced") !== "on" && text("event.locationName") === ""');
     // The action reads the switch by the name the island posts.
     expect(read("src/app/[locale]/admin/actions.ts")).toContain('locationToBeAnnounced: form.get("event.locationToBeAnnounced") === "on"');
   });

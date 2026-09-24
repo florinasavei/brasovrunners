@@ -125,6 +125,12 @@ export type AuditAction =
    * its queue ever existed.
    */
   | "event.hard_deleted"
+  /**
+   * A series' "Publică datele noi automat" switched (§NNN): on the source's rule, from and to,
+   * and which date's editor it was pressed from — a change to what the site will publish by
+   * itself every week, so the trail says who made it.
+   */
+  | "event.repeat_publish_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */

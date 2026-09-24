@@ -17,7 +17,7 @@ import {
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { env } from "@/shared/config/env";
-import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import Panel from "@/shared/ui/Panel";
 import BibDesignPreview from "./BibDesignPreview";
 import BibFooterTextField from "./BibFooterTextField";
 
@@ -54,19 +54,25 @@ export default async function BibDesignPanel({
   design = DEFAULT_BIB_DESIGN,
   bibStartNumber,
   bibColour,
+  summary,
 }: {
-  /** The event being designed; the preview asks the picture route for its title and date. */
-  eventId: string;
+  /**
+   * The event being designed; the preview asks the picture route for its title and date. Null on
+   * the create page (§NNN): every setting is there, and no preview — the route needs an event.
+   */
+  eventId: string | null;
   /** What is stored, or the platform's own on an event nobody has designed. */
   design?: BibDesign;
   /** The stored start number and band colour (§173), for the preview's first address. */
   bibStartNumber: number;
   bibColour: string | null;
+  /** The card's closed line: what is printed, from the saved design. */
+  summary?: string;
 }) {
   const t = await getTranslations("Admin");
   // The reader's own language, for the picture list's titles; the form has no locale prop.
   const locale = (await getLocale()) as Locale;
-  const initialSrc = bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design });
+  const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
   /*
     The pictures already uploaded, read here rather than fetched by the browser: this form is a
     Server Component and the list is the same one the pictures page shows. Nothing is offered
@@ -155,10 +161,7 @@ export default async function BibDesignPanel({
   );
 
   return (
-    <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }} data-testid="bib-design">
-      <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
-        {t("editor.bibDesign.title")}
-      </Typography>
+    <Panel collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
       {/* What tells the action that this panel was on the form; see the note above. */}
       <input type="hidden" name="event.bibDesign.present" value="1" />
 
@@ -167,13 +170,16 @@ export default async function BibDesignPanel({
           {t("editor.bibDesign.intro")}
         </Typography>
 
-        {/* The bib as it would print with the boxes as they are now, redrawn as they change. */}
-        <BibDesignPreview
-          eventId={eventId}
-          locale={locale}
-          initialSrc={initialSrc}
-          labels={{ alt: t("editor.bibDesign.previewAlt"), caption: t("editor.bibDesign.previewCaption") }}
-        />
+        {/* The bib as it would print with the boxes as they are now, redrawn as they change —
+            once the event exists: the picture route draws an event's title and date. */}
+        {eventId && initialSrc && (
+          <BibDesignPreview
+            eventId={eventId}
+            locale={locale}
+            initialSrc={initialSrc}
+            labels={{ alt: t("editor.bibDesign.previewAlt"), caption: t("editor.bibDesign.previewCaption") }}
+          />
+        )}
 
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2 }}>
           {(["showName", "showEventTitle", "showDate", "showLogo", "cutMarks"] as const).map((field) => (
@@ -246,10 +252,12 @@ export default async function BibDesignPanel({
           </Stack>
         </Box>
 
-        <Typography variant="caption" color="text.secondary">
-          {t("editor.bibDesign.previewNote")}
-        </Typography>
+        {eventId && (
+          <Typography variant="caption" color="text.secondary">
+            {t("editor.bibDesign.previewNote")}
+          </Typography>
+        )}
       </Stack>
-    </Box>
+    </Panel>
   );
 }

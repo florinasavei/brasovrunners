@@ -12,7 +12,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 /** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
 const SWITCH_NAME = "event.locationToBeAnnounced";
 
-/** The meeting point's box as `EventFieldsForm` read it off the schema (§315): plain data, never zod. */
+/** The meeting point's box as the Locul box read it off the schema (§315): plain data, never zod. */
 type BoxProps = ReturnType<typeof textFieldConstraints>;
 
 type Props = {

@@ -627,7 +627,7 @@
       "cancelRegistrationTitle": "Cancel this registration?",
       "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled.",
       "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
-      "repeatTitle": "Create the editions?",
+      "repeatTitle": "Create the dates?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay.",
@@ -664,9 +664,9 @@
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
-      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The shared name, filled in once; if the place goes by another name in English, write that one under “Content”, on the language's tab.",
+      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The shared name, filled in once; if the place goes by another name in English, write that one below, on the language's tab.",
       "locationNameInLanguage": "The place's name (in this language)",
-      "locationNameInLanguageHelp": "Optional. What the meeting point is called on this language's page — “Tractorul Park” on the English one, for instance. Leave it empty and the page uses the name from “{panel}”.",
+      "locationNameInLanguageHelp": "Optional. What the meeting point is called on this language's page — “Tractorul Park” on the English one, for instance. Leave it empty and the page uses the meeting point above.",
       "placeToBeAnnounced": "Location to be announced",
       "placeToBeAnnouncedHelp": "Turn it on when the place is not settled yet. The event can be published anyway: the page, the cards, the calendar, the share picture and the emails say “Location to be announced soon”, and the place, the address, the map and the programme's places appear nowhere. What you fill in below — and the place's name on each language's tab — is kept, unpublished. When you announce the place, turn the switch off and save — it appears everywhere at once.",
       "placeUnpublished": "Not published while the location is to be announced.",
@@ -675,18 +675,17 @@
       "special": "A special edition",
       "specialHelp": "An edition apart — an anniversary, a charity run, a race the club joins somebody else at. Shown with a badge on the card and on the page. Any number of events may be special, including one date of a series; the mark does not travel to the other dates.",
       "saveEvent": "Save the event details",
-      "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
       "translationReadOnly": "The words are the Redactor’s or the Administrator’s — yours are the Settings: the date, the place, the route, the places, the registrations and race day. Ask the Administrator to change anything here.",
-      "saveCoversSettingsOnly": "The save below covers the event’s settings. Nothing under “Content” is saved from here, because those words are not this role’s.",
+      "saveCoversSettingsOnly": "Your save changes the settings only; the texts are the editor's.",
       "version": "version {version}",
-      "liveWarning": "This event is published. Your changes become public the moment you save.",
+      "liveWarning": "Published: every save appears on the site at once, in both languages.",
       "acknowledgeLive": "I understand that I am editing published content.",
       "acknowledgeLiveHint": "Tick that you understand you are changing published content to be able to save.",
       "saving": "Saving…",
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
-      "costHelp": "Free text: \"Free\", \"50 lei\". Leave empty when no cost has been stated.",
+      "costHelp": "Free or paid; the amount and how to pay are written in the description.",
       "fields": {
         "title": "Title",
         "slug": "Page address",
@@ -704,25 +703,19 @@
         "scheduleNotes": "Notes under the programme"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
-      "contentHelp": "The same event, in two languages. The words change here — and the place's name, when English calls it something else; the time, the map, the difficulty and the cost are below, once, shared by both.",
       "tabIncomplete": "incomplete",
       "settingsSection": "Settings",
       "contentSection": "Content",
       "save": "Save",
       "publicationSection": "Publication",
-      "noTransitions": "Your role cannot move this event from its current state.",
-      "incompleteForPublication": "Both languages must be complete before this event can be published. Missing: {detail}.",
       "newTitle": "New event",
-      "newHelp": "Both languages are filled in here, because an event goes live in both at once. The event is created as a draft; everything can still be changed afterwards on its own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "scheduleHelp": "The programme itself is the timed rows under “{panel}” → “{section}”, shared by both languages. Here you write, in this language, what does not fit a row — how the kit is collected, the cut-off rules. On the event page it appears beneath the rows; the reminder email repeats the rows and points here.",
       "programmeSection": "Programme",
       "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
-      "programmeNotesHint": "What does not fit a row — how the kit is collected, the cut-off rules — is written under “{panel}”, in each language, at “{fold}”; it appears on the page beneath these rows.",
       "programmeRows": {
         "date": "Date",
         "time": "Time",
@@ -757,7 +750,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Chosen from the approved versions. This text is never edited here — a new version arrives through a migration.",
+      "declarationDocumentHelp": "Chosen from the approved versions; the text is never edited here. A new version is approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -785,20 +778,16 @@
       "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next eight weeks are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
-      "repeatRuleTitle": "This event repeats",
-      "repeatRuleForever": "{sentence} — for ever. The next eight weeks are always created; the dates are in the list.",
-      "repeatRuleUntil": "{sentence} — until {until}. The dates are in the list.",
-      "repeatRuleEnded": "{sentence} — ended on {until}.",
-      "repeatStop": "Stop the series",
-      "repeatStopHelp": "No further dates are made; the ones that exist stay (tick them in the list to delete them).",
+      "repeatRuleForever": "{sentence} — for ever",
+      "repeatRuleUntil": "{sentence} — until {until}",
+      "repeatRuleEnded": "{sentence} — the series ended on {until}",
+      "repeatStop": "Stop the recurrence",
+      "repeatStopHelp": "No new dates are made; the ones already made stay — you delete them from the events list.",
       "repeatStopped": "The series is stopped: no further dates will be made.",
       "repeatPublishOn": "New dates of the series publish automatically: the source is published, so every new date starts published already.",
       "repeatPublishWaiting": "Automatic publication is on, but waiting: the source is not published right now, so new dates start as drafts until it is published again.",
       "repeatPublishOff": "New dates of the series start as drafts — automatic publication is off. You publish them yourself, from the list or from each one's own editor.",
-      "repeatPublishTurnOff": "Turn off automatic publication",
-      "repeatPublishTurnOn": "Publish new dates automatically",
       "repeatPublishPending": "Changing…",
-      "repeatPublishNeedsLive": "Publish this event first — the series' dates can only publish automatically from a published source.",
       "repeatPublishStarted": "Automatic publication has been turned on: from now on, new dates of the series publish by themselves.",
       "repeatPublishStopped": "Automatic publication has been turned off: new dates of the series stay drafts until you publish them.",
       "savedSeriesOne": "Saved — also on {dates} of the series.",
@@ -814,18 +803,21 @@
         "following": "This and the following dates",
         "all": "All dates of the series",
         "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays.",
-        "chosen": "this date and {count} more ticked above",
-        "selectAll": "All",
-        "selectNone": "None",
-        "open": "Open the date {date}"
+        "countThis": "The save changes this date only.",
+        "countFollowing": "The save changes {dates}: {first} and the following {rest}, until {last}.",
+        "countRange": "The save changes {dates}, from {first} to {last}.",
+        "countTail": "A date moved or cancelled on its own stays as it is.",
+        "custom": "Picked by hand ({count})",
+        "whyTitle": "Why only what you changed",
+        "thisOne": "the open date",
+        "openShort": "open"
       },
-      "repeatOfNote": "A save reaches every date of the series by default — the ticks above and the box by Save show exactly which. A cancellation, a different place or a different time stay here alone if you untick the others.",
       "series": {
         "kicker": "Series “{title}”",
-        "editing": "Editing the date {date}",
-        "position": "Date {position} of {count} in the series. Tick the dates the save should reach; the arrow opens a date.",
         "previous": "← Previous date: {date}",
-        "next": "Next date: {date} →"
+        "next": "Next date: {date} →",
+        "positionShort": "date {position} of {count}",
+        "headerChip": "Date {position} of {count} · {title}"
       },
       "repeatOfLink": "Open the series",
       "repeatCadence": "Interval",
@@ -836,13 +828,11 @@
         "MONTHLY": "Monthly"
       },
       "repeatCount": "How many editions",
-      "repeatPublish": "Publish the editions as they are created (this event is published, so the copies are complete too).",
-      "repeat": "Create the editions",
+      "repeat": "Create the dates",
       "timeOfDay": "Time",
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
       "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
-      "repeatOnCreateHelp": "Optional. Tick it and choose the interval: the dates of the next eight weeks are created with the event, and the platform creates the ones that follow by itself, always eight weeks ahead, until the chosen date or for ever. Each date is its own event with its day's address; they are drafts unless you tick publish.",
       "weekdays": {
         "1": "Mo",
         "2": "Tu",
@@ -889,20 +879,15 @@
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
       "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
-      "panels": {
-        "when": "When and where",
-        "registration": "Registration",
-        "details": "Route and details"
-      },
       "seoSection": "Page address and search engines",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
         "RACE": "Race: registration, a declaration, race numbers and a programme for the day.",
         "HIKE": "Hike: may take registrations and have a programme, when places are limited.",
-        "COFFEE": "Coffee: may take registrations, to book the table. No programme.",
+        "COFFEE": "Coffee: may take registrations, to book the table, and have a programme.",
         "GEAR_TEST": "Gear test: may take registrations and have a programme.",
-        "MEETUP": "Special event: the one-off, with a partner or for an occasion. May take registrations and have a programme.",
+        "MEETUP": "Other event: the one-off, with a partner or for an occasion. May take registrations and have a programme.",
         "EXTERNAL": "External event: it is somebody else's, and registration happens on the organizer's own page."
       },
       "repeatOn": "Repeat this event",
@@ -999,6 +984,268 @@
           "cancelledNobody": "The event is cancelled. It takes no registrations on this site, so there was nobody to email. The reason is in the audit log."
         },
         "countTest": "Test registrations, which get the email too and are counted nowhere: {test}."
+      },
+      "untitled": "(untitled)",
+      "immediateActions": "Immediate actions — they do not go through “Save”",
+      "groupRunNoRegistration": "A group run takes no registration — anybody simply turns up. Change the type under “What kind of event” to take registrations.",
+      "groupRunNoProgramme": "A group run has no programme.",
+      "modeNoneSentence": "The page says no registration is needed.",
+      "repeatPublishAuto": "Publish new dates automatically",
+      "repeatPublishOffHelp": "Off: new dates are created as drafts; you publish them from the events list.",
+      "repeatPublishDraftSource": "While the event is a draft, new dates are drafts too.",
+      "repeatNextDates": "Next dates",
+      "repeatRenewal": "The platform always keeps the next eight weeks created; the last one created: {date}.",
+      "repeatPublishSave": "Save this setting",
+      "repeatAdminOnly": "Only an administrator can start or stop the recurrence.",
+      "repeatAllInList": "All the dates ({count}) in the events list",
+      "repeatRuleLiveForever": " — for ever.",
+      "repeatRuleLiveUntil": " — until {until}.",
+      "repeatRuleLiveHorizon": "The dates of the next eight weeks are created now.",
+      "groups": {
+        "event": "The event",
+        "day": "The day and who takes part",
+        "details": "Course, links and presentation"
+      },
+      "publication": {
+        "missingTitle": "Missing before publishing",
+        "createDraft": "Created as a draft: nothing appears on the site until it is published.",
+        "adminOnly": "An Administrator publishes.",
+        "createSummary": "New draft · {count} missing before publishing",
+        "createReady": "New draft · ready to publish",
+        "nothingMissing": "Nothing is missing: the event can be published.",
+        "preview": "Preview:"
+      },
+      "risk": {
+        "chip": {
+          "one": "{count} registered",
+          "few": "{count} registered",
+          "other": "{count} registered"
+        },
+        "when": "Registrations for this date: {count}, for {date}. A new date does not cancel them; the 48-hour reminder, the confirmation window and the calendar entry follow it. To tell them, tick “Tell the participants” under Save.",
+        "place": "Registrations: {count}, who know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
+        "programme": "The 48-hour reminder repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
+        "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
+        "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered ({count}) with the reason written here."
+      },
+      "boxes": {
+        "summaryLabel": "Summary",
+        "textsReadOnly": "Texts are written by an Editor or an Administrator.",
+        "settingsReadOnly": "Settings are changed by an Organiser or an Administrator.",
+        "kind": {
+          "title": "What kind of event",
+          "changes": "The type decides what the other boxes ask: a group run has no registration and no programme — the two boxes below say so.",
+          "groupRunWarning": "It has registrations ({count}) — a group run takes none, and their list leaves the page."
+        },
+        "titleSummary": {
+          "title": "Title and summary"
+        },
+        "description": {
+          "title": "Event description"
+        },
+        "when": {
+          "title": "Date and time",
+          "timezone": "Time zone",
+          "timezoneHelp": "Changed only for an event in another time zone. The times above are written in it.",
+          "series": "On the other dates of the series, a new time lands at that time on each date's own day."
+        },
+        "place": {
+          "title": "The place"
+        },
+        "programme": {
+          "title": "The day's programme and what to bring"
+        },
+        "rules": {
+          "title": "Rules"
+        },
+        "registration": {
+          "title": "Taking part and registration"
+        },
+        "registrationWindow": {
+          "title": "Registration period",
+          "earlierClose": "An earlier close stops only new registrations."
+        },
+        "conditions": {
+          "title": "Who may enter and what they sign",
+          "legalLink": "Legal documents — where a new version of the declaration is approved"
+        },
+        "confirmation": {
+          "title": "Confirmation window",
+          "dates": "For {date}: asked from {opens}, due {due}."
+        },
+        "bibs": {
+          "title": "Race numbers (bibs)",
+          "startChange": "Numbers given stay; a new first number applies only to the numbers given from now on."
+        },
+        "bibPrint": {
+          "title": "Allocate and print",
+          "unprinted": "Not printed yet: {count}."
+        },
+        "startList": {
+          "title": "Public participant list"
+        },
+        "status": {
+          "title": "Event status"
+        },
+        "course": {
+          "title": "The course"
+        },
+        "links": {
+          "title": "Links and files"
+        },
+        "coHosts": {
+          "title": "Co-hosts — “Together with”",
+          "note": "They appear as “Together with …” on the page and, if you tick Partners in the footer, on the race number."
+        },
+        "promotion": {
+          "title": "Promotion on the site"
+        },
+        "address": {
+          "title": "Page address and search engines"
+        },
+        "save": {
+          "title": "Save",
+          "createDraft": "Created as a draft",
+          "createWithSeries": "with the series' dates of the next eight weeks."
+        },
+        "pickDates": {
+          "title": "Pick dates one by one"
+        },
+        "received": {
+          "title": "Registrations received",
+          "summary": "real registrations: {count} · on the waiting list: {waiting}"
+        },
+        "queue": {
+          "title": "Registration queue",
+          "waiting": "on the waiting list: {waiting}"
+        },
+        "thanks": {
+          "title": "Thank-you after the race"
+        },
+        "testRegs": {
+          "title": "Test registrations"
+        },
+        "copyDelete": {
+          "title": "Duplicate or delete the event",
+          "summary": "Duplicate as a draft · delete only without registrations"
+        },
+        "recurrence": {
+          "title": "Recurrence",
+          "none": "Does not repeat"
+        },
+        "summary": {
+          "filled": "written",
+          "empty": "empty",
+          "nothing": "Nothing filled in",
+          "separator": " · ",
+          "titleSummary": {
+            "missingTitle": "title missing ({language})",
+            "missingSummary": "summary missing ({language})",
+            "untitled": "untitled"
+          },
+          "description": {
+            "fallback": "the {language} page shows the summary"
+          },
+          "rules": {
+            "none": "the {language} page has no rules"
+          },
+          "when": {
+            "none": "No date chosen yet",
+            "raceStart": "race start {time}",
+            "duration": "{minutes} min"
+          },
+          "timezone": {
+            "home": "{zone} — Romanian time"
+          },
+          "place": {
+            "tba": "To be announced",
+            "map": "map",
+            "none": "The meeting point is missing",
+            "inLanguage": "{language}: {name}"
+          },
+          "programme": {
+            "moments": {
+              "one": "{count} item",
+              "few": "{count} items",
+              "other": "{count} items"
+            },
+            "range": "{from}–{to}",
+            "groupRun": "No programme (group run)",
+            "none": "No programme",
+            "checklist": "what to bring: {languages}"
+          },
+          "registration": {
+            "groupRun": "Group run — no registration",
+            "none": "No registration",
+            "noneInvite": "No registration — open to take registrations on the site",
+            "internal": "On the site",
+            "places": {
+              "one": "{count} place",
+              "few": "{count} places",
+              "other": "{count} places"
+            },
+            "unlimited": "unlimited places",
+            "minAge": "from {age}",
+            "declaration": "declaration v{version}",
+            "noDeclaration": "declaration missing",
+            "listHidden": "list hidden",
+            "listShown": "list public",
+            "external": "With the organiser: {provider}",
+            "externalUnnamed": "With the organiser"
+          },
+          "window": {
+            "range": "{from} – {to}",
+            "fromPublication": "From publication",
+            "untilStart": "until the start"
+          },
+          "conditions": {
+            "noDeclaration": "Declaration missing — required for registration on the site"
+          },
+          "confirmation": {
+            "sentence": "Asked {opens} days before, due {due} days before"
+          },
+          "bibs": {
+            "from": "From {number}",
+            "clubColour": "the club's colour",
+            "allocated": "allocated: {count}",
+            "toPrint": "to print: {count}"
+          },
+          "bibDesign": {
+            "parts": "{parts}",
+            "footer": "footer: {parts}"
+          },
+          "startList": {
+            "hidden": "Hidden",
+            "shown": "Public — only the names of those confirmed who chose to appear"
+          },
+          "course": {
+            "route": "route",
+            "km": "{km} km",
+            "elevation": "+{m} m"
+          },
+          "links": {
+            "strava": "Strava",
+            "facebook": "Facebook",
+            "files": {
+              "one": "{count} link",
+              "few": "{count} links",
+              "other": "{count} links"
+            },
+            "none": "No links"
+          },
+          "coHosts": {
+            "with": "Together with {names}",
+            "none": "No co-hosts"
+          },
+          "promotion": {
+            "featured": "Lead event",
+            "special": "Special edition",
+            "none": "Nothing highlighted"
+          },
+          "address": {
+            "locked": "locked after publication",
+            "none": "no address"
+          }
+        }
       }
     },
     "preview": {

@@ -71,6 +71,7 @@ export default async function PageFieldsForm({
       />
 
       <LocaleTabPanels
+        idPrefix="locale"
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;

@@ -5,8 +5,12 @@ import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/l
 /**
  * The label of every box on the event form, by the `name` it posts — for the refusal summary
  * that links a named field to its box (§47, `DECISIONS.md` §315), so an organizer reads
- * "Română: Titlu" and never `translations.ro.title`, the same lookup the editor's "not ready
- * to publish" alert makes (§170).
+ * "Titlu și rezumat › Română › Titlu" and never `translations.ro.title`.
+ *
+ * Every label starts with the title of the editor box that holds it (§NNN): the form is fourteen
+ * boxes now, most of them shut, and the summary's line is what tells the reader which one to
+ * open — the link opens it for them. The names are exactly the ones the form posts; only the
+ * words changed.
  *
  * Numbered boxes are listed once, unindexed (`event.schedule[].date`); `ActionForm` strips the
  * index before it looks. A whole panel has an entry too (`event.bibDesign`), so a field inside
@@ -15,61 +19,62 @@ import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/l
 export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const t = await getTranslations("Admin");
   const tSite = await getTranslations("Site");
+  const inBox = (box: string, label: string) => `${t(`editor.boxes.${box}.title`)} › ${label}`;
 
   const labels: Record<string, string> = {
-    "event.type": t("editor.type"),
-    "event.surface": t("editor.surface"),
-    "event.eventStatus": t("editor.eventStatus"),
-    "event.timezone": t("editor.timezone"),
-    "event.startsAtDate": t("editor.startsAt"),
-    "event.startsAtTime": t("editor.startsAt"),
-    "event.endsAtDate": t("editor.endsAt"),
-    "event.endsAtTime": t("editor.endsAt"),
-    "event.raceStartsAtDate": t("editor.raceStartsAt"),
-    "event.raceStartsAtTime": t("editor.raceStartsAt"),
-    "event.durationMinutes": t("editor.durationMinutes"),
-    "event.locationName": t("editor.fields.locationName"),
-    "event.locationToBeAnnounced": t("editor.placeToBeAnnounced"),
-    "event.mapUrl": t("editor.mapUrl"),
-    "event.registrationMode": t("editor.registrationMode"),
-    "event.capacity": t("editor.capacity"),
-    "event.minAge": t("editor.minAge"),
-    "event.registrationOpensAtDate": t("editor.registrationOpensAt"),
-    "event.registrationOpensAtTime": t("editor.registrationOpensAt"),
-    "event.registrationClosesAtDate": t("editor.registrationClosesAt"),
-    "event.registrationClosesAtTime": t("editor.registrationClosesAt"),
-    "event.confirmationOpensDaysBefore": t("editor.confirmationOpensDaysBefore"),
-    "event.confirmationDeadlineDaysBefore": t("editor.confirmationDeadlineDaysBefore"),
-    "event.bibStartNumber": t("editor.bibStartNumber"),
-    "event.bibColour": t("editor.bibColour"),
-    "event.bibDesign": t("editor.bibDesign.title"),
-    "event.declarationDocumentId": t("editor.declarationDocument"),
-    "event.participantListVisibility": t("editor.participantList"),
-    "event.externalProvider": t("editor.externalProvider"),
-    "event.externalRegistrationUrl": t("editor.externalRegistrationUrl"),
-    "event.difficulty": t("editor.fields.difficulty"),
-    "event.costType": t("editor.fields.costType"),
-    "event.routeUrl": t("editor.routeUrl"),
-    "event.distanceMeters": t("editor.distanceMeters"),
-    "event.elevationGainMeters": t("editor.elevationGainMeters"),
-    "event.stravaEventUrl": t("editor.stravaEventUrl"),
-    "event.facebookEventUrl": t("editor.facebookEventUrl"),
-    "event.featured": t("editor.featured"),
-    "event.isSpecial": t("editor.special"),
-    "event.coHosts[].name": `${t("editor.coHostSection")}: ${t("editor.coHostName")}`,
-    "event.coHosts[].url": `${t("editor.coHostSection")}: ${t("editor.coHostUrl")}`,
-    "event.schedule[].date": `${t("editor.programmeSection")}: ${t("editor.programmeRows.date")}`,
-    "event.schedule[].time": `${t("editor.programmeSection")}: ${t("editor.programmeRows.time")}`,
-    "event.schedule[].endTime": `${t("editor.programmeSection")}: ${t("editor.programmeRows.endTime")}`,
-    "event.schedule[].ro": `${t("editor.programmeSection")}: ${t("editor.programmeRows.ro")}`,
-    "event.schedule[].en": `${t("editor.programmeSection")}: ${t("editor.programmeRows.en")}`,
-    "event.schedule[].place": `${t("editor.programmeSection")}: ${t("editor.programmeRows.place")}`,
-    // Beside the save button (§331): what changed, and why the event is cancelled.
-    "notice.note": t("editor.notice.note"),
-    "cancel.reason": t("editor.notice.cancelReason"),
-    "repeat.cadence": t("editor.repeatCadence"),
-    "repeat.until": t("editor.repeatUntil"),
-    weekday: t("editor.repeatWeekdays"),
+    "event.type": inBox("kind", t("editor.type")),
+    "event.surface": inBox("course", t("editor.surface")),
+    "event.eventStatus": inBox("status", t("editor.eventStatus")),
+    "event.timezone": inBox("when", t("editor.timezone")),
+    "event.startsAtDate": inBox("when", t("editor.startsAt")),
+    "event.startsAtTime": inBox("when", t("editor.startsAt")),
+    "event.endsAtDate": inBox("when", t("editor.endsAt")),
+    "event.endsAtTime": inBox("when", t("editor.endsAt")),
+    "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
+    "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
+    "event.durationMinutes": inBox("when", t("editor.durationMinutes")),
+    "event.locationName": inBox("place", t("editor.fields.locationName")),
+    "event.locationToBeAnnounced": inBox("place", t("editor.placeToBeAnnounced")),
+    "event.mapUrl": inBox("place", t("editor.mapUrl")),
+    "event.registrationMode": inBox("registration", t("editor.registrationMode")),
+    "event.capacity": inBox("registration", t("editor.capacity")),
+    "event.minAge": inBox("conditions", t("editor.minAge")),
+    "event.registrationOpensAtDate": inBox("registrationWindow", t("editor.registrationOpensAt")),
+    "event.registrationOpensAtTime": inBox("registrationWindow", t("editor.registrationOpensAt")),
+    "event.registrationClosesAtDate": inBox("registrationWindow", t("editor.registrationClosesAt")),
+    "event.registrationClosesAtTime": inBox("registrationWindow", t("editor.registrationClosesAt")),
+    "event.confirmationOpensDaysBefore": inBox("confirmation", t("editor.confirmationOpensDaysBefore")),
+    "event.confirmationDeadlineDaysBefore": inBox("confirmation", t("editor.confirmationDeadlineDaysBefore")),
+    "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
+    "event.bibColour": inBox("bibs", t("editor.bibColour")),
+    "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
+    "event.declarationDocumentId": inBox("conditions", t("editor.declarationDocument")),
+    "event.participantListVisibility": inBox("startList", t("editor.participantList")),
+    "event.externalProvider": inBox("registration", t("editor.externalProvider")),
+    "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
+    "event.difficulty": inBox("course", t("editor.fields.difficulty")),
+    "event.costType": inBox("registration", t("editor.fields.costType")),
+    "event.routeUrl": inBox("course", t("editor.routeUrl")),
+    "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
+    "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
+    "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
+    "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
+    "event.featured": inBox("promotion", t("editor.featured")),
+    "event.isSpecial": inBox("promotion", t("editor.special")),
+    "event.coHosts[].name": inBox("coHosts", t("editor.coHostName")),
+    "event.coHosts[].url": inBox("coHosts", t("editor.coHostUrl")),
+    "event.schedule[].date": inBox("programme", t("editor.programmeRows.date")),
+    "event.schedule[].time": inBox("programme", t("editor.programmeRows.time")),
+    "event.schedule[].endTime": inBox("programme", t("editor.programmeRows.endTime")),
+    "event.schedule[].ro": inBox("programme", t("editor.programmeRows.ro")),
+    "event.schedule[].en": inBox("programme", t("editor.programmeRows.en")),
+    "event.schedule[].place": inBox("programme", t("editor.programmeRows.place")),
+    // In the Salvare box (§331): what changed; in the status box: why the event is cancelled.
+    "notice.note": inBox("save", t("editor.notice.note")),
+    "cancel.reason": inBox("status", t("editor.notice.cancelReason")),
+    "repeat.cadence": inBox("recurrence", t("editor.repeatCadence")),
+    "repeat.until": inBox("recurrence", t("editor.repeatUntil")),
+    weekday: inBox("recurrence", t("editor.repeatWeekdays")),
   };
 
   /*
@@ -77,40 +82,40 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     să înceapă cu https://" — because a link row is refused for one reason a person can cause
     (the address), and "Linkuri: Adresa" in a list of eight would not say which of the rows to
     look at. `ActionForm` reads the exact name first, so the indexed entries win; the unindexed
-    ones are the fallback for a name past the ceiling. A label or a kind can only be wrong from a
-    form somebody tampered with — the boxes carry `maxLength` and the select posts the set.
+    ones are the fallback for a name past the ceiling.
   */
   labels["event.links"] = t("editor.linkRows.tooMany", { max: MAX_EVENT_LINKS });
-  labels["event.links[].url"] = `${t("editor.linksSection")}: ${t("editor.linkRows.url")}`;
-  labels["event.links[].kind"] = `${t("editor.linksSection")}: ${t("editor.linkRows.kind")}`;
-  labels["event.links[].labelRo"] = `${t("editor.linksSection")}: ${t("editor.linkRows.labelRo")}`;
-  labels["event.links[].labelEn"] = `${t("editor.linksSection")}: ${t("editor.linkRows.labelEn")}`;
+  labels["event.links[].url"] = inBox("links", t("editor.linkRows.url"));
+  labels["event.links[].kind"] = inBox("links", t("editor.linkRows.kind"));
+  labels["event.links[].labelRo"] = inBox("links", t("editor.linkRows.labelRo"));
+  labels["event.links[].labelEn"] = inBox("links", t("editor.linkRows.labelEn"));
   for (let index = 0; index < MAX_EVENT_LINKS; index += 1) {
     const n = index + 1;
+    // "Linkul 2: …" already says where it is: the row's own words, without the box's title.
     labels[`event.links[${index}].url`] = t("editor.linkRows.urlError", { n });
     labels[`event.links[${index}].kind`] = t("editor.linkRows.kindError", { n });
     labels[`event.links[${index}].labelRo`] = t("editor.linkRows.labelRoError", { n, max: MAX_EVENT_LINK_LABEL });
     labels[`event.links[${index}].labelEn`] = t("editor.linkRows.labelEnError", { n, max: MAX_EVENT_LINK_LABEL });
   }
 
-  // Every language's boxes, named with the language first, as the publication alert does.
-  const perLanguage: Record<string, string> = {
-    title: t("editor.fields.title"),
-    slug: t("editor.fields.slug"),
-    excerpt: t("editor.fields.excerpt"),
-    excerptBody: t("editor.fields.excerpt"),
-    body: t("editor.fields.body"),
-    rules: t("editor.fields.rules"),
-    schedule: t("editor.fields.scheduleNotes"),
-    checklist: t("editor.fields.checklist"),
-    locationName: t("editor.locationNameInLanguage"),
-    seoTitle: t("editor.fields.seoTitle"),
-    seoDescription: t("editor.fields.seoDescription"),
+  // Every language's boxes: the box, the language (the tab to bring forward), the field.
+  const perLanguage: Record<string, [box: string, label: string]> = {
+    title: ["titleSummary", t("editor.fields.title")],
+    excerpt: ["titleSummary", t("editor.boxes.summaryLabel")],
+    excerptBody: ["titleSummary", t("editor.boxes.summaryLabel")],
+    body: ["description", t("editor.fields.body")],
+    rules: ["rules", t("editor.fields.rules")],
+    schedule: ["programme", t("editor.fields.scheduleNotes")],
+    checklist: ["programme", t("editor.fields.checklist")],
+    locationName: ["place", t("editor.locationNameInLanguage")],
+    slug: ["address", t("editor.fields.slug")],
+    seoTitle: ["address", t("editor.fields.seoTitle")],
+    seoDescription: ["address", t("editor.fields.seoDescription")],
   };
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);
-    for (const [field, label] of Object.entries(perLanguage)) {
-      labels[`translations.${locale}.${field}`] = `${language}: ${label}`;
+    for (const [field, [box, label]] of Object.entries(perLanguage)) {
+      labels[`translations.${locale}.${field}`] = inBox(box, `${language} › ${label}`);
     }
   }
 

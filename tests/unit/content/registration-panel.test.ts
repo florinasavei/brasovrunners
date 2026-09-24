@@ -6,7 +6,8 @@ import ro from "../../../messages/ro.json";
 
 /**
  * BR-REQ-050-02 criterion 19 — the editor's panels, and the sentences inside them
- * (`DECISIONS.md` §170).
+ * (`DECISIONS.md` §170; since the editor's boxes, §NNN, the named cards of "Participare și
+ * înscrieri").
  *
  * The registration panel holds two windows: when people may sign up, and when the ones who
  * have signed up are asked to confirm they are coming (§104). Both are a pair of inputs with a
@@ -20,7 +21,7 @@ import ro from "../../../messages/ro.json";
  * its own. This test reads the file because the failure is an ordering one: nothing type-checks
  * a sentence back above the wrong pair.
  */
-const FORM = path.join(process.cwd(), "src", "modules", "content", "events", "ui", "EventFieldsForm.tsx");
+const FORM = path.join(process.cwd(), "src", "modules", "content", "events", "ui", "boxes", "RegistrationBox.tsx");
 const source = readFileSync(FORM, "utf8");
 
 const at = (needle: string) => {
@@ -37,20 +38,23 @@ describe("BR-REQ-050-02 the registration panel's two windows read as two questio
   it("puts it above the participation window rather than inside it", () => {
     // The order on the screen is: the two dates, their sentence, the heading, the two numbers,
     // their sentence. Anything else is how the sentence came to describe the wrong fields.
-    expect(at("editor.confirmationWindowTitle")).toBeGreaterThan(at("editor.registrationWindowHelp"));
-    expect(at("editor.confirmationOpensDaysBefore")).toBeGreaterThan(at("editor.confirmationWindowTitle"));
+    expect(at("editor.boxes.confirmation.title")).toBeGreaterThan(at("editor.registrationWindowHelp"));
+    expect(at("editor.confirmationOpensDaysBefore")).toBeGreaterThan(at("editor.boxes.confirmation.title"));
     expect(at("editor.confirmationWindowHelp")).toBeGreaterThan(at("editor.confirmationDeadlineDaysBefore"));
   });
 
-  it("gives the participation window a heading under the panel's own", () => {
-    // The panel's title is an `h2` (`EditorPanel`), so a group inside it is an `h3` — a
-    // heading level skipped inside a form is a screen reader reading a list with a hole in it.
-    expect(source).toMatch(/component="h3"[\s\S]{0,120}editor\.confirmationWindowTitle/);
+  it("gives each window a card of its own under the box's heading", () => {
+    // The box's title is an `h2` (`Panel`), so a card inside it is a level-3 `Panel` — an `h3`:
+    // a heading level skipped inside a form is a screen reader reading a list with a hole in it.
+    expect(source).toMatch(/<Panel[\s\S]{0,80}level=\{3\}[\s\S]{0,80}id="box-registration-window"/);
+    expect(source).toMatch(/<Panel[\s\S]{0,80}level=\{3\}[\s\S]{0,80}id="box-confirmation"/);
   });
 
-  it("names it in both languages", () => {
-    expect(ro.Admin.editor.confirmationWindowTitle).toBe("Confirmarea participării");
-    expect(en.Admin.editor.confirmationWindowTitle).toBe("Participation confirmation");
+  it("names them in both languages", () => {
+    expect(ro.Admin.editor.boxes.registrationWindow.title).toBe("Perioada de înscriere");
+    expect(en.Admin.editor.boxes.registrationWindow.title).toBe("Registration period");
+    expect(ro.Admin.editor.boxes.confirmation.title).toBe("Fereastra de confirmare");
+    expect(en.Admin.editor.boxes.confirmation.title).toBe("Confirmation window");
   });
 
   it("renames no field: every input still posts the name it posted before", () => {

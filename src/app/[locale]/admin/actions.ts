@@ -117,7 +117,7 @@ const eventFormFieldNames = (error: DomainError) => error.fields.map(eventFormFi
  * turns "" into "not stated" and refuses the rest.
  *
  * The names are namespaced `event.*` because the editor is one form carrying the event row and
- * both languages together (`EventFieldsForm`, `TranslationFieldsForm`).
+ * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
  */
 function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
@@ -192,7 +192,7 @@ function eventFieldsFrom(form: FormData) {
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
-    // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
+    // No box for it any more (the Locul box); the field is folded into the meeting point.
     locationAddress: null,
     // "Locația se anunță mai târziu" (§328): a switch, so an absent value is "announced" —
     // the state every event was in before the switch existed.
@@ -243,7 +243,7 @@ function eventFieldsFrom(form: FormData) {
 }
 
 /**
- * One language's fields, as `TranslationFieldsForm` posts them — the one reader for the save
+ * One language's fields, as `ui/TranslationFields.tsx` posts them from its boxes — the one reader for the save
  * and the create, so the two cannot drift in what they read (`eventFieldsFrom`'s sibling).
  * Every value stays a string here; `fields.ts` turns "" into "not stated" and refuses the rest.
  */
@@ -575,7 +575,14 @@ export async function createEventAction(_previous: FormOutcome | null, form: For
       // The second button's marker: "create and publish". The service asks the role itself.
       publish: text(form, THEN_FIELD) === THEN_PUBLISH,
       repeat: repeats
-        ? { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null }
+        ? {
+            cadence: cadence as RepeatCadence,
+            weekdays: weekdaysFrom(form),
+            until: text(form, "repeat.until") || null,
+            // "Publică datele noi automat" (§NNN), ticked by default: the rule stores it, and the
+            // dates go live only while the event is live too.
+            publish: form.get("repeat.publish") === "on",
+          }
         : null,
     });
     createdId = result.event.id;

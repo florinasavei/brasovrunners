@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import ro from "../../../messages/ro.json";
+import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/RepeatRuleFields";
+import { followingIds, presetOf } from "@/modules/content/events/ui/SeriesScope";
+import { slugFromTitle } from "@/modules/content/events/ui/slug";
+import { normalizeForMode } from "@/modules/content/events/service";
+import { isBlankValue } from "@/shared/forms/blank-value";
+
+/**
+ * §NNN — the small pure pieces the event editor's boxes stand on: the page address from a title,
+ * a blank value (the tab marks), the series scope's presets and its new default, the live rule
+ * sentence, and `normalizeForMode`.
+ */
+
+describe("§NNN slugFromTitle — the create page's address, from the title", () => {
+  it("lowercases, drops the diacritics (comma and cedilla forms), and joins the words with hyphens", () => {
+    expect(slugFromTitle("Crosul Tâmpei 2026")).toBe("crosul-tampei-2026");
+    expect(slugFromTitle("Alergare de luni — Șprint în Parcul Tractorul")).toBe("alergare-de-luni-sprint-in-parcul-tractorul");
+    expect(slugFromTitle("Ştafeta ţării")).toBe("stafeta-tarii");
+    expect(slugFromTitle("  ---Hello, World!!  ")).toBe("hello-world");
+  });
+
+  it("stays within the 120 characters the schema allows, without a trailing hyphen", () => {
+    const long = slugFromTitle(`${"a".repeat(119)} b`);
+    expect(long.length).toBeLessThanOrEqual(120);
+    expect(long.endsWith("-")).toBe(false);
+  });
+});
+
+describe("§NNN isBlankValue — what the tabs call unfinished", () => {
+  it("reads whitespace and an empty editor document as blank, a word or a picture as not", () => {
+    expect(isBlankValue("")).toBe(true);
+    expect(isBlankValue("   ")).toBe(true);
+    expect(isBlankValue(JSON.stringify({ type: "doc", content: [{ type: "paragraph" }] }))).toBe(true);
+    expect(isBlankValue(JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: " " }] }] }))).toBe(true);
+    expect(isBlankValue(JSON.stringify({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Da" }] }] }))).toBe(false);
+    expect(isBlankValue(JSON.stringify({ type: "doc", content: [{ type: "image", attrs: { src: "x" } }] }))).toBe(false);
+    expect(isBlankValue("Titlu")).toBe(false);
+    // A half-typed value never throws.
+    expect(isBlankValue('{"type":"doc"')).toBe(false);
+  });
+});
+
+describe("§NNN the series scope: three words, 'this and the following' by default (reversing §240)", () => {
+  const dates = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+
+  it("starts on this date and the ones after it", () => {
+    expect(followingIds(dates, "b")).toEqual(["c", "d"]);
+    expect(presetOf(dates, "b", new Set(followingIds(dates, "b")))).toBe("following");
+  });
+
+  it("names the three presets and a hand-picked set as none of them", () => {
+    expect(presetOf(dates, "b", new Set())).toBe("this");
+    expect(presetOf(dates, "b", new Set(["a", "c", "d"]))).toBe("all");
+    expect(presetOf(dates, "b", new Set(["a"]))).toBeNull();
+    // On the last date there is nothing after it: the default is this date alone.
+    expect(presetOf(dates, "d", new Set(followingIds(dates, "d")))).toBe("this");
+  });
+});
+
+describe("§NNN the rule in one live sentence", () => {
+  const words = {
+    weekly: ro.Event.series.weekly,
+    fortnightly: ro.Event.series.fortnightly,
+    monthly: ro.Event.series.monthly,
+    atTime: ro.Event.series.atTime,
+    forever: ro.Admin.editor.repeatRuleLiveForever,
+    until: ro.Admin.editor.repeatRuleLiveUntil,
+    horizon: ro.Admin.editor.repeatRuleLiveHorizon,
+  };
+
+  it("says the days, the time, and for ever — or until when — and what is made now", () => {
+    expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [3, 1], time: "18:30", day: "", until: "" }, "ro")).toBe(
+      "În fiecare luni și miercuri, la 18:30 — la nesfârșit. Se creează acum datele din următoarele opt săptămâni.",
+    );
+    expect(ruleSentenceFrom(words, { cadence: "WEEKLY", weekdays: [1], time: "18:30", day: "", until: "2026-12-20" }, "ro")).toContain(
+      "— până la 20.12.2026.",
+    );
+    expect(ruleSentenceFrom(words, { cadence: "MONTHLY", weekdays: [], time: "09:00", day: "11", until: "" }, "ro")).toMatch(/^Lunar, pe 11, la 09:00/);
+  });
+
+  it("reads the own day off the start date as it is typed", () => {
+    expect(isoWeekdayOf("2026-09-28")).toBe(1);
+    expect(isoWeekdayOf("2026-10-04")).toBe(7);
+    expect(isoWeekdayOf("")).toBeNull();
+  });
+});
+
+describe("§NNN normalizeForMode — what the chosen mode hides is ignored, not refused (extending §111)", () => {
+  const fields = {
+    registrationMode: "NONE",
+    capacity: 20,
+    declarationDocumentId: "d",
+    participantListVisibility: "NAMES",
+    externalProvider: "Asociația X",
+    externalRegistrationUrl: "https://entries.example.test",
+    confirmationOpensDaysBefore: 7,
+    minAge: 16,
+    bibStartNumber: 100,
+  } as unknown as Parameters<typeof normalizeForMode>[0];
+
+  it("clears the capacity, the declaration and the public list when the mode is not 'here'", () => {
+    const none = normalizeForMode(fields);
+    expect(none).toMatchObject({ capacity: null, declarationDocumentId: null, participantListVisibility: "HIDDEN", externalProvider: null, externalRegistrationUrl: null });
+  });
+
+  it("keeps the organizer's name and link for 'elsewhere', and the window, the age and the numbers always", () => {
+    const external = normalizeForMode({ ...fields, registrationMode: "EXTERNAL" } as typeof fields);
+    expect(external).toMatchObject({ externalProvider: "Asociația X", externalRegistrationUrl: "https://entries.example.test", capacity: null });
+    expect(external).toMatchObject({ confirmationOpensDaysBefore: 7, minAge: 16, bibStartNumber: 100 });
+    const internal = normalizeForMode({ ...fields, registrationMode: "INTERNAL" } as typeof fields);
+    expect(internal).toMatchObject({ capacity: 20, declarationDocumentId: "d", participantListVisibility: "NAMES", externalProvider: null });
+  });
+});

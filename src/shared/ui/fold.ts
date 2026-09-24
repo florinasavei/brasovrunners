@@ -63,6 +63,14 @@ export function openFoldsAround(node: FoldNode | null): number {
   return opened;
 }
 
+/**
+ * The event a box dispatches — bubbling — to have the language tab that holds it brought forward
+ * (§NNN). `ActionForm` sends it from a box the browser refused and from the box a refusal's link
+ * names; `LocaleTabPanels` answers it for the strip the box sits in. A tab is a fold of another
+ * kind, and the asker never knows which strip, if any, holds the box.
+ */
+export const REVEAL_EVENT = "br:reveal";
+
 /** The id a `#fragment` names, decoded; `null` for an empty or malformed one. */
 export function fragmentId(hash: string): string | null {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;

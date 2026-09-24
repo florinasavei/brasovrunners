@@ -72,6 +72,7 @@ export default async function AlbumFieldsForm({
 
       {/* One tab per language, as every other editor has (§259). */}
       <LocaleTabPanels
+        idPrefix="locale"
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);
           const name = (field: string) => `translations.${locale}.${field}`;

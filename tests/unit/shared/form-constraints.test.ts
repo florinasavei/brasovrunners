@@ -21,8 +21,12 @@ import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/f
  * is the drift this exists to prevent, so the form sources are checked for the call.
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
-const EVENT_FORM = read("src/modules/content/events/ui/EventFieldsForm.tsx");
-const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFieldsForm.tsx");
+// The event editor's boxes (§NNN): every box that renders an event field, read as one source.
+const EVENT_FORM = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox"]
+  .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
+  .join("\n");
+const TRANSLATION_FORM = read("src/modules/content/events/ui/TranslationFields.tsx");
+const asksFor = (field: string) => EVENT_FORM.includes(`box("${field}"`) || EVENT_FORM.includes(`eventInputConstraints("${field}")`);
 
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
 // `links` is an island of rows (§332) whose boxes read their constraints off `eventLinkRowSchema`.
@@ -36,8 +40,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
     // The fields that are genuinely required today — a new required rule lands here by itself.
     expect(required.sort()).toEqual(["eventStatus", "locationName", "registrationMode", "startsAtWallTime", "timezone", "type"]);
     for (const field of required) {
-      const asks = EVENT_FORM.includes(`box("${field}"`) || EVENT_FORM.includes(`eventInputConstraints("${field}")`);
-      expect(asks, `EventFieldsForm reads the constraints of "${field}"`).toBe(true);
+      expect(asksFor(field), `the editor's boxes read the constraints of "${field}"`).toBe(true);
     }
   });
 
@@ -47,7 +50,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
     );
     expect(required.sort()).toEqual(["slug", "title"]);
     for (const field of required) {
-      expect(TRANSLATION_FORM.includes(`box("${field}")`), `TranslationFieldsForm reads the constraints of "${field}"`).toBe(true);
+      expect(TRANSLATION_FORM.includes(`box("${field}")`), `TranslationFields reads the constraints of "${field}"`).toBe(true);
     }
     // A summary may be saved empty on a draft — it is publication that asks for it (§170).
     expect(translationInputConstraints("excerptBody").required).toBeUndefined();
@@ -58,7 +61,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
       const constraints = eventInputConstraints(field);
       expect(constraints, field).toMatchObject({ type: "url", pattern: "[Hh][Tt][Tt][Pp][Ss]://.*" });
       expect(constraints.required, field).toBeUndefined();
-      expect(EVENT_FORM.includes(`box("${field}"`), `EventFieldsForm reads the constraints of "${field}"`).toBe(true);
+      expect(asksFor(field), `the editor's boxes read the constraints of "${field}"`).toBe(true);
     }
   });
 
@@ -75,7 +78,7 @@ describe("the event form's constraints are the schema's (§315)", () => {
     // Optional: an empty capacity is "no limit", never a refusal; an empty minimum is fourteen.
     expect(eventInputConstraints("capacity").required).toBeUndefined();
     expect(eventInputConstraints("minAge").required).toBeUndefined();
-    expect(EVENT_FORM.includes('box("minAge"'), "EventFieldsForm reads the constraints of the minimum age").toBe(true);
+    expect(asksFor("minAge"), "the editor's boxes read the constraints of the minimum age").toBe(true);
   });
 
   it("carries every ceiling and the address's shape, as a pattern the browser compiles", () => {

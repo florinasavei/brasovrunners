@@ -42,7 +42,7 @@ describe("RecallHidden — the version guard after a refusal", () => {
     const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
     const guards: Array<[string, RegExp]> = [
       ["src/app/[locale]/admin/events/[id]/page.tsx", /<RecallHidden name="event\.expectedVersion"/],
-      ["src/modules/content/events/ui/TranslationFieldsForm.tsx", /<RecallHidden name=\{name\("expectedVersion"\)\}/],
+      ["src/modules/content/events/ui/TranslationFields.tsx", /<RecallHidden name=\{name\("expectedVersion"\)\}/],
       ["src/app/[locale]/admin/pages/[id]/page.tsx", /<RecallHidden name="expectedVersion" value=\{page\.version\}/],
       ["src/app/[locale]/admin/gallery/[id]/page.tsx", /<RecallHidden name="expectedVersion" value=\{album\.version\}/],
     ];

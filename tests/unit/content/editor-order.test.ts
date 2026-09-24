@@ -3,67 +3,144 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §260 — the language panel of the event editor, in the order somebody writes in
- * and with every long text behind a fold.
+ * `DECISIONS.md` §NNN (the editor's boxes, building on §170 and §260) — the event editor as one
+ * page of boxes, in the order of the questions they answer.
  *
- * The owner asked for both in one breath: "partea de rezumat si descoere completa trebuie sa gie
- * in acordeoane colapsabile" and "si prima oara vad rezumat, apoi descriere full, asta e flow-ul
- * logic". §170 had put the description first and the summary under it, on the reasoning that the
- * description is what the writer came for — the cost was a panel two screens tall with two
- * Tiptap instances mounted before anybody typed anything, and a required field below the fold.
+ * The owner asked for the editor to read "like the event's fact sheet": each box answers one
+ * question and says its answer while shut. The order is pinned here because it is what drifts —
+ * the next field added lands in whichever box is nearest unless something says where boxes go:
  *
- * This is a source assertion because there is nothing to call: the panel is a Server Component
- * that renders whatever it is handed, and the thing being pinned is the order and the shape of
- * the five editors on it, which is exactly the kind of thing that drifts back on the next change.
+ *   Evenimentul — what kind, title and summary, description;
+ *   Ziua evenimentului și participanții — date and time, place, programme, rules, registration,
+ *   and on the editor the status;
+ *   Traseu, legături și prezentare — course, links and files, partners, promotion, page address;
+ *   then Salvare, always open.
+ *
+ * Source assertions, like the rest of this folder: these are Server Components rendering what
+ * they are handed, and the thing pinned is the order and the shape.
  */
-const SOURCE = readFileSync(
-  path.join(process.cwd(), "src/modules/content/events/ui/TranslationFieldsForm.tsx"),
-  "utf8",
-);
+const ROOT = process.cwd();
+const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
+const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
+const FIELDS = read("src/modules/content/events/ui/TranslationFields.tsx");
 
-const at = (field: string) => {
-  const index = SOURCE.indexOf(`name={name("${field}")}`);
-  expect(index, `${field} is not on the panel at all`).toBeGreaterThan(-1);
+const at = (source: string, needle: string) => {
+  const index = source.indexOf(needle);
+  expect(index, `${needle} is on the page`).toBeGreaterThan(-1);
   return index;
 };
 
-describe("§260 the event editor's language panel", () => {
-  it("asks for the title, then the summary, then the full description", () => {
-    // The visitor's order: the card, the hero and every share carry the summary, and the
-    // description is what somebody reads after deciding to look.
-    expect(at("title")).toBeLessThan(at("excerptBody"));
-    expect(at("excerptBody")).toBeLessThan(at("body"));
+const EDITOR_ORDER = [
+  't("editor.groups.event")',
+  "<KindBox",
+  "<TitleSummaryBox",
+  "<DescriptionBox",
+  't("editor.groups.day")',
+  "<WhenBox",
+  "<PlaceBox",
+  "<ProgrammeBox",
+  "<RulesBox",
+  "<RegistrationBox",
+  "<StatusBox",
+  't("editor.groups.details")',
+  "<CourseBox",
+  "<LinksBox",
+  "<CoHostsBox",
+  "<PromotionBox",
+  "<AddressBox",
+  'id="box-save"',
+];
+
+describe("§NNN the editor's boxes, in order", () => {
+  it("renders the three groups and their boxes in the order of the design, then Salvare", () => {
+    const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
+    for (let index = 1; index < positions.length; index += 1) {
+      expect(positions[index], `${EDITOR_ORDER[index]} after ${EDITOR_ORDER[index - 1]}`).toBeGreaterThan(positions[index - 1]);
+    }
   });
 
-  it("keeps the rules and the programme after the description, as they were", () => {
-    expect(at("body")).toBeLessThan(at("rules"));
-    expect(at("rules")).toBeLessThan(at("schedule"));
-    // "What to bring" and the folded search-engine fields stay last.
-    expect(at("schedule")).toBeLessThan(at("checklist"));
-    expect(at("checklist")).toBeLessThan(SOURCE.indexOf("editor.seoSection"));
+  it("puts the side column — Publicare, then Recurență — first in the document, as on a phone", () => {
+    expect(at(EDIT, 'id="box-publication"')).toBeLessThan(at(EDIT, "<RecurrenceSeriesPanel"));
+    expect(at(EDIT, "<RecurrenceSeriesPanel")).toBeLessThan(at(EDIT, "<KindBox"));
+    const layout = read("src/modules/content/events/ui/EventEditorLayout.tsx");
+    expect(layout.indexOf("{side}")).toBeLessThan(layout.indexOf("{main}"));
+    expect(layout).toContain("order: { xs: 1, md: 2 }");
+  });
+
+  it("keeps the save form and the side column's forms siblings, never nested", () => {
+    // The publication moves and the recurrence actions are forms of their own; the save form
+    // opens after the side column has closed.
+    expect(at(EDIT, 'action={transitionEventAction}')).toBeLessThan(at(EDIT, 'id="event-save-form"'));
+    expect(at(EDIT, "action={repeatEventAction}")).toBeLessThan(at(EDIT, 'id="event-save-form"'));
+    // The bib card's immediate actions post small forms drawn after the save form closes.
+    const saveEnd = EDIT.indexOf("</ActionForm>", at(EDIT, 'id="event-save-form"'));
+    expect(saveEnd).toBeGreaterThan(-1);
+    expect(saveEnd).toBeLessThan(at(EDIT, "<BibPrintForms"));
+  });
+
+  it("puts the registrations received and duplicate or delete below the grid, outside the save", () => {
+    expect(at(EDIT, "below={")).toBeGreaterThan(at(EDIT, 'id="box-save"'));
+    expect(at(EDIT, 'id="box-received"')).toBeGreaterThan(at(EDIT, "below={"));
+    expect(at(EDIT, 'id="box-copy-delete"')).toBeGreaterThan(at(EDIT, 'id="box-received"'));
+  });
+
+  it("sends a role that may not read the club's content back to the list", () => {
+    expect(EDIT).toMatch(/if \(!canReadContent\(staffUser\.role\)\) redirect\(/);
+  });
+
+  it("offers repeat, stop and duplicate only to the role the service allows", () => {
+    expect(EDIT).toContain("const mayChangeSeries = canCreateEvent(staffUser.role);");
+    expect(EDIT).toMatch(/\{mayChangeSeries \? \(\s*\/\* A refused rule/);
+    expect(EDIT).toMatch(/\{mayChangeSeries && \(\s*<form action=\{duplicateEventAction\}>/);
+    expect(EDIT).toContain("mayChange={mayChangeSeries}");
+  });
+
+  it("marks the five boxes a change reaches — date, place, programme, registration, status — and no other", () => {
+    for (const box of ["<WhenBox", "<PlaceBox", "<ProgrammeBox", "<RegistrationBox", "<StatusBox"]) {
+      const start = at(EDIT, box);
+      expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
+    }
+    for (const box of ["<KindBox", "<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
+      const start = at(EDIT, box);
+      expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).not.toContain("risk=");
+    }
+    // Real registrations only: a test row is counted nowhere the club looks (§12.6).
+    expect(EDIT).toContain("const realCount = registered.total - registered.test;");
+  });
+});
+
+describe("§260 the language pieces, each in its box", () => {
+  it("asks for the title, then the summary — the visitor's order — in the Titlu și rezumat box", () => {
+    const piece = FIELDS.slice(at(FIELDS, "export async function TitleSummaryFields"), at(FIELDS, "export async function DescriptionFields"));
+    expect(piece.indexOf('name={name("title")}')).toBeLessThan(piece.indexOf('name={name("excerptBody")}'));
+    // The fold says on its face that the summary is required before publication (§170).
+    expect(piece).toContain('emptyHint={t("editor.excerptEmpty")}');
+  });
+
+  it("gives every per-language field exactly one piece", () => {
+    for (const field of ["title", "excerptBody", "body", "locationName", "schedule", "checklist", "rules", "slug", "seoTitle", "seoDescription"]) {
+      expect(FIELDS.match(new RegExp(`name=\\{name\\("${field}"\\)\\}`, "g"))?.length ?? 0, field).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it("mounts no rich-text editor until its fold is opened", () => {
-    // Five editors a language, ten on the page. `LazyRichTextEditor` posts the stored document
-    // from a hidden field until it is opened, so a save that never opened a section never
-    // changes it — which is also why the eager component must not come back by accident.
-    expect(SOURCE).not.toMatch(/<RichTextEditor\b/);
-    expect(SOURCE).not.toMatch(/from "@\/modules\/content\/rich-text\/ui\/RichTextEditor"/);
-    expect(SOURCE.match(/<LazyRichTextEditor\b/g)).toHaveLength(4);
+    expect(FIELDS).not.toMatch(/<RichTextEditor\b/);
+    // The summary, the description, the programme's notes and the rules: four a language.
+    expect(FIELDS.match(/<LazyRichTextEditor\b/g)).toHaveLength(4);
   });
 
-  it("says on the summary's fold that it is required before publication", () => {
-    // What §170 was protecting: an empty `excerpt` is what refuses publication
-    // (`REQUIRED_PUBLIC_TRANSLATION_FIELDS`), and a fold can hide that it is empty. The hint on
-    // the closed fold is the answer, so the organizer is told before the save, not by it.
-    const hint = SOURCE.indexOf(`emptyHint={t("editor.excerptEmpty")}`);
-    expect(hint).toBeGreaterThan(-1);
-    expect(hint).toBeGreaterThan(at("excerptBody"));
-    expect(hint).toBeLessThan(at("body"));
-    for (const file of ["messages/ro.json", "messages/en.json"]) {
-      const messages = JSON.parse(readFileSync(path.join(process.cwd(), file), "utf8"));
-      expect(messages.Admin.editor.excerptEmpty, `${file}`).toBeTruthy();
-      expect(messages.Admin.editor.bodyEmpty, `${file}`).toBeTruthy();
-    }
+  it("renders a language the reader may not write as text, and posts nothing for it", () => {
+    expect(FIELDS).toContain("if (!mayEdit) {");
+    expect(FIELDS).toContain('t("editor.boxes.textsReadOnly")');
+    // The hidden id and version come once per editable language, at the top of the save form.
+    expect(EDIT).toContain("languages.filter((entry) => entry.mayEdit).map((entry) => (");
+    expect(EDIT).toContain("<TranslationHiddenFields");
+  });
+
+  it("gives each box's tabs their own ids, so six strips share one page", () => {
+    const boxes = read("src/modules/content/events/ui/boxes/TextBoxes.tsx") + read("src/modules/content/events/ui/boxes/PlaceBox.tsx") + read("src/modules/content/events/ui/boxes/ProgrammeBox.tsx");
+    const prefixes = [...boxes.matchAll(/idPrefix="(\w+)"/g)].map((match) => match[1]);
+    expect(prefixes.sort()).toEqual(["address", "description", "place", "programme", "rules", "title"]);
+    expect(new Set(prefixes).size).toBe(prefixes.length);
   });
 });

@@ -23,11 +23,14 @@ export default function TypeNote({
   selectName,
   initialType,
   notes,
+  warning = false,
 }: {
   selectName: string;
   initialType: string;
   /** One sentence per type, keyed by the value the select posts. */
   notes: Readonly<Record<string, string>>;
+  /** Amber rather than grey: a sentence about who a change reaches (§NNN). */
+  warning?: boolean;
 }) {
   const recall = useRecall();
   const fallback = recall.value(selectName) ?? initialType;
@@ -51,7 +54,7 @@ export default function TypeNote({
   const note = notes[current] ?? notes[fallback];
   if (!note) return null;
   return (
-    <Typography variant="body2" color="text.secondary">
+    <Typography variant="body2" color={warning ? "warning.main" : "text.secondary"} data-testid={warning ? "type-change-warning" : undefined}>
       {note}
     </Typography>
   );
