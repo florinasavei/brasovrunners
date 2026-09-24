@@ -321,6 +321,34 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(source).toContain("flexShrink: 0");
   });
 
+  it("wraps the when line rather than clip it, for a date more than a year out that keeps its year (a review, 2026-09-24)", async () => {
+    // More than 365 days ahead of `NOW`: the card keeps the year («Sâmbătă, 26 sept. 2027 · 08:00»)
+    // and, kept whole under `nowrap`, would run past the card's width and be cut by its own
+    // `overflow: hidden`. `wrap: !!event.raceStartsAt || dateMoreThanYearOut` catches it too, not
+    // only a race's two named times.
+    const html = await single({ startsAt: new Date("2027-09-26T05:00:00Z") });
+    const when = fact(html, "when");
+    expect(text(when)).toContain("2027");
+    // The flow row's own class — the second `MuiBox-root` inside the fact, the first being the
+    // `minWidth: 0` wrapper `cardLine` gives every value: `flex-wrap:wrap`, not `nowrap`.
+    const rowClass = [...when.matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(rowClass, "the flow row's own emotion class").toBeTruthy();
+    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:wrap");
+    expect(rulesFor(html, rowClass!)).not.toContain("flex-wrap:nowrap");
+  });
+
+  it("does not wrap a past event's when line: its full date (also with no short rendering) is no longer than a within-year card's, and does not need the room", async () => {
+    // A date before `NOW` also carries its year (`dateWithinYear` requires a non-negative
+    // difference), but it is not the case the review found clipped — only a date more than a
+    // year *ahead* is. A first version that treated every year-carrying date alike (`!dateShort`)
+    // wrapped this one too, costing it a line it did not need.
+    const html = await single({ startsAt: new Date("2026-09-20T05:00:00Z") });
+    const when = fact(html, "when");
+    const rowClass = [...when.matchAll(/class="MuiBox-root (css-[\w-]+)"/g)][1]?.[1];
+    expect(rowClass, "the flow row's own emotion class").toBeTruthy();
+    expect(rulesFor(html, rowClass!)).toContain("flex-wrap:nowrap");
+  });
+
   it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.

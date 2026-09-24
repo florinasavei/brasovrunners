@@ -514,24 +514,34 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(source).toContain('year: false');
   });
 
-  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), and hides it below a breakpoint so the row fits at 320 pixels (§366, amended §NNN)", async () => {
+  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), and visually hides it below its own breakpoint so the row fits at 320 pixels — never MUI's `sm`, which would hide it on every phone (§366, amended §NNN)", async () => {
     const html = await card({}, { whenLead: "Următoarea:" });
     const when = line(html, "when").inner;
     // The lead comes before the date, which comes before the time — the calendar glyph is first
-    // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row). It is still in
-    // the markup — a screen reader reads it — even though a phone no longer shows it beside the
-    // date, the clock and the time (below): measured (§366, amended §NNN), the four together do
-    // not fit the card's 226 pixels at 320, the width the amendment's own note named as the fix.
+    // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row). It is always in
+    // the markup — a screen reader reads it — even where a narrow phone does not show it beside
+    // the date, the clock and the time (below): measured (§366, amended §NNN), the four together
+    // need about 245 pixels and a 320-pixel card gives only about 226, so the row's own breakpoint
+    // is below `sm` (600), not at it — a review, 2026-09-24, found `sm` hiding the lead on every
+    // phone, including a 360-pixel one with room for it.
     expect(when.indexOf("Următoarea:")).toBeGreaterThan(-1);
     expect(when.indexOf("Următoarea:")).toBeLessThan(when.indexOf("Sâmbătă, 26 sept."));
     expect(when.indexOf("Sâmbătă, 26 sept.")).toBeLessThan(when.indexOf("08:00"));
     // Not a line of its own above the facts.
     expect(lines(html)[0]?.key).toBe("when");
-    // Hidden below `sm`, back from `sm` up — the same trick the date's own year already plays.
+    // Visually hidden (clipped) below the row's own 345-pixel breakpoint, plain text from it up —
+    // never `display: none`, so a screen reader reads it at every width, the same trick the date's
+    // own year already plays.
     const leadClass = /<span\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>Următoarea:<\/span>/.exec(when)?.[1] ?? "";
     expect(leadClass).not.toBe("");
-    expect(html).toContain(`@media (min-width:0px){.${leadClass}{display:none;}}`);
-    expect(html).toContain(`@media (min-width:600px){.${leadClass}{display:inline;}}`);
+    const baseRule = ruleOf(html, `class="MuiBox-root ${leadClass}"`);
+    expect(baseRule).toContain("white-space:nowrap");
+    expect(baseRule).not.toContain("display:none");
+    const mediaRule = new RegExp(`@media \\(max-width: 34[45](\\.\\d+)?px\\)\\{\\.${leadClass}\\{([^}]*)\\}\\}`).exec(html)?.[2] ?? "";
+    expect(mediaRule).not.toBe("");
+    expect(mediaRule).toContain("position:absolute");
+    expect(mediaRule).toContain("clip:rect(0 0 0 0)");
+    expect(mediaRule).not.toContain("display:none");
   });
 
   it("lets a race's two named times wrap onto their own line rather than have the card clip the start time (§366, amended §NNN)", async () => {

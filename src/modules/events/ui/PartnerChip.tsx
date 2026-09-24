@@ -4,9 +4,9 @@ import { partnerPhrase } from "./counted-phrases";
 import GlyphChip from "./GlyphChip";
 
 /**
- * A pill that wraps rather than ending in MUI's ellipsis, like the event page's pills (§356): a
- * partner's name is what the chip is for, and "În parteneriat cu Brașov Running Festival" is wider
- * than a 320-pixel card. A plain object in module scope, because it crosses to `GlyphChip`.
+ * A pill that wraps rather than ending in MUI's ellipsis, like the event page's pills (§356):
+ * the generic "Eveniment în parteneriat" marker (§367) is still a full word wider than some
+ * 320-pixel cards leave it. A plain object in module scope, because it crosses to `GlyphChip`.
  */
 const PARTNER_CHIP_SX = {
   height: "auto",

@@ -442,54 +442,74 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
    * keeps the weekday), and the row stays whole between pieces — never breaking a piece's own
    * words — for every card. Measured on the two cases the seed cannot: a series card, whose own
    * lead ("Următoarea:") does not fit next to the date, the clock and the time even with the
-   * year already dropped, and hides below a breakpoint instead (still in the markup for a screen
-   * reader); and a race with its own two named times, whose row is allowed to wrap between them
-   * rather than have the card's `overflow: hidden` clip the start time (the seed's only race with
-   * two times is the featured hero, not a card). Both fixtures are made through the backoffice,
-   * the way an organizer would, and removed after.
+   * year already dropped at 320 pixels, but does at 360; and a race with its own two named times,
+   * whose row is allowed to wrap between them rather than have the card's `overflow: hidden` clip
+   * the start time (the seed's only race with two times is the featured hero, not a card). Both
+   * fixtures are made through the backoffice, the way an organizer would, and removed after.
+   *
+   * A review, 2026-09-24, of the first round's fix — `display: { xs: "none", sm: "inline" }` —
+   * found it hiding the lead on every phone, not only the 320-pixel ones the row was measured for:
+   * a 360- or 390-pixel phone has the room and lost the lead anyway, since `sm` is 600. The row's
+   * own breakpoint (345 pixels, `EventFacts.tsx`'s `WHEN_LEAD_HIDDEN_BELOW_345`) is checked at all
+   * three widths — 320 (hidden), 360 and 390 (visible) — each still one line, in both languages.
    */
-  test("keeps the «when» row to one line at 320 pixels, in both languages — except a race's own two times, which wrap between whole pieces instead of being clipped", async ({
+  test("keeps the «when» row to one line at 320, 360 and 390 pixels, showing the series lead only where it fits, in both languages — except a race's own two times, which wrap between whole pieces instead of being clipped", async ({
     page,
   }) => {
-    test.skip(test.info().project.name !== "mobile", "320 pixels is the mobile project's fixed viewport");
-    test.setTimeout(150_000);
+    test.skip(test.info().project.name !== "mobile", "the widths below are only meaningful under the mobile project's phone viewport");
+    test.setTimeout(240_000);
     const seriesTitle = await publishSeries(page);
     const raceTitle = await publishRace(page);
     try {
-      for (const locale of ["ro", "en"] as const) {
-        const list = await cards(page, locale);
-        const count = await list.count();
-        expect(count).toBeGreaterThan(0);
+      for (const width of [320, 360, 390] as const) {
+        await page.setViewportSize({ width, height: 720 });
+        for (const locale of ["ro", "en"] as const) {
+          const list = await cards(page, locale);
+          const count = await list.count();
+          expect(count).toBeGreaterThan(0);
 
-        const seriesTitleForLocale = locale === "ro" ? seriesTitle.ro : seriesTitle.en;
-        const raceTitleForLocale = locale === "ro" ? raceTitle.ro : raceTitle.en;
-        const series = list.filter({ has: page.getByRole("link", { name: seriesTitleForLocale, exact: true }) });
-        const race = list.filter({ has: page.getByRole("link", { name: raceTitleForLocale, exact: true }) });
-        await expect(series, `series card present (${locale})`).toHaveCount(1);
-        await expect(race, `race card present (${locale})`).toHaveCount(1);
-        // The one case a phone still shows two lines: a race's gathering and start time.
-        await expect(race.locator('[data-fact="when"]')).toContainText(/08:00/);
-        await expect(race.locator('[data-fact="when"]')).toContainText(/09:00/);
+          const seriesTitleForLocale = locale === "ro" ? seriesTitle.ro : seriesTitle.en;
+          const raceTitleForLocale = locale === "ro" ? raceTitle.ro : raceTitle.en;
+          const series = list.filter({ has: page.getByRole("link", { name: seriesTitleForLocale, exact: true }) });
+          const race = list.filter({ has: page.getByRole("link", { name: raceTitleForLocale, exact: true }) });
+          await expect(series, `series card present (${width}px, ${locale})`).toHaveCount(1);
+          await expect(race, `race card present (${width}px, ${locale})`).toHaveCount(1);
+          // The one case a phone still shows two lines: a race's gathering and start time.
+          await expect(race.locator('[data-fact="when"]')).toContainText(/08:00/);
+          await expect(race.locator('[data-fact="when"]')).toContainText(/09:00/);
 
-        for (let i = 0; i < count; i += 1) {
-          const card = list.nth(i);
-          const isRace = (await card.getByRole("link", { name: raceTitleForLocale, exact: true }).count()) > 0;
-          const when = card.locator('[data-fact="when"]');
-          const measured = await when.evaluate((el) => {
-            const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.4;
-            const rect = el.getBoundingClientRect();
-            return { height: rect.height, lineHeight, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
-          });
-          // Every other card: one line, never two. The race: its own two times may wrap onto a
-          // second, but never more, and — wrapped or not — nothing inside the row overflows its box.
-          expect.soft(measured.height, `card ${i} (${locale}): when row height`).toBeLessThanOrEqual(measured.lineHeight * (isRace ? 2.5 : 1.5));
-          expect.soft(measured.scrollWidth - measured.clientWidth, `card ${i} (${locale}): when row overflow`).toBeLessThanOrEqual(1);
+          // The series' lead ("Următoarea:" / "Next:"): in the markup at every width (a screen
+          // reader always reads it), but visually a single clipped pixel below 345 and the words'
+          // own width from there up.
+          const leadWord = locale === "ro" ? "Următoarea:" : "Next:";
+          const leadBox = await series.locator('[data-fact="when"]').getByText(leadWord, { exact: true }).boundingBox();
+          expect(leadBox, `lead present (${width}px, ${locale})`).not.toBeNull();
+          if (width < 345) {
+            expect.soft(leadBox!.width, `lead clipped (${width}px, ${locale})`).toBeLessThanOrEqual(1);
+          } else {
+            expect.soft(leadBox!.width, `lead visible (${width}px, ${locale})`).toBeGreaterThan(1);
+          }
+
+          for (let i = 0; i < count; i += 1) {
+            const card = list.nth(i);
+            const isRace = (await card.getByRole("link", { name: raceTitleForLocale, exact: true }).count()) > 0;
+            const when = card.locator('[data-fact="when"]');
+            const measured = await when.evaluate((el) => {
+              const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || parseFloat(getComputedStyle(el).fontSize) * 1.4;
+              const rect = el.getBoundingClientRect();
+              return { height: rect.height, lineHeight, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+            });
+            // Every other card: one line, never two. The race: its own two times may wrap onto a
+            // second, but never more, and — wrapped or not — nothing inside the row overflows its box.
+            expect.soft(measured.height, `card ${i} (${width}px, ${locale}): when row height`).toBeLessThanOrEqual(measured.lineHeight * (isRace ? 2.5 : 1.5));
+            expect.soft(measured.scrollWidth - measured.clientWidth, `card ${i} (${width}px, ${locale}): when row overflow`).toBeLessThanOrEqual(1);
+          }
+          // And the time itself is never cut off or hidden: still readable text on the row.
+          const times = list.locator('[data-fact="when"]');
+          await expect(times.first()).toContainText(/\d{2}:\d{2}/);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+          expect(overflow).toBeLessThanOrEqual(0);
         }
-        // And the time itself is never cut off or hidden: still readable text on the row.
-        const times = list.locator('[data-fact="when"]');
-        await expect(times.first()).toContainText(/\d{2}:\d{2}/);
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-        expect(overflow).toBeLessThanOrEqual(0);
       }
     } finally {
       await removeEvent(page, raceTitle.ro);

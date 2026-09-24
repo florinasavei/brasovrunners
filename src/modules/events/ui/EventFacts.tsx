@@ -52,6 +52,27 @@ const CLOCK_SX = { ...ROW_ICON_SX, mr: 0.5 } as const;
 const HERO_GLYPH_SX = { fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 } as const;
 
 /**
+ * A series card's «Următoarea:» / «Next:» lead, on the date's own line (§366, amended §NNN — a
+ * review, 2026-09-24, of the row hiding the lead below 600 pixels: "every phone loses the lead,
+ * not only the 320-px ones; the owner's row keeps the lead where it fits"). Measured: the lead
+ * next to the date (year already dropped), the clock and the time needs about 245 pixels; a
+ * 320-pixel phone's card gives the row about 226, a 360-pixel one about 266 — so the lead fits
+ * from 345 pixels up, not from `sm` (600) down. Below that the lead is visually hidden (clipped,
+ * never `display: none`) rather than removed, so a screen reader still reads it — the same trick
+ * `date` already plays with the year.
+ */
+const WHEN_LEAD_HIDDEN_BELOW_345 = {
+  "@media (max-width: 344.95px)": {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    overflow: "hidden",
+    clip: "rect(0 0 0 0)",
+    whiteSpace: "nowrap",
+  },
+} as const;
+
+/**
  * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
  * page and the cards read alike. Its label wraps rather than ending in an ellipsis: MUI cuts a
  * chip's label to one line, and a club's own amount ("50 lei la înscriere, 70 lei în ziua
@@ -150,6 +171,15 @@ export default async function EventFacts({
    */
   const dateWithinYear = compact && event.startsAt.getTime() - now.getTime() >= 0 && event.startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
   const dateShort = dateWithinYear ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
+  /**
+   * A card more than a year ahead keeps its year — «Sâmbătă, 26 sept. 2027 · 08:00» — longer than
+   * `nowrap` fits at 320 pixels too (a review, 2026-09-24, found one clipped by the card's own
+   * `overflow: hidden`). A date already past (also `dateShort === null`, the same boolean the year
+   * drops on) is not this case — its printed date is the same length a within-year card's full
+   * rendering is, and forcing it to wrap would cost it a line it does not need — so this checks
+   * the distance itself, not merely whether the short rendering exists.
+   */
+  const dateMoreThanYearOut = compact && event.startsAt.getTime() - now.getTime() >= 365 * 24 * 60 * 60 * 1000;
   const date: ReactNode = dateShort ? (
     <>
       <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
@@ -357,14 +387,17 @@ export default async function EventFacts({
     A series card's own lead ("Următoarea:") is the other width the amendment measured: with the
     year already dropped (`date`, above) the lead still does not fit next to the date, the clock
     and the time at 320 pixels ("Următoarea: Luni, 28 sept. · [clock] 18:30" is about 245 pixels
-    against 226). `§366`'s own measurement named the fix this amendment takes: no lead below a
-    breakpoint (a screen reader still reads it — it is in the markup, only hidden by width, the
-    same trick `date` already plays with the year).
+    against 226; a 360-pixel card gives it about 266, which fits). A review, 2026-09-24, amended
+    §NNN once more: MUI's `sm` (600 pixels) hid the lead on every phone, not only the ones too
+    narrow for it. `WHEN_LEAD_HIDDEN_BELOW_345`, above, is the row's own breakpoint instead — 345
+    pixels, from the measurement — and the lead is visually hidden below it (clipped, never
+    `display: none`), so a screen reader still reads it, the same trick `date` already plays with
+    the year.
   */
   const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean }) => (
     <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
       {card?.lead && (
-        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, display: { xs: "none", sm: "inline" } }}>
+        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_345 }}>
           {card.lead}
         </Box>
       )}
@@ -503,8 +536,9 @@ export default async function EventFacts({
     return (
       <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
         {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
-            a race's gathering and start time may still wrap between whole pieces (§366, amended §NNN). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt }))}
+            a race's gathering and start time, or a date more than a year out (`dateMoreThanYearOut`,
+            above), may still wrap between whole pieces rather than be clipped (§366, amended §NNN). */}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt || dateMoreThanYearOut }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
