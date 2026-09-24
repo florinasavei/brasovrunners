@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -65,7 +65,7 @@ export default async function AlbumPage({ params }: Props) {
         {album.title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: album.description ? 1 : 3 }}>
-        {formatDay(album.takenOn, { locale, timeZone: CLUB_TIME_ZONE, style: "long" })} · {t("photoCount", { count: album.photoCount })}
+        {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
         {album.event && (
           <>
             {" · "}

@@ -8,9 +8,10 @@
  * knows which is which: a job last seen fifty minutes ago is `stale` at 10:00 and `ok` at
  * 03:00. Romania time, by name, so the clock follows the club through daylight saving.
  */
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 
-export const CLUB_TIME_ZONE = "Europe/Bucharest";
+// The club's zone is defined once, in the date helper (§NNN); the scheduler reads the same one.
 
 /** Quiet from `from` o'clock up to (not including) `to` o'clock, club time. */
 export const QUIET_HOURS = { from: 23, to: 7 } as const;

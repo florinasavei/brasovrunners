@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -59,7 +59,8 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
     {
       key: "takenOn",
       label: t("gallery.columnTakenOn"),
-      render: (row) => formatDay(row.takenOn, { locale, timeZone: CLUB_TIME_ZONE, style: "short" }),
+      // A calendar day stored at noon UTC (the album form): read as the day it names (§NNN).
+      render: (row) => formatCalendarDay(row.takenOn, { locale, style: "short" }),
     },
     {
       key: "status",

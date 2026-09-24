@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import ChipLink from "@/shared/ui/ChipLink";
 import { getPathname, Link } from "@/i18n/navigation";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthParam, shiftMonth, type YearMonth, yearsAround } from "../domain/calendar";
 import CalendarPicker from "./CalendarPicker";
 import CalendarStepLink from "./CalendarStepLink";

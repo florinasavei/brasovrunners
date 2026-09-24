@@ -10,7 +10,7 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { listPublishedEventsBetween } from "@/modules/events/repository";
 import CalendarSection from "@/modules/events/ui/CalendarSection";

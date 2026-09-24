@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { formatCalendarDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -116,7 +116,7 @@ async function AlbumGrid({ albums: pending }: { albums: ReturnType<typeof listPu
                     {album.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {formatDay(album.takenOn, { locale, timeZone: CLUB_TIME_ZONE, style: "long" })} · {t("photoCount", { count: album.photoCount })}
+                    {formatCalendarDay(album.takenOn, { locale, style: "long" })} · {t("photoCount", { count: album.photoCount })}
                   </Typography>
                 </CardContent>
               </CardLink>

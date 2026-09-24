@@ -2,9 +2,8 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
-import { formatTime } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { fadeInSoft } from "@/theme/motion";
 import {
   type CalendarDay,

@@ -40,10 +40,11 @@ const LABELS = {
   date: "Data",
   idDocument: "Act de identitate",
   version: "Versiunea",
-  generatedOn: "Generat la 4 septembrie 2026",
+  // What declarationWords writes for NOW (§NNN): "pe" before a date that starts with its weekday.
+  generatedOn: "Generat pe vineri, 4 sept. 2026, 13:00",
   page: (n: number, total: number) => `Pagina ${n} din ${total}`,
-  signedByLink: (when: string) => `Semnat electronic la ${when}`,
-  signedOnPaper: (who: string, when: string) => `Semnat pe hârtie; înregistrat de ${who} la ${when}`,
+  signedByLink: (when: string) => `Semnat electronic pe ${when}`,
+  signedOnPaper: (who: string, when: string) => `Semnat pe hârtie; înregistrat de ${who} pe ${when}`,
   attesterRemoved: "un membru al echipei",
 };
 
