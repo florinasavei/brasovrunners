@@ -17,9 +17,8 @@ import EventLinks from "@/modules/events/ui/EventLinks";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventVideo from "@/modules/events/ui/EventVideo";
-import { GLYPHS, SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
-import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
+import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import PartnerOverline from "@/modules/events/ui/PartnerOverline";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -74,12 +73,6 @@ function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {
 function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
   const Icon = SURFACE_GLYPH[surface];
   return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
-}
-
-/** The handshake of an event held with a partner (§NNN), the size of the two glyphs before it. */
-function PartnerGlyph() {
-  const Icon = GLYPHS.partner;
-  return <Icon aria-hidden="true" sx={{ fontSize: 18, flexShrink: 0 }} />;
 }
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
@@ -158,8 +151,6 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
-  // The partner marker (§NNN): "În parteneriat cu …" on the overline, or nothing.
-  const partner = partnerPhrase(t, locale, readCoHosts(event).map((host) => host.name));
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The
@@ -221,15 +212,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             {t(`surface.${event.surface}`)}
           </>
         )}
-        {partner && (
-          <>
-            <span aria-hidden="true">·</span>
-            <Box component="span" data-testid="overline-partner" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
-              <PartnerGlyph />
-              <span>{partner}</span>
-            </Box>
-          </>
-        )}
+        <PartnerOverline event={event} />
       </Typography>
       {/* An edition apart (§168): the same badge the card and the hero wear, above the
           title where the overline already says what kind of event this is. */}

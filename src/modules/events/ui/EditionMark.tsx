@@ -25,9 +25,14 @@ const MARK = {
 
 export default function EditionMark({ note, size = 18 }: { note: EditionNote; size?: number }) {
   const { Icon, color } = MARK[note.kind];
+  // `aria-hidden={false}` (§NNN): MUI's `SvgIcon` writes `aria-hidden="true"` on a glyph without
+  // `titleAccess`, so the mark's `role` and name were hidden from a screen reader — in a series
+  // card's date chip, the backoffice list and the agenda — until this said otherwise.
+  // `titleAccess` is not the way: it draws an SVG `<title>`, the browser's own tooltip on top of
+  // this one.
   return (
     <Tooltip title={note.text} arrow enterTouchDelay={0}>
-      <Icon role="img" aria-label={note.text} sx={{ fontSize: size, color, flexShrink: 0, verticalAlign: "-4px" }} />
+      <Icon role="img" aria-label={note.text} aria-hidden={false} sx={{ fontSize: size, color, flexShrink: 0, verticalAlign: "-4px" }} />
     </Tooltip>
   );
 }

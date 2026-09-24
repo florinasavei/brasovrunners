@@ -12,12 +12,16 @@ import { GLYPHS } from "./glyphs";
  * In the month grid the entry's own tooltip already carries that line, so the grid draws the bare
  * glyph instead (`CalendarEventChip`): one tooltip per entry, never one inside another. A client
  * island because `Tooltip` needs a ref on its child, and the glyph is made here from its name.
+ *
+ * `aria-hidden={false}`: MUI's `SvgIcon` hides every glyph from assistive technology unless it is
+ * given `titleAccess` — which draws an SVG `<title>`, the browser's own tooltip on top of this one
+ * — so without it the `role` and the name below were never read (§NNN).
  */
 export default function PartnerMark({ text, size = 18 }: { text: string; size?: number }) {
   const Icon = GLYPHS.partner;
   return (
     <Tooltip title={text} arrow enterTouchDelay={0}>
-      <Icon role="img" aria-label={text} sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />
+      <Icon role="img" aria-label={text} aria-hidden={false} sx={{ fontSize: size, flexShrink: 0, verticalAlign: "-4px" }} />
     </Tooltip>
   );
 }

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createTranslator } from "next-intl";
 import { createElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -47,6 +47,7 @@ vi.mock("@mui/material/Tooltip", async () => {
 const { default: PartnerChip } = await import("@/modules/events/ui/PartnerChip");
 const { default: CalendarEventChip } = await import("@/modules/events/ui/CalendarEventChip");
 const { default: EventCalendar } = await import("@/modules/events/ui/EventCalendar");
+const { default: PartnerOverline } = await import("@/modules/events/ui/PartnerOverline");
 
 afterEach(() => {
   currentLocale = "ro";
@@ -101,12 +102,23 @@ describe("§NNN the listing card's chip", () => {
     expect(english).not.toContain("În parteneriat");
   });
 
-  it("says two partners by name and the third as a count", async () => {
+  it("says two partners by name and the third as a count, in both languages", async () => {
     const two = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont") } }));
     expect(two).toContain("În parteneriat cu Brașov Running Festival și Salvamont");
     const three = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") } }));
     expect(three).toContain("În parteneriat cu Brașov Running Festival și încă 2 parteneri");
     expect(three).not.toContain("Clubul Alpin");
+    currentLocale = "en";
+    const twoEn = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont") } }));
+    expect(twoEn).toContain("With Brașov Running Festival and Salvamont");
+    const threeEn = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") } }));
+    expect(threeEn).toContain("With Brașov Running Festival and 2 more partners");
+    expect(threeEn).not.toContain("Clubul Alpin");
+    // One chip, one handshake, whatever the count.
+    for (const html of [two, three, twoEn, threeEn]) {
+      expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      expect(count(html, 'class="MuiChip-root ')).toBe(1);
+    }
   });
 
   it("reads the partners the one way every surface does — the legacy columns too", async () => {
@@ -126,31 +138,65 @@ describe("§NNN the listing card's chip", () => {
   });
 
   it("stands in the chips row of the event card, the series card and the featured hero", () => {
-    // The listing's own card is a function of the page; its chips row is the one Stack before the title.
-    const listing = readFileSync("src/app/[locale]/events/page.tsx", "utf8");
+    // Each card's chips row is the first thing in it: the chip comes after the type's chip and
+    // before the title (`variant="h2"`, or the hero's `h1`/`h2`). The listing's own card lives in
+    // the page or, once it has a file of its own, in `EventCard.tsx` — either is read.
+    const cardFile = existsSync("src/modules/events/ui/EventCard.tsx") ? "src/modules/events/ui/EventCard.tsx" : "src/app/[locale]/events/page.tsx";
+    const listing = readFileSync(cardFile, "utf8");
     const card = listing.slice(listing.indexOf("async function EventCard"));
-    expect(card.indexOf("<PartnerChip event={event} />")).toBeGreaterThan(card.indexOf("<EventKindChips"));
-    expect(card.indexOf("<PartnerChip event={event} />")).toBeLessThan(card.indexOf("</Stack>"));
-    const series = readFileSync("src/modules/events/ui/SeriesCard.tsx", "utf8");
-    expect(series.indexOf("<PartnerChip event={next} />")).toBeGreaterThan(series.indexOf("<EventKindChips"));
-    expect(series.indexOf("<PartnerChip event={next} />")).toBeLessThan(series.indexOf("</Stack>"));
-    const hero = readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8");
-    expect(hero.indexOf("<PartnerChip event={event} />")).toBeGreaterThan(hero.indexOf("<EventKindChips"));
-    expect(hero.indexOf("<PartnerChip event={event} />")).toBeLessThan(hero.indexOf("</Stack>"));
+    const within = (source: string, chipTag: string) => {
+      const at = source.indexOf(chipTag);
+      expect(at).toBeGreaterThan(source.indexOf("<EventKindChips"));
+      expect(at).toBeLessThan(source.search(/<Typography[^>]*variant="h[12]"/));
+    };
+    within(card, "<PartnerChip event={event} />");
+    within(readFileSync("src/modules/events/ui/SeriesCard.tsx", "utf8"), "<PartnerChip event={next} />");
+    within(readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8"), "<PartnerChip event={event} />");
   });
 });
 
 describe("§NNN the event page's overline", () => {
-  it("carries the handshake and the partner's words beside the type, and wraps on a phone", () => {
+  const overline = async (locale: "ro" | "en", ...names: string[]) => {
+    currentLocale = locale;
+    const element = await PartnerOverline({ event: { ...noPartner, coHosts: partners(...names) } });
+    return element ? renderToStaticMarkup(element) : "";
+  };
+
+  it("carries the handshake and one, two or three partners' words, in both languages", async () => {
+    const cases: [locale: "ro" | "en", names: string[], words: string][] = [
+      ["ro", ["Brașov Running Festival"], "În parteneriat cu Brașov Running Festival"],
+      ["ro", ["Brașov Running Festival", "Salvamont"], "În parteneriat cu Brașov Running Festival și Salvamont"],
+      ["ro", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "În parteneriat cu Brașov Running Festival și încă 2 parteneri"],
+      ["en", ["Brașov Running Festival"], "With Brașov Running Festival"],
+      ["en", ["Brașov Running Festival", "Salvamont"], "With Brașov Running Festival and Salvamont"],
+      ["en", ["Brașov Running Festival", "Salvamont", "Clubul Alpin"], "With Brașov Running Festival and 2 more partners"],
+    ];
+    for (const [locale, names, words] of cases) {
+      const html = await overline(locale, ...names);
+      expect(html).toContain('data-testid="overline-partner"');
+      expect(html).toContain(`<span>${words}</span>`);
+      expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      // Decorative beside its words, the overline's own size, the "·" before it unread.
+      expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="HandshakeIcon"/);
+      expect(html.startsWith('<span aria-hidden="true">·</span>')).toBe(true);
+    }
+  });
+
+  it("is nothing at all for an event with no partner", async () => {
+    currentLocale = "ro";
+    expect(await PartnerOverline({ event: noPartner })).toBeNull();
+    currentLocale = "en";
+    expect(await PartnerOverline({ event: { coHosts: [], coHostName: null, coHostUrl: null } })).toBeNull();
+  });
+
+  it("stands on the page's overline after the type, and the overline wraps on a phone", () => {
     const page = readFileSync("src/app/[locale]/events/[slug]/page.tsx", "utf8");
-    const overline = page.slice(page.indexOf('<Typography variant="overline"'), page.indexOf("</Typography>", page.indexOf('<Typography variant="overline"')));
-    expect(overline).toContain("<TypeGlyph");
-    expect(overline).toContain("<PartnerGlyph />");
-    expect(overline).toContain("{partner}");
-    expect(overline).toContain('flexWrap: "wrap"');
-    expect(page).toContain("partnerPhrase(t, locale, readCoHosts(event).map((host) => host.name))");
+    const start = page.indexOf('<Typography variant="overline"');
+    const line = page.slice(start, page.indexOf("</Typography>", start));
+    expect(line.indexOf("<PartnerOverline event={event} />")).toBeGreaterThan(line.indexOf("<TypeGlyph"));
+    expect(line).toContain('flexWrap: "wrap"');
     // The glyph by name from the one registry, never a second import of its own.
-    expect(page).toContain("GLYPHS.partner");
+    expect(readFileSync("src/modules/events/ui/PartnerOverline.tsx", "utf8")).toContain("GLYPHS.partner");
   });
 });
 
@@ -220,6 +266,12 @@ describe("§NNN one tooltip per calendar entry", () => {
     expect(count(html, "data-tooltip=")).toBe(2);
     expect(html).toContain(`aria-label="${PARTNER}"`);
     expect(html).toContain(`aria-label="${MOVED.text}"`);
+    // Named images a screen reader can reach — not MUI's default `aria-hidden="true"` — and no SVG
+    // `<title>`, which would be the browser's own tooltip over MUI's.
+    const marks = [...html.matchAll(/<svg [^>]*role="img"[^>]*>/g)].map((match) => match[0]);
+    expect(marks).toHaveLength(2);
+    for (const mark of marks) expect(mark).toContain('aria-hidden="false"');
+    expect(html).not.toContain("<title>");
     // The handshake before the ⚠, at the end of the row.
     expect(html.indexOf("HandshakeIcon")).toBeLessThan(html.indexOf("WarningAmberIcon"));
     expect(html.indexOf("HandshakeIcon")).toBeGreaterThan(html.indexOf("Happy Monday"));
@@ -280,5 +332,59 @@ describe("§NNN the calendar, grid and agenda, wears the handshake beside a part
     );
     expect(html).toContain("10:00 Trail to Road cu Brașov Running Festival. With Brașov Running Festival and Salvamont");
     expect(html).not.toContain("În parteneriat");
+  });
+
+  it("names the first of three partners and counts the rest, in both languages", async () => {
+    const three = [row({ coHosts: partners("Brașov Running Festival", "Salvamont", "Clubul Alpin") })];
+    for (const [locale, words] of [
+      ["ro", "În parteneriat cu Brașov Running Festival și încă 2 parteneri"],
+      ["en", "With Brașov Running Festival and 2 more partners"],
+    ] as const) {
+      currentLocale = locale;
+      for (const layout of ["grid", "list"] as const) {
+        const html = renderToStaticMarkup(await EventCalendar({ view: { kind: "month", month: { year: 2026, month: 9 } }, events: three, now: NOW, layout }));
+        expect(html).toContain(`aria-label="10:00 Trail to Road cu Brașov Running Festival. ${words}"`);
+        expect(html).not.toContain("Clubul Alpin");
+        expect(count(html, 'data-testid="HandshakeIcon"')).toBe(1);
+      }
+    }
+  });
+});
+
+/**
+ * BR-REQ-020-01 criterion 13, amended (§NNN), on the calendar the owner looked at: production's
+ * Happy Monday name with ", Brasov" and the map link beside QA's name without either is one place,
+ * so no date wears the ⚠; a date at another place still does, its note one line of the one tooltip.
+ */
+describe("§NNN the calendar marks no Happy Monday date for ', Brasov'", () => {
+  const TRACTORUL = "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic";
+  const MAP = ["https:/", "maps.example.test", "vuCwrzFtgLTDE5H68"].join("/");
+  const monday = (day: string, id: string, values: Partial<PublicEvent> = {}) =>
+    row({ id, slug: `happy-monday-${day}`, title: "Happy Monday", startsAt: new Date(`2026-09-${day}T15:30:00Z`), locationName: TRACTORUL, ...values });
+
+  it("draws no mark when the dates only spell the place two ways", async () => {
+    currentLocale = "ro";
+    const rows = [
+      monday("07", "30000000-0000-0000-0000-000000000007"),
+      monday("14", "30000000-0000-0000-0000-000000000014"),
+      monday("21", "30000000-0000-0000-0000-000000000021", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP }),
+      monday("28", "30000000-0000-0000-0000-000000000028", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP }),
+    ];
+    const html = renderToStaticMarkup(await EventCalendar({ view: { kind: "month", month: { year: 2026, month: 9 } }, events: rows, now: NOW, layout: "grid" }));
+    expect(html).not.toContain("Nu în locul obișnuit");
+    expect(html).not.toContain("WarningAmberIcon");
+  });
+
+  it("still marks a date at another place, in the entry's one tooltip and its name", async () => {
+    currentLocale = "ro";
+    const rows = [
+      monday("07", "30000000-0000-0000-0000-000000000007"),
+      monday("14", "30000000-0000-0000-0000-000000000014", { locationName: `${TRACTORUL}, Brasov`, mapUrl: MAP }),
+      monday("21", "30000000-0000-0000-0000-000000000021", { locationName: "Stația de telecabină Tâmpa" }),
+    ];
+    const html = renderToStaticMarkup(await EventCalendar({ view: { kind: "month", month: { year: 2026, month: 9 } }, events: rows, now: NOW, layout: "grid" }));
+    expect(count(html, "WarningAmberIcon")).toBe(1);
+    expect(html).toContain('aria-label="18:30 Happy Monday. Nu în locul obișnuit: Stația de telecabină Tâmpa"');
+    expect(count(html, "data-tooltip=")).toBe(3);
   });
 });

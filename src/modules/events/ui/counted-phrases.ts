@@ -54,8 +54,12 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
  *
  * One partner by name, two by name ("… cu A și B"), and from three the first by name and the rest
  * counted ("… cu A și încă 2 parteneri"): a chip on a 320-pixel card has room for a name and a
- * number, not a list — the whole list is the facts' "Împreună cu" row a line below it. Names in
- * the order the club listed them (`readCoHosts`). Null when the event has no partner: no marker.
+ * number, not a list — the whole list is the event page's partner cards (§344). Names in the
+ * order the club listed them (`readCoHosts`). Null when the event has no partner: no marker.
+ *
+ * The count picks a plain key (`countForm`), never an ICU plural: "și încă 2 parteneri", "și încă
+ * 20 de parteneri". `more.one` is there because every counted phrase has the three keys, though
+ * "the first and one more" is two partners, which the `two` wording names.
  */
 export function partnerPhrase(say: Say, locale: string, names: readonly string[]): string | null {
   if (names.length === 0) return null;

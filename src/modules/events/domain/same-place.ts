@@ -5,35 +5,53 @@ import { CLUB_LOCALITY } from "./place";
  * rule below).
  *
  * The owner, at a Happy Monday date marked "Nu în locul obișnuit: Parcul Sportiv Tractorul –
- * intrarea dinspre Patinoarul Olimpic, Brasov": "the location is actually the same". It was: the
- * dates had been made with "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic", and
- * one of them had since been saved with ", Brasov" after it and a map link — the same entrance,
- * written a little longer. The mark compared the two strings byte for byte, so a comma and a
- * city were a move.
+ * intrarea dinspre Patinoarul Olimpic, Brasov": "the location is actually the same". It was. The
+ * series was made with "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic" and no map
+ * link (QA's nine dates still read exactly that on 2026-09-24); production's pages read "…
+ * Patinoarul Olimpic, Brasov", with the map link, on every date that day. The mark named the
+ * longer spelling, so on the day it was drawn most of the dates on view still said it the shorter
+ * way. It compared the two strings byte for byte, so ", Brasov" — a comma and the city the club
+ * runs in, without its "ș" — was a move.
+ *
+ * **What is compared** is the name the reader's page shows, in the reader's language: a public row's
+ * `locationName` is already that language's own name, else the event's (`PUBLIC_COLUMNS`), so the
+ * Romanian calendar compares Romanian names and the English one English names; the backoffice,
+ * which has no reader's language, compares the event's own name. The street address an older event
+ * still carries (`location_address`, no longer asked for since §36's follow-up) is **not**
+ * compared: a save that clears it would otherwise "move" that date away from the dates that keep it.
  *
  * Two places are the same when **either** of these holds, and in no other case:
  *
- * 1. **Their map links are the same link**, once `mapLinkKey` has read them: the host in lower
- *    case without "www.", no trailing slash, no fragment, and none of the parameters a share
- *    button adds (`g_st`, `utm_*`). Two different short links to one pin are two different
- *    strings and are not resolved here — this answers "the same link", never "a nearby pin".
+ * 1. **Their map links are the same link**, once `mapLinkKey` has read them: the scheme ignored,
+ *    the host in lower case without "www.", no trailing slash, no fragment, and none of the
+ *    parameters a share button adds (`g_st`, `utm_*`). Two different short links to one pin are
+ *    two different strings and are not resolved here — this answers "the same link", never "a
+ *    nearby pin", and it never makes two different links a difference: rule 2 still applies.
  * 2. **Their names say the same place**, once `placeKey` has read them. A name is compared, not
  *    shown: its diacritics dropped (ș and ş, ț and ţ, ă, â and î fold to s, t, a and i), lower
- *    case, every run of punctuation and spacing inside a part one space — so "–", "-", "—" and
- *    "(…)" never make a different place — and then its **trailing address parts** taken off: a
- *    part after the last comma that is the club's city (`CLUB_LOCALITY`, "municipiul Brașov"),
- *    its county ("județul Brașov", "jud. BV"), the country ("România", "Romania", "RO"), a
- *    six-digit postcode ("500152", "500152 Brașov"), a street ("Strada Turnului 5", "str.",
- *    "bulevardul", "calea", "aleea", "piața", "șoseaua", "splaiul", "street", "road", "avenue")
- *    or a house number ("nr. 5", "5A"), repeatedly, from the end, and never the first part.
- *    What is left is the place itself; two places are the same when what is left is equal.
+ *    case, every run of punctuation and spacing inside a part one space — so "–", "-", "—", "( )"
+ *    and a double space never make a different place — and then its **trailing address parts**
+ *    taken off, one by one from the end, never the first part. A part is what stands between two
+ *    commas, and a trailing one is an address part when, folded, it is exactly:
+ *    - the club's city (`CLUB_LOCALITY`): "Brașov", "Brasov", "municipiul Brașov", "mun. Brașov";
+ *    - its county: "județul Brașov", "jud. Brașov", "jud. BV", "BV", "Brașov County";
+ *    - the country: "România", "Romania", "RO";
+ *    - a postcode: six digits, alone or with the city — "500152", "500152 Brașov";
+ *    - a Romanian street, by the word it starts with: "strada"/"str.", "bulevardul"/"bd."/"b-dul",
+ *      "calea", "aleea", "șoseaua"/"șos.", "splaiul" — "Aleea Tiberiu Brediceanu", "str. Turnului
+ *      nr. 5";
+ *    - an English street, by the word it ends with: "street"/"st", "road"/"rd", "avenue"/"ave",
+ *      "boulevard"/"blvd" — "Turnului Street", "5 Eroilor Blvd";
+ *    - a house number: "nr. 5", "no. 5", "5", "5A".
+ *    What is left is the place itself; two names are the same place when what is left is equal.
  *
  * That is precise on purpose. "Parcul Tractorul, Brașov" and "Parcul Tractorul" are the same
- * place; "Parcul Tractorul, intrarea de nord" is not — "intrarea de nord" is none of the address
- * parts above, so an entrance, a gate or a trailhead after a comma is still a difference and
- * still marked. So is a different park, a different street given as the whole name ("Strada
- * Turnului 5" and "Strada Lungă 12"), and a kilometre on a road ("km 3" and "km 7"). No
- * similarity score, no edit distance: nothing that could call a real move a typo.
+ * place; "Parcul Tractorul, intrarea de nord" is not — "intrarea de nord" is none of the parts
+ * above, so an entrance, a gate, a trailhead or a square ("Piața Sfatului") after a comma is still
+ * a difference and still marked. So is a different park, a different street given as the whole
+ * name ("Strada Turnului 5" and "Strada Lungă 12" — the first part is never taken off), and a
+ * kilometre on a road ("km 3" and "km 7"). No similarity score, no edit distance: nothing that
+ * could call a real move a typo.
  *
  * Pure, so the listing, the calendar, the backoffice and a test read the same answer.
  */
@@ -57,23 +75,35 @@ function foldPart(part: string): string {
     .trim();
 }
 
-/** A street word at the start of a part: Romanian and English, abbreviated or not. */
-const STREET = /^(strada|str|bulevardul|bulevard|bdul|b dul|bd|calea|aleea|piata|soseaua|sos|splaiul|street|st|road|rd|avenue|ave)( |$)/;
+/** The city, the county and the country, as whole parts (the header's first three kinds). */
+const WHERE = new Set([
+  CITY,
+  `municipiul ${CITY}`,
+  `mun ${CITY}`,
+  `judetul ${CITY}`,
+  `jud ${CITY}`,
+  `${CITY} county`,
+  "jud bv",
+  "bv",
+  "romania",
+  "ro",
+]);
 
-/**
- * A trailing part that says where the place is rather than which place it is — the list in the
- * file's header, after `foldPart` (so "Județul Brașov" arrives as "judetul brasov").
- */
+/** A Romanian postcode: six digits, alone or with the city it belongs to. */
+const POSTCODE = new RegExp(`^(\\d{6}( ${CITY})?|${CITY} \\d{6})$`);
+
+/** A Romanian street, by the word it starts with ("b-dul" folds to "b dul", "șos." to "sos"). */
+const ROMANIAN_STREET = /^(strada|str|bulevardul|bulevard|bdul|b dul|bd|calea|aleea|soseaua|sos|splaiul) \S/;
+
+/** An English street, by the word it ends with. */
+const ENGLISH_STREET = /\S (street|st|road|rd|avenue|ave|boulevard|blvd)$/;
+
+/** A house number: "nr 5", "no 5a", "5". */
+const HOUSE_NUMBER = /^((nr|no) )?\d+[a-z]?$/;
+
+/** A trailing part that says where the place is rather than which place it is (the header's list). */
 function isAddressPart(part: string): boolean {
-  if (part === CITY || part === `municipiul ${CITY}` || part === `mun ${CITY}`) return true;
-  if (part === `judetul ${CITY}` || part === `jud ${CITY}` || part === "jud bv" || part === "bv") return true;
-  if (part === "romania" || part === "ro") return true;
-  // A Romanian postcode is six digits, sometimes followed by the city it belongs to.
-  if (/^\d{6}( |$)/.test(part)) return true;
-  if (STREET.test(part)) return true;
-  // "nr 5", "nr 5a", or the number on its own.
-  if (/^(nr )?\d+[a-z]?$/.test(part)) return true;
-  return false;
+  return WHERE.has(part) || POSTCODE.test(part) || ROMANIAN_STREET.test(part) || ENGLISH_STREET.test(part) || HOUSE_NUMBER.test(part);
 }
 
 /**

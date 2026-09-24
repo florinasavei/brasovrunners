@@ -21,7 +21,15 @@ import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 const DATE = "2027-04-17";
 const MONTH = "2027-04";
 
+/**
+ * The handshake glyph, by its drawing: a production build has no `data-testid="HandshakeIcon"` —
+ * MUI writes that attribute only outside production — so the glyph is found by the start of its
+ * path, `@mui/icons-material/Handshake`'s own.
+ */
+const HANDSHAKE = 'svg:has(path[d^="M16.48 10.41"])';
+
 let title = "";
+let englishTitle = "";
 let englishSlug = "";
 let slug = "";
 let partner = "";
@@ -32,6 +40,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     title = `Alergare cu partener ${suffix}`;
     slug = `alergare-cu-partener-${suffix}`;
     englishSlug = `run-with-partner-${suffix}`;
+    englishTitle = `Run with a partner ${suffix}`;
     partner = `Festivalul Exemplu ${suffix}`;
 
     await signIn(page, "Dev Administrator");
@@ -45,7 +54,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
     await languageTab(page, "title", "en").click();
-    await field("translations.en.title").fill(`Run with a partner ${suffix}`);
+    await field("translations.en.title").fill(englishTitle);
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     // The partner's card (§344): a name is all a partner needs; no description, no link.
@@ -81,17 +90,24 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     const card = page.locator("li").filter({ has: page.getByRole("heading", { name: title }) });
     const chip = card.locator(".MuiChip-root").filter({ hasText: `În parteneriat cu ${partner}` });
     await expect(chip).toHaveCount(1);
-    await expect(chip.locator('[data-testid="HandshakeIcon"]')).toHaveCount(1);
+    await expect(chip.locator(HANDSHAKE)).toHaveCount(1);
     // At 320 pixels the name wraps inside the card rather than widening the page.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+
+    // The English listing says it in English, and never in Romanian.
+    await page.goto("/en/events");
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
+    const englishCard = page.locator("li").filter({ has: page.getByRole("heading", { name: englishTitle }) });
+    await expect(englishCard.locator(".MuiChip-root").filter({ hasText: `With ${partner}` })).toHaveCount(1);
+    await expect(englishCard).not.toContainText("În parteneriat");
   });
 
   test("the event page says it on the overline, in each language", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
     const overline = page.getByTestId("overline-partner");
     await expect(overline).toContainText(`În parteneriat cu ${partner}`);
-    await expect(overline.locator('[data-testid="HandshakeIcon"]')).toHaveCount(1);
+    await expect(overline.locator(HANDSHAKE)).toHaveCount(1);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -104,7 +120,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     const entry = page.locator(`#main [role=table] a[aria-label*="${title}"]`);
     await expect(entry).toHaveCount(1);
     await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. În parteneriat cu ${partner}`);
-    await expect(entry.locator('[data-testid="HandshakeIcon"]')).toHaveCount(1);
+    await expect(entry.locator(HANDSHAKE)).toHaveCount(1);
     // The browser's own tooltip is a `title` attribute; no calendar entry carries one.
     await expect(page.locator("#main [role=table] a[title], #main [role=table] a [title]")).toHaveCount(0);
     expect((await entry.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -117,7 +133,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(tooltip).toContainText(`10:00 ${title}`);
     await expect(tooltip).toContainText(`În parteneriat cu ${partner}`);
     // On the mark itself — where the ⚠ opened a second tooltip over the first — still one.
-    await entry.locator('[data-testid="HandshakeIcon"]').hover();
+    await entry.locator(HANDSHAKE).hover();
     await expect(page.getByRole("tooltip")).toHaveCount(1);
   });
 
@@ -141,6 +157,21 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     await expect(entry).toHaveCount(1);
     await expect(entry).toHaveAttribute("aria-label", `10:00 ${title}. În parteneriat cu ${partner}`);
     await expect(entry.getByRole("img", { name: `În parteneriat cu ${partner}` })).toHaveCount(1);
+    await expect(entry.locator(HANDSHAKE)).toHaveCount(1);
     await expect(entry).not.toHaveAttribute("title", /.*/);
+    await expect(entry.locator("[title], title")).toHaveCount(0);
+
+    // The agenda row has no tooltip of its own (§261); the handshake's is the only one.
+    if (test.info().project.name === "mobile") return;
+    await entry.locator(HANDSHAKE).hover();
+    await expect(page.getByRole("tooltip")).toHaveCount(1);
+    await expect(page.getByRole("tooltip")).toHaveText(`În parteneriat cu ${partner}`);
+  });
+
+  test("the English calendar names the partner in English", async ({ page }) => {
+    await page.goto(`/en/calendar?month=${MONTH}`);
+    const entry = page.locator(`#main [role=table] a[aria-label*="${partner}"]`).filter({ has: page.locator(HANDSHAKE) });
+    await expect(entry).toHaveCount(1);
+    await expect(entry).toHaveAttribute("aria-label", new RegExp(`\\. With ${partner}$`));
   });
 });
