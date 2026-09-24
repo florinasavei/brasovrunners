@@ -254,6 +254,23 @@ export const events = pgTable(
     coHosts: jsonb("co_hosts"),
 
     /**
+     * "Linkuri și fișiere" (`DECISIONS.md` §332; the owner: "other links such as google drive
+     * files for GPX track files, etc"): an ordered array of `[{ kind, url, labelRo, labelEn }]`,
+     * at most twelve — the GPX on Google Drive, the extended rules as a PDF, the album, the
+     * results. `kind` is one of `events/domain/links.ts#EVENT_LINK_KINDS`, the address https,
+     * each label optional and at most 80 characters; an empty label is the kind's own word in the
+     * reader's language, so a link never holds up publication (it is not part of §28's gate).
+     *
+     * Links and never files: the file stays wherever the club keeps it (`AGENTS.md` §17), which
+     * is also why this is a sibling of `route_url` rather than an upload. The same on every date
+     * of a series and carried by a duplicate, like the route (§49). Read through
+     * `readEventLinks`, which drops an entry that is not a link rather than rendering it; null is
+     * "no links", like `[]` — the save writes null for an empty list, so a row that never had any
+     * and one whose links were all removed are the same value to a series edit.
+     */
+    links: jsonb("links"),
+
+    /**
      * A standing recurrence (`DECISIONS.md` §122): on the *source* event, how it repeats —
      * `{ cadence, weekdays, until }`, `until` a date or null for "indefinitely" — and the
      * maintenance job keeps the coming weeks' occurrences created from it. Each occurrence is
@@ -295,10 +312,27 @@ export const events = pgTable(
      *
      * Nullable at the database, required by `content/events/fields.ts` on every save: the column
      * has to accept the rows that existed before the migration that added it, and
-     * `transitionEvent` refuses to publish an event whose meeting point is still blank.
+     * `transitionEvent` refuses to publish an event whose meeting point is still blank — unless
+     * the place is to be announced (below), which is the one state in which blank is an answer.
      */
     locationName: text("location_name"),
     locationAddress: text("location_address"),
+
+    /**
+     * The place is not announced yet (`DECISIONS.md` §328; the owner, 2026-09-23: "I want to be
+     * able to set the location as TBD, and to not announce it yet").
+     *
+     * A state of the event, not an empty field. While it is true, every public reader is handed
+     * no place at all — `events/repository.ts` returns null for the name (in either language),
+     * the address and the map link, in SQL, so a surface that forgets the flag shows nothing
+     * rather than the hidden place — and each surface says "Locația se anunță în curând" where
+     * the place would be. What the organizer typed meanwhile stays in the three columns above,
+     * visible to staff and published the moment this goes back to false.
+     *
+     * Not null with a default, so every row written before it reads as "announced", which is
+     * what they were.
+     */
+    locationToBeAnnounced: boolean("location_to_be_announced").notNull().default(false),
 
     /**
      * The two facts that stopped being free text in migration `0018`.
@@ -390,6 +424,17 @@ export const events = pgTable(
      */
     confirmationOpensDaysBefore: integer("confirmation_opens_days_before").notNull().default(7),
     confirmationDeadlineDaysBefore: integer("confirmation_deadline_days_before").notNull().default(2),
+
+    /**
+     * The youngest a participant may be **on the day of the event**, in whole years (§329,
+     * amending §321; the owner: "actually this min age must be set at event level!").
+     *
+     * The club's fourteen is the default — `MIN_PARTICIPANT_AGE` in `registrations/domain/age.ts`
+     * says the same number, and every event that existed before this column was given it, so no
+     * event's rule changed the day it was added. Zero means no minimum. `submitRegistration`
+     * counts it at every door; the guardian rule (eighteen, §108) is not this column's.
+     */
+    minAge: integer("min_age").notNull().default(14),
 
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
@@ -498,6 +543,18 @@ export const events = pgTable(
       sql`${t.coHostUrl} IS NULL OR ${t.coHostUrl} LIKE 'https://%'`,
     ),
 
+    /**
+     * The links (§332): an array of at most twelve, every address https — the same guarantee
+     * the single-link columns above give, for a list. The form refuses first and says which
+     * row; this is what holds when a seed or a hand-written `UPDATE` writes the column. The
+     * `CASE` fixes the order: `jsonb_array_length` raises on a scalar, and a check that raises
+     * is a refusal nobody can read, where one that answers false names itself.
+     */
+    check(
+      "events_links_is_a_short_array_of_https_links",
+      sql`${t.links} IS NULL OR CASE WHEN jsonb_typeof(${t.links}) = 'array' THEN jsonb_array_length(${t.links}) <= 12 AND NOT jsonb_path_exists(${t.links}, '$[*] ? (!(@.url.type() == "string" && @.url starts with "https://"))') ELSE false END`,
+    ),
+
     check(
       "events_non_negative_measurements",
       sql`(${t.distanceMeters} IS NULL OR ${t.distanceMeters} >= 0)
@@ -518,6 +575,12 @@ export const events = pgTable(
      * which is what `registration_mode = NONE` already says honestly.
      */
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    /**
+     * A minimum age a person can have (§329): zero (no minimum) to ninety-nine. The form says
+     * the same bounds; this is for the seed, the script and the hand-written `UPDATE`.
+     */
+    check("events_min_age_in_range", sql`${t.minAge} >= 0 AND ${t.minAge} <= 99`),
 
     /**
      * A start list can only be published for an event this platform actually registers.

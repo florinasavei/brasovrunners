@@ -133,10 +133,21 @@ export const routing = defineRouting({
      * and so the refusal has somewhere to land.
      */
     "/admin/events/[id]/erase": "/admin/events/[id]/erase",
+    /**
+     * The emergency sheet (§322): every confirmed runner's phone, emergency contact and health
+     * note on one printable page, for the people on the course. The same word the club uses for
+     * the paper it replaces, in both locales, because it is printed and handed over.
+     */
+    "/admin/events/[id]/urgente": "/admin/events/[id]/urgente",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",
     "/admin/registrations/new": "/admin/registrations/new",
+    /**
+     * Everything held about one person (§322), looked up by address. The address never travels
+     * in this URL: the form posts it, and it comes back only sealed (`person-data.ts`).
+     */
+    "/admin/registrations/person": "/admin/registrations/person",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
     "/devs/theme": "/devs/theme",
     /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */

@@ -23,6 +23,7 @@ import {
   type RegistrationSortKey,
 } from "@/modules/registrations/admin-repository";
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -193,10 +194,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, t, format] = await Promise.all([
+  const [resubmissions, t, format, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
     getTranslations("Admin"),
     getFormatter(),
+    /*
+      Whether "Confirmă pe hârtie" on a minor attests the minor's signature too (§330): the
+      declaration in effect, per language, looked up by each row's own. Only when a minor is on
+      the page — the confirmation's sentence is the only thing that reads it.
+    */
+    rows.some((row) => row.guardianName)
+      ? declarationAsksMinorToSignByLocale(db, new Date())
+      : Promise.resolve({ ro: false, en: false }),
   ]);
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
@@ -456,6 +465,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.registrationsErased", { erased: erased ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
+        {/* What the erase could not reach (§322): the copies outside the database, by hand. */}
+        {((saved === "registrationsErased" && Number(erased) > 0) || saved === "registrationDeleted") && (
+          <Alert severity="info" data-testid="erase-leftovers" sx={{ mt: 1 }}>
+            {t("registrations.eraseLeftovers")}
+          </Alert>
+        )}
         {saved === "registrationsCancelled" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
             {t("registrations.registrationsCancelled", {
@@ -542,9 +557,15 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <Typography variant="body2" color="text.secondary">
                 {t("registrations.deleteHelp")}
               </Typography>
+              {/* What the erase cannot reach (§322), read before the press as well as after it. */}
+              <Typography variant="body2" color="text.secondary" data-testid="erase-leftovers-before">
+                {t("registrations.eraseLeftovers")}
+              </Typography>
               <RecallField
                 name="reason"
                 label={t("registrations.deleteReason")}
+                // The one line that outlives the erasure (§322): why, never who.
+                helperText={t("registrations.reasonNoIdentity")}
                 required
                 size="small"
                 slotProps={{ htmlInput: { maxLength: 500 } }}
@@ -641,6 +662,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {t("registrations.export")}
           </GlyphButton>
+          {/* An access request arrives as an address, and this list searches by name (§322):
+              the Administrator's own page for "everything held about this person". */}
+          {mayManage && (
+            <GlyphButton
+              icon="personData"
+              href={getPathname({ locale, href: "/admin/registrations/person" })}
+              variant="text"
+              size="small"
+              sx={TAP_TARGET}
+            >
+              {t("registrations.personLink")}
+            </GlyphButton>
+          )}
         </Stack>
       </Stack>
 
@@ -1107,7 +1141,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   formId: `confirm-${row.id}`,
                   confirm: {
                     title: t("desk.confirmOnPaper"),
-                    body: t("registrations.confirmOnPaperBody"),
+                    // A minor's paper carries two signatures, and the press attests both (§330) —
+                    // where the declaration in effect asks the minor to sign; else the one sentence.
+                    body:
+                      row.guardianName && minorSigns[row.locale]
+                        ? t("registrations.confirmOnPaperBodyMinor", { guardian: row.guardianName })
+                        : t("registrations.confirmOnPaperBody"),
                     confirmLabel: t("desk.confirmOnPaper"),
                   },
                 });
@@ -1271,7 +1310,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   {t("registrations.bulkCancelPrinted", { numbers: printedOnPage.join(", ") })}
                 </Alert>
               )}
-              <TextField name="reason" label={t("registrations.cancelReason")} size="small" required />
+              {/* One reason for the batch, cancel or erase alike — kept in the trail (§322). */}
+              <TextField
+                name="reason"
+                label={t("registrations.cancelReason")}
+                helperText={t("registrations.reasonNoIdentity")}
+                size="small"
+                required
+              />
               <Box>
                 <GlyphSubmitButton
                   label={t("registrations.bulkCancelAction")}
@@ -1298,6 +1344,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   {t("registrations.bulkEraseHelp")}
+                </Typography>
+                {/* What the erase cannot reach (§322), for each person in the batch. */}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {t("registrations.eraseLeftovers")}
                 </Typography>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "flex-start" } }}>
                   <TextField

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { declarationWords, pdfResponse } from "@/modules/registrations/declaration-labels";
 import { findRegistrationById } from "@/modules/registrations/repository";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
@@ -29,5 +30,16 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   // long as the database keeps the identity document (§95, §320).
   const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, await declarationWords(signed.locale, now), now, "participant");
   if (!pdf) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  // A file with a name and an identity document in it, out of the erase's reach (§324): who
+  // made it and when, on the registration's own timeline — never what it holds.
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: registration.participantId,
+    action: "registration.declaration_downloaded",
+    entityType: "registration",
+    entityId: registration.id,
+    metadata: { format: "pdf" },
+    now,
+  });
   return pdfResponse(pdf, `declaratie-${id.slice(0, 8)}.pdf`);
 }

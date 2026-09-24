@@ -164,6 +164,26 @@ describe("BR-REQ-052-02 criterion 3 capacity", () => {
   });
 });
 
+describe("BR-REQ-052-02 who may enter (§329)", () => {
+  const race = (overrides: Partial<PublicEvent>) =>
+    baseEvent({ type: "RACE", registrationMode: "INTERNAL", minAge: 14, ...overrides } as Partial<PublicEvent>);
+
+  it("states the event's own minimum as schema.org's open-ended range", () => {
+    expect(parsed(sportsEventJsonLd(race({}), URL, "Brașov Runners")).typicalAgeRange).toBe("14-");
+    expect(parsed(sportsEventJsonLd(race({ minAge: 16 } as Partial<PublicEvent>), URL, "Brașov Runners")).typicalAgeRange).toBe("16-");
+  });
+
+  it("states nothing for no minimum, and nothing where the club counts no age", () => {
+    // Zero is no minimum: "0-" would be a rule nobody set.
+    expect("typicalAgeRange" in parsed(sportsEventJsonLd(race({ minAge: 0 } as Partial<PublicEvent>), URL, "Brașov Runners"))).toBe(false);
+    // Registered elsewhere, or not at all, or turned up to (§111): the platform refuses nobody there.
+    for (const overrides of [{ registrationMode: "EXTERNAL" }, { registrationMode: "NONE" }, { type: "GROUP_RUN" }] as const) {
+      const block = parsed(sportsEventJsonLd(race(overrides as Partial<PublicEvent>), URL, "Brașov Runners"));
+      expect("typicalAgeRange" in block, JSON.stringify(overrides)).toBe(false);
+    }
+  });
+});
+
 describe("BR-REQ-052-02 criterion 6 no participant data", () => {
   it("contains no participant, email, registration or declaration field", () => {
     const serialised = JSON.stringify([

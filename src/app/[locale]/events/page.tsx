@@ -301,7 +301,7 @@ async function PastEvents({
       <Typography
         component="summary"
         variant="h2"
-        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5, listStyle: "revert" }}
+        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5 }}
       >
         {type ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${type}`) }) : t("pastCount", { count: cards.length })}
       </Typography>
@@ -381,7 +381,8 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<
             // The heading sits on its list, not a line above it (§252).
             mb: 0.5,
             cursor: { xs: "pointer", sm: "default" },
-            listStyle: { xs: "revert", sm: "none" },
+            // Its arrow hides from sm up, where the fold is always open and not a control (§325).
+            "&::before": { display: { xs: "block", sm: "none" } },
             pointerEvents: { xs: "auto", sm: "none" },
           }}
         >

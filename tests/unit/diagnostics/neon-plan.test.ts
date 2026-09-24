@@ -4,10 +4,12 @@ import ro from "../../../messages/ro.json";
 import {
   DEFAULT_NEON_PLAN,
   describeNeonBlock,
+  effectiveNeonPlan,
   NEON_PLAN_IDS,
   NEON_PLANS,
   NEON_PLANS_CHECKED_ON,
   NEON_WARN_AT_SHARE,
+  neonPlanFromSubscription,
   neonPlanSettingSchema,
   readNeonPlanValue,
 } from "@/modules/diagnostics/domain/neon-plan";
@@ -134,6 +136,38 @@ describe("the block on /devs, given the plan and the month", () => {
       const without = describeNeonBlock({ plan, databaseBytes: 11 * 1024 * 1024, consumption: null, now: NOW });
       expect(without.compute).toBeNull();
       expect(without.storage.usedMb).toBe(11);
+    }
+  });
+});
+
+/**
+ * §326 — Neon's answer wins over the stated setting. The owner, 2026-09-23: "Neon is already on
+ * Launch at $0.106/CU-hour, and here it shows Free" — the project row had said "launch_v3" all
+ * along, and the pages believed a setting nobody had changed.
+ */
+describe("§326 the plan Neon reports", () => {
+  it("matches Neon's subscription names by prefix, and knows nothing else", () => {
+    expect(neonPlanFromSubscription("launch_v3")).toBe("LAUNCH");
+    expect(neonPlanFromSubscription("launch")).toBe("LAUNCH");
+    expect(neonPlanFromSubscription("free_v3")).toBe("FREE");
+    expect(neonPlanFromSubscription(" Free ")).toBe("FREE");
+    expect(neonPlanFromSubscription("scale")).toBeNull();
+    expect(neonPlanFromSubscription("business")).toBeNull();
+    expect(neonPlanFromSubscription(undefined)).toBeNull();
+    expect(neonPlanFromSubscription(42)).toBeNull();
+  });
+
+  it("takes Neon's answer when there is one, and the setting only when there is not", () => {
+    expect(effectiveNeonPlan("FREE", "LAUNCH")).toEqual({ plan: "LAUNCH", source: "neon" });
+    expect(effectiveNeonPlan("LAUNCH", "FREE")).toEqual({ plan: "FREE", source: "neon" });
+    expect(effectiveNeonPlan("LAUNCH", null)).toEqual({ plan: "LAUNCH", source: "setting" });
+    expect(effectiveNeonPlan("FREE", null)).toEqual({ plan: "FREE", source: "setting" });
+  });
+
+  it("has both sentences of the panel and of /devs in both languages", () => {
+    for (const messages of [ro, en]) {
+      expect(messages.Admin.tasks.neonPlan.source.neon).toContain("{name}");
+      expect(messages.Admin.tasks.neonPlan.source.setting.length).toBeGreaterThan(20);
     }
   });
 });

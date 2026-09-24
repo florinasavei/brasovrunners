@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql, type SQLWrapper } from "drizzle-orm";
 import { type AuditLog, auditLogs } from "@/db/schema/audit-logs";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -72,10 +72,50 @@ export type AuditAction =
    * never the address or the name that was typed.
    */
   | "registration.resubmitted"
+  /**
+   * Somebody at the club read a registration's emergency details — the phone, the emergency
+   * contact and the health note (§322). Written each time the section is opened, with the
+   * reader as the actor and no value in the metadata: Article 9 data is read by name, and the
+   * trail is how the club answers "who has seen my health note".
+   */
+  | "registration.health_viewed"
+  /**
+   * Optional data withdrawn (§322): the health note and its consent, the socials, or the
+   * results consent. By the participant from their own link (no staff actor, the door in the
+   * metadata) or by an Administrator (the actor, and the reason typed). The metadata names the
+   * fields — `["health"]`, `["socials"]` — and never what they held.
+   */
+  | "registration.consent_withdrawn"
+  /** The registrations exported to a file (§322): the event, the format and the row count — never a row. */
+  | "registration.exported"
+  /**
+   * One registration's signed declaration downloaded as a PDF (§324): a file that names a
+   * person and an identity document and leaves the application, where no erase can reach it.
+   * The reader as the actor, `{ format: "pdf" }` as the metadata — never a value.
+   */
+  | "registration.declaration_downloaded"
+  /** Every signed declaration of one event downloaded as one PDF (§324): the event and how many, never who. */
+  | "event.declarations_downloaded"
+  /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
+  | "event.emergency_sheet_viewed"
+  /**
+   * Everything the platform holds about one person, downloaded as a file by an Administrator
+   * (§322) — the answer to an access request (art. 15 GDPR). Counts only in the metadata.
+   */
+  | "participant.data_exported"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
+  /**
+   * The event cancelled in the editor (§331): the reason the organizer typed, whether the
+   * participants were told and how many were — never who they are. One row per date the save
+   * cancelled, a date of the series that had already begun included: that one is marked
+   * `alreadyStarted` and told nobody.
+   */
+  | "event.cancelled"
+  /** "Detalii actualizate" queued (§331): which facts changed, the organizer's note and the count. */
+  | "event.update_notice_sent"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
@@ -129,9 +169,11 @@ export type RecordAuditInput = {
   action: AuditAction;
   // `event` for the one action that is about a whole event's registrations at once;
   // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
-  // that is about a version of the club's own text.
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document";
-  entityId: string;
+  // that is about a version of the club's own text; `participant` for the one about a person
+  // across all their registrations (§322).
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document" | "participant";
+  /** Null only for an act about no single row — an export of every event's registrations (§322). */
+  entityId: string | null;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw
    * token, no declaration text, no participant export. A name before and after, a status, a
@@ -154,6 +196,75 @@ export async function recordAuditEvent<T extends Record<string, unknown>>(
     metadataJson: input.metadata ?? {},
     createdAt: input.now,
   });
+}
+
+/**
+ * Erasure reaches the trail too (§322): the one update this table ever takes.
+ *
+ * The trail is insert-only because it is evidence — and a record of *what was done* stays
+ * evidence without saying *to whom*. Before this, erasing a person left their participant id on
+ * every row about the registration until the participant row itself went (and never, when they
+ * had another registration), and a name correction kept the old and the new name in its
+ * metadata for three years: the one copy of the name the erasure was asked to remove.
+ *
+ * So, for one registration: every row loses its `participant_id`, a name correction loses its
+ * `from` and `to`, and every earlier row loses its `reason` — a cancellation's, a withdrawal's:
+ * free text somebody typed about this person while they were still somebody, and the helper
+ * under the field asking not to name them is a request, not a guarantee. What stays is who
+ * acted, what they did and when — the deletion's own row keeps its status, its reason and its
+ * bib number (§311), written under that same helper at the moment of erasing, and the one
+ * sentence that says why the rest is gone. Called by `eraseRegistration` inside the transaction
+ * that deletes the row, so the scrub and the delete land together or not at all.
+ */
+export async function scrubRegistrationFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<void> {
+  await scrubRegistrationsFromAudit(db, [registrationId]);
+}
+
+/**
+ * The same scrub for a set of registrations the retention sweep is about to delete (§324): a
+ * lapsed registration's rename kept both names for three years after the row itself had gone,
+ * which is the leftover the manual erase was written to remove. The set is ids or a subquery of
+ * them, run before the delete it describes and in its transaction.
+ */
+export async function scrubRegistrationsFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationIds: readonly string[] | SQLWrapper,
+): Promise<void> {
+  if (Array.isArray(registrationIds) && registrationIds.length === 0) return;
+  const aboutThisRegistration = and(
+    eq(auditLogs.entityType, "registration"),
+    inArray(auditLogs.entityId, registrationIds as string[] | SQLWrapper),
+  );
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'from' - 'to')` })
+    .where(and(aboutThisRegistration, eq(auditLogs.action, "registration.name_corrected")));
+  await db
+    .update(auditLogs)
+    .set({ metadataJson: sql`(${auditLogs.metadataJson} - 'reason')` })
+    .where(and(aboutThisRegistration, ne(auditLogs.action, "registration.deleted_by_staff")));
+  await db.update(auditLogs).set({ participantId: null }).where(aboutThisRegistration);
+}
+
+/**
+ * The person, when the erasure took their last registration (§322). A row about the person
+ * rather than one registration — `participant.data_exported`, the one kind today — carries
+ * their participant id twice: `participant_id`, which the foreign key nulls when the
+ * participant row goes, and `entity_id`, which no key reaches and would otherwise keep the
+ * deleted person's uuid for three years. Both go, in the transaction that deletes the
+ * participant; the row still says that a file was made, by whom and when, and of how much.
+ */
+export async function scrubParticipantFromAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  participantId: string,
+): Promise<void> {
+  await db
+    .update(auditLogs)
+    .set({ participantId: null, entityId: null })
+    .where(and(eq(auditLogs.entityType, "participant"), eq(auditLogs.entityId, participantId)));
 }
 
 export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt" | "actorStaffUserId"> & {

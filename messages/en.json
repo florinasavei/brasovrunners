@@ -114,8 +114,20 @@
     },
     "rules": "Event rules",
     "schedule": "Event programme",
+    "links": {
+      "heading": "Links and files",
+      "kinds": {
+        "GPX": "Route (GPX)",
+        "MAP": "Route map",
+        "DOCUMENT": "Document",
+        "PHOTOS": "Photo album",
+        "RESULTS": "Results",
+        "OTHER": "Link"
+      }
+    },
     "openMap": "Open the map",
     "address": "Address",
+    "locationToBeAnnounced": "Location to be announced soon",
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
@@ -147,7 +159,7 @@
       "title": "Who's coming",
       "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
-      "note": "Only people who confirmed their registration and did not ask to be left out are listed here.",
+      "note": "Only confirmed participants who chose to be listed appear here. Changed your mind? Take yourself off from “My registrations”, or from the link in your confirmation email.",
       "anonymous": "Anonymous participant",
       "caption": "The confirmed participants, in the order they confirmed.",
       "columnPosition": "#",
@@ -208,6 +220,7 @@
       "fullDescription": "Full event description"
     },
     "route": "Route",
+    "age": "Age",
     "openRoute": "View the route",
     "video": {
       "open": "Watch the event film",
@@ -316,6 +329,8 @@
       "summaryTotal": "Registrations: {count}",
       "summaryTest": "Test: {count}",
       "export": "Export CSV",
+      "personLink": "Everything held about a person",
+      "personThis": "Everything held about this person",
       "backToList": "Back to registrations",
       "resend": "Resend email",
       "resendSent": "The email has been queued again.",
@@ -343,11 +358,12 @@
       "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
-      "birthDateMinimumAge": "Optional here. The minimum age is 14 on the day of the race: a date that gives less is refused.",
+      "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age (the number with a “+” beside its name) on the day of the race; otherwise the registration is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
       "listOptIn": "The person wants to appear on the public participant list",
-      "relayConfirmation": "I confirm this person asked me to register them.",
+      "listOptInHelp": "Tick only if the person told you they want to.",
+      "relayConfirmation": "I confirm this person asked me to register them, and I told them the club uses their details for the race and that the privacy notice is on the site, at the foot of every page.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
       "correctName": "Correct the name",
@@ -357,6 +373,16 @@
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
+      "withdraw": {
+        "title": "Withdraw consent",
+        "help": "For a person who asked, in writing, to have what they gave on consent deleted. Only what you tick is deleted; the registration's state, place and number stay as they are, and the person is sent no message.",
+        "health": "The health note and its consent",
+        "socials": "The Strava link and the Instagram username",
+        "results": "The public-results consent",
+        "reason": "Reason",
+        "action": "Withdraw",
+        "nothing": "There is nothing left to withdraw: the health note, the socials and the results consent are already empty."
+      },
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
       "auditActorParticipant": "the participant, from their own link",
@@ -374,7 +400,10 @@
           "bibs_printed": "Bib marked as printed",
           "bibs_unprinted": "Bib marked as not printed",
           "list_consent_changed": "Public-list choice changed by the participant",
-          "resubmitted": "Registered again with the same address"
+          "resubmitted": "Registered again with the same address",
+          "health_viewed": "Emergency details and health note opened",
+          "consent_withdrawn": "Consent withdrawn",
+          "declaration_downloaded": "Signed declaration downloaded (PDF)"
         }
       },
       "locale": {
@@ -384,9 +413,11 @@
       "deleteTitle": "Delete permanently",
       "deleteHelp": "Deletes the registration and the signed declaration, permanently. The place is released to the waiting list, and the log keeps who deleted it and why — not the person’s data. Use it for an erasure request; for an ordinary withdrawal, cancel instead.",
       "deleteReason": "Reason for deletion",
+      "reasonNoIdentity": "Do not write the person's name, address or anything that identifies them.",
       "deleteAction": "Delete permanently",
       "deleteConfirm": "I confirm this deletion is permanent",
       "registrationDeleted": "The registration was permanently deleted.",
+      "eraseLeftovers": "Also delete by hand: the person's “Signed declaration” messages in the archive mailbox and its Cc/Bcc copies, their row in any downloaded export and their page in any downloaded declarations PDF, any printed emergency sheet, the paper declaration, and their address in Mailgun → Suppressions if it is there. The database's backups (Neon's restore history) still hold the registration until they expire, at most 7 days later — nothing to do there by hand.",
       "rowActions": "Actions for {name}",
       "clubMemberLabel": "Brașov Runners members",
       "bouncedLabel": "Email",
@@ -423,6 +454,19 @@
       "sendReminder": "Send the reminder",
       "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
+      "emergency": {
+        "title": "Emergency and health",
+        "show": "Show the phone, the emergency contact and the health note",
+        "showHelp": "Who opened this section, and when, is recorded in the audit trail.",
+        "phone": "Phone",
+        "contact": "Emergency contact",
+        "none": "—",
+        "health": "Health note",
+        "healthNone": "No note",
+        "healthConsented": "consent given on {date}",
+        "hide": "Hide",
+        "viewed": "Opening it was recorded in the audit trail."
+      },
       "bibNumber": "Race number (BIB)",
       "checkinCode": "Pickup code",
       "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
@@ -434,7 +478,11 @@
       "declarationPdf": "Signed declaration (PDF)",
       "declarationsPdf": "Signed declarations (PDF)",
       "declarationForm": "Paper declaration form (PDF)",
+      "declarationFormMinor": "Paper declaration form for a minor (PDF)",
       "declarationPaper": "on paper, recorded by {who}",
+      "signedByMinor": "the minor",
+      "signedByGuardian": "the parent or guardian",
+      "confirmOnPaperBodyMinor": "You are confirming that the declaration was signed on paper, at the desk, by both: the minor and the parent or legal guardian ({guardian}). They get the place and a race number, and the audit row names you as the person who recorded the signatures. Use it only with the paper carrying both signatures in front of you.",
       "emailVouched": "address vouched for by {who}",
       "journey": {
         "title": "The registration's journey",
@@ -504,11 +552,13 @@
     "events": {
       "empty": "There is no event in the database.",
       "featured": "Featured",
+      "placeToBeAnnounced": "Location not announced",
       "preview": "Preview",
       "edit": "Edit",
       "editNamed": "Edit {title}",
       "moreActions": "More actions",
       "registrationsLink": "Registrations ({count})",
+      "emergencySheet": "Emergency sheet",
       "new": "New event",
       "registrations": "Registrations",
       "columnTitle": "Event",
@@ -576,7 +626,7 @@
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: this version of the terms now has registrations or signed declarations from the time it was in force, and neither records which version of the terms was accepted. You can withdraw it instead — it stays on the record and is offered to nobody.",
-      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet 14 on the day of the race, and 14 is the minimum age to take part. Check the date with them."
+      "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them."
     },
     "editor": {
       "eventSection": "Event details",
@@ -589,6 +639,9 @@
       "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The shared name, filled in once; if the place goes by another name in English, write that one under “Content”, on the language's tab.",
       "locationNameInLanguage": "The place's name (in this language)",
       "locationNameInLanguageHelp": "Optional. What the meeting point is called on this language's page — “Tractorul Park” on the English one, for instance. Leave it empty and the page uses the name from “{panel}”.",
+      "placeToBeAnnounced": "Location to be announced",
+      "placeToBeAnnouncedHelp": "Turn it on when the place is not settled yet. The event can be published anyway: the page, the cards, the calendar, the share picture and the emails say “Location to be announced soon”, and the place, the address, the map and the programme's places appear nowhere. What you fill in below — and the place's name on each language's tab — is kept, unpublished. When you announce the place, turn the switch off and save — it appears everywhere at once.",
+      "placeUnpublished": "Not published while the location is to be announced.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
@@ -680,7 +733,7 @@
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
-      "participantListHelp": "Publishes the names of the people who confirmed their registration and did not ask to be left out. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on.",
+      "participantListHelp": "Publishes the names of confirmed participants who ticked that they want to be listed. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -714,6 +767,8 @@
       "savedSeries": "Saved — and on {applied} more dates of the series.",
       "savedSeriesOffered": "Saved — and on {applied} more dates of the series; places offered to the waiting list: {offered}.",
       "savedOffered": "Saved — places offered to the waiting list: {offered}.",
+      "placeAnnouncedLive": "The location is announced: it now shows on the event page, the cards, the calendar and in every email sent from now on. People already registered are not emailed about it automatically; the reminder 48 hours before the event will carry it.",
+      "placeAnnouncedDraft": "The location is announced: it will show on every page once the event is published. Nobody is emailed about it.",
       "scope": {
         "title": "Save for:",
         "this": "This date only",
@@ -768,6 +823,24 @@
         "add": "Add a partner",
         "remove": "Remove partner"
       },
+      "linksSection": "Links and files",
+      "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional in each language: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
+      "linkRows": {
+        "kind": "Kind",
+        "url": "Address (https://…)",
+        "labelRo": "Label in Romanian (optional)",
+        "labelEn": "Label in English (optional)",
+        "add": "Add a link",
+        "remove": "Remove link",
+        "moveUp": "Move up link",
+        "moveDown": "Move down link",
+        "row": "Link",
+        "urlError": "Link {n}: the address must start with https://",
+        "kindError": "Link {n}: choose the kind from the list",
+        "labelRoError": "Link {n}: the Romanian label is at most {max} characters",
+        "labelEnError": "Link {n}: the English label is at most {max} characters",
+        "tooMany": "Links and files: at most {max} on one event"
+      },
       "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
@@ -800,6 +873,8 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "minAge": "Minimum age (years)",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers them. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -859,7 +934,33 @@
       "createdPublishedWithSeries": "The event and {created} dates were created and published.",
       "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
       "createdNotPublishedRole": "The event was created as a draft. Publishing is the Administrator's — submit it for review.",
-      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}"
+      "createdNotPublishedOther": "The event was created as a draft but could not be published: {reason}",
+      "notice": {
+        "notify": "Tell participants about the change",
+        "count": "Participants who would get the “Updated details” email: {count}, each in the language they registered in. It goes only if the place, the date and time or the programme changed, or if you write a note below. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "countNone": "Nobody is registered for this date right now, so the box sends no email.",
+        "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
+        "note": "What changed (optional)",
+        "noteHelp": "Plain text, at most {max} characters. It appears in the email under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
+        "cancelTitle": "You are cancelling the event",
+        "cancelIntro": "The registrations stay as they are, as a record: nobody is withdrawn and no status changes. No more places are offered, no numbers are given and no automatic emails go out for this event.",
+        "cancelReason": "Why the event is cancelled",
+        "cancelReasonHelp": "Required. Plain text, at most {max} characters. It appears in the email to the participants and in the audit log, with your name.",
+        "cancelNotify": "Tell the participants that the event is cancelled",
+        "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
+        "cancelCountNone": "Nobody is registered right now, so no email goes out.",
+        "allowanceDay": "the {plan} plan: {remaining} left today",
+        "allowanceMonth": "the {plan} plan: {remaining} left this month",
+        "allowanceNone": "the {plan} plan, no limit",
+        "outcome": {
+          "update": "“Updated details” emails queued: {queued}. They go within minutes, each in the participant's language.",
+          "none": "No email went out: the place, the date and time and the programme did not change, and the note for the participants was empty.",
+          "cancelled": "The event is cancelled. “Event cancelled” emails queued: {queued}.",
+          "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked.",
+          "cancelledNobody": "The event is cancelled. It takes no registrations on this site, so there was nobody to email. The reason is in the audit log."
+        },
+        "countTest": "Test registrations, which get the email too and are counted nowhere: {test}."
+      }
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -1006,7 +1107,7 @@
       "newTitle": "New version",
       "newFromTemplateIntro": "Prefilled with the platform's text, the club's legal name and the contact address already written in. Left to fill, in angle brackets, in both languages: {blanks}. Read it all, save the draft, then approve it from its page.",
       "templatesIntro": "Or start from the platform's text:",
-      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{idDocument}}' (the identity document typed at signing), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
+      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
       "newVersion": "New version",
       "saveDraft": "Save draft",
@@ -1074,7 +1175,9 @@
         "participant": "The name the participant registered under",
         "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
         "guardian": "The parent or guardian when the participant is a minor; a dash otherwise",
-        "idDocument": "The identity document typed at signing — never scanned",
+        "idDocument": "The declarant's identity document (the parent's, for a minor), typed at signing — never scanned",
+        "participantIdDocument": "The participant's own identity document — the minor's, for a minor — typed at signing. With it in the text a minor signs too, beside the parent; without it, only the parent signs",
+        "guardianIdDocument": "The parent's or guardian's document when the participant is a minor; a dash otherwise",
         "event": "The event's title",
         "eventDate": "The event's date, in its own zone",
         "eventLocation": "The meeting point",
@@ -1143,16 +1246,20 @@
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",
-        "intro": "The platform cannot read from Neon which plan the account is on — the API gives the consumption, not the plan and not the invoice — so you tell it here. The figures on /devs and the Neon row below follow it: on Free, the hours ceiling and the storage, red from 80%; on Launch, the estimated cost at the plan's rates, with no ceiling.",
+        "intro": "The platform reads the plan from Neon: the project names the plan of the account that owns it, every time the page opens. The choice below is the fallback, used only when NEON_API_KEY is missing or Neon does not answer. The figures on /devs and the Neon row below follow it: on Free, the hours ceiling and the storage, red from 80%; on Launch, the estimated cost at the plan's rates, with no ceiling.",
         "inForce": {
-          "free": "Plan set: Free — {of} CU-hours a month per project, included; when they run out the database stops until the next month.",
-          "freeMeasured": "Plan set: Free — {cu} of {of} CU-hours used this period ({percent}%); when they run out the database stops until the next month.",
-          "launch": "Plan set: Launch — paid by usage, ${rate}/CU-hour, no ceiling and no stop. The hours appear once NEON_API_KEY is set.",
-          "launchMeasured": "Plan set: Launch — paid by usage. Compute hours this period: {cu}; estimated cost: ${usd} (${rate}/CU-hour)."
+          "free": "Plan: Free — {of} CU-hours a month per project, included; when they run out, the database stops until next month.",
+          "freeMeasured": "Plan: Free — {cu} of {of} CU-hours used this period ({percent}%); when they run out, the database stops until next month.",
+          "launch": "Plan: Launch — pay as you go, {rate} $/CU-hour, no ceiling and no stop. The hours show once NEON_API_KEY is set.",
+          "launchMeasured": "Plan: Launch — pay as you go. Compute hours this period: {cu}; estimated cost: {usd} $ ({rate} $/CU-hour)."
+        },
+        "source": {
+          "neon": "Read from Neon just now: the account is on the {name} plan. Nothing needs choosing below.",
+          "setting": "Neon did not name the plan (NEON_API_KEY is missing or Neon did not answer), so the plan chosen below is used."
         },
         "estimate": "The figures are estimates from the consumption read from Neon; the invoice is Neon's, with storage and restore history on top.",
         "updatedAt": "Set on {when}. Note: {note}",
-        "field": "The plan the Neon account is on",
+        "field": "Fallback plan, when Neon does not answer",
         "fieldHelp": "Rates and limits from the Neon console and neon.com/pricing, checked on {checkedOn}. The account holds both projects (QA and production); the setting is made on each environment separately.",
         "option": {
           "FREE": "{name} — {cuHours} CU-hours and {storageMb} MB a month per project, free; past that the database stops",
@@ -1231,6 +1338,16 @@
             "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header, every 30 minutes (Custom → every day, every hour, minutes 0 and 30). Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
           ]
         },
+        "retentionSweep": {
+          "title": "The automatic deletion of expired data is failing",
+          "todo": "The scheduled job runs on time, but the step that deletes data past its window has failed twice in a row. While it fails, the privacy notice's windows (the identity document and the health note seven days after the event, registrations after three years) no longer keep themselves. The cron-job.org monitors are fine — there is nothing to redo there",
+          "done": "The automatic deletion of expired data runs without errors.",
+          "how": [
+            "Open /devs: the registration-maintenance row says “failing” and its last error names the steps that failed (for example retention:registrations-after-event). The step names are in src/modules/jobs/retention.ts.",
+            "In the function logs on Vercel, look for “[retention] sweep step failed”: next to the step's name is the database's error code (for example 57014, a timeout), never the values.",
+            "Fix the cause, then wait for the next run (at most 15 minutes by day, an hour at night). The row goes by itself after the first run without errors, and /api/health answers ok again."
+          ]
+        },
         "inviteStaff": {
           "title": "Invite the team",
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
@@ -1286,6 +1403,18 @@
             "Open /admin/events → “New event”. Fill in the type, the date, the place and the title in both languages. Save.",
             "Press “Submit for review”, then “Publish”. Both languages go live together; until then the page is a 404 for visitors.",
             "Only one event can be “featured” — it opens the home page. Next year: “Duplicate” this year's."
+          ]
+        },
+        "raceDaySheets": {
+          "title": "Delete the event's exports and printed sheets",
+          "todo": "Seven days have passed since the event: downloaded lists and printed race-day sheets are destroyed now, at the latest 30 days after the event — the privacy notice promises it. The platform cannot see them, so the row is never ticked: it goes by itself after 30 days.",
+          "done": "No list or sheet to destroy right now.",
+          "how": [
+            "Delete the CSV and xlsx files downloaded for the event and the all-declarations PDF — from Downloads, from the bin, and from any email or chat you sent them through. If a list must be kept, cut the identity document column first.",
+            "On declarations signed on paper, cross out or cover the identity document's series and number. The paper stays three years, then it is destroyed too.",
+            "Destroy the emergency sheet and any other list printed for race day (shredder, or torn small).",
+            "In the club's Gmail: declaration copies older than three years are found with subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, and contact-form messages older than 12 months with subject:\"Mesaj de pe site\" older_than:1y — select them all and delete them.",
+            "In the same place, the confirmation notices sent to the club and the club copies of participants' emails, older than three years: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — select them all and delete them. The search carries both languages, so it finds the subject in either."
           ]
         },
         "botCheck": {
@@ -1719,6 +1848,40 @@
       "downloadAll": "Download every number ({count}) — a PDF to print",
       "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
     },
+    "emergency": {
+      "title": "Emergency sheet — confidential. Destroy after the event.",
+      "event": "{event} · {date}",
+      "backToEvent": "Back to the event",
+      "print": "Print",
+      "help": "Every confirmed participant, checked in or not. The health note deletes itself seven days after the event; after that the column is empty. Opening this page is recorded in the audit trail.",
+      "columnBib": "No.",
+      "columnName": "Name",
+      "columnPhone": "Phone",
+      "columnContact": "Emergency contact",
+      "columnHealth": "Health note",
+      "present": "checked in",
+      "empty": "No confirmed participant yet.",
+      "count": "Confirmed participants: {count}"
+    },
+    "person": {
+      "title": "Everything held about a person",
+      "intro": "For an access request, or before an erasure: everything the platform holds about one email address — every registration in every state with every field, the declarations, the consents and their versions, the messages sent, the “Tell me” requests and the audit rows. The address is matched by its canonical form, so “Ana.Pop+club@gmail.com” and “ana.pop@gmail.com” are the same person.",
+      "email": "Email address",
+      "lookUp": "Look up",
+      "expired": "The lookup expired (after {minutes} minutes). Type the address again.",
+      "audited": "Opening this page is recorded in the audit trail, for every registration shown.",
+      "canonical": "Canonical form: {email}",
+      "notFound": "No registration, no message and no “Tell me” request for this address.",
+      "downloadJson": "Download JSON",
+      "participant": "Participant",
+      "registrations": "Registrations ({count})",
+      "acceptances": "Accepted declarations ({count})",
+      "messages": "Messages ({count})",
+      "interests": "“Tell me” requests ({count})",
+      "audit": "Audit trail ({count})",
+      "none": "None.",
+      "newSearch": "Another lookup"
+    },
     "desk": {
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
@@ -1756,6 +1919,10 @@
       "scannedTitle": "Scanned participant",
       "confirmHere": "Confirm on paper",
       "idDocument": "Identity document",
+      "idDocumentMinor": "Identity document (minor)",
+      "idDocumentGuardian": "Identity document (parent/guardian)",
+      "confirmMinorNote": "Minor: both sign the paper — the minor and the parent or guardian ({guardian}), each with their own document. Confirm only with both signatures.",
+      "minorForm": "Form for a minor (PDF)",
       "rowHelp": "On each row: type the race number (if not assigned already) → Save; when the person has arrived → Present. Somebody whose email never arrived signs the declaration on paper → Confirm on paper.",
       "givePlace": "Give a place",
       "bibField": "Race number (BIB)",
@@ -1813,7 +1980,9 @@
         "BIB_ASSIGNED": "A race number given by hand",
         "STAFF_INVITATION": "The team invitation",
         "REGISTRATION_OPENED": "Registration is open",
-        "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed"
+        "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed",
+        "EVENT_UPDATE_NOTICE": "Updated details (place, time, programme)",
+        "EVENT_CANCELLED": "Event cancelled"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1822,18 +1991,20 @@
         "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
         "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
         "REGISTRATION_CANCELLED": "When the participant withdraws or an organizer cancels the registration.",
-        "WAITLIST_OFFER_EXPIRED": "When the offer's 24 hours pass without a signature.",
-        "REGISTRATION_MANAGE_LINK": "On request, from “Resend the link” (site or backoffice).",
+        "WAITLIST_OFFER_EXPIRED": "Not sent any more: when an offered place's 24 hours pass without a signature, the place moves to the next person in line with no email to the one who did not sign.",
+        "REGISTRATION_MANAGE_LINK": "Not sent any more: “Resend the link” sends the whole confirmation (with the manage link, the QR code and the number), and “My registrations” has its own message.",
         "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
-        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
-        "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
-        "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
-        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link; in the attached PDF the identity document's series and number are masked.",
-        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link.",
+        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once. Scheduled events only: a cancelled one sends nothing automatic any more.",
+        "EVENT_THANKS": "By hand, from the event page, once the start time has passed; once, to those checked in at the desk. Never for a cancelled event.",
+        "DECLARATION_SIGNED": "Not sent any more: the signed declaration, as a PDF, goes attached to “Registration confirmed”, together with a link to it.",
+        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the club's declarations mailbox set above (or DECLARATIONS_ARCHIVE_TO, when none is set here) — only for real registrations. No action link; in the attached PDF the identity document's series and number are masked.",
+        "BIB_ASSIGNED": "Automatically, once, when registration closes and the numbers become final; and when an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link. Never for a cancelled event.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form.",
-        "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token."
+        "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token.",
+        "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
+        "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link."
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -1942,7 +2113,8 @@
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
         "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
-      }
+      },
+      "neverSent": "not sent any more"
     },
     "guide": {
       "title": "How to use the platform",
@@ -2044,15 +2216,16 @@
           "title": "Declarations of own responsibility and personal data (GDPR)",
           "who": "Role: Administrator. Read once, before the first event with registrations.",
           "steps": [
-            "The declaration's text is a legal document under “Legal documents”. Start from the platform's text (the “Declaration” link under “New version”): it is the club's declaration with its blanks as tokens — {{participant}}, {{idDocument}}, {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — filled in automatically for each person and event. One approved text serves every event.",
-            "When signing, the participant reads the text filled in with their name and the event, types the series and number of their identity document (no photo or scan of an ID is ever uploaded) and writes their name as the signature. Recorded: the name, the document, the text's version, its fingerprint (SHA-256), the moment and the method. That is a simple electronic signature (eIDAS and Law 214/2024).",
+            "The declaration's text is a legal document under “Legal documents”. Start from the platform's text (the “Declaration” link under “New version”): it is the club's declaration with its blanks as tokens — {{participant}} and {{participantIdDocument}} (the participant and their document), {{guardian}} and {{guardianIdDocument}} (a minor's parent or guardian and their document; a dash for an adult), {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — filled in automatically for each person and event. A text approved earlier, with {{idDocument}} (the declarant's document), still works. One approved text serves every event. The minor signs too, with their own document, only when the approved declaration contains {{participantIdDocument}}; under a text without it only the parent or guardian signs, with their own document, as before. That is why the new declaration is approved together with the new privacy notice and terms, which describe the minor's document.",
+            "When signing, the participant reads the text filled in with their name and the event, types the series and number of their identity document (no photo or scan of an ID is ever uploaded) and writes their name as the signature; for a minor the parent or guardian signs, and under a declaration with {{participantIdDocument}} both sign at the one press, the minor and the parent or guardian, each with their own document and name. Recorded: the names, the documents, the text's version, its fingerprint (SHA-256), the moment and the method. That is a simple electronic signature (eIDAS and Law 214/2024).",
             "Right after signing, the participant receives the signed declaration by email as an attached PDF (“Your signed declaration”), plus a link to it from their registration page. At the desk, the kit is handed out against the identity document written in the declaration — it shows on the “Race day” row and in the CSV.",
-            "Whoever cannot sign from the email signs on paper: on the event page, “Paper declaration form (PDF)” prints the form with the event filled in. At the desk, “Confirm on paper” records the signature under the volunteer's name; the club keeps the signed original.",
+            "Whoever cannot sign from the email signs on paper: on the event page, “Paper declaration form (PDF)” prints the form with the event filled in. Under a declaration with {{participantIdDocument}}, for a minor it is “Paper declaration form for a minor (PDF)”: both sign, the minor and the parent or guardian, each with their own document. At the desk, “Confirm on paper” records the signature — for a minor, under such a declaration, both — under the volunteer's name; the club keeps the signed original.",
             "Where the declarations live: in the database (Neon, Frankfurt), as records — not as files. The PDF is generated from them on request, any time, identically. After the event, from the event page: “Signed declarations (PDF)” — all in one file, one per page (200 declarations ≈ 2 MB, a few seconds) — and the CSV export. Keep them in the club's own archive, with restricted access (they carry names and identity documents).",
             "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
             "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
             "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document.",
-            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”."
+            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”.",
+            "Minimum age: each event has its own, in the event's “Registration” panel — “Minimum age (years)”, 14 unless you change it, 0 for none. It is counted on the day of the event, at every door (the form, the desk, a registration you enter, test data); the form, the event page and the date picker say the event's number, and the staff form shows it beside each event's name (“16+”)."
           ],
           "roles": [
             "ADMIN",
@@ -2111,17 +2284,19 @@
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
-    "privacyLinkLabel": "GDPR",
+    "privacyLinkLabel": "Privacy",
+    "privacyLinkName": "Privacy notice",
     "termsLinkLabel": "Racing TOS",
+    "botCheckNotice": "The “I'm not a robot” check is run by Cloudflare, which sees your IP address and browser details for that purpose only.",
+    "inForce": "Version {version}, in force since {date}",
     "termsTitle": "Terms and conditions",
     "privacyTitle": "Privacy notice"
   },
   "Registration": {
     "title": "Register: {event}",
     "email": "Email address",
-    "privacyPrefix": "I have read and agree to the",
+    "privacyPrefix": "I have read the",
     "privacyLinkLabel": "privacy notice",
-    "resultsNameConsent": "My name may appear in public results",
     "listOptIn": "I want to appear on the participant list",
     "submit": "Submit registration",
     "submitting": "Sending…",
@@ -2162,7 +2337,7 @@
       "fieldsIntro": "Check these fields:",
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "emergencySame": "The emergency contact needs a different number from yours — nobody can ring your own phone if something happens to you.",
-      "tooYoung": "The minimum age to take part is 14 on the day of the race.",
+      "tooYoung": "The minimum age for this event is {age} on the day of the race.",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again.",
@@ -2184,16 +2359,24 @@
     "displayName": "Public display name",
     "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
     "birthDate": "Date of birth",
-    "birthDateHelp": "The minimum age is 14 on the day of the race. Age categories are worked out against that day too.",
-    "ageRule": "Participants from age 14; under 18, a parent registers them.",
+    "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
+    "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
+    "ageRule": {
+      "minimumAndGuardian": "Open to anyone {age} or older on the day of the event; under 18, a parent registers them.",
+      "minimumOnly": "Open to anyone {age} or older on the day of the event.",
+      "guardianOnly": "Under 18, a parent registers them."
+    },
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Female",
       "MALE": "Male",
       "UNSPECIFIED": "Prefer not to say"
     },
+    "sexHelp": "For category rankings; you may choose “Prefer not to say”.",
     "nationality": "Citizenship",
     "city": "City",
+    "originHelp": "Optional. Tells the club where its events' participants come from.",
+    "nationalityNone": "Prefer not to say",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
     "preferredLocaleOptions": {
@@ -2205,6 +2388,7 @@
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
+    "emergencyContactHelp": "Tell this person you gave us their name and number: we call only if something happens to you at the race. We keep them as long as the registration.",
     "tshirtSize": "T-shirt size",
     "tshirtSizes": {
       "NONE": "No t-shirt"
@@ -2213,7 +2397,7 @@
     "optional": "Optional",
     "healthNotes": "Conditions, allergies or medication",
     "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
-    "healthConsent": "This health information may be kept, only for my safety on race day",
+    "healthConsent": "I agree that the race organizers may keep this health information, only for my safety on race day. I can withdraw it at any time from “My registrations”.",
     "displayNameToggle": "Want to appear publicly under a different name?",
     "displayNamePlaceholder": "Ana P.",
     "fieldNames": {
@@ -2233,7 +2417,7 @@
       "clubName": "Club or team",
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
-      "privacyAcknowledged": "GDPR",
+      "privacyAcknowledged": "Privacy notice",
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
@@ -2298,6 +2482,7 @@
     },
     "disclosure": {
       "race": "Brașov Runners member, club and t-shirt — optional",
+      "origin": "Where you're from — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
@@ -2308,21 +2493,21 @@
       "details": "Event details",
       "rules": "The rules",
       "terms": "Racing TOS",
-      "privacy": "GDPR"
+      "privacy": "Privacy"
     },
-    "socialsHelp": "If you want us to find you and tag you in the club's posts. Not published on the site, not given to anyone.",
+    "socialsHelp": "Optional. Used only to follow you and tag you in the club's posts; a tag is public on that network. Never shown on the site. You can delete them at any time from “My registrations”.",
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
     "instagramHandleHelp": "With or without the @.",
-    "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. For an adult, leave this empty.",
+    "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. You fill in the child's details and give the choices below (public list, health information) on their behalf. The email and phone may be yours. For an adult, leave this empty.",
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
-    "privacyBanner": "Nothing you write here appears anywhere on the site. Only the team organizing this event sees it, and the declaration and the emails go to you alone.",
-    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth.",
+    "privacyBanner": "Nothing you write here appears on the site. The club uses it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
+    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth. The club uses your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document's series and number masked (at most the first two and last two characters remain), goes to the club's archive. We keep the registration for three years after the event.",
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
-    "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
+    "healthIntro": "Optional, and only if you want to. Write only what the race organizers should know if you need help — an allergy, a treatment, a condition. Only the organizers see it; it is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
     "clubMemberHint": "I have been to at least 3 group runs in the past year.",
     "rules": {
@@ -2352,19 +2537,22 @@
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
+    "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
     "confirm": {
       "title": "Confirm your email address",
       "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",
       "action": "Confirm",
       "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
-      "doneTitle": "Your email address is confirmed"
+      "doneTitle": "Your email address is confirmed",
+      "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do."
     },
     "declare": {
       "title": "Event declaration",
       "accept": "I have read and accept the declaration above",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
+      "privacyLink": "Privacy notice",
       "doneConfirmed": "Your registration is confirmed.",
       "changed": "The declaration was updated while you were reading it. Nothing was recorded. Below is the current text — please read it and sign again.",
       "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
@@ -2373,7 +2561,7 @@
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
       "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
-      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it.",
+      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
       "idDocumentPlaceholder": "BV 123456",
       "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
       "nextTitle": "What happens next",
@@ -2402,6 +2590,23 @@
       "signatureNameWrongForMinorReply": "If the parent or guardian name given at registration is wrong, it cannot be changed on this registration: cancel it from <mine>My registrations</mine> (or reply to the email you received, or <contact>write to us</contact>, and the club cancels it), then register the minor again with the right name. The new registration gets a place like any other, or a place on the waiting list if the race has filled up by then.",
       "nameRefusedTitle": "The signature does not match the name given at registration",
       "nameRefusedNothingRecorded": "Nothing was recorded and your link is fine: correct the name and sign again.",
+      "documentRefusedTitle": "An identity document is missing or not written correctly",
+      "documentRefusedNothingRecorded": "Nothing was recorded and your link is fine: type the document's series and number, for example “BV 123456”, and sign again.",
+      "twoSignersIntro": "A minor participant's declaration is signed by two people: the minor and the parent or legal guardian. Each gives their identity document and types their name, below.",
+      "minorSection": "The minor: {name}",
+      "guardianSection": "The parent or legal guardian: {name}",
+      "minorIdDocumentType": "Which document the minor will show",
+      "minorIdDocument": "The minor's identity document (series and number)",
+      "minorIdDocumentHelp": "The minor's identity card — for example “BV 123456” — or passport. It goes into the declaration, beside the parent's or guardian's.",
+      "guardianIdDocumentType": "Which document the parent or guardian will show",
+      "guardianIdDocument": "The parent's or guardian's identity document (series and number)",
+      "minorTypedName": "Minor's signature",
+      "guardianTypedName": "Parent's or guardian's signature",
+      "minorTypedNameHelp": "The minor signs too, with the name they were registered under: <strong>{name}</strong> — type exactly this name. It appears as a signature.",
+      "minorSignatureMismatch": "The minor's signature must be exactly the name they were registered under: {name}.",
+      "minorSignatureMismatchRich": "The minor's signature must be exactly the name they were registered under: <strong>{name}</strong>.",
+      "minorNameWrong": "If the minor's name given at registration is wrong, <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
+      "minorNameWrongReply": "If the minor's name given at registration is wrong, reply to the email you received or <contact>write to us</contact>: the club corrects it, and you then sign from the same link.",
       "idDocumentTypes": {
         "ID_CARD": "Identity card",
         "PASSPORT": "Passport",
@@ -2424,6 +2629,15 @@
       "shortNotListed": "You are not on the public participant list.",
       "eventPage": "The event's page"
     },
+    "withdraw": {
+      "title": "What you gave us with your consent",
+      "help": "The health note and your Strava and Instagram accounts are here only because you chose to give them. You can delete them here at any time; your registration and your place stay as they are.",
+      "health": "Delete my health note",
+      "socials": "Delete my Strava and Instagram",
+      "healthDone": "Your health note and its consent are deleted.",
+      "socialsDone": "Your Strava link and Instagram username are deleted.",
+      "failed": "We could not delete it. Try again or write to us."
+    },
     "mine": {
       "title": "My registrations",
       "intro": "Type the address you registered with and we send one link to every active registration of yours — the state of each, the access code and QR, and the option to withdraw.",
@@ -2445,8 +2659,15 @@
         "PENDING_DECLARATION": "Awaiting the declaration",
         "WAITLISTED": "On the waiting list",
         "WAITLIST_OFFERED": "Place offered — sign the declaration",
-        "CONFIRMED": "Confirmed"
-      }
+        "CONFIRMED": "Confirmed",
+        "CHECKED_IN": "Checked in",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired"
+      },
+      "closedTitle": "Registrations that are over",
+      "closedHelp": "These registrations are no longer active, but they still hold details you gave us only because you agreed to. You can delete them here; the rest of the registration is kept for as long as the privacy notice says.",
+      "eventCancelledChip": "Event cancelled",
+      "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do."
     },
     "manage": {
       "title": "Manage your registration",
@@ -2534,7 +2755,8 @@
     "jobStatus": {
       "ok": "running",
       "stale": "stale",
-      "never_run": "never run"
+      "never_run": "never run",
+      "failing": "failing"
     },
     "checks": {
       "emailCaptureLocal": {
@@ -2719,6 +2941,10 @@
         "FREE": "Plan set: Free.",
         "LAUNCH": "Plan set: Launch."
       },
+      "planFromNeon": {
+        "FREE": "Plan: Free, read from Neon.",
+        "LAUNCH": "Plan: Launch, read from Neon."
+      },
       "planLink": "Change the plan (Tasks → Costs).",
       "planSetBy": "The Administrator sets it, on Tasks → Costs.",
       "sizeLaunch": "Storage used: {used} MB — ${storageRate}/GB-month, about ${usd} a month.",
@@ -2745,6 +2971,7 @@
     "title": "Gallery",
     "loading": "Loading…",
     "intro": "Photos from the club's runs, races and meetups.",
+    "photosNotice": "Photos are taken at club events and published here and on the club's channels. Recognise yourself and want one taken down? <contact>Write to us</contact> and we remove it, no reason needed.",
     "empty": "No published albums yet.",
     "backToGallery": "← All albums",
     "photoCount": "{count} photos",
@@ -2759,7 +2986,7 @@
     "emailHelp": "We answer at this address.",
     "message": "Message",
     "messageHelp": "At most 2,000 characters.",
-    "privacy": "The message goes to the club's mailbox; the details are used for nothing else.",
+    "privacy": "Your message arrives as an email in the club's Gmail (Google) mailbox, read by the team members who answer. We use it only to reply and delete it after at most 12 months.",
     "privacyDetails": "Details in the",
     "privacyLinkLabel": "privacy notice",
     "submit": "Send",
