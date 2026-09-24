@@ -87,7 +87,7 @@ const TYPED_EVENT_HALF = {
   ...EVENT_FIELDS,
   locationToBeAnnounced: true,
   locationName: SECRET_NAME,
-  // The English box of "Punct de întâlnire" (§NNN), typed and hidden like the Romanian one.
+  // The English box of "Punct de întâlnire" (§362), typed and hidden like the Romanian one.
   locationNameEn: SECRET_EN_NAME,
   mapUrl: SECRET_MAP,
   scheduleRows: [{ date: "2026-11-21", time: "08:00", endTime: "", ro: "Ridicarea kitului", en: "Kit pickup", place: SECRET_ROW_PLACE }],

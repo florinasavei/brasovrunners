@@ -95,7 +95,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The short description as the editor posts it (`DECISIONS.md` §73); `excerpt` is derived.
       "excerptBody",
       // Not the place's name: it is stored on this row (migration `0059`) but asked once per
-      // language in the Locul box and written by the event's own save, the Organizer's (§NNN).
+      // language in the Locul box and written by the event's own save, the Organizer's (§362).
       // The rules, per language (`DECISIONS.md` §96).
       "rules",
       // The programme, per language (`DECISIONS.md` §96).
@@ -113,7 +113,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     ["capacity, which belongs to the event row rather than to one language", "capacity"],
     ["the record id", "id"],
     ["the stored body column itself — the form posts `body`, validated, never the column", "bodyJson"],
-    // A text save never moves the meeting point (§NNN): the place's name in each language is the
+    // A text save never moves the meeting point (§362): the place's name in each language is the
     // event's, asked in the Locul box and saved with the event's fields.
     ["the place's name, which is the event's in both languages and saved with its fields", "locationName"],
   ])("refuses a save that also posts %s", async (_name, field) => {

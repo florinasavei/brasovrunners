@@ -70,7 +70,7 @@ function eventPlace(event: Pick<EventChangeFacts, "locationName" | "locationAddr
  * The place as each language's page shows it: its own name when it has one, else the event's —
  * and an older event's street address after either, because the page shows it after either
  * (`EventFacts`). The same rule the editor's box and the series edit read (`place.ts#placeShown`,
- * §NNN): an older event with an English name of its own ("Tractor Park") and an address opens
+ * §362): an older event with an English name of its own ("Tractor Park") and an address opens
  * with "Tractor Park, Str. Turnului 5" in the English box, and saving that is not a new place.
  */
 function placesByLanguage(event: EventChangeFacts, languages: readonly PlaceInLanguage[]): Map<string, string> {
@@ -91,7 +91,7 @@ const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true
  * - announced by the save (hidden before, shown after) — always, whether or not the words behind
  *   the switch changed at the same press: to the runner the place is new.
  * - shown before and after — when the map link differs, or the place a language's page shows.
- *   With the languages in hand, the place is read per language only (§NNN): the first save of an
+ *   With the languages in hand, the place is read per language only (§362): the first save of an
  *   older event writes the Romanian page's own name into the event's column, which changes the
  *   column and not what any page says. Without them, the event's own place is what is compared.
  */

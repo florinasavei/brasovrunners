@@ -95,7 +95,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     const place = await openEditorBox(page, "Locul");
     await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
-    // The English box has a name of its own, so it keeps it until it is told (§NNN) — and says so,
+    // The English box has a name of its own, so it keeps it until it is told (§362) — and says so,
     // under the box. The copy button never writes over a name that is there: it is off.
     await expect(field("event.locationNameEn")).toHaveValue(`Tractorul Park ${suffix}`);
     await expect(place.getByTestId("place-english-left-behind")).toContainText(`Tractorul Park ${suffix}`);

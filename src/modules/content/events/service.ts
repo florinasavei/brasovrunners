@@ -584,13 +584,13 @@ async function namedUnder<R>(prefix: string, save: () => Promise<R>): Promise<R>
   }
 }
 
-// --- The place's name in each language (§NNN) -----------------------------------------------
+// --- The place's name in each language (§362) -----------------------------------------------
 
 /** Each language's name for the place as one save of the event's fields leaves it; a language absent here is not being edited. */
 type PlaceNames = Partial<Record<Locale, string | null>>;
 
 /**
- * The Locul box's names, by language (§NNN; the owner: "There is some redundance on this meeting
+ * The Locul box's names, by language (§362; the owner: "There is some redundance on this meeting
  * spot location"). The place is asked once per language, and the Romanian box is also the event's
  * own meeting point, so it is always part of the event's fields; the English one only when the
  * caller posted it — absent, the English row keeps what it holds (an older caller, a fixture).
@@ -605,7 +605,7 @@ function placeNamesFrom(fields: Pick<EventFieldsInput, PlaceNameField>): PlaceNa
 }
 
 /**
- * The names written to each language's row, inside the event save's transaction (§NNN).
+ * The names written to each language's row, inside the event save's transaction (§362).
  *
  * Not a translation save, and deliberately so: the place is the event's — the Organizer's, who
  * sets the place and may not write the words (§207) — so this runs under the event row's version
@@ -633,7 +633,7 @@ function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames)
   });
 }
 
-/** The place each language's page shows (§NNN), the street address folded in: what a series edit compares. */
+/** The place each language's page shows (§362), the street address folded in: what a series edit compares. */
 function placesShown(event: EditableEvent, rows: readonly EditableTranslation[]): Record<Locale, string> {
   return Object.fromEntries(
     routing.locales.map((locale) => [locale, placeShown(event, rows.find((row) => row.locale === locale)?.locationName)]),
@@ -641,7 +641,7 @@ function placesShown(event: EditableEvent, rows: readonly EditableTranslation[])
 }
 
 /**
- * The names one save writes, an older event's English following its Romanian (§NNN, found by
+ * The names one save writes, an older event's English following its Romanian (§362, found by
  * review; `place.ts#englishNameAfterSave`). Without it, an older event whose organizer moved only
  * the Romanian box stored the old place as its English name — and a series save carried the new
  * Romanian to every other date, whose English pages follow it, while this date's English page
@@ -817,7 +817,7 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
  * Three texts are deliberately not here. The title and the page address are required in both
  * languages at every save already (`translationFieldsSchema`). The summary is required in both
  * before publication (§28) and may be half-written in a draft, the way a title may not. And the
- * place's name is required in both languages by the event's own schema since §NNN (`placeRule`),
+ * place's name is required in both languages by the event's own schema since §362 (`placeRule`),
  * where the switch that excuses it (§328) is known.
  */
 function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
@@ -869,14 +869,14 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
  * fields are not blank strings.
  */
 /**
- * What the *event* itself is missing before it can be published (`DECISIONS.md` §36, §NNN): a
+ * What the *event* itself is missing before it can be published (`DECISIONS.md` §36, §362): a
  * meeting point in every language, named by the Locul box that asks for it (`locationName` for
  * Romanian, `locationNameEn` for English) — a missing English place is refused like any other
  * missing translation.
  *
  * A language's place is what its page would show (`placeNameIn`): its own name, else the event's.
  * Every save through the editor writes both; the fallback speaks for an event nobody has saved
- * since §NNN, whose English page has always shown the event's name — so such an event is not
+ * since §362, whose English page has always shown the event's name — so such an event is not
  * refused for an English name it never needed, and a row with no meeting point at all (written
  * before the column existed) is refused in both languages. Without the rows, the event's own
  * column answers for every language.
@@ -1307,7 +1307,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
       now,
     );
-    // The place's name in each language is the event's (§NNN): written with the row, under its version.
+    // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
     const announcing = request.notify || request.cancellation !== null;
@@ -1357,7 +1357,7 @@ export type SaveEventAndTranslationsInput = {
   /** Required when the save moves the event to CANCELLED (§331): the reason, and whether to tell. */
   cancellation?: EventCancellationRequest;
   /**
-   * The Locul box's names were typed in the editor with JavaScript running (§NNN, found by
+   * The Locul box's names were typed in the editor with JavaScript running (§362, found by
    * re-review): its English box already followed the Romanian one on the screen while the two
    * agreed, and what it holds now is what the organizer left there — "Tractorul Park" put back
    * after the Romanian became "Parcul Tractorul" included, under the line that says so. Both
@@ -1389,7 +1389,7 @@ const SERIES_COLUMNS = [
   "links",
   "coHosts",
   // Not `locationName` and `locationAddress`: the place travels by what each language's page
-  // shows (`placesShown`, §NNN), in `applyToSeries` below, with the names on each language's row.
+  // shows (`placesShown`, §362), in `applyToSeries` below, with the names on each language's row.
   // Whether the place is announced travels with the place (§328): a series moved to a venue
   // not yet settled is moved on every date it reaches, and announced on them all at once.
   "locationToBeAnnounced",
@@ -1434,7 +1434,7 @@ const SERIES_TRANSLATION_COLUMNS = [
   "scheduleJson",
   "checklist",
   "coverAltText",
-  // Not `locationName`: the place's name in each language is the event's since §NNN and travels
+  // Not `locationName`: the place's name in each language is the event's since §362 and travels
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
@@ -1513,7 +1513,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
   });
   /*
-    The place (§NNN), compared by what each language's page shows — its own name, else the event's,
+    The place (§362), compared by what each language's page shows — its own name, else the event's,
     the address folded in — and not column by column. The first save of an older event writes the
     event's name onto both rows and folds its address into the name: the columns change, the place
     does not, and nothing travels, so a date moved to another place on its own keeps it. A language
@@ -1729,7 +1729,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   const outcome = await db.transaction(async (tx) => {
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
-    // The place's name in each language, when the event's fields are part of this save (§NNN) —
+    // The place's name in each language, when the event's fields are part of this save (§362) —
     // an older event's English following its Romanian when only the Romanian moved, unless the
     // editor's box did that on the screen already and the organizer saw what it holds.
     const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
@@ -1907,7 +1907,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     en: translationColumnsFrom(parsed.translations.en, parsed.type),
   };
   assertOptionalTextsInBothLanguages(translationColumns);
-  // Each language's name for the place, from the Locul box (§NNN); a caller that posts no English
+  // Each language's name for the place, from the Locul box (§362); a caller that posts no English
   // name leaves the English row to the event's, as every event before it did.
   const names = placeNamesFrom(parsed);
 

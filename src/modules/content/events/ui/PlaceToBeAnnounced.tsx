@@ -19,7 +19,7 @@ import { ShownWhen } from "./OnlyForType";
 
 /** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
 const SWITCH_NAME = "event.locationToBeAnnounced";
-/** The two boxes of "Punct de întâlnire" (§NNN), by the names `eventFieldsFrom` reads. */
+/** The two boxes of "Punct de întâlnire" (§362), by the names `eventFieldsFrom` reads. */
 const RO_NAME = "event.locationName";
 const EN_NAME = "event.locationNameEn";
 /** Nothing to listen to: whether the island runs is settled once it has hydrated. */
@@ -80,7 +80,7 @@ const UNSEEN = {
 /**
  * "Locația se anunță mai târziu" (`DECISIONS.md` §328; the owner: "I want to be able to set the
  * location as TBD, and to not announce it yet") — the switch, and the place's boxes whose
- * `required` follows it: "Punct de întâlnire" once per language (§NNN; the owner: "There is some
+ * `required` follows it: "Punct de întâlnire" once per language (§362; the owner: "There is some
  * redundance on this meeting spot location"), Romanian and English side by side from `sm` and
  * stacked on a phone, then the map link.
  *
@@ -93,11 +93,11 @@ const UNSEEN = {
  *
  * "Același nume și în engleză" under the English box copies the Romanian text into it: a place's
  * name is often the same in both ("Stadionul Tineretului" is not translated). It fills an **empty**
- * English box only, and is off otherwise (§NNN, found by review): a thumb on the 44-pixel button
+ * English box only, and is off otherwise (§362, found by review): a thumb on the 44-pixel button
  * right under a box holding "Tractorul Park" would replace it in one tap, past the browser's undo.
  *
  * **While the two boxes say the same place, the English follows the Romanian as it is typed**
- * (`englishFollowsTyping`; found by review). An event saved before §NNN opens with the event's name
+ * (`englishFollowsTyping`; found by review). An event saved before §362 opens with the event's name
  * in both boxes — its English page had no name of its own — and moving only the Romanian used to
  * leave the old place in the English box, saved as that date's English name while a series save
  * sent the new one to every other date. Now the English box moves with it, on the screen; the

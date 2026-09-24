@@ -82,7 +82,7 @@ describe("BR-REQ-011-01 criterion 19 publication", () => {
   it("needs no meeting point while the place is to be announced, and one in every language otherwise", () => {
     expect(missingPublicEventFields({ locationName: null, locationToBeAnnounced: true })).toEqual([]);
     expect(missingPublicEventFields({ locationName: "  ", locationToBeAnnounced: true })).toEqual([]);
-    // No place at all is no place in either language (§NNN): each language's box is named.
+    // No place at all is no place in either language (§362): each language's box is named.
     expect(missingPublicEventFields({ locationName: null, locationToBeAnnounced: false })).toEqual(["locationName", "locationNameEn"]);
     expect(missingPublicEventFields({ locationName: "Parcul Tractorul", locationToBeAnnounced: false })).toEqual([]);
   });

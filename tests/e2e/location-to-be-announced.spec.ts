@@ -33,13 +33,13 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
       await page.keyboard.type(text);
     };
 
-    // The two names side by side from `sm`, stacked on a phone — and never wider than the phone (§NNN).
+    // The two names side by side from `sm`, stacked on a phone — and never wider than the phone (§362).
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await fillDateField(page, "Începutul evenimentului", "2027-06-12");
     await fillTimeField(page, "Ora", "09:00");
 
     // The browser asks for a meeting point in each language until the switch says it is to be
-    // announced (§315, §NNN).
+    // announced (§315, §362).
     await expect(field("event.locationName")).toHaveAttribute("required", "");
     await expect(field("event.locationNameEn")).toHaveAttribute("required", "");
     // A venue written down the moment it is known — then the switch hides it, kept and not shown
@@ -155,7 +155,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.goto(`/ro/evenimente/${slug}`);
     await expect(page.locator("main").getByText(secret).first()).toBeVisible();
     await expect(page.locator("main")).not.toContainText("Locația se anunță în curând");
-    // The English page names the place in English, never the Romanian words (§NNN).
+    // The English page names the place in English, never the Romanian words (§362).
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.locator("main").getByText(secretEnglish).first()).toBeVisible();
     await expect(page.locator("main")).not.toContainText(secret);

@@ -161,7 +161,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §345).
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
-    // The meeting point is asked once per language, side by side in the Locul box (§NNN).
+    // The meeting point is asked once per language, side by side in the Locul box (§362).
     await field("event.locationName").fill("Parcul Tractorul");
     await field("event.locationNameEn").fill("Parcul Tractorul");
     // The languages are the editor's own tabs on the create form too: the Romanian panel is
@@ -669,7 +669,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await fillDateField(page, "Începutul evenimentului", ymd);
     await fillTimeField(page, "Ora", "18:30");
     await field("event.locationName").fill("Parcul Titulescu");
-    // "Parcul Titulescu" is its name in English too: one press copies it into the English box (§NNN).
+    // "Parcul Titulescu" is its name in English too: one press copies it into the English box (§362).
     await expect(page.getByTestId("place-copy-to-english")).toBeEnabled();
     await page.getByTestId("place-copy-to-english").click();
     await expect(field("event.locationNameEn")).toHaveValue("Parcul Titulescu");

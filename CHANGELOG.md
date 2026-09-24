@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.80-2026-09-24
+
+- **"Punct de întâlnire" is asked once per language.** The owner: "There is some redundance on this meeting spot location". The Locul box now holds two boxes side by side, Română and English, both required unless the location is to be announced, and the language tabs no longer carry a second "Denumirea locului". "Același nume și în engleză" fills an empty English box only, never over a name already typed. While the two boxes say the same place, typing in Romanian writes the English too. An English name of its own that the Romanian moved away from gets an amber line under its box. Each language's page, preview, calendar file, structured data, declaration and email half names the place in its own language. Publication names a missing English place like any missing translation. A series save carries a place moved in either language to every date it reaches. An event saved before opens with what its pages show, and the server never fills a blank English box with the Romanian. §362.
 ## BR-V1.79-2026-09-24
 
 - **Editor toolbars wear real icons.** Every button on the page, event and email text editor, and on the legal documents' editor (bold, lists, link, picture, gallery, film, the table's buttons, undo and redo), is now a crisp Material icon of one size and colour, with its name shown on hover or a long press, instead of the tiny emoji and arrow characters. "H2"/"H3" and the legal editor's new "Text" stay words, and the table's buttons no longer hide under the sticky toolbar. §361.

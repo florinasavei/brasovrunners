@@ -306,7 +306,7 @@ export type TemplateData = {
   eventLocationName?: string;
   /**
    * The place in the other language's words, for the bilingual message's second half: that
-   * language's own name for the place (§NNN) — "Tractorul Park" under "Parcul Tractorul" — or,
+   * language's own name for the place (§362) — "Tractorul Park" under "Parcul Tractorul" — or,
    * while the place is to be announced (§328), the sentence that says so in that language.
    */
   eventLocationNameOther?: string;

@@ -56,7 +56,7 @@ describe("§350 missingForPublish", () => {
     expect(missingForPublish(reader({ ...later, "event.locationToBeAnnounced": "" }), LOCALES).map((gap) => gap.box)).toEqual(["place", "place"]);
   });
 
-  it("treats a missing English place like any other missing translation (§NNN)", () => {
+  it("treats a missing English place like any other missing translation (§362)", () => {
     const gaps = missingForPublish(reader({ ...complete, "event.locationNameEn": "  " }), LOCALES);
     expect(gaps).toEqual([{ box: "place", locale: "en", field: "locationName", name: "event.locationNameEn" }]);
   });

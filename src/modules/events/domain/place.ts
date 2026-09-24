@@ -10,12 +10,12 @@
 export const CLUB_LOCALITY = "Brașov";
 
 /*
-  The meeting point in each language (`DECISIONS.md` §36, §303, §NNN) — pure, so the editor, the
+  The meeting point in each language (`DECISIONS.md` §36, §303, §362) — pure, so the editor, the
   service and the browser read one rule.
 
   Where it is stored has not changed: `events.location_name` is the event's own meeting point (the
   desk, the backoffice and every reader without a language at hand read it) and each translation's
-  `location_name` is that language's name (migration `0059`). What changed in §NNN is how it is
+  `location_name` is that language's name (migration `0059`). What changed in §362 is how it is
   asked: once per language, in the Locul box, both required — the Romanian box writes the event's
   column and the Romanian row, the English box the English row. So a saved event names the place in
   both rows, and the fallback below only speaks for an event nobody has saved since.
@@ -59,7 +59,7 @@ const spoken = (text: string | null | undefined) => (text ?? "").replace(/\s+/g,
 
 /**
  * The place one language's page shows, spacing aside — `placeInBox`, compared. Every "did the
- * place move" asks this one question (§NNN): the series edit (`service.ts#placesShown`), the
+ * place move" asks this one question (§362): the series edit (`service.ts#placesShown`), the
  * participants' notice (`event-changes.ts`) and the English name that follows the Romanian one
  * below. The street address an older event carries stands after a language's own name as much as
  * after the event's, because that is where the page shows it.
@@ -69,7 +69,7 @@ export function placeShown(event: { locationName: string | null; locationAddress
 }
 
 /**
- * The English name one save of an **older event** writes (§NNN, found by review): the Romanian
+ * The English name one save of an **older event** writes (§362, found by review): the Romanian
  * one, when the English page had no name of its own and the organizer moved only the Romanian.
  *
  * An event saved before the Locul box asked once per language has no English row name: its English
@@ -108,7 +108,7 @@ export function englishNameAfterSave(
 }
 
 /**
- * Whether the English box follows the Romanian one as it is typed (§NNN, found by review): while
+ * Whether the English box follows the Romanian one as it is typed (§362, found by review): while
  * both say the same place. An older event opens with the event's name in both, a place called the
  * same in both languages stays so, and "Același nume și în engleză" links them from then on —
  * moving the Romanian then moves the English with it, on the screen, before anything is saved. An
@@ -121,7 +121,7 @@ export function englishFollowsTyping(romanianBefore: string, english: string): b
 
 /**
  * Whether "Același nume și în engleză" may fill the English box: only an empty one, and only with
- * something (§NNN, found by review). It never writes over a name the organizer typed — a thumb
+ * something (§362, found by review). It never writes over a name the organizer typed — a thumb
  * under the English box on a phone would otherwise replace "Tractorul Park" in one tap, past the
  * browser's own undo.
  */
@@ -130,7 +130,7 @@ export function mayCopyToEnglish(romanian: string, english: string): boolean {
 }
 
 /**
- * Whether the English box still names the place the Romanian one has moved away from (§NNN, found
+ * Whether the English box still names the place the Romanian one has moved away from (§362, found
  * by review): the Romanian differs from what was stored, the English is what was stored, and it is
  * a name of its own ("Tractorul Park") — so it did not follow, and says so under the box.
  */

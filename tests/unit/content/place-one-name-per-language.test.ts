@@ -24,7 +24,7 @@ import { textFieldConstraints } from "@/shared/forms/constraints";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * BR-REQ-011-01 criterion 30 (`DECISIONS.md` §NNN) — "Punct de întâlnire", once per language.
+ * BR-REQ-011-01 criterion 30 (`DECISIONS.md` §362) — "Punct de întâlnire", once per language.
  *
  * The owner, 2026-09-24, with a screenshot of the Locul box: "There is some redundance on this
  * meeting spot location". The shared meeting point and each language's "Denumirea locului" are

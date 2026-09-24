@@ -256,9 +256,9 @@ type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "loca
  * Box 5: `Parcul Titulescu (EN: Titulescu Park) · hartă`, or `Se anunță mai târziu`.
  *
  * The Romanian name first — the event's own meeting point — and another language's only when it
- * says something else (§NNN): "Stadionul Tineretului" twice over would be the redundancy the box
+ * says something else (§362): "Stadionul Tineretului" twice over would be the redundancy the box
  * was rebuilt to remove. Each language reads as its box and its page do (`placeInBox`), so an
- * event saved before §NNN, whose English row is empty, summarises as the one name it shows.
+ * event saved before §362, whose English row is empty, summarises as the one name it shows.
  */
 export function placeSummary(words: SummaryWords, event: PlaceEvent | null, translations: readonly SummaryTranslation[]): string {
   if (!event) return words.place.tba;

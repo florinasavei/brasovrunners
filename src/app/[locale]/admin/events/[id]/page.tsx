@@ -185,7 +185,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const live = isLiveContent(event.editorialStatus);
   const slugLocked = event.publishedAt !== null;
   const incomplete = describeIncompleteLocales(translations);
-  // The meeting point in every language, asked in the Locul box (`DECISIONS.md` §36, §NNN).
+  // The meeting point in every language, asked in the Locul box (`DECISIONS.md` §36, §362).
   const missingOnEvent = missingPublicEventFields(event, translations);
   const maySaveSettings = canEditEventFields(staffUser.role);
   const mayChangeSeries = canCreateEvent(staffUser.role);
@@ -298,7 +298,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.tabMissing")}`, name: `translations.${entry.locale}.title` };
       }),
     ),
-    // "Locul › English › Punct de întâlnire": the language whose box is empty (§NNN).
+    // "Locul › English › Punct de întâlnire": the language whose box is empty (§362).
     ...missingOnEvent.map((field) => {
       const language = field === PLACE_NAME_FIELD.en ? "en" : "ro";
       return { label: `${t("editor.boxes.place.title")} › ${languageName(language)} › ${t("editor.fields.locationName")}`, name: `event.${field}` };

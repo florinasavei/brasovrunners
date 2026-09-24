@@ -36,7 +36,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
     "event.durationMinutes": inBox("when", t("editor.durationMinutes")),
-    // "Punct de întâlnire", once per language (§NNN): the refusal names the empty one's language.
+    // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
     "event.locationName": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
     "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
     "event.locationToBeAnnounced": inBox("place", t("editor.placeToBeAnnounced")),

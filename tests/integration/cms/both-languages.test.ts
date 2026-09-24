@@ -256,7 +256,7 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (�
   it("leaves the summary to its own rule, and takes an English place that says something else", async () => {
     const event = await createEvent(db, { actor: admin, fields: { ...POSTED, translations: TRANSLATIONS }, now: NOW });
     // The summary is required in both before publication (§28), not at every draft save; and the
-    // place is asked in both languages by the event's own schema (§NNN), each in its own words.
+    // place is asked in both languages by the event's own schema (§362), each in its own words.
     await save(event.id, { locationNameEn: "Council Square" }, { ro: { excerpt: "Duminică." }, en: { excerpt: "" } });
     const rows = await translationsOf(event.id);
     expect(rows.find((row) => row.locale === "en")?.locationName).toBe("Council Square");

@@ -181,7 +181,7 @@ describe("the time is picked, always on the 24-hour clock", () => {
   });
 });
 
-describe("the place's name in each language (§NNN)", () => {
+describe("the place's name in each language (§362)", () => {
   it("is asked once per language in the Locul box, beside each other — hidden with the map link while to be announced", () => {
     const place = read("src/modules/content/events/ui/boxes/PlaceBox.tsx");
     const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");

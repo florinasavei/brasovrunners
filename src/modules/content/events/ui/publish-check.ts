@@ -7,7 +7,7 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
  * What publication would refuse, read off a form as it stands (§315, §350) — the same rule the
  * server applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): a title and
  * a summary in every language, the meeting point in every language unless the place is to be
- * announced (§328, §NNN), and a page address in every language.
+ * announced (§328, §362), and a page address in every language.
  *
  * One function for the two things that ask it on the create page — "Creează și publică", which
  * dims and names the first gap, and the "Ce lipsește pentru publicare" list in the Publicare box,
@@ -35,7 +35,7 @@ export function missingForPublish(read: (name: string) => string, locales: reado
   }
   // No meeting point is a gap only while the place is announced (§328): with the switch on, the
   // server publishes without one and every surface says it is to be announced. One box per
-  // language (§NNN), each its own gap — a missing English place like any missing translation.
+  // language (§362), each its own gap — a missing English place like any missing translation.
   if (read("event.locationToBeAnnounced") !== "on") {
     for (const locale of locales) {
       const box = PLACE_NAME_FIELD[locale as PlaceNameLocale];

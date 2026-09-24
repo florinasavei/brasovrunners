@@ -8,7 +8,7 @@ export const THEN_FIELD = "then";
 export const THEN_PUBLISH = "publish";
 
 /**
- * The marker the Locul box posts once JavaScript runs in it (§NNN, found by re-review): the
+ * The marker the Locul box posts once JavaScript runs in it (§362, found by re-review): the
  * English place name is what the organizer left in the box, after the box itself made it follow
  * the Romanian one on the screen — so the server keeps it as posted rather than making it follow
  * again (`service.ts`, `placeNamesAsTyped`). Here for the same reason as the two above.

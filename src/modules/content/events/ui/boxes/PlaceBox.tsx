@@ -12,14 +12,14 @@ import { type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryW
 
 /**
  * Box 5, "Locul" (§350): whether the place is announced at all (§328), then the meeting point once
- * per language — "Punct de întâlnire", Română and English side by side (§NNN; the owner, of the
+ * per language — "Punct de întâlnire", Română and English side by side (§362; the owner, of the
  * shared field and the per-language name that used to be asked one under the other: "There is
  * some redundance on this meeting spot location") — then the map link, one box, because a link has
  * no language.
  *
  * Each box opens with what that language's page shows today (`placeInBox`): the language's own
  * name, else the event's meeting point, the street address of an older event folded in. So an event
- * saved before §NNN opens with the same words on both sides, and one save stores them on both
+ * saved before §362 opens with the same words on both sides, and one save stores them on both
  * rows — while the two agree, the English box follows what is typed in the Romanian one, so moving
  * the place moves it in both (found by review; `PlaceToBeAnnounced`). The Romanian box is also the
  * event's own meeting point (`events.location_name`).

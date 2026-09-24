@@ -209,7 +209,7 @@ function eventFieldsFrom(form: FormData) {
     // Only when the form carried the list's marker (`LinkRowsEditor`): a form without the
     // editor posts nothing, and "nothing" must read as "not editing the links", not "none".
     links: form.get("event.links.present") === "1" ? links.filter((row) => row !== undefined) : undefined,
-    // "Punct de întâlnire", once per language (§NNN): the Romanian box, which is also the event's
+    // "Punct de întâlnire", once per language (§362): the Romanian box, which is also the event's
     // own meeting point (§36), and the English one — only when the form carried it, so a form
     // without the box reads as "not editing the English name" rather than as a blank one.
     locationName: value("locationName"),
@@ -286,7 +286,7 @@ function translationInputFrom(form: FormData, locale: Locale) {
     rules: value("rules"),
     schedule: value("schedule"),
     // No place name here: it is asked once per language in the Locul box and read with the
-    // event's fields (`eventFieldsFrom`, §NNN).
+    // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
   };
@@ -537,7 +537,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
           ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
           : undefined,
-      // The Locul box ran in the browser (§NNN): its English name is the organizer's as it stands.
+      // The Locul box ran in the browser (§362): its English name is the organizer's as it stands.
       placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.

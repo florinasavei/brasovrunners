@@ -26,7 +26,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-011-01 criterion 30 (`DECISIONS.md` §NNN) — the meeting point, once per language.
+ * BR-REQ-011-01 criterion 30 (`DECISIONS.md` §362) — the meeting point, once per language.
  *
  * The owner, 2026-09-24, of the Locul box: "There is some redundance on this meeting spot
  * location". It asked for the place twice — a shared "Punct de întâlnire" and then, on each
@@ -77,7 +77,7 @@ const TRANSLATIONS = {
   en: { slug: "the-cross", title: "The cross", excerpt: "Ten kilometres." },
 };
 
-describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -189,7 +189,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§NNN
     });
   });
 
-  describe("an event saved before §NNN", () => {
+  describe("an event saved before §362", () => {
     /** The shape every event had until now: the meeting point on the event row, no row names, an address. */
     async function legacy(extra: Partial<typeof events.$inferInsert> = {}) {
       const [event] = await db

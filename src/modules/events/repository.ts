@@ -463,7 +463,7 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
   if (!row) return undefined;
   /*
     The place in every language the event has, for the half of a bilingual message written in the
-    other one (§NNN, `renderBilingual`): the English half names the English place, read by the same
+    other one (§362, `renderBilingual`): the English half names the English place, read by the same
     rule — and withheld the same way while the place is to be announced (§328).
   */
   const locationNames: Partial<Record<Locale, string | null>> = Object.fromEntries(rows.map((candidate) => [candidate.locale, candidate.locationName]));

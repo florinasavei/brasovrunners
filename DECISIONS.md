@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.79-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.80-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.79-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.80-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14639,3 +14639,41 @@ The editors are client islands, so the glyph is passed as the component itself, 
 - checks that none of the old characters remains in either editor's code.
 
 Baseline `BR-V1.79-2026-09-24`.
+
+## 362. The meeting point, asked once per language
+
+**2026-09-24.** The owner, of the editor's Locul box, with a screenshot: "There is some redundance on this meeting spot location". The box asked for the place twice: a shared "Punct de întâlnire", then "Denumirea locului (în această limbă)" on Română | English tabs, which in practice held the same text again.
+
+**Decision.** The box asks "Punct de întâlnire" once per language: two boxes, Română and English, side by side from `sm` and stacked on a phone. Both are required unless the place is to be announced; §328 hides and keeps them. The map link stays one field, because a link has no language.
+
+- **Storage, no migration.** The Romanian box writes `events.location_name`, which the desk, the backoffice and every reader without a language read, and the Romanian row's `location_name`. The English box always writes the English row's `location_name`, even when it matches the Romanian, so no English page borrows the Romanian words.
+- **Opening values.** Each box opens with what its page shows today (`place.ts#placeInBox`): the row's own name, else the event's, with an older event's street address folded in. An event saved before this opens unchanged.
+- **Whose field it is.** The names belong to the event, not the words. The event save writes them (the Organizer's save, §207) under the event row's version. A text save refuses a `locationName`, so a Redactor saving in the same minute is never refused over a place she did not touch.
+- **Readers.** Each reader reads its own language's name: the page, the preview, the emails, the calendar file, the JSON-LD and the declaration's `{{eventLocation}}`. In a bilingual email, each half names its own language's place.
+- **Publication.** A missing English place is refused like a missing translation, judged by what the page would show, so older events still publish.
+- **"Did the place move."** There is one rule for this: `place.ts#placeShown`, which is what the page shows with spacing normalised. The series edit and the participants' notice both use it. A series save carries a place moved in either language to every date it reaches. The first save of an older event moves no date's place and announces nothing.
+
+**The copy button.** "Același nume și în engleză" fills an **empty** English box only. It never replaces a name already there: on a phone, the 44-pixel button sits right under the English box, and one tap would replace "Tractorul Park" in a way the browser's undo cannot reverse (found by review).
+
+**The English follows the Romanian while they agree** (found by review). An older event's English page had no name of its own, so its English box opens with the Romanian words. Moving only the Romanian used to save the old place as that date's English name. A series save then sent the new Romanian name to every other date, whose English pages follow it, so the edited date's English page kept the old meeting point on its own.
+- **In the editor:** while the two boxes say the same non-empty place, typing in Romanian writes the English box too.
+- **On the server,** for any save: `englishNameAfterSave` gives the English row the new Romanian name when all three hold:
+  - the English row had no name of its own;
+  - the English box posted exactly what the English page showed;
+  - the Romanian place moved.
+- **An English name of its own is never written over.** When the Romanian moves away from it, a line under the English box says the English still names the old place, and the organizer decides.
+
+Found on the way: in MUI's `sx`, `width: 1` means 100%. The visually hidden half of each label pushed the 320px create page to 342px, so taps below the box landed beside their targets. Sizes are strings now.
+
+Found by re-review and settled in the round before the crash (a5a72dad), then checked again in this one: the server's rule that lets an older event's English name follow its Romanian one (`place.ts#englishNameAfterSave`) never fills a blank English box. A blank box is saved blank. So an event whose place is to be announced (§328), with only the Romanian venue typed, keeps its English row empty, and `placeRule` asks for the English name when the switch goes off. The owner's rule is "multi-lingual, always": the English name stays required unless the place is to be announced, and the Romanian is never written into it by the server. The English follows the Romanian only when all three hold:
+- neither language's row had a name of its own;
+- the English box posted exactly what the English page showed;
+- the Romanian moved.
+
+When the Romanian row had a name of its own, the two pages already said different things. The English is then kept as posted, as the amber line under the English box says ("În engleză scrie tot „{place}”").
+
+Once JavaScript runs in it, the editor's Locul box posts `event.placeNamesAsTyped` (the constant is in `form-names.ts`, not in the "use client" file). The service then keeps both names as posted: the box already made the English follow on the screen, and what it holds is what the organizer left there, including an English box put back to the old name. The server's HTML carries no marker, so a save without JavaScript, from a script or from a test gets the server rule.
+
+The tests read no source line for the place except one layout guard: the unseen half of each label stays one pixel wide, never MUI's `1` (100%), because a label-wide span pushed a 320-pixel page sideways. The refusal summary's labels for the two boxes are checked by calling `eventFormFieldLabels` against the shipped Romanian catalogue, not by reading the file.
+
+Baseline `BR-V1.80-2026-09-24`.

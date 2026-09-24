@@ -116,7 +116,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
-    // The place in the runner's language (§NNN), nullable on an event row from before the column
+    // The place in the runner's language (§362), nullable on an event row from before the column
     // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
     eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
     // And in the other language, for the second half of the bilingual message: its own name for

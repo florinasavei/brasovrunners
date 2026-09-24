@@ -113,7 +113,7 @@ export const translationFieldsSchema = z
      */
     excerptBody: richTextField,
     /*
-      No `locationName` here any more (§NNN). The place's name in each language is stored on this
+      No `locationName` here any more (§362). The place's name in each language is stored on this
       row (`event_translations.location_name`, migration `0059`) but asked in the Locul box with
       the rest of the place — once per language, both required — and written by the event's own
       save (`eventFieldsSchema.locationName` / `locationNameEn`), which is the Organizer's. A text
@@ -251,7 +251,7 @@ const scheduleRowSchema = z
 export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
 
 /**
- * A meeting point in every language, unless the place is to be announced (§328, §NNN).
+ * A meeting point in every language, unless the place is to be announced (§328, §362).
  *
  * On the object because it reads the switch too, and named on the empty language's box so the
  * refusal summary links to it (§47) — "Punct de întâlnire (English)". With the switch off, a blank
@@ -571,14 +571,14 @@ export const eventFieldsSchema = z
      * drops that `required` while the switch is on (`PlaceToBeAnnounced`). One rule, read in both
      * places: the browser refuses a blank place exactly when the server would.
      *
-     * **One name per language (§NNN).** This is the Romanian box of "Punct de întâlnire", and it is
+     * **One name per language (§362).** This is the Romanian box of "Punct de întâlnire", and it is
      * also the event's own meeting point: the save writes it to `events.location_name` — which
      * the desk, the backoffice and every reader without a language at hand read — and to the
      * Romanian translation's `location_name`.
      */
     locationName: optionalText(200).meta({ html: { required: true } }),
     /**
-     * The English box of "Punct de întâlnire" (§NNN): written to the English translation's
+     * The English box of "Punct de întâlnire" (§362): written to the English translation's
      * `location_name`, always — even when it says what the Romanian says — so the English pages
      * never borrow the Romanian words. Required like the Romanian one (`placeRule`). Optional in
      * the input: absent means "this caller is not editing the English name", and the stored one
@@ -775,7 +775,7 @@ export type NewEventInput = z.infer<typeof newEventSchema>;
  * languages, which is precisely what publishing both together is for.
  *
  * The meeting point left this list when it left the table (`DECISIONS.md` §36). It has a name
- * per language again since §NNN, but it is asked in the Locul box with the event's own fields and
+ * per language again since §362, but it is asked in the Locul box with the event's own fields and
  * excused by the event's own switch (§328), so `service.ts#missingPublicEventFields` is where
  * "is there a place in every language" is asked.
  */

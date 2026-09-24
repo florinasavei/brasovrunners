@@ -32,7 +32,7 @@ async function editorLabels() {
  * inputs; it never omits them: a language the person may edit posts every one of its fields, or
  * the save would write "" over what a hidden box held.
  *
- * The place's name is no longer one of them (§NNN): it is asked once per language in the Locul
+ * The place's name is no longer one of them (§362): it is asked once per language in the Locul
  * box, beside the other language's, and saved with the event's fields — the Organizer's, not the
  * words' (`PlaceBox`, `PlaceToBeAnnounced`).
  *
