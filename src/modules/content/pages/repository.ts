@@ -131,7 +131,7 @@ export async function findPageForEditor<T extends Record<string, unknown>>(db: D
 
 /**
  * Every locale one published page lives in, with that locale's own slug — its `hreflang`
- * alternates (§NNN), the pages' twin of `findPublishedTranslations` for events. A page that is
+ * alternates (§342), the pages' twin of `findPublishedTranslations` for events. A page that is
  * not published yields nothing, so no draft is ever advertised.
  */
 export async function findPublishedPageTranslations<T extends Record<string, unknown>>(
@@ -147,7 +147,7 @@ export async function findPublishedPageTranslations<T extends Record<string, unk
 
 /**
  * The same, for every page in `pageIds` at once — the sitemap's own twin of the single-page
- * version above (§NNN), one query for the whole list rather than one per row.
+ * version above (§342), one query for the whole list rather than one per row.
  */
 export async function findPublishedPageTranslationsForPages<T extends Record<string, unknown>>(
   db: Database<T>,

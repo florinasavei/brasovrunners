@@ -9,7 +9,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `AGENTS.md` §10.10, `DECISIONS.md` §32, §NNN — a public participant list MUST NOT be switched
+ * `AGENTS.md` §10.10, `DECISIONS.md` §32, §346 — a public participant list MUST NOT be switched
  * on before the approved privacy notice describes the disclosure.
  *
  * §32 recorded the rule in 2026-09-05 and left it unenforced on purpose: "no environment has an
@@ -87,7 +87,7 @@ beforeEach(async () => {
   });
 });
 
-describe("§NNN the participant list is refused without an approved, effective privacy notice", () => {
+describe("§346 the participant list is refused without an approved, effective privacy notice", () => {
   it("refuses NAMES when no privacy notice has ever been written", async () => {
     await expect(
       createEvent(db, { actor: organizer, fields: RACE_FIELDS(declarationId), now: NOW }),

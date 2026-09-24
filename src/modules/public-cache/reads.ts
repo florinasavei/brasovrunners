@@ -137,7 +137,7 @@ export async function cachedPublishedTranslations(eventId: string) {
 
 /**
  * The sitemap's events: the address, the publication date and every published locale's own slug
- * (the entry's `hreflang` alternates, §NNN canonical and hreflang), and nothing else.
+ * (the entry's `hreflang` alternates, §342 canonical and hreflang), and nothing else.
  *
  * Narrowed before it is cached, because every published event is a lot of rich text to keep for
  * three fields — and Vercel refuses to cache an entry over two megabytes, which a few seasons of
@@ -162,7 +162,7 @@ export async function cachedSitemapEvents(locale: Locale) {
 
 /**
  * Groups a flat "one row per (id, locale)" read into `id → its locales and slugs` — what turns
- * "one lookup per event/page/album" into one lookup for the whole sitemap (§NNN canonical and
+ * "one lookup per event/page/album" into one lookup for the whole sitemap (§342 canonical and
  * hreflang). The id is left off each row: the cache keeps only what the sitemap prints.
  */
 function groupById<T extends { locale: Locale; slug: string }>(
@@ -190,7 +190,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * key. So the number served is the number the formula gives for this instant. It is still a
  * page render and not a decision: the form and the allocator count again, under the lock.
  *
- * It carries the event's own number of places beside the free ones (§NNN public fill count):
+ * It carries the event's own number of places beside the free ones (§346 public fill count):
  * "12 înscriși din 50 de locuri" is the same count read against the capacity of the very row the
  * formula counted, so the two lines beside the button come from one internal read and one cache
  * entry — never a second formula, and never a query per visitor.
@@ -258,7 +258,7 @@ export async function cachedPublishedPageBySlug(locale: Locale, slug: string) {
   return readBySlug(slug, ["pages.by-slug", locale, slug], ["pages"], () => findPublishedPageBySlug(getDb(), locale, slug));
 }
 
-/** `findPublishedPageTranslations`: a standing page's `hreflang` alternates (§NNN canonical and hreflang). */
+/** `findPublishedPageTranslations`: a standing page's `hreflang` alternates (§342 canonical and hreflang). */
 export async function cachedPublishedPageTranslations(pageId: string) {
   return publicRead(["pages.translations", pageId], ["pages"], () => findPublishedPageTranslations(getDb(), pageId));
 }
@@ -288,7 +288,7 @@ export async function cachedPublishedAlbumBySlug(locale: Locale, slug: string) {
   );
 }
 
-/** `findPublishedAlbumTranslations`: an album's `hreflang` alternates (§NNN canonical and hreflang). */
+/** `findPublishedAlbumTranslations`: an album's `hreflang` alternates (§342 canonical and hreflang). */
 export async function cachedPublishedAlbumTranslations(albumId: string) {
   return publicRead(["gallery.translations", albumId], ["gallery"], () => findPublishedAlbumTranslations(getDb(), albumId));
 }

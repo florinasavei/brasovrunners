@@ -7,7 +7,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — a running series' automatic publication, switched after it started
+ * `DECISIONS.md` §341 — a running series' automatic publication, switched after it started
  * (`setRepeatPublish`, `src/modules/content/events/service.ts`).
  *
  * A series begun without the tick under "Repetă evenimentul" — or from a draft — made every
@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * weekdays and end stay exactly as chosen, and turning it on asks the same two questions the
  * first creation asked (`repeatEvent`, §122) — a role that may publish, and a published source.
  */
-describe("§NNN setRepeatPublish — the running series' publish switch", () => {
+describe("§341 setRepeatPublish — the running series' publish switch", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

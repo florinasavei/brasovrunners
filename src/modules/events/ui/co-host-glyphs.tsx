@@ -8,7 +8,7 @@ import SocialIcon, { type SocialNetwork } from "@/shared/ui/SocialIcon";
 import type { CoHostLinkKind } from "../domain/co-hosts";
 
 /**
- * One glyph per kind of partner link (§NNN), for the editor's kind select and the public page's
+ * One glyph per kind of partner link (§344), for the editor's kind select and the public page's
  * partner cards alike — the same picture on both sides, the way `LINK_GLYPH` plays that role for
  * "Linkuri și fișiere" (§332).
  *

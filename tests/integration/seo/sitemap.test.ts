@@ -128,7 +128,7 @@ describe("BR-REQ-070-02 criterion 2 — the sitemap", () => {
 
   it("lists the gallery listing in both languages even with no album, as the page itself always answers", async () => {
     // `gallery/page.tsx` renders its empty state rather than a 404 and declares both languages
-    // as alternates, so the sitemap says the same whatever the album count (§NNN canonical and
+    // as alternates, so the sitemap says the same whatever the album count (§342 canonical and
     // hreflang) — as it does for the events listing.
     const entries = await sitemap();
     expect(urlsOf(entries)).toContain(`${BASE}/ro/galerie`);

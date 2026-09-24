@@ -55,7 +55,7 @@ export async function hydrated(page: Page) {
 }
 
 /**
- * A backoffice date box, on MUI's picker since `DECISIONS.md` §NNN — day, month, year in one
+ * A backoffice date box, on MUI's picker since `DECISIONS.md` §345 — day, month, year in one
  * segmented field rather than the single `<input type="date">` a page could once `.fill()`
  * directly. What the field actually posts is a *hidden* input under the box's real name (never
  * visible, so `.fill()` on it times out); this drives the picker itself, the way a person would:
@@ -77,7 +77,7 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
   await group.page().keyboard.type(`${day}${month}${year}`);
 }
 
-/** The time half of the same picker family, always on the 24-hour clock (§NNN). */
+/** The time half of the same picker family, always on the 24-hour clock (§345). */
 export async function fillTimeField(scope: Page | Locator, label: string, value: string /* HH:mm */) {
   const [hour, minute] = value.split(":");
   const group = pickerGroup(scope, label);

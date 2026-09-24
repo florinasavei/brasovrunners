@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     /*
       Its own canonical, never another date's: a date of a series is its own page, with its own
       places, holds and start list, and it is what the series card's date chips link to (§113,
-      §NNN canonical and hreflang). The canonical carries no query — `?lista=`, `?interest=` and
+      §342 canonical and hreflang). The canonical carries no query — `?lista=`, `?interest=` and
       `?since=` are the same page. BR-REQ-040-01 criterion 5: each alternate points at *that
       locale's own slug*, looked up from the database through the public cache (§333) — never
       this slug under another prefix, which is a 404 — and only a published locale appears

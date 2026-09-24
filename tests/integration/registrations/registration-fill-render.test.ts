@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN public fill count, integrated onto the public cache (§333) — "12 înscriși din 50 de
+ * §346 public fill count, integrated onto the public cache (§333) — "12 înscriși din 50 de
  * locuri" beside the register button, rendered from a real database.
  *
  * The branch that built the line read the internal row and the allocator's formula straight
@@ -102,7 +102,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN the fill line beside the register button, from the cached count", () => {
+describe("§346 the fill line beside the register button, from the cached count", () => {
   it("answers both numbers from one cached read: the free places and the row's own size", async () => {
     const event = await openRace(50);
     await confirm(event.id, 12);

@@ -52,7 +52,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.costType": t("editor.fields.costType"),
     // `costRule` (`content/events/fields.ts`) never names `costAmount` outside `PAID` nor
     // `costUrl` outside `DONATION`, so each name has exactly one meaning to the organizer who
-    // reads it back — the same box `CostFields` relabels by the chosen kind (§NNN).
+    // reads it back — the same box `CostFields` relabels by the chosen kind (§343).
     "event.costAmount": t("editor.costAmount"),
     "event.costUrl": t("editor.costDonationUrl"),
     "event.routeUrl": t("editor.routeUrl"),
@@ -98,7 +98,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   }
 
   /*
-    The partners (§168) and their links (§NNN), named **by card and by row** — "Partenerul 2,
+    The partners (§168) and their links (§344), named **by card and by row** — "Partenerul 2,
     linkul 3: adresa trebuie să înceapă cu https://" — the same reasoning the plain links above
     follow, one level deeper: a link is wrong on one partner's one row, and naming only "Parteneri"
     would leave an organizer with eight cards to search. The unindexed entries are the fallback

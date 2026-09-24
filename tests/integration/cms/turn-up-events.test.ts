@@ -91,7 +91,7 @@ beforeEach(async () => {
     translations,
     now: NOW,
   });
-  // §NNN: publishing a start list (RACE_FIELDS asks for one) is refused without an approved,
+  // §346: publishing a start list (RACE_FIELDS asks for one) is refused without an approved,
   // effective privacy notice — an unrelated fixture here, since this file is about the
   // registration block, not the disclosure itself.
   const noticeTranslations = [

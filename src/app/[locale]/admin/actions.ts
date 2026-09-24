@@ -148,7 +148,7 @@ function eventFieldsFrom(form: FormData) {
   }
 
   /**
-   * The partners (§168) and their links (§NNN), posted as `event.coHosts[p].name` and
+   * The partners (§168) and their links (§344), posted as `event.coHosts[p].name` and
    * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
    * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
    * a link and no name, or a link with no address, naming both indices.
@@ -688,7 +688,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
 }
 
 /**
- * The series' automatic publication, on or off (§NNN): whether the dates made from now on go
+ * The series' automatic publication, on or off (§341): whether the dates made from now on go
  * live as they are made. The button posts which way it switches; the role and the published
  * source are the service's to assert.
  */

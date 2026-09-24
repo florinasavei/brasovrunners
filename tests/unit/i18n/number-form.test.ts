@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { numberForm } from "@/i18n/number-form";
 
 /**
- * §NNN — which of a counted phrase's three keys (`one`, `few`, `other`) a number reads with.
+ * §346 — which of a counted phrase's three keys (`one`, `few`, `other`) a number reads with.
  *
  * The catalogues carry no ICU plurals (`docs/VIBECODING.md`), so every counted sentence is
  * three message keys and this is what chooses among them. It wraps `Intl.PluralRules`, which is
@@ -11,7 +11,7 @@ import { numberForm } from "@/i18n/number-form";
  * this file adds: collapsing CLDR's five-way Romanian split into the three keys the catalogues
  * carry, and reading nought as a plural rather than as its own fourth case.
  */
-describe("§NNN numberForm — Romanian", () => {
+describe("§346 numberForm — Romanian", () => {
   it("is singular for one, and for nothing else", () => {
     expect(numberForm("ro", 1)).toBe("one");
   });
@@ -39,7 +39,7 @@ describe("§NNN numberForm — Romanian", () => {
   });
 });
 
-describe("§NNN numberForm — English", () => {
+describe("§346 numberForm — English", () => {
   it("is singular for one and plural for everything else, including nought", () => {
     expect(numberForm("en", 1)).toBe("one");
     expect(numberForm("en", 0)).toBe("other");

@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import { confirmedPhrase, fillPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
- * §NNN — the two counted sentences an event page can show, assembled from the real catalogues.
+ * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
  *
  * `createTranslator` (not `next-intl/server`, which needs a live request) builds the same `t`
  * a page gets from `getTranslations("Event")`, against the actual `messages/*.json` content —
@@ -20,7 +20,7 @@ function translator(locale: "ro" | "en") {
   ) => string;
 }
 
-describe("§NNN fillPhrase — 'taken of capacity', in each language's own wording", () => {
+describe("§346 fillPhrase — 'taken of capacity', in each language's own wording", () => {
   it("reads Romanian's 'de' rule on both halves of the sentence", () => {
     const say = translator("ro");
     expect(fillPhrase(say, "ro", { taken: 12, capacity: 50 })).toBe("12 înscriși din 50 de locuri");
@@ -30,7 +30,7 @@ describe("§NNN fillPhrase — 'taken of capacity', in each language's own wordi
   });
 
   /**
-   * Integration review (§NNN public fill count): "12 registered of 50 places" is Romanian word
+   * Integration review (§346 public fill count): "12 registered of 50 places" is Romanian word
    * order in English. The English sentence is the natural one — "12 of 50 places taken" — built
    * from the same two numbers and the same keys, only the catalogue's words differ.
    */
@@ -51,7 +51,7 @@ describe("§NNN fillPhrase — 'taken of capacity', in each language's own wordi
   });
 });
 
-describe("§NNN confirmedPhrase — the start list's own header line", () => {
+describe("§346 confirmedPhrase — the start list's own header line", () => {
   it("names the total and how many of them are named, in Romanian", () => {
     const say = translator("ro");
     expect(confirmedPhrase(say, "ro", { confirmed: 42, named: 39 })).toBe(

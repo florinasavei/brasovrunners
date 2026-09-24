@@ -50,7 +50,7 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
 /**
  * `costRule` (`content/events/fields.ts`) names `event.costAmount` only for a `PAID` event and
  * `event.costUrl` only for a `DONATION` one, so each has one real label — never the raw name a
- * caller sees when `ActionForm.labelOf` finds none (§NNN).
+ * caller sees when `ActionForm.labelOf` finds none (§343).
  */
 describe("the cost amount and the donation link are named, not left as their own path", () => {
   it("gives «Suma» and «Link pentru donație» in Romanian", async () => {

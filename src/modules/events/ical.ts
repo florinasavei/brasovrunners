@@ -93,9 +93,9 @@ export type CalendarEvent = {
   surface?: EventSurface | null;
   difficulty?: "EASY" | "MODERATE" | "HARD" | null;
   costType?: EventCostType | null;
-  /** What a paid event costs, or what a donation suggests (§NNN); free text, the club's own. */
+  /** What a paid event costs, or what a donation suggests (§343); free text, the club's own. */
   costAmount?: string | null;
-  /** Where a paid event is settled, or where a donation is made (§NNN); https, or nothing. */
+  /** Where a paid event is settled, or where a donation is made (§343); https, or nothing. */
   costUrl?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
@@ -334,7 +334,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const times = event.raceStartsAt ? `${t("gatheringAt", { time: time.format(event.startsAt) })} · ${t("raceStartAt", { time: time.format(event.raceStartsAt) })}` : "";
 
   /*
-    The cost (§NNN), the same short phrase the page's full facts say — an amount for a paid
+    The cost (§343), the same short phrase the page's full facts say — an amount for a paid
     event, "plata pe {host}" after it when the club gave a link; a donation's own phrase names
     the host it goes to, with the suggested amount after it. Never the raw URL: only the host a
     runner recognises, which is what the page's own facts line allows too.
@@ -413,7 +413,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     checklist ? [{ text: `${t("calendar.checklist")}: ${checklist}` }] : [],
     // "Împreună cu A", then the other partners on their own lines: the label is said once,
     // and each partner keeps its own link — its site if it named one, else its first link
-    // (§NNN) — which a joined sentence could not carry (§168).
+    // (§344) — which a joined sentence could not carry (§168).
     coHosts.map((host, index) => ({
       text: index === 0 ? `${t("coHost")} ${host.name.trim()}` : host.name.trim(),
       url: primaryCoHostLink(host)?.url,

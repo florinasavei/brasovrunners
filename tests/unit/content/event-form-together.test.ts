@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The 2026-09-24 third batch, integrated (§NNN): cost and donation, partners with many links,
+ * The 2026-09-24 third batch, integrated (§347): cost and donation, partners with many links,
  * "Linkuri și fișiere" (§332), the place to be announced (§328, §339) and the date pickers all
  * added boxes to `EventFieldsForm` and lines to `admin/actions.ts#eventFieldsFrom`, on branches
  * that could not see each other. The save itself is proven end to end in
@@ -28,7 +28,7 @@ const UI = readdirSync(path.join(process.cwd(), UI_DIR))
   .map((file) => read(`${UI_DIR}/${file}`))
   .join("\n");
 
-describe("§NNN one event form for five features, on both pages", () => {
+describe("§347 one event form for five features, on both pages", () => {
   it("both the create page and the editor render the one shared form", () => {
     expect(CREATE).toContain("<EventFieldsForm");
     expect(EDIT).toContain("<EventFieldsForm");

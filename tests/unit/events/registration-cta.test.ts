@@ -150,10 +150,10 @@ describe("BR-REQ-035-01 a full event", () => {
 });
 
 /**
- * §NNN — how full a capped event is, read from the exact two numbers the button already uses:
+ * §346 — how full a capped event is, read from the exact two numbers the button already uses:
  * never a second query, never a second formula.
  */
-describe("§NNN publicFill — capacity minus the allocator's own free-place count", () => {
+describe("§346 publicFill — capacity minus the allocator's own free-place count", () => {
   it("is nought taken when nobody has registered yet", () => {
     expect(publicFill(50, 50)).toEqual({ taken: 0, capacity: 50 });
   });

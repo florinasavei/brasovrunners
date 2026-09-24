@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Its own title, and indexed only while a notice is in force in this language — with a
- * canonical and hreflang to the languages that have one (§NNN). See `public-page.ts`.
+ * canonical and hreflang to the languages that have one (§342). See `public-page.ts`.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -86,7 +86,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
         </>
       ) : (
         <>
-          {/* The document's name even when there is no text yet (§NNN): the two legal pages
+          {/* The document's name even when there is no text yet (§342): the two legal pages
               were one page twice without it. */}
           <Typography variant="h1" gutterBottom>
             {t("privacyTitle")}

@@ -24,7 +24,7 @@ import { fillPhrase } from "./counted-phrases";
  *
  * The count comes from `readPublicAvailability`, which is the allocator's own formula
  * (AGENTS.md §10.6). Nothing here counts anything itself, and nothing here mutates: this is a
- * page render, not a capacity decision. "12 înscriși din 50 de locuri" (§NNN) is the same count
+ * page render, not a capacity decision. "12 înscriși din 50 de locuri" (§346) is the same count
  * read against the event's own number of places — `publicFill`, arithmetic on the two numbers
  * this already holds, never a second query.
  */
@@ -53,7 +53,7 @@ export default async function RegistrationCta({
    */
   let availablePlaces: number | null = null;
   // The event's own number of places, from the same row the count was read against: the
-  // "out of" of §NNN's sentence. Null for an uncapped event, and for every event not read here.
+  // "out of" of §346's sentence. Null for an uncapped event, and for every event not read here.
   let capacity: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
@@ -63,7 +63,7 @@ export default async function RegistrationCta({
         offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
         Without it, an open race's page woke the database for every visitor during exactly the
         weeks the page is read most. The same entry carries the event's size beside the free
-        places (§NNN public fill count), so the fill line costs nothing more.
+        places (§346 public fill count), so the fill line costs nothing more.
       */
       const availability = await cachedPublicAvailability(event.id, now);
       if (availability) {
@@ -115,7 +115,7 @@ export default async function RegistrationCta({
   }
 
   if (cta.kind === "OPEN" || cta.kind === "FULL") {
-    // How full it is (§NNN): the free places read against the event's size. Null — and nothing
+    // How full it is (§346): the free places read against the event's size. Null — and nothing
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     const fill = publicFill(capacity, availablePlaces);
     return (

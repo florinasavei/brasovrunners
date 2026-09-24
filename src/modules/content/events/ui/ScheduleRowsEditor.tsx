@@ -96,7 +96,7 @@ function ScheduleRowsEditorIsland({
   useEffect(() => {
     const input = findStartDateInput(root.current, startDateName);
     if (input) lastStart.current = input.value;
-    // Listen on the form, not the element `findStartDateInput` returns right now (§NNN): on a
+    // Listen on the form, not the element `findStartDateInput` returns right now (§345): on a
     // full page load the picker replaces the scriptless box during hydration, after this effect
     // has already run (`useIslandRunning`'s `useSyncExternalStore` forces that re-render from
     // its own passive effect, which lands after this one), so a listener on the element it

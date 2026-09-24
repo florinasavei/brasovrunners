@@ -27,7 +27,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
  *
  * After a refused submit every one of them comes back as it was chosen (`DECISIONS.md` §315): the
  * cadence is a `RecallField`, the end a `DateField` (`30.09.2026`, day first, on MUI's picker —
- * `DECISIONS.md` §NNN), the weekday ticks `CheckboxField`s, which read the form's returned state
+ * `DECISIONS.md` §345), the weekday ticks `CheckboxField`s, which read the form's returned state
  * wherever the form is an `ActionForm`.
  */
 export default async function RepeatFields({

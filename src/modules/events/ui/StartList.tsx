@@ -10,7 +10,7 @@ import type { PublicEvent } from "../repository";
 import { confirmedPhrase } from "./counted-phrases";
 
 /**
- * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §NNN): every
+ * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
  * confirmed, real participant of an event whose organizer switched the list on — by name for
  * those who ticked "Vreau să apar pe lista de participanți", and as "Participant (nume ascuns)"
  * for everybody else.
@@ -34,7 +34,7 @@ import { confirmedPhrase } from "./counted-phrases";
  * repository's select list carries and what `tests/privacy/public-surface.test.ts` refuses to
  * let widen. No number, no address, no state.
  *
- * ## The hidden names (§186, §NNN)
+ * ## The hidden names (§186, §346)
  *
  * A runner who did not tick the box is a row that says "Participant (nume ascuns)" and nothing
  * else — not initials, not a club, not a position. There is nothing to leak because nothing was
@@ -64,7 +64,7 @@ export default async function StartList({
   // Two counts first, so one page of fifty never fetches four hundred rows (§250). Both, and the
   // page, from the public cache (§333): a confirmation, a cancellation, an erasure or somebody
   // leaving the list expires them, so a name is never shown after its owner withdrew it. The
-  // hidden rows (§NNN) are drawn from the anonymous count alone — the cache holds a number for
+  // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
   const { named, anonymous } = await cachedStartListCounts(event.id);
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE);
@@ -102,7 +102,7 @@ export default async function StartList({
         </Typography>
       ) : (
         <>
-          {/* How many are confirmed, and how many of them are named (§NNN). */}
+          {/* How many are confirmed, and how many of them are named (§346). */}
           <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 1 }}>
             {confirmedPhrase(t, locale, { confirmed: view.total, named })}
           </Typography>
@@ -152,7 +152,7 @@ export default async function StartList({
                   </Box>
                 ))}
                 {/*
-                  The runners who did not ask to be named, counted but never named (§186, §NNN).
+                  The runners who did not ask to be named, counted but never named (§186, §346).
 
                   One row each rather than a single "and 3 others", because the list is read to
                   find out how many are coming as much as who — and a row that says "Participant

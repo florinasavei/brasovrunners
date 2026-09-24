@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — the events list's status column wires `seriesDrafts` and
+ * `DECISIONS.md` §341 — the events list's status column wires `seriesDrafts` and
  * `draftExplanation` (`src/modules/events/domain/series-drafts.ts`, both proven directly in
  * `tests/unit/events/series-drafts.test.ts`) into `SeriesDraftLine`.
  *
@@ -17,7 +17,7 @@ const PAGE = "src/app/[locale]/admin/(list)/page.tsx";
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 const source = read(PAGE);
 
-describe("§NNN the events list's series-drafts line", () => {
+describe("§341 the events list's series-drafts line", () => {
   it("hides the bare 'Ciornă · N date' chip for a series — the line replaces it", () => {
     expect(source).toContain('.filter(([status]) => !(isSeries && status === "DRAFT"))');
   });
@@ -54,7 +54,7 @@ describe("§NNN the events list's series-drafts line", () => {
   });
 
   /**
-   * Integration review (§NNN hints): the first wording sent the reader to "the series' settings",
+   * Integration review (§341 hints): the first wording sent the reader to "the series' settings",
    * which do not exist — the switch is under the source event's "Evenimentul se repetă" — and
    * offered to publish one date "from the list, by ticking it", when the list's tick on a series
    * ticks every date (§113). Each sentence now names what is actually on the screen, by the
@@ -93,7 +93,7 @@ describe("§NNN the events list's series-drafts line", () => {
  * `tests/integration/cms/repeat-publish.test.ts`): the editor's own words for the three states
  * (`on`, `waiting`, `off`), the two button labels and the alert after each press.
  */
-describe("§NNN the editor's repeat-publish switch", () => {
+describe("§341 the editor's repeat-publish switch", () => {
   const editor = read("src/app/[locale]/admin/events/[id]/page.tsx");
 
   it("shows one of three sentences, by the rule's flag and whether the source is live", () => {

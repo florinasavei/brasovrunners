@@ -3,7 +3,7 @@ import { readRepeatRule } from "./repeat";
 
 /**
  * The dates of a series that are not on the site because they are drafts, and why the platform
- * made them that way (`DECISIONS.md` §NNN).
+ * made them that way (`DECISIONS.md` §341).
  *
  * The owner, of a series row reading "Publicat · 8 date · Ciornă · 1 date": "ce înseamnă această
  * 1 ciornă?". On QA it was the newest Monday of "Happy Monday": the standing job (§122) had made

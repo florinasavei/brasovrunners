@@ -47,7 +47,7 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
 }
 
 const URL = "https://example.test/ro/evenimente/tura-pe-tampa";
-/** The listing — the club's front page, which the organization block names as its `url` (§NNN). */
+/** The listing — the club's front page, which the organization block names as its `url` (§342). */
 const LISTING = "https://example.test/ro/evenimente";
 
 function parsed(data: Record<string, unknown>) {
@@ -103,7 +103,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
-  it("takes a partner's url from its SITE link even when a different kind was listed first (§NNN)", () => {
+  it("takes a partner's url from its SITE link even when a different kind was listed first (§344)", () => {
     const block = parsed(
       sportsEventJsonLd(
         baseEvent({
@@ -132,7 +132,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
   });
 
-  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID or DONATION (§121, §NNN)", () => {
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID or DONATION (§121, §343)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);
     expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
@@ -147,7 +147,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(donation.offers).toBeUndefined();
   });
 
-  it("offers the club's own cost link, never a price parsed out of the free text amount (§NNN)", () => {
+  it("offers the club's own cost link, never a price parsed out of the free text amount (§343)", () => {
     const paidUrl = "https://revolut.me/brasovrunners";
     const paid = parsed(
       sportsEventJsonLd(
@@ -177,7 +177,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.organizer["@id"]).toBe(parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING))["@id"]);
   });
 
-  it("names the listing as the club's url, never the bare base that redirects (§NNN)", () => {
+  it("names the listing as the club's url, never the bare base that redirects (§342)", () => {
     const block = parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING));
     expect(block.url).toBe(LISTING);
     expect(block.url).not.toBe(clubId().replace(/\/#organization$/, ""));

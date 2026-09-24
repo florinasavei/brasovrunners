@@ -9,7 +9,7 @@ import {
 
 /**
  * BR-REQ-070-02 criterion 1 — a canonical URL and `hreflang` alternates for every public page
- * (§NNN).
+ * (§342).
  *
  * The pilot's Search Console report ("4 pages with redirect", "1 duplicate without
  * user-selected canonical") named the calendar's own current month against its bare address —

@@ -7,7 +7,7 @@ import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 
 /**
  * A "?" beside a label, holding the explanation of what the label names (`DECISIONS.md` §189,
- * §200, §NNN).
+ * §200, §341).
  *
  * The owner, of "Sunt membru al grupului Brașov Runners": "cu un semn de întrebare cu tooltip
  * care să zică «am fost la cel puțin 3 alergări de grup în ultimul an»". The claim needs a
@@ -17,7 +17,7 @@ import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
  *
  * ## What the text may be
  *
- * More than one sentence (§NNN; the owner: "tooltipurile trebuie să fie mai lungi … cu liniuță,
+ * More than one sentence (§341; the owner: "tooltipurile trebuie să fie mai lungi … cu liniuță,
  * frumos descris"): what the thing is, how to read it, what to do about it, with a list written
  * as one `\n– item` per line. The tooltip keeps those lines (`TOOLTIP_TEXT_SX`, the style
  * `InfoTip` shares), and on a touch screen it stays up for as long as the text takes to read

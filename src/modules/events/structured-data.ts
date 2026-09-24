@@ -33,7 +33,7 @@ export function clubId(): string {
  * `url` is the listing in the reader's language — the club's front page — and never the bare
  * `APP_BASE_URL`: the root redirects twice (to `/ro`, then to the listing), and a structured
  * data `url` that redirects is one more address a crawler reports as "page with redirect"
- * (§NNN). The `@id` above stays the base: it is an identifier, not an address anybody fetches.
+ * (§342). The `@id` above stays the base: it is an identifier, not an address anybody fetches.
  */
 export function sportsOrganizationJsonLd(name: string, url: string) {
   const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL].filter(
@@ -106,7 +106,7 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
  * The club, then the partners (§168): schema.org takes one organizer or several, and the
  * order is what says who holds the event. The club's entry is the same `@id` every event
  * points at, so a search engine reads one organization across the whole site; a partner is a
- * plain Organization with a name and, when it named one, its `url` — its own site (§NNN), or
+ * plain Organization with a name and, when it named one, its `url` — its own site (§344), or
  * its first link if it named no site.
  */
 function organizers(event: PublicEvent, organizationName: string) {
@@ -187,7 +187,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // because `organizer` is one value there and an array of one reads as a list of one.
     organizer: organizers(event, organizationName),
     /**
-     * Whether a runner needs their wallet (§NNN, reversing part of the owner's 2026-09-19 "state
+     * Whether a runner needs their wallet (§343, reversing part of the owner's 2026-09-19 "state
      * somewhere that Brașov Runners events are always free"): true for `FREE` and for an event
      * that has not said, which is what most club events still are and what the owner's sentence
      * was written for; false for `PAID` and `DONATION` alike — a donation is still something a

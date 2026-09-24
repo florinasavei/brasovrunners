@@ -14,7 +14,7 @@ import { env } from "@/shared/config/env";
  *
  * Every entry carries the same `alternates.languages` its own page declares (`modules/seo/
  * alternates.ts`) — built from the one set of helpers, so the two cannot disagree about which
- * address a page lives at (§NNN). No entry ever carries a query string, and no address here
+ * address a page lives at (§342). No entry ever carries a query string, and no address here
  * redirects: the site root and the bare, unprefixed paths are deliberately absent, because
  * they answer 307/308 and Search Console reports a redirecting sitemap entry as a defect.
  *
@@ -25,7 +25,7 @@ import { env } from "@/shared/config/env";
  * (`app/[locale]/calendar/page.tsx`, proven in `tests/e2e/seo.spec.ts`): it renders the same
  * published events the listing already carries at priority 1, in a different layout rather
  * than different content, so a second entry here would be the near-duplicate a sitemap exists
- * to avoid rather than one it prevents (§NNN). A visitor reaches it from the listing's own
+ * to avoid rather than one it prevents (§342). A visitor reaches it from the listing's own
  * "Lună"/"An" view switch; nothing depends on a crawler being pointed at it directly.
  *
  * Per request, from the public cache (§333): a crawler is exactly the visitor that should not
@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      * exists in both locales — `events/page.tsx` renders an empty state rather than 404ing —
      * and its own `generateMetadata` already declares both languages as alternates
      * unconditionally, so omitting the entry only made the sitemap disagree with the page about
-     * which addresses exist (§NNN).
+     * which addresses exist (§342).
      */
     entries.push({
       url: staticRouteUrl(env.APP_BASE_URL, "/events", locale),
@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // never re-stamping it after the first publication — a later edit that only fixes a
         // typo must not tell a crawler the page is new (`content/events/service.ts` § "First
         // publication stamps the date"). Pages and albums differ because nothing there plays
-        // that second role; an event's `publishedAt` already has to (§NNN).
+        // that second role; an event's `publishedAt` already has to (§342).
         lastModified: event.publishedAt ?? undefined,
         changeFrequency: "weekly",
         priority: 0.7,
@@ -116,7 +116,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * Albums (BR-REQ-054-01): the listing once per locale, then each published album.
    *
    * The listing entry is pushed whatever the album count, for the same reason the events
-   * listing now is (§NNN): `gallery/page.tsx` renders with zero albums rather than 404ing, and
+   * listing now is (§342): `gallery/page.tsx` renders with zero albums rather than 404ing, and
    * its own `generateMetadata` already names both locales as alternates unconditionally, so a
    * count-gated entry here only disagreed with the page. "Galerie" leaving the nav while no
    * album is published (§66) is a navigation decision, not a routing one — the address still

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("title"),
     description: t("intro"),
     /*
-      One page per language, whatever `?sent=`, `?error=`, `?fields=` or `?about=` adds (§NNN):
+      One page per language, whatever `?sent=`, `?error=`, `?fields=` or `?about=` adds (§342):
       each is this same form, before or after a submission, never distinct content.
     */
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/contact")),

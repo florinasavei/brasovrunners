@@ -1,5 +1,5 @@
 /**
- * Which of a counted phrase's three wordings a number takes (§NNN).
+ * Which of a counted phrase's three wordings a number takes (§346).
  *
  * Romanian puts "de" between a number and its noun from twenty on — "12 înscriși", "20 de
  * înscriși" — except where the last two digits fall back under twenty: "101 înscriși", "120 de

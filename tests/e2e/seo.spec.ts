@@ -3,7 +3,7 @@ import { FEATURED } from "./support/featured-event";
 
 /**
  * BR-REQ-070-02 criterion 1 — every public page's own canonical, and `hreflang` to the
- * languages it exists in (§NNN).
+ * languages it exists in (§342).
  *
  * The pilot's first Search Console report named "4 pages with redirect" (http→https, `www`→
  * apex, `/`→`/ro`, `/[locale]`→the listing — all expected, `SETUP.md` §26) and "1 duplicate

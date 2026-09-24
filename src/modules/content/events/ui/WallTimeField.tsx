@@ -7,7 +7,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
  * A date and a time, as two boxes, each on MUI's picker (BR-REQ-050-02, `DECISIONS.md` §70,
- * §303 and §NNN).
+ * §303 and §345).
  *
  * `<input type="datetime-local">` showed the *browser's* clock and date order — "06:30 PM" and a
  * month-first calendar on an English-language Chrome — and no attribute changes that. §70 split

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §NNN) — a partner is a card of
+ * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344) — a partner is a card of
  * its own links now, in the editor and on the page.
  *
  * One event, created as a draft and never published: the assertion is what the editor posts
@@ -23,7 +23,7 @@ test("the editor adds a partner with two links, and the preview shows both under
 
   const field = (name: string) => page.locator(`[name="${name}"]`);
 
-  // The date and time are MUI pickers since the pickers landed beside the partners (§NNN): the
+  // The date and time are MUI pickers since the pickers landed beside the partners (§347): the
   // posted inputs are hidden, so the picker is driven the way a person drives it.
   await fillDateField(page, "Începutul evenimentului", "2027-06-01");
   await fillTimeField(page, "Ora", "09:00");
@@ -42,7 +42,7 @@ test("the editor adds a partner with two links, and the preview shows both under
   const coHostsSection = page.locator('[id="field-event.coHosts"]');
   await field("event.coHosts[0].name").fill(partnerName);
 
-  // Named with the partner (§NNN, batch integration): "Linkuri și fișiere" has its own "Linkul 1".
+  // Named with the partner (§347, batch integration): "Linkuri și fișiere" has its own "Linkul 1".
   const link1 = coHostsSection.getByRole("group", { name: "Linkul 1 al partenerului 1", exact: true });
   await link1.getByRole("combobox").click();
   await page.getByRole("option", { name: "Site-ul partenerului" }).click();

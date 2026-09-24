@@ -3,7 +3,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { absoluteUrl } from "@/modules/events/share-links";
 
 /**
- * One canonical URL per page, and the language versions of it that exist (§NNN).
+ * One canonical URL per page, and the language versions of it that exist (§342).
  *
  * Pure functions of a base URL and what the database said, so a test can hold them to a fixed
  * base and read them back — the page metadata and the sitemap both build from these, which is

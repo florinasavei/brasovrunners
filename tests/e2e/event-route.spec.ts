@@ -51,7 +51,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // surface is chosen here so the public page can be checked for both labels below.
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
-    // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §NNN).
+    // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §345).
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
@@ -71,7 +71,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await field("event.routeUrl").fill(ROUTE_LINK);
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
-    // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§NNN).
+    // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§347).
     const firstLink = page.getByRole("group", { name: "Linkul 1", exact: true });
     await firstLink.getByRole("combobox").click();
     await page.getByRole("option", { name: "Traseul (GPX)" }).click();

@@ -12,7 +12,7 @@ type BoxProps = ReturnType<typeof textFieldConstraints>;
 /**
  * "Suma" and "Unde se plătește", or "Link pentru donație" and "Suma sugerată" — one pair of
  * columns (`cost_amount`, `cost_url`) wearing whichever pair of labels the chosen kind needs
- * (`DECISIONS.md` §NNN; the owner, of "Cu taxă" showing no box for the money: "usually nothing
+ * (`DECISIONS.md` §343; the owner, of "Cu taxă" showing no box for the money: "usually nothing
  * is paid; the exception is Wings for Life, where a donation is made on another site").
  *
  * One `RecallField` per column, not two — a second pair with the same `name` would post twice —

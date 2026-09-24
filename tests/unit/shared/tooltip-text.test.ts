@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 
 /**
- * `DECISIONS.md` §257, §NNN — the owner, of the journey hint arriving as one run-on paragraph:
+ * `DECISIONS.md` §257, §341 — the owner, of the journey hint arriving as one run-on paragraph:
  * "tooltipurile trebuie să fie mai lungi, spre exemplu aici trebuie să fie cu liniuță, frumos
  * descris". `TOOLTIP_TEXT_SX` is the one style `Hint` and `InfoTip` both hand to MUI's tooltip
  * slot, and `readingTimeMs` is how long a longer one stays up after a tap.
@@ -12,7 +12,7 @@ import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 
-describe("§NNN TOOLTIP_TEXT_SX — a tooltip keeps its line breaks and stays readable", () => {
+describe("§341 TOOLTIP_TEXT_SX — a tooltip keeps its line breaks and stays readable", () => {
   it("keeps \\n as a line break, so a '\\n– item' list reads as one item per line", () => {
     expect(TOOLTIP_TEXT_SX.whiteSpace).toBe("pre-line");
   });
@@ -41,7 +41,7 @@ describe("§NNN TOOLTIP_TEXT_SX — a tooltip keeps its line breaks and stays re
   });
 });
 
-describe("§NNN readingTimeMs — how long a tap keeps a tooltip open", () => {
+describe("§341 readingTimeMs — how long a tap keeps a tooltip open", () => {
   it("never opens for less than six seconds, even for a very short text", () => {
     expect(readingTimeMs("Ok.")).toBe(6_000);
   });

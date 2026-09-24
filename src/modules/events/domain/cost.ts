@@ -1,7 +1,7 @@
 import { eventLinkHost } from "./links";
 
 /**
- * What a runner pays, and where (`DECISIONS.md` §NNN; the owner, 2026-09-24, on "Cu taxă"
+ * What a runner pays, and where (`DECISIONS.md` §343; the owner, 2026-09-24, on "Cu taxă"
  * showing no box for the money: "usually nothing is paid; the exception is Wings for Life,
  * where a donation is made on another site").
  *

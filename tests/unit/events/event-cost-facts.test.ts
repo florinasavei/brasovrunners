@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — what a runner pays, and where, said the same short way everywhere the
+ * `DECISIONS.md` §343 — what a runner pays, and where, said the same short way everywhere the
  * public reads it (`EventFacts`, full and compact): a coin for `FREE`, an amount and where to
  * pay for `PAID`, a link to give at and what is suggested for `DONATION`. Never a raw URL — the
  * host a runner recognises, exactly as "Linkuri și fișiere" (§332) shows its own links.
@@ -66,7 +66,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-describe("the cost facts, full page (§NNN)", () => {
+describe("the cost facts, full page (§343)", () => {
   it("says «Gratuit» for a free event, with no amount and no link", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "FREE" }), now: NOW, stacked: true }));
     expect(html).toContain("Gratuit");
@@ -137,7 +137,7 @@ describe("the cost facts, full page (§NNN)", () => {
   });
 });
 
-describe("the cost facts, compact card (§NNN)", () => {
+describe("the cost facts, compact card (§343)", () => {
   it("keeps only the closed set's short word — no amount, no link, on any kind", async () => {
     for (const [costType, extra] of [
       ["FREE", {}],
@@ -153,7 +153,7 @@ describe("the cost facts, compact card (§NNN)", () => {
   });
 });
 
-describe("the cost phrases exist in both catalogues, with the club's tokens (§NNN)", () => {
+describe("the cost phrases exist in both catalogues, with the club's tokens (§343)", () => {
   const t = (locale: "ro" | "en", key: string, values?: Record<string, unknown>) =>
     (createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: "Event" }) as (key: string, values?: Record<string, unknown>) => string)(
       key,

@@ -3,7 +3,7 @@ import { MAX_CO_HOST_LINKS, MAX_CO_HOSTS } from "@/modules/events/domain/co-host
 import { eventFieldsSchema } from "@/modules/content/events/fields";
 
 /**
- * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §NNN) — the partners' cards, and
+ * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344) — the partners' cards, and
  * each one's links, as the editor posts them.
  *
  * The rows arrive as strings from an ordinary form, so everything the column must never hold
@@ -100,7 +100,7 @@ describe("BR-REQ-011-01 criterion 16 the partners a form may post", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 one partner's links, as the editor posts them (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 one partner's links, as the editor posts them (§344)", () => {
   it("keeps the order and the kind, and turns an empty label into none", () => {
     const parsed = parse([
       card("Brașov Marathon", [

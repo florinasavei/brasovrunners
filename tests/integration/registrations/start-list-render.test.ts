@@ -10,7 +10,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * §NNN — the rendered start list, not just the counts behind it: what the brief calls a render
+ * §346 — the rendered start list, not just the counts behind it: what the brief calls a render
  * test. `countAnonymousStartListEntries` (`tests/privacy/public-surface.test.ts`) proves the
  * *query* cannot return a name; this proves the *page* built from it does not print one either
  * — the guarantee end to end, in the actual HTML a browser receives.
@@ -104,7 +104,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => resetTables(db));
 
-describe("§NNN the rendered start list carries a name only for those who ticked the box", () => {
+describe("§346 the rendered start list carries a name only for those who ticked the box", () => {
   it("prints the named row, and an anonymous row with none of the opted-out person's fields", async () => {
     const event = await createEvent();
     await createRegistration(event.id, {

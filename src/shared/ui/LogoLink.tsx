@@ -19,7 +19,7 @@ import { Link } from "@/i18n/navigation";
  *
  * The 44px minimum height is BR-REQ-041-01 criterion 6: a logo is a tap target on a phone.
  *
- * `href="/events"`, not `"/"` (§NNN): the root itself 308-redirects to the listing
+ * `href="/events"`, not `"/"` (§342): the root itself 308-redirects to the listing
  * (`app/[locale]/page.tsx`), so a literal `/` here sent every tap through that redirect. A nav
  * link should go straight to where it lands, the same rule the sitemap and the JSON-LD `url`
  * follow — one hop fewer, and one less "page with redirect" for a crawler to report.

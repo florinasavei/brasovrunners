@@ -79,11 +79,11 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
   }
 }
 
-/** How full a capped event is, in the two numbers a visitor reads beside the button (§NNN). */
+/** How full a capped event is, in the two numbers a visitor reads beside the button (§346). */
 export type PublicFill = { taken: number; capacity: number };
 
 /**
- * "12 înscriși din 50 de locuri" — the free places read the other way round (§NNN; the owner:
+ * "12 înscriși din 50 de locuri" — the free places read the other way round (§346; the owner:
  * "I need to show the total number registered out of the available places").
  *
  * **Not a second count.** `taken` is the event's places minus the free places the button

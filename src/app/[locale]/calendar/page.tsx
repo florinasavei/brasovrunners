@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: t("calendar.pageIntro"),
     /*
       One calendar page per language, whatever month, year, layout or kind the address names
-      (§NNN). The "Lună" pill on the plain page links to `?month=<this month>`, which is this
+      (§342). The "Lună" pill on the plain page links to `?month=<this month>`, which is this
       very page under a second address, and neither declared a canonical — the likeliest pair
       behind Search Console's "duplicate without user-selected canonical". Another month is the
       same events' own pages, arranged; the event pages are what is indexed, and every month's

@@ -60,7 +60,7 @@ export const dynamic = "force-dynamic";
 
 
 /**
- * The listing is one page per language, whatever the address adds (§NNN).
+ * The listing is one page per language, whatever the address adds (§342).
  *
  * `?type=` shows a subset of the same cards, each of which is an indexed page of its own, and
  * `?view=` changes nothing here at all since the calendar moved to its own page (§251) — the

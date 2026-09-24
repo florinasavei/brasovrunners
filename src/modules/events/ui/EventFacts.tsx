@@ -143,7 +143,7 @@ export default async function EventFacts({
   // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
   if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
   /*
-    The cost (§NNN): the card keeps the closed set's short word, exactly as before — a coin, a
+    The cost (§343): the card keeps the closed set's short word, exactly as before — a coin, a
     hand holding a heart, "Cu taxă", "Donație". The full page says more, the way the meeting
     point becomes its own map link: a paid event's amount, with "plata pe {host}" as a second,
     separate link when the club gave one; a donation's whole phrase is the link to give at,
@@ -184,7 +184,7 @@ export default async function EventFacts({
   /**
    * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
    * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
-   * comma and an "and". A partner may carry any number of links now (§NNN), and a sentence has
+   * comma and an "and". A partner may carry any number of links now (§344), and a sentence has
    * room for one, so each name is its own link to the partner's own site — its first link if it
    * named no site — except where the facts may carry no links at all (a card that is itself one
    * link). The compact card and the listing's featured hero keep this sentence exactly (§169);
@@ -208,7 +208,7 @@ export default async function EventFacts({
   };
 
   /**
-   * One partner, in full, for the page's own "Împreună cu" (§NNN; the owner: "this can have
+   * One partner, in full, for the page's own "Împreună cu" (§344; the owner: "this can have
    * multiple links, so it should be a card, it's like: partner link, partner event, etc"): its
    * name, then every link it carries as its own compact row — the kind's glyph, the club's own
    * label or the kind's word, and the host in small text underneath, the same reading
@@ -363,7 +363,7 @@ export default async function EventFacts({
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
   // Held with other organizations (§121, §168). On the event page (`stacked`), each its own card
-  // of links now (§NNN partners with many links; the owner: "it should be a card, it's like:
+  // of links now (§344 partners with many links; the owner: "it should be a card, it's like:
   // partner link, partner event, etc"): one piece per partner, so two or more partners read as
   // their own rows — the bullets `stack()` already draws for any line with more than one piece —
   // each carrying every link it has, not the one a joined sentence could fit.

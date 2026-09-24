@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * The organizations an event is held with (`DECISIONS.md` §168; the owner: "any number of
- * partners on one event, each with a name and an optional link") — and, since §NNN (the owner:
+ * partners on one event, each with a name and an optional link") — and, since §344 (the owner:
  * "this can have multiple links, so it should be a card, it's like: partner link, partner
  * event, etc"), any number of links on each partner: its own site, its own event, where to
  * register with it, its socials.

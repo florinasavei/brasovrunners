@@ -117,7 +117,7 @@ const PUBLIC_COLUMNS = {
   locationToBeAnnounced: events.locationToBeAnnounced,
   difficulty: events.difficulty,
   costType: events.costType,
-  // What a paid event costs, or what a donation suggests, and where either is paid (§NNN) —
+  // What a paid event costs, or what a donation suggests, and where either is paid (§343) —
   // free text and an https link, read only through the phrase each surface builds from them.
   costAmount: events.costAmount,
   costUrl: events.costUrl,
@@ -203,7 +203,7 @@ export async function findPublishedTranslations(db: Database, eventId: string) {
 
 /**
  * The same, for every event in `eventIds` at once — the sitemap's own twin of the single-event
- * version above (§NNN). Building the whole file with `findPublishedTranslations` per row asks
+ * version above (§342). Building the whole file with `findPublishedTranslations` per row asks
  * one query per event, and a weekly series is dozens of dated rows: this asks one query for the
  * lot, grouped by `eventId`, and costs nothing extra when the list is a single event.
  *

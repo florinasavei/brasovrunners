@@ -2,7 +2,7 @@ import { type RefObject, useEffect, useRef, useSyncExternalStore } from "react";
 import type { SxProps, Theme } from "@mui/material/styles";
 
 /*
-  What `DateField` and `TimeField` share (`DECISIONS.md` §NNN): when the picker takes over from
+  What `DateField` and `TimeField` share (`DECISIONS.md` §345): when the picker takes over from
   the scriptless box, and how a picker behaves like the native input it replaced in front of the
   rest of the form.
 */

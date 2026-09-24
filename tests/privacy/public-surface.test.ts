@@ -203,11 +203,11 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
 });
 
 /**
- * §NNN — the runners who did not tick "I want to appear" are still counted, as a number with
+ * §346 — the runners who did not tick "I want to appear" are still counted, as a number with
  * nothing else attached: the query behind that number selects `count()` alone, so there is no
  * name, club, position or anything else it could return even by a future mistake.
  */
-describe("§NNN what the anonymous count may contain — nothing but itself", () => {
+describe("§346 what the anonymous count may contain — nothing but itself", () => {
   it("counts exactly the confirmed, real, opted-out rows — same event, same people, the other half of the list", async () => {
     const event = await createEvent();
     await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org" });

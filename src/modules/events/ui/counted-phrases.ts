@@ -2,7 +2,7 @@ import { numberForm } from "@/i18n/number-form";
 import type { PublicFill } from "../domain/registration-cta";
 
 /**
- * The two counted sentences of an event page (§NNN), put together from the catalogue's words.
+ * The two counted sentences of an event page (§346), put together from the catalogue's words.
  *
  * `say` is the page's translator under the `Event` namespace — `getTranslations("Event")` on
  * the server, `createTranslator` in a test — so the sentence is the catalogue's and only the

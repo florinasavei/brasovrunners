@@ -152,7 +152,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const tEvent = await getTranslations("Event");
   const format = await getFormatter();
   const now = new Date();
-  // "1 dată", "7 date", "20 de date" (§NNN), for the banners that count a series' dates. The
+  // "1 dată", "7 date", "20 de date" (§341), for the banners that count a series' dates. The
   // count arrives in the query string, so anything that is not a number reads as none.
   const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
   const datesWords = (raw: string | undefined) => tEvent(`series.count.${countForm(countOf(raw), locale)}`, { count: countOf(raw) });
@@ -686,7 +686,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               : t("editor.repeatRuleForever", { sentence: ruleWords })}
           </Typography>
           {/*
-            Whether the dates made from now on go live by themselves, and the switch (§NNN). The
+            Whether the dates made from now on go live by themselves, and the switch (§341). The
             rule's `publish` was chosen once, with the tick under "Repetă evenimentul", and
             nothing showed it afterwards: a series started without it made a draft every week,
             and the list's "Ciornă · 1 date" was all anybody saw of it. The dates that exist keep

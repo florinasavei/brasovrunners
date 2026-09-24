@@ -204,7 +204,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
   });
 
   /**
-   * §NNN / AGENTS.md §12.6: `readPublicAvailability` counts a `TEST` hold exactly like a REAL
+   * §346 / AGENTS.md §12.6: `readPublicAvailability` counts a `TEST` hold exactly like a REAL
    * one, so the "N înscriși din capacity locuri" line on the event page (`publicFill`) is the
    * same arithmetic on the same number the button already reads — never a second, REAL-only
    * count that could disagree with it. A `TEST` row cannot exist in production (asserted above),

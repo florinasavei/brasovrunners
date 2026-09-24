@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §NNN) — a partner's own links,
+ * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344) — a partner's own links,
  * on the surfaces drawn from a public row: the event page's own "Împreună cu" (a card of links
  * per partner) and the listing card's mention (one sentence, one link per partner — its site,
  * or its first link).
@@ -166,7 +166,7 @@ describe("BR-REQ-011-01 criterion 16 the listing card's mention", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 the featured hero's mention (§NNN partners with many links)", () => {
+describe("BR-REQ-011-01 criterion 16 the featured hero's mention (§344 partners with many links)", () => {
   /**
    * The hero on the listing draws the full facts, but not stacked: it is a summary above the
    * fold with a button to reach, like the cards, so its partners are the cards' one sentence —

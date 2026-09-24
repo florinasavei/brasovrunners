@@ -32,7 +32,7 @@ export type PublicAlbumSummary = {
   title: string;
   description: string | null;
   takenOn: Date;
-  /** When the album row last changed — the sitemap's `lastModified` (§NNN). */
+  /** When the album row last changed — the sitemap's `lastModified` (§342). */
   updatedAt: Date;
   photoCount: number;
   coverThumbUrl: string | null;
@@ -220,7 +220,7 @@ export async function findAlbumForEditor<T extends Record<string, unknown>>(
 
 /**
  * Every locale one published album lives in, with that locale's own slug — its `hreflang`
- * alternates (§NNN). An album that is not published yields nothing.
+ * alternates (§342). An album that is not published yields nothing.
  */
 export async function findPublishedAlbumTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -235,7 +235,7 @@ export async function findPublishedAlbumTranslations<T extends Record<string, un
 
 /**
  * The same, for every album in `albumIds` at once — the sitemap's own twin of the single-album
- * version above (§NNN), one query for the whole list rather than one per row.
+ * version above (§342), one query for the whole list rather than one per row.
  */
 export async function findPublishedAlbumTranslationsForAlbums<T extends Record<string, unknown>>(
   db: Database<T>,

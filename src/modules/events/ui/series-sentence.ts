@@ -56,7 +56,7 @@ export async function recurrenceSentence(
 
   if (recurrence.kind === "dates") {
     return t("series.dates", {
-      // "12 date", "20 de date", "1 dată" (§NNN): the count picks the catalogue's phrasing.
+      // "12 date", "20 de date", "1 dată" (§341): the count picks the catalogue's phrasing.
       dates: t(`series.count.${countForm(members.length, locale)}`, { count: members.length }),
       last: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone }).format(last.startsAt),
     });

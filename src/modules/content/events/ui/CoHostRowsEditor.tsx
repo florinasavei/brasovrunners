@@ -80,7 +80,7 @@ function makePartnerRow(value: CoHostRowValue, key: number): PartnerRow {
 
 /**
  * The organizations the event is held with, in the editor (`DECISIONS.md` §168; the owner,
- * §NNN: "this can have multiple links, so it should be a card, it's like: partner link, partner
+ * §344: "this can have multiple links, so it should be a card, it's like: partner link, partner
  * event, etc"): one boxed card per partner, titled with its name — "Partener nou" while it has
  * none — holding the name box and the partner's own links, each a row with its kind, address and
  * a label in each language, the same four boxes `LinkRowsEditor` carries for "Linkuri și
@@ -124,7 +124,7 @@ function CoHostRowsEditorIsland({
     link: string;
     /**
      * "al partenerului {p}" — said after every link row's name and its buttons, with `{p}`
-     * replaced by the card's number (§NNN, batch integration). "Linkuri și fișiere" (§332) sits
+     * replaced by the card's number (§347, batch integration). "Linkuri și fișiere" (§332) sits
      * on the same form with its own "Linkul 1" and "Șterge linkul 1"; without the partner in the
      * name, a screen reader heard two identical groups and two identical buttons.
      */

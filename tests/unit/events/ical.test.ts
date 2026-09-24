@@ -18,7 +18,7 @@ import {
 } from "@/modules/events/ical";
 import type { CoHost } from "@/modules/events/domain/co-hosts";
 
-/** A partner with its one page, the shape a bare `url` always meant (§168, §NNN). */
+/** A partner with its one page, the shape a bare `url` always meant (§168, §344). */
 const partner = (name: string, url: string | null): CoHost => ({
   name,
   links: url ? [{ kind: "SITE", url, labelRo: null, labelEn: null }] : [],
@@ -237,7 +237,7 @@ describe("the calendar file", () => {
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
   });
 
-  it("carries a paid event's amount and where it is paid, and a donation's host and suggested amount (§NNN)", () => {
+  it("carries a paid event's amount and where it is paid, and a donation's host and suggested amount (§343)", () => {
     const paid = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsRo);
     expect(paid).toContain("Taxă: 50 lei · plata pe revolut.me");
     const paidEn = calendarDescription({ ...full, costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, labelsEn);

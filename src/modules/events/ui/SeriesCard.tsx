@@ -54,7 +54,7 @@ export default async function SeriesCard({
       ? t("series.weeklyChip")
       : recurrence.kind === "fortnightly"
         ? t("series.fortnightlyChip")
-        // "1 dată", "2 date", "20 de date" (§NNN): the count picks the catalogue's phrasing.
+        // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
         : t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });

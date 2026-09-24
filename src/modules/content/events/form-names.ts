@@ -37,7 +37,7 @@ export function eventFormFieldName(path: string): string {
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;
   if (path === "scheduleRows") return "event.schedule[0].date";
-  // The partners (§NNN): a card's own box by its index, or one of its links' by both indices —
+  // The partners (§344): a card's own box by its index, or one of its links' by both indices —
   // "Partenerul 2, linkul 3" is `coHosts.1.links.2.<box>`, checked first since it is the more
   // specific shape.
   const partnerLink = /^coHosts\.(\d+)\.links\.(\d+)\.(\w+)$/.exec(path);

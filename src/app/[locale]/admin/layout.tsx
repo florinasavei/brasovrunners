@@ -67,7 +67,7 @@ export default async function AdminLayout({ children, params }: Props) {
       }
     >
       {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
-          `DECISIONS.md` §NNN) — never on a public route, which never imports this shell. */}
+          `DECISIONS.md` §345) — never on a public route, which never imports this shell. */}
       <PickerProvider>{children}</PickerProvider>
     </BackofficeShell>
   );

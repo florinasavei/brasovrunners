@@ -321,7 +321,7 @@ async function assertCoherentRegistrationBlock<T extends Record<string, unknown>
     }
 
     /**
-     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §NNN: the disclosure MUST NOT be switched on
+     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §346: the disclosure MUST NOT be switched on
      * before the approved privacy notice describes it. §32 recorded the rule and left it
      * unenforced because no environment had an approved notice at all yet, so nothing could be
      * blocked — that stopped being true on 2026-09-22, when production approved one. The check
@@ -397,7 +397,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationToBeAnnounced: fields.locationToBeAnnounced,
     difficulty: fields.difficulty,
     costType: fields.costType,
-    // Absent means this caller is not editing the cost fields (§NNN), the discipline `links`
+    // Absent means this caller is not editing the cost fields (§343), the discipline `links`
     // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
     // is in the boxes even while the chosen kind does not need one of them.
     ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
@@ -2062,7 +2062,7 @@ export async function stopRepeat<T extends Record<string, unknown>>(
 }
 
 /**
- * Switch a running series' automatic publication on or off (`DECISIONS.md` §NNN): whether the
+ * Switch a running series' automatic publication on or off (`DECISIONS.md` §341): whether the
  * dates the job makes from now on go live as they are made, or wait as drafts.
  *
  * The rule's `publish` flag was chosen once, with the tick under "Repetă evenimentul", and never

@@ -76,11 +76,11 @@ describe("event difficulty and cost type", () => {
 });
 
 /**
- * `DECISIONS.md` §NNN: `DONATION` is a third answer to "does a runner need their wallet" — no
+ * `DECISIONS.md` §343: `DONATION` is a third answer to "does a runner need their wallet" — no
  * fee the platform or the club takes, a link to somewhere else where a runner gives what they
  * choose. A paid event must say the amount; a donation must say the link.
  */
-describe("event cost amount and donation link (§NNN)", () => {
+describe("event cost amount and donation link (§343)", () => {
   it("requires the amount for a paid event, and refuses a blank one", () => {
     const withAmount = parse("MODERATE", "PAID", { costAmount: "50 lei", costUrl: "" });
     expect(withAmount.success).toBe(true);

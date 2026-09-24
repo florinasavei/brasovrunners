@@ -4,7 +4,7 @@ import { legalPageMetadata, type LegalInForce } from "@/modules/legal-documents/
 /**
  * BR-REQ-070-02 criterion 1 — a legal page's own head: `noindex` with no alternates where this
  * locale has no approved text, a self-canonical plus `hreflang` only to the locales that do
- * have one, and a title alone when the read itself failed (§NNN).
+ * have one, and a title alone when the read itself failed (§342).
  *
  * `legalPageMetadata` is a pure function of `inForce` — `alternates.test.ts`'s own pattern —
  * so a fixed base and a fixed `inForce` hold it to an exact `Metadata` without a database. The

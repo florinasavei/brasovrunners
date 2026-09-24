@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
- * `DECISIONS.md` §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
+ * `DECISIONS.md` §341 — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
  * 1 date": "ce înseamnă această 1 ciornă?". A series started from a published event, with
  * "Publică edițiile create" left unticked, makes every new date a draft the site never shows —
  * and until now the list said nothing beyond a bare, wrongly-pluralised count.
@@ -42,7 +42,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // that this one is deliberately left to make drafts instead.
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    // MUI pickers since the pickers landed beside the series hints (§NNN): driven, not filled.
+    // MUI pickers since the pickers landed beside the series hints (§347): driven, not filled.
     await fillDateField(page, "Începutul evenimentului", ymd(first));
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
@@ -103,7 +103,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
     await expect(tooltip).toContainText("publicarea automată e oprită");
-    // Where the switch really is, and what the list's tick really does (§NNN hints): the source
+    // Where the switch really is, and what the list's tick really does (§341 hints): the source
     // event's "Evenimentul se repetă" and its button, and the bar's verb for a series' tick.
     await expect(tooltip).toContainText("la „Evenimentul se repetă”, apasă „Publică datele noi automat”");
     await expect(tooltip).toContainText("bifează seria în listă");

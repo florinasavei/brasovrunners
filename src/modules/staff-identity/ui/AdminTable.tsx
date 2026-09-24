@@ -63,7 +63,7 @@ export type AdminColumn<Row> = {
    * "?" beside the heading (§200) — and once above the phone layout, which has no heading. For
    * a column whose values are shorthand — "3/6 · Loc rezervat" — the heading alone cannot say
    * what the six are, and a legend above the table is a legend nobody reads twice. A list is
-   * written one `\n– item` per line; the tooltip keeps the lines (§257, §NNN).
+   * written one `\n– item` per line; the tooltip keeps the lines (§257, §341).
    */
   hint?: string;
   sortable?: boolean;
@@ -264,7 +264,7 @@ export default function AdminTable<Row>({
       </Box>
 
       {/*
-        The column hints, once, above the phone layout (§NNN). The table's "?" lives in its
+        The column hints, once, above the phone layout (§341). The table's "?" lives in its
         heading, and the phone layout has no heading — a block per row, each label repeated — so
         on the screen race morning is read on, the explanation of "3/6" or "2*" was nowhere.
         Once above the blocks rather than beside every row's label: a hundred identical "?"

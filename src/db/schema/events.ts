@@ -349,7 +349,7 @@ export const events = pgTable(
     difficulty: eventDifficulty("difficulty"),
     costType: eventCostType("cost_type"),
     /**
-     * What a paid event costs, or what a donation suggests — free text (§NNN), because a price
+     * What a paid event costs, or what a donation suggests — free text (§343), because a price
      * is rarely just a number: "50 lei", "20 € la ridicarea kitului", "sugerat 50 lei". Required
      * by `content/events/fields.ts` when `cost_type` is `PAID`, optional on `DONATION`, kept
      * whatever it holds while a different kind is chosen — like the meeting point while the

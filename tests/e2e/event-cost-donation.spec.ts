@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
- * `DECISIONS.md` §NNN — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
+ * `DECISIONS.md` §343 — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
  * "usually nothing is paid; the exception is Wings for Life, where a donation is made on
  * another site". The editor's Cost select gets a third answer, `DONATION`, and its own pair of
  * boxes — a link, shown only for the chosen kind — and the event page says the same short
@@ -13,7 +13,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
  */
 const DONATION_LINK = ["https:/", "donate.example.test", "wings-for-life"].join("/");
 
-test.describe("the cost select's third answer, Donație (§NNN)", () => {
+test.describe("the cost select's third answer, Donație (§343)", () => {
   test("shows the donation link only when Donație is chosen, and the page says the short phrase", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `alergare-donatie-${suffix}`;
@@ -31,7 +31,7 @@ test.describe("the cost select's third answer, Donație (§NNN)", () => {
       await page.keyboard.type(text);
     };
 
-    // MUI pickers since the pickers landed beside the cost boxes (§NNN): driven, not filled.
+    // MUI pickers since the pickers landed beside the cost boxes (§347): driven, not filled.
     await fillDateField(page, "Începutul evenimentului", "2027-05-08");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");

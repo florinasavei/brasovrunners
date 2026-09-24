@@ -261,7 +261,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   }).format(event.startsAt);
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
   /*
-    What is being paid for, and where (§NNN), the same short phrase the event page's facts say
+    What is being paid for, and where (§343), the same short phrase the event page's facts say
     (`EventFacts`) — never a raw URL, only the host a runner recognises ("Linkuri și fișiere",
     §332). Null for an event whose cost has not been stated, which is not the same as free.
   */
@@ -314,7 +314,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               as the event page; the query withholds the typed place itself. */}
           {event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}` : event.locationName ? ` · ${event.locationName}` : ""}
         </Typography>
-        {/* What a participant pays, and where (§NNN) — the same short phrase the event page's
+        {/* What a participant pays, and where (§343) — the same short phrase the event page's
             own facts say (`EventFacts`), so the two never disagree. */}
         {costLine && (
           <Typography variant="body2" color="text.secondary">
@@ -624,7 +624,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 /* The event's minimum age and the categories, in the help (§321, §329) — only the
                    categories on an event with no minimum; a refusal for age says the rule again
                    rather than "complete this field correctly". Left native, not the backoffice's
-                   MUI picker (`shared/forms/pickers`, `DECISIONS.md` §NNN): a runner's own birth
+                   MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
                    date is decades back, faster typed than paged through a calendar month by
                    month, and this box is public — the picker never ships here anyway. */
                 helperText={

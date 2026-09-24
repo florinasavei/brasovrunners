@@ -264,7 +264,7 @@ function placeRule(fields: { locationName: string | null; locationToBeAnnounced:
 }
 
 /**
- * What each cost kind needs, and only that (`DECISIONS.md` §NNN): a paid event has to say how
+ * What each cost kind needs, and only that (`DECISIONS.md` §343): a paid event has to say how
  * much, a donation has to say where. Named on the box the kind actually requires, so the
  * refusal summary links the right one (§315) — the same shape as `placeRule` above. Absent
  * (`undefined`) means this caller is not editing the cost fields at all, the discipline `links`
@@ -284,7 +284,7 @@ function costRule(
 }
 
 /**
- * One partner's link row as the editor posts it (§NNN): a kind from the select, the address,
+ * One partner's link row as the editor posts it (§344): a kind from the select, the address,
  * and a label in each language — the same four boxes `eventLinkRowSchema` carries for
  * "Linkuri și fișiere" (§332), one card of them per partner rather than one list for the event.
  * Exported so the editor reads the boxes' ceilings and the address's https pattern off it
@@ -305,7 +305,7 @@ type CoHostLinkRowInput = z.infer<typeof coHostLinkRowSchema>;
 const isBlankCoHostLinkRow = (row: CoHostLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * One partner's card as the editor posts it (§NNN): a name, and its links. A row with nothing
+ * One partner's card as the editor posts it (§344): a name, and its links. A row with nothing
  * typed in either — the editor's spare card — is dropped, like a spare link row is; a name with
  * no links is kept, since a partner's page is optional (§168) and always has been.
  */
@@ -321,7 +321,7 @@ type CoHostRowInput = z.infer<typeof coHostRowSchema>;
 const isBlankCoHostRow = (row: CoHostRowInput) => row.name === "" && row.links.every(isBlankCoHostLinkRow);
 
 /**
- * The partners, as the editor posts them (§168, extended by §NNN into a card of links each).
+ * The partners, as the editor posts them (§168, extended by §344 into a card of links each).
  *
  * Every refusal names the partner **and** the link, both as the editor numbered them — the
  * posted index, before the spare lines are dropped — so "Partenerul 2, linkul 3" is the second
@@ -528,7 +528,7 @@ export const eventFieldsSchema = z
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
     costType: optionalEnum(EVENT_COST_TYPES),
     /**
-     * What a paid event costs, or what a donation suggests (§NNN): free text, at most 60
+     * What a paid event costs, or what a donation suggests (§343): free text, at most 60
      * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input
      * — absent means this caller is not editing the cost fields, the discipline `links` and
      * `bibDesign` follow — but the editor always posts it, so a blank box while `PAID` is chosen
@@ -536,7 +536,7 @@ export const eventFieldsSchema = z
      */
     costAmount: optionalText(MAX_EVENT_COST_AMOUNT).optional(),
     /**
-     * Where a paid event is settled, or where a donation is made (§NNN): https, like every other
+     * Where a paid event is settled, or where a donation is made (§343): https, like every other
      * pasted link. Required by `costRule` below when `costType` is `DONATION`; optional on
      * `PAID`. Same absent-means-not-editing discipline as `costAmount`.
      */
@@ -569,7 +569,7 @@ export const eventFieldsSchema = z
         message: "a Facebook event link must be an https page on facebook.com",
       })
       .meta(HTTPS_BOX),
-    // The organizations the event is held with, each a card of its own links (§168, §NNN) —
+    // The organizations the event is held with, each a card of its own links (§168, §344) —
     // what `coHostsField` above decides, name and all.
     coHosts: coHostsField,
     /**

@@ -194,7 +194,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const shortDate = (event: EditableEvent) =>
     format.dateTime(event.startsAt, { timeZone: event.timezone, day: "numeric", month: "short", year: "numeric" });
 
-  // "1 dată", "2 date", "20 de date" (§NNN): the count picks the catalogue's phrasing.
+  // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
   const datesWords = (count: number) => tEvent(`series.count.${countForm(count, locale)}`, { count });
   // A hand-edited query string is not a number; unguarded, `Number(raw)` is `NaN` and the banner
   // reads "NaN date" (the editor page's own `datesWords` guards the same param the same way).
@@ -312,7 +312,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         const byStatus = new Map<EditableEvent["editorialStatus"], number>();
         for (const member of members) byStatus.set(member.event.editorialStatus, (byStatus.get(member.event.editorialStatus) ?? 0) + 1);
         /*
-          A series' drafts are a line of their own, not a chip (§NNN; the owner, of "Ciornă ·
+          A series' drafts are a line of their own, not a chip (§341; the owner, of "Ciornă ·
           1 date": "ce înseamnă această 1 ciornă?"). A draft date is a date the site does not
           show, and the chip said neither that nor which date nor why: the line names the dates,
           each a link to where it is published, and its "?" says why this series makes drafts —
@@ -360,7 +360,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   // The words of the real controls, read from the catalogue rather than retyped,
                   // so the hint names exactly the button and the heading the reader will find:
                   // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
-                  // under the source's "Evenimentul se repetă" (§NNN hints).
+                  // under the source's "Evenimentul se repetă" (§341 hints).
                   always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
                   autoPublishOff: t("events.seriesDraftsWhyOff", {
                     section: t("editor.repeatRuleTitle"),

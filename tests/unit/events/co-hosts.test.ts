@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { coHostLinkHost, coHostLinkLabel, MAX_CO_HOST_LINKS, MAX_CO_HOSTS, primaryCoHostLink, readCoHosts } from "@/modules/events/domain/co-hosts";
 
 /**
- * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §NNN into a card of links each)
+ * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344 into a card of links each)
  * — an event is held with any number of partners, each carrying any number of links, and a row
  * written before either release still says the one thing it has.
  *
@@ -90,7 +90,7 @@ describe("BR-REQ-011-01 criterion 16 reading an event's partners", () => {
     expect(readCoHosts(row({ coHosts: many }))).toHaveLength(MAX_CO_HOSTS);
   });
 
-  it("reads this release's shape — a card of links, in the club's own order (§NNN)", () => {
+  it("reads this release's shape — a card of links, in the club's own order (§344)", () => {
     expect(
       readCoHosts(
         row({
@@ -116,7 +116,7 @@ describe("BR-REQ-011-01 criterion 16 reading an event's partners", () => {
     ]);
   });
 
-  it("keeps a partner with no links at all — a name is still an answer (§NNN)", () => {
+  it("keeps a partner with no links at all — a name is still an answer (§344)", () => {
     expect(readCoHosts(row({ coHosts: [{ name: "Salvamont", links: [] }] }))).toEqual([{ name: "Salvamont", links: [] }]);
   });
 
@@ -147,7 +147,7 @@ describe("BR-REQ-011-01 criterion 16 reading an event's partners", () => {
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 a partner's one link for a sentence (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 a partner's one link for a sentence (§344)", () => {
   it("is the site link when the partner named one, whatever order the links are in", () => {
     const [host] = readCoHosts(
       row({ coHosts: [{ name: "Salvamont", links: [{ kind: "FACEBOOK", url: "https://facebook.com/s" }, { kind: "SITE", url: "https://s.example.test" }] }] }),

@@ -134,7 +134,7 @@ export default async function EventFieldsForm({
   });
 
   /**
-   * The partners as cards (§168, §NNN), read through the one function that decides which shape
+   * The partners as cards (§168, §344), read through the one function that decides which shape
    * a row means — its list of links, its one legacy link, or the two columns before the list —
    * so an event saved by any earlier release opens with the partner it has, and the first save
    * writes it as the new shape.
@@ -600,7 +600,7 @@ export default async function EventFieldsForm({
 
           {/*
             "Suma" and "Unde se plătește" for a paid event, "Link pentru donație" and "Suma
-            sugerată" for a donation (§NNN; the owner: "Cu taxă" showed no box for the money, and
+            sugerată" for a donation (§343; the owner: "Cu taxă" showed no box for the money, and
             usually nothing is paid — the exception is Wings for Life, where a donation is made
             on another site). One pair of columns, relabelled by `CostFields` rather than posted
             twice; shown only while the chosen kind needs one of them, values kept otherwise.
@@ -702,7 +702,7 @@ export default async function EventFieldsForm({
           />
 
           {/* The organizations the event is held with (§168), each a card of its own links
-              (§NNN): its site, its event, registering with it, its socials. An event saved
+              (§344): its site, its event, registering with it, its socials. An event saved
               before the card existed opens with the partner its earlier shape holds, and the
               first save writes it as a card. */}
           <Stack spacing={1}>

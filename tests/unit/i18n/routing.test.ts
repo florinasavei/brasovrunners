@@ -16,7 +16,7 @@ describe("BR-REQ-040-01 locale routing", () => {
     expect(routing.localePrefix).toBe("always");
   });
 
-  // BR-REQ-070-02 criterion 1 (§NNN): next-intl's own `Link` response header would advertise
+  // BR-REQ-070-02 criterion 1 (§342): next-intl's own `Link` response header would advertise
   // the unprefixed path as `x-default` (a 307 to `/ro/…`) and swap this locale's slug onto the
   // other language (a 404 there). The pages declare their own alternates instead, from the
   // database (`modules/seo/alternates.ts`), so this stays off.

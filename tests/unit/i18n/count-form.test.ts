@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { countForm } from "@/i18n/count-form";
 
 /**
- * `DECISIONS.md` §NNN — the owner, of a series row reading "Ciornă · 1 date": "ce înseamnă
+ * `DECISIONS.md` §341 — the owner, of a series row reading "Ciornă · 1 date": "ce înseamnă
  * această 1 ciornă?". Romanian's three plural forms, without ICU (`docs/VIBECODING.md`), picked
  * by a tiny pure function so every counted phrase in the catalogues reads as Romanian.
  */
-describe("§NNN countForm — which of Romanian's three plural forms a count takes", () => {
+describe("§341 countForm — which of Romanian's three plural forms a count takes", () => {
   it("is 'one' for exactly 1, in every locale", () => {
     expect(countForm(1, "ro")).toBe("one");
     expect(countForm(1, "en")).toBe("one");

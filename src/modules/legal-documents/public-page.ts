@@ -7,7 +7,7 @@ import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import type { CurrentLegalDocument } from "./repository";
 
 /**
- * The two legal texts a visitor can read, and what search engines are told about them (§NNN).
+ * The two legal texts a visitor can read, and what search engines are told about them (§342).
  *
  * The page never 404s (`legal/privacy/page.tsx` says why), so "does it exist in this language"
  * is not the route's question — it is whether an approved version is in force there. Before

@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * The 2026-09-24 third batch, integrated (§NNN): five branches — what a runner pays (cost amount
+ * The 2026-09-24 third batch, integrated (§347): five branches — what a runner pays (cost amount
  * and donation), partners with many links, "Linkuri și fișiere" (§332), the place to be
  * announced (§328, §339) and the date pickers — each added boxes to the one event form
  * (`EventFieldsForm`), the one reader (`admin/actions.ts#eventFieldsFrom`), the one schema
@@ -138,7 +138,7 @@ async function saveAll(eventId: string, changes: Record<string, unknown>) {
   });
 }
 
-describe("§NNN the event form's five new boxes, created and saved together", () => {
+describe("§347 the event form's five new boxes, created and saved together", () => {
   it("creates and publishes an event with every one of them at once, each written once", async () => {
     const result = await createEventAndPublish(db, {
       actor: admin,

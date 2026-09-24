@@ -10,7 +10,7 @@ import { RecallProvider } from "@/shared/forms/recall";
 import { DATE_PATTERN, TIME_PATTERN } from "@/shared/forms/pickers/wall-values";
 
 /**
- * `DateField` and `TimeField` without JavaScript (`DECISIONS.md` §NNN, §315): what a browser
+ * `DateField` and `TimeField` without JavaScript (`DECISIONS.md` §345, §315): what a browser
  * with the picker's script never run receives is the scriptless box `DatePickerInput` and
  * `TimePickerInput` replace once the island runs — a plain text input the server can still read.
  *

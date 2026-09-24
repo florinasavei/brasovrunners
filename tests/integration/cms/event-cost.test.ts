@@ -8,12 +8,12 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN — save and read the three cost kinds, a series carries the amount and
+ * `DECISIONS.md` §343 — save and read the three cost kinds, a series carries the amount and
  * the link like it carries `cost_type`, and a row saved before this migration reads exactly as
- * it did (§NNN reversing no rule; `cost_amount`/`cost_url` are null on it and that is not an
+ * it did (§343 reversing no rule; `cost_amount`/`cost_url` are null on it and that is not an
  * error).
  */
-describe("event cost: save, read, series carry (§NNN)", () => {
+describe("event cost: save, read, series carry (§343)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
