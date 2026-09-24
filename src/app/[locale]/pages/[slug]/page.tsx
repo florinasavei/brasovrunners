@@ -5,24 +5,26 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { getDb } from "@/db/client";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
-import { findPublishedPageBySlug } from "@/modules/content/pages/repository";
+import { cachedPublishedPageBySlug } from "@/modules/public-cache/reads";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { PAGE_WIDTH, PROSE_MEASURE } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
-/** A page's text changes when the club saves it, with no deploy in between. */
+/**
+ * A page's text changes when the club saves it, with no deploy in between — and the save expires
+ * the public cache the text is read from (§NNN), so the next visitor gets the new words.
+ */
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
 
-  const page = await findPublishedPageBySlug(getDb(), locale, slug);
+  const page = await cachedPublishedPageBySlug(locale, slug);
   if (!page) return {};
 
   return {
@@ -52,9 +54,7 @@ export default async function StandingPage({ params }: Props) {
   setRequestLocale(locale);
 
   // The last copy behind it (§281); `notFound()` on the result, never inside the loader.
-  const read = await readWithLastGood(`page:${locale}:${slug}`, () =>
-    findPublishedPageBySlug(getDb(), locale, slug),
-  );
+  const read = await readWithLastGood(`page:${locale}:${slug}`, () => cachedPublishedPageBySlug(locale, slug));
   const page = read.value;
   if (!page) notFound();
 

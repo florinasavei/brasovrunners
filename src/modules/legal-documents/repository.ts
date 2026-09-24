@@ -87,6 +87,25 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 }
 
 /**
+ * Every instant at which `findCurrentApprovedDocument(key, …)` can change its answer without a
+ * write: the effective dates of the approved, not withdrawn versions of `key` (`DECISIONS.md`
+ * §NNN). The same three conditions as that query, so the two cannot disagree about which dates
+ * matter; the public cache keys the text in force by the stretch `now` is in
+ * (`public-cache/clock.ts`), which is how a version approved today for next month takes effect
+ * on the day without anybody saving anything.
+ */
+export async function listEffectiveDates<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+): Promise<Date[]> {
+  const rows = await db
+    .select({ effectiveAt: legalDocuments.effectiveAt })
+    .from(legalDocuments)
+    .where(and(eq(legalDocuments.key, key), eq(legalDocuments.isApproved, true), isNull(legalDocuments.withdrawnAt)));
+  return rows.map((row) => row.effectiveAt);
+}
+
+/**
  * Which row of `key` is in force at `now`, as an id — the question withdrawal has to answer.
  *
  * The same predicate as `findCurrentApprovedDocument` with the translation join taken out, and

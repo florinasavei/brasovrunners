@@ -1,10 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
+import { mintActionLink, registrationByEmail, registrationStatus } from "./support/action-link";
 import {
   ensureRegistrationIsOpen,
   FEATURED,
   HUMAN_PAUSE_MS,
   signIn,
 } from "./support/featured-event";
+
+/** The number in "50 de locuri libere" / "3 locuri libere" / "1 loc liber", inside `scope`. */
+async function freePlaces(scope: Locator): Promise<number> {
+  const text = await scope.getByText(/\d+ (de )?loc(uri)? liber/).first().textContent();
+  const places = Number(/(\d+)/.exec(text ?? "")?.[1]);
+  expect(Number.isInteger(places), `a number of free places, got "${text}"`).toBe(true);
+  return places;
+}
 
 /**
  * BR-REQ-030-01, BR-REQ-031-01 — a visitor can actually reach the registration form.
@@ -24,8 +33,15 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
   test("walks hero → register → submitted, and shows the free places on the way", async ({
     page,
   }) => {
+    // A registration, its email link and two reads of the count afterwards, under load.
+    test.setTimeout(90_000);
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
+
+    // The event page's count, read first — and so cached (§NNN): what follows proves the hold
+    // taken below expires it, rather than a cold read that would have been right anyway.
+    await page.goto(`/ro/evenimente/${FEATURED.slug}`);
+    const placesOnPage = await freePlaces(page.locator("#main"));
 
     await page.goto("/ro/evenimente");
 
@@ -33,6 +49,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await expect(hero).toBeVisible();
     // BR-REQ-034-01: the count is a number of places, stated in words next to the button.
     await expect(hero.getByText(/locuri libere/)).toBeVisible();
+    const placesOnListing = await freePlaces(hero);
 
     const enter = hero.getByRole("link", { name: "Înscrie-te la eveniment" });
     // BR-REQ-041-01 criterion 6: a 44px tap target, on the page whose whole purpose is to be
@@ -108,6 +125,23 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     const back = page.getByRole("link", { name: "Înapoi la eveniment" });
     const backBox = await back.boundingBox();
     expect(backBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    /*
+      BR-REQ-034-01 with the public cache in front of it (§NNN): the count both pages showed
+      came from the cache, and the email link below takes a place (the hold). The next visitor
+      must see one place fewer — which is the allocator's number, not the cached one, only if the
+      hold expired the cache. "Fewer", not "one fewer": the other viewport's run registers against
+      the same event at the same time.
+    */
+    const registration = await registrationByEmail(address);
+    await page.goto(`/ro/inregistrari/confirmare/${await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL")}`);
+    await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
+    expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+
+    await page.goto(`/ro/evenimente/${FEATURED.slug}`);
+    expect(await freePlaces(page.locator("#main"))).toBeLessThan(placesOnPage);
+    await page.goto("/ro/evenimente");
+    expect(await freePlaces(page.getByRole("region", { name: new RegExp(FEATURED.title) }))).toBeLessThan(placesOnListing);
   });
 
   test("offers the same door on the event's own page", async ({ page }) => {

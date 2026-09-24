@@ -5,6 +5,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageTestRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -239,7 +240,7 @@ export async function removeTestRegistrations<T extends Record<string, unknown>>
   assertTestRegistrationsEnabled();
   assertMayManage(actor);
 
-  return db.transaction(async (tx) => {
+  const removed = await db.transaction(async (tx) => {
     const rows = await tx
       .select({ id: registrations.id, participantId: registrations.participantId })
       .from(registrations)
@@ -277,4 +278,8 @@ export async function removeTestRegistrations<T extends Record<string, unknown>>
 
     return { registrationsRemoved: rows.length, participantsRemoved: orphaned.length };
   });
+  // A test row occupies a place like a real one (§30), so taking them away frees places on the
+  // public page — whose count is cached (§NNN).
+  if (removed.registrationsRemoved > 0) revalidatePublicContent("places");
+  return removed;
 }

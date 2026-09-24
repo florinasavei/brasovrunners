@@ -4,6 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import type { Database } from "@/db/types";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   allowedTransitions,
   canCreatePage,
@@ -149,7 +150,7 @@ export async function savePage<T extends Record<string, unknown>>(
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
 
-  return db.transaction(async (tx) => {
+  const saved = await db.transaction(async (tx) => {
     await assertSlugsAreFree(tx, fields, input.pageId);
 
     const [page] = await tx
@@ -189,6 +190,9 @@ export async function savePage<T extends Record<string, unknown>>(
 
     return page;
   });
+  // A live page's words and its place in the navigation are read from the public cache (§NNN).
+  revalidatePublicContent("pages");
+  return saved;
 }
 
 /**
@@ -222,7 +226,7 @@ export async function transitionPage<T extends Record<string, unknown>>(
 ): Promise<Page> {
   const now = input.now ?? new Date();
 
-  return db.transaction(async (tx) => {
+  const moved = await db.transaction(async (tx) => {
     const [current] = await tx.select().from(pages).where(eq(pages.id, input.pageId)).limit(1);
     if (!current) throw new DomainError("NOT_FOUND", "no such page");
 
@@ -276,6 +280,9 @@ export async function transitionPage<T extends Record<string, unknown>>(
 
     return updated;
   });
+  // Published or taken down: the page, the navigation on every page and the sitemap.
+  revalidatePublicContent("pages");
+  return moved;
 }
 
 /**
@@ -297,6 +304,7 @@ export async function deletePage<T extends Record<string, unknown>>(
 
   const [deleted] = await db.delete(pages).where(eq(pages.id, input.pageId)).returning();
   if (!deleted) throw new DomainError("NOT_FOUND", "no such page");
+  revalidatePublicContent("pages");
 }
 
 /**
@@ -350,6 +358,8 @@ export async function movePageInNav<T extends Record<string, unknown>>(
         .where(eq(pages.id, row.id));
     }
   });
+  // The navigation every public page carries, in its new order (§NNN).
+  revalidatePublicContent("pages");
 }
 
 export { allowedTransitions };

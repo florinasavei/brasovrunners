@@ -9,6 +9,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 
 /**
  * Deleting the rows nobody will ever read again.
@@ -163,6 +164,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     .delete(registrations)
     .where(inArray(registrations.id, stale))
     .returning({ id: registrations.id });
+  // An old race's page still shows its start list, from the public cache (§NNN): the names that
+  // retention has just removed must leave it too.
+  if (deletedRegistrations.length > 0) revalidatePublicContent("places");
   const deletedParticipants =
     deletedRegistrations.length > 0
       ? await db

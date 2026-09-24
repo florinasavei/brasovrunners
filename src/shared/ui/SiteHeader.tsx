@@ -1,12 +1,13 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { getLocale, getTranslations } from "next-intl/server";
-import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
-import { listPublishedAlbums } from "@/modules/content/gallery/repository";
-import { listPublishedPages } from "@/modules/content/pages/repository";
 import { contactFormReaches } from "@/modules/contact/delivery";
-import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
+import {
+  cachedContactFormReaches,
+  cachedPublishedAlbums,
+  cachedPublishedPages,
+} from "@/modules/public-cache/reads";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
@@ -37,14 +38,21 @@ import SiteNav from "./SiteNav";
  *
  * Returning `[]` costs a navigation entry on the two routes that are statically prerendered —
  * a redirect and a catch-all 404, neither of which shows a menu anybody reads. Every page where
- * the navigation matters declares `force-dynamic` and queries for real, on every request.
+ * the navigation matters declares `force-dynamic` and renders per request.
  *
  * And a header that throws is a site with no way out of any page, which is worse than a site
  * with a shorter menu.
+ *
+ * ## Why from the public cache (§NNN)
+ *
+ * The header is on every page, so its three reads were the three queries every visitor paid for
+ * and the reason even a 404 woke the database. They are cached now and expired by the writes that
+ * change them — publishing a page, an album, or the contact setting — so a visitor reads the
+ * navigation without the database being asked.
  */
 async function navigationPages(locale: Locale) {
   try {
-    return await listPublishedPages(getDb(), locale);
+    return await cachedPublishedPages(locale);
   } catch {
     return [];
   }
@@ -53,7 +61,7 @@ async function navigationPages(locale: Locale) {
 /** Whether the gallery section is offered: a published album in this locale, or nothing. */
 async function hasPublishedAlbum(locale: Locale) {
   try {
-    return (await listPublishedAlbums(getDb(), locale)).length > 0;
+    return (await cachedPublishedAlbums(locale)).length > 0;
   } catch {
     return false;
   }
@@ -87,7 +95,9 @@ export default async function SiteHeader() {
   /**
    * One indexed query on every public page, which is a cost worth naming: the header is what
    * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
-   * without a developer, which is the whole point of the page type (BR-REQ-050-03).
+   * without a developer, which is the whole point of the page type (BR-REQ-050-03). Answered
+   * from the public cache, so the cost is paid once per change rather than once per visitor
+   * (§NNN).
    */
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
@@ -110,7 +120,7 @@ export default async function SiteHeader() {
   const showContact =
     Boolean(env.EMAIL_REPLY_TO) ||
     contactFormReaches(env, null) ||
-    contactFormReaches(env, await readContactRecipientsOrNull());
+    (await cachedContactFormReaches());
 
   return (
     <>

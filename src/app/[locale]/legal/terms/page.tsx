@@ -6,14 +6,14 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
+import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
+/** Per request, from the public cache — the privacy notice's arrangement, for the same reasons (§NNN). */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ export default async function TermsPage({ params }: Props) {
     few hours behind, which the banner says anyway.
   */
   const read = await readWithLastGood(`legal:TERMS:${locale}`, () =>
-    findCurrentApprovedDocument(getDb(), "TERMS", locale, new Date()),
+    cachedCurrentApprovedDocument("TERMS", locale, new Date()),
   );
   const document = read.value;
 
