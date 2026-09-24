@@ -196,7 +196,8 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     // in either language, whichever tab is open; the editor's warning stays with the one on screen.
     expect(page).toMatch(/openWhen=\{\{ saved: copySaved, inUse: lang !== undefined, attention: anySamples \}\}/);
     expect(page).toMatch(/const samples = mayWrite && own \? sampleValuesIn\(own, messageType, emailLocale\) : \[\];/);
-    expect(page).toContain("const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];");
+    // Not the organizer's message, which has no words to keep: it is written per send (§364).
+    expect(page).toContain("const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];");
     expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
   });
 
