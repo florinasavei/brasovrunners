@@ -2,6 +2,7 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -140,7 +141,13 @@ function ScheduleRowsEditorIsland({
             spacing={1}
             sx={{ alignItems: { md: "flex-start" }, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1 }}
           >
-            <Stack direction="row" spacing={1}>
+            {/* Wraps on a phone: the three boxes' own widths (150 + 140 + 140, each holding a
+                44-pixel button) add up to more than a phone's content width, and a `Stack`
+                does not wrap by itself. None of the three has a clear button — the row's own
+                remove button empties it in one press, and a clear button beside a calendar or
+                clock button, both held to 44 pixels (BR-REQ-041-01 criterion 6), collided with
+                the digits in a box this narrow. */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {/* Controlled, unlike the rest of the row: this is the one box the start-date
                   effect above moves by hand, and a stale posted value under this row's *current*
                   index (after an earlier row was removed) must never win over that move
@@ -151,13 +158,14 @@ function ScheduleRowsEditorIsland({
                 value={value.date}
                 onValueChange={(posted) => setDate(key, posted)}
                 size="small"
+                clearable={false}
                 sx={{ width: 150 }}
               />
               {/* Picked, not typed, like the start time (`WallTimeField`): MUI's own 24-hour
                   clock, posting `HH:mm` in either language of the backoffice. */}
-              <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" sx={{ width: 120 }} />
-              <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" sx={{ width: 120 }} />
-            </Stack>
+              <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ width: 140 }} />
+              <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ width: 140 }} />
+            </Box>
             <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <TextField name={name("place")} id={recall.idOf(name("place"))} error={recall.named(name("place"))} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />

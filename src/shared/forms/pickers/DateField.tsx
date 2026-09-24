@@ -31,6 +31,15 @@ export type DateFieldProps = {
   sx?: SxProps<Theme>;
   /** Told the posted value on every change — `ScheduleRowsEditor` keeps a row's date in state. */
   onValueChange?: (posted: string) => void;
+  /**
+   * A button that empties the box; defaults to on for an optional date, off when required — as
+   * `TimeField`'s own `clearable` does. `ScheduleRowsEditor` turns it off for its narrow row date
+   * (150 pixels): a calendar button and a clear button are both held to a 44-pixel target
+   * (BR-REQ-041-01 criterion 6), and two of them beside `DD.MM.YYYY` collided with the digits on a
+   * phone the way the row's own time boxes did before they turned theirs off too — the row itself
+   * still empties with its own remove button.
+   */
+  clearable?: boolean;
 };
 
 /**
@@ -51,7 +60,7 @@ export type DateFieldProps = {
  *
  * Needs `PickerProvider` above it — the backoffice's layout mounts it once.
  */
-export default function DateField({ name, label, defaultValue = "", value, required = false, helperText, size, sx, onValueChange }: DateFieldProps) {
+export default function DateField({ name, label, defaultValue = "", value, required = false, helperText, size, sx, onValueChange, clearable }: DateFieldProps) {
   const recall = useRecall();
   const t = useTranslations("Admin");
   const running = useIslandRunning();
@@ -95,6 +104,7 @@ export default function DateField({ name, label, defaultValue = "", value, requi
       sx={sx}
       refusal={t("pickers.dateIncomplete")}
       onValueChange={onValueChange}
+      clearable={clearable ?? !required}
     />
   );
 }
@@ -115,6 +125,7 @@ export function DatePickerInput({
   sx,
   refusal,
   onValueChange,
+  clearable,
 }: {
   id: string;
   name: string;
@@ -127,6 +138,7 @@ export function DatePickerInput({
   sx?: SxProps<Theme>;
   refusal: string;
   onValueChange?: (posted: string) => void;
+  clearable: boolean;
 }) {
   const [picked, setPicked] = useState<Dayjs | null>(() => pickerDate(initial));
   const [refused, setRefused] = useState(false);
@@ -166,8 +178,9 @@ export function DatePickerInput({
         slotProps={{
           // `error` only when the refusal named the box: `false` would hide the picker's own red.
           textField: { id, required, error: error || undefined, helperText, size },
-          // An optional date can be emptied again with one press, as the native box could.
-          field: { clearable: !required },
+          // An optional date can be emptied again with one press, as the native box could —
+          // unless the caller turned it off for a box too narrow to hold both buttons.
+          field: { clearable },
           openPickerButton: { sx: PICKER_BUTTON_SX },
           clearButton: { sx: PICKER_BUTTON_SX },
         }}
