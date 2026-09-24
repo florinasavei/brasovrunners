@@ -168,6 +168,20 @@ describe("no date is formatted outside the helper", () => {
     "src/db/seeds/sample-dates.ts", // arithmetic for the sample data
   ];
 
+  /*
+    §324: the browser's ICU is not the server's, so an island that formats a date the server also
+    rendered can disagree with it and throw the page away on hydration. Every island that shows a
+    date — the series chips, the scope selector — is handed the server's string instead.
+  */
+  it("leaves no client island to format a date itself", () => {
+    const islands = files.filter((file) => /^\s*["']use client["']/.test(readFileSync(file, "utf8")));
+    expect(islands.length).toBeGreaterThan(0);
+    const offenders = islands.filter((file) =>
+      /\bformat(Day|CalendarDay|DayRange|Time)\(|\.dateTime\(|new Intl\.DateTimeFormat\(|toLocale(Date|Time)?String\(/.test(readFileSync(file, "utf8")),
+    );
+    expect(offenders.map((file) => relative(process.cwd(), file))).toEqual([]);
+  });
+
   it("never builds a display-locale DateTimeFormat outside src/i18n/dates.ts", () => {
     const offenders = files
       .filter((file) => !allowed.some((path) => file.replace(/\\/g, "/").endsWith(path)))
