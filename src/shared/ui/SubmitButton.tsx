@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { type ComponentType, useEffect, useId, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { paintedScheduler } from "@/shared/forms/after-paint";
-import RunnerLoader from "./RunnerLoader";
+import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
 import { accentOnHover } from "@/theme/surfaces";
 
@@ -332,6 +332,14 @@ export default function SubmitButton({
         aria-disabled={pending}
         aria-busy={pending}
         aria-describedby={dimmed && hint ? hintId : undefined}
+        /*
+          No ink under the finger (§NNN): the press answers with "Se salvează…" and the runner in
+          the same frame, which is the feedback, and the ripple was the costliest thing in it — MUI
+          mounts it on the first press, measures the button (a forced layout), and on a page whose
+          first press this is, writes its styles into the layered sheet: a whole-page
+          recalculation inside the press. The keyboard's focus ripple stays.
+        */
+        disableTouchRipple
         sx={{
           ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
           ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
@@ -374,6 +382,8 @@ export default function SubmitButton({
       >
         {pending ? pendingLabel : label}
       </Button>
+      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      <RunnerLoaderStyles size={GLYPH_PX[size]} color="inherit" />
       {dimmed && hint && (
         <Typography id={hintId} variant="body2" color="text.secondary" role="status">
           {hint}

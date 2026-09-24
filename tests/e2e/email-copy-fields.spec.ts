@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 function databaseUrl(): string {
@@ -42,6 +42,8 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
   test("a Redactor is handed {eventTitle}, not the sample's title, and a sample value is refused", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
     await page.goto("/ro/admin/emails?lang=ro");
+    // A press before the page is hydrated is lost (`hydrated`): nothing is posted at all.
+    await hydrated(page);
     const main = page.locator("#main");
 
     const card = main.locator("#email-VERIFY_REGISTRATION_EMAIL");
@@ -80,6 +82,8 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     try {
       await signIn(page, "Dev Copywriter");
       await page.goto("/ro/admin/emails?lang=ro");
+      // A press before the page is hydrated is lost (`hydrated`): nothing is posted at all.
+      await hydrated(page);
       const main = page.locator("#main");
 
       // The card of cards and the message's own card open by themselves, and the closed line says why.
@@ -123,6 +127,8 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     try {
       await signIn(page, "Dev Copywriter");
       await page.goto("/ro/admin/emails?lang=ro");
+      // A press before the page is hydrated is lost (`hydrated`): nothing is posted at all.
+      await hydrated(page);
       const main = page.locator("#main");
 
       const card = main.locator("#email-WAITLIST_OFFER_EXPIRED");

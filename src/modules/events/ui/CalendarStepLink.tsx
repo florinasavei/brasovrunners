@@ -4,7 +4,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import IconButton from "@mui/material/IconButton";
 import Link, { useLinkStatus } from "next/link";
-import RunnerLoader from "@/shared/ui/RunnerLoader";
+import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
 
 /**
  * The calendar's previous/next arrow, as a soft navigation (`DECISIONS.md` §166).
@@ -38,6 +38,8 @@ export default function CalendarStepLink({
   return (
     <IconButton component={Link} href={href} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
       <StepGlyph direction={direction} />
+      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      <RunnerLoaderStyles size={24} color="inherit" />
     </IconButton>
   );
 }

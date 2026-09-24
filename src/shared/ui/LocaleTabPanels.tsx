@@ -4,7 +4,8 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { REVEAL_EVENT } from "./fold";
@@ -88,7 +89,17 @@ export default function LocaleTabPanels({
   const root = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  /** Bring panel `index` forward — the DOM attribute at once, React's state after it. */
+  /**
+   * Bring panel `index` forward — the DOM at once, React's state after it.
+   *
+   * **The whole swap is done by hand, and the state follows as a transition (§NNN).** The browser
+   * needs the panel shown before it looks for a box to focus, so that part was always by hand; the
+   * state was set at once, and React renders an update made inside an `invalid` event before the
+   * event ends — the strip, and MUI's `Tabs`, which measures its tabs after every render: a forced
+   * layout of the panel just revealed, inside the refused press, before the browser's own. Now the
+   * siblings are hidden by hand too, so the frame shows one language, and the strip catches up in a
+   * transition that does not hold the frame the refusal paints.
+   */
   const bringForward = useCallback((index: number, element: HTMLElement | null) => {
     if (revealed.current) return;
     revealed.current = true;
@@ -96,7 +107,10 @@ export default function LocaleTabPanels({
       revealed.current = false;
     }, 0);
     if (element) element.hidden = false;
-    setActive(index);
+    panelRefs.current.forEach((panel, other) => {
+      if (panel && other !== index) panel.hidden = true;
+    });
+    startTransition(() => setActive(index));
   }, []);
 
   /**
@@ -152,15 +166,17 @@ export default function LocaleTabPanels({
     const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
       if (watch) {
-        setIncomplete(
-          panels.map((panel) =>
-            watch.names.some((field) => {
-              const blank = isBlankValue(valueOf(panel.locale, field));
-              if (watch.rule === "required") return blank;
-              return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
-            }),
-          ),
+        const next = panels.map((panel) =>
+          watch.names.some((field) => {
+            const blank = isBlankValue(valueOf(panel.locale, field));
+            if (watch.rule === "required") return blank;
+            return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
+          }),
         );
+        // The same marks keep the same array, so React renders nothing (§NNN): a new one re-rendered
+        // the strip on every keystroke and every focus leaving a box — the press of a save button
+        // too — and MUI's `Tabs` measures its tabs after every render it makes, a forced layout.
+        setIncomplete((current) => (current.length === next.length && current.every((mark, index) => mark === next[index]) ? current : next));
       }
       if (identical) {
         const [first, ...rest] = panels;
@@ -172,10 +188,13 @@ export default function LocaleTabPanels({
         }
       }
     };
-    const deferred = () => setTimeout(measure, 0);
-    for (const type of ["input", "change", "focusout"]) container.addEventListener(type, deferred);
+    // Behind the frame the keystroke or the press leads to, once for a burst (§NNN): the marks
+    // are not what the reader is waiting for, the letter and the "Se salvează…" are.
+    const scheduler = paintedScheduler(measure);
+    for (const type of ["input", "change", "focusout"]) container.addEventListener(type, scheduler.schedule);
     return () => {
-      for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, deferred);
+      for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, scheduler.schedule);
+      scheduler.cancel();
     };
   }, [watch, identical, live, panels]);
 

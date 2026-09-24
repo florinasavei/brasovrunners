@@ -1,7 +1,7 @@
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { expect, type Locator, type Page, type Route, test } from "@playwright/test";
-import { FEATURED, fillDateField, fillTimeField, hydrated, signIn } from "../support/featured-event";
+import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, hydrated, signIn } from "../support/featured-event";
 import { languagePanel, languageTab, openEditorBox } from "../support/fold";
 
 /**
@@ -21,15 +21,23 @@ import { languagePanel, languageTab, openEditorBox } from "../support/fold";
  * the finger to the next frame, which is exactly what INP counts. The CPU is slowed 4× over the
  * Chrome DevTools protocol (a mid-range phone, `PERF_CPU` to change it) for the press alone, and
  * each press is repeated `PERF_RUNS` times (3). Long animation frames overlapping the press are
- * kept beside it, with their scripts, so a regression says where it went.
+ * kept beside it, with their scripts, so a regression says where it went — and so are the CSS
+ * rules the press inserted, which must be none (§NNN, `instrument`).
  *
- * **Nothing is written.** The Server Action's POST is held unanswered while the frame after the
- * press is measured — the pending "Se salvează…" is what that frame paints — and then abandoned,
- * so no event, registration, wording or legal draft is created on the shared database. A press
- * the browser refuses (a required box empty) posts nothing anyway.
+ * **Nothing is written by a press.** The Server Action's POST is held unanswered while the frame
+ * after the press is measured — the pending "Se salvează…" is what that frame paints — and then
+ * abandoned, so no event, registration, wording or legal draft is created. A press the browser
+ * refuses (a required box empty) posts nothing anyway. The one write is the registration test's
+ * setup: the featured event is opened for registration as every registration spec opens it.
  *
- * The table is printed and written to `test-results/inp-<project>.json` (`PERF_OUT` for a path).
+ * The table is printed and written to `test-results/inp-<project>.jsonl` (`PERF_OUT` for a path).
  * Good INP is under 200 ms (web.dev); the summary line says which presses are over.
+ *
+ * To see where a slow press goes, three switches, each costing time of its own (so a number
+ * measured with one on is not a number to report): `PERF_TRACE=<dir>` writes a Chrome trace of
+ * each press, with CPU samples, for the Performance panel; `PERF_PROFILE=<dir>` a V8 CPU profile;
+ * `PERF_REACT=1` lists, per React commit, the top of each re-rendered subtree and how many
+ * components rendered.
  */
 
 const RUN = process.env.PERF_INP === "1";
@@ -46,13 +54,97 @@ test.use({ actionTimeout: 30_000 });
 type EventRow = { name: string; duration: number; interactionId: number; startTime: number; processingStart: number; processingEnd: number; target: string };
 type ScriptRow = { invoker: string; sourceURL: string; sourceFunctionName: string; duration: number; forcedStyleAndLayoutDuration: number };
 type FrameRow = { startTime: number; duration: number; blockingDuration: number; renderStart: number; styleAndLayoutStart: number; scripts: ScriptRow[] };
-type Probe = { events: EventRow[]; frames: FrameRow[] };
-type Measured = { inp: number; entries: EventRow[]; frames: FrameRow[] };
+type RuleRow = { at: number; rule: string };
+/** One React commit: where each re-rendered subtree starts, and how many components it rendered. */
+type CommitRow = { at: number; rendered: number; roots: string[] };
+type Probe = { events: EventRow[]; frames: FrameRow[]; rules: RuleRow[]; commits: CommitRow[] };
+type Measured = { inp: number; entries: EventRow[]; frames: FrameRow[]; rules: RuleRow[]; commits: CommitRow[] };
 
-/** Installed before any page script: every event entry and every long animation frame, kept on `window`. */
+/** Every test's page, instrumented: the timings always, React's commits with `PERF_REACT=1`. */
+async function prepare(page: Page) {
+  await page.addInitScript(instrument);
+  if (process.env.PERF_REACT === "1") await page.addInitScript(watchCommits);
+}
+
+/**
+ * `PERF_REACT=1`: which components a press re-rendered, read from React's own commits through
+ * the hook its developer tools use (production React reports to it too). Each commit lists the
+ * top of every re-rendered subtree, named by the first element it draws, and how many components
+ * rendered in all — "the whole form re-rendered" is one line instead of a guess.
+ */
+function watchCommits() {
+  type Fiber = {
+    tag: number;
+    flags: number;
+    alternate: Fiber | null;
+    child: Fiber | null;
+    sibling: Fiber | null;
+    stateNode: unknown;
+    type: unknown;
+  };
+  const COMPONENT_TAGS = new Set([0, 1, 11, 14, 15]);
+  const PERFORMED_WORK = 1;
+  const describe = (fiber: Fiber): string => {
+    for (let node: Fiber | null = fiber; node; node = node.child) {
+      if (node.tag === 5 && node.stateNode instanceof Element) {
+        const element = node.stateNode;
+        const name = element.getAttribute("name") ?? element.getAttribute("data-testid") ?? element.id;
+        const text = (element.textContent ?? "").trim().slice(0, 30);
+        return `${element.tagName.toLowerCase()}${name ? `[${name}]` : ""}.${String(element.className).split(" ")[0]} "${text}"`;
+      }
+    }
+    return "(no element)";
+  };
+  let previous = new WeakSet<Fiber>();
+  (window as unknown as { __REACT_DEVTOOLS_GLOBAL_HOOK__: unknown }).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+    isDisabled: false,
+    supportsFiber: true,
+    renderers: new Map(),
+    inject: () => 1,
+    onScheduleFiberRoot: () => undefined,
+    onCommitFiberUnmount: () => undefined,
+    onPostCommitFiberRoot: () => undefined,
+    onCommitFiberRoot: (_id: number, root: { current: Fiber }) => {
+      const probe = (window as unknown as { __inp?: Probe }).__inp;
+      if (!probe) return;
+      let rendered = 0;
+      const roots: string[] = [];
+      const seen = new WeakSet<Fiber>();
+      const walk = (fiber: Fiber | null, insideRendered: boolean) => {
+        for (let node = fiber; node; node = node.sibling) {
+          seen.add(node);
+          // A subtree React skipped keeps the very fiber objects of the last commit, with their old
+          // flags; one it rendered is the other copy. So "performed work, and new since last time".
+          const didRender =
+            COMPONENT_TAGS.has(node.tag) && node.alternate !== null && (node.flags & PERFORMED_WORK) === PERFORMED_WORK && !previous.has(node);
+          if (didRender) rendered += 1;
+          if (didRender && !insideRendered) roots.push(describe(node));
+          walk(node.child, insideRendered || didRender);
+        }
+      };
+      walk(root.current.child, false);
+      previous = seen;
+      if (rendered > 0) probe.commits.push({ at: performance.now(), rendered, roots: roots.slice(0, 12) });
+    },
+  };
+}
+
+/**
+ * Installed before any page script: every event entry and every long animation frame, kept on
+ * `window` — and every CSS rule the page inserts after it has loaded (§NNN). MUI's styles sit in
+ * cascade layers here (`enableCssLayer`, `modularCssLayers`), and Chromium answers a rule inserted
+ * into a layered sheet by rebuilding the layer map and its font cache: every element's style and
+ * every text's layout, a whole-page recalculation. A press that renders a style the page has not
+ * yet drawn pays that inside its interaction, so the spec names what was inserted.
+ */
 function instrument() {
-  const probe: Probe = { events: [], frames: [] };
+  const probe: Probe = { events: [], frames: [], rules: [], commits: [] };
   (window as unknown as { __inp: Probe }).__inp = probe;
+  const insertRule = CSSStyleSheet.prototype.insertRule;
+  CSSStyleSheet.prototype.insertRule = function patched(this: CSSStyleSheet, rule: string, index?: number) {
+    probe.rules.push({ at: performance.now(), rule: rule.replace(/\s+/g, " ").slice(0, 160) });
+    return insertRule.call(this, rule, index);
+  };
   const describe = (node: Node | null) => {
     if (!(node instanceof Element)) return String(node);
     const text = (node.textContent ?? "").trim().slice(0, 40);
@@ -152,6 +244,8 @@ async function measure(page: Page, kind: "click" | "keydown", act: () => Promise
     const probe = (window as unknown as { __inp: Probe }).__inp;
     probe.events.length = 0;
     probe.frames.length = 0;
+    probe.rules.length = 0;
+    probe.commits.length = 0;
   });
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU_RATE });
@@ -161,7 +255,16 @@ async function measure(page: Page, kind: "click" | "keydown", act: () => Promise
   const tracing = process.env.PERF_TRACE && browser ? `${process.env.PERF_TRACE}/${test.info().project.name}-${kind}-${Date.now()}.json` : null;
   if (tracing && browser) {
     mkdirSync(process.env.PERF_TRACE as string, { recursive: true });
-    await browser.startTracing(page, { path: tracing, categories: ["devtools.timeline", "disabled-by-default-devtools.timeline", "disabled-by-default-devtools.timeline.invalidationTracking", "blink.user_timing", "v8.execute"] });
+    await browser.startTracing(page, { path: tracing, categories: ["devtools.timeline", "disabled-by-default-devtools.timeline", "disabled-by-default-devtools.timeline.invalidationTracking", "blink.user_timing", "v8.execute", "disabled-by-default-v8.cpu_profiler"] });
+  }
+  // `PERF_PROFILE=<dir>`: a V8 CPU profile of each measured interaction (`.cpuprofile`, which the
+  // Performance panel opens), sampled finely enough to see a 5 ms function at the throttled rate.
+  const profiling = process.env.PERF_PROFILE ? `${process.env.PERF_PROFILE}/${test.info().project.name}-${kind}-${Date.now()}.cpuprofile` : null;
+  if (profiling) {
+    mkdirSync(process.env.PERF_PROFILE as string, { recursive: true });
+    await cdp.send("Profiler.enable");
+    await cdp.send("Profiler.setSamplingInterval", { interval: 100 });
+    await cdp.send("Profiler.start");
   }
   const from = await page.evaluate(() => performance.now());
   await act();
@@ -176,9 +279,18 @@ async function measure(page: Page, kind: "click" | "keydown", act: () => Promise
     .catch(() => undefined);
   await page.waitForTimeout(500);
   if (tracing && browser) await browser.stopTracing();
+  if (profiling) {
+    const { profile } = await cdp.send("Profiler.stop");
+    writeFileSync(profiling, JSON.stringify(profile));
+  }
   const probe = await page.evaluate((since) => {
-    const { events, frames } = (window as unknown as { __inp: Probe }).__inp;
-    return { events: events.filter((entry) => entry.startTime >= since - 50), frames: frames.filter((frame) => frame.startTime + frame.duration >= since) };
+    const { events, frames, rules, commits } = (window as unknown as { __inp: Probe }).__inp;
+    return {
+      events: events.filter((entry) => entry.startTime >= since - 50),
+      frames: frames.filter((frame) => frame.startTime + frame.duration >= since),
+      rules: rules.filter((row) => row.at >= since),
+      commits: commits.filter((row) => row.at >= since),
+    };
   }, from);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   await cdp.detach();
@@ -187,7 +299,13 @@ async function measure(page: Page, kind: "click" | "keydown", act: () => Promise
   const entries = first ? probe.events.filter((entry) => entry.interactionId === first.interactionId) : probe.events.filter((entry) => entry.interactionId > 0);
   const inp = entries.length === 0 ? 0 : Math.max(...entries.map((entry) => entry.duration));
   const end = entries.length === 0 ? from + 1_000 : Math.max(...entries.map((entry) => entry.startTime + entry.duration));
-  return { inp, entries, frames: probe.frames.filter((frame) => frame.startTime <= end) };
+  return {
+    inp,
+    entries,
+    frames: probe.frames.filter((frame) => frame.startTime <= end),
+    rules: probe.rules.filter((row) => row.at <= end),
+    commits: probe.commits.filter((row) => row.at <= end),
+  };
 }
 
 /**
@@ -204,8 +322,11 @@ async function record(scenario: string, attempt: () => Promise<Measured>) {
   const max = Math.max(...values);
   const worst = runs[values.indexOf(max)];
   const project = test.info().project.name;
+  // How many CSS rules each run inserted inside its interaction: anything but 0 is a whole-page
+  // recalculation paid inside the press (see `instrument`).
+  const inserted = runs.map((run) => run.rules.length).join("/");
   console.log(
-    `[inp] ${max >= GOOD_MS ? "OVER" : "ok  "} ${project} ${scenario}: ${values.map((value) => Math.round(value)).join(" / ")} ms (median ${Math.round(median)}, CPU ${CPU_RATE}×)`,
+    `[inp] ${max >= GOOD_MS ? "OVER" : "ok  "} ${project} ${scenario}: ${values.map((value) => Math.round(value)).join(" / ")} ms (median ${Math.round(median)}, CPU ${CPU_RATE}×, rules inserted ${inserted})`,
   );
   const out = process.env.PERF_OUT ?? `test-results/inp-${project}.jsonl`;
   mkdirSync(dirname(out), { recursive: true });
@@ -242,7 +363,7 @@ async function fillCreatePage(page: Page, { englishTitle }: { englishTitle: bool
 }
 
 test("the event create page: Creează evenimentul, Creează și publică, and a refused press", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
   await signIn(page, "Dev Administrator");
 
   const hold = await holdServerActions(page);
@@ -271,7 +392,7 @@ test("the event create page: Creează evenimentul, Creează și publică, and a 
 });
 
 test("the event create page: a keystroke in the title and in the summary", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
   await signIn(page, "Dev Administrator");
   await record("create: keystroke in the Romanian title", async () => {
     await fillCreatePage(page, { englishTitle: true });
@@ -288,7 +409,7 @@ test("the event create page: a keystroke in the title and in the summary", async
 });
 
 test("the event editor: Salvează on the featured event", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
   await signIn(page, "Dev Administrator");
   const hold = await holdServerActions(page);
   await record("editor: Salvează (featured event, boxes open)", async () => {
@@ -335,7 +456,13 @@ async function fillRegistration(page: Page, omit?: string) {
 }
 
 test("the public registration form: Trimite înscrierea, valid and refused", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
+  // The one write this file makes, before anything is held: the featured event takes
+  // registrations on the site, as every registration spec sets it (a fresh seed does not).
+  if (!process.env.PERF_EVENT_SLUG) {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+  }
   const path = `/ro/evenimente/${process.env.PERF_EVENT_SLUG ?? FEATURED.slug}/inscriere`;
   const hold = await holdServerActions(page);
   await record("register: Trimite înscrierea (valid)", async () => {
@@ -368,7 +495,7 @@ async function openAround(target: Locator) {
 }
 
 test("the email wording editor: Salvează textul", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
   await signIn(page, "Dev Administrator");
   const hold = await holdServerActions(page);
   await record("emails: Salvează textul", async () => {
@@ -387,7 +514,7 @@ test("the email wording editor: Salvează textul", async ({ page }) => {
 });
 
 test("the legal document editor: Salvează ciorna", async ({ page }) => {
-  await page.addInitScript(instrument);
+  await prepare(page);
   await signIn(page, "Dev Superadministrator");
   const hold = await holdServerActions(page);
   await record("legal: Salvează ciorna (new version)", async () => {

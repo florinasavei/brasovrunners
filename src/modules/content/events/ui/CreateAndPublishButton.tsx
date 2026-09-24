@@ -8,7 +8,7 @@ import { useFormStatus } from "react-dom";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { VALIDITY_PROXY_ATTRIBUTE } from "@/shared/forms/ValidityProxy";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
-import RunnerLoader from "@/shared/ui/RunnerLoader";
+import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { THEN_FIELD, THEN_PUBLISH } from "../form-names";
 import { missingForPublish, type PublishGap, publishGapLabel, type PublishGapLabels } from "./publish-check";
@@ -105,6 +105,8 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
         size="medium"
         aria-disabled={status.pending}
         aria-busy={pending}
+        // No ink under the finger, as `SubmitButton` (§NNN); the keyboard's focus ripple stays.
+        disableTouchRipple
         aria-describedby={dimmed ? "publish-not-ready" : undefined}
         startIcon={pending ? <RunnerLoader size={20} color="inherit" /> : <PublishGlyph fontSize="small" />}
         sx={{ ...TAP_TARGET, ...(dimmed ? { opacity: 0.38, cursor: "not-allowed" } : {}) }}
@@ -131,6 +133,8 @@ export default function CreateAndPublishButton({ label, pendingLabel, notReadyHi
       >
         {pending ? pendingLabel : label}
       </Button>
+      {/* The runner's styles, drawn with the page, so the press adds none (§NNN). */}
+      <RunnerLoaderStyles size={20} color="inherit" />
       {dimmed && (
         <Typography id="publish-not-ready" variant="body2" color="text.secondary" role="status">
           {notReadyHint.replace("{field}", missing)}
