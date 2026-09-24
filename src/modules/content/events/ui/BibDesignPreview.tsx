@@ -81,7 +81,10 @@ export default function BibDesignPreview({
   return (
     <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-design-preview">
       {/* The paper's own proportion (A5, 990×700, §NNN) is declared, so the box keeps its height
-          while a fresh picture is on its way and the panel below does not jump. */}
+          while a fresh picture is on its way and the panel below does not jump. No border and no
+          rounded corner of its own: the picture draws the paper's edge itself (`bib-image.tsx`,
+          A5 bibs §NNN), and a second frame round it read as a double line with its corners
+          clipped. */}
       <Box
         component="img"
         src={src}
@@ -90,7 +93,7 @@ export default function BibDesignPreview({
         height={BIB_IMAGE.height}
         loading="lazy"
         decoding="async"
-        sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1, border: 1, borderColor: "divider" }}
+        sx={{ display: "block", width: "100%", height: "auto" }}
       />
       <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
         {labels.caption}

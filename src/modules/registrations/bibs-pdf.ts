@@ -350,10 +350,30 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       .stroke()
       .undash();
     if (!design.cutMarks) return;
+    trimMarksAt(BIB_SHEET_CUT);
+  };
+
+  /** A short solid rule at each end of a horizontal cut, from the paper's edge across the margin. */
+  const trimMarksAt = (y: number) => {
     const length = BIB_MARGIN + L.inset;
     doc.lineWidth(0.75).strokeColor(COLOR.ink);
-    doc.moveTo(0, BIB_SHEET_CUT).lineTo(length, BIB_SHEET_CUT).stroke();
-    doc.moveTo(A4_PAGE.width - length, BIB_SHEET_CUT).lineTo(A4_PAGE.width, BIB_SHEET_CUT).stroke();
+    doc.moveTo(0, y).lineTo(length, y).stroke();
+    doc.moveTo(A4_PAGE.width - length, y).lineTo(A4_PAGE.width, y).stroke();
+  };
+
+  /**
+   * The trim guide of a `one` page, with the club's cut marks (§249; A5 bibs two per sheet,
+   * §NNN): the centred A5 bib has no paper edge above or below it, so a club that asked for cut
+   * marks gets them at the bib's own top and foot — the same short solid rules at each end as the
+   * two-up cut carries, which is where origin/qa's corner marks told a printer to trim. No dashed
+   * line and no frame: without the club's marks the page is the bib alone, as §79 keeps it, and a
+   * rule across the picture would be cut along. The bib is the page's full width, so its sides
+   * are the paper's own and need nothing.
+   */
+  const drawTrimGuide = (slot: BibSlot) => {
+    if (!design.cutMarks) return;
+    trimMarksAt(slot.y);
+    trimMarksAt(slot.y + slot.height);
   };
 
   const perPage = input.layout === "one" ? 1 : 2;
@@ -365,6 +385,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       if (perPage === 2) drawCut();
     }
     drawBib(input.rows[index], slot);
+    if (perPage === 1) drawTrimGuide(slot);
   });
 
   // A sheet with nothing to print is still a valid file that says so, rather than an error.

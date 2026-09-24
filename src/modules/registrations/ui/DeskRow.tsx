@@ -235,6 +235,7 @@ export default async function DeskRow({
               <Typography component="summary" variant="body2" color="text.secondary">
                 {t("desk.showBib")}
               </Typography>
+              {/* The picture draws the paper's edge itself (A5 bibs, §NNN): no second frame round it. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
                 src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
@@ -243,7 +244,7 @@ export default async function DeskRow({
                 height={BIB_IMAGE.height}
                 loading="lazy"
                 decoding="async"
-                style={{ display: "block", width: "100%", maxWidth: 360, height: "auto", border: "1px solid #ddd", borderRadius: 4 }}
+                style={{ display: "block", width: "100%", maxWidth: 360, height: "auto" }}
               />
             </Box>
           )}

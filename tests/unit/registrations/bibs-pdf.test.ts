@@ -4,6 +4,7 @@ import { inflateSync } from "node:zlib";
 import PDFDocument from "pdfkit";
 import { describe, expect, it, vi } from "vitest";
 import { BIB_BAND_FALLBACK, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { A4_PAGE, BIB_PAPER } from "@/modules/registrations/bib-geometry";
 import { BIB_SHEET_CUT, BIB_SHEET_FOOTER, bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
@@ -101,6 +102,66 @@ describe("BR-REQ-038-01 the bib sheet", () => {
     } finally {
       moveTo.mockRestore();
     }
+  });
+
+  /**
+   * §249 × §NNN (A5 bibs) — the club's cut marks are honoured on both layouts, drawn from the
+   * PDF's own calls: on `two`, the dashed cut half-way down and a solid mark at each end of it; on
+   * `one`, no cut at all but a trim guide at the centred bib's top and foot. Without the marks,
+   * `one` draws no line whatever (§79).
+   */
+  describe("the club's cut marks", () => {
+    const MARKED = { ...DEFAULT_BIB_DESIGN, cutMarks: true };
+    const spyOn = () => ({
+      moveTo: vi.spyOn(PDFDocument.prototype, "moveTo"),
+      dash: vi.spyOn(PDFDocument.prototype, "dash"),
+    });
+
+    it("on `two`, runs the cut on every page: the dashed line, and a mark at each end", async () => {
+      const spies = spyOn();
+      try {
+        await sheet(3, "two", { design: MARKED });
+        const atCut = spies.moveTo.mock.calls.filter(([, y]) => y === BIB_SHEET_CUT);
+        // Two pages × (the dashed line from the left edge + the left mark + the right mark).
+        expect(atCut).toHaveLength(6);
+        expect(atCut.filter(([x]) => x === 0)).toHaveLength(4);
+        expect(spies.dash).toHaveBeenCalledTimes(2);
+      } finally {
+        spies.moveTo.mockRestore();
+        spies.dash.mockRestore();
+      }
+    });
+
+    it("on `one`, draws no cut but a trim guide at the bib's top and foot, on every page", async () => {
+      const spies = spyOn();
+      try {
+        await sheet(2, "one", { design: MARKED });
+        const top = (A4_PAGE.height - BIB_PAPER.height) / 2;
+        const foot = top + BIB_PAPER.height;
+        expect(spies.moveTo.mock.calls.filter(([, y]) => y === BIB_SHEET_CUT)).toHaveLength(0);
+        expect(spies.dash).not.toHaveBeenCalled();
+        // Two pages × two edges × a mark at each end.
+        expect(spies.moveTo.mock.calls.filter(([, y]) => y === top)).toHaveLength(4);
+        expect(spies.moveTo.mock.calls.filter(([, y]) => y === foot)).toHaveLength(4);
+        const lefts = spies.moveTo.mock.calls.filter(([x, y]) => x === 0 && (y === top || y === foot));
+        expect(lefts).toHaveLength(4);
+      } finally {
+        spies.moveTo.mockRestore();
+        spies.dash.mockRestore();
+      }
+    });
+
+    it("on `one` without the marks, draws no line at all", async () => {
+      const spies = spyOn();
+      try {
+        await sheet(2, "one");
+        expect(spies.moveTo).not.toHaveBeenCalled();
+        expect(spies.dash).not.toHaveBeenCalled();
+      } finally {
+        spies.moveTo.mockRestore();
+        spies.dash.mockRestore();
+      }
+    });
   });
 
   /**
