@@ -12,6 +12,7 @@ import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import { processUploadedImage } from "@/modules/media/images";
 import { getStorage, objectKey } from "@/modules/media/storage";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   canCreateEvent,
   canEditEventFields,
@@ -113,7 +114,7 @@ export async function saveAlbum<T extends Record<string, unknown>>(
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
 
-  return db.transaction(async (tx) => {
+  const saved = await db.transaction(async (tx) => {
     await assertSlugsAreFree(tx, fields, input.albumId);
     const [album] = await tx
       .update(galleryAlbums)
@@ -143,6 +144,9 @@ export async function saveAlbum<T extends Record<string, unknown>>(
     }
     return album;
   });
+  // The gallery pages read albums from the public cache (§NNN); every write below says so.
+  revalidatePublicContent("gallery");
+  return saved;
 }
 
 /**
@@ -154,7 +158,7 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
   input: { actor: Actor; albumId: string; expectedVersion: number; to: EditorialStatus; now?: Date },
 ): Promise<GalleryAlbum> {
   const now = input.now ?? new Date();
-  return db.transaction(async (tx) => {
+  const moved = await db.transaction(async (tx) => {
     const [current] = await tx.select().from(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).limit(1);
     if (!current) throw new DomainError("NOT_FOUND", "no such album");
 
@@ -194,6 +198,9 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
     }
     return updated;
   });
+  // Published or taken down: the album, the gallery, "Galerie" in every page's navigation.
+  revalidatePublicContent("gallery");
+  return moved;
 }
 
 /**
@@ -256,6 +263,9 @@ export async function addPhoto<T extends Record<string, unknown>>(
     await storage.delete(objectKey(keyPrefix, "web")).catch(() => undefined);
     throw error;
   }
+  // Only once the objects exist: a cached album pointing at a photo not yet stored is a broken
+  // picture on a published page.
+  revalidatePublicContent("gallery");
   return rows;
 }
 
@@ -291,6 +301,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
       .where(and(eq(galleryAlbums.id, item.albumId), sql`${galleryAlbums.coverMediaAssetId} IS NULL`));
     return item.keyPrefix;
   });
+  revalidatePublicContent("gallery");
   await removeObjects([keyPrefix]);
 }
 
@@ -308,6 +319,7 @@ export async function setCover<T extends Record<string, unknown>>(
     .limit(1);
   if (!item) throw new DomainError("NOT_FOUND", "no such photo in this album");
   await db.update(galleryAlbums).set({ coverMediaAssetId: item.assetId }).where(eq(galleryAlbums.id, input.albumId));
+  revalidatePublicContent("gallery");
 }
 
 /** The album, its translations, its items, its assets — and every object they owned. */
@@ -329,6 +341,7 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
     for (const asset of assets) await tx.delete(mediaAssets).where(eq(mediaAssets.id, asset.id));
     return assets.map((asset) => asset.keyPrefix);
   });
+  revalidatePublicContent("gallery");
   await removeObjects(prefixes);
 }
 

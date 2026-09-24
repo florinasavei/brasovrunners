@@ -9,7 +9,6 @@ import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
-import { getDb } from "@/db/client";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
@@ -30,7 +29,8 @@ import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
-import { findLatestPastEvent, listPastEvents, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
+import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
+import { cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
@@ -49,6 +49,10 @@ type Props = {
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
  * snapshot would show a run as scheduled after it was called off. It also keeps the database
  * out of the build, which is what lets CI build without one.
+ *
+ * Per request is not per query any more (§NNN): the rows come from the public cache, which every
+ * event save expires and which is keyed by the moment the next event ends — so the page reads the
+ * address and the clock afresh on every visit, and the database only when something changed.
  */
 export const dynamic = "force-dynamic";
 
@@ -59,8 +63,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("intro") };
 }
 
-/** The database handle and the locale, exactly as the repository spells them. */
-type Db = Parameters<typeof listUpcomingEvents>[0];
+/** The locale, exactly as the repository spells it. */
 type EventLocale = Parameters<typeof listUpcomingEvents>[1];
 
 /**
@@ -71,10 +74,10 @@ type EventLocale = Parameters<typeof listUpcomingEvents>[1];
  * and must not ask twice: the lead (the hero and the filter) and the list below the calendar
  * each `await` this, and the second one gets the settled value.
  */
-async function loadListing(db: Db, locale: EventLocale, now: Date) {
-  const upcoming = await listUpcomingEvents(db, locale, now);
+async function loadListing(locale: EventLocale, now: Date) {
+  const upcoming = await cachedUpcomingEvents(locale, now);
   if (upcoming.length > 0) return { events: upcoming, hasUpcoming: true };
-  const latestPast = await findLatestPastEvent(db, locale, now);
+  const latestPast = await cachedLatestPastEvent(locale, now);
   return { events: latestPast ? [latestPast] : [], hasUpcoming: false };
 }
 
@@ -96,7 +99,6 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
-  const db = getDb();
 
   /**
    * The query is **started here and awaited nowhere in this function** (§166).
@@ -115,7 +117,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
     renders the copy this site last served instead of the whole page becoming `error.tsx`. The
     promise is still started here and awaited nowhere, so the streaming above is unchanged.
   */
-  const listing = readWithLastGood(`events:${locale}`, () => loadListing(db, locale, now), now);
+  const listing = readWithLastGood(`events:${locale}`, () => loadListing(locale, now), now);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -269,7 +271,7 @@ async function PastEvents({
   hasUpcoming: Promise<boolean>;
 }) {
   const [rows, upcoming] = await Promise.all([
-    listPastEvents(getDb(), locale, now, PAST_EVENTS_SHOWN + 1, type),
+    cachedPastEvents(locale, now, PAST_EVENTS_SHOWN + 1, type),
     hasUpcoming,
   ]);
   // The one the lead is already showing, when there is nothing to come (§167).

@@ -11,6 +11,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import {
@@ -950,6 +951,13 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       await tx.delete(participants).where(eq(participants.id, current.participantId));
     }
   });
+  /*
+    The release above already told the public cache, through `transitionRegistration`; this says
+    it again for the row that held no place, because erasure is the one write where "the start
+    list may still show the name for a while" is not an acceptable answer (§NNN, `AGENTS.md`
+    §12.12). Telling it twice costs nothing.
+  */
+  revalidatePublicContent("places");
 }
 
 // --- The emergency details, and withdrawing consent (§322) --------------------------------------

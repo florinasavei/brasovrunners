@@ -3,6 +3,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { turnstileSiteKey } from "./turnstile";
@@ -168,5 +169,7 @@ export async function updateBotCheck<T extends Record<string, unknown>>(
     });
   });
   forgetCachedBotCheck();
+  // The contact page draws its widget from the public cache (§NNN), not from the memo above.
+  revalidatePublicContent("settings");
   return { enabled, honeypot, updatedAt: now };
 }

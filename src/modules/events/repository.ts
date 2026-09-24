@@ -263,6 +263,25 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
 }
 
 /**
+ * Every instant at which a published event in this locale stops being upcoming — the one thing
+ * the clock changes about the listing (`DECISIONS.md` §NNN).
+ *
+ * `listUpcomingEvents`, `listPastEvents` and `findLatestPastEvent` compare `now` against exactly
+ * this expression and nothing else, so between two of these instants their answers cannot
+ * change; the public cache keys them by the stretch `now` is in (`public-cache/clock.ts`). The
+ * same expression, not a copy of it — a cut-off that drifted from the queries' would file an
+ * answer under a stretch it was not true for.
+ */
+export async function listPublishedEventEndings(db: Database, locale: Locale): Promise<Date[]> {
+  const rows = await db
+    .selectDistinct({ endsAt: sql<Date>`${eventEndsAt}`.mapWith(events.startsAt) })
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(publishedIn(locale));
+  return rows.map((row) => row.endsAt);
+}
+
+/**
  * The published events that start inside `[from, to)`, soonest first — one month of them for
  * the calendar (`DECISIONS.md` §89). Past ones included: a calendar shows the month, and last
  * Monday's run is part of it.

@@ -10,6 +10,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 
 /**
  * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
@@ -372,6 +373,9 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.registrations = deleted.length;
     if (deleted.length > 0) counts.participants += await deleteOrphanParticipants(tx);
   });
+  // An old race's page still shows its start list, from the public cache (§NNN): the names that
+  // retention has just removed must leave it too. After the step's commit.
+  if (counts.registrations > 0) revalidatePublicContent("places");
 
   await step("audit-log", async (tx) => {
     const deleted = await tx

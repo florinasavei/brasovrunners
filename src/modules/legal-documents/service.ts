@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -388,6 +389,9 @@ export async function approveVersion<T extends Record<string, unknown>>(
   if (!approved) {
     throw new DomainError("CONFLICT", "this version changed while it was being approved");
   }
+  // In force from now, on `/termeni` and `/confidentialitate` — which read the text through the
+  // public cache (§NNN) and must show it on the next visit, not the next day.
+  revalidatePublicContent("legal");
 }
 
 /**
@@ -555,6 +559,9 @@ export async function withdrawApprovedVersion<T extends Record<string, unknown>>
       throw new DomainError("CONFLICT", "this version changed while it was being withdrawn");
     }
   });
+  // Never the version in force — but one dated ahead of it, which the public cache has already
+  // filed as the text of the coming stretch (`public-cache/clock.ts`, §NNN).
+  revalidatePublicContent("legal");
 }
 
 /**
@@ -704,7 +711,7 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
     );
   }
 
-  return db.transaction(async (tx) => {
+  const deletedVersion = await db.transaction(async (tx) => {
     const row = await assertDeletable(tx, input.versionId, input.now);
 
     // First, and in this transaction: the row that says this happened. It outlives the version
@@ -738,6 +745,8 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
 
     return { key: row.key, version: row.version };
   });
+  revalidatePublicContent("legal");
+  return deletedVersion;
 }
 
 /**
