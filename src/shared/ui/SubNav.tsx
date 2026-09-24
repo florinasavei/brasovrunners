@@ -5,7 +5,7 @@ export type SubNavItem = { href: string; label: string; active?: boolean };
 
 /**
  * The row the sub-navigation sits in: a thin rule under it like the backoffice's own tab bar,
- * and on a phone it scrolls sideways rather than wrapping (§NNN).
+ * and on a phone it scrolls sideways rather than wrapping (§360).
  *
  * The scrollbar is hidden, as MUI hides the main tab bar's: the entry cut off at the edge is what
  * says there is more, and a focused entry is scrolled into view by the browser. `overflow-y` is
@@ -26,7 +26,7 @@ const ROW_SX = {
 const LIST_SX = { display: "flex", flexWrap: "nowrap", m: 0, p: 0, listStyle: "none" } as const;
 
 /**
- * One entry, drawn as a secondary tab (§NNN): the words and nothing else — no border box, no
+ * One entry, drawn as a secondary tab (§360): the words and nothing else — no border box, no
  * fill, no shadow — a size smaller than the main tab bar and without its glyphs, so the two rows
  * read as a section and its parts rather than as two rows of the same thing.
  *
@@ -63,7 +63,7 @@ const ENTRY_SX = {
 
 /**
  * A row of sub-tabs inside one backoffice section (`DECISIONS.md` §265), and the one look every
- * sub-navigation in the backoffice wears (§NNN).
+ * sub-navigation in the backoffice wears (§360).
  *
  * The owner: "partea de configurare ar trebui să aibă subtaburi, pt status, general, mailuri,
  * captcha, etc". Both configuration screens had grown to six or seven panels on one scroll —

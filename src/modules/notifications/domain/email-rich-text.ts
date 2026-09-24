@@ -229,7 +229,7 @@ export function emailBodyParts(doc: RichTextDoc, data: Facts): EmailBodyPart[] {
 }
 
 /**
- * The block as this message sends it (§NNN): without the paragraphs whose only fields are facts the
+ * The block as this message sends it (§359): without the paragraphs whose only fields are facts the
  * message lacks (`onlyMissingFacts`) — a heading or a paragraph whole, a list without those items,
  * a quote without those paragraphs — and nothing when nothing is left. Only when filling: the
  * stored plain paragraphs keep every word as typed.
@@ -305,7 +305,7 @@ function runsOf(text: string): RichTextText[] {
 }
 
 /**
- * Plain paragraphs as the document the editor opens with (§NNN): **one paragraph block per
+ * Plain paragraphs as the document the editor opens with (§359): **one paragraph block per
  * paragraph**, and the platform's `**bold**` as the editor's bold.
  *
  * It was `fromPlainText(paragraphs.join("\n\n"))` — one paragraph holding every paragraph, blank
@@ -351,7 +351,7 @@ export function splitBlankLineParagraphs(doc: RichTextDoc): RichTextDoc {
 
 /**
  * Every run of text in the document through `rewrite`, marks and structure kept; a run left empty
- * is dropped, since a document may not hold one. What "Înlocuiește cu câmpurile" (§NNN) does to a
+ * is dropped, since a document may not hold one. What "Înlocuiește cu câmpurile" (§359) does to a
  * formatted text: the sample value inside a run becomes its field, and the bold around it stays.
  */
 export function mapEmailDocText(doc: RichTextDoc, rewrite: (text: string) => string): RichTextDoc {

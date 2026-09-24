@@ -21,7 +21,7 @@ export type ParticipantEmailCard = {
    */
   neverSent?: string;
   /**
-   * "textul salvat (EN) are valori de exemplu" (§NNN): the club's saved words for this message, in
+   * "textul salvat (EN) are valori de exemplu" (§359): the club's saved words for this message, in
    * the languages named, still hold a value of the page's sample, which every participant would
    * receive as written. Said in the closed card's summary on either language's tab, and the card
    * opens, for whoever may write the words; absent otherwise.

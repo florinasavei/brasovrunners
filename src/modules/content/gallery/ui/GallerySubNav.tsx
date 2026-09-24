@@ -13,7 +13,7 @@ import SubNav from "@/shared/ui/SubNav";
  * is where a link goes to be missed. Two entries at the top of both pages, the current one
  * marked, is navigation.
  *
- * It is the shared `SubNav` since §NNN, the one look every backoffice sub-navigation wears: it
+ * It is the shared `SubNav` since §360, the one look every backoffice sub-navigation wears: it
  * was two buttons, the current one filled, each with a glyph (§318) — a different drawing of the
  * same idea from the configuration screens', and the only row whose current entry did not say
  * `aria-current`. No glyphs any more, because a sub-tab row has none (`SubNav`); the album glyph

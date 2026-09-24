@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.77-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.78-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.77-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.78-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14539,3 +14539,52 @@ Tests:
 - e2e: `cms-publish.spec.ts`, `event-route.spec.ts`, `forms-keep-values.spec.ts`.
 
 Baseline `BR-V1.77-2026-09-24`.
+
+## 359. The email words start from the fields, and the preview's sample never reaches a participant
+
+The owner, 2026-09-24, with a screenshot of "Confirmă adresa de email" on `/admin/emails`: the editable text read "Ai început înscrierea la Crosul de toamnă" — the preview's made-up event — where it should read `{eventTitle}`. "Also all emails text must include these placeholders!"
+
+**What was wrong.** The words editor under each preview (§247, §270) started from the preview itself: the platform's words rendered with the page's sample (§91). A Redactor who saved it unchanged stored the sample's title, runner, place, date, bib, desk code or checklist as literal words, and every participant of every event would have read them. The same starting text put every paragraph in one block, which the email's HTML ran together, and printed the platform's `**bold**` as asterisks.
+
+**Decided.**
+
+1. **The starting text is the platform's words with the fields** — every field of the closed set written as its placeholder, for all twenty message types in both languages (`platformWords` in `templates.ts`, `emailCopyPrefill` in `email-copy-fields.ts`), one paragraph block per paragraph, the platform's bold as bold. Per sentence: the invitation's address reads as the platform's own fallback ("adresa aceasta"), since `{staffEmail}` is not a field; no "results at the link below" on the thank-you; none of the lines the platform adds around a body (the update's new place and time, the club copy's note, "already registered", "provisional"), which are sent whoever wrote the words.
+2. **The sample is one constant, and the save refuses it.** The preview is unchanged and reads its sample from `domain/email-sample.ts`; the save refuses a subject or paragraph holding one of its values, naming the box, the value and the field to use, with what was typed kept (§315). The check is the save's, not the schema's, so a text already stored with a sample value still reads and sends. The bib and the status are too ordinary to refuse as words ("42 de kilometri") and are found only inside the platform's own sentence. The sample inviter is "Ion Exemplu", a name nobody at the club has, so it is refused in every message; the former "Florin" — a real name at the club — is looked for only inside the platform's invitation sentence, so a club that signs "Florin" is not refused.
+3. **A saved text with sample values is flagged in either language.** Every message goes out in both (§96), so an English text holding the sample's title reaches every Romanian participant too: on either tab the card of cards and the message's card open, and the closed card names the language ("textul salvat (EN) are valori de exemplu"). The amber warning and "Înlocuiește cu câmpurile" stay with the language being edited; the button saves the text with each value rewritten to its field — the platform's own sentences whole, so the bib, the status and the old inviter too — audited like a save.
+4. **A paragraph whose only fields are facts the message lacks is not sent.** The platform writes a sentence around seven facts only when a message has them: the place, the start, the number, the desk code, the hold's deadline, the time of signing, what to bring (`EMAIL_COPY_CONDITIONAL_FACTS`). Four are in fact missing from real sends — no number yet, no checklist, no desk code on the club's copy (§320), the hold's deadline once past (§160). A text the club writes cannot say "only when", so the paragraph is the unit: "Numărul tău de concurs: {bibNumber}." is not sent without a number, and the same holds for a heading, a list item and a quoted paragraph. The runner's name, the title, the status, the role and the inviter are not among them: the platform keeps its sentence with a stand-in word ("eveniment", "Un coleg"), and a club paragraph naming one is sent. The starting text gives each conditional platform sentence a paragraph of its own, so a text saved unchanged drops it as the platform does. The helper line under the box says so.
+
+**What goes out.** A message the club never rewrote renders byte for byte as before (1,920 renders compared). The starting text saved unchanged sends the platform's own message for every type and language — with every fact, with none of the four, and as a club copy — but for two differences the test pins: a paragraph break before the conditional sentence in three messages (the declaration's hold deadline, the desk code in the number given by hand, the number in the club's confirmation notice), and the club copy of the number given by hand drops "Îl ridici la masă în ziua cursei" together with the code.
+
+**Rejected.** Leaving the conditional sentences out of the starting text: the owner asked for every text to carry the fields. A rule by sentence: "Numărul tău de concurs: …. Îl primești la masă…" would keep its second sentence with no number to refer to, and a rich-text paragraph's sentences cross its runs. Dropping any paragraph whose fields all came out empty, name and title included: "{participantName}, locul tău a fost anulat." would lose the whole message in a send with no name to put in it.
+
+No migration, no dependency. Tests: unit `notifications/email-copy-prefill.test.ts`, `notifications/emails-page-folds.test.ts`; integration `notifications/email-copy.test.ts`; e2e `email-copy-fields.spec.ts`.
+
+Baseline `BR-V1.78-2026-09-24`.
+
+## 360. Every backoffice sub-navigation is one row of secondary tabs, not pill buttons
+
+**Context.** The owner, 2026-09-24, with screenshots of `/devs` ("Stare | General | Emailuri | Anti-robot") and `/admin/tasks` ("De făcut | Anti-robot | Costuri | Sistem"): "I do not like the subtabs/buttons of the configs and todos". §265 had drawn these panels as MUI buttons, the current one filled blue with a shadow, the others outlined. The row sat under the backoffice's main navigation, which is a row of text tabs with an underline. Buttons under tabs read as things to do rather than as parts of the page. At 320 pixels the four-entry rows wrapped into a second row of buttons, 96 pixels tall. The gallery drew the same idea a third way: two `GlyphButtonLink`s with glyphs (§183, §318), with no `aria-current` on the current one. The email previews' language switch (§268) was already `SubNav` and wore the same buttons.
+
+**Decision.** *One look, one component.* `shared/ui/SubNav` is every sub-navigation in the backoffice: the configuration panels, the to-do panels, the gallery's albums and pictures (`GallerySubNav` now renders it), and the email previews' language. It is drawn as secondary tabs, the main bar's smaller relative:
+
+- **The entry.** Plain links in a list inside a labelled `<nav>` (`label` is required and becomes the `aria-label`). The words are 0.8125rem at weight 500, in the secondary text colour, with no fill, no border box, no shadow and no glyph.
+- **The current entry.** The primary colour, weight 600 and a 2-px underline in the primary colour, sitting on the row's 1-px divider the way the main bar's indicator does.
+- **Styled from `aria-current="page"` itself** (`&[aria-current="page"]`), never from a second prop, so the eye and a screen reader cannot be told different things. Colour alone is not the signal (BR-REQ-041-01): the weight and the underline carry it too.
+- **Heights.** Every entry keeps a transparent 2-px underline, so the current one is not taller. Every entry is 44 pixels.
+- **Focus.** The ring is drawn inside the entry (`outline-offset: -2px`), because the row is a scroll container and would clip one drawn outside.
+- **On a phone.** One line that scrolls sideways inside itself, with the scrollbar hidden as MUI hides the main bar's. It never wraps and never widens the page. The padding is 8 pixels on a phone and 12 from `sm`, so today's rows fit at 320 without scrolling at all.
+
+*Still a Server Component of anchors* (§265): real navigation, rendered on the server, underline included with JavaScript off. The links and their parameters are unchanged. Links rather than `role="tab"`: every entry changes the address, and a tab widget promises arrow keys and a panel in the same document that these rows do not have. The gallery moves from the client-side `GlyphButtonLink` to the same anchors, with its hrefs resolved by `getPathname`.
+
+*No glyphs on a sub-tab row.* The main bar carries the pictures, and a row of one-word labels under it is lighter without them. The alternative was a glyph on every entry of every row: seven panel names and two languages, several with no honest picture. **Amends §318**, which gave the gallery's two sub-navigation buttons glyphs. The `album` name is used nowhere else, so it leaves `action-icons.ts`.
+
+**Rejected.**
+- *MUI `Tabs` for the sub-row.* It is a client component whose indicator is placed by script after hydration, so the current entry would have no underline with JavaScript off. It would also make every sub-row a client island for what CSS draws.
+- *Keeping the buttons with a lighter variant (text buttons).* That is still button chrome and still a ripple, and it still reads as a verb.
+- *Wrapping on a phone.* A second line of tabs is the thing the owner saw and disliked.
+
+**Tests.**
+- `tests/unit/shared/sub-nav.test.ts` renders `SubNav` as the server sends it and reads the markup and the CSS Emotion writes beside it. It checks a labelled `<nav>` holding a `<ul>` of links with the hrefs as given, and `aria-current="page"` on the current entry only. It checks no `<button>`, no MUI Button, Chip or Tab class, no `<svg>`, and no background or shadow. It checks the base rule's transparent 2-px underline, weight 500, 44 px and `nowrap`, and the `[aria-current="page"]` rule's primary border and colour at weight 600. It checks the inset `:focus-visible` ring, and the row's `overflow-x: auto`, 1-px divider, no-wrap flex list and non-shrinking items. At source level it checks that `SubNav` is not a client component, that the gallery, tasks, devs and email previews use it with a label, and that no `? "contained" : "outlined"` pill navigation is left in `src/`.
+- `tests/e2e/config-panels.spec.ts` gains a 320-px walk over the to-do screen, the configuration's general panel and the gallery's pictures. It checks the current link carries `aria-current`, there are no buttons in the row, and the entries sit on one line. It checks every entry is at least 44 px and the page does not overflow. It checks a 2-px underline in a colour no other entry wears, and weight 600. Squeezed to 60 pixels, the row is still one line, overflows and scrolls.
+
+Baseline `BR-V1.78-2026-09-24`.

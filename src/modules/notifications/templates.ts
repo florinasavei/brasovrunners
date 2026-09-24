@@ -1025,7 +1025,7 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
  * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
  * so a club text that repeated them would say them twice.
  *
- * The editor's starting text is built from this (§NNN, `email-copy-fields.ts`), with every field of
+ * The editor's starting text is built from this (§359, `email-copy-fields.ts`), with every field of
  * the closed set standing for itself, so nothing of the page's sample reaches the box — and each
  * sentence the platform adds only when a fact exists in a paragraph of its own, so a saved text
  * drops it the same way. The send path never calls it: `buildTemplateContent` below reads the same
@@ -1146,7 +1146,7 @@ export function buildTemplateContent(
         falls back to the plain paragraphs beside it rather than to nothing, which is the same
         direction `readEmailCopy` takes with an unreadable setting: a message still goes out.
         Either way a paragraph whose only fields are facts this message lacks is not sent
-        (§NNN): the platform's "only when there is a number", said the one way a text the club
+        (§359): the platform's "only when there is a number", said the one way a text the club
         wrote can.
       */
       ...(writtenBody

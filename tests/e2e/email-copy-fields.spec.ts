@@ -24,7 +24,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 const STALE_KEY = "REGISTRATION_CANCELLED:ro";
 
 /**
- * BR-REQ-080-01, `DECISIONS.md` §NNN — the words of a message start from the platform's text with
+ * BR-REQ-080-01, `DECISIONS.md` §359 — the words of a message start from the platform's text with
  * the fields in it, and a sample value is refused at the save.
  *
  * The owner, 2026-09-24, with a screenshot of "Confirmă adresa de email": the box read "Ai început

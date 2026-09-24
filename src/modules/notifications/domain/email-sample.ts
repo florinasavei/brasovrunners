@@ -6,7 +6,7 @@ import type { EmailCopyPlaceholder } from "./email-copy";
 
 /**
  * The made-up runner at the made-up event every preview on `/admin/emails` is rendered with
- * (`DECISIONS.md` §91) — and, since §NNN, the words the club's own text may never contain.
+ * (`DECISIONS.md` §91) — and, since §359, the words the club's own text may never contain.
  *
  * ## Why the sample and the guard read one constant
  *
@@ -39,7 +39,7 @@ export type EmailSampleValues = {
   eventChecklist: string;
   /**
    * The staff invitation (§141): a made-up colleague, added by a made-up administrator — a name
-   * nobody at the club has, so it is refused in every message, as the runner's is (§NNN).
+   * nobody at the club has, so it is refused in every message, as the runner's is (§359).
    */
   staffRole: string;
   inviterName: string;
@@ -92,7 +92,7 @@ export const EMAIL_SAMPLE_FORMER_WHEN: Readonly<Record<EmailLocale, readonly str
 };
 
 /**
- * The sample inviter before §NNN: "Florin", which is also a real first name at the club — a text
+ * The sample inviter before §359: "Florin", which is also a real first name at the club — a text
  * the club signs "Florin" is its own. So it is not refused as a word: it is looked for only inside
  * the platform's own invitation sentence, where a text saved from the old editor still carries it
  * (`email-copy-fields.ts`), exactly as the bib and the status are.
@@ -207,7 +207,7 @@ export function emailSampleReplacementOf(literal: EmailSampleLiteral, locale: Em
   return literal.placeholder ? `{${literal.placeholder}}` : (literal.words?.[locale] ?? "");
 }
 
-/** Every sample value in a piece of text, rewritten to its field (§NNN "Înlocuiește cu câmpurile"). */
+/** Every sample value in a piece of text, rewritten to its field (§359 "Înlocuiește cu câmpurile"). */
 export function replaceEmailSampleLiterals(text: string, messageType: EmailMessageType, locale: EmailLocale): string {
   let out = text;
   for (const literal of EMAIL_SAMPLE_LITERALS) {
@@ -231,7 +231,7 @@ export type EmailSampleHit = {
 };
 
 /**
- * The save's refusal when the words still carry a sample value (§NNN). A `VALIDATION_ERROR` like
+ * The save's refusal when the words still carry a sample value (§359). A `VALIDATION_ERROR` like
  * any other, naming the boxes (`subject`, `body`) as `fields`; the values found travel with it so
  * the action can say which, and with what to replace them — words the sample holds, never anything
  * a person typed about somebody.

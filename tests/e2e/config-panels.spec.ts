@@ -67,7 +67,7 @@ test.describe("§265 the configuration panels", () => {
 });
 
 /**
- * §NNN — every backoffice sub-navigation is one row of secondary tabs (the owner, 2026-09-24:
+ * §360 — every backoffice sub-navigation is one row of secondary tabs (the owner, 2026-09-24:
  * "I do not like the subtabs/buttons of the configs and todos").
  *
  * They were pill buttons that wrapped into a second row of buttons at 320 pixels. What a unit
@@ -76,7 +76,7 @@ test.describe("§265 the configuration panels", () => {
  * underlined. The row is squeezed by hand to prove the scrolling, because at 320 pixels today's
  * labels happen to fit — a longer label, or English, must scroll, never wrap.
  */
-test.describe("§NNN the sub-tabs on a phone", () => {
+test.describe("§360 the sub-tabs on a phone", () => {
   test.skip(() => test.info().project.name !== "mobile", "the phone is the case this protects");
 
   test("are one row of links that scrolls sideways instead of wrapping, with no page overflow", async ({ page }) => {

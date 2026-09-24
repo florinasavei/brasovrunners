@@ -8,7 +8,7 @@ import SubNav from "@/shared/ui/SubNav";
 
 /**
  * BR-REQ-041-01 (the current entry is not colour alone; 44-pixel targets), `DECISIONS.md` §265 and
- * §NNN — every backoffice sub-navigation is one row of secondary tabs.
+ * §360 — every backoffice sub-navigation is one row of secondary tabs.
  *
  * The owner, 2026-09-24, on the configuration screen's "Stare | General | Emailuri | Anti-robot"
  * and the to-do screen's "De făcut | Anti-robot | Costuri | Sistem": "I do not like the
@@ -52,7 +52,7 @@ function rule(className: string, suffix = ""): string {
 
 const primary = createTheme().palette.primary.main;
 
-describe("§NNN SubNav as the server renders it", () => {
+describe("§360 SubNav as the server renders it", () => {
   it("is a labelled <nav> holding a list of plain links, one per entry, with the hrefs as given", () => {
     expect(markup).toMatch(/^<nav [^>]*aria-label="Configurația acestui mediu"/);
     expect(markup).toContain("<ul");
@@ -108,7 +108,7 @@ describe("§NNN SubNav as the server renders it", () => {
   });
 });
 
-describe("§NNN one look for every backoffice sub-navigation", () => {
+describe("§360 one look for every backoffice sub-navigation", () => {
   it("is a Server Component that imports no MUI button", () => {
     const source = read("src/shared/ui/SubNav.tsx");
     expect(source).not.toMatch(/^"use client"/m);

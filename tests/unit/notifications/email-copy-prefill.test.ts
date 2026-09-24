@@ -31,7 +31,7 @@ import {
 import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * BR-REQ-080-01, `DECISIONS.md` §NNN — the editor starts from the platform's words with the
+ * BR-REQ-080-01, `DECISIONS.md` §359 — the editor starts from the platform's words with the
  * fields in them, and no sample value is ever stored as the club's words.
  *
  * The owner, 2026-09-24, with a screenshot of "Confirmă adresa de email": the editable text read
@@ -134,7 +134,7 @@ function savedPrefill(messageType: EmailMessageType): EmailCopy {
 const P = '<p style="margin:0 0 14px;font-size:16px;line-height:1.5">';
 
 /**
- * Where the starting text starts a paragraph the platform's own message does not (§NNN,
+ * Where the starting text starts a paragraph the platform's own message does not (§359,
  * `ownParagraphsOf`): at the sentence the platform tacks on to the one before only when a fact
  * exists — the hold's deadline, the desk code, the number.
  */
@@ -171,7 +171,7 @@ function platformAsSaved(messageType: EmailMessageType, locale: (typeof LOCALES)
   return { subject: platform.subject, html, text };
 }
 
-describe("§NNN the editor starts from the platform's words, with the fields", () => {
+describe("§359 the editor starts from the platform's words, with the fields", () => {
   for (const messageType of TYPES) {
     for (const locale of LOCALES) {
       it(`${messageType} (${locale}): no sample value, and the fields its platform text uses`, () => {
@@ -227,7 +227,7 @@ describe("§NNN the editor starts from the platform's words, with the fields", (
   });
 });
 
-describe("§NNN what goes out is what went out before", () => {
+describe("§359 what goes out is what went out before", () => {
   for (const messageType of TYPES) {
     for (const locale of LOCALES) {
       it(`${messageType} (${locale}): the starting text saved unchanged sends the platform's message`, () => {
@@ -297,12 +297,12 @@ describe("§NNN what goes out is what went out before", () => {
 });
 
 /*
-  The review of §NNN: the starting text had every field in it and no condition, so a text saved
+  The review of §359: the starting text had every field in it and no condition, so a text saved
   unchanged printed "Ce să aduci:" for an event with no checklist, "Numărul tău de concurs: ." for a
   runner with no number, "…sau spune codul." under a club copy with no QR, and "ținut până la;" on a
   resend after the deadline. The preview, rendered with every sample fact, showed none of it.
 */
-describe("§NNN a paragraph whose every field is missing is not sent", () => {
+describe("§359 a paragraph whose every field is missing is not sent", () => {
   const text = (messageType: EmailMessageType, data: TemplateData) =>
     renderBilingual(messageType, "ro", data, ACTION, savedPrefill(messageType)).text;
 
@@ -369,7 +369,7 @@ describe("§NNN a paragraph whose every field is missing is not sent", () => {
   });
 });
 
-describe("§NNN a saved text with sample values is found in either language", () => {
+describe("§359 a saved text with sample values is found in either language", () => {
   const stale = { subject: "Cancelled: The autumn cross", paragraphs: ["Your registration for The autumn cross was cancelled."] };
   const clean = { subject: "Anulat", paragraphs: ["Înscrierea ta la {eventTitle} a fost anulată."] };
 
@@ -393,7 +393,7 @@ describe("§NNN a saved text with sample values is found in either language", ()
   });
 });
 
-describe("§NNN the save refuses a sample value", () => {
+describe("§359 the save refuses a sample value", () => {
   const entry = (subject: string, paragraphs: string[]) => ({ subject, paragraphs });
 
   for (const locale of LOCALES) {
@@ -474,7 +474,7 @@ describe("§NNN the save refuses a sample value", () => {
   });
 });
 
-describe("§NNN \"Înlocuiește cu câmpurile\" rewrites a saved text to its fields", () => {
+describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fields", () => {
   const STRUCTURAL = new Set<EmailMessageType>(["COMPLETE_DECLARATION", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "EVENT_THANKS"]);
 
   /** What the old editor handed a Redactor: the platform's words rendered with the page's sample. */
