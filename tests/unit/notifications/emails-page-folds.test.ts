@@ -11,7 +11,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN on `/admin/emails` (the owner, 2026-09-23): "the first card should also
+ * `DECISIONS.md` §336 on `/admin/emails` (the owner, 2026-09-23): "the first card should also
  * be an accordion", "'Cine primește mesajele de contact' should be closed by default", and
  * "'Emailurile trimise participanților' should be a master card with smaller cards within".
  *
@@ -62,7 +62,7 @@ function render(messages: ParticipantEmailCard[], openWhen?: FoldOpenWhen): stri
 const foldTags = (html: string): string[] => html.match(/<details[^>]*>/g) ?? [];
 const isOpen = (tag: string): boolean => /\sopen(=""|\s|>)/.test(tag);
 
-describe("§NNN the emails participants receive: one card of cards", () => {
+describe("§336 the emails participants receive: one card of cards", () => {
   it("is one closed fold holding one closed fold per message type", () => {
     const html = render(TYPES.map((type) => card(type)));
     const folds = foldTags(html);
@@ -120,7 +120,7 @@ describe("§NNN the emails participants receive: one card of cards", () => {
   });
 
   /**
-   * §331 × §NNN: the two messages the event notices added are cards like every other — one inner
+   * §331 × §336: the two messages the event notices added are cards like every other — one inner
    * fold each, with the short "when" in the closed summary and the full sentence, the subject and
    * the preview inside — and the three types nothing queues any more say so on the closed card.
    */
@@ -158,7 +158,7 @@ function escape(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-describe("§NNN the page hands every message to the card, and the panels fold", () => {
+describe("§336 the page hands every message to the card, and the panels fold", () => {
   const page = read("src/app/[locale]/admin/emails/page.tsx");
 
   it("renders the card of cards from every message type, with the language switch inside it", () => {

@@ -44,7 +44,7 @@ export default async function GalleryPage({ params }: Props) {
   const t = await getTranslations("Gallery");
   // Started, not awaited (§166): the heading and the intro reach the browser at once, and
   // the covers fill a grid of their own size when the query answers — from the public cache,
-  // which publishing an album or adding a photo expires (§NNN).
+  // which publishing an album or adding a photo expires (§333).
   const albums = readWithLastGood(`gallery:${locale}`, () => cachedPublishedAlbums(locale));
 
   return (

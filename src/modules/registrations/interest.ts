@@ -89,7 +89,7 @@ export async function registerInterest<T extends Record<string, unknown>>(
       createdAt: now,
     })
     .onConflictDoNothing({ target: [registrationInterests.eventId, registrationInterests.canonicalEmail] });
-  // The announcement is due when the window opens; the job is told if that is soon (§NNN).
+  // The announcement is due when the window opens; the job is told if that is soon (§334).
   wakeJobs("registration-maintenance", event.registrationOpensAt ?? event.publishedAt ?? now, now);
 }
 

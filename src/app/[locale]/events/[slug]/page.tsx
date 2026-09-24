@@ -55,7 +55,7 @@ type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: 
  * snapshot would show a run as scheduled after it was called off. It also keeps the database
  * out of the build, which is what lets CI build without one.
  *
- * Per request, and still not per query (§NNN). The page reads things no cache may freeze — the
+ * Per request, and still not per query (§333). The page reads things no cache may freeze — the
  * address (`?lista=`, `?interest=`), the clock (whether registration is open, the countdown) and
  * whether a staff member is signed in, for the "edit" button — so the HTML is made afresh every
  * time, from rows the public cache keeps: the event, its translations, the free places, the start

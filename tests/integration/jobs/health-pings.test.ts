@@ -5,7 +5,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criterion 12 (§NNN) — the health check does not cry wolf once a ping with
+ * BR-REQ-090-03 criterion 12 (§334) — the health check does not cry wolf once a ping with
  * nothing to do writes no `job_runs` row.
  *
  * `/api/health` answers 503 for anything but `ok`, and cron-job.org emails the owner on a 503

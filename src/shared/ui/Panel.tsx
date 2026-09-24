@@ -44,7 +44,7 @@ type Props = {
   /** Whether the panel folds at all. A panel that holds one line does not need to. */
   collapsible?: boolean;
   /**
-   * Why this fold opens by itself (`shared/ui/fold.ts`, §NNN). Closed when absent or when no
+   * Why this fold opens by itself (`shared/ui/fold.ts`, §336). Closed when absent or when no
    * reason holds. Ignored unless `collapsible`.
    */
   openWhen?: FoldOpenWhen;
@@ -82,7 +82,7 @@ type Props = {
  * screen every time. A box says where one thing ends, and a fold takes the ones that are not
  * today's work out of the way without hiding that they exist.
  *
- * **A fold starts closed, and opens by itself when it holds something to see** (§NNN, reversing
+ * **A fold starts closed, and opens by itself when it holds something to see** (§336, reversing
  * §269's "a panel that holds a form starts open"; the owner, 2026-09-23: "I would like the
  * accordions to be closed by default"). §269's reason was a heading nobody could find, and it
  * was the heading's fault rather than the fold's: the heading was once the `<summary>` itself

@@ -20,7 +20,7 @@ import { NEON_FAILURE_KINDS } from "@/modules/diagnostics/neon";
 import { NEON_LIMITS_REFUSAL_CODES } from "@/modules/diagnostics/neon-limits";
 
 /**
- * BR-REQ-090-07 criterion 8 (§NNN) — the rules of the database's brakes: the six ceilings and
+ * BR-REQ-090-07 criterion 9 (§335) — the rules of the database's brakes: the six ceilings and
  * what each costs at worst, a new or changed limit that must clear what is spent, production's
  * confirmation, the limit in force kept to the second, and the limit the card recommends.
  */

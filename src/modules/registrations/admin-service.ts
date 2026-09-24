@@ -954,7 +954,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   /*
     The release above already told the public cache, through `transitionRegistration`; this says
     it again for the row that held no place, because erasure is the one write where "the start
-    list may still show the name for a while" is not an acceptable answer (§NNN, `AGENTS.md`
+    list may still show the name for a while" is not an acceptable answer (§333, `AGENTS.md`
     §12.12). Telling it twice costs nothing.
   */
   revalidatePublicContent("places");

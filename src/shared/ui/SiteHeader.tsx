@@ -43,7 +43,7 @@ import SiteNav from "./SiteNav";
  * And a header that throws is a site with no way out of any page, which is worse than a site
  * with a shorter menu.
  *
- * ## Why from the public cache (§NNN)
+ * ## Why from the public cache (§333)
  *
  * The header is on every page, so its three reads were the three queries every visitor paid for
  * and the reason even a 404 woke the database. They are cached now and expired by the writes that
@@ -97,7 +97,7 @@ export default async function SiteHeader() {
    * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
    * without a developer, which is the whole point of the page type (BR-REQ-050-03). Answered
    * from the public cache, so the cost is paid once per change rather than once per visitor
-   * (§NNN).
+   * (§333).
    */
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);

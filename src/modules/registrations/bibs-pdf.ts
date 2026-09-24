@@ -14,7 +14,7 @@ import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, 
 import type { BibRow } from "./bibs";
 
 /**
- * Race numbers as a sheet to print (BR-REQ-038-01, `DECISIONS.md` §180, §NNN): **every bib is an
+ * Race numbers as a sheet to print (BR-REQ-038-01, `DECISIONS.md` §180, §338): **every bib is an
  * A5 sheet lying on its side, two to an A4 portrait page**, one above the other, and the page is
  * cut exactly in half — the owner, 2026-09-23: "they will be printed on an A4 page so we gonna
  * have 2 per page, basically their format is A5". The paper's edge is the bib's edge; a dashed
@@ -264,7 +264,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       The number's line is centred on its area even when the line is taller than the area — a
       large number over a sponsors' strip and two lines of small print — because its digits are
       shorter than its line and still fit; the picture centres it the same way, and a number that
-      hugged the band here would be a preview of a different bib (§NNN).
+      hugged the band here would be a preview of a different bib (§338).
     */
     const nameBlock = design.showName ? L.nameBlock : 0;
     const nameAbove = design.showName && design.namePosition === "above";
@@ -363,7 +363,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
   /**
    * The trim guide of a `one` page, with the club's cut marks (§249; A5 bibs two per sheet,
-   * §NNN): the centred A5 bib has no paper edge above or below it, so a club that asked for cut
+   * §338): the centred A5 bib has no paper edge above or below it, so a club that asked for cut
    * marks gets them at the bib's own top and foot — the same short solid rules at each end as the
    * two-up cut carries, which is where origin/qa's corner marks told a printer to trim. No dashed
    * line and no frame: without the club's marks the page is the bib alone, as §79 keeps it, and a

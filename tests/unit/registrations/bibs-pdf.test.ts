@@ -64,7 +64,7 @@ const carries = (pdf: Buffer, hex: string) => {
 
 describe("BR-REQ-038-01 the bib sheet", () => {
   /**
-   * §NNN — every bib is an A5 sheet lying on its side, two to an A4 portrait page, so a page
+   * §338 — every bib is an A5 sheet lying on its side, two to an A4 portrait page, so a page
    * count is always the rows split into pairs, an odd row's own page left with a blank half.
    */
   it.each([1, 2, 3, 4, 5, 6])("prints two A5 bibs per A4 page, so %i bibs are ceil(n/2) pages", async (count) => {
@@ -87,7 +87,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   });
 
   /**
-   * §NNN — the cut is the one place a club's scissors or guillotine go: exactly half-way down
+   * §338 — the cut is the one place a club's scissors or guillotine go: exactly half-way down
    * the A4 page, the upper bib's foot and the lower bib's top, whether or not a second bib sits
    * under it (an odd count's last page still gets the line, its lower half left blank).
    */
@@ -105,7 +105,7 @@ describe("BR-REQ-038-01 the bib sheet", () => {
   });
 
   /**
-   * §249 × §NNN (A5 bibs) — the club's cut marks are honoured on both layouts, drawn from the
+   * §249 × §338 (A5 bibs) — the club's cut marks are honoured on both layouts, drawn from the
    * PDF's own calls: on `two`, the dashed cut half-way down and a solid mark at each end of it; on
    * `one`, no cut at all but a trim guide at the centred bib's top and foot. Without the marks,
    * `one` draws no line whatever (§79).

@@ -10,7 +10,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criteria 9, 11 and 12; BR-REQ-090-07 criterion 7 (§NNN) — a job ping with nothing
+ * BR-REQ-090-03 criteria 9, 11 and 12; BR-REQ-090-07 criterion 7 (§334) — a job ping with nothing
  * to do answers from Next's data cache and never opens a connection.
  *
  * The route handlers themselves, end to end, with the data cache kept in memory

@@ -23,7 +23,7 @@ type Props = {
    * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
    */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§NNN). */
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -41,7 +41,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
   const t = await getTranslations("Admin");
 
   /*
-    Closed by default (§NNN; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
+    Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
     be closed by default"), with where the messages go right now in the summary — the one thing
     anybody opens this panel to check. The copies are left to the body: the summary is one line.
   */

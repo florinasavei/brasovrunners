@@ -1,7 +1,7 @@
 import { DIALING_CODES, KEEPS_LEADING_ZERO } from "./phone";
 
 /**
- * The telephone box's mask: digits grouped with spaces as they are typed (`DECISIONS.md` §NNN;
+ * The telephone box's mask: digits grouped with spaces as they are typed (`DECISIONS.md` §337;
  * the owner, with another site's field: "I like the phone input with the mask").
  *
  * Presentation only, and that is the whole safety argument. `composePhone` strips spaces before
@@ -77,7 +77,7 @@ function readTyped(typed: string): { plus: boolean; digits: string } {
 
 /**
  * Whether `typed` holds nothing `composePhone` would refuse outright on sight: only digits, the
- * separators it tolerates, and a leading `+` (§NNN).
+ * separators it tolerates, and a leading `+` (§337).
  *
  * `formatNationalNumber` below keeps only digits and a leading `+`, dropping everything else —
  * which is exactly right for a keystroke, where the mask only ever *adds* spaces to a value it

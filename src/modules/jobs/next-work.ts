@@ -12,7 +12,7 @@ import type { JobName } from "./schedule";
 
 /**
  * The earliest instant each job will next have something to do, read from the database by the
- * run that has it awake (§NNN) — the other half of `schedule.ts`.
+ * run that has it awake (§334) — the other half of `schedule.ts`.
  *
  * Each duty below mirrors the query of the job that performs it, and names it. A duty missing
  * here is not a wrong answer, it is a late one: the cap in `planQuiet` looks for real within the
@@ -74,7 +74,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     Scheduled events only, as the job itself (`findEventsNeedingMaintenance`): a cancelled event's
     queue is left as it stood (§331, event notices), holds and all, so its deadlines are no work of
     the job's, and waking the database at each of them would be a real run that does nothing
-    (§NNN, jobs sleep when nothing is due). An event put back on is a save, and the save wakes the
+    (§334, jobs sleep when nothing is due). An event put back on is a save, and the save wakes the
     job itself.
   */
   const [holds] = await any

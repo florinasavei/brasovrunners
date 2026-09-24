@@ -40,7 +40,7 @@ type Props = {
 /**
  * Per request: the page reads the draft cookie and the outcome in the address. Its three reads —
  * the captcha switch, who receives the messages, the event in `?about=` — come from the public
- * cache (§NNN); sending a message reads the switch and the recipients from the database itself.
+ * cache (§333); sending a message reads the switch and the recipients from the database itself.
  */
 export const dynamic = "force-dynamic";
 

@@ -6,7 +6,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-07 criterion 7 (§NNN) — the owner's throttle: `platform_settings.jobCadence`, the
+ * BR-REQ-090-07 criterion 7 (§334) — the owner's throttle: `platform_settings.jobCadence`, the
  * minimum minutes between two real runs of each job. Built like the Neon plan beside it: the
  * Administrator's, asserted on the server, audited from and to, a value this code cannot read
  * falling back to the default — and on save every cached schedule is forgotten, so the next ping

@@ -25,7 +25,7 @@ type Props = {
    * without this the Organizer was shown a "Salvează planul" that could only answer FORBIDDEN.
    */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§NNN). */
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -53,7 +53,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
   });
 
   /*
-    A fold since §NNN (the owner, 2026-09-23: "the first card should also be an accordion"),
+    A fold since §336 (the owner, 2026-09-23: "the first card should also be an accordion"),
     closed, with the plan and the day's figure in the summary — which is what anybody opening
     this page on race morning wants to read, and is readable without opening anything. It opens
     by itself after its own save, and when the allowance is spent: that is the one state here

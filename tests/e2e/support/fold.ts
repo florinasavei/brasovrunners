@@ -1,7 +1,7 @@
 import { expect, type Locator } from "@playwright/test";
 
 /**
- * Open a backoffice fold, the way a person does: activate its summary (`DECISIONS.md` §NNN —
+ * Open a backoffice fold, the way a person does: activate its summary (`DECISIONS.md` §336 —
  * every backoffice fold starts closed and opens by itself only for what the reader must see).
  *
  * By keyboard (`press("Enter")`, which Playwright focuses the element for) rather than a raw

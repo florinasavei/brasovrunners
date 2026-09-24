@@ -7,7 +7,7 @@ import { answerJobPing } from "@/modules/jobs/ping";
  * retry after a transient failure, a row deferred to the allowance reset, a batch longer than
  * twenty, or every message when the club chose "scheduled" delivery (§221).
  *
- * Since §NNN a ping with nothing claimable answers from Next's data cache without waking the
+ * Since §334 a ping with nothing claimable answers from Next's data cache without waking the
  * database: the last real run left the soonest instant a row becomes claimable, and the drain
  * that leaves a row behind forgets that promise (`wakeJobs`), so the next ping runs for real.
  *

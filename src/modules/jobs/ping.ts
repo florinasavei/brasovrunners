@@ -5,7 +5,7 @@ import { type JobName, planQuiet, type QuietPlan } from "./schedule";
 import { insideJobRun, readPingVerdict, recordPing, recordRealRun } from "./schedule-cache";
 
 /**
- * One ping of a job endpoint, in the order the rules rank (§NNN):
+ * One ping of a job endpoint, in the order the rules rank (§334):
  *
  *   1. who is calling — `JOB_SECRET`, before anything else is read, the cache included;
  *   2. whether there is anything to do — from the cache alone. A ping before the cached "nothing

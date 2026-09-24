@@ -11,7 +11,7 @@ import { forgetJobSchedules } from "./schedule-cache";
 
 /**
  * How often the platform may look at the database for its scheduled work, at most — the owner's
- * throttle (§NNN; 2026-09-23: "I want toggles in my admin area, so I can throttle myself when
+ * throttle (§334; 2026-09-23: "I want toggles in my admin area, so I can throttle myself when
  * needed"). Set on `/admin/tasks` → Costuri beside the Neon plan, and the same shape as it
  * (`diagnostics/neon-plan.ts`): one `platform_settings` row, a strict schema, the Administrator's
  * role asserted here and not only by the hidden button, and an audit row naming who changed it

@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (jobs sleep when nothing is due) × §221 — what the throttle card says about email is true
+ * §334 (jobs sleep when nothing is due) × §221 — what the throttle card says about email is true
  * whichever way the club's email leaves.
  *
  * The card said "emails go out right after the request that queued them" as a consequence nothing
@@ -32,7 +32,7 @@ async function render(emailTiming: "immediate" | "scheduled"): Promise<string> {
   return html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN, §221 the throttle card's sentence about email", () => {
+describe("§334, §221 the throttle card's sentence about email", () => {
   it("says email leaves after the request, whatever the interval, when that is how it leaves", async () => {
     const html = await render("immediate");
     expect(html).toContain(ro.Admin.tasks.jobCadence.emails.immediate);

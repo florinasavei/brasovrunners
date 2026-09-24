@@ -164,7 +164,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
     ),
   );
   /*
-    What the pings will do (§NNN): the cached "nothing due until" or the minimum interval, and the
+    What the pings will do (§334): the cached "nothing due until" or the minimum interval, and the
     last ping and whether it woke the database — from the cache, beside the last real run from
     `job_runs` above.
   */

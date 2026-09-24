@@ -170,14 +170,14 @@ describe("DECISIONS.md §98 what a working deployment reports is unchanged", () 
 });
 
 /**
- * The Neon project's monthly compute-time quota (§NNN): once this period's spend reaches 80%
+ * The Neon project's monthly compute-time quota (§335): once this period's spend reaches 80%
  * of it, health degrades before Neon suspends the database at 100% — the club's one warning
  * through a channel that still works once email is among what has stopped.
  *
  * `checkNeonQuotaHealth` is mocked here (it is unit-tested on its own account against a fake
  * Neon in `diagnostics/neon.test.ts`), so these assert only what the route does with its answer.
  */
-describe("BR-REQ-090-07 criterion 10, DECISIONS.md §NNN — /api/health's early warning for the Neon quota", () => {
+describe("BR-REQ-090-07 criterion 11, DECISIONS.md §335 — /api/health's early warning for the Neon quota", () => {
   it("carries the reading in a `neon` block and stays ok under the warning", async () => {
     checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
 
@@ -187,7 +187,7 @@ describe("BR-REQ-090-07 criterion 10, DECISIONS.md §NNN — /api/health's early
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
     // Status and percent only — this endpoint is public and unauthenticated, and the exact
-    // quota and this period's CU-hours are the club's own billing figures (§NNN); the full
+    // quota and this period's CU-hours are the club's own billing figures (§335); the full
     // reading is `/admin/tasks` and `/devs`'s to show.
     expect(body.neon).toEqual({ status: "ok", percent: 12 });
   });
@@ -242,11 +242,11 @@ describe("BR-REQ-090-07 criterion 10, DECISIONS.md §NNN — /api/health's early
 });
 
 /**
- * §NNN (the batch that caches: public pages, job pings, the Neon quota) — whatever else is
+ * §340 (the batch that caches: public pages, job pings, the Neon quota) — whatever else is
  * cached, the answer is not. A monitor told `ok` from a stored response while the database is
  * away is the one failure this endpoint exists to prevent (§98).
  */
-describe("DECISIONS.md §98, §NNN /api/health asks the database on every call", () => {
+describe("DECISIONS.md §98, §340 /api/health asks the database on every call", () => {
   it("is a dynamic route, never a prerendered or cached one", async () => {
     const route = await import("@/app/api/health/route");
     expect(route.dynamic).toBe("force-dynamic");

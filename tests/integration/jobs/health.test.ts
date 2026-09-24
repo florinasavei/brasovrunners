@@ -180,7 +180,7 @@ describe("job health reporting", () => {
     try {
       const first = await runRegistrationMaintenance(db, NOW);
       expect(first.errorCount).toBeGreaterThan(0);
-      // §NNN: retryable, so the run promises the pings no quiet and the second run — the one
+      // §334: retryable, so the run promises the pings no quiet and the second run — the one
       // that raises or clears the alarm — is the next ping rather than the next hour.
       expect(first.retryableErrorCount).toBeGreaterThan(0);
       // One failing run is not yet an alarm.

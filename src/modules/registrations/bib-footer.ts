@@ -15,7 +15,7 @@ import { BIB_FOOTER_LINE } from "./bib-geometry";
  *
  * `bibs-pdf.ts` prints the A5 bibs two to an A4 page with pdfkit and `bib-image.tsx` draws the
  * 990×700 picture of one with `next/og`, and the picture is the club's preview of the paper (§180,
- * §NNN). A footer that wraps in
+ * §338). A footer that wraps in
  * one and not in the other is a preview of a different bib, so neither renderer wraps anything:
  * both ask `bibFooterLines` which lines to draw and draw exactly those, each on its own line
  * with wrapping off — the sheet hands pdfkit no width at all, because pdfkit wraps any text it
@@ -52,7 +52,7 @@ export const BIB_FOOTER_MAX_LINES = 2;
 /**
  * How wide one footer line is, in ems of the footer's type: the A5 bib's 523.28 points of line
  * (the paper less its 18-point margin and the card's 18-point inset, each side) at 8 points —
- * 65.41 (§NNN; 62.91 while the bib was a 539-point card inside the A4 page's margins, §317). The
+ * 65.41 (§338; 62.91 while the bib was a 539-point card inside the A4 page's margins, §317). The
  * picture's footer size is derived from this, which is what makes its lines the paper's lines.
  */
 export const BIB_FOOTER_EMS = BIB_FOOTER_LINE.width / BIB_FOOTER_LINE.size;

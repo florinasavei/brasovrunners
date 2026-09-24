@@ -309,7 +309,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
     const phone = page.locator('[name="phone"]');
     // E.164 is fifteen digits in all and Romania's code is two of them, so thirteen remain for
     // the number that is stored — and a typed trunk zero is dropped before storing, so it is not
-    // charged (§NNN). Sixteen typed, fourteen kept, grouped by the mask; the cap counts digits,
+    // charged (§337). Sixteen typed, fourteen kept, grouped by the mask; the cap counts digits,
     // never the mask's spaces, and it is per country, not one number for everybody.
     await phone.fill("0712345678999999");
     await expect(phone).toHaveValue("0712 345 678 999 9");
@@ -388,7 +388,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
 
 test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag and a mask", () => {
   /**
-   * `DECISIONS.md` §NNN — the owner, with another site's field: "I like the phone input with the
+   * `DECISIONS.md` §337 — the owner, with another site's field: "I like the phone input with the
    * mask". One outlined box: the country's flag at its start (the native select lying invisible
    * over it), then the digits grouped as they are typed. What is stored does not move.
    */
@@ -472,7 +472,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
     }
   });
 
-  test("a country restored before hydration is not lost — the flag, mask and verdict follow it (§NNN)", async ({ page }) => {
+  test("a country restored before hydration is not lost — the flag, mask and verdict follow it (§337)", async ({ page }) => {
     /*
       What Firefox's own form restoration does on reload, and what a country picked in the
       instant before React attaches its listener does too: the select's value changes with no
@@ -566,7 +566,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
       So this is `+40 711 111 111` and not `40 711 111 111` — if it ever fails again, the filter
       has started eating the plus, which is a stored-number bug and not a test to adjust. The
-      spaces are the mask's (§NNN): the draft comes back through the same function the keys do.
+      spaces are the mask's (§337): the draft comes back through the same function the keys do.
     */
     await expect(page.locator('[name="phone"]')).toHaveValue("+40 711 111 111");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");

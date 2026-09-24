@@ -211,7 +211,7 @@ export type OwnerTaskInputs = {
   roDomainBound: boolean;
   /**
    * This environment's monthly compute-time quota and this period's spend against it, both read
-   * from the same Neon project row the consumption panel already fetches (§NNN) — never a
+   * from the same Neon project row the consumption panel already fetches (§335) — never a
    * second request. `null` when Neon could not be read at all (no key, or no answer), and
    * `quotaCuHours: null` when it answered and there is no quota: the row asks for the same next
    * step either way — set a limit, or find out why it could not be checked — so both are `open`.
@@ -360,7 +360,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /**
-   * The monthly compute-time limit, and this period's spend against it (§NNN; the owner,
+   * The monthly compute-time limit, and this period's spend against it (§335; the owner,
    * 2026-09-23, after $1.09 in two days of Launch: "I want toggles in my admin area, so I can
    * throttle myself when needed"). Not blocking: a limit is a brake the club chooses to pull,
    * not something a registration depends on. `broken` — red — at 80% of the quota is

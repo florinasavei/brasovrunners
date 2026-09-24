@@ -33,7 +33,7 @@ type Props = {
   /**
    * Which limit the card recommends (`recommendedNeonQuotaCuHours`, `SETUP.md` §40), and whether a
    * new, changed or removed limit asks for the ticked confirmation — production's guard, because
-   * reaching the limit suspends the site and removing it leaves production uncapped (§NNN, §327).
+   * reaching the limit suspends the site and removing it leaves production uncapped (§335, §327).
    */
   appEnv: AppEnvironment;
   /** The Administrator's form; `updateNeonLimits` refuses anybody else whatever this says (§291). */
@@ -41,7 +41,7 @@ type Props = {
 };
 
 /**
- * "Limitele bazei de date" — the two brakes on the Neon bill, beside the Neon plan (§NNN; the
+ * "Limitele bazei de date" — the two brakes on the Neon bill, beside the Neon plan (§335; the
  * owner, 2026-09-23: "I want toggles in my admin area, so I can throttle myself when needed").
  *
  * Three states, and only the last has a form: no key (what is missing, and where it goes), a read

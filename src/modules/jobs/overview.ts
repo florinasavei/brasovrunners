@@ -5,7 +5,7 @@ import { type JobCadenceMinutes, type JobName, planQuiet, SLOT_MINUTES } from ".
 import { readJobCacheState } from "./schedule-cache";
 
 /**
- * What the task board's throttle card and `/devs` print for one job (§NNN): the last real run,
+ * What the task board's throttle card and `/devs` print for one job (§334): the last real run,
  * when the next real one will happen at the latest, and the last ping and whether it ran.
  *
  * The next real check is read from the cache — it is what the pings will actually do. When the

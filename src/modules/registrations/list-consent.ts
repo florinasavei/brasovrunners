@@ -42,7 +42,7 @@ import { findRegistrationById } from "./repository";
  *
  * The published set (`repository.ts#listPublicStartList`) already reads the column, so a name
  * leaves the list the moment the row changes and returns the same way. The public page reads the
- * list through the public cache (§NNN), and the write below expires it before the request ends,
+ * list through the public cache (§333), and the write below expires it before the request ends,
  * so the next visitor asks the database again — the choice still reaches the page at once, and
  * §281's last good copy is still never consulted for it. §186's "Participant anonim" count picks
  * the row up on the other side of the same column.
@@ -84,7 +84,7 @@ export async function setListConsent<T extends Record<string, unknown>>(
     .update(registrations)
     .set({ listOptOut: !listed, updatedAt: now })
     .where(eq(registrations.id, registrationId));
-  // Off the public list (or back on it) for the next visitor, not after the cache's day (§NNN).
+  // Off the public list (or back on it) for the next visitor, not after the cache's day (§333).
   revalidatePublicContent("places");
 
   // The participant's own act: no staff actor. The trail names the change and the door, and

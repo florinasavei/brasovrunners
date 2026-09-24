@@ -51,7 +51,7 @@ export default async function RegistrationCta({
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
       /*
-        From the public cache (§NNN), and still the allocator's number for this instant: every
+        From the public cache (§333), and still the allocator's number for this instant: every
         registration that moves expires it, and the one input the clock changes — a waiting-list
         offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
         Without it, an open race's page woke the database for every visitor during exactly the

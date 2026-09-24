@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-090-07 criteria 7 and 11 (§NNN) — the database's limits card on an environment with no
+ * BR-REQ-090-07 criteria 8 and 12 (§335) — the database's limits card on an environment with no
  * Neon key, and the to-do row that reads the same reading.
  *
  * The suite never reaches Neon: `playwright.config.ts` sets `E2E_DISABLE_NEON`, so the server

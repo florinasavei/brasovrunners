@@ -86,7 +86,7 @@ describe("§254 the anti-bot switch", () => {
     */
     const read = (...where: string[]) => readFileSync(path.join(process.cwd(), ...where), "utf8");
     expect(read("src", "app", "[locale]", "events", "[slug]", "register", "page.tsx")).toContain("activeBotCheckSiteKey");
-    // The contact page asks the same switch through the public cache (§NNN), which the switch's
+    // The contact page asks the same switch through the public cache (§333), which the switch's
     // own save expires — so it is still consulted, and a change still shows on the next visit.
     expect(read("src", "app", "[locale]", "contact", "page.tsx")).toContain("cachedBotCheckSiteKey");
     expect(read("src", "modules", "public-cache", "reads.ts")).toMatch(/cachedBotCheckSiteKey[\s\S]*readBotCheck/);

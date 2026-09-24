@@ -11,13 +11,13 @@ import { formatNationalNumber, phoneMaxLength, phonePlaceholder, reformatPhoneIn
 
 /**
  * A telephone number as one box: the country's flag at its start, the digits after it, grouped
- * as they are typed (`DECISIONS.md` §84, §198, §NNN). Posted as `<name>Country` and `<name>`
+ * as they are typed (`DECISIONS.md` §84, §198, §337). Posted as `<name>Country` and `<name>`
  * exactly as it was when these were two boxes; `form-mapping.ts` composes the E.164 the schema
  * stores.
  *
  * The country is still a native `<select>`, on purpose: it works before hydration, it is the
  * control a phone knows how to open, and 200 options in a Popover is a scroll nobody wants.
- * Romania first, then the rest by name in the reader's language. What changed (§NNN) is that the
+ * Romania first, then the rest by name in the reader's language. What changed (§337) is that the
  * select is no longer what is *drawn*: it lies, invisible, over the flag and the caret at the
  * start of the box, so a tap on the flag opens the phone's own picker, and what the eye reads is
  * one outlined field with a real flag in it.
@@ -85,7 +85,7 @@ function flagEmoji(code: string): string {
 }
 
 /**
- * The flag, the caret, and the select laid over both (§NNN).
+ * The flag, the caret, and the select laid over both (§337).
  *
  * - **The target is the whole start of the box.** Pulled out to the outline's own left edge
  *   (the input's padding is 14 pixels) and as tall as the field, so it is 56 × 64 — over the
@@ -176,7 +176,7 @@ function PhoneFieldIsland({
 }: {
   name: string;
   label: string;
-  /** The select's accessible name — it draws no label of its own since §NNN. */
+  /** The select's accessible name — it draws no label of its own since §337. */
   countryLabel: string;
   /**
    * The prefixes in the order to show them, from `phoneCountryOrder` on the server (§324): the
@@ -185,7 +185,7 @@ function PhoneFieldIsland({
    */
   countryOrder: readonly string[];
   /**
-   * The reader's own name for each code, from `phoneCountryLabels` on the server (§NNN, §324):
+   * The reader's own name for each code, from `phoneCountryLabels` on the server (§337, §324):
    * the option now carries the country's name as well as its flag and code, and it is server
    * data for the same reason the order is — computed once with Node's `Intl.DisplayNames` and
    * handed down as plain data, never recomputed from the browser's own ICU, which is the
@@ -301,7 +301,7 @@ function PhoneFieldIsland({
   /*
     E.164 is fifteen digits in all, country code included (§282; Amalia: the number needs a
     maximum and a clearer answer as it is typed). So the room left in the box depends on the
-    country chosen with it — and, since §NNN, on the form typed: `phoneDigitCap` counts the
+    country chosen with it — and, since §337, on the form typed: `phoneDigitCap` counts the
     digits that will be *stored*, so a `+40…` may carry its code and a trunk zero is not charged.
     Typing past it is refused at the keystroke rather than at the submit, because the digit
     somebody has just typed is the one they can still see. `maxLength` is the longest the mask
@@ -325,7 +325,7 @@ function PhoneFieldIsland({
    * Cleared the moment the numbers differ, or the control would stay refused for ever.
    */
   const inputRef = useRef<HTMLInputElement>(null);
-  /** The native select underneath the flag (§NNN) — read once, on mount, below. */
+  /** The native select underneath the flag (§337) — read once, on mount, below. */
   const selectRef = useRef<HTMLSelectElement>(null);
   useEffect(() => {
     const input = inputRef.current;
@@ -334,7 +334,7 @@ function PhoneFieldIsland({
   }, [sameAsOther, mustDifferLabel]);
 
   /**
-   * The country a browser can put in the select before this island ever ran (§NNN).
+   * The country a browser can put in the select before this island ever ran (§337).
    *
    * The select stays native so it works before hydration (see the component's own comment) —
    * but that cuts both ways. A country picked in that window, or one Firefox refills from its
@@ -364,7 +364,7 @@ function PhoneFieldIsland({
   }, []);
 
   /*
-    The list the phone opens: flag, name and code — "🇷🇴 România (+40)" (§NNN, superseding
+    The list the phone opens: flag, name and code — "🇷🇴 România (+40)" (§337, superseding
     §236's cut to the flag and the code alone).
 
     §236 cut the name because the select *was* the box, 104 pixels of it, and "România (+4…"
@@ -431,7 +431,7 @@ function PhoneFieldIsland({
       placeholder={phonePlaceholder(country)}
       /*
         Digits only, in the box — **and a leading `+` survives** (§223, §226; the owner: "in
-        the phone field I should be able to type only numbers!") — **grouped as typed** (§NNN).
+        the phone field I should be able to type only numbers!") — **grouped as typed** (§337).
 
         The country code is chosen at the start of the box, so what belongs here is the
         national number and nothing else. Anything that is not a digit is **stripped as it
@@ -514,7 +514,7 @@ function PhoneFieldIsland({
             have taken — which is the form working *worse* for the person least able to
             recover from it (`AGENTS.md` §1.5).
 
-            **Escaped, because browsers compile `pattern` with the `v` flag** (§NNN), and under
+            **Escaped, because browsers compile `pattern` with the `v` flag** (§337), and under
             it an unescaped `(`, `)`, `/` or `-` inside a class is a syntax error. The pattern
             this replaced, `[0-9+()./\s-]`, was therefore invalid, and a browser ignores an
             invalid pattern outright — it had been enforcing nothing.

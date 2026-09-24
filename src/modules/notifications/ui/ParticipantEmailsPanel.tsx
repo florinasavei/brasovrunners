@@ -26,7 +26,7 @@ export type ParticipantEmailCard = {
   subjectLine: string;
   /** The message as it goes out, for the sandboxed preview. */
   html: string;
-  /** Whether this card opens by itself: its words were just saved (§NNN). */
+  /** Whether this card opens by itself: its words were just saved (§336). */
   justSaved: boolean;
   /** The words' editor, for whoever writes them (§247); absent for everybody else. */
   editor?: ReactNode;
@@ -46,7 +46,7 @@ type Props = {
 };
 
 /**
- * Every message a participant can receive, as one card of cards (`DECISIONS.md` §NNN; the
+ * Every message a participant can receive, as one card of cards (`DECISIONS.md` §336; the
  * owner, 2026-09-23: "'Emailurile trimise participanților' should be a master card with smaller
  * cards within").
  *

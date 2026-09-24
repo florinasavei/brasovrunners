@@ -1,5 +1,5 @@
 /**
- * When a backoffice fold opens by itself (`DECISIONS.md` §NNN; the owner, 2026-09-23, on
+ * When a backoffice fold opens by itself (`DECISIONS.md` §336; the owner, 2026-09-23, on
  * `/admin/emails`: "I would like the accordions to be closed by default").
  *
  * A fold starts closed. It opens on arrival only when it holds something the reader must see

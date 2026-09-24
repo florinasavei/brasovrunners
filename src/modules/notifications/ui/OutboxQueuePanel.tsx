@@ -17,7 +17,7 @@ type Props = {
   volume: EmailVolumeToday;
   /** "Trimite acum" is the Administrator's (§80); the queue itself is read by whoever may read the registrations (§291). */
   mayEdit: boolean;
-  /** Why the fold opens by itself, as the page knows it: "send now" just answered (§NNN). */
+  /** Why the fold opens by itself, as the page knows it: "send now" just answered (§336). */
   openWhen?: FoldOpenWhen;
 };
 
@@ -49,7 +49,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       intro={t("emails.queue.intro")}
       aside={t("outbox.waitingShort", { count: queue.total })}
       collapsible
-      // Open while something waits (§269), and after "send now" answered — sent or refused (§NNN).
+      // Open while something waits (§269), and after "send now" answered — sent or refused (§336).
       openWhen={{ ...openWhen, attention: queue.total > 0 }}
       id="outbox-queue"
       data-testid="outbox-queue"

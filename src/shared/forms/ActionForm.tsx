@@ -110,7 +110,7 @@ export default function ActionForm({
     // first named box's tab is the one on top (§NNN): the event editor's boxes start closed, and
     // a named box the reader cannot see is a refusal they cannot act on.
     for (const name of state.fields) revealField(document.getElementById(fieldId(name, scope)));
-    // The folds around the form (§NNN): backoffice folds start closed, and an element in
+    // The folds around the form (§336): backoffice folds start closed, and an element in
     // a closed `<details>` cannot take focus. Normally the person opened it to press and it is
     // still open; this is for whatever closed it in between.
     openFoldsAround(summary.current);

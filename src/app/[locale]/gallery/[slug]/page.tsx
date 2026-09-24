@@ -16,7 +16,7 @@ import { riseIn } from "@/theme/motion";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
-/** Rendered per request, from rows the public cache keeps and an album save expires (§NNN). */
+/** Rendered per request, from rows the public cache keeps and an album save expires (§333). */
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

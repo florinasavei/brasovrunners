@@ -15,7 +15,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { pruneExpiredRows, RETENTION } from "@/modules/jobs/retention";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
-// The public cache's one call (§NNN, public pages from cache), stubbed so the sweep's deletes can
+// The public cache's one call (§333, public pages from cache), stubbed so the sweep's deletes can
 // be seen telling it; outside the tests that stub `NEXT_RUNTIME` the helper returns before it.
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), unstable_cache: vi.fn() }));
 const { revalidateTag } = await import("next/cache");
@@ -357,7 +357,7 @@ describe("retention sweep", () => {
   });
 
   /**
-   * §NNN (public pages from cache) × §322: both of the sweep's registration deletes — the lapsed
+   * §333 (public pages from cache) × §322: both of the sweep's registration deletes — the lapsed
    * ones after thirty days and a race's after three years — expire the public "places" rows, and a
    * sweep that deletes no registration tells the cache nothing (it runs every few minutes).
    */

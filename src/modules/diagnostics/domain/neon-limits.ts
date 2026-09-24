@@ -3,7 +3,7 @@ import type { AppEnvironment } from "@/shared/config/env-enums";
 import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
 
 /**
- * The two brakes the club can put on its own Neon bill from `/admin/tasks` → Costuri (§NNN):
+ * The two brakes the club can put on its own Neon bill from `/admin/tasks` → Costuri (§335):
  * how large the database's compute may grow, and how many CU-hours a billing period may spend
  * before Neon stops it. Pure rules — no request, no database — so the page, the service and the
  * tests agree on them.
@@ -69,7 +69,7 @@ export function recommendedNeonQuotaCuHours(appEnv: AppEnvironment): number {
 
 /**
  * 80%: the one share of a quota that both `/api/health`'s early warning and the derived
- * `neonLimits` row on `/admin/tasks` read the period's spend against (§NNN). Neon suspends the
+ * `neonLimits` row on `/admin/tasks` read the period's spend against (§335). Neon suspends the
  * whole database at 100% — every page down until the next billing period — so there has to be
  * one formula that decides "close to it", or the two could disagree the day it matters.
  */

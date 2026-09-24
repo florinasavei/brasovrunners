@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.69-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.70-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.69-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.70-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -13,8 +13,8 @@ M1 — event pages, the full registration lifecycle, staff sign-in, legal docume
 transactional email, a registrations backoffice, and since 2026-09-18 the race-day desk, a
 photo gallery on R2, recurring events and a rich-text event description — exists and is
 tested. **Production serves the club's `.com`** (first deployment 2026-09-17; it runs
-`BR-V1.40` on schema `0054` as of 2026-09-22) and **QA serves its `qa.` subdomain** (`BR-V1.43`,
-schema `0056`, which is everything merged so far), each on its own
+`BR-V1.69` on schema `0065` as of 2026-09-24) and **QA serves its `qa.` subdomain** (the same
+release, plus whatever the open batch PR has merged), each on its own
 Neon project in Frankfurt, each with staff sign-in through Zitadel; every environment but
 production carries clearly marked sample legal text (`DECISIONS.md` §29), so the participant
 journey can be walked on QA end to end. What is left is not application code — it is the list
@@ -199,6 +199,14 @@ sections and in `CHANGELOG.md`.
   first, which cancelling never does (§33, §44, §67, §88); "Trimite acum" within the allowance (§80). The race-day desk on a phone: scan or
   type, confirm on paper, give a place, a number, check in, walk-ins (§67); the desk row names
   a minor's parent (§108).
+- **What wakes the database, and the brakes on it** (the bill is time awake, §327): anonymous public
+  traffic reads rows from Next's data cache, expired by every write that changes them (§333); a job
+  ping with nothing due answers without the database, and the Administrator may set a minimum
+  interval between real runs on `/admin/tasks` → Costuri (§334); the "Limitele bazei de date" card
+  reads and sets Neon's size ceiling and monthly quota, and `/api/health` warns at 80% of it (§335).
+- Backoffice folds start closed and open themselves only for a refusal, a save, a warning or the
+  address's `#` (§336); `/admin/emails` is one card of cards. The telephone is one box with a flag
+  and a mask (§337); a bib is a true A5 sheet, two to an A4 page (§338).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
@@ -305,7 +313,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0059` (2026-09-23); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; **the pages read the plan from Neon's own answer** (the project row's `owner.subscription_type`), and `platform_settings.neonPlan` is only the fallback without a key (`DECISIONS.md` §280, §306, §326). **Capped since 2026-09-23**: production 0.25–1 CU and 100 CU-hours a month, QA 0.25 CU and 30 — a project that reaches its limit is suspended until the next period (`SETUP.md` §40) |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated on `0065` (2026-09-24); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; **the pages read the plan from Neon's own answer** (the project row's `owner.subscription_type`), and `platform_settings.neonPlan` is only the fallback without a key (`DECISIONS.md` §280, §306, §326). **Capped since 2026-09-23**: production 0.25–1 CU and 100 CU-hours a month, QA 0.25 CU and 30 — a project that reaches its limit is suspended until the next period (`SETUP.md` §40) |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |

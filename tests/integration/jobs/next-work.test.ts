@@ -12,7 +12,7 @@ import { confirmEmail, type EventForRegistration, submitRegistration } from "@/m
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-03 criterion 10 (§NNN) — each real run works out, from the database it already has
+ * BR-REQ-090-03 criterion 10 (§334) — each real run works out, from the database it already has
  * awake, the earliest instant its job will next have work. One case per duty the maintenance job
  * performs, each alone on an empty database so the instant is that duty's and nobody else's, and
  * the outbox's own. "Nothing at all" is null, which the plan turns into the hour-long cap.
@@ -188,7 +188,7 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
   });
 
   /**
-   * §331 (event notices) × §NNN: a cancelled event's queue is left as it stood, holds and all, and
+   * §331 (event notices) × §334: a cancelled event's queue is left as it stood, holds and all, and
    * the job does nothing with it — so its deadlines, its start and its reminders are no reason to
    * wake the database.
    */

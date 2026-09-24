@@ -7,7 +7,7 @@ import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
  * The same picture as the Open Graph one, as a file to save (`DECISIONS.md` §90): square by
  * default, because Instagram takes no link and a post there is a picture somebody uploads by
  * hand; `?shape=og` for the wide one. Public, like the event: it shows nothing the page does
- * not, and reads the same cached row (§NNN).
+ * not, and reads the same cached row (§333).
  */
 export const dynamic = "force-dynamic";
 

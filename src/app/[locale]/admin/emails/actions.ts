@@ -217,7 +217,7 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
     return refused(error, form, { never: ["reset"] });
   }
   revalidatePath(path);
-  // The message is named on the way back (§NNN), so its card opens with the preview that just
+  // The message is named on the way back (§336), so its card opens with the preview that just
   // changed. Only a real type reaches this line — anything else was refused above.
   redirect(`${back}&${outcome}&message=${messageType}#admin-alert`);
 }

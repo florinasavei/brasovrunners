@@ -11,11 +11,11 @@ import {
 import { BIB_SHEET_CUT, bibSheetSlots } from "@/modules/registrations/bibs-pdf";
 
 /**
- * §NNN — the owner, 2026-09-23: "they will be printed on an A4 page so we gonna have 2 per
+ * §338 — the owner, 2026-09-23: "they will be printed on an A4 page so we gonna have 2 per
  * page, basically their format is A5". Every bib is an A5 sheet lying on its side, half of the
  * A4 portrait page exactly, and the picture is the same paper at a screen's size.
  */
-describe("§NNN the bib's geometry", () => {
+describe("§338 the bib's geometry", () => {
   it("is A5 landscape, exactly half of the A4 page — 210 × 148.5 mm, 1:√2", () => {
     expect(BIB_PAPER.width).toBe(A4_PAGE.width);
     expect(BIB_PAPER.height).toBe(A4_PAGE.height / 2);

@@ -8,7 +8,7 @@ import { checkNeonLimits, describeNeonLimits, type NeonLimitsReading, parseNeonL
 import { type NeonDeps, type NeonFailure, readNeonLimits, writeNeonLimits } from "./neon";
 
 /**
- * The database's brakes, changed by an Administrator from `/admin/tasks` → Costuri (§NNN): the
+ * The database's brakes, changed by an Administrator from `/admin/tasks` → Costuri (§335): the
  * compute's size ceiling and the period's CU-hour limit, both held by Neon rather than by this
  * application — so there is no settings row here, only Neon's answer before, the change, Neon's
  * answer after, and the audit row between them.

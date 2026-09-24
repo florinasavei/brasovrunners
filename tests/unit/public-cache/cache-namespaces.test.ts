@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — three branches of one batch put Next's data cache to work, and they must not step on
+ * §340 — three branches of one batch put Next's data cache to work, and they must not step on
  * each other:
  *
  * - the public pages' rows (`public-cache/`, public pages from cache): `unstable_cache` keyed
@@ -46,7 +46,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN the data cache's three tenants", () => {
+describe("§340 the data cache's three tenants", () => {
   it("file their entries under keys that name their owner first", async () => {
     await publicRead(["events.upcoming", "ro", "after-last"], ["events"], async () => []);
     await recordPing("email-outbox", NOW, false);

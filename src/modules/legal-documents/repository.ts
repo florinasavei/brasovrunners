@@ -118,7 +118,7 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 /**
  * Every instant at which `findCurrentApprovedDocument(key, …)` can change its answer without a
  * write: the effective dates of the approved, not withdrawn versions of `key` (`DECISIONS.md`
- * §NNN). The same three conditions as that query, so the two cannot disagree about which dates
+ * §333). The same three conditions as that query, so the two cannot disagree about which dates
  * matter; the public cache keys the text in force by the stretch `now` is in
  * (`public-cache/clock.ts`), which is how a version approved today for next month takes effect
  * on the day without anybody saving anything.

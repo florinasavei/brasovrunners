@@ -1,5 +1,5 @@
 /**
- * The clock, as part of a cache key (`DECISIONS.md` §NNN).
+ * The clock, as part of a cache key (`DECISIONS.md` §333).
  *
  * Some public reads compare against `now` in SQL: an event is upcoming while it has not ended, a
  * legal version is in force from its effective date, a waiting-list offer holds a place until it

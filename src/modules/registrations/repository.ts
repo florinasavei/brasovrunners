@@ -307,7 +307,7 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
     .where(and(eq(registrations.id, params.id), inArray(registrations.status, fromStatuses)))
     .returning();
   /*
-    The free places and the public start list are cached for the public pages (§NNN), and this is
+    The free places and the public start list are cached for the public pages (§333), and this is
     the one statement every change of state goes through — the allocator's click and its job, the
     desk, the staff screens, a participant's own link — so the cache is told here, once, rather
     than in each of them. Next applies it when the request ends, which is after the caller's
@@ -454,7 +454,7 @@ export async function countOccupied<T extends Record<string, unknown>>(
 
 /**
  * When each open waiting-list offer of one event lapses — the one thing the clock changes about
- * `countOccupied` (`DECISIONS.md` §NNN).
+ * `countOccupied` (`DECISIONS.md` §333).
  *
  * An offer occupies its place while `hold_expires_at > now` and not a moment after, so between
  * two of these instants the free-place count cannot change without a write. The public cache
@@ -610,7 +610,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
       .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
   }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
-  // cache itself (§NNN): the places these rows held are counted as free from now on.
+  // cache itself (§333): the places these rows held are counted as free from now on.
   if (lapsedOffers.length > 0 || releasing.length > 0) revalidatePublicContent("places");
 }
 
@@ -717,7 +717,7 @@ export async function closeWaitlistForStartedEvent<T extends Record<string, unkn
     .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", provisionalBibNumber: null, updatedAt: now })
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED")))
     .returning({ id: registrations.id });
-  // The waiting list is part of the public count (`computePublicAvailability`) — §NNN.
+  // The waiting list is part of the public count (`computePublicAvailability`) — §333.
   if (rows.length > 0) revalidatePublicContent("places");
   return rows.length;
 }

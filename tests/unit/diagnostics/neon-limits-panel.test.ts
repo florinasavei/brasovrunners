@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { NeonLimitsReading } from "@/modules/diagnostics/domain/neon-limits";
 
 /**
- * BR-REQ-090-07 criteria 7 and 8 (§NNN) — the card's three states, rendered to HTML on the server
+ * BR-REQ-090-07 criteria 8 and 9 (§335) — the card's three states, rendered to HTML on the server
  * the way the page sends them: no key (what is missing, no form), a read that failed (a sentence,
  * no form), and the values Neon holds above the form that changes them.
  *

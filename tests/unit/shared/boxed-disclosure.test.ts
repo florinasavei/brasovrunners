@@ -129,7 +129,7 @@ describe("§269 every fold in the backoffice spreads the one object", () => {
     // repeat help, the type help; the registrations screen's batch verbs and the erase panel;
     // the guide; the desk's how-to and its bib picture; the tasks' steps; the series dates on
     // the events list; and `Panel` itself. The email previews were a fold the page drew by hand
-    // until §NNN made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
+    // until §336 made them `Panel`s inside a `Panel` — they are counted as `Panel` now.
     // Since the editor's boxes (§NNN) every box and card of the event editor — the bib design
     // among them — is a `Panel`, counted as `Panel`; the series scope's two folds are its own.
     expect(folds.length).toBeGreaterThanOrEqual(10);

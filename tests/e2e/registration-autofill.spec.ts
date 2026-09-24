@@ -34,7 +34,7 @@ async function fillRequired(page: Page, email: string, lastName = "Popescu") {
   // pass puts back whatever went missing, and changes nothing that did not.
   for (const [name, value] of Object.entries(values)) {
     const box = page.locator(`[name="${name}"]`);
-    // Spaces aside: the telephone boxes group the digits as they arrive (§NNN), which is not a wipe.
+    // Spaces aside: the telephone boxes group the digits as they arrive (§337), which is not a wipe.
     if ((await box.inputValue()).replace(/\s/g, "") !== value.replace(/\s/g, "")) await box.fill(value);
   }
   await page.locator('[name="emailConfirm"]').fill(email);

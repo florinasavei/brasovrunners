@@ -61,7 +61,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
 ): Promise<EmailHealth> {
   const deferredFrom = new Date(now.getTime() + DEFERRED_BEYOND_MS);
   /*
-    The Administrator's minimum interval between two real runs (§NNN) is time the outbox job may
+    The Administrator's minimum interval between two real runs (§334) is time the outbox job may
     legitimately leave a retry waiting, and it is added in full whenever one is set. Not "past
     the hour": the ninety minutes above already spend their hour on the night pinger, and the
     interval comes on top of it. At night with sixty minutes, a retry due just after a run at T

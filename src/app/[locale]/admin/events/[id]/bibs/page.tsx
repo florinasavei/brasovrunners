@@ -85,7 +85,7 @@ export default async function EventBibsPage({ params }: Props) {
         >
           {bibs.map((bib) => (
             <Box component="li" key={bib.id}>
-              {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §NNN), and
+              {/* No rounded corner: the picture draws the paper's edge itself (A5 bibs, §338), and
                   a radius here clipped that edge's corners — as the editor preview and the desk row
                   no longer do either. */}
               <Box

@@ -277,7 +277,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // A job that runs on time and fails its retention sweep (§322) is not a missing monitor (§324).
   const failingJobNames = jobs.filter((job) => job.status === "failing").map((job) => job.jobName);
 
-  // Read early, ahead of the task board: the derived `neonLimits` row (§NNN) needs this
+  // Read early, ahead of the task board: the derived `neonLimits` row (§335) needs this
   // period's quota and spend on every panel, not only Costuri, where the full endpoint detail
   // (`readNeonLimits`, the two extra requests) stays gated — the task board's own row only
   // needs the same project row `readNeonConsumption` already fetches.
@@ -313,7 +313,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
       // the page does: is there a way out, and is there anybody at the other end.
       contactFormConfigured: contactFormReaches(env, contactRecipients),
-      // The same reading the Costuri panel shows, never a second request (§NNN): null when
+      // The same reading the Costuri panel shows, never a second request (§335): null when
       // Neon could not be read at all, so "no quota" and "we could not check" both read `open`.
       neonQuota: neon.ok ? { quotaCuHours: neon.consumption.quotaCuHours, usedCuHours: neon.consumption.cuHours } : null,
     }),
@@ -361,7 +361,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     now,
   });
   /*
-    The owner's throttle, beside the plan it pays (§NNN): the minimum interval between two real
+    The owner's throttle, beside the plan it pays (§334): the minimum interval between two real
     runs, and what each job did with it — read only for the panel that shows it, since the
     overview asks the cache and, when the cache does not answer here, the database.
   */
@@ -661,7 +661,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         */}
         <NeonPlanPanel locale={locale} plan={neonPlan} source={neonInForce.source} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
 
-        {/* How often the platform may wake the database for its scheduled work (§NNN) — the
+        {/* How often the platform may wake the database for its scheduled work (§334) — the
             throttle the owner asked for, beside the plan that bills each wake. */}
         <JobCadencePanel
           locale={locale}
@@ -672,7 +672,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         />
 
         {/*
-          The database's brakes (§NNN), beside the plan they are priced against: the compute's size
+          The database's brakes (§335), beside the plan they are priced against: the compute's size
           ceiling and the period's CU-hour limit, read from Neon and written to Neon. The same
           door and the same `mayEdit` as the plan; `updateNeonLimits` asserts the role again.
         */}
