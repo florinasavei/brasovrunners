@@ -53,6 +53,10 @@ describe("the create page is the editor's page", () => {
     const order = [
       'id="box-recurrence"',
       "<KindBox",
+      "<StatusBox",
+      "<CourseBox",
+      "<LinksBox",
+      "</KindBox>",
       "<TitleSummaryBox",
       "<DescriptionBox",
       "<WhenBox",
@@ -60,8 +64,6 @@ describe("the create page is the editor's page", () => {
       "<ProgrammeBox",
       "<RulesBox",
       "<RegistrationBox",
-      "<CourseBox",
-      "<LinksBox",
       "<CoHostsBox",
       "<PromotionBox",
       "<AddressBox",
@@ -71,14 +73,29 @@ describe("the create page is the editor's page", () => {
     for (let index = 1; index < positions.length; index += 1) {
       expect(positions[index], `${order[index]} after ${order[index - 1]}`).toBeGreaterThan(positions[index - 1]);
     }
-    // The editor has the same order, with the status box between registration and course.
-    expect(at(EDIT, "<RegistrationBox")).toBeLessThan(at(EDIT, "<StatusBox"));
-    expect(at(EDIT, "<StatusBox")).toBeLessThan(at(EDIT, "<CourseBox"));
+    // The editor has the same order: the three cards inside the first box on both pages (§NNN).
+    for (const page of [CREATE, EDIT]) {
+      expect(at(page, "<KindBox")).toBeLessThan(at(page, "<StatusBox"));
+      expect(at(page, "<LinksBox")).toBeLessThan(at(page, "</KindBox>"));
+      expect(at(page, "</KindBox>")).toBeLessThan(at(page, "<TitleSummaryBox"));
+    }
   });
 
-  it("offers no status on create: a hidden SCHEDULED, and never Anulat for an event that does not exist", () => {
+  it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
     expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    expect(CREATE).not.toContain("<StatusBox");
+    // The card is there, so the two pages look the same (§NNN) — handed no event, it is read-only.
+    expect(CREATE).toContain("<StatusBox {...box} />");
+    const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
+    // Keyed on the create page alone: a saved event always comes with its notice, by type, so it
+    // can never fall into the read-only "Programat" that posts nothing.
+    expect(status).toContain("{ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice }");
+    expect(status).not.toContain("!notice");
+    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "<RecallField"));
+    expect(createBranch).toContain('data-testid="status-on-create"');
+    expect(createBranch).toContain("disabled");
+    expect(createBranch).not.toContain("name=");
+    expect(createBranch).toContain('t("editor.boxes.status.createNote")');
+    for (const [file, messages] of MESSAGES) expect(messages.Admin.editor.boxes.status.createNote, file).toBeTruthy();
     // And none of what needs a saved event.
     for (const edited of ["<BibPrintCard", "<RecurrenceSeriesPanel", 'id="box-received"', 'id="box-copy-delete"']) {
       expect(CREATE, edited).not.toContain(edited);

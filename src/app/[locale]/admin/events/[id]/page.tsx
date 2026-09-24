@@ -106,10 +106,11 @@ export const dynamic = "force-dynamic";
  *
  * **The same page as the create form** (`EventEditorLayout`): a side column — Publicare and
  * Recurență, first on a phone, pinned on the right from `md` up — and a main column of boxes in
- * three labelled groups: "Evenimentul" (what kind, title and summary, description), "Ziua
- * evenimentului și participanții" (date and time, place, programme, rules, registration, status),
- * "Traseu, legături și prezentare" (course, links, partners, promotion, page address), then the
- * always-open Salvare. Each box answers one question and its closed line shows the answer, so the
+ * three labelled groups: "Evenimentul" (what kind — with its three cards inside it, the status, the
+ * course and the links and files, §NNN — title and summary, description), "Ziua evenimentului și
+ * participanții" (date and time, place, programme, rules, registration), "Parteneri și prezentare"
+ * (partners, promotion, page address), then the always-open Salvare. The create page nests the
+ * same three cards in the same box. Each box answers one question and its closed line shows the answer, so the
  * editor opens as a fact sheet and one opens only the box to change. Every box with per-language
  * text has its own Română | English tabs; there is no page-wide language switch, so a shared
  * setting never hides behind a language tab.
@@ -123,8 +124,10 @@ export const dynamic = "force-dynamic";
  * rather than settings: the registrations received, and duplicate or delete.
  *
  * **Once people have registered** (real ones: a test row is counted nowhere the club looks,
- * §12.6), the five boxes whose change reaches them — date, place, programme, registration,
- * status — are amber, wear the count, and say in one line what a change does.
+ * §12.6), the five boxes whose change reaches them — date, place, programme, registration, and
+ * the status card inside "Ce fel de eveniment" — are amber, wear the count, and say in one line
+ * what a change does. "Ce fel de eveniment" is amber and wears the count too, closed, because the
+ * status card is inside it (§NNN); the sentence stays in the card.
  *
  * The interface hides what a role may not do, and that is a courtesy rather than the rule — every
  * button here is checked again in the action behind it (BR-REQ-060-01). A role that may not read
@@ -604,7 +607,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
                 <Stack spacing={2}>
                   <EditorGroup label={t("editor.groups.event")} />
-                  <KindBox {...box} registered={realCount} />
+                  {/* 1 — the type, and inside it the three cards about the event itself (§NNN):
+                      1.1 the status, 1.2 the course, 1.3 the links and files. */}
+                  <KindBox {...box} risk={risk} registered={realCount} locale={locale}>
+                    <StatusBox {...box} risk={risk} notice={notice} />
+                    <CourseBox {...box} />
+                    <LinksBox {...box} locale={locale} />
+                  </KindBox>
                   <TitleSummaryBox languages={languages} creating={false} />
                   <DescriptionBox languages={languages} />
 
@@ -634,11 +643,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       ) : null
                     }
                   />
-                  <StatusBox event={event} mayEditSettings={maySaveSettings} risk={risk} notice={notice} />
 
                   <EditorGroup label={t("editor.groups.details")} />
-                  <CourseBox {...box} />
-                  <LinksBox {...box} locale={locale} />
                   <CoHostsBox {...box} locale={locale} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
