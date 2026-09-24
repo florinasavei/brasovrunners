@@ -14,7 +14,9 @@ import SignalCellularAlt1BarIcon from "@mui/icons-material/SignalCellularAlt1Bar
 import SignalCellularAlt2BarIcon from "@mui/icons-material/SignalCellularAlt2Bar";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
+import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
@@ -70,11 +72,18 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 /**
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
  * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star,
- * `special` for an edition apart (§168) and `series` for a repeated event's count (§113).
+ * `special` for an edition apart (§168), `series` for a repeated event's count (§113), and
+ * `distance` and `elevation` for the two numbers of a route (§356).
  *
  * The star is taken: it is the one event the site leads with. A special edition is the
  * sparkle beside it — "this one is not an ordinary Wednesday" — which is a different claim
  * from "read this one first", and any number of events may make it.
+ *
+ * The two numbers are metaphors too, written down like the rest: the distance is a ruler, the
+ * climb a line that rises — the calendar entry writes the same climb with "↗" (`ical.ts`). They
+ * exist because the event page's route became a row of pills (§356), and a pill with no glyph
+ * beside three that have one was exactly the "some with a glyph, some without" the owner
+ * pointed at.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -84,6 +93,8 @@ export const GLYPHS = {
   featured: StarIcon,
   special: AutoAwesomeIcon,
   series: EventRepeatIcon,
+  distance: StraightenIcon,
+  elevation: TrendingUpIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

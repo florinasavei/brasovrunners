@@ -527,11 +527,16 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       /*
         "Anunță participanții despre schimbare" and its note, and the cancellation's reason and
         its "tell them" box (§331). Read as posted and judged by the service — the role, the
-        reason required on a cancellation, the five hundred characters — so a replayed POST
-        meets the same rules as the page. An unticked box posts nothing, which is "no".
+        reason required on a cancellation, the five hundred characters, both languages or
+        neither (§354, bilingual everywhere) — so a replayed POST meets the same rules as the
+        page. An unticked box posts nothing, which is "no". The note and the reason are one box
+        per language; the cancellation is there when either of its boxes was drawn.
       */
-      notice: { notify: form.get("notice.notify") === "on", note: text(form, "notice.note") },
-      cancellation: form.has("cancel.reason") ? { reason: text(form, "cancel.reason"), notify: form.get("cancel.notify") === "on" } : undefined,
+      notice: { notify: form.get("notice.notify") === "on", note: { ro: text(form, "notice.noteRo"), en: text(form, "notice.noteEn") } },
+      cancellation:
+        form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
+          ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
+          : undefined,
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
     // So does what the participants were told (§331): the kind and the count, never who.

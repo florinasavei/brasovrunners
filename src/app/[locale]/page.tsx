@@ -22,6 +22,12 @@ type Props = { params: Promise<{ locale: string }> };
  *
  * The helper comes from the next-intl navigation module, not from `next/navigation`: the raw
  * one would drop the locale prefix and send a Romanian visitor to an unprefixed path.
+ *
+ * **The fallback, not the answer (§353).** `src/proxy.ts` sends `/ro` and `/en` to the listing
+ * before anything renders (`i18n/root-redirect.ts`). A redirect thrown from here comes after the
+ * root layout has started streaming, so Next cannot send its 308 any more: production answered
+ * with a 200 and an error document carrying a client-side hop. This stays for whatever reaches
+ * the page without passing the proxy.
  */
 export default async function HomePage({ params }: Props) {
   const { locale } = await params;

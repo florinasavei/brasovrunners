@@ -9,19 +9,33 @@ const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * A box (or card) of the event editor by its title (§350): the `<details>` whose own summary's
  * heading begins with it. "Begins", because the heading carries the box's closed line after the
  * title — "Locul Parcul Titulescu · hartă" — and its "23 înscriși" chip.
+ *
+ * Found whether or not it can be seen: a card inside a closed box — "Traseul" inside "Ce fel de
+ * eveniment" (§358) — has its heading out of the accessibility tree until the box opens, and the
+ * card is still the thing a spec means.
  */
 export function editorBox(scope: Page | Locator, title: string): Locator {
   const page = "page" in scope && typeof scope.page === "function" ? scope.page() : (scope as Page);
   return scope
     .locator("summary")
-    .filter({ has: page.getByRole("heading", { name: new RegExp(`^${escaped(title)}`) }) })
+    .filter({ has: page.getByRole("heading", { name: new RegExp(`^${escaped(title)}`), includeHidden: true }) })
     .first()
     .locator("xpath=..");
 }
 
-/** Open a box of the event editor by its title, the way a person does (`openFold`), and return it. */
+/**
+ * Open a box of the event editor by its title, the way a person does (`openFold`), and return it.
+ *
+ * Every box around it first, outermost first — a card inside a closed box cannot be pressed until
+ * the box is open (§358: the status, the course and the links sit inside "Ce fel de eveniment").
+ */
 export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {
   const box = editorBox(scope, title);
+  await box.waitFor({ state: "attached" });
+  // Document order, which for ancestors is outermost first.
+  const around = box.locator("xpath=ancestor::details");
+  const count = await around.count();
+  for (let index = 0; index < count; index += 1) await openFold(around.nth(index));
   await openFold(box);
   return box;
 }

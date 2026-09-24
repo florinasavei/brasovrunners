@@ -81,8 +81,17 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     expect(await page.content()).not.toContain(secret);
     expect(await page.content()).not.toContain(secretEnglish);
 
-    // The calendar file: the sentence, and no LOCATION for a calendar to route to.
-    const ics = await (await page.request.get(`/ro/evenimente/${slug}/calendar.ics`)).text();
+    /*
+      The calendar file: the sentence, and no LOCATION for a calendar to route to. At the address
+      the page links (`events/[slug]/page.tsx`, `/${locale}/events/${slug}/calendar.ics`): a path
+      with an extension skips the proxy, so the localized `/ro/evenimente/…/calendar.ics` this used
+      to ask for was the catch-all's 404 — which passed only while every page's payload carried the
+      whole catalogue, this sentence included (§353). Hence the status and the type, too.
+    */
+    const icsResponse = await page.request.get(`/ro/events/${slug}/calendar.ics`);
+    expect(icsResponse.status()).toBe(200);
+    expect(icsResponse.headers()["content-type"]).toContain("text/calendar");
+    const ics = await icsResponse.text();
     expect(ics).toContain("Locația se anunță în curând");
     expect(ics).not.toContain("LOCATION:");
     expect(ics.replace(/\r\n /g, "")).not.toContain(secret);

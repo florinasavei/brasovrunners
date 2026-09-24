@@ -9,6 +9,7 @@ import {
   BLANK,
   type BlankTest,
   descriptionSummary,
+  identicalLocales,
   incompleteLocales,
   rulesSummary,
   type SummaryTranslation,
@@ -28,27 +29,47 @@ import { type LanguageEntry, summaryWords } from "./box-kit";
 
 const summaryOf = (entry: LanguageEntry): SummaryTranslation => entry.translation;
 
-/** One strip of tabs, its marks computed from what is stored and then from what is typed. */
+/**
+ * One strip of tabs, its marks computed from what is stored and then from what is typed.
+ *
+ * `identical` names the long texts of the strip to compare across languages (§354, bilingual
+ * everywhere): the same words in both is an amber line over the panels and a mark on the English
+ * tab — computed here from what is stored for the first paint, re-read in the browser as typed.
+ */
 export async function LanguageTabs({
   idPrefix,
   languages,
   watch,
   blank,
+  identical,
   render,
 }: {
   idPrefix: string;
   languages: readonly LanguageEntry[];
   watch: TabWatch;
   blank: BlankTest | readonly BlankTest[];
+  identical?: readonly string[];
   render: (entry: LanguageEntry) => ReactNode;
 }) {
   const t = await getTranslations("Admin");
   const incomplete = incompleteLocales(languages.map(summaryOf), watch.rule, blank);
+  const mayType = languages.some((entry) => entry.mayEdit);
   return (
     <LocaleTabPanels
       idPrefix={idPrefix}
       // Only the languages the reader may write are re-read as they type; a read-only one has no box.
-      watch={languages.some((entry) => entry.mayEdit) ? watch : undefined}
+      watch={mayType ? watch : undefined}
+      live={mayType}
+      identical={
+        identical
+          ? {
+              names: identical,
+              warning: t("editor.identical.warning"),
+              mark: t("editor.identical.tab"),
+              initial: identicalLocales(languages.map(summaryOf), identical).length > 0,
+            }
+          : undefined
+      }
       markLabel={t("editor.tabIncomplete")}
       panels={languages.map((entry) => ({
         locale: entry.translation.locale,
@@ -83,6 +104,7 @@ export async function TitleSummaryBox({ languages, creating }: { languages: read
         languages={languages}
         watch={{ names: ["title", "excerptBody"], rule: "required" }}
         blank={BLANK.titleSummary}
+        identical={["excerptBody"]}
         render={(entry) => <TitleSummaryFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
     </Panel>
@@ -100,6 +122,7 @@ export async function DescriptionBox({ languages }: { languages: readonly Langua
         languages={languages}
         watch={{ names: ["body"], rule: "parity" }}
         blank={BLANK.description}
+        identical={["body"]}
         render={(entry) => <DescriptionFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
     </Panel>
@@ -117,6 +140,7 @@ export async function RulesBox({ languages }: { languages: readonly LanguageEntr
         languages={languages}
         watch={{ names: ["rules"], rule: "parity" }}
         blank={BLANK.rules}
+        identical={["rules"]}
         render={(entry) => <RulesFields translation={entry.translation} mayEdit={entry.mayEdit} />}
       />
     </Panel>

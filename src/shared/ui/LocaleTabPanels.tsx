@@ -1,10 +1,12 @@
 "use client";
 
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { isBlankValue } from "@/shared/forms/blank-value";
+import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { REVEAL_EVENT } from "./fold";
 
 export type LocalePanel = {
@@ -26,6 +28,15 @@ export type LocalePanel = {
  * `names` are the part after `translations.<locale>.`.
  */
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
+
+/**
+ * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
+ * compare across languages, what the amber line above the panels says, and the word each copying
+ * tab wears — every tab after the first, compared with the first (`routing.locales` order). A
+ * warning, never a refusal. `initial` is the server's answer from what is stored, so the first
+ * paint already shows it; the boxes are re-read as they are typed, like the marks above.
+ */
+export type IdenticalWatch = { names: readonly string[]; warning: string; mark: string; initial: boolean };
 
 /**
  * One tab per language, over panels that are all part of the same form.
@@ -53,6 +64,8 @@ export default function LocaleTabPanels({
   panels,
   watch,
   markLabel,
+  identical,
+  live = true,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
@@ -61,9 +74,14 @@ export default function LocaleTabPanels({
   watch?: TabWatch;
   /** The mark's word ("incomplet") for a tab that becomes unfinished while typing. */
   markLabel?: string;
+  /** Warn when a watched text says the same words in both languages (§354). */
+  identical?: IdenticalWatch;
+  /** Whether anything here can be typed into; a read-only strip keeps the server's first answers. */
+  live?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
+  const [same, setSame] = useState(identical?.initial ?? false);
   const markWord = markLabel ?? panels.find((panel) => panel.incompleteLabel)?.incompleteLabel;
   // Whether this validation pass has already brought a panel forward; see `reveal`.
   const revealed = useRef(false);
@@ -128,26 +146,38 @@ export default function LocaleTabPanels({
   */
   useEffect(() => {
     const container = root.current;
-    if (!watch || !container) return;
-    const valueOf = (locale: string, field: string) =>
-      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`)?.value ?? "";
+    if ((!watch && !identical) || !live || !container) return;
+    const boxOf = (locale: string, field: string) =>
+      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`);
+    const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
-      setIncomplete(
-        panels.map((panel) =>
-          watch.names.some((field) => {
-            const blank = isBlankValue(valueOf(panel.locale, field));
-            if (watch.rule === "required") return blank;
-            return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
-          }),
-        ),
-      );
+      if (watch) {
+        setIncomplete(
+          panels.map((panel) =>
+            watch.names.some((field) => {
+              const blank = isBlankValue(valueOf(panel.locale, field));
+              if (watch.rule === "required") return blank;
+              return blank && panels.some((other) => other.locale !== panel.locale && !isBlankValue(valueOf(other.locale, field)));
+            }),
+          ),
+        );
+      }
+      if (identical) {
+        const [first, ...rest] = panels;
+        // A language with no boxes here (the reader may not write it) cannot be re-read: the
+        // server's answer stands for it rather than turning into "different" on a keystroke.
+        const readable = first !== undefined && rest.every((panel) => identical.names.every((field) => boxOf(panel.locale, field) && boxOf(first.locale, field)));
+        if (readable) {
+          setSame(identical.names.some((field) => rest.some((panel) => identicalInBothLanguages(valueOf(first.locale, field), valueOf(panel.locale, field)))));
+        }
+      }
     };
     const deferred = () => setTimeout(measure, 0);
     for (const type of ["input", "change", "focusout"]) container.addEventListener(type, deferred);
     return () => {
       for (const type of ["input", "change", "focusout"]) container.removeEventListener(type, deferred);
     };
-  }, [watch, panels]);
+  }, [watch, identical, live, panels]);
 
   return (
     <Box ref={root}>
@@ -182,7 +212,14 @@ export default function LocaleTabPanels({
               the missing language was found at the moment publication was refused, which is the
               worst moment to find it.
             */
-            label={incomplete[index] && markWord ? `${panel.label} · ${markWord}` : panel.label}
+            label={[
+              panel.label,
+              incomplete[index] && markWord ? markWord : null,
+              // The copying language's tab — every one after the first — says it (§354).
+              same && identical && index > 0 ? identical.mark : null,
+            ]
+              .filter((part): part is string => Boolean(part))
+              .join(" · ")}
             id={`${idPrefix}-tab-${panel.locale}`}
             aria-controls={`${idPrefix}-panel-${panel.locale}`}
             value={index}
@@ -190,6 +227,13 @@ export default function LocaleTabPanels({
           />
         ))}
       </Tabs>
+
+      {/* The same words in both languages (§354): above the panels, so it reads whichever tab is on top. */}
+      {same && identical && (
+        <Alert severity="warning" sx={{ mb: 2 }} data-testid={`${idPrefix}-identical`}>
+          {identical.warning}
+        </Alert>
+      )}
 
       {panels.map((panel, index) => (
         <Box

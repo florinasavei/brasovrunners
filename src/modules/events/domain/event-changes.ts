@@ -148,7 +148,9 @@ export function readEventChanges(value: unknown): EventChangeKind[] {
  * The organizer's own words on the two messages — the note on "details updated", the reason on
  * "cancelled" — as plain text, at most five hundred characters, which is a paragraph and not a
  * newsletter. Line breaks are kept (a two-line note is written as two lines); every other control
- * character is dropped, and the template escapes the rest.
+ * character is dropped, and the template escapes the rest. Each language's box is read by this
+ * rule on its own (§354, bilingual everywhere): five hundred characters in Romanian and five
+ * hundred in English.
  */
 export const EVENT_NOTICE_TEXT_MAX = 500;
 
@@ -168,4 +170,29 @@ export function readEventNoticeText(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const parsed = eventNoticeTextSchema.safeParse(value);
   return parsed.success && parsed.data !== "" ? parsed.data : undefined;
+}
+
+/**
+ * The note or the reason as a message is written from it (§354, bilingual everywhere): what the
+ * half in `language` says, and what the other half says.
+ *
+ * - **Both languages** — the shape every row queued since the organizer types the text twice:
+ *   `{ ro, en }`. Each half of the bilingual message reads its own language, so the Romanian
+ *   registrant's English half carries the English text and never the Romanian one.
+ * - **One string** — a row queued before, with the one text the organizer typed. Rendered as it
+ *   always was, the same words in both halves: the row is already in the outbox and rewriting what
+ *   it says is not this release's to do.
+ * - **Half a pair**, or nothing readable — nothing at all. The save refuses one language only, so
+ *   a half can only come from a hand-made row, and showing it would put one language's text in
+ *   front of a reader of the other; the rest of the message still goes.
+ */
+export function readEventNoticeWords(value: unknown, language: "ro" | "en"): { text?: string; other?: string } {
+  const legacy = readEventNoticeText(value);
+  if (legacy) return { text: legacy };
+  if (!value || typeof value !== "object") return {};
+  const pair = value as { ro?: unknown; en?: unknown };
+  const ro = readEventNoticeText(pair.ro);
+  const en = readEventNoticeText(pair.en);
+  if (!ro || !en) return {};
+  return language === "ro" ? { text: ro, other: en } : { text: en, other: ro };
 }

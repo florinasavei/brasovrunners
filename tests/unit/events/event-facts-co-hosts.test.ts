@@ -40,7 +40,7 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   return {
     id: "11111111-1111-1111-1111-111111111111",
     type: "RACE",
-    surface: "ROAD",
+    surface: "ASPHALT",
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-11-21T07:00:00Z"),
     endsAt: null,
@@ -80,7 +80,7 @@ const TWO_PARTNERS = [
     name: "Brașov Marathon",
     links: [
       { kind: "SITE", url: "https://bm.example.test" },
-      { kind: "FACEBOOK", url: "https://facebook.com/bm", labelRo: "Pagina noastră" },
+      { kind: "FACEBOOK", url: "https://facebook.com/bm", labelRo: "Pagina noastră", labelEn: "Our page" },
     ],
   },
   { name: "Salvamont", links: [] },
@@ -127,6 +127,20 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
     // React escapes the apostrophe in text content.
     expect(html).toContain("Partner&#x27;s site");
     expect(html).not.toContain("Site-ul partenerului");
+  });
+
+  it("shows the kind's own word on both pages for a link stored with its label in one language only (§354)", async () => {
+    // Saved before both-or-neither: the club's label in Romanian, nothing in English. Neither page
+    // shows the Romanian label — both show the kind's word, each in its own language.
+    const half = [{ name: "Brașov Marathon", links: [{ kind: "SITE", url: "https://bm.example.test", labelRo: "Site-ul nostru" }] }];
+    currentLocale = "ro";
+    const romanian = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: half }), now: NOW, stacked: true }));
+    expect(romanian).toContain("Site-ul partenerului");
+    expect(romanian).not.toContain("Site-ul nostru");
+    currentLocale = "en";
+    const english = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: half }), now: NOW, stacked: true }));
+    expect(english).toContain("Partner&#x27;s site");
+    expect(english).not.toContain("Site-ul nostru");
   });
 
   it("renders no partners' line at all for an event with none", async () => {
