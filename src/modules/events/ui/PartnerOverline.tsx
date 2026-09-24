@@ -5,7 +5,7 @@ import { partnerPhrase } from "./counted-phrases";
 import { GLYPHS } from "./glyphs";
 
 /**
- * The partner marker on the event page's overline (§NNN; the owner: "a special marker with this
+ * The partner marker on the event page's overline (§367; the owner: "a special marker with this
  * partnered event, so that people know this is not a regular Brașov Runners group run"): after the
  * type and the surface, a "·", the handshake and "În parteneriat cu Brașov Running Festival" — the
  * words the listing card's chip and the calendar entry say, from the one phrase (`partnerPhrase`).

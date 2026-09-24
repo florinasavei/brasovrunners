@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §NNN) — an event held with a partner wears the
+ * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367) — an event held with a partner wears the
  * handshake on the listing card, on its page's overline and in the calendar; and a calendar entry
  * has one tooltip, never the browser's as well, never one inside another.
  *

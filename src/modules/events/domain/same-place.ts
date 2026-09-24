@@ -1,7 +1,7 @@
 import { CLUB_LOCALITY } from "./place";
 
 /**
- * Whether two dates of a series meet at the same place (`DECISIONS.md` §122, and §NNN for the
+ * Whether two dates of a series meet at the same place (`DECISIONS.md` §122, and §367 for the
  * rule below).
  *
  * The owner, at a Happy Monday date marked "Nu în locul obișnuit: Parcul Sportiv Tractorul –

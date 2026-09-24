@@ -17,7 +17,7 @@ import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 
 /**
- * One event on the listing — the single-date card, beside `SeriesCard`, and since §NNN the same
+ * One event on the listing — the single-date card, beside `SeriesCard`, and since §366 the same
  * structure as it: the chips, the title as the link, the summary, the facts, the door. It lived
  * inside `events/page.tsx` until the two cards were given one shape and a test had to render it.
  * Each card rises into place in reading order — CSS only, and none of it for a reader who asked
@@ -56,12 +56,12 @@ export default async function EventCard({
       /* An event the club marked special wears it on the whole card (§272), not only as a chip. */
       sx={{ ...riseIn(index), ...(event.isSpecial ? specialCard : {}) }}
     >
-      {/* The shape the series card has, from the same constants (`card-layout.ts`, §NNN): the door
+      {/* The shape the series card has, from the same constants (`card-layout.ts`, §366): the door
           right after the facts, and what the row leaves over below it rather than above it. */}
       <Box sx={CARD_BODY_SX}>
         <Box sx={CARD_CHIPS_SX}>
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
-              said once on the card (§NNN). */}
+              said once on the card (§366). */}
           <EventKindChips type={event.type} surface={null} />
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
@@ -81,7 +81,7 @@ export default async function EventCard({
         </Typography>
 
         {/* The short description as it was written, picture and all (§73), three lines of it and
-            no link (`CARD_EXCERPT_SX`, §NNN). `EventExcerpt` renders nothing when there is
+            no link (`CARD_EXCERPT_SX`, §366). `EventExcerpt` renders nothing when there is
             nothing, which is what the old `event.excerpt &&` did. */}
         <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />
 

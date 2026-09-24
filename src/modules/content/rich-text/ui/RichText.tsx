@@ -28,7 +28,7 @@ import { tableSx } from "./table-layout";
  * written before the editor existed are still in the old section shape. `readRichText` is the one
  * place that difference is handled.
  *
- * `links={false}` is the listing card's reading (§NNN): a link mark is its words and a bare web
+ * `links={false}` is the listing card's reading (§366): a link mark is its words and a bare web
  * address is its host ("register.hakuapp.com/…", `shortenUrls`). A card is a summary of a page
  * one press away, its three clamped lines are no place for a link that may be cut in half, and a
  * ninety-character address wrapped over two lines of a card was one of the holes the owner pointed
@@ -256,7 +256,7 @@ function renderBlock(block: RichTextBlock, floats = false, links = true): ReactN
  * not — a rule that then applies to every body ever written, including those written before the
  * rule existed.
  *
- * Without `links` (a listing card, §NNN) a link mark renders nothing but its words, and every web
+ * Without `links` (a listing card, §366) a link mark renders nothing but its words, and every web
  * address written as text — in a link's words or in a sentence — is shortened to its host.
  */
 function renderInline(content: RichTextText[] | undefined, links = true): ReactNode {

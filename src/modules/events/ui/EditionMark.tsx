@@ -25,7 +25,7 @@ const MARK = {
 
 export default function EditionMark({ note, size = 18 }: { note: EditionNote; size?: number }) {
   const { Icon, color } = MARK[note.kind];
-  // `aria-hidden={false}` (§NNN): MUI's `SvgIcon` writes `aria-hidden="true"` on a glyph without
+  // `aria-hidden={false}` (§367): MUI's `SvgIcon` writes `aria-hidden="true"` on a glyph without
   // `titleAccess`, so the mark's `role` and name were hidden from a screen reader — in a series
   // card's date chip, the backoffice list and the agenda — until this said otherwise.
   // `titleAccess` is not the way: it draws an SVG `<title>`, the browser's own tooltip on top of
@@ -39,7 +39,7 @@ export default function EditionMark({ note, size = 18 }: { note: EditionNote; si
 
 /**
  * The same glyph with no tooltip of its own, for a place that already has one: the month grid's
- * event chip (§NNN). A tooltip inside a tooltip opened both at once — the chip's and the mark's
+ * event chip (§367). A tooltip inside a tooltip opened both at once — the chip's and the mark's
  * — so there the note is a line of the chip's own tooltip, and this is only its picture.
  * Decorative: the chip's link carries the note in its accessible name.
  */

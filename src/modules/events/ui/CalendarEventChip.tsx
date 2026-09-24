@@ -8,7 +8,7 @@ import { GLYPHS, type GlyphName } from "./glyphs";
 import PartnerMark from "./PartnerMark";
 
 /**
- * What the calendar says about one entry, line by line (§NNN): the time and the whole title, then
+ * What the calendar says about one entry, line by line (§367): the time and the whole title, then
  * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then its partner when it is
  * held with one ("În parteneriat cu …"). The grid's tooltip shows them as lines; the link's
  * accessible name reads them as sentences, each ended so a screen reader pauses between them.
@@ -24,7 +24,7 @@ function calendarEntryName(lines: readonly string[]): string {
 /**
  * One event in the calendar (`DECISIONS.md` §137): the type's glyph and the surface's
  * (§112; the owner: "the icons in the calendar should also contain the type of terrain"),
- * the time and the title, and at the end its marks — the handshake of a partnered event (§NNN)
+ * the time and the title, and at the end its marks — the handshake of a partnered event (§367)
  * and the date's note (§122). A client island so `Tooltip` can hold a ref to its child and the
  * glyphs are made on this side of the boundary, by name (§112).
  *
@@ -35,7 +35,7 @@ function calendarEntryName(lines: readonly string[]): string {
  * that on a tap, over the next two rows. The owner: "sunt destul de enervante". There the marks
  * keep a tooltip each (`PartnerMark`, `EditionMark`), side by side, never nested.
  *
- * **One tooltip per grid entry** (§NNN). The ⚠ used to be an `EditionMark` — a tooltip of its own
+ * **One tooltip per grid entry** (§367). The ⚠ used to be an `EditionMark` — a tooltip of its own
  * — inside the chip's tooltip, so a pointer on the mark opened both at once, one over the other.
  * In the grid the marks are bare glyphs now (`EditionGlyph`, the handshake) and the chip's one
  * tooltip carries every line: the time and the title, the note, the partner. The same tooltip
@@ -66,7 +66,7 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "În parteneriat cu …" (§NNN), made on the server — or null for an event with no partner. */
+  /** "În parteneriat cu …" (§367), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;

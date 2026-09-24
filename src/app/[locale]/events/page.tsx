@@ -312,7 +312,7 @@ async function PastEvents({
           gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
           // Every card in a row is as tall as the tallest (§275): `start` left a short card
           // beside a tall one and a hole under it, which is what made the listing look broken.
-          // The room a short card is given is at its foot, under its door (§NNN, `CARD_BODY_SX`).
+          // The room a short card is given is at its foot, under its door (§366, `CARD_BODY_SX`).
           alignItems: "stretch",
         }}
       >

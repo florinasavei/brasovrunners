@@ -25,7 +25,7 @@ import { editionNote, recurrenceSentence } from "./series-sentence";
 
 /**
  * A repeated event as one card (`DECISIONS.md` §113): the title once, how it recurs, the next
- * occurrence's facts, and the coming dates as links. The same structure as `EventCard` (§NNN): the
+ * occurrence's facts, and the coming dates as links. The same structure as `EventCard` (§366): the
  * title is the link to the next occurrence's page, the place is its map, and every date is its
  * own link. Each link is 44px tall (BR-REQ-041-01 criterion 6), like every other on the listing.
  */
@@ -69,7 +69,7 @@ export default async function SeriesCard({
   );
 
   /*
-    The same shape as the single-date card, from the same constants (`card-layout.ts`, §NNN): the
+    The same shape as the single-date card, from the same constants (`card-layout.ts`, §366): the
     chips, the title, the rhythm, the summary, the next date's facts and pills, the dates folded,
     the door — each a group's gap from the one before it and nothing else.
   */
@@ -77,7 +77,7 @@ export default async function SeriesCard({
     <Card component="li" variant="outlined" sx={{ ...(special ? specialCard : {}), ...riseIn(index) }}>
       <Box sx={CARD_BODY_SX}>
         <Box sx={CARD_CHIPS_SX}>
-          {/* The type; the surface is a pill with the facts below, said once (§NNN). */}
+          {/* The type; the surface is a pill with the facts below, said once (§366). */}
           <EventKindChips type={next.type} surface={null} />
           <GlyphChip glyph="series" variant="outlined" label={rhythm} />
           {/* An edition apart on *any* of the dates (§168, §169). A repeated event is one card
@@ -87,27 +87,27 @@ export default async function SeriesCard({
               gives the line would have no visible cause. Which date it is, is the mark in the
               folded list below. */}
           {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
-          {/* The next date's partners (§NNN) — the date whose facts the card shows below. */}
+          {/* The next date's partners (§367) — the date whose facts the card shows below. */}
           <PartnerChip event={next} />
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Box>
 
         {/* The title in the one style every card's title has (`CARD_TITLE_SX`): the club's blue,
             visited or not, underlined under a pointer or the keyboard — no longer the browser's
-            blue-then-purple underlined link beside a black heading (§NNN). */}
+            blue-then-purple underlined link beside a black heading (§366). */}
         <Typography variant="h2" sx={CARD_TITLE_SX}>
           <Link href={{ pathname: "/events/[slug]", params: { slug: next.slug } }}>{next.title}</Link>
         </Typography>
 
         {/* "În fiecare luni, la 18:30" — the line the card exists for, a line's gap under its title:
             one of the card's two gaps, and exactly as far as the title's link reaches below its
-            words, so the line never sits on the part of the link a finger presses (§NNN). */}
+            words, so the line never sits on the part of the link a finger presses (§366). */}
         <Typography variant="body1" sx={{ fontWeight: 500, mt: LINE_GAP }}>
           {sentence}
         </Typography>
 
         {/* The short description as written, picture and all (§73), three lines of it and no
-            address (`CARD_EXCERPT_SX`, §NNN) — the same excerpt the single-event card renders. */}
+            address (`CARD_EXCERPT_SX`, §366) — the same excerpt the single-event card renders. */}
         <EventExcerpt place="card" excerptJson={next.excerptJson} excerpt={next.excerpt} />
 
         {/* The next date's facts: "Următoarea: Luni, 28 sept. 2026 · [clock] 18:30" on one line — the

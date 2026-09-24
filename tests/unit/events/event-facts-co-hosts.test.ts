@@ -229,7 +229,7 @@ describe("BR-REQ-011-01 criterion 16 the partnership's description and the partn
     expect(html).not.toContain("<a ");
   });
 
-  it("keeps the featured hero's one-line form to the names alone, and the listing card's facts to none of it (§NNN)", async () => {
+  it("keeps the featured hero's one-line form to the names alone, and the listing card's facts to none of it (§366)", async () => {
     currentLocale = "ro";
     const hero = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW }));
     expect(hero).toContain("Brașov Running Festival");
@@ -242,12 +242,12 @@ describe("BR-REQ-011-01 criterion 16 the partnership's description and the partn
 });
 
 /**
- * The listing card's facts say nothing of the partners (§NNN; the owner, 2026-09-24, of the card's
+ * The listing card's facts say nothing of the partners (§366; the owner, 2026-09-24, of the card's
  * facts line "Piața Sfatului, Brașov · Împreună cu Brașov Running Festival · 8 km · …": "this is
  * currently pretty ugly!"). The sentence sat between the place and the kilometres; the partner's mark
  * on a card belongs to its chips, and the event page and the hero keep theirs (above and below).
  */
-describe("BR-REQ-011-01 criterion 16 the listing card's facts leave the partners out (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 the listing card's facts leave the partners out (§366)", () => {
   it("draws no «Împreună cu», no partner's name and no partner's link among a card's facts", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({

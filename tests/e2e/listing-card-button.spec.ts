@@ -25,7 +25,7 @@ test.describe("§305 the listing card's door to the page", () => {
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(await first.getAttribute("href")).toMatch(/^\/ro\/evenimente\/[^/]+$/);
 
-    // And it is the same door the card already opens: every card links its title (§NNN; no card
+    // And it is the same door the card already opens: every card links its title (§366; no card
     // is one whole link any more) — so the card's first link and the button agree. CI's seed has
     // no multi-date series, so there the cards are all single-date.
     const card = first.locator("xpath=ancestor::li[1]");

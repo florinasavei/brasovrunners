@@ -86,7 +86,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * beside three that have one was exactly the "some with a glyph, some without" the owner
  * pointed at.
  *
- * `partner` is the handshake (§NNN; the owner: "show like a handshake icon on the card and in the
+ * `partner` is the handshake (§367; the owner: "show like a handshake icon on the card and in the
  * calendar"): an event held with another organization, on the listing card's chip, beside the
  * calendar entry and on the event page's overline — the same glyph the facts' "Împreună cu" row
  * has worn since §168, so the marker and the row it summarises are one picture.

@@ -9,7 +9,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { partnerPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
- * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §NNN) — the partner marker, and one tooltip per
+ * BR-REQ-020-01 criteria 18 and 19 (`DECISIONS.md` §367) — the partner marker, and one tooltip per
  * calendar entry.
  *
  * The owner, 2026-09-24: "I would like to have a special marker with this partnered event, so that
@@ -63,7 +63,7 @@ function say(locale: "ro" | "en") {
 const partners = (...names: string[]) => names.map((name) => ({ name, links: [] }));
 const noPartner = { coHosts: null, coHostName: null, coHostUrl: null };
 
-describe("§NNN partnerPhrase — the marker's words, in each language", () => {
+describe("§367 partnerPhrase — the marker's words, in each language", () => {
   it("names one partner, two partners, and the first of three with the rest counted", () => {
     expect(partnerPhrase(say("ro"), "ro", ["Brașov Running Festival"])).toBe("În parteneriat cu Brașov Running Festival");
     expect(partnerPhrase(say("ro"), "ro", ["Brașov Running Festival", "Salvamont"])).toBe("În parteneriat cu Brașov Running Festival și Salvamont");
@@ -88,7 +88,7 @@ describe("§NNN partnerPhrase — the marker's words, in each language", () => {
   });
 });
 
-describe("§NNN the listing card's chip", () => {
+describe("§367 the listing card's chip", () => {
   it("is a small outlined chip with the handshake and the partner's name, in both languages", async () => {
     currentLocale = "ro";
     const romanian = renderToStaticMarkup(await PartnerChip({ event: { ...noPartner, coHosts: partners("Brașov Running Festival") } }));
@@ -155,7 +155,7 @@ describe("§NNN the listing card's chip", () => {
   });
 });
 
-describe("§NNN the event page's overline", () => {
+describe("§367 the event page's overline", () => {
   const overline = async (locale: "ro" | "en", ...names: string[]) => {
     currentLocale = locale;
     const element = await PartnerOverline({ event: { ...noPartner, coHosts: partners(...names) } });
@@ -222,7 +222,7 @@ const MOVED = { kind: "moved" as const, text: "Nu în locul obișnuit: Stația d
 const PARTNER = "În parteneriat cu Brașov Running Festival";
 const count = (html: string, needle: string) => html.split(needle).length - 1;
 
-describe("§NNN one tooltip per calendar entry", () => {
+describe("§367 one tooltip per calendar entry", () => {
   it("gives a grid entry one tooltip: the time and the title, then the note, then the partner, each its own line", () => {
     const html = chip({ note: MOVED, partner: PARTNER });
     expect(count(html, "data-tooltip=")).toBe(1);
@@ -303,7 +303,7 @@ function row(values: Partial<PublicEvent>): PublicEvent {
   } as PublicEvent;
 }
 
-describe("§NNN the calendar, grid and agenda, wears the handshake beside a partnered event", () => {
+describe("§367 the calendar, grid and agenda, wears the handshake beside a partnered event", () => {
   const rows = [
     row({ coHosts: partners("Brașov Running Festival") }),
     row({ id: "22222222-2222-2222-2222-222222222222", slug: "happy-monday", title: "Happy Monday", startsAt: new Date("2026-09-28T15:30:00Z") }),
@@ -352,11 +352,11 @@ describe("§NNN the calendar, grid and agenda, wears the handshake beside a part
 });
 
 /**
- * BR-REQ-020-01 criterion 13, amended (§NNN), on the calendar the owner looked at: production's
+ * BR-REQ-020-01 criterion 13, amended (§367), on the calendar the owner looked at: production's
  * Happy Monday name with ", Brasov" and the map link beside QA's name without either is one place,
  * so no date wears the ⚠; a date at another place still does, its note one line of the one tooltip.
  */
-describe("§NNN the calendar marks no Happy Monday date for ', Brasov'", () => {
+describe("§367 the calendar marks no Happy Monday date for ', Brasov'", () => {
   const TRACTORUL = "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic";
   const MAP = ["https:/", "maps.example.test", "vuCwrzFtgLTDE5H68"].join("/");
   const monday = (day: string, id: string, values: Partial<PublicEvent> = {}) =>

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 (§NNN) — the listing's two cards, rendered on the server as the page renders them.
+ * BR-REQ-041-01 (§366) — the listing's two cards, rendered on the server as the page renders them.
  *
  * The owner, 2026-09-24, with a screenshot of the listing's two-column grid: "There is too much
  * whitespace on these cards, it needs to be better spaced"; then, of the one-off "Trail to Road cu
@@ -194,7 +194,7 @@ async function markup(node: ReactNode): Promise<string> {
 const single = async (overrides: Partial<PublicEvent> = {}) => markup(createElement(EventCard, { event: trailToRoad(overrides), index: 0, now: NOW }));
 const repeated = async () => markup(createElement(SeriesCard, { members: series(), index: 0, now: NOW }));
 
-describe("BR-REQ-041-01 a web address on a card is its host (§NNN)", () => {
+describe("BR-REQ-041-01 a web address on a card is its host (§366)", () => {
   it("shortens an address to its host, and says there is more", () => {
     expect(shortenUrls(`aici: ${HAKU}`)).toBe("aici: register.hakuapp.com/…");
     expect(shortenUrls("https://www.example.ro")).toBe("example.ro");
@@ -220,7 +220,7 @@ describe("BR-REQ-041-01 a web address on a card is its host (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)", () => {
+describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)", () => {
   it("is no whole-card link: the title, the place and the door are three links side by side, none inside another", async () => {
     const html = withoutStyles(await single());
     const links = anchors(html);
@@ -244,9 +244,9 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
     expect(rules).toMatch(/ a:hover\{[^}]*;text-decoration:underline/);
     expect(rules).toMatch(/ a:focus-visible\{[^}]*;text-decoration:underline/);
     // 44 pixels to a thumb, given back as margin so the line is as tall as its words: ten above the
-    // words, and below them a line's gap and no more (§NNN) — the nearest anything sits under a title.
+    // words, and below them a line's gap and no more (§366) — the nearest anything sits under a title.
     // The 44 includes the padding, said on the link: inside the listing's fold everything is
-    // content-box, and there the link was 62 pixels and the heading 44 tall rather than 26 (§NNN).
+    // content-box, and there the link was 62 pixels and the heading 44 tall rather than 26 (§366).
     expect(rules).toMatch(/ a\{[^}]*box-sizing:border-box/);
     expect(rules).toMatch(/ a\{[^}]*min-height:44px/);
     expect(rules).toMatch(/ a\{[^}]*padding-top:10px/);
@@ -256,7 +256,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
     expect(CARD_TITLE_SX["& a"]).toMatchObject({ color: "primary.main", textDecoration: "none", minHeight: 44, pb: LINE_GAP, mb: -LINE_GAP });
   });
 
-  it("puts nothing nearer under the title than its link reaches: the summary a line's gap below, the facts a group's (§NNN)", async () => {
+  it("puts nothing nearer under the title than its link reaches: the summary a line's gap below, the facts a group's (§366)", async () => {
     // Whatever follows the title paints over it and takes a press on the pixels they share, so the
     // gap under the title's words is never less than the link's reach below them.
     expect(CARD_EXCERPT_SX.mt).toBe(LINE_GAP);
@@ -308,7 +308,8 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
 
   it("draws the route and the cost as the page's pills, and says the surface once — as a pill, not also a chip at the top", async () => {
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
+    // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "În parteneriat cu Brașov Running Festival", "8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
     expect(chipLabels(fact(html, "pills"))).toEqual(["8 km", "250 m D+", "Mediu", "Mixt", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
     expect(text(fact(html, "pills"))).not.toContain("·");
@@ -325,7 +326,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
 
   it("carries its marks at the top: special, cancelled", async () => {
     const html = await single({ isSpecial: true, eventStatus: "CANCELLED" });
-    expect(chipLabels(html).slice(0, 3)).toEqual(["Alergare de grup", "Ediție specială", "Anulat"]);
+    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "În parteneriat cu Brașov Running Festival", "Anulat"]);
   });
 
   it("prints the summary with no link and the address as its host", async () => {
@@ -347,7 +348,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "8 km", "250 m climb", "Moderate", "Mixed", "Free"]);
+    expect(chipLabels(html)).toEqual(["Group run", "With Brașov Running Festival", "8 km", "250 m climb", "Moderate", "Mixed", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
     expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026·10:00$/);
@@ -355,7 +356,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§NNN)"
   });
 });
 
-describe("BR-REQ-041-01 the series card (§NNN)", () => {
+describe("BR-REQ-041-01 the series card (§366)", () => {
   it("reads, in order: the chips, the title, the rhythm, the summary, «Următoarea:» with the date and the time on one line, the place, the pills, the dates, the door", async () => {
     const html = await repeated();
     const words = text(withoutStyles(html));
@@ -381,7 +382,7 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     expect(when).toContain('data-testid="ScheduleIcon"');
   });
 
-  it("sets the rhythm a line's gap under the title — no nearer than the title's link reaches, so the line never sits on it (§NNN)", async () => {
+  it("sets the rhythm a line's gap under the title — no nearer than the title's link reaches, so the line never sits on it (§366)", async () => {
     const html = await repeated();
     const rhythm = /<p\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>În fiecare luni, la 18:30<\/p>/.exec(withoutStyles(html))?.[1] ?? "";
     expect(rhythm).not.toBe("");
@@ -412,7 +413,7 @@ describe("BR-REQ-041-01 the series card (§NNN)", () => {
     expect(withoutStyles(html)).not.toMatch(/<a\b(?:(?!<\/a>)[\s\S])*<a\b/);
   });
 
-  it("gives every date in the fold a link at least 44 by 44 around its small pill, not the 24-pixel pill as the link (BR-REQ-041-01 criterion 6, §NNN)", async () => {
+  it("gives every date in the fold a link at least 44 by 44 around its small pill, not the 24-pixel pill as the link (BR-REQ-041-01 criterion 6, §366)", async () => {
     const html = await repeated();
     const markup = withoutStyles(html);
     const fold = markup.slice(markup.indexOf("<details"), markup.indexOf("</details>"));

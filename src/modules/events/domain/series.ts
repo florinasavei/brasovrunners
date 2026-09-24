@@ -105,7 +105,7 @@ export function recurrenceOf(members: readonly { startsAt: Date }[], timeZone: s
  * page language's own name when the club gave one, else the event's (`PUBLIC_COLUMNS`), so the
  * Romanian calendar compares Romanian names and the English one English names.
  *
- * The place is read, not compared byte for byte (§NNN, `same-place.ts`): the usual one is the
+ * The place is read, not compared byte for byte (§367, `same-place.ts`): the usual one is the
  * name most dates give once `placeKey` has read it — so "…Patinoarul Olimpic" and "…Patinoarul
  * Olimpic, Brasov" are one place with two spellings, not two places — together with every map
  * link those dates carry, so a date that names the spot differently but pins the same link is at
@@ -161,7 +161,7 @@ export function editionDifference(
 ): EditionDifference {
   if (member.eventStatus === "CANCELLED") return { kind: "cancelled" };
   if (member.isSpecial) return { kind: "special" };
-  // The same place read, not the same string (§NNN): the mark names the date's place as it is written.
+  // The same place read, not the same string (§367): the mark names the date's place as it is written.
   if (member.locationName && usual.place && !isAtPlace(member, usual.place)) return { kind: "moved", place: member.locationName };
   const time = toWallTimeInput(member.startsAt, member.timezone).slice(11, 16);
   if (usual.time && time !== usual.time) return { kind: "retimed", time };

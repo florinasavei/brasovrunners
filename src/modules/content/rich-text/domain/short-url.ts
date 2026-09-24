@@ -1,5 +1,5 @@
 /**
- * A web address as a listing card prints it (§NNN): the host a runner recognises, and "/…" when
+ * A web address as a listing card prints it (§366): the host a runner recognises, and "/…" when
  * the address went further than that — "register.hakuapp.com/…", never the ninety characters of
  * the registration address, scheme, query and all, wrapped over two lines of a card.
  *

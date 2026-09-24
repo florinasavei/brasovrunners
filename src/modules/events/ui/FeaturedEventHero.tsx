@@ -73,7 +73,7 @@ export default async function FeaturedEventHero({
             then it says both — "the one we are leading with" and "not an ordinary one". */}
         {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
         <EventKindChips type={event.type} surface={event.surface} />
-        {/* Held with a partner (§NNN), as on every listing card. */}
+        {/* Held with a partner (§367), as on every listing card. */}
         <PartnerChip event={event} />
         {/* BR-REQ-020-01 criterion 2: a cancelled event says so wherever it appears. */}
         {event.eventStatus === "CANCELLED" && (

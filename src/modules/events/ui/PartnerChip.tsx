@@ -16,7 +16,7 @@ const PARTNER_CHIP_SX = {
 } as const;
 
 /**
- * The partner marker on a listing card (§NNN; the owner: "I would like to have a special marker
+ * The partner marker on a listing card (§367; the owner: "I would like to have a special marker
  * with this partnered event, so that people know this is not a regular Brașov Runners group run —
  * show like a handshake icon on the card"): one small outlined chip in the card's chips row, the
  * handshake and "În parteneriat cu Brașov Running Festival" — the size and the colour of the

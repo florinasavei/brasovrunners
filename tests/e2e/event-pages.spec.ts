@@ -30,7 +30,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
-    // One tooltip per entry, and it is MUI's (§NNN): no entry carries the browser's `title` too.
+    // One tooltip per entry, and it is MUI's (§367): no entry carries the browser's `title` too.
     await expect(main.locator("[role=table] a[title], [role=table] a [title]")).toHaveCount(0);
 
     await main.getByRole("link", { name: "Listă", exact: true }).click();
@@ -142,7 +142,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // Open every fold, so the links are measured as a reader would see them.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
-    // Criterion 6. Every card's title is its link (§NNN; no card is one whole link any more) — 44
+    // Criterion 6. Every card's title is its link (§366; no card is one whole link any more) — 44
     // pixels tall at either width — and so is its door (§319) and its place's map link. This
     // measures the boxes; that nothing later on the card covers part of one, which a box's own
     // height cannot show, is pressed at its edges in `listing-cards.spec.ts`.
@@ -218,7 +218,7 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     await expect(when).toHaveText(/^(Luni|Marți|Miercuri|Joi|Vineri|Sâmbătă|Duminică), \d{1,2} [\w.]+ \d{4}·\d{2}:\d{2}$/);
     const lineHeight = await when.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
     expect((await when.boundingBox())?.height ?? Infinity).toBeLessThan(lineHeight * 1.5);
-    // A clock in front of the time (§NNN), the row glyph's size, as the listing cards have it: the
+    // A clock in front of the time (§366), the row glyph's size, as the listing cards have it: the
     // one glyph in the answer, the row's own being in its label. Found by place, because MUI names
     // its icons (`data-testid="ScheduleIcon"`) only outside a production build, and this suite runs
     // one; `event-facts-pills.test.ts` checks the name.

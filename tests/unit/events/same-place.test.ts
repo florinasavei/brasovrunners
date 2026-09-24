@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mapLinkKey, placeKey, samePlace } from "@/modules/events/domain/same-place";
 
 /**
- * BR-REQ-020-01 criterion 13 (`DECISIONS.md` §122, amended by §NNN) — two dates of a series are at
+ * BR-REQ-020-01 criterion 13 (`DECISIONS.md` §122, amended by §367) — two dates of a series are at
  * the same place when their map links are the same link, or their names say the same place once
  * read; a real move is still a move.
  *
@@ -24,7 +24,7 @@ const OTHER_MAP = ["https:/", "maps.example.test", "rqrDhWj6JPqWAUNv5"].join("/"
 
 const at = (locationName: string | null, mapUrl: string | null = null) => ({ locationName, mapUrl });
 
-describe("§NNN the same place, written two ways, is the same place", () => {
+describe("§367 the same place, written two ways, is the same place", () => {
   it("reads the owner's Happy Monday: production's name with ', Brasov' and the map is QA's name without either", () => {
     expect(samePlace(at(TRACTORUL_PRODUCTION, MAP), at(TRACTORUL))).toBe(true);
     expect(samePlace(at(TRACTORUL), at(TRACTORUL_PRODUCTION, MAP))).toBe(true);
@@ -81,7 +81,7 @@ describe("§NNN the same place, written two ways, is the same place", () => {
   });
 });
 
-describe("§NNN a real move is still a move", () => {
+describe("§367 a real move is still a move", () => {
   it("marks a different park", () => {
     expect(samePlace(at("Parcul Noua"), at(TRACTORUL))).toBe(false);
     expect(samePlace(at("Stația de telecabină Tâmpa, Brașov"), at(TRACTORUL_PRODUCTION))).toBe(false);

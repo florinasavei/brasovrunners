@@ -15,8 +15,6 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The public listing's cards: one structure, the title a blue link, no empty bands, the place linked to its map, a clock by the time, route and cost as the event page's pills — **the owner's first priority** | `feat/listing-cards-spacing` | then a round for the title link, the map link and the clock |
-| A handshake marker on partnered events (card, calendar, event page); one tooltip per calendar event; a same place never flagged "Nu în locul obișnuit" | `feat/partner-marker-calendar` | |
 | The primary buttons respond within 200 ms (INP) — measured before and after at 4× CPU | `perf/inp-submit` | Vercel flagged 352 ms |
 | Leftover literal club names (email sender name, PDF metadata, Zitadel invitation, legend example), a donation event's structured data, the queue panel's times in the event's zone | `chore/no-hardcoded-leftovers` | |
 | `yarn dev` answers 500 on `/admin/tasks` and `/admin/gallery` (production is fine) — root cause and a guard | `fix/dev-ssr-invalid-element` | |
@@ -38,8 +36,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | What is needed |
 | --- | --- |
+| Who may write to participants | "Trimite un mesaj participanților" is open to the Organizator and the Administrator (`BR-V1.81`); say if the Tehnic role should have it too |
 | The three emails marked "nu se mai trimite" on `/admin/emails` | choose: fold them into one "Nu se mai trimit (3)" card, and/or send an email again when a waiting-list offer expires |
-| cron-job.org | minute 45 on "prod maintenance day" (it reads 0,15,30); QA's „Cât de des verifică platforma" → 2 ore (`SETUP.md` §40) |
 | The English "Happy Monday" description | its English box holds the Romanian text — replace it in the editor |
 | Sunday 27 September, the shared event with the Brașov Running Festival | create it on production; the partner card: name, "Despre parteneriat" RO + EN, a "Site" link and an "Înscriere" link |
 | The legal texts on production | `/admin/legal` → New version → "start from the platform's text" for all three (the GDPR rewrite, the per-event minimum age, the minor's own signature, and the declaration's risks, `BR-V1.76`; the sample versions are on QA since 2026-09-24 — read them there first) — **a Romanian lawyer should read the declaration first** (Civil Code art. 1355: a waiver cannot remove liability for bodily harm; the text is worded as informed acceptance of risk and the runner's own obligations) |
@@ -58,6 +56,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.82` | the listing's cards are one structure — the title a blue link, the place a link to its map, a clock by the time, route and cost as the event page's pills, no empty bands · a handshake and the partner's name on a partnered event's card, calendar entry and page; one tooltip per calendar entry; a series' usual place read rather than compared letter for letter, so "Nu în locul obișnuit" appears only when the place really differs · the dispatcher in the repository (`docs/DISPATCHER.md`, `yarn docs:land`, `yarn ship`) |
 | `BR-V1.81` | **hotfix** — the rich-text editor's selection and table bars show their buttons again (Tiptap's production build dropped their stacking order); a fold opened in one language tab stays open in the other; closing a fold no longer loses what was typed · "Trimite un mesaj participanților": a bilingual message to an event's participants by group, previewed, sent through the outbox, audited (migration `0068`) · the phone footer floats one line and rests two, RO \| EN side by side, the build stamp in the "Despre club" fold |
 | `BR-V1.80` | the meeting point once per language — Română and English side by side, both required unless to be announced, "Același nume și în engleză" for an empty English box; every page, email, calendar file and the declaration name the place in the reader's language |
 | `BR-V1.79` | both text editors' toolbars wear Material icons with tooltips, one shared button — no more 🖼 🔗 ↶ ↷ ¶ |

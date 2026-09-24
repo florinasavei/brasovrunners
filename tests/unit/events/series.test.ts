@@ -88,12 +88,12 @@ describe("a date that is not like the series' others", () => {
 });
 
 /**
- * BR-REQ-020-01 criterion 13, amended (§NNN) — the owner, at a Happy Monday date marked "Nu în
+ * BR-REQ-020-01 criterion 13, amended (§367) — the owner, at a Happy Monday date marked "Nu în
  * locul obișnuit: Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov": "the
  * location is actually the same". The dates had been made without ", Brasov" and without a map
  * link; one was saved later with both. Same entrance, two spellings — and a real move still marked.
  */
-describe("§NNN the usual place is read, not compared byte for byte", () => {
+describe("§367 the usual place is read, not compared byte for byte", () => {
   const TRACTORUL = "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic";
   const MAP = ["https:/", "maps.example.test", "vuCwrzFtgLTDE5H68"].join("/");
   const monday = (wall: string, values: { locationName?: string | null; mapUrl?: string | null } = {}) => ({

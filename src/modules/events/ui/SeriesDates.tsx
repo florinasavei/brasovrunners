@@ -18,11 +18,11 @@ export type SeriesDate = {
 /**
  * The link around one date's pill: 44 pixels tall and at least 44 wide (BR-REQ-041-01 criterion
  * 6), the pill inside it MUI's small one, 24 — the shape `ChipLink` gives every other small pill
- * that is a link (§158). Until §NNN the link *was* the pill, a 24-pixel target under a comment
+ * that is a link (§158). Until §366 the link *was* the pill, a 24-pixel target under a comment
  * that said 44.
  *
  * The ten pixels above and below the pill stay in the layout. The card's tight links give theirs
- * back as a negative margin (§356, §NNN), but only ever as much as the gap on that side, because
+ * back as a negative margin (§356, §366), but only ever as much as the gap on that side, because
  * whatever comes later in the page paints over the link and takes a press there — and these have
  * no gap to give into: a date that wraps sits right under the row before it, the first row four
  * pixels under the fold's own 44-pixel summary, the last four above the door. So the rows stand

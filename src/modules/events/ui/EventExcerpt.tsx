@@ -43,7 +43,7 @@ export const PAGE_EXCERPT_SX = {
  * The words stay the size a card's words were (`body2`): this change is about the picture, and
  * a listing whose type grew would be a second, unasked-for change.
  *
- * **Three lines of words, and no address** (§NNN; the owner, 2026-09-24, of the listing: "There
+ * **Three lines of words, and no address** (§366; the owner, 2026-09-24, of the listing: "There
  * is too much whitespace on these cards, it needs to be better spaced"). A summary as long as its
  * author made it was what set one card's height against its neighbour's, and a registration
  * address in it wrapped over two lines of a phone. So the card reads at most three lines —
@@ -57,7 +57,7 @@ export const PAGE_EXCERPT_SX = {
 export const CARD_EXCERPT_SX = {
   color: "text.secondary",
   // A line's gap under the title (or the series' rhythm): the summary belongs to them. Never less:
-  // the title's link reaches exactly this far below its words (`CARD_TITLE_SX`, §NNN).
+  // the title's link reaches exactly this far below its words (`CARD_TITLE_SX`, §366).
   mt: LINE_GAP,
   display: "-webkit-box",
   WebkitBoxOrient: "vertical",

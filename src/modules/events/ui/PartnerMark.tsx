@@ -4,7 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { GLYPHS } from "./glyphs";
 
 /**
- * The handshake beside a calendar entry held with a partner (§NNN; the owner: "show like a
+ * The handshake beside a calendar entry held with a partner (§367; the owner: "show like a
  * handshake icon on the card and in the calendar"), for the agenda, where the entry has no
  * tooltip of its own (§261): the partner's words — "În parteneriat cu Brașov Running Festival" —
  * in a tooltip and as the glyph's accessible name, the way `EditionMark` says a date's note.
@@ -15,7 +15,7 @@ import { GLYPHS } from "./glyphs";
  *
  * `aria-hidden={false}`: MUI's `SvgIcon` hides every glyph from assistive technology unless it is
  * given `titleAccess` — which draws an SVG `<title>`, the browser's own tooltip on top of this one
- * — so without it the `role` and the name below were never read (§NNN).
+ * — so without it the `role` and the name below were never read (§367).
  */
 export default function PartnerMark({ text, size = 18 }: { text: string; size?: number }) {
   const Icon = GLYPHS.partner;

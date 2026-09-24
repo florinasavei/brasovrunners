@@ -1,6 +1,6 @@
 /**
  * The listing card's shape, shared by the single-date card (`EventCard`) and the series card
- * (`SeriesCard`), so the two are one structure and cannot drift apart (§NNN).
+ * (`SeriesCard`), so the two are one structure and cannot drift apart (§366).
  *
  * The owner, 2026-09-24, with a screenshot of the listing's two-column grid: "There is too much
  * whitespace on these cards, it needs to be better spaced" — then, of the one-off "Trail to Road cu
@@ -47,7 +47,7 @@ export const GROUP_GAP = 1.5;
  * the body keeps its natural height inside the card, so a short card's door sits right under its
  * facts, where it belongs to them, and the room the taller neighbour needs is at the card's foot —
  * the one place empty space reads as a margin rather than as a gap in the content. Choosing
- * `align-items: start` instead was weighed and not taken (§NNN): it gives every card its own
+ * `align-items: start` instead was weighed and not taken (§366): it gives every card its own
  * height and moves the same room outside the border, where the row's ragged bottom edge is what
  * the eye reads first — the very thing §275 was decided against.
  *
@@ -84,7 +84,7 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * ever cancels the padding. A flex item's margin does not collapse, and a flex item holds its
  * child's margins inside itself, so the heading's `mt` stays what it says.
  *
- * **The reach is uneven, and never more than the gap on its side** (§NNN). Whatever comes after
+ * **The reach is uneven, and never more than the gap on its side** (§366). Whatever comes after
  * the title in the page paints over it, and so takes a press on any pixel the two share: the
  * series card's rhythm line sat four pixels under the words when the link reached ten, and the
  * part of the 44 a finger could still hit was about 40 (42 above a summary) — while a measure of
@@ -95,7 +95,7 @@ export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, ali
  * neighbour follows, and `listing-cards.spec.ts` presses its edges to prove it. Neither neighbour
  * is a link, so the reach never covers another control.
  *
- * **`border-box`, said here, or none of the arithmetic above holds** (§NNN). The cards usually
+ * **`border-box`, said here, or none of the arithmetic above holds** (§366). The cards usually
  * stand inside a `<details>` — the "other events" fold under a lead event (§78) — and the browser
  * slots a fold's content into the fold's own shadow tree, where MUI's `box-sizing: inherit` does
  * not reach: everything in it is `content-box`. There the 44 was the words' box and the eighteen

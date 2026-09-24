@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
- * BR-REQ-041-01 (§NNN) — the listing's cards, measured in a browser at 320 pixels (the mobile
+ * BR-REQ-041-01 (§366) — the listing's cards, measured in a browser at 320 pixels (the mobile
  * project) and on a desktop, where they stand two to a row.
  *
  * The owner, 2026-09-24, with a screenshot of `/ro/evenimente`: "There is too much whitespace on
@@ -112,7 +112,7 @@ async function removeSeries(page: Page, title: string): Promise<void> {
   await page.context().clearCookies();
 }
 
-test.describe("BR-REQ-041-01 the listing's cards (§NNN)", () => {
+test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   test("are no whole-card link: the title is the card's link, the heading holds it, nothing is a link inside a link", async ({ page }) => {
     const list = await cards(page);
     const count = await list.count();
@@ -184,7 +184,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§NNN)", () => {
     /*
       A box 44 pixels tall is not a 44-pixel target when something later on the card sits on part
       of it: what comes later paints over it and takes the press there. The series card's rhythm
-      line once sat six pixels up inside its title link's box (§NNN) while a measure of the box
+      line once sat six pixels up inside its title link's box (§366) while a measure of the box
       still said 44, and a series' dates were 24-pixel pills under a comment that said 44 — so this
       presses the edges of every link and fold on every card and asks which element answers. With
       a series of its own first: the seed has none, and a series card is the one whose title has a
@@ -266,7 +266,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§NNN)", () => {
   test("keep a title's line as tall as its words: what follows starts one of the card's gaps under them, not under the link's reach", async ({ page }) => {
     /*
       The title's link is 44 pixels of target around 26 pixels of words, the rest given back as
-      margin (§NNN) — given back only if the padding is inside the 44. Inside the listing's
+      margin (§366) — given back only if the padding is inside the 44. Inside the listing's
       "other events" fold everything is content-box (a `<details>` slots its content where MUI's
       `box-sizing: inherit` does not reach), and until the link said border-box its heading stood
       44 tall and the line under it began 27 pixels below the title's words instead of 9: nothing

@@ -199,7 +199,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
           each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held
-          with a partner, the handshake and "În parteneriat cu …" (§NNN) — the marker the listing
+          with a partner, the handshake and "În parteneriat cu …" (§367) — the marker the listing
           card and the calendar wear. The line wraps rather than overflowing a phone: a partner's
           name is long, and the small "·" before it stays at the end of the line it follows. */}
       <Typography variant="overline" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.75, rowGap: 0 }}>

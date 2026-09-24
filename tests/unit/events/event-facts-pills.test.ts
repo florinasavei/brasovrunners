@@ -230,12 +230,12 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
   it("a race's two times, each named, on the same line", async () => {
     const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·întâlnire la 09:00·start la 10:00");
-    // One clock, in front of the first time: the two read as one group (§NNN).
+    // One clock, in front of the first time: the two read as one group (§366).
     expect(when.match(/data-testid="ScheduleIcon"/g)).toHaveLength(1);
     expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("întâlnire"));
   });
 
-  it("puts a clock in front of the time, as the listing card does (§NNN): «[calendar] Sâmbătă, 26 sept. 2026 · [clock] 08:00»", async () => {
+  it("puts a clock in front of the time, as the listing card does (§366): «[calendar] Sâmbătă, 26 sept. 2026 · [clock] 08:00»", async () => {
     const html = await page();
     const when = row(html, "Când").dd;
     const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when)?.[0] ?? "";
@@ -318,7 +318,7 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
-  it("the featured hero's clock is the size of its other glyphs — eighteen pixels, three under the baseline (§NNN)", async () => {
+  it("the featured hero's clock is the size of its other glyphs — eighteen pixels, three under the baseline (§366)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
     const when = row(html, "Când");
     const clock = /<svg\b[^>]*data-testid="ScheduleIcon"[^>]*>/.exec(when.dd)?.[0] ?? "";
@@ -332,7 +332,7 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
     expect(rule).toContain("vertical-align:-3px");
   });
 
-  it("keeps the hero's own pieces on the hero: its route, Strava and Facebook links and its partner sentence, none of them on a card (§NNN)", async () => {
+  it("keeps the hero's own pieces on the hero: its route, Strava and Facebook links and its partner sentence, none of them on a card (§366)", async () => {
     const withEverything = event({
       routeUrl: "https://www.strava.com/routes/1",
       stravaEventUrl: "https://www.strava.com/clubs/1/group_events/2",
@@ -350,14 +350,14 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
 });
 
 /**
- * BR-REQ-041-01 (§NNN) — the listing card draws the event page's shapes, smaller. The owner,
+ * BR-REQ-041-01 (§366) — the listing card draws the event page's shapes, smaller. The owner,
  * 2026-09-24, with a screenshot of the listing: "There is too much whitespace on these cards, it
  * needs to be better spaced" — and in it, the pin alone on a line with the place under it, and the
  * route as "8 km · 250 m diferență de nivel · ı Mediu" with a tiny glyph and middle dots, the
  * partner's "Împreună cu …" among them, while the event page had just made the same facts pills
  * (§356): "I like these pills on the full page details! this is currently pretty ugly!".
  */
-describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's pills (§NNN)", () => {
+describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's pills (§366)", () => {
   const card = async (overrides: Partial<PublicEvent> = {}, extra: { links?: boolean; whenLead?: string } = {}) =>
     renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", links: extra.links, whenLead: extra.whenLead }));
 
@@ -418,7 +418,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(anchors[0]).toContain('target="_blank"');
     const rule = ruleOf(html, anchors[0] ?? "");
     // The 44 includes the padding, said on the link: inside the listing's fold everything is
-    // content-box, and there the link was 64 pixels and its words twelve under the pin (§NNN).
+    // content-box, and there the link was 64 pixels and its words twelve under the pin (§366).
     expect(rule).toContain("box-sizing:border-box");
     expect(rule).toContain("min-height:44px");
     expect(rule).toContain("padding-top:10px");
@@ -427,7 +427,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(rule).toContain("margin-bottom:-10px");
   });
 
-  it("keeps the map link's ten pixels below inside the facts when no pills follow it — nothing nearer may sit on them (§NNN)", async () => {
+  it("keeps the map link's ten pixels below inside the facts when no pills follow it — nothing nearer may sit on them (§366)", async () => {
     // No distance, climb, difficulty, surface or cost: the state of registration is a line's gap
     // (eight pixels) under the place, nearer than the link's ten, and would take its bottom.
     const html = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
@@ -436,7 +436,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(anchors).toHaveLength(1);
     const rule = ruleOf(html, anchors[0] ?? "");
     // The 44 includes the padding, said on the link: inside the listing's fold everything is
-    // content-box, and there the link was 64 pixels and its words twelve under the pin (§NNN).
+    // content-box, and there the link was 64 pixels and its words twelve under the pin (§366).
     expect(rule).toContain("box-sizing:border-box");
     expect(rule).toContain("min-height:44px");
     expect(rule).toContain("padding-top:10px");

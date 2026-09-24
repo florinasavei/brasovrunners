@@ -87,7 +87,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& p"].fontSize).toBe("0.875rem");
   });
 
-  it("reads three lines of the summary at most, and wraps anything too long for a phone (§NNN)", () => {
+  it("reads three lines of the summary at most, and wraps anything too long for a phone (§366)", () => {
     /*
       The owner, 2026-09-24, of the listing: "There is too much whitespace on these cards". A
       summary as long as its author made it set one card's height against its neighbour's; the
@@ -112,7 +112,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     // be cropped to the shape a card shows (§241): "on the event card I wanna be able to see
     // pictures in the preview". So there is no longer a card that drops it, and the editor's
     // help text must not claim there is.
-    // The single-date card left `events/page.tsx` for a module of its own beside the series card (§NNN).
+    // The single-date card left `events/page.tsx` for a module of its own beside the series card (§366).
     const cards = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"), "utf8");
     expect(cards).not.toContain("underHero");
     expect(cards).toContain('<EventExcerpt place="card"');

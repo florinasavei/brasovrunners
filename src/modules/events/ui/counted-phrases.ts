@@ -47,7 +47,7 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
- * The partner marker's words (§NNN; the owner: "a special marker with this partnered event, so
+ * The partner marker's words (§367; the owner: "a special marker with this partnered event, so
  * that people know this is not a regular Brașov Runners group run"): "În parteneriat cu Brașov
  * Running Festival" / "With Brașov Running Festival" — on the listing card's chip, in the
  * calendar entry's tooltip and accessible name, and on the event page's overline.
