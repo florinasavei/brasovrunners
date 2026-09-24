@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { ALIGN_STRETCH_MINUTES } from "@/modules/jobs/schedule";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -96,8 +97,18 @@ describe("§NNN the throttle card says the safety look is on the hour", () => {
     expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour);
   });
 
-  it("names the hour, the health monitor and the one wake in both languages", () => {
-    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/ora fixă.*\/api\/health.*o trezire/);
-    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/on the hour.*\/api\/health.*one wake/);
+  it("names the hour, the health monitor and the one wake of an idle hour in both languages", () => {
+    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/ora fixă.*\/api\/health.*o oră fără nimic de făcut.*o trezire/);
+    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/on the hour.*\/api\/health.*idle hour.*one wake/);
+  });
+
+  it("promises no more lateness than the scheduler keeps: several checks, each at most the stretch late", () => {
+    // `minimumIntervalEnd` moves a run off its interval's marks one stretch at a time — several
+    // runs under an hour or two, not one — and the sentence says so, with the stretch's own length.
+    expect(ALIGN_STRETCH_MINUTES).toBe(15);
+    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/unele verificări pot întârzia fiecare cu până la un sfert de oră/);
+    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/some checks up to a quarter of an hour late each/);
+    expect(ro.Admin.tasks.jobCadence.onTheHour).not.toMatch(/o dată|jumătate/);
+    expect(en.Admin.tasks.jobCadence.onTheHour).not.toMatch(/once|half an hour/);
   });
 });

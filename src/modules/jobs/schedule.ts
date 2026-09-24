@@ -43,7 +43,8 @@
  * - **A minimum interval** ends on the first boundary of its own length at least that many
  *   minutes after the run (`minimumIntervalEnd`: quarter-hours for 15, :00/:30 for 30, the hour
  *   for 60, even hours for 120) — a minimum stays a minimum, so it may only come later, and at
- *   most `ALIGN_STRETCH_MINUTES` later, which the health thresholds absorb.
+ *   most `ALIGN_STRETCH_MINUTES` (one pinger period) later, which leaves the job health's
+ *   threshold room for one missed pinger call after the stretched run.
  * - **A deadline the work itself has** (`nextWorkAt`) is never moved: before it there is nothing
  *   to do, and after it the next call runs, exactly as before.
  */
@@ -70,12 +71,15 @@ export type JobCadenceMinutes = (typeof JOB_CADENCE_CHOICES)[number];
 
 /**
  * How much later than the owner's minimum interval its aligned end may come (§NNN), so that a
- * run off the interval's boundary moves toward it without ever tripping a health threshold: the
+ * run off the interval's boundary moves toward it without ever tripping a health threshold. The
  * tightest one is production's by day, twice the fifteen-minute pinger plus five minutes past
- * max(cap, interval) (`quiet-hours.ts`, `health.ts`), and thirty leaves the five for the run
- * itself. A boundary further than this is reached over two or more runs, each at most this late.
+ * max(cap, interval) (`quiet-hours.ts`, `health.ts`), and its promise is that one slow run never
+ * flips it: one pinger period of stretch, one missed call after it and the grace come to 32 of
+ * those 35 minutes. Thirty would leave five, and a stretched run followed by a single missed call
+ * would read `stale` on `/api/health`. A boundary further than this is reached over several runs,
+ * each at most this late: up to three under sixty minutes, seven under two hours.
  */
-export const ALIGN_STRETCH_MINUTES = 30;
+export const ALIGN_STRETCH_MINUTES = 15;
 
 /**
  * No cached quiet period that a wake could shorten ends later than this after the run that wrote
@@ -212,8 +216,9 @@ export function safetyCapEnd(ranAt: Date): Date {
  *    06:02, 12:02 and 18:02 ride their wakes.
  * 3. When that boundary is more than `ALIGN_STRETCH_MINUTES` (and the grace) past
  *    `ranAt + minutes`, the target is instead the latest pinger slot within that stretch: this
- *    run moves the job half an hour toward the boundary and a later one reaches it. Only 60 and
- *    120 ever need it — a run at 10:15 under 60 goes to 11:45, then 13:00.
+ *    run moves the job a quarter of an hour toward the boundary and later ones reach it. From a
+ *    run on the pinger's grid only 60 and 120 ever need it — a run at 10:15 under 60 goes to
+ *    11:30, 12:45, then 14:00; a run off the grid (a woken one at 10:05) may need it under 30.
  * 4. The end is two minutes before the target, so the target's call runs even when it lands
  *    early — but never before `earliest`.
  */

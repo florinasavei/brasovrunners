@@ -80,12 +80,19 @@ function pingerCalls(from: Date, until: Date, dayMinutes: number): Call[] {
 
 type Rule = (ranAt: Date) => QuietPlan;
 
-/** The real runs of one job: a run at `start`, then every call its latest plan does not hold back. */
-function realRuns(start: Date, until: Date, plan: Rule, dayMinutes = 15): Call[] {
+/**
+ * The real runs of one job: a run at `start`, then every call its latest plan does not hold back.
+ * `dropped` names calls that never arrive — the pinger missed one, or the function timed out
+ * before it recorded — by their place among the calls that would have run (0 is the first): a
+ * dropped call the plan would have skipped changes nothing, so only these are worth dropping.
+ */
+function realRuns(start: Date, until: Date, plan: Rule, dayMinutes = 15, dropped: ReadonlySet<number> = new Set()): Call[] {
   const runs: Call[] = [{ slot: start, at: start }];
   let current = plan(start);
+  let due = 0;
   for (const call of pingerCalls(start, until, dayMinutes)) {
     if (!verdict(call.at, current).run) continue;
+    if (dropped.has(due++)) continue;
     runs.push(call);
     current = plan(call.at);
   }
@@ -216,13 +223,19 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) a minimum interval ends on a bounda
     expect(minimumIntervalEnd(club("11:45"), 120)).toEqual(club("13:58"));
   });
 
-  it("gets there half an hour at a time when the boundary is further than that", () => {
-    // 60 after a run at 10:15: 12:00 would be 45 minutes late; 11:45 is 30, and from it, 13:00.
-    expect(minimumIntervalEnd(club("10:15"), 60)).toEqual(club("11:43"));
-    expect(minimumIntervalEnd(club("11:45"), 60)).toEqual(club("12:58"));
-    // 120 after a run at 11:00 (odd): 13:30, then 16:00.
-    expect(minimumIntervalEnd(club("11:00"), 120)).toEqual(club("13:28"));
-    expect(minimumIntervalEnd(club("13:30"), 120)).toEqual(club("15:58"));
+  it("gets there a quarter of an hour at a time when the boundary is further than that", () => {
+    expect(ALIGN_STRETCH_MINUTES).toBe(PINGER_SLOT_MINUTES);
+    // 60 after a run at 10:15: 12:00 would be 45 minutes late; 11:30 is 15, then 12:45, then 14:00.
+    expect(minimumIntervalEnd(club("10:15"), 60)).toEqual(club("11:28"));
+    expect(minimumIntervalEnd(club("11:30"), 60)).toEqual(club("12:43"));
+    expect(minimumIntervalEnd(club("12:45"), 60)).toEqual(club("13:58"));
+    // 120 after a run at 11:00 (odd): 13:15, 15:30, 17:45, then 20:00.
+    expect(minimumIntervalEnd(club("11:00"), 120)).toEqual(club("13:13"));
+    expect(minimumIntervalEnd(club("13:15"), 120)).toEqual(club("15:28"));
+    expect(minimumIntervalEnd(club("15:30"), 120)).toEqual(club("17:43"));
+    expect(minimumIntervalEnd(club("17:45"), 120)).toEqual(club("19:58"));
+    // 30 needs it only after a run off the pinger's grid: a woken run at 10:05 goes to 10:45, not 11:00.
+    expect(minimumIntervalEnd(club("10:05"), 30)).toEqual(club("10:43"));
   });
 
   it("never ends sooner than the interval minus the grace, nor more than the stretch past it, for a run at any moment", () => {
@@ -258,15 +271,24 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) a minimum interval ends on a bounda
   it("brings production's quarter-hour pinger onto the boundary within a few runs, never sooner than the interval", () => {
     for (const cadence of [30, 60, 120] as const) {
       const rule = (ranAt: Date) => idle(ranAt, cadence);
+      const boundary = cadence === 120 ? onEvenHour : cadence === 60 ? onTheHour : (at: Date) => clubMinuteOfDay(at) % 30 === 0;
+      /*
+        From a run on the pinger's grid the boundary is at most the interval less one slot away,
+        and each run gets one stretch closer: three runs for 60, seven for 120, one for 30. A start
+        off the grid (a woken run at 08:05) spends one more run reaching it.
+      */
+      const most = cadence / PINGER_SLOT_MINUTES;
       for (let minute = 0; minute < 120; minute += 5) {
         const start = after(club("08:00"), minute);
-        const runs = realRuns(start, club("22:00"), rule);
+        // Into the next evening: seven quarter-hour steps of two hours outlast one day's pinger.
+        const runs = realRuns(start, club("22:00", "2026-10-02"), rule);
         for (let index = 1; index < runs.length; index++) {
           expect(runs[index].at.getTime() - runs[index - 1].at.getTime()).toBeGreaterThanOrEqual(cadence * MINUTE - GRACE);
         }
-        const boundary = cadence === 120 ? onEvenHour : cadence === 60 ? onTheHour : (at: Date) => clubMinuteOfDay(at) % 30 === 0;
-        // Four runs at most: 120 minutes off by up to 105, half an hour a run.
-        expect(runs.slice(5).every((run) => boundary(run.slot)), `${cadence} ${start.toISOString()}`).toBe(true);
+        const first = runs.findIndex((run, index) => index > 0 && boundary(run.slot));
+        expect(first, `${cadence} ${start.toISOString()}`).toBeGreaterThan(0);
+        expect(first, `${cadence} ${start.toISOString()}`).toBeLessThanOrEqual(most);
+        expect(runs.slice(first).every((run) => boundary(run.slot)), `${cadence} ${start.toISOString()}`).toBe(true);
       }
     }
   });
@@ -329,6 +351,9 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) no health threshold is ever crossed
    * moment between them — checked just before every pinger slot in between, which is where the
    * gap is largest under each threshold, the day's ending at 23:00 included — and, with work
    * waiting at every run, the outbox's claim is never later than the email health's "overdue".
+   * The job threshold also holds with any one call that would have run dropped, as its "one slow
+   * run never flips the check" promises; two dropped in a row right after a stretched run are past
+   * that promise, as three in a row were before alignment.
    */
   /** The threshold changes only on the hour, so each hour's is asked of `quiet-hours.ts` once. */
   const thresholds = new Map<string, number>();
@@ -385,10 +410,44 @@ describe("BR-REQ-090-03 criterion 14 (§NNN) no health threshold is ever crossed
     }
   });
 
-  it("keeps the stretch inside the tightest job threshold with room for the run itself", () => {
-    // Production by day: twice fifteen plus five past max(cap, interval).
+  it("leaves the tightest job threshold room for one missed pinger call after a stretched run", () => {
+    // Production by day: twice fifteen plus five past max(cap, interval) — "one slow run never
+    // flips the check" (`health.ts`). A stretch of thirty left five minutes, not one call.
     const tightest = jobStalenessThresholdMs(club("12:00"), 15);
     expect(tightest).toBe(35 * MINUTE);
-    expect((ALIGN_STRETCH_MINUTES + PLAN_GRACE_MINUTES) * MINUTE).toBeLessThan(tightest);
+    expect((ALIGN_STRETCH_MINUTES + PINGER_SLOT_MINUTES + PLAN_GRACE_MINUTES) * MINUTE).toBeLessThan(tightest);
+  });
+
+  it("keeps production at an hour inside its threshold when the 13:00 call and then the stretched run's own call are missed", () => {
+    // Aligned on the hour at 12:00; 13:00 never arrives, so 13:15 runs and stretches to 14:30;
+    // 14:30 never arrives either, so 14:45 runs — ninety minutes, inside ninety-five — and 16:00
+    // is back on the hour. Under a thirty-minute stretch the second gap was 13:15 → 15:00, 105.
+    const every60 = (ranAt: Date) => idle(ranAt, 60);
+    const runs = realRuns(club("12:00"), club("17:30"), every60, 15, new Set([0, 2]));
+    expect(runs.map((run) => run.slot)).toEqual([club("12:00"), club("13:15"), club("14:45"), club("16:00"), club("17:00")]);
+    expect(firstCrossing(runs, 60, 15)).toBeNull();
+  });
+
+  it.each([15, 60])("holds with any one call dropped while runs move onto the interval's marks, with a %i-minute day pinger", (dayMinutes) => {
+    // Starts off the interval's marks by day — on the pinger's grid, and off it as a woken run is —
+    // so the stretched runs are the ones a dropped call follows.
+    const starts = [
+      ...["08:15", "08:30", "08:45", "09:00", "09:15", "09:30", "09:45"].map((time) => club(time)),
+      ...["08:05:17", "08:40:17", "09:20:17"].map((time) => club(time)),
+    ];
+    for (const cadence of CADENCES) {
+      const plans: Rule[] = [
+        (ranAt) => idle(ranAt, cadence),
+        (ranAt) => planQuiet({ ranAt, nextWorkAt: after(ranAt, 1), cadenceMinutes: cadence, failed: false }),
+      ];
+      for (const plan of plans) {
+        for (const start of starts) {
+          for (let drop = 0; drop < 10; drop++) {
+            const runs = realRuns(start, club("23:30"), plan, dayMinutes, new Set([drop]));
+            expect(firstCrossing(runs, cadence, dayMinutes), `${cadence} min from ${start.toISOString()}, call ${drop} dropped`).toBeNull();
+          }
+        }
+      }
+    }
   });
 });
