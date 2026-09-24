@@ -1403,3 +1403,26 @@ the internet.
 The capacity and the two window numbers (the club's own call), the rules text, the programme,
 the meeting point and its map link, and the bib band colour. Nothing else is asked for, and
 nothing here needs a developer.
+
+## 40. Give the Neon key write access, so Costuri → "The database's limits" can change them
+
+Optional, and only needed once an Administrator actually sets one of the two brakes — the
+compute's maximum size or the period's CU-hour quota (BR-REQ-090-07). §33's key is enough to
+read the figures; it is deliberately read-only, and the panel answers with the exact sentence
+when a read-only key meets the write: "Neon refused the key: the key in `NEON_API_KEY` may read
+the project but not modify it."
+
+1. Neon console → the organization's **Settings** → **API keys** → **Create new** → choose
+   **Project-scoped**, this environment's project, and give it the **Editor** role. This is a
+   second key, not a replacement for §33's — an organization administrator's personal key works
+   too, and reads exactly the same figures either way.
+2. Vercel → the environment's project → **Settings → Environment Variables** → set
+   `NEON_API_KEY` to this key's value (it replaces the read-only one; `NEON_PROJECT_ID` stays as
+   it was). Redeploy.
+3. `/admin/tasks` → Costuri → "The database's limits": choose the maximum compute size and,
+   optionally, a CU-hours limit for the billing period — on production, tick the confirmation,
+   because reaching the limit suspends every page until the next period — then save. The
+   readout above the form afterwards is what Neon now holds, never what was sent.
+4. A refusal names the exact problem, never a stack trace: unset variables, a key that can read
+   but not write (repeat step 1), Neon busy with another change to the project (retry in a
+   minute), or Neon unreachable (retry later).

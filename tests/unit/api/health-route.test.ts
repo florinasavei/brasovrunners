@@ -170,7 +170,10 @@ describe("DECISIONS.md §NNN /api/health's early warning for the Neon quota", ()
 
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
-    expect(body.neon).toEqual({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
+    // Status and percent only — this endpoint is public and unauthenticated, and the exact
+    // quota and this period's CU-hours are the club's own billing figures (§NNN); the full
+    // reading is `/admin/tasks` and `/devs`'s to show.
+    expect(body.neon).toEqual({ status: "ok", percent: 12 });
   });
 
   it("degrades to a 503 once the reading turns near-limit", async () => {
@@ -182,7 +185,7 @@ describe("DECISIONS.md §NNN /api/health's early warning for the Neon quota", ()
     expect(response.status).toBe(503);
     expect(body.status).toBe("degraded");
     expect(body.database).toBe("ok");
-    expect(body.neon).toMatchObject({ status: "near-limit", percent: 82 });
+    expect(body.neon).toEqual({ status: "near-limit", percent: 82 });
   });
 
   it("stays ok when Neon could not be read at all — an unconfigured key is not a health failure", async () => {
@@ -193,7 +196,7 @@ describe("DECISIONS.md §NNN /api/health's early warning for the Neon quota", ()
 
     expect(response.status).toBe(200);
     expect(body.status).toBe("ok");
-    expect(body.neon).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(body.neon).toEqual({ status: "ok", percent: null });
   });
 
   it("is asked beside the connection probe, whether or not the database answers", async () => {
@@ -208,6 +211,16 @@ describe("DECISIONS.md §NNN /api/health's early warning for the Neon quota", ()
     expect(response.status).toBe(503);
     expect(body.database).toBe("down");
     expect(checkNeonQuotaHealth).toHaveBeenCalledTimes(1);
-    expect(body.neon).toEqual({ status: "ok", quotaCuHours: null, usedCuHours: null, percent: null });
+    expect(body.neon).toEqual({ status: "ok", percent: null });
+  });
+
+  it("never publishes the exact quota or this period's CU-hours — a monitor and a 503 need only the status and the share spent", async () => {
+    checkNeonQuotaHealth.mockResolvedValue({ status: "ok", quotaCuHours: 100, usedCuHours: 12.34, percent: 12 });
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.neon).not.toHaveProperty("quotaCuHours");
+    expect(body.neon).not.toHaveProperty("usedCuHours");
   });
 });

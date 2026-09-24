@@ -138,9 +138,13 @@ export async function GET(): Promise<Response> {
       schema,
       jobs,
       email,
-      // The monthly compute quota's early warning (§NNN): `null` figures mean nothing was asked
-      // (no key, or Neon did not answer within the timeout) rather than "there is no quota".
-      neon: neonQuota,
+      // The monthly compute quota's early warning (§NNN): `percent: null` means nothing was
+      // asked (no key, or Neon did not answer within the timeout) rather than "there is no
+      // quota". The figures themselves — the exact quota and this period's CU-hours — are the
+      // club's own billing numbers; this endpoint is public and unauthenticated, so only what
+      // the 503 and a monitor need (the status and the share of the quota spent) is published
+      // here. `/admin/tasks` and `/devs` are where the full figures belong.
+      neon: { status: neonQuota.status, percent: neonQuota.percent },
       checkedAt: now.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },

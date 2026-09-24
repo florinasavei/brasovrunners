@@ -327,15 +327,25 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    * deliberately the same word the invitation key's row uses for "set up and needs a hand
    * today": Neon suspends the whole database at 100%, every page down until the next billing
    * period, and a row that still had time to prevent that must not read as merely `open`.
+   *
+   * No quota is two different facts and only one of them is `open`: `input.neonQuota === null`
+   * means Neon could not be read at all (no key, or no answer) — still `open`, the same "find
+   * out why" as before. `input.neonQuota.quotaCuHours === null` means Neon answered and there is
+   * genuinely no limit — on production that is the panel's own recommendation
+   * (`NeonLimitsPanel`'s `recommendProduction`: "no limit on production; use Neon's spending
+   * alert instead"), so a board that kept the row open would be asking the club to undo advice
+   * this same screen gives; everywhere else a limit is still worth setting, so it stays `open`.
    */
+  const noReading = input.neonQuota === null;
   const quota = input.neonQuota?.quotaCuHours ?? null;
   const nearLimit = quota !== null && isNeonQuotaNearLimit(input.neonQuota?.usedCuHours ?? 0, quota);
+  const noQuotaAsRecommended = !noReading && quota === null && input.appEnv === "production";
   push("neonLimits", {
     owner: "club",
-    state: quota === null ? "open" : nearLimit ? "broken" : "done",
+    state: noReading || quota === null ? (noQuotaAsRecommended ? "done" : "open") : nearLimit ? "broken" : "done",
     // `broken` needs its own sentence — the default "todo"/"done" pair cannot say "this is
     // about to suspend the database", which is the one thing this row exists to say in time.
-    text: nearLimit ? "broken" : undefined,
+    text: nearLimit ? "broken" : noQuotaAsRecommended ? "recommendedProduction" : undefined,
   });
 
   /**

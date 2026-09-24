@@ -45,46 +45,75 @@ export type NeonConsumption = {
   quotaCuHours: number | null;
 };
 
+/**
+ * The one project row `readNeonConsumption` and `checkNeonQuotaHealth` both read — every field
+ * either has ever needed, in one shape, so a third reader cannot invent a second one.
+ */
+type NeonProjectRow = {
+  compute_time_seconds?: number;
+  active_time_seconds?: number;
+  consumption_period_start?: string;
+  consumption_period_end?: string;
+  owner?: { subscription_type?: string };
+  settings?: { quota?: { compute_time_seconds?: number } };
+};
+
+/** The quota and this period's spend, read off the row the same one way everywhere (§NNN). */
+function neonQuotaReading(project: NeonProjectRow): { quotaCuHours: number | null; usedCuHours: number } {
+  return {
+    quotaCuHours: secondsToCuHours(project.settings?.quota?.compute_time_seconds),
+    usedCuHours: (project.compute_time_seconds ?? 0) / 3600,
+  };
+}
+
+/**
+ * The one request `readNeonConsumption` and `checkNeonQuotaHealth` both make to Neon — same URL,
+ * same headers, same five-second timeout — so a cache option is the only way they can ever
+ * differ, rather than each keeping its own copy of the request that could quietly drift apart.
+ */
+async function fetchNeonProjectRow(
+  env: Pick<Env, "NEON_API_KEY" | "NEON_PROJECT_ID">,
+  fetchImpl: typeof fetch,
+  cacheInit: { cache: "no-store" } | { next: { revalidate: number } },
+): Promise<{ ok: true; project: NeonProjectRow } | { ok: false; reason: string }> {
+  try {
+    const response = await fetchImpl(`${NEON_API}/projects/${env.NEON_PROJECT_ID}`, {
+      headers: { authorization: `Bearer ${env.NEON_API_KEY}`, accept: "application/json" },
+      signal: AbortSignal.timeout(5_000),
+      ...cacheInit,
+    });
+    if (!response.ok) return { ok: false, reason: `HTTP ${response.status}` };
+    const body = (await response.json()) as { project?: NeonProjectRow };
+    if (!body.project) return { ok: false, reason: "unexpected answer" };
+    return { ok: true, project: body.project };
+  } catch (error) {
+    return { ok: false, reason: error instanceof Error ? error.name : String(error) };
+  }
+}
+
 export async function readNeonConsumption(
   env: Pick<Env, "NEON_API_KEY" | "NEON_PROJECT_ID">,
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ ok: true; consumption: NeonConsumption } | { ok: false; reason: "unconfigured" | string }> {
   if (!env.NEON_API_KEY || !env.NEON_PROJECT_ID) return { ok: false, reason: "unconfigured" };
-  try {
-    const response = await fetchImpl(`${NEON_API}/projects/${env.NEON_PROJECT_ID}`, {
-      headers: { authorization: `Bearer ${env.NEON_API_KEY}`, accept: "application/json" },
-      signal: AbortSignal.timeout(5_000),
-      cache: "no-store",
-    });
-    if (!response.ok) return { ok: false, reason: `HTTP ${response.status}` };
-    const body = (await response.json()) as {
-      project?: {
-        compute_time_seconds?: number;
-        active_time_seconds?: number;
-        consumption_period_start?: string;
-        consumption_period_end?: string;
-        owner?: { subscription_type?: string };
-        settings?: { quota?: { compute_time_seconds?: number } };
-      };
-    };
-    const project = body.project;
-    if (!project?.consumption_period_start || !project.consumption_period_end) {
-      return { ok: false, reason: "unexpected answer" };
-    }
-    return {
-      ok: true,
-      consumption: {
-        cuHours: (project.compute_time_seconds ?? 0) / 3600,
-        activeHours: (project.active_time_seconds ?? 0) / 3600,
-        periodStart: new Date(project.consumption_period_start),
-        periodEnd: new Date(project.consumption_period_end),
-        reportedPlan: neonPlanFromSubscription(project.owner?.subscription_type),
-        quotaCuHours: secondsToCuHours(project.settings?.quota?.compute_time_seconds),
-      },
-    };
-  } catch (error) {
-    return { ok: false, reason: error instanceof Error ? error.name : String(error) };
+  const row = await fetchNeonProjectRow(env, fetchImpl, { cache: "no-store" });
+  if (!row.ok) return row;
+  const { project } = row;
+  if (!project.consumption_period_start || !project.consumption_period_end) {
+    return { ok: false, reason: "unexpected answer" };
   }
+  const reading = neonQuotaReading(project);
+  return {
+    ok: true,
+    consumption: {
+      cuHours: reading.usedCuHours,
+      activeHours: (project.active_time_seconds ?? 0) / 3600,
+      periodStart: new Date(project.consumption_period_start),
+      periodEnd: new Date(project.consumption_period_end),
+      reportedPlan: neonPlanFromSubscription(project.owner?.subscription_type),
+      quotaCuHours: reading.quotaCuHours,
+    },
+  };
 }
 
 /** How long `/api/health`'s own reading of the quota is kept, so a monitor's ping does not put a Neon request behind every one of them. */
@@ -126,30 +155,16 @@ export async function checkNeonQuotaHealth(
 ): Promise<NeonQuotaHealth> {
   const unavailable: NeonQuotaHealth = { status: "ok", quotaCuHours: null, usedCuHours: null, percent: null };
   if (!env.NEON_API_KEY || !env.NEON_PROJECT_ID) return unavailable;
-  try {
-    const response = await fetchImpl(`${NEON_API}/projects/${env.NEON_PROJECT_ID}`, {
-      headers: { authorization: `Bearer ${env.NEON_API_KEY}`, accept: "application/json" },
-      signal: AbortSignal.timeout(5_000),
-      next: { revalidate: NEON_HEALTH_CACHE_SECONDS },
-    });
-    if (!response.ok) return unavailable;
-    const body = (await response.json()) as {
-      project?: { compute_time_seconds?: number; settings?: { quota?: { compute_time_seconds?: number } } };
-    };
-    const project = body.project;
-    if (!project) return unavailable;
-    const quotaCuHours = secondsToCuHours(project.settings?.quota?.compute_time_seconds);
-    const usedCuHours = (project.compute_time_seconds ?? 0) / 3600;
-    const ratio = neonQuotaRatio(usedCuHours, quotaCuHours);
-    return {
-      status: isNeonQuotaNearLimit(usedCuHours, quotaCuHours) ? "near-limit" : "ok",
-      quotaCuHours,
-      usedCuHours,
-      percent: ratio === null ? null : Math.round(ratio * 100),
-    };
-  } catch {
-    return unavailable;
-  }
+  const row = await fetchNeonProjectRow(env, fetchImpl, { next: { revalidate: NEON_HEALTH_CACHE_SECONDS } });
+  if (!row.ok) return unavailable;
+  const { quotaCuHours, usedCuHours } = neonQuotaReading(row.project);
+  const ratio = neonQuotaRatio(usedCuHours, quotaCuHours);
+  return {
+    status: isNeonQuotaNearLimit(usedCuHours, quotaCuHours) ? "near-limit" : "ok",
+    quotaCuHours,
+    usedCuHours,
+    percent: ratio === null ? null : Math.round(ratio * 100),
+  };
 }
 
 /**

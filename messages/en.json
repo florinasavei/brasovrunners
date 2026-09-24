@@ -1403,11 +1403,12 @@
         },
         "neonLimits": {
           "title": "The database's monthly compute-time limit",
-          "todo": "The database can be capped from Costuri → “The database's limits”, above this list: how large it may grow, and how many CU-hours a billing period may spend before Neon suspends it until the next one. No limit is set on this environment yet.",
+          "todo": "The database can be capped on the Costuri tab → “The database's limits”: how large it may grow, and how many CU-hours a billing period may spend before Neon suspends it until the next one. No limit is set on this environment yet.",
           "broken": "This period has already spent 80% or more of the monthly limit. Neon suspends the whole database — every page, until the next billing period — the moment it is reached: raise the limit or wait for the reset, today rather than when it happens.",
           "done": "A monthly limit is set on this environment, and this period is comfortably under it.",
+          "recommendedProduction": "No monthly limit on production, which is what this same screen recommends there: a limit stops the whole site the moment it is reached, so Neon's own spending alert is the safer warning. Set one anyway only with the confirmation ticked.",
           "how": [
-            "Open Costuri → “The database's limits”, above this list: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §40).",
+            "On the Costuri tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon (SETUP.md §40).",
             "A limit needs a key that may modify the project, not only read it (NEON_API_KEY with the Editor right) — the card names the exact key when the one set cannot write.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
           ]

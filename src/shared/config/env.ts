@@ -94,6 +94,20 @@ export const envSchema = z
     // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
     NEON_API_KEY: z.string().min(1).optional(),
     NEON_PROJECT_ID: z.string().min(1).optional(),
+    /**
+     * `playwright.config.ts`'s `webServer` alone, never a developer's own shell: a developer's
+     * `.env.local` legitimately carries a real `NEON_API_KEY`/`NEON_PROJECT_ID` — reading the
+     * account's real figures while developing is the point of them — but that same file backs
+     * the end-to-end suite's `yarn build && yarn start`, and a suite must not call a real third
+     * party. Setting the two variables to `""` in `webServer.env` does not work: they are
+     * `z.string().min(1)`, so an empty string is refused rather than treated as absent. This
+     * flag is read once, below, to blank both regardless of what `.env.local` set — the schema
+     * itself treats them as unset, rather than each caller learning to check a second variable.
+     */
+    E2E_DISABLE_NEON: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
@@ -392,6 +406,13 @@ export const envSchema = z
       (value.APP_ENV === "local" || value.APP_ENV === "test"
         ? ("dev-switcher" as const)
         : ("disabled" as const)),
+    /**
+     * `E2E_DISABLE_NEON` blanks both regardless of what `.env.local` set (its own comment,
+     * above), so every reader of `env.NEON_API_KEY`/`env.NEON_PROJECT_ID` — there is no second
+     * copy to keep in sync — sees the end-to-end run as an environment with no Neon key at all.
+     */
+    NEON_API_KEY: value.E2E_DISABLE_NEON ? undefined : value.NEON_API_KEY,
+    NEON_PROJECT_ID: value.E2E_DISABLE_NEON ? undefined : value.NEON_PROJECT_ID,
     /**
      * Derived, never set: `local` writes under `.media/` on a developer's disk and `fake`
      * keeps objects in memory for tests, so neither environment needs a bucket; `r2` when
