@@ -219,12 +219,12 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                   }}
                 >
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-                    <GlyphSubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} icon="add" incompleteHintNamed={t("forms.incompleteFirst")} size="medium" />
+                    <GlyphSubmitButton label={t("editor.create")} pendingLabel={t("editor.saving")} icon="add" incompleteHintNamed={t.raw("forms.incompleteFirst") as string} size="medium" />
                     {mayPublish && (
                       <CreateAndPublishButton
                         label={t("editor.createAndPublish")}
                         pendingLabel={t("editor.publishing")}
-                        notReadyHint={t("editor.notReadyToPublish")}
+                        notReadyHint={t.raw("editor.notReadyToPublish") as string}
                         locales={localeCodes}
                         labels={gapLabels}
                       />
