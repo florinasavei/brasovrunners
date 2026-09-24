@@ -1,4 +1,4 @@
-import { eventLinkHost, isEventLinkUrl } from "./links";
+import { eventLinkHost } from "./links";
 
 /**
  * What a runner pays, and where (`DECISIONS.md` §NNN; the owner, 2026-09-24, on "Cu taxă"
@@ -19,13 +19,6 @@ export type EventCostType = (typeof EVENT_COST_TYPES)[number];
  * paragraph.
  */
 export const MAX_EVENT_COST_AMOUNT = 60;
-
-/**
- * https, and nothing else — the rule every other link an organizer pastes follows (`map_url`,
- * `route_url`, "Linkuri și fișiere"). Reused rather than repeated: one rule for what a pasted
- * link may be.
- */
-export const isEventCostUrl = isEventLinkUrl;
 
 /**
  * The host a runner recognises under a cost link — "revolut.me", "strava.com" — shown instead

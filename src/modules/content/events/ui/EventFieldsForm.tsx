@@ -6,6 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
@@ -590,7 +591,7 @@ export default async function EventFieldsForm({
               defaultValue={event?.costType ?? ""}
               options={[
                 { value: "", label: t("editor.notStated") },
-                ...(["FREE", "PAID", "DONATION"] as const).map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
+                ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
               ]}
               sx={{ flex: 1 }}
             />
