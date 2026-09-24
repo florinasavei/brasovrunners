@@ -17,7 +17,7 @@ import {
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 
 /**
- * BR-REQ-031-04 criterion 12, `DECISIONS.md` §NNN — the telephone box groups the digits as they
+ * BR-REQ-031-04 criterion 16, `DECISIONS.md` §NNN — the telephone box groups the digits as they
  * are typed, and nothing about what is stored or refused moves.
  */
 

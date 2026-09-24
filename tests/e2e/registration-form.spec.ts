@@ -385,7 +385,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
   });
 });
 
-test.describe("BR-REQ-031-04 criterion 12 the telephone is one box with a flag and a mask", () => {
+test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag and a mask", () => {
   /**
    * `DECISIONS.md` §NNN — the owner, with another site's field: "I like the phone input with the
    * mask". One outlined box: the country's flag at its start (the native select lying invisible
