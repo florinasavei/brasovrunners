@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.84-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.85-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.84-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.85-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15290,3 +15290,29 @@ Baseline `BR-V1.84-2026-09-25`.
 Baseline `BR-V1.82-2026-09-24` unchanged — the orchestrator bumps it when this lands.
 
 Baseline `BR-V1.84-2026-09-25`.
+
+## 375. Amending §366 and §367: the partner marker loses names, the card's date row stays one line on a phone, the pills read terrain-first
+
+No DECISIONS.md edit made — the reviewer's own instructions said no DECISIONS/CHANGELOG/SPECS/baseline edits for this fix-one-branch pass, matching the implementer's original round. The §375 placeholders already present in the branch (and added here) are the `land-batch.mjs` convention the owner's batch-landing script fills in when this PR lands; they are intentionally left as literal `§375` text in code comments, not resolved here.
+
+A review, 2026-09-24/25, of the series card's «Următoarea:» / «Next:» lead found it hidden below MUI's `sm` breakpoint (600px), losing it on every phone rather than only the ones too narrow for it. Its own breakpoint is 345 pixels (measured: the lead next to the date, the clock and the time needs about 245px; a 320-pixel card gives about 226, a 360-pixel one about 266), and below it the lead is visually hidden by a clip technique rather than `display: none`, so a screen reader still reads it at every width. Separately, a card whose date is genuinely more than a year out keeps its year and now wraps between whole pieces rather than being clipped by the card's own `overflow: hidden` — but only for that case (`dateMoreThanYearOut`, a distance check), not for every date lacking the short (no-year) rendering: a past-dated event also lacks that rendering but does not need the extra room, and a first draft of the fix (using `!dateShort` as the review's own literal suggestion) wrapped such a card unnecessarily, caught by the seed's own past-dated card in e2e.
+
+A third review, 2026-09-24, amended the card's "when" row twice more.
+
+A card that keeps its year on a phone is not always a date more than a year out: a date already past keeps it too, and a past-dated card was nowrap. Measured in Chromium, "Duminică, 20 sept. 2026 · 07:00" is 227 pixels against the 226 a 320-pixel card leaves the row, and a series card's lead in front of a past date ("Următoarea: Duminică, 27 sept. 2026 · 18:30", 310) runs past a 360-pixel card's 266, so the Card's own `overflow: hidden` cut the time off. The rule is now one condition: the row may wrap between whole pieces for a race's two named times or whenever the card keeps its year on a phone (`wrap: !!event.raceStartsAt || (compact && !dateShort)`). Flex wrapping breaks only a row that does not fit, so a year-carrying card with room stays one line. The earlier distinction between "more than a year out" and "past" is withdrawn.
+
+The series lead's breakpoint came from one Monday (345 pixels). It is now measured over the widest case: every day of a year, in both languages, in headless Chromium on the built listing (Roboto, 14 pixels, the date bold, the year dropped). Widest in Romanian: "Următoarea: Duminică, 27 sept. · 18:30", 274 pixels. Widest in English: "Next: Wednesday, 30 Sept · 18:30", 240 pixels. The page and the card take 94 pixels around the row at every phone width. So the lead fits from 368 pixels. The breakpoint is 376 (eight pixels to spare for font rendering elsewhere), one number for both languages, since the Romanian lead is the wider. When the row is short of room the lead gives way, never the time: below 376 it is clipped visually, never `display: none`, so a screen reader still reads it. That is a different mechanism from the date's year, which swaps two renderings with `display`. This is the orchestrator's decision, listed for the owner: a 368–375-pixel phone loses a lead that would just fit.
+
+The e2e check now makes its own fixtures rather than relying on what the database holds: a series on the longest Romanian weekday (a Sunday with a two-digit day), one on the longest English weekday (a Wednesday), a race with two times, a run more than a year out and a run already past. It measures each card's row by its pieces' right edge at 320, 360, 390 and 412 pixels in both languages.
+
+Baseline `BR-V1.85-2026-09-25`.
+
+## 376. The /admin/legal notice says what the code enforces and folds shut; a malformed admin id is refused before it reaches the database
+
+No DECISIONS.md edit made (repo convention: docs:land fills §376 placeholders later; this is application code under the fast lane per CLAUDE.md). If a decisions entry is wanted, it would read: the legal-versions explanation now states exactly what the service and deletability rules enforce (frozen once approved; deletable only if unrelied-on and not in force; declaration+notice must both be in effect, not approved, together) and is shown only on /admin/legal rather than on every backoffice page.
+
+§336 addendum: the legal-versions notice on `/admin/legal` was found saying more than the code does — "refused unless a declaration and a privacy notice are both in effect at the same time" reads as one joint condition, where `registerForEvent` refuses on a missing `PRIVACY_NOTICE` alone and the declaration is checked separately, at confirmation. Both language files now say the two refusals apart: no privacy notice blocks registration; no declaration blocks confirming a place. The notice itself also moved: it was rendered by the section's `layout.tsx`, above `{children}` — so it sat over the list page's own saved/refusal alert, its heading and the platform-approve card, the one thing on the page most in need of being seen first when something needs the club's attention. It now lives in `(list)/page.tsx`, directly under the legal.title / legal.intro / whatIs block, as `id="legal-versions"` so `/admin/legal#legal-versions` opens it like every other §336 panel; the layout is back to being a plain role gate. `BackofficeShell`'s `notice` prop, which nothing had called since the notice moved out of it, is removed along with its render slot.
+
+The legal-versions fold's `id` moved from the wrapping `Box` to the `Panel` component itself (its rendered `<details>`), so that `openFoldsAround` — which walks up the DOM from `#legal-versions` — finds the fold to open rather than an inert spacing wrapper. The Box is kept only for its margin-bottom spacing. `tests/unit/legal/legal-notice-fold.test.ts` now asserts the id appears on the `<Panel id="legal-versions" ...>` element rather than a bare `<Box id="legal-versions"`, and separately asserts the RO and EN `Admin.legalNotice.title` strings read from `messages/ro.json` and `messages/en.json` match the expected headings, rather than checking only that the translation key `legalNotice.title` is referenced.
+
+Baseline `BR-V1.85-2026-09-25`.

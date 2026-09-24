@@ -30,6 +30,7 @@ import { canMessageParticipants } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ActionForm from "@/shared/forms/ActionForm";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { isUuid } from "@/shared/ids";
 import Panel from "@/shared/ui/Panel";
 import { previewParticipantMessageAction, sendParticipantMessageAction } from "./actions";
 
@@ -68,8 +69,8 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
 
   const actor = await requireStaff();
   if (!canMessageParticipants(actor.role)) notFound();
-  // A typed address that is not an event's id is the same 404, not a query Postgres refuses.
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
+  if (!isUuid(id)) notFound();
 
   const db = getDb();
   const record = await findEventForEditing(db, id);

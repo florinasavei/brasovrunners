@@ -15,9 +15,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| The listing card: one handshake glyph and never a partner's name, the next date and its time on one line on a phone, the pills in the order surface, difficulty, distance, elevation, cost | `fix/card-marker-row-pills` | second fix round |
 | "Termene": every participant-facing deadline a club setting | `feat/deadlines-config` | migration `0069`; its own release |
-| The `/admin/legal` notice says what the code enforces and folds closed; a malformed admin id answers 404 | `fix/backoffice-small` | |
 | Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
 | Tighter spacing on phones for the public pages | `fix/mobile-density` | after `BR-V1.83` |
 | "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after the deadlines land |
@@ -26,7 +24,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.84` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.85` |
 
 ## Next, queued
 
@@ -57,6 +55,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.85` | the listing card: one handshake glyph and never a partner's name, the next date and its time on one line on a phone, the pills in the order surface, difficulty, distance, elevation, cost · the `/admin/legal` notice folds closed on the legal page and says what the code enforces; a malformed admin id answers 404 everywhere in the backoffice |
 | `BR-V1.84` | the phone footer in one row from 320 px — every item on it, a lock for the privacy notice, the languages as flags, 24-px targets below 360 and 28 up to `sm` · the email editor's placeholder legend and preview sample, the save guard, a bilingual email's second half entirely in its own language with the status in words · the dispatcher guards its own context, `yarn ship` continues past a merged batch PR, a worktree-sweep card, a resumed branch still gets its review |
 | `BR-V1.83` | the club's name from one source and the last hardcoded values gone — a donation event reads as free to attend with a `DonateAction`, the queue panel in the event's zone, the legal editor keeps its height · the backoffice works under `yarn dev` again, a source-walk test refuses element props into client components, `yarn test:e2e:dev` · a save press paints "Se salvează…" first, every measured press under 200 ms at 4× CPU |
 | `BR-V1.82` | the listing's cards are one structure — the title a blue link, the place a link to its map, a clock by the time, route and cost as the event page's pills, no empty bands · a handshake and the partner's name on a partnered event's card, calendar entry and page; one tooltip per calendar entry; a series' usual place read rather than compared letter for letter, so "Nu în locul obișnuit" appears only when the place really differs · the dispatcher in the repository (`docs/DISPATCHER.md`, `yarn docs:land`, `yarn ship`) |

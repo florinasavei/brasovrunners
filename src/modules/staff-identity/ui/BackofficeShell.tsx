@@ -35,15 +35,12 @@ export default async function BackofficeShell({
   locale,
   staffUser,
   signOut,
-  notice,
   children,
 }: {
   locale: Locale;
   staffUser: Pick<StaffUser, "displayName" | "email" | "role">;
   /** The sign-out Server Action; handed in so this module never imports the app's actions. */
   signOut: (form: FormData) => Promise<void>;
-  /** A line under the tabs, when a section has one to say — the legal-text rule on `/admin`. */
-  notice?: ReactNode;
   children: ReactNode;
 }) {
   const t = await getTranslations("Admin");
@@ -127,8 +124,6 @@ export default async function BackofficeShell({
         URL regardless (BR-REQ-060-01).
       */}
       <AdminTabs items={tabs} />
-
-      {notice}
 
       {children}
 

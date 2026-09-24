@@ -26,7 +26,7 @@ export const MAX_CO_HOST_LINK_URL = 2000;
 /**
  * What the partnership is, in a sentence or two (§352; the owner, for the Brașov Running
  * Festival's card: "a short description of the partnership") — one short paragraph under the
- * partner's name, not an article. Three hundred characters is two full sentences.
+ * name of the partner, not an article. Three hundred characters is two full sentences.
  */
 export const MAX_CO_HOST_DESCRIPTION = 300;
 

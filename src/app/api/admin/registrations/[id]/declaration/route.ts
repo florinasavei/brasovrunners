@@ -7,6 +7,7 @@ import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/reg
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 
 /** One registration's signed declaration, for the organizer (`DECISIONS.md` §95, §289). */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
@@ -20,6 +21,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!canReadRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
+  if (!isUuid(id)) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const db = getDb();
   const registration = await findRegistrationById(db, id);
   const signed = registration ? await findSignedDeclaration(db, registration.id) : undefined;
