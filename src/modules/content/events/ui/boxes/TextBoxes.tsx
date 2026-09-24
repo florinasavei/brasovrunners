@@ -60,7 +60,11 @@ export async function LanguageTabs({
   );
 }
 
-/** Box 2, "Titlu și rezumat": open on create, and on the editor while a language lacks either. */
+/**
+ * Box 2, "Titlu și rezumat": open on create, where it is the first thing a new event is asked —
+ * the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a language
+ * lacks either (`attention`: something inside asks for action).
+ */
 export async function TitleSummaryBox({ languages, creating }: { languages: readonly LanguageEntry[]; creating: boolean }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
@@ -72,7 +76,7 @@ export async function TitleSummaryBox({ languages, creating }: { languages: read
       id="box-title"
       title={t("editor.boxes.titleSummary.title")}
       aside={creating ? undefined : titleSummarySummary(words, translations)}
-      openWhen={{ attention: creating || incomplete.length > 0 }}
+      openWhen={{ primary: creating, attention: !creating && incomplete.length > 0 }}
     >
       <LanguageTabs
         idPrefix="title"

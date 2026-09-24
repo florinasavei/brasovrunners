@@ -534,6 +534,16 @@ export function ignoreHiddenFields(raw: unknown): unknown {
       : {};
   const replaced = { ...posted };
   for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
+  /*
+    The place behind "Locația se anunță mai târziu" (§328; §NNN, the editor's boxes, found by
+    re-review): hidden with the switch on, and kept — a venue and a map link typed before the
+    switch went on are saved as typed, never published. But a map link that is not one cannot be
+    stored, and refusing the save over it names a box the switch hides: it is written as no link,
+    exactly as a blank box would be. Switched off, the box is on screen and checked as typed.
+  */
+  if (posted.locationToBeAnnounced === true && "mapUrl" in replaced && !eventFieldsSchema.shape.mapUrl.safeParse(replaced.mapUrl).success) {
+    replaced.mapUrl = "";
+  }
   return replaced;
 }
 

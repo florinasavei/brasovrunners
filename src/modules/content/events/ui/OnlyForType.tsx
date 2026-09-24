@@ -79,12 +79,21 @@ function relaxHiddenBoxes(root: HTMLElement): void {
  *
  * A refusal about a box in here while it is hidden — one of the kept boxes, which the server
  * checks — arrives as `REVEAL_EVENT` from the box (`ActionForm`), and the block shows itself
- * until the answer changes, so the refusal names a box the reader can see and fix.
+ * until the answer changes, so the refusal names a box the reader can see and fix. The reveal
+ * belongs to the answer it was made under and is **cleared when the answer changes**: switching
+ * the mode away and back later hides the block again rather than finding an old reveal waiting.
  */
 export function ShownWhen({ shown, answer, children }: { shown: boolean; answer: string; children: ReactNode }) {
   const block = useRef<HTMLDivElement>(null);
   const { generation } = useRecall();
   const [revealedFor, setRevealedFor] = useState<string | null>(null);
+  // The answer the reveal was last checked against: a new answer drops the reveal, during render
+  // (React's "adjusting state when a prop changes"), so no frame shows the stale one.
+  const [revealAnswer, setRevealAnswer] = useState(answer);
+  if (revealAnswer !== answer) {
+    setRevealAnswer(answer);
+    setRevealedFor(null);
+  }
   const visible = shown || revealedFor === answer;
 
   useEffect(() => {

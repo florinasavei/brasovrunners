@@ -168,6 +168,13 @@ describe("§NNN ignoreHiddenFields — what the type or mode hides is replaced b
     expect(ignoreHiddenFields({ ...posted, registrationMode: "NONE" })).not.toHaveProperty("waitlistCapacity");
   });
 
+  it("writes a map link that is not one as no link while the place is to be announced, and keeps a real one", () => {
+    const place = { locationName: "Sala secretă", locationToBeAnnounced: true, mapUrl: "www.harta.ro" };
+    expect(ignoreHiddenFields(place)).toEqual({ ...place, mapUrl: "" });
+    expect(ignoreHiddenFields({ ...place, mapUrl: "https://maps.example.test/sala" })).toEqual({ ...place, mapUrl: "https://maps.example.test/sala" });
+    // Announced, the box is on screen: checked as typed, and the schema names it.
+    expect(ignoreHiddenFields({ ...place, locationToBeAnnounced: false })).toEqual({ ...place, locationToBeAnnounced: false });
+  });
 });
 
 describe("§NNN normalizeForMode and the waiting list's length (the waiting-list cap)", () => {

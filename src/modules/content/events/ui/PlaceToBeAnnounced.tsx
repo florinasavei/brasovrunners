@@ -8,6 +8,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { ShownWhen } from "./OnlyForType";
 
 /** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
 const SWITCH_NAME = "event.locationToBeAnnounced";
@@ -104,22 +105,32 @@ function Island({ initial, labels, locationName, children }: Props & { initial: 
         The place's boxes are hidden while the place is to be announced (the owner, 2026-09-24:
         "if the location is announced later, we should hide these fields"), and kept mounted: a
         venue typed before the switch went on is still posted, still saved, never published, and
-        back in its box the moment the switch goes off (§328). `hidden` keeps them out of the
-        accessibility tree as well as out of sight; nothing is required while they are hidden.
-      */}
-      <Stack spacing={2} hidden={later} data-place-details sx={{ display: later ? "none" : undefined }}>
-        <RecallField
-          name="event.locationName"
-          label={labels.locationName}
-          helperText={later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
-          defaultValue={locationName.defaultValue}
-          {...box}
-          required={required}
-          slotProps={{ ...box.slotProps, htmlInput: { ...box.slotProps.htmlInput, required } }}
-        />
+        back in its box the moment the switch goes off (§328). `display: none` keeps them out of
+        the accessibility tree as well as out of sight; nothing is required while they are hidden.
 
-        {children}
-      </Stack>
+        And nothing in them can stop the save while hidden (§NNN, the editor's boxes, found by
+        re-review): the map link keeps its https pattern, and one typed as `www.harta.ro` before
+        the switch went on made the browser refuse the submit and then fail to focus a box it
+        could not show — Salvează did nothing and said nothing. `ShownWhen` makes every box in the
+        block read-only while it is hidden, which the browser does not check and still posts; the
+        service ignores a map link it could not store while the switch is on
+        (`ignoreHiddenFields`). Switched off, the boxes are checked again as they stand.
+      */}
+      <ShownWhen shown={!later} answer={later ? "later" : "announced"}>
+        <Stack spacing={2} data-place-details>
+          <RecallField
+            name="event.locationName"
+            label={labels.locationName}
+            helperText={later ? `${labels.unpublished} ${labels.locationHelp}` : labels.locationHelp}
+            defaultValue={locationName.defaultValue}
+            {...box}
+            required={required}
+            slotProps={{ ...box.slotProps, htmlInput: { ...box.slotProps.htmlInput, required } }}
+          />
+
+          {children}
+        </Stack>
+      </ShownWhen>
     </Stack>
   );
 }

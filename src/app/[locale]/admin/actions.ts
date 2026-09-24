@@ -700,8 +700,12 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
 
 /**
  * The series' automatic publication, on or off (§341): whether the dates made from now on go
- * live as they are made. The button posts which way it switches; the role and the published
- * source are the service's to assert.
+ * live as they are made. Posted from the Recurență box on any date of the series (§NNN, the
+ * editor's boxes): the tick "Publică datele noi automat" is the rule's new flag — ticked posts
+ * `publish=on`, unticked posts nothing — and "Salvează setarea" sends it. The service resolves the
+ * date to the series' source and asserts the role (switching it on asks for the role that
+ * publishes); a draft source is not refused — the switch is stored and waits until the source is
+ * live (`setRepeatPublish`).
  */
 export async function setRepeatPublishAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));

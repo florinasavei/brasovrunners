@@ -21,8 +21,10 @@
  * - **primary** — the fold is the page's own verb rather than one more setting, and stays open on
  *   every arrival: the event editor's Publicare box (the transition the editor exists for, with
  *   what is missing for it) and the Recurență box, on the create page and on a series' date
- *   (BR-REQ-050-02 criterion 7: the repetition is asked first, and a series is run from there).
- *   Rare by design — a page with three primary folds has none.
+ *   (BR-REQ-050-02 criterion 7: the repetition is asked first, and a series is run from there),
+ *   and the create page's "Titlu și rezumat" — the first thing a new event is asked, which is the
+ *   page's work rather than a warning about it. Rare by design — a page with three primary folds
+ *   has none.
  *
  * A fold targeted by the address's `#fragment` opens too; that one is the browser's to know,
  * not the server's, so it is `OpenFoldFromHash` in the backoffice shell, over `openFoldsAround`

@@ -163,6 +163,25 @@ describe("§NNN the waiting list's length, the capacity's kin (the waiting-list 
   });
 });
 
+describe("§328, §NNN a map link the place switch hides cannot refuse the save", () => {
+  it("saves a TBA event over a hidden 'www.harta.ro', as no link, keeping the venue it hides", async () => {
+    const created = await create({ locationToBeAnnounced: true, locationName: "Sala secretă", mapUrl: "www.harta.ro" });
+    const saved = await reload(created.id);
+    expect(saved.locationToBeAnnounced).toBe(true);
+    expect(saved.locationName).toBe("Sala secretă");
+    expect(saved.mapUrl).toBeNull();
+  });
+
+  it("keeps a real map link behind the switch, as typed", async () => {
+    const created = await create({ locationToBeAnnounced: true, mapUrl: "https://maps.example.test/sala" });
+    expect((await reload(created.id)).mapUrl).toBe("https://maps.example.test/sala");
+  });
+
+  it("refuses the same link once the place is announced, naming the box that is on screen", async () => {
+    await expect(create({ locationToBeAnnounced: false, mapUrl: "www.harta.ro" })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["mapUrl"] });
+  });
+});
+
 describe("§NNN what the chosen mode shows, and what every mode keeps, is still checked", () => {
   it("refuses a zero capacity under 'Pe site', naming the box", async () => {
     await expect(create({ capacity: "0" })).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["capacity"] });
