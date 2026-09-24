@@ -60,9 +60,13 @@ export default function LocaleSwitcher() {
         side the pair is ~100px wide, stacked ~46px, and that difference is what let the first
         section of the site sit on the header row beside the menu at 320px. Since §262 a phone's
         switcher is not on the header row at all — the header's copy is `display: none` below
-        `sm` — but the footer's second line, beside the privacy notice, where 100 pixels are
-        free. Stacked there, the pair read as two lines of a footer that was already too tall
-        (the owner, 2026-09-24), and it needed a pseudo-element to stretch a 22px link to 44.
+        `sm` — but the footer's row, beside the privacy notice.
+
+        Since §NNN (the owner, 2026-09-24: "all in 1 row … all visible, smaller") the footer's
+        whole bar is one row on a phone, so the pair shrinks there too: the flag drops (the
+        language code alone still says which is which) and the target is 32px, not 44 — this
+        component's only user below `sm` is the footer, so the shrink never reaches the header's
+        own copy, which stays hidden there and full-size from `sm` up.
       */
       sx={{
         display: "flex",
@@ -77,7 +81,9 @@ export default function LocaleSwitcher() {
 
         const content = (
           <>
-            <Flag code={FLAG[locale]} width={16} />
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline-flex" } }}>
+              <Flag code={FLAG[locale]} width={16} />
+            </Box>
             {t(`languageCode.${locale}`)}
           </>
         );
@@ -86,11 +92,12 @@ export default function LocaleSwitcher() {
           display: "inline-flex",
           alignItems: "center",
           gap: 0.5,
-          fontSize: "0.8125rem",
-          // 44px is the minimum tap target (BR-REQ-041-01 criterion 6), at every width.
-          minHeight: 44,
+          fontSize: { xs: "0.75rem", sm: "0.8125rem" },
+          // The footer's own exception, 32px on a phone (§NNN); 44px, the minimum tap target
+          // (BR-REQ-041-01 criterion 6), from `sm` up and everywhere else this renders.
+          minHeight: { xs: 32, sm: 44 },
           lineHeight: 1,
-          px: 0.75,
+          px: { xs: 0.5, sm: 0.75 },
         } as const;
 
         return isActive ? (

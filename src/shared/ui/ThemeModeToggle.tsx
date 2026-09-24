@@ -16,6 +16,10 @@ import { useSyncExternalStore } from "react";
  * device's setting (the owner, 2026-09-18: "by default we are on white"). The button shows the mode it would switch *to*, which is what every phone's
  * quick-settings tile does. Until mounted the mode is unknown on the client, so the same-sized
  * button renders disabled rather than nothing, and the header does not shift.
+ *
+ * 32 pixels on a phone, 44 from `sm` up — the footer's own tap-target exception (§NNN, the
+ * owner 2026-09-24: "all in 1 row … all visible, smaller"), never used anywhere else this
+ * component renders.
  */
 export default function ThemeModeToggle() {
   const t = useTranslations("Site");
@@ -37,7 +41,7 @@ export default function ThemeModeToggle() {
       disabled={!mounted}
       onClick={() => setMode(dark ? "light" : "dark")}
       size="small"
-      sx={{ minHeight: 44, minWidth: 44, color: "text.secondary" }}
+      sx={{ minHeight: { xs: 32, sm: 44 }, minWidth: { xs: 32, sm: 44 }, color: "text.secondary" }}
     >
       {mounted && dark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
     </IconButton>
