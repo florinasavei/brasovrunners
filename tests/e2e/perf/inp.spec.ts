@@ -351,6 +351,8 @@ async function fillCreatePage(page: Page, { englishTitle }: { englishTitle: bool
   await fillDateField(page, "Începutul evenimentului", "2027-09-26");
   await fillTimeField(page, "Ora", "09:00");
   await field(page, "event.locationName").fill("Parcul Tractorul");
+  // The meeting point is asked once per language, side by side in the Locul box (§362).
+  await field(page, "event.locationNameEn").fill("Parcul Tractorul");
   await field(page, "translations.ro.title").fill(`Ieșire pe traseu ${suffix}`);
   await typeRichText(page, "translations.ro.excerptBody", "O tură relaxată, fără presiune de timp.");
   await languageTab(page, "title", "en").click();
