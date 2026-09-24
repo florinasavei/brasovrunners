@@ -158,7 +158,8 @@ describe("§260 the language pieces, each in its box", () => {
   });
 
   it("gives every per-language field exactly one piece", () => {
-    for (const field of ["title", "excerptBody", "body", "locationName", "schedule", "checklist", "rules", "slug", "seoTitle", "seoDescription"]) {
+    // Not the place's name: it is asked once per language in the Locul box, with the event's fields (§NNN).
+    for (const field of ["title", "excerptBody", "body", "schedule", "checklist", "rules", "slug", "seoTitle", "seoDescription"]) {
       expect(FIELDS.match(new RegExp(`name=\\{name\\("${field}"\\)\\}`, "g"))?.length ?? 0, field).toBeGreaterThanOrEqual(1);
     }
   });
@@ -177,10 +178,11 @@ describe("§260 the language pieces, each in its box", () => {
     expect(EDIT).toContain("<TranslationHiddenFields");
   });
 
-  it("gives each box's tabs their own ids, so six strips share one page", () => {
+  it("gives each box's tabs their own ids, so five strips share one page", () => {
+    // The Locul box has no strip since §NNN: its two names stand side by side.
     const boxes = read("src/modules/content/events/ui/boxes/TextBoxes.tsx") + read("src/modules/content/events/ui/boxes/PlaceBox.tsx") + read("src/modules/content/events/ui/boxes/ProgrammeBox.tsx");
     const prefixes = [...boxes.matchAll(/idPrefix="(\w+)"/g)].map((match) => match[1]);
-    expect(prefixes.sort()).toEqual(["address", "description", "place", "programme", "rules", "title"]);
+    expect(prefixes.sort()).toEqual(["address", "description", "programme", "rules", "title"]);
     expect(new Set(prefixes).size).toBe(prefixes.length);
   });
 });

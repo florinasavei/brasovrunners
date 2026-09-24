@@ -79,22 +79,30 @@ describe("BR-REQ-011-01 criterion 19 the schema: a meeting point, unless the pla
 });
 
 describe("BR-REQ-011-01 criterion 19 publication", () => {
-  it("needs no meeting point while the place is to be announced, and one otherwise", () => {
+  it("needs no meeting point while the place is to be announced, and one in every language otherwise", () => {
     expect(missingPublicEventFields({ locationName: null, locationToBeAnnounced: true })).toEqual([]);
     expect(missingPublicEventFields({ locationName: "  ", locationToBeAnnounced: true })).toEqual([]);
-    expect(missingPublicEventFields({ locationName: null, locationToBeAnnounced: false })).toEqual(["locationName"]);
+    // No place at all is no place in either language (§NNN): each language's box is named.
+    expect(missingPublicEventFields({ locationName: null, locationToBeAnnounced: false })).toEqual(["locationName", "locationNameEn"]);
     expect(missingPublicEventFields({ locationName: "Parcul Tractorul", locationToBeAnnounced: false })).toEqual([]);
   });
 });
 
 describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch (§315)", () => {
-  const box = textFieldConstraints(eventInputConstraints("locationName"));
+  const names = {
+    ro: { defaultValue: "", box: textFieldConstraints(eventInputConstraints("locationName")) },
+    en: { defaultValue: "", box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
+  };
   const labels = {
     toggle: "Locația se anunță mai târziu",
     toggleHelp: "Ajutor.",
-    locationName: "Punct de întâlnire",
+    meetingPoint: "Punct de întâlnire",
+    ro: "Română",
+    en: "English",
     locationHelp: "Locul, cum i-ai spune unui prieten.",
     unpublished: "Nepublicat cât timp locația se anunță mai târziu.",
+    copyToEnglish: "Același nume și în engleză",
+    englishLeftBehind: "În engleză scrie tot „{place}”.",
   };
   const render = (defaultChecked: boolean, values: Record<string, string[]> | null = null, typed = "") =>
     renderToStaticMarkup(
@@ -104,43 +112,57 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
         createElement(
           PlaceToBeAnnounced,
           // The map link's box arrives as `children`, the third argument, as the form passes it.
-          { defaultChecked, labels, locationName: { defaultValue: typed, box } } as ComponentProps<typeof PlaceToBeAnnounced>,
+          {
+            defaultChecked,
+            labels,
+            names: { ro: { ...names.ro, defaultValue: typed }, en: { ...names.en, defaultValue: typed } },
+          } as ComponentProps<typeof PlaceToBeAnnounced>,
           createElement("input", { name: "event.mapUrl" }),
         ),
       ),
     );
-  /** The meeting point's `<input>`, as the browser receives it. */
+  /** Each language's meeting point `<input>`, as the browser receives it. */
   const locationInput = (html: string) => /<input[^>]*name="event\.locationName"[^>]*>/.exec(html)?.[0] ?? "";
+  const englishInput = (html: string) => /<input[^>]*name="event\.locationNameEn"[^>]*>/.exec(html)?.[0] ?? "";
   const switchInput = (html: string) => /<input[^>]*name="event\.locationToBeAnnounced"[^>]*>/.exec(html)?.[0] ?? "";
 
   it("reads `required` and the ceiling off the schema, so the browser refuses what the server refuses", () => {
     expect(eventInputConstraints("locationName")).toMatchObject({ required: true, maxLength: 200 });
-    // The Locul box hands the island the schema's own box, never a second list (§350).
-    expect(read("src/modules/content/events/ui/boxes/PlaceBox.tsx")).toContain('box: textFieldConstraints(eventInputConstraints("locationName"))');
+    expect(eventInputConstraints("locationNameEn")).toMatchObject({ required: true, maxLength: 200 });
+    // The Locul box hands the island the schema's own boxes, never a second list (§350).
+    const place = read("src/modules/content/events/ui/boxes/PlaceBox.tsx");
+    expect(place).toContain('box: textFieldConstraints(eventInputConstraints("locationName"))');
+    expect(place).toContain('box: textFieldConstraints(eventInputConstraints("locationNameEn"))');
   });
 
-  it("asks for the place while the switch is off", () => {
+  it("asks for the place in both languages while the switch is off", () => {
     const html = render(false);
-    expect(locationInput(html)).toMatch(/\brequired\b/);
-    expect(locationInput(html)).toContain('maxLength="200"');
+    for (const input of [locationInput(html), englishInput(html)]) {
+      expect(input).toMatch(/\brequired\b/);
+      expect(input).toContain('maxLength="200"');
+    }
     expect(switchInput(html)).not.toMatch(/\bchecked\b/);
     expect(html).not.toContain(labels.unpublished);
   });
 
   it("does not ask for it while the switch is on, keeps what was typed, and says it is not published", () => {
     const html = render(true, null, "Sala Sporturilor");
-    expect(locationInput(html)).not.toMatch(/\brequired\b/);
-    expect(locationInput(html)).toContain('value="Sala Sporturilor"');
-    expect(locationInput(html)).toContain('maxLength="200"');
+    for (const input of [locationInput(html), englishInput(html)]) {
+      expect(input).not.toMatch(/\brequired\b/);
+      expect(input).toContain('value="Sala Sporturilor"');
+      expect(input).toContain('maxLength="200"');
+    }
     expect(switchInput(html)).toMatch(/\bchecked\b/);
     expect(html).toContain(labels.unpublished);
-    // The map link's box is still there, under the name, kept like it.
+    // The map link's box is still there, under the names, kept like them.
     expect(html).toContain('name="event.mapUrl"');
   });
 
   it("comes back as it was posted after a refusal: on when posted, off when not — whatever the page said", () => {
     expect(locationInput(render(false, { "event.locationToBeAnnounced": ["on"] }))).not.toMatch(/\brequired\b/);
+    expect(englishInput(render(false, { "event.locationToBeAnnounced": ["on"] }))).not.toMatch(/\brequired\b/);
     expect(locationInput(render(true, { "event.locationName": [""] }))).toMatch(/\brequired\b/);
+    expect(englishInput(render(true, { "event.locationName": [""] }))).toMatch(/\brequired\b/);
   });
 
   it("is on both pages, and the create button's gap follows it", () => {
@@ -150,7 +172,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     // The create button and the Publicare list ask the one shared check, which follows the switch.
     expect(read("src/modules/content/events/ui/CreateAndPublishButton.tsx")).toContain("missingForPublish(");
     const check = read("src/modules/content/events/ui/publish-check.ts");
-    expect(check).toContain('read("event.locationToBeAnnounced") !== "on" && text("event.locationName") === ""');
+    expect(check).toContain('if (read("event.locationToBeAnnounced") !== "on") {');
     // The action reads the switch by the name the island posts.
     expect(read("src/app/[locale]/admin/actions.ts")).toContain('locationToBeAnnounced: form.get("event.locationToBeAnnounced") === "on"');
   });

@@ -36,7 +36,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.raceStartsAtDate": inBox("when", t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inBox("when", t("editor.raceStartsAt")),
     "event.durationMinutes": inBox("when", t("editor.durationMinutes")),
-    "event.locationName": inBox("place", t("editor.fields.locationName")),
+    // "Punct de întâlnire", once per language (§NNN): the refusal names the empty one's language.
+    "event.locationName": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
+    "event.locationNameEn": inBox("place", `${t("editor.fields.locationName")} (${tSite("languageName.en")})`),
     "event.locationToBeAnnounced": inBox("place", t("editor.placeToBeAnnounced")),
     "event.mapUrl": inBox("place", t("editor.mapUrl")),
     "event.registrationMode": inBox("registration", t("editor.registrationMode")),
@@ -163,7 +165,6 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     rules: ["rules", t("editor.fields.rules")],
     schedule: ["programme", t("editor.fields.scheduleNotes")],
     checklist: ["programme", t("editor.fields.checklist")],
-    locationName: ["place", t("editor.locationNameInLanguage")],
     slug: ["address", t("editor.fields.slug")],
     seoTitle: ["address", t("editor.fields.seoTitle")],
     seoDescription: ["address", t("editor.fields.seoDescription")],

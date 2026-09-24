@@ -37,6 +37,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await fillDateField(page, "Începutul evenimentului", day);
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
+    await field("event.locationNameEn").fill(`Tractorul Park ${suffix}`);
     // Everything about registration is one box, and the declaration is in its own card (§350).
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
@@ -94,6 +95,15 @@ test.describe("§331 the participants hear about a change when the organizer ask
     const place = await openEditorBox(page, "Locul");
     await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
+    // The English box has a name of its own, so it keeps it until it is told (§NNN) — and says so,
+    // under the box. The copy button never writes over a name that is there: it is off.
+    await expect(field("event.locationNameEn")).toHaveValue(`Tractorul Park ${suffix}`);
+    await expect(place.getByTestId("place-english-left-behind")).toContainText(`Tractorul Park ${suffix}`);
+    await expect(place.getByTestId("place-copy-to-english")).toBeDisabled();
+    await field("event.locationNameEn").fill(`Poiana Brașov ${suffix}`);
+    await expect(place.getByTestId("place-english-left-behind")).toHaveCount(0);
+    // The box ran here, so the save keeps its English as it stands (found by re-review).
+    await expect(place.locator('input[name="event.placeNamesAsTyped"]')).toHaveValue("1");
     // The same words in both boxes: the amber line, before anything is saved.
     await field("notice.noteRo").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await field("notice.noteEn").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");

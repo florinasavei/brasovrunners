@@ -12,6 +12,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
+import { PLACE_NAME_FIELD } from "@/modules/events/domain/place";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type ScopeDate, SeriesScopeBox, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote, ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -184,8 +185,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const live = isLiveContent(event.editorialStatus);
   const slugLocked = event.publishedAt !== null;
   const incomplete = describeIncompleteLocales(translations);
-  // The meeting point is the event's now, not each language's (`DECISIONS.md` §36).
-  const missingOnEvent = missingPublicEventFields(event);
+  // The meeting point in every language, asked in the Locul box (`DECISIONS.md` §36, §NNN).
+  const missingOnEvent = missingPublicEventFields(event, translations);
   const maySaveSettings = canEditEventFields(staffUser.role);
   const mayChangeSeries = canCreateEvent(staffUser.role);
 
@@ -297,7 +298,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         return { label: `${t("editor.boxes.titleSummary.title")} › ${languageName(entry.locale)} › ${t("editor.tabMissing")}`, name: `translations.${entry.locale}.title` };
       }),
     ),
-    ...missingOnEvent.map(() => ({ label: `${t("editor.boxes.place.title")} › ${t("editor.fields.locationName")}`, name: "event.locationName" })),
+    // "Locul › English › Punct de întâlnire": the language whose box is empty (§NNN).
+    ...missingOnEvent.map((field) => {
+      const language = field === PLACE_NAME_FIELD.en ? "en" : "ro";
+      return { label: `${t("editor.boxes.place.title")} › ${languageName(language)} › ${t("editor.fields.locationName")}`, name: `event.${field}` };
+    }),
   ];
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
   /*

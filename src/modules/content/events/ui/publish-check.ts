@@ -1,3 +1,4 @@
+import { PLACE_NAME_FIELD, type PlaceNameLocale } from "@/modules/events/domain/place";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
 import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
@@ -5,8 +6,8 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
 /**
  * What publication would refuse, read off a form as it stands (§315, §350) — the same rule the
  * server applies (`missingPublicEventFields`, `REQUIRED_PUBLIC_TRANSLATION_FIELDS`): a title and
- * a summary in every language, the meeting point unless the place is to be announced (§328), and
- * a page address in every language.
+ * a summary in every language, the meeting point in every language unless the place is to be
+ * announced (§328, §NNN), and a page address in every language.
  *
  * One function for the two things that ask it on the create page — "Creează și publică", which
  * dims and names the first gap, and the "Ce lipsește pentru publicare" list in the Publicare box,
@@ -33,9 +34,13 @@ export function missingForPublish(read: (name: string) => string, locales: reado
     }
   }
   // No meeting point is a gap only while the place is announced (§328): with the switch on, the
-  // server publishes without one and every surface says it is to be announced.
-  if (read("event.locationToBeAnnounced") !== "on" && text("event.locationName") === "") {
-    gaps.push({ box: "place", field: "locationName", name: "event.locationName" });
+  // server publishes without one and every surface says it is to be announced. One box per
+  // language (§NNN), each its own gap — a missing English place like any missing translation.
+  if (read("event.locationToBeAnnounced") !== "on") {
+    for (const locale of locales) {
+      const box = PLACE_NAME_FIELD[locale as PlaceNameLocale];
+      if (box && text(`event.${box}`) === "") gaps.push({ box: "place", locale, field: "locationName", name: `event.${box}` });
+    }
   }
   for (const locale of locales) {
     if (text(field(locale, "slug")) === "") gaps.push({ box: "address", locale, field: "slug", name: field(locale, "slug") });
@@ -51,7 +56,7 @@ export type PublishGapLabels = {
   languages: Readonly<Record<string, string>>;
 };
 
-/** "Titlu și rezumat › English › Rezumat", "Locul › Punct de întâlnire". */
+/** "Titlu și rezumat › English › Rezumat", "Locul › English › Punct de întâlnire". */
 export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): string {
   return [labels.boxes[gap.box], gap.locale ? (labels.languages[gap.locale] ?? gap.locale) : null, labels.fields[gap.field]]
     .filter((part): part is string => Boolean(part))

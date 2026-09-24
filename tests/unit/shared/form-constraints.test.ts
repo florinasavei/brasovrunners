@@ -38,7 +38,8 @@ describe("the event form's constraints are the schema's (§315)", () => {
       (field) => !NOT_A_BOX.has(field) && eventInputConstraints(field as keyof typeof eventFieldsSchema.shape).required,
     );
     // The fields that are genuinely required today — a new required rule lands here by itself.
-    expect(required.sort()).toEqual(["eventStatus", "locationName", "registrationMode", "startsAtWallTime", "timezone", "type"]);
+    // The meeting point is two boxes since §NNN, one per language, both required.
+    expect(required.sort()).toEqual(["eventStatus", "locationName", "locationNameEn", "registrationMode", "startsAtWallTime", "timezone", "type"]);
     for (const field of required) {
       expect(asksFor(field), `the editor's boxes read the constraints of "${field}"`).toBe(true);
     }

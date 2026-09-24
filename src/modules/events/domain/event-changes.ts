@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { placeShown as shownOnPage } from "./place";
 import { readScheduleItems } from "./schedule";
 
 /**
@@ -62,13 +63,18 @@ const words = (value: string | null | undefined) => (value ?? "").replace(/\s+/g
  * the name, says the same thing, and must not read as a new place.
  */
 function eventPlace(event: Pick<EventChangeFacts, "locationName" | "locationAddress">): string {
-  return [words(event.locationName), words(event.locationAddress)].filter((part) => part !== "").join(", ");
+  return shownOnPage(event, null);
 }
 
-/** The place as each language's page shows it: its own name when it has one, else the event's. */
+/**
+ * The place as each language's page shows it: its own name when it has one, else the event's —
+ * and an older event's street address after either, because the page shows it after either
+ * (`EventFacts`). The same rule the editor's box and the series edit read (`place.ts#placeShown`,
+ * §NNN): an older event with an English name of its own ("Tractor Park") and an address opens
+ * with "Tractor Park, Str. Turnului 5" in the English box, and saving that is not a new place.
+ */
 function placesByLanguage(event: EventChangeFacts, languages: readonly PlaceInLanguage[]): Map<string, string> {
-  const fallback = eventPlace(event);
-  return new Map(languages.map((language) => [language.locale, words(language.locationName) || fallback]));
+  return new Map(languages.map((language) => [language.locale, shownOnPage(event, language.locationName)]));
 }
 
 const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true;
@@ -84,7 +90,10 @@ const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true
  *   wants to say why writes the note, which goes on its own.
  * - announced by the save (hidden before, shown after) — always, whether or not the words behind
  *   the switch changed at the same press: to the runner the place is new.
- * - shown before and after — when the place, the map link or a language's own name differs.
+ * - shown before and after — when the map link differs, or the place a language's page shows.
+ *   With the languages in hand, the place is read per language only (§NNN): the first save of an
+ *   older event writes the Romanian page's own name into the event's column, which changes the
+ *   column and not what any page says. Without them, the event's own place is what is compared.
  */
 function placeChanged(
   before: EventChangeFacts,
@@ -94,8 +103,8 @@ function placeChanged(
 ): boolean {
   if (hidden(after)) return false;
   if (hidden(before)) return true;
-  if (eventPlace(before) !== eventPlace(after)) return true;
   if (words(before.mapUrl) !== words(after.mapUrl)) return true;
+  if (languagesBefore.length === 0 || languagesAfter.length === 0) return eventPlace(before) !== eventPlace(after);
   const was = placesByLanguage(before, languagesBefore);
   const now = placesByLanguage(after, languagesAfter);
   for (const [locale, place] of now) {
