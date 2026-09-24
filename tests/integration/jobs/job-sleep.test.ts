@@ -249,9 +249,19 @@ describe("BR-REQ-090-07 criterion 7 the Administrator's minimum interval", () =>
   });
 
   it("replaces the hour-long cap when it is longer", async () => {
+    // NOW is 13:00 in Brașov; a run an hour later is on an even hour, which two hours keep (§NNN).
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
-    expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: ends(120).toISOString(), notBefore: ends(120).toISOString() });
-    expect((await pingAt(75, { database: false })).body.ran).toBe(false);
-    expect((await pingAt(justBefore(120))).body.ran).toBe(true);
+    expect((await pingAt(60)).body).toMatchObject({ ran: true, nextCheckAt: ends(180).toISOString(), notBefore: ends(180).toISOString() });
+    expect((await pingAt(135, { database: false })).body.ran).toBe(false);
+    expect((await pingAt(justBefore(180))).body.ran).toBe(true);
+  });
+
+  it("moves a two-hour interval that started on an odd hour onto the even hours, never sooner than two hours (§NNN)", async () => {
+    await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
+    // 13:00 in Brașov: 16:00 would be three hours on, so this run goes half an hour past the two, to 15:30.
+    expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: ends(150).toISOString(), notBefore: ends(150).toISOString() });
+    // QA's hourly pinger: the 15:00 call is held, the 16:00 call runs, and from it the runs are even.
+    expect((await pingAt(120, { database: false })).body).toMatchObject({ ran: false, nothingDueUntil: ends(150).toISOString() });
+    expect((await pingAt(justBefore(180))).body).toMatchObject({ ran: true, nextCheckAt: ends(300).toISOString() });
   });
 });

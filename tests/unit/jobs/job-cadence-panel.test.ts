@@ -84,3 +84,20 @@ describe("§334, §221 the throttle card's sentence about email", () => {
     }
   });
 });
+
+/*
+  BR-REQ-090-03 criterion 14 (§NNN): the card says why an idle hour costs one wake — the safety
+  look is on the hour, with the health monitor's check — to a reader who may not change it too.
+*/
+describe("§NNN the throttle card says the safety look is on the hour", () => {
+  it("says it on the card, whether or not the reader may change the interval", async () => {
+    const html = await render("immediate");
+    expect(html).toContain('data-testid="job-cadence-on-the-hour"');
+    expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour);
+  });
+
+  it("names the hour, the health monitor and the one wake in both languages", () => {
+    expect(ro.Admin.tasks.jobCadence.onTheHour).toMatch(/ora fixă.*\/api\/health.*o trezire/);
+    expect(en.Admin.tasks.jobCadence.onTheHour).toMatch(/on the hour.*\/api\/health.*one wake/);
+  });
+});

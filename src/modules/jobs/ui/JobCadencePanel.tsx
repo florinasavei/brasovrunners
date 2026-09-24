@@ -62,6 +62,11 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         {t("tasks.jobCadence.safe")}
       </Typography>
+      {/* §NNN: why an idle hour costs one wake — the safety look shares the :00 call and the
+          health monitor's check, whichever interval is chosen. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-on-the-hour">
+        {t("tasks.jobCadence.onTheHour")}
+      </Typography>
       {/* Email, as it is on this deployment (§221): untouched by the interval when it leaves
           after the request, delayed by it when the outbox job is the only sender. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-emails">
