@@ -1,5 +1,36 @@
 import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
+import { expectBarGlyphsVisible, floatingBar } from "./support/floating-bar";
+
+/**
+ * §NNN — the two floating bars show their glyphs, above the sticky toolbar, in the built page.
+ *
+ * The owner, 2026-09-24, with the bar over a selection on screen: "I can't see these buttons in
+ * the rich text editor" — three empty buttons. §361's lift above the toolbar was passed to
+ * Tiptap's `BubbleMenu` as `style`, which a production build drops; a word selected on the first
+ * line puts the bar right over the toolbar, which is where it went missing. Both viewports: at
+ * 320 pixels the toolbar is three rows tall and the bar over the first line sits on it.
+ */
+test.describe("§NNN the floating bars show their glyphs", () => {
+  test("over a word selected on the first line, and over a table", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/pages/new");
+
+    const editor = page.locator('[data-rich-text="translations.ro.body"]');
+    await editor.locator("[data-field]").click();
+    await page.keyboard.type("Programul zilei");
+    // The first word of the first line, selected the way a person does: its bar goes above it,
+    // over the toolbar.
+    await editor.locator(".tiptap p").first().dblclick({ position: { x: 8, y: 8 } });
+    await expectBarGlyphsVisible(floatingBar(editor, "selection"));
+
+    // The table's bar, with the caret in the table it has just inserted.
+    await page.keyboard.press("End");
+    await editor.getByRole("button", { name: "Tabel" }).click();
+    await expect(floatingBar(editor, "selection")).toHaveCount(0);
+    await expectBarGlyphsVisible(floatingBar(editor, "table"));
+  });
+});
 
 /**
  * BR-REQ-050-03, `DECISIONS.md` §263 — the organizer chooses how a table is drawn, and the page

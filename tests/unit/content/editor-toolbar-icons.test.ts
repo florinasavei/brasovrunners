@@ -189,12 +189,32 @@ describe("§361 the pages' editor wears Material glyphs", () => {
     expect(source).not.toMatch(/function Control\b|<Control\b/);
   });
 
-  it("lifts both floating bars above the sticky toolbar", () => {
+  it("lifts both floating bars above the sticky toolbar, on the Paper it renders (§NNN)", () => {
     // The table's bar sat under the toolbar's `zIndex: 2` whenever the table was at the top of
-    // the body, and every table verb with it (§361).
+    // the body, and every table verb with it (§361); the bar over a selection on the first lines
+    // showed the bottoms of three empty buttons (§NNN). The order is on each bar's own `Paper`.
     const source = read(RICH_TEXT);
-    expect(source).toContain("const FLOATING_BAR_STYLE = { zIndex: 3 } as const;");
-    expect(source.match(/<BubbleMenu\b[^>]*?style=\{FLOATING_BAR_STYLE\}/g)).toHaveLength(2);
+    expect(source).toContain('const FLOATING_BAR_SX = { position: "relative", zIndex: 3 } as const;');
+    const papers = [...source.matchAll(/<BubbleMenu\b[\s\S]*?<\/BubbleMenu>/g)].map(
+      (menu) => menu[0].match(/<Paper\b[^>]*>/)?.[0] ?? "",
+    );
+    expect(papers).toHaveLength(2);
+    for (const paper of papers) expect(paper).toContain("...FLOATING_BAR_SX");
+    expect(papers.map((paper) => paper.match(/data-floating-bar="(\w+)"/)?.[1])).toEqual(["table", "selection"]);
+  });
+
+  it("gives BubbleMenu only the plugin's own props — the rest never reaches a production build (§NNN)", () => {
+    // Tiptap 3.31 copies `style`, `data-*` and `aria-*` onto the bar through a helper the
+    // production minifier deletes as dead code: `style={{ zIndex: 3 }}` worked under `next dev`
+    // and was nowhere in the built page. Whatever a bar needs goes on what it renders instead.
+    const PLUGIN_PROPS = ["editor", "pluginKey", "shouldShow", "options", "updateDelay", "resizeDelay", "appendTo", "getReferencedVirtualElement"];
+    const opening = [...read(RICH_TEXT).matchAll(/<BubbleMenu\b([^>]*)>/g)].map((match) => match[1]);
+    expect(opening).toHaveLength(2);
+    for (const props of opening) {
+      const names = [...props.matchAll(/([\w-]+)=/g)].map((match) => match[1]);
+      expect(names.length, props).toBeGreaterThan(0);
+      for (const name of names) expect(PLUGIN_PROPS, props).toContain(name);
+    }
   });
 });
 

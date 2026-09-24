@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
 import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
-import { editorBox, languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -205,7 +205,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
     const romanian = languagePanel(page, "title", "ro");
-    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await openFold(romanian.locator('[data-rich-text-fold="translations.ro.excerptBody"]'));
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("Zece kilometri prin parc.");
     await languageTab(page, "title", "en").click();
@@ -309,7 +309,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     const romanian = languagePanel(page, "title", "ro");
-    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await openFold(romanian.locator('[data-rich-text-fold="translations.ro.excerptBody"]'));
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("O serie care se termină înainte să înceapă.");
     await languageTab(page, "title", "en").click();
@@ -361,7 +361,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -637,7 +637,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };

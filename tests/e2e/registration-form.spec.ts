@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
-import { languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -728,7 +728,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };

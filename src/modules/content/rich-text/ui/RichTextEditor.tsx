@@ -76,13 +76,27 @@ import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 const TABLE_BAR_OPTIONS = { placement: "top" } as const;
 
 /**
- * The two floating bars' own element, above the sticky toolbar (§361). Tiptap appends a bar to
- * the writing area and positions it with no stacking order of its own, so the toolbar's
- * `zIndex: 2` painted over it: a table at the top of the body had its bar — every table verb —
- * hidden behind the toolbar it sat under. One above the toolbar, and far below MUI's app bar and
- * popovers. A constant, like the two props above, so it is one object across renders.
+ * The two floating bars, above the sticky toolbar (§361, §NNN). Tiptap appends a bar to the
+ * writing area and positions it with no stacking order of its own, so the toolbar's `zIndex: 2`
+ * painted over it: a table at the top of the body had its bar — every table verb — hidden behind
+ * the toolbar it sat under, and a word selected on the first lines had the bar over it drawn
+ * *under* the toolbar, which the owner saw as "three empty buttons" (2026-09-24: "I can't see
+ * these buttons in the rich text editor"): the bottoms of the three buttons below the toolbar,
+ * their glyphs behind it.
+ *
+ * **On the `Paper` we render, never on `BubbleMenu`'s `style`.** §361 passed `{ zIndex: 3 }` as the
+ * menu's `style` prop, and it worked under `next dev` and nowhere else. Tiptap 3.31 copies `style`
+ * and the `data-*`/`aria-*` props onto the menu's element in a helper whose loop is a
+ * `new Set([...])` annotated `@__PURE__` with `.forEach(…)` called on it; the production minifier
+ * takes the annotation for the whole call, finds its result unused and deletes it — the built
+ * chunk has no trace of the style code at all. So nothing passed to `BubbleMenu` beyond the plugin's own props (`editor`,
+ * `pluginKey`, `shouldShow`, `options`) exists in production, and a unit test keeps it that way.
+ *
+ * The menu's element has `z-index: auto` and `opacity: 1` while shown, so it makes no stacking
+ * context of its own: a positioned `Paper` inside it is stacked with the toolbar's, and 3 is one
+ * above it — far below MUI's app bar, tooltips and popovers.
  */
-const FLOATING_BAR_STYLE = { zIndex: 3 } as const;
+const FLOATING_BAR_SX = { position: "relative", zIndex: 3 } as const;
 
 /**
  * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
@@ -1006,9 +1020,12 @@ function RichTextEditorIsland({
               pluginKey="tableVerbs"
               shouldShow={showOverTable}
               options={TABLE_BAR_OPTIONS}
-              style={FLOATING_BAR_STYLE}
             >
-              <Paper elevation={3} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}>
+              <Paper
+                elevation={3}
+                data-floating-bar="table"
+                sx={{ ...FLOATING_BAR_SX, display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}
+              >
               {/* A row is the rows glyph and a column the columns glyph; the corner says whether
                   the press adds one or deletes the one the caret is in (§361). */}
               <ToolbarButton
@@ -1129,8 +1146,8 @@ function RichTextEditorIsland({
             already installed: no new dependency (§1.5).
           */}
           {editor && (
-            <BubbleMenu editor={editor} style={FLOATING_BAR_STYLE}>
-              <Paper elevation={3} sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
+            <BubbleMenu editor={editor}>
+              <Paper elevation={3} data-floating-bar="selection" sx={{ ...FLOATING_BAR_SX, display: "flex", gap: 0.5, p: 0.5 }}>
                 <ToolbarButton
                   label={labels.bold}
                   icon={FormatBoldIcon}
