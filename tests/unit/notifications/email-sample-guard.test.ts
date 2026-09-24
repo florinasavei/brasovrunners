@@ -11,7 +11,7 @@ import {
 import { sampleValuesIn } from "@/modules/notifications/email-copy-fields";
 
 /**
- * `DECISIONS.md` §NNN (email follow-up) — the save's guard against the page's sample values finds
+ * `DECISIONS.md` §373 (email follow-up) — the save's guard against the page's sample values finds
  * the sample, and not the club's prose.
  *
  * The re-review of the starting-text change: a value of several words was matched whatever its case,
@@ -47,7 +47,7 @@ const DECISIONS: readonly Decision[] = [
 const values = (text: string, messageType: EmailMessageType = "EVENT_REMINDER") =>
   emailSampleLiteralsIn(text, messageType).map((literal) => literal.value);
 
-describe("§NNN the guard refuses the sample exactly as it writes it", () => {
+describe("§373 the guard refuses the sample exactly as it writes it", () => {
   it("looks for every value the table decides, and nothing else", () => {
     const decided = [...new Set(DECISIONS.map((decision) => decision.value))].sort();
     expect(EMAIL_SAMPLE_LITERALS.map((literal) => literal.value).sort()).toEqual(decided);
@@ -88,7 +88,7 @@ describe("§NNN the guard refuses the sample exactly as it writes it", () => {
   });
 });
 
-describe("§NNN the guard leaves the club's own prose alone", () => {
+describe("§373 the guard leaves the club's own prose alone", () => {
   const prose: [string, string][] = [
     // Case: the sample's words in the club's own case are the club's words.
     ["the title in lower case", "Ne vedem la crosul de toamnă al clubului, ca în fiecare an."],

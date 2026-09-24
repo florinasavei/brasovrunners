@@ -57,7 +57,7 @@ type Props = {
  * hidden input still carries the document it was given, so a save writes the words back
  * unchanged rather than blanking a message.
  *
- * The fields are a legend under the box (`EmailFieldLegend`, §NNN email follow-up): one row each,
+ * The fields are a legend under the box (`EmailFieldLegend`, §373 email follow-up): one row each,
  * this message's own first, with what each becomes and the preview's value for it — because a
  * field nobody can see the name of is a field nobody uses. What is *not* editable is said under it
  * — the button, the QR and the links are the message's machinery (`domain/email-copy.ts` argues why).
@@ -143,7 +143,7 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.paragraphsHelp")}
         </Typography>
-        {/* The fields, as the declaration's editor lists its tokens (§NNN, email follow-up): a named card, closed. */}
+        {/* The fields, as the declaration's editor lists its tokens (§373, email follow-up): a named card, closed. */}
         <EmailFieldLegend locale={locale} emailLocale={emailLocale} messageType={messageType} />
         <Typography variant="caption" color="text.secondary">
           {t("emails.copy.machinery")}

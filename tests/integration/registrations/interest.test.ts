@@ -261,7 +261,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
       db,
       OPENS_AT,
     );
-    // The other half says it in its own language, the event's English title included (§96, §NNN
+    // The other half says it in its own language, the event's English title included (§96, §373
     // email follow-up — it repeated the Romanian title until then).
     expect(message.subject).toBe("Înscrierile la Crosul s-au deschis / Registration for The cross is open");
     expect(message.text).toContain("Parcul Tractorul");

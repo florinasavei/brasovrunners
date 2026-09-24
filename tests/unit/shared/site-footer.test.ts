@@ -5,7 +5,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-041-01 (§NNN) — the footer as the server sends it: one row on every width, the build
+ * BR-REQ-041-01 (§372) — the footer as the server sends it: one row on every width, the build
  * stamp inside the "Despre club" fold below `md` and pinned to the bar's own corner from `md`,
  * RO and EN side by side, and the privacy notice and the language on the always-visible bar.
  *
@@ -37,7 +37,7 @@ vi.mock("@/i18n/navigation", () => ({
   getPathname: ({ href }: { href: string }) => `/ro${href}`,
 }));
 
-// The three social marks render only when their URLs are configured (§NNN): stub them so the
+// The three social marks render only when their URLs are configured (§372): stub them so the
 // guarded assertions below actually run in `yarn check`, not skip past a footer with no marks.
 vi.mock("@/shared/config/env", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/shared/config/env")>();
@@ -99,7 +99,7 @@ function rulesOf(css: string, className: string): string {
   return [...css.matchAll(new RegExp(`(@media[^{]*\\{)?[^{}]*\\.${escaped}(?![\\w-])[^{]*\\{[^}]*\\}\\}?`, "g"))].map((match) => match[0]).join("\n");
 }
 
-/** An element's class rules carry the bar's three sizes (`footer-target.ts`, §NNN). */
+/** An element's class rules carry the bar's three sizes (`footer-target.ts`, §372). */
 function expectBarTarget(rules: string, properties: readonly string[], what: string) {
   for (const property of properties) {
     // 24px, 28px from 360 up to `sm`, 44px from `sm`.
@@ -114,7 +114,7 @@ function expectBarTarget(rules: string, properties: readonly string[], what: str
   expect(rules, `${what}: no open-ended 360 rule`).not.toMatch(/@media \(min-width:360px\)\{/);
 }
 
-describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doors", () => {
+describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doors", () => {
   it("renders the build stamp twice: once in the fold's panel, once pinned to the bar's corner", async () => {
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';

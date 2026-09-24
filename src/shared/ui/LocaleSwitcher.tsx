@@ -35,7 +35,7 @@ import { footerTargetSx, SM_UP } from "./footer-target";
  * `en-GB`. That is why, from `sm` up, the two-letter language code stays visible beside the
  * flag, and why at every width the accessible name and the tooltip are the language in its own
  * words — nobody should have to recognise a flag to find their language. On a phone the flag is
- * all that shows (§NNN, below); the name and the tooltip still say it in words.
+ * all that shows (§372, below); the name and the tooltip still say it in words.
  *
  * The files come from `flag-icons` (MIT), copied into `public/flags/` by
  * `scripts/sync-flags.mjs`. The set is there for the country field a participant will fill in
@@ -79,7 +79,7 @@ export default function LocaleSwitcher() {
         switcher is not on the header row at all — the header's copy is `display: none` below
         `sm` — but on the footer's bar.
 
-        Since §NNN (the owner, 2026-09-24: the bar keeps every item but not every word) the
+        Since §372 (the owner, 2026-09-24: the bar keeps every item but not every word) the
         footer's bar is one row on a phone, and the pair is two flags there: no letters, each a
         square of the bar's target (`footer-target.ts`: 24px below 360, 28px from 360), the
         current one ringed as well as `aria-current`. From `sm` up — the header's copy, the only

@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
  * It was a fixed label in the bottom-right corner from `md` and a line under the footer below
  * that, read by every visitor on every page. §365 (the owner, 2026-09-24: "version shows by
  * default") put it inside the footer's "Despre club" fold: on screen at no width until
- * somebody opened it, at every width. §NNN split it by width again, the owner's later word on
+ * somebody opened it, at every width. §372 split it by width again, the owner's later word on
  * the desktop site: "I liked when I saw the app on the bottom right." Two copies exist in the
  * markup now, mutually exclusive by `display` and each with its own test id: the phone's, still
  * inside the fold (`footer-build-badge-panel`, shown below `md`), and the desktop's, pinned to
@@ -98,9 +98,9 @@ test.describe("the build badge", () => {
   });
 
   test("on a phone, is not on screen until the footer's fold is opened", async ({ page }, testInfo) => {
-    // §365, still true below `md` (§NNN): the phone's own copy is on screen at no width until
+    // §365, still true below `md` (§372): the phone's own copy is on screen at no width until
     // "Despre club" is opened. From `md` the entrance is the pinned copy instead (below), which
-    // shows without opening anything — that is the point of §NNN, not a regression of this.
+    // shows without opening anything — that is the point of §372, not a regression of this.
     test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await expect(panelBadge(page)).toBeHidden();
@@ -119,7 +119,7 @@ test.describe("the build badge", () => {
   });
 
   test("from md, the pinned copy is visible at the bar's corner without opening anything", async ({ page }, testInfo) => {
-    // §NNN, the owner: "on the desktop version I liked when I saw the app on the bottom right."
+    // §372, the owner: "on the desktop version I liked when I saw the app on the bottom right."
     test.skip(testInfo.project.name !== "desktop", "the pinned copy only shows from md");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await expect(pinnedBadge(page)).toBeVisible();
@@ -230,9 +230,9 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
-    // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§NNN), and
+    // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§372), and
     // the link is on the bar's one row, on screen at every scroll position — a lock on a phone,
-    // named for the notice (§NNN). The privacy notice is on the bar since §323, so nothing has
+    // named for the notice (§372). The privacy notice is on the bar since §323, so nothing has
     // to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);

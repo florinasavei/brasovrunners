@@ -17,7 +17,7 @@ import { DECLARATION_TOKENS, type TokenLocale, tokensUsedIn } from "../templates
  * A Server Component, and each token is plain text inside a `<code>`: selecting and copying one
  * is the browser's job, and a click-to-insert control would be a client island owning a textarea
  * this form deliberately keeps native. The rows are `shared/ui/FieldLegend`, the layout the
- * emails' legend shares (§NNN, email follow-up).
+ * emails' legend shares (§373, email follow-up).
  *
  * `usedIn` marks the ones the current draft already carries — so a text that lost `{{eventDate}}`
  * in an edit says so on the page rather than at the first signature.

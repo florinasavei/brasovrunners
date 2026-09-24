@@ -295,7 +295,7 @@ describe("§359 what goes out is what went out before", () => {
     for (const value of ["The autumn cross", "EXAMPL", "42", "Water, a rain jacket, good spirits"]) expect(confirmed).toContain(value);
 
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
-    // Per message since the email follow-up (§NNN): the sample minus the fields the message never carries.
+    // Per message since the email follow-up (§373): the sample minus the fields the message never carries.
     expect(page).toContain("const sample = emailSampleFor(messageType, emailLocale);");
     expect(page).toContain("renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy)");
     expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale)}");
@@ -443,7 +443,7 @@ describe("§359 the save refuses a sample value", () => {
   }
 
   it("finds every value exactly as the sample writes it, and a single word only as itself", () => {
-    // Case-sensitive since the email follow-up (§NNN): the old starting text carried the value
+    // Case-sensitive since the email follow-up (§373): the old starting text carried the value
     // verbatim, and a case-blind match only added club prose (`email-sample-guard.test.ts`).
     expect(emailSampleLiteralsIn("Crosul de toamnă vine.", "EVENT_REMINDER").map((literal) => literal.value)).toEqual(["Crosul de toamnă"]);
     expect(emailSampleLiteralsIn("CROSUL DE TOAMNĂ vine.", "EVENT_REMINDER")).toEqual([]);
@@ -488,7 +488,7 @@ describe("§359 the save refuses a sample value", () => {
 describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fields", () => {
   // The thank-you's "results at the link below" is the one branch the sample takes and the starting
   // text does not; the hold's deadline and the time of signing have a sample value since the email
-  // follow-up (§NNN), so the declaration's three messages come back as today's starting text too.
+  // follow-up (§373), so the declaration's three messages come back as today's starting text too.
   const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS"]);
 
   /** What the old editor handed a Redactor: the platform's words rendered with the page's sample. */
@@ -593,8 +593,8 @@ describe("§364 the organizer's message on the page of every email", () => {
     expect(english).not.toContain("Prognoza anunță");
   });
 
-  it("gives every message's second half the other language's title, the organizer's message included (§NNN, email follow-up)", () => {
-    // Every message's second half now reads its own language's title (§NNN), not the registrant's
+  it("gives every message's second half the other language's title, the organizer's message included (§373, email follow-up)", () => {
+    // Every message's second half now reads its own language's title (§373), not the registrant's
     // repeated — the fix §354 left undone for anything but the organizer's message, generalised
     // once the read was shared per event per batch rather than paid again per message.
     const verify = renderBilingual("VERIFY_REGISTRATION_EMAIL", "ro", emailSampleData("ro"), emailSampleActionUrl("ro"));

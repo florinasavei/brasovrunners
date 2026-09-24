@@ -26,7 +26,7 @@ export async function POST(request: Request): Promise<Response> {
       import("@/shared/config/env"),
     ]);
     const { sender } = createEmailSenderForEnvironment(env);
-    // One renderer per batch: each event's words are read once for it (§NNN, email follow-up).
+    // One renderer per batch: each event's words are read once for it (§373, email follow-up).
     const summary = await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now });
     return { summary, failed: false };
   });

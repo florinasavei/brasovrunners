@@ -161,7 +161,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
          * And room for the sticky footer below it (§324), for the same reason at the other
          * edge: what the browser scrolls into view at the bottom — a field or a button reached
          * with Tab, the send button under a long form — landed behind the bar (WCAG 2.4.11,
-         * focus not obscured). The footer is one row at every width since §NNN (`SiteFooter`):
+         * focus not obscured). The footer is one row at every width since §372 (`SiteFooter`):
          * at most 28px tall on a phone and 44px from `sm` up, plus its border and a little air.
          */
         html: {

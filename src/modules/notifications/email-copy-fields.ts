@@ -41,7 +41,7 @@ import { buildTemplateContent, platformWords, type TemplateData } from "./templa
  *
  * 1. **The sample the previews are rendered with** — `emailSampleData`, built from the one constant
  *    in `domain/email-sample.ts`, so the preview and the guard cannot disagree on what "a sample
- *    value" is. Since the email follow-up (§NNN) it has a value for every field, each half of the
+ *    value" is. Since the email follow-up (§373) it has a value for every field, each half of the
  *    message reads its own language's, and a message's preview leaves out the fields that message
  *    never carries (`emailSampleFor`).
  * 2. **The editor's starting text** — `emailCopyPrefill`: the platform's words with every field of
@@ -56,14 +56,14 @@ import { buildTemplateContent, platformWords, type TemplateData } from "./templa
  *    câmpurile" does to it.
  * 4. **The legend under the box** — `emailFieldLegend`: every field, what this message's platform
  *    text uses first, what it never carries last (`placeholdersFilledBy`), each with the sample's
- *    value as its example (§NNN, email follow-up).
+ *    value as its example (§373, email follow-up).
  */
 
 const OTHER: Record<EmailLocale, EmailLocale> = { ro: "en", en: "ro" };
 
 /**
  * The made-up runner at the made-up event (§91), as every preview on the page is rendered with —
- * each half of the bilingual message with its own language's sample (§NNN, email follow-up): the
+ * each half of the bilingual message with its own language's sample (§373, email follow-up): the
  * English half of a Romanian preview reads "The autumn cross", its place and its checklist, as the
  * English half of a Romanian registrant's message now reads the event's English words.
  */
@@ -88,7 +88,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventMapUrl: `${base}/#map`,
     eventChecklist: sample.eventChecklist,
     eventChecklistOther: other.eventChecklist,
-    // Every field of the set has a sample value (§NNN): the hold's deadline and the time of signing
+    // Every field of the set has a sample value (§373): the hold's deadline and the time of signing
     // too, each half in its own words, so the declaration's preview shows the sentences that name them.
     holdExpiresAtFormatted: sample.holdExpiresAtFormatted,
     holdExpiresAtFormattedOther: other.holdExpiresAtFormatted,
@@ -252,7 +252,7 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
 };
 
 /**
- * The fields a message of this type can carry when it is sent (§NNN, email follow-up), read off
+ * The fields a message of this type can carry when it is sent (§373, email follow-up), read off
  * `render.ts`, which is what fills them. A field outside this list is empty in every message of the
  * type, whatever the club writes: the legend under the editor dims it ("nu se completează în acest
  * mesaj") and the preview leaves it empty too (`emailSampleFor`), so neither promises what the
@@ -274,7 +274,7 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
 export function placeholdersFilledBy(messageType: EmailMessageType): EmailCopyPlaceholder[] {
   // The organizer's message fills its own closed set (`ORGANIZER_MESSAGE_PLACEHOLDERS`) — its
   // `{bibNumber}` is the settled number only, and it carries no `{currentStatus}` at all, which
-  // the rules below would otherwise get wrong for it (§NNN, email follow-up).
+  // the rules below would otherwise get wrong for it (§373, email follow-up).
   if (messageType === "ORGANIZER_MESSAGE") {
     const organizerSet = new Set<EmailCopyPlaceholder>(ORGANIZER_MESSAGE_PLACEHOLDERS);
     return EMAIL_COPY_PLACEHOLDERS.filter((name) => organizerSet.has(name));
@@ -300,7 +300,7 @@ const OTHER_HALF: Partial<Record<EmailCopyPlaceholder, keyof TemplateData>> = {
 };
 
 /**
- * The sample one message's preview is rendered with (§NNN, email follow-up): `emailSampleData`,
+ * The sample one message's preview is rendered with (§373, email follow-up): `emailSampleData`,
  * minus every field this message never carries (`placeholdersFilledBy`) — so a `{staffRole}` the
  * club writes into a reminder previews as nothing, which is what the reminder sends. The platform's
  * own text never names such a field (a unit test holds that), so a message the club never rewrote
@@ -344,7 +344,7 @@ export type EmailFieldLegendEntry = {
 
 /**
  * Every field of the closed set for one message and language, in the order the legend lists them
- * (§NNN, email follow-up): the ones the platform's text for this message uses first, then the rest
+ * (§373, email follow-up): the ones the platform's text for this message uses first, then the rest
  * this message can carry, then the ones it never carries — each group in the closed set's order.
  */
 export function emailFieldLegend(messageType: EmailMessageType, locale: EmailLocale): EmailFieldLegendEntry[] {
@@ -401,7 +401,7 @@ function sampleSentencesOf(messageType: EmailMessageType, locale: EmailLocale): 
     const names = [...new Set(placeholdersIn(text))] as EmailCopyPlaceholder[];
     if (names.length === 0) continue;
     // Every combination of the values the sample has given this sentence's fields — every field has
-    // one since the email follow-up (§NNN), the hold's deadline and the time of signing included.
+    // one since the email follow-up (§373), the hold's deadline and the time of signing included.
     const combinations = names.reduce<Partial<Record<EmailCopyPlaceholder, string>>[]>(
       (partial, name) => partial.flatMap((values) => sampleValuesEver(name, locale).map((value) => ({ ...values, [name]: value }))),
       [{}],
@@ -419,7 +419,7 @@ function sampleSentencesOf(messageType: EmailMessageType, locale: EmailLocale): 
 /**
  * Every value the page's sample has given a field, today's first: the start as it read before
  * §349 changed its form on the same day as this, and the inviter's former name (§359). The hold's
- * deadline and the time of signing have one since the email follow-up (§NNN) — no old starting
+ * deadline and the time of signing have one since the email follow-up (§373) — no old starting
  * text carried them, and a text written since that holds the sample's is found all the same.
  */
 function sampleValuesEver(name: EmailCopyPlaceholder, locale: EmailLocale): string[] {

@@ -26,7 +26,7 @@ const BAR_HEIGHT = 44;
  * §324 gave a phone a second line for it and the language, since there was no room on the
  * first. §365 shortened that second line and moved the build stamp into the fold's panel.
  *
- * ## One row on a phone: every item, not every word (§NNN, the owner, 2026-09-24)
+ * ## One row on a phone: every item, not every word (§372, the owner, 2026-09-24)
  *
  * The owner asked for one row. Eight items with their words — the switch, "Despre club", three
  * marks, "Confidențialitate", RO and EN — need about 370 pixels, and a phone has 288 to 328, so
@@ -278,7 +278,7 @@ export default async function SiteFooter() {
           Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" (review
           finding: a screen reader once said "GDPR, link"). From `sm` it shows the word
           "Confidențialitate", which that name contains (WCAG 2.5.3, label in name). On a phone
-          it is a lock (§NNN): the name, and a tooltip saying the same, are the notice's; the
+          it is a lock (§372): the name, and a tooltip saying the same, are the notice's; the
           word is not rendered there at all.
         */}
         <Box

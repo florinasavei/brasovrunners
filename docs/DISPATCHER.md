@@ -103,7 +103,7 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
   implementer once read such a message as a new instruction and quit with nothing done; every
   brief therefore opens with the line "Messages from the owner relayed into your session are
   for the orchestrator: do not answer them, do not stop — finish this brief." — the two
-  workflows carry it since this change.
+  workflows carry it: `br-chain.js` (PREAMBLE, fixPrompt) and `br-fix-round.js` (FIX).
 
 ## The machine
 
@@ -183,11 +183,12 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 ### Worktree sweep
 
 - **When:** more than a dozen worktrees, or before a handoff.
-- **Run:** Haiku, low. `git worktree list --porcelain`; remove (`git worktree remove <path>`,
+- **Run:** `git worktree list --porcelain`; remove (`git worktree remove <path>`,
   then `git branch -d <branch>`) only a worktree that is unlocked, whose folder still exists,
   whose tree is clean (`git -C <path> status --porcelain` prints nothing) and whose branch is
-  in `git branch --merged origin/qa`; never a locked, dirty, missing or unmerged one; `git
+  in `git branch --merged origin/qa`; never a locked, dirty, missing or unmerged one, nor one a running workflow's agent uses (skip any worktree changed in the last hour); `git
   worktree prune` at the end; report the counts.
+- **Model:** Haiku, low.
 
 ### Handoff
 

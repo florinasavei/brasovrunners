@@ -268,10 +268,10 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
-    // The status in the other language's own words (§NNN, email follow-up), never the registrant's.
+    // The status in the other language's own words (§373, email follow-up), never the registrant's.
     ...(data.currentStatusOther ? { currentStatus: data.currentStatusOther } : {}),
     /*
-      The event's own words in the second half's language (§NNN, email follow-up): its title — in
+      The event's own words in the second half's language (§373, email follow-up): its title — in
       the second subject too, and in a `{eventTitle}` of the club's words for that language — and
       what to bring, or nothing when that language has none. Absent when the event has no text in
       the other language: both halves read the row's, as before.
@@ -286,7 +286,7 @@ export function renderBilingual(
     ...(data.organizerSubjectOther ? { organizerSubject: data.organizerSubjectOther } : {}),
     ...(data.organizerBodyOther ? { organizerBody: data.organizerBodyOther } : {}),
     // The organizer's message reads the same `eventTitleOther`/`eventChecklistOther` fields above
-    // (§364) — every message's second half does now (§NNN, email follow-up), so no separate gate
+    // (§364) — every message's second half does now (§373, email follow-up), so no separate gate
     // is needed for this one.
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
@@ -320,12 +320,12 @@ export type TemplateData = {
    */
   bibProvisional?: boolean;
   eventTitle?: string;
-  /** The event's title in the other language, for the bilingual message's second half (§NNN, email follow-up). */
+  /** The event's title in the other language, for the bilingual message's second half (§373, email follow-up). */
   eventTitleOther?: string;
   eventLocationName?: string;
   /**
    * The place in the other language's words, for the bilingual message's second half: that
-   * language's own name for it (§NNN, email follow-up; §362) — "Tractorul Park" under "Parcul
+   * language's own name for it (§373, email follow-up; §362) — "Tractorul Park" under "Parcul
    * Tractorul" — or, while the place is to be announced (§328), the sentence that says so in
    * that language. Absent: the second half reads `eventLocationName`.
    */
@@ -336,7 +336,7 @@ export type TemplateData = {
   /** A race's gun time, "10:00", when it has one apart from the gathering (§71); on the update notice (§331). */
   eventRaceStartsAtFormatted?: string;
   currentStatus?: string;
-  /** The same status in the other language's words, for the bilingual message's second half (§NNN, email follow-up). */
+  /** The same status in the other language's words, for the bilingual message's second half (§373, email follow-up). */
   currentStatusOther?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
@@ -349,7 +349,7 @@ export type TemplateData = {
   /** "What to bring", the translation's one line (§81). */
   eventChecklist?: string;
   /**
-   * The same line in the other language, for the second half (§NNN, email follow-up); `null` when
+   * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
    * words. Absent when the other language was not read — both halves read `eventChecklist`.
    */

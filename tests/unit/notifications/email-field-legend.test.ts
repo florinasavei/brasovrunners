@@ -21,7 +21,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN (email follow-up) — the fields of an email's words as a legend, like the
+ * `DECISIONS.md` §373 (email follow-up) — the fields of an email's words as a legend, like the
  * declaration's tokens (the owner, 2026-09-24: "I like how the placeholders are listed here on the
  * documents — need to have the same on emails, because now they are just plain inline text"), and
  * a sample with a value for every field, each half of a preview in its own language.
@@ -80,7 +80,7 @@ function order(html: string): string[] {
   return [...html.matchAll(/data-field="\{(\w+)\}"/g)].map((match) => match[1]);
 }
 
-describe("§NNN the fields of an email's words, as a legend", () => {
+describe("§373 the fields of an email's words, as a legend", () => {
   for (const locale of LOCALES) {
     const words = CATALOGUE[locale].Admin.emails.copy.legend;
 
@@ -185,7 +185,7 @@ describe("§NNN the fields of an email's words, as a legend", () => {
   });
 });
 
-describe("§NNN which fields a message carries", () => {
+describe("§373 which fields a message carries", () => {
   for (const messageType of TYPES) {
     for (const locale of LOCALES) {
       it(`${messageType} (${locale}): the platform's own text names no field its message never carries`, () => {
@@ -214,7 +214,7 @@ describe("§NNN which fields a message carries", () => {
     );
   });
 
-  it("fills the organizer's message with exactly its own closed set (§NNN, email follow-up): the settled bib, never the status", () => {
+  it("fills the organizer's message with exactly its own closed set (§373, email follow-up): the settled bib, never the status", () => {
     const filled = placeholdersFilledBy("ORGANIZER_MESSAGE");
     expect(filled.sort()).toEqual([...ORGANIZER_MESSAGE_PLACEHOLDERS].sort());
     expect(filled).toContain("bibNumber");
@@ -231,7 +231,7 @@ describe("§NNN which fields a message carries", () => {
   });
 });
 
-describe("§NNN the sample has every field, and each half of a preview its own language", () => {
+describe("§373 the sample has every field, and each half of a preview its own language", () => {
   it("gives every field a value in both languages, the two dates through the send path's own format", () => {
     for (const locale of LOCALES) {
       for (const name of EMAIL_COPY_PLACEHOLDERS) expect(emailSampleValueOf(name, locale), `${locale} ${name}`).not.toBe("");

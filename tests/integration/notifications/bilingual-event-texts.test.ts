@@ -16,7 +16,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * `DECISIONS.md` §NNN (email follow-up; the owner, 2026-09-24: "multi-lingual, always") — the
+ * `DECISIONS.md` §373 (email follow-up; the owner, 2026-09-24: "multi-lingual, always") — the
  * second half of a bilingual message reads the other language's event texts.
  *
  * Found by the review of §354: every message carries both languages (§96), but the event's title,
@@ -46,7 +46,7 @@ function recordingSender(): EmailSender & { calls: OutgoingEmail[] } {
   };
 }
 
-describe("§NNN each half of a bilingual message reads its own language's event texts", () => {
+describe("§373 each half of a bilingual message reads its own language's event texts", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let sequence = 0;
@@ -259,7 +259,7 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     expect(sender.calls.filter((call) => call.text.includes("Alergarea de luni") && call.text.includes("The Monday run"))).toHaveLength(1);
   });
 
-  it("writes {currentStatus} in the reader's own words, never the raw enum (§NNN, email follow-up review)", async () => {
+  it("writes {currentStatus} in the reader's own words, never the raw enum (§373, email follow-up review)", async () => {
     const event = await bilingual();
     const confirmedRo = await renderOutboxMessage(await queue(event.id, "ro", "REGISTRATION_STATE_NOTICE", {}, "CONFIRMED"), db, NOW);
     expect(confirmedRo.text).toContain("confirmată");
@@ -284,7 +284,7 @@ describe("§NNN each half of a bilingual message reads its own language's event 
     ["en", "CONFIRMED"],
     ["en", "WAITLISTED"],
   ] as const)(
-    "gives each half {currentStatus} in its own language's words, never the registrant's repeated (locale=%s, status=%s) (§NNN, email follow-up)",
+    "gives each half {currentStatus} in its own language's words, never the registrant's repeated (locale=%s, status=%s) (§373, email follow-up)",
     async (locale, status) => {
       const event = await bilingual();
       const other = locale === "ro" ? "en" : "ro";

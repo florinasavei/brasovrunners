@@ -10,7 +10,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  * When this site was built — and, for the club's own people, the way in.
  *
  * **The fold's own line below `md`, and pinned to the bar's own bottom-right corner from `md`
- * (`SiteFooter`, §NNN).** On a phone the stamp stays inside "Despre club": §365 took it off the bar
+ * (`SiteFooter`, §372).** On a phone the stamp stays inside "Despre club": §365 took it off the bar
  * after it had become a third line of footer under a bar that was already two, and nobody the
  * public site is for has a use for it there. On a desktop the owner asked for it back in the bar's
  * corner (2026-09-24), where it costs nothing — the bar is one line with room to spare. So the rule

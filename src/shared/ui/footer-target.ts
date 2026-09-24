@@ -1,5 +1,5 @@
 /**
- * The footer bar's tap targets (§NNN), the one place outside BR-REQ-041-01 criterion 6's 44
+ * The footer bar's tap targets (§372), the one place outside BR-REQ-041-01 criterion 6's 44
  * pixels, and only on a phone.
  *
  * The owner, 2026-09-24: the bar keeps every item but not every word. Eight items with their
@@ -16,7 +16,7 @@
  */
 export const FOOTER_TARGET = { xs: 24, phoneWide: 28, sm: 44 } as const;
 
-/** The phone's second size (§NNN): 360px up to, not including, `sm` — MUI's own `down("sm")` bound. */
+/** The phone's second size (§372): 360px up to, not including, `sm` — MUI's own `down("sm")` bound. */
 export const PHONE_WIDE = "@media (min-width:360px) and (max-width:599.95px)";
 
 /** The theme's `sm` (600px), the same string MUI emits for `theme.breakpoints.up("sm")`. */

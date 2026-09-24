@@ -18,7 +18,7 @@ import { footerTargetSx } from "./footer-target";
  * quick-settings tile does. Until mounted the mode is unknown on the client, so the same-sized
  * button renders disabled rather than nothing, and the header does not shift.
  *
- * A square the footer bar's size (`footer-target.ts`, §NNN): 24 pixels below 360, 28 from 360,
+ * A square the footer bar's size (`footer-target.ts`, §372): 24 pixels below 360, 28 from 360,
  * 44 from `sm` up. The footer is the only place this renders. The padding is 2 pixels at every
  * width so the 20-pixel glyph fits the 24; from `sm` the 44-pixel minimum centres it as before.
  */

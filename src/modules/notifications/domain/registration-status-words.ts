@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 
 /**
- * `{currentStatus}` in words, never the raw enum (§NNN, email follow-up review): the send path
+ * `{currentStatus}` in words, never the raw enum (§373, email follow-up review): the send path
  * used to write `registration.status` straight into the field, so a runner read "Starea
  * înscrierii tale: CONFIRMED" while the preview and the legend, reading `EMAIL_SAMPLE`, showed
  * "confirmată". One table, read by both — `render.ts` for the real send and

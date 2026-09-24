@@ -453,7 +453,7 @@ export type EventNotificationRow = Awaited<ReturnType<typeof findEventNotificati
  * Every language's row of what an email needs about one event, in one query — the same query
  * `findEventNotificationDetails` always ran, which already read each translation and kept one.
  *
- * The send path keeps them all (§NNN, email follow-up): each half of the bilingual message reads
+ * The send path keeps them all (§373, email follow-up): each half of the bilingual message reads
  * its own language's title, "what to bring" and name for the place, so the English half of a
  * Romanian registrant's message is English (`notifications/render.ts`, read once per event per
  * batch).

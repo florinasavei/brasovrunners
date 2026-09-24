@@ -61,7 +61,7 @@ export function drainOutboxAfterResponse(): void {
         }
 
         const { sender } = createEmailSenderForEnvironment(env);
-        // One renderer per batch: each event's words are read once for it (§NNN, email follow-up).
+        // One renderer per batch: each event's words are read once for it (§373, email follow-up).
         await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now: new Date() });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to

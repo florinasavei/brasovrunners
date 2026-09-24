@@ -72,7 +72,7 @@ export async function sendOutboxNow(
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
-      // A renderer per batch, so each event's words are read once per batch (§NNN, email follow-up).
+      // A renderer per batch, so each event's words are read once per batch (§373, email follow-up).
       render: createOutboxRenderer(),
       now,
       // Never past what the day still allows: the counter is the ceiling, not a display.

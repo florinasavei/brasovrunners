@@ -24,7 +24,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 const STALE_KEY = "REGISTRATION_CANCELLED:ro";
 
 /**
- * `DECISIONS.md` §NNN (email follow-up; the owner, 2026-09-24: "I like how the placeholders are
+ * `DECISIONS.md` §373 (email follow-up; the owner, 2026-09-24: "I like how the placeholders are
  * listed here on the documents — need to have the same on emails") — the legend under a message's
  * words, on a phone and a desktop. It reads nothing but the page, so both projects run it.
  */
@@ -72,7 +72,7 @@ test.describe("the fields of an email's words, as a legend", () => {
     await page.goto("/ro/admin/emails?lang=ro");
     const card = page.locator("#main").locator("#email-EVENT_UPDATE_NOTICE");
     await openFold(card);
-    // Each half its own title, in the subject too (§NNN, email follow-up).
+    // Each half its own title, in the subject too (§373, email follow-up).
     await expect(card).toContainText("Detalii actualizate pentru Crosul de toamnă / Updated details for The autumn cross");
     await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /The meeting point is now: Tâmpa cable-car station\./);
   });
@@ -109,7 +109,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     const words = editor.locator(".ProseMirror");
     await expect(words).toContainText("Ai început înscrierea la {eventTitle}. Pentru a continua, confirmă adresa ta de email.");
     await expect(words).not.toContainText("Crosul de toamnă");
-    // The fields are a legend under the box now (§NNN, email follow-up), the one this text uses first.
+    // The fields are a legend under the box now (§373, email follow-up), the one this text uses first.
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
     await expect(legend).toContainText("12 câmpuri · 1 câmp folosit aici");
     await openFold(legend);
@@ -159,7 +159,7 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
       await expect(warning).toContainText("„Crosul de toamnă” — în subiect și în text; în locul ei: {eventTitle}");
 
       // A form pressed before React has taken the page over is lost (`hydrated`), and the page
-      // grew twenty legends in the email follow-up (§NNN): the press waits for the client.
+      // grew twenty legends in the email follow-up (§373): the press waits for the client.
       await hydrated(page);
       await editor.getByRole("button", { name: "Înlocuiește cu câmpurile" }).click();
       await expect(main.getByText("Am pus câmpurile în locul valorilor de exemplu și am salvat textul.")).toBeVisible();

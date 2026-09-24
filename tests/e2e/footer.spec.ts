@@ -2,14 +2,14 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * The footer's one row, on every width, phone included (BR-REQ-041-01 criteria 1, 6, 11, 21, 23
- * and 29; `DECISIONS.md` §115, §262, §299, §323, §324, §365, §NNN; `shared/ui/SiteFooter.tsx`).
+ * and 29; `DECISIONS.md` §115, §262, §299, §323, §324, §365, §372; `shared/ui/SiteFooter.tsx`).
  *
  * Three reports on one day said the same thing about the marks landing on the summary's last
  * word and the build badge (§299) — every control here is still its own flex item, so overlap
  * is not a state the layout can reach, and `click({ trial: true })` runs Playwright's hit-target
  * check at each one without navigating anywhere.
  *
- * §NNN, the owner, 2026-09-24: one row on a phone, keeping every item but not every word. Eight
+ * §372, the owner, 2026-09-24: one row on a phone, keeping every item but not every word. Eight
  * items with their words need ~370 pixels and a phone has 288–328, so below `sm` the privacy
  * notice is a lock and RO/EN are flags, and every item on the bar is a square of the bar's
  * target: 24px below 360 (WCAG 2.2 SC 2.5.8, AA), 28px from 360, 44px from `sm` — a
@@ -18,7 +18,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
  * 360 the owner's screenshot and the second size's first width, 393 the Pixel phone, 640 and
  * 768 the band where the marks used to land on the summary and the badge, and 1280 a desktop,
- * where the build stamp is pinned to the bar's own corner (§NNN).
+ * where the build stamp is pinned to the bar's own corner (§372).
  */
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -55,14 +55,14 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă|theme/i }),
     // On the bar since §323, named for the notice at every width (WCAG 2.5.3); a lock on a phone
-    // and the word from `sm` (§NNN).
+    // and the word from `sm` (§372).
     privacy: footer.getByRole("link", { name: where.privacyName, exact: true }),
     lock: page.getByTestId("footer-privacy-lock"),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
     language,
     current: language.locator('[aria-current="true"]'),
     other: language.getByRole("link", { name: where.other, exact: true }),
-    // Two copies, mutually exclusive by width (§NNN): the fold's, below `md`, and the one
+    // Two copies, mutually exclusive by width (§372): the fold's, below `md`, and the one
     // pinned to the bar's corner, from `md`.
     panelBadge: page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului|website version/i),
     pinnedBadge: page.getByTestId("footer-build-badge-pinned").getByLabel(/versiunea site-ului|website version/i),
@@ -139,7 +139,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       // Criterion 11: the switch is the first control on the row, in the bar's own corner.
       expect(items[0]![1].x).toBeLessThan(4);
 
-      // Criterion 6 and its footer-bar exception (§NNN): every item at least the bar's target,
+      // Criterion 6 and its footer-bar exception (§372): every item at least the bar's target,
       // in width and in height. The summary is a label: its height is the target, its width its words.
       for (const [name, box] of items) {
         expect(box.height, `${name} is ${target}px tall at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
@@ -152,7 +152,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       if (phone) await other.click({ trial: true });
 
       // §323: the notice is reachable from every page without opening anything. On a phone a
-      // lock whose name and tooltip are the notice's (§NNN); from `sm` the word, uncut.
+      // lock whose name and tooltip are the notice's (§372); from `sm` the word, uncut.
       await expect(privacy).toHaveAttribute("title", "Nota de confidențialitate (GDPR)");
       if (phone) {
         await expect(lock).toBeVisible();
@@ -198,12 +198,12 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
 });
 
 /**
- * §NNN — the phone's one row in both languages, fold closed and open. The English row has other
+ * §372 — the phone's one row in both languages, fold closed and open. The English row has other
  * widths ("About the club" is longer than "Despre club"), and opening the fold is what broke the
  * row twice before: the fold's panel is inside the `<details>` again (review finding 4), and
  * every row item keeps the switch's top however tall the open fold grows.
  */
-test.describe("§NNN one row on a phone, in both languages, fold closed and open", () => {
+test.describe("§372 one row on a phone, in both languages, fold closed and open", () => {
   for (const where of PAGES) {
     for (const width of [320, 360] as const) {
       for (const state of ["closed", "open"] as const) {
@@ -322,7 +322,7 @@ test.describe("§NNN one row on a phone, in both languages, fold closed and open
   });
 });
 
-test.describe("§NNN the desktop build stamp, pinned to the bar's own corner", () => {
+test.describe("§372 the desktop build stamp, pinned to the bar's own corner", () => {
   test("from md, is visible at the bar's right end without opening anything", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });

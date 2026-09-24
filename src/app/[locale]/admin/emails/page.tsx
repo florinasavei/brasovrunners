@@ -140,7 +140,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     /*
       The sample the preview is rendered with (§91) — one constant, `domain/email-sample.ts`, which
       is also what the save refuses to store (§359), so the preview and the guard cannot drift. Each
-      half in its own language's sample, and without the fields this message never carries (§NNN,
+      half in its own language's sample, and without the fields this message never carries (§373,
       email follow-up: the legend under the editor dims them, and the preview says the same).
     */
     const sample = emailSampleFor(messageType, emailLocale);

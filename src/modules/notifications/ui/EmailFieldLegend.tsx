@@ -17,7 +17,7 @@ type Props = {
 };
 
 /**
- * The fields a message's words may use, as a legend under the editor (§NNN, email follow-up; the
+ * The fields a message's words may use, as a legend under the editor (§373, email follow-up; the
  * owner, 2026-09-24: "I like how the placeholders are listed here on the documents — need to have
  * the same on emails, because now they are just plain inline text").
  *

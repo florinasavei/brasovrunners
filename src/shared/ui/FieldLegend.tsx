@@ -30,7 +30,7 @@ type Props = {
 
 /**
  * The look of every row, set once on the list rather than on each element: `/admin/emails` draws
- * twenty legends of twelve rows (§NNN, email follow-up), and an `sx` per term, description and
+ * twenty legends of twelve rows (§373, email follow-up), and an `sx` per term, description and
  * mark was a styled component each — markup and payload for 240 rows the page mostly keeps shut.
  * Plain elements under one class are the same picture for a fraction of the bytes.
  */
@@ -84,7 +84,7 @@ const LEGEND_SX = {
 
 /**
  * The fields a text is written with, one row each: the token in a code chip, what it becomes, and
- * an example (`DECISIONS.md` §190 for the declaration; §NNN, email follow-up, for the emails).
+ * an example (`DECISIONS.md` §190 for the declaration; §373, email follow-up, for the emails).
  *
  * One layout for both legends — the declaration's `{{tokens}}` (`legal-documents/ui/TokenLegend`)
  * and an email's `{fields}` (`notifications/ui/EmailFieldLegend`) — because the owner asked for

@@ -28,7 +28,7 @@ export const EMAIL_SAMPLE_STARTS_AT = new Date("2026-10-04T06:00:00Z");
 
 /**
  * Until when the sample runner's place is held — Friday 2 October 2026, 18:30 in Brașov (§104).
- * Before §NNN (email follow-up) the sample had none, so the declaration's preview left out the
+ * Before §373 (email follow-up) the sample had none, so the declaration's preview left out the
  * sentence that names it and a `{holdExpiresAtFormatted}` the club wrote previewed as nothing.
  */
 export const EMAIL_SAMPLE_HOLD_EXPIRES_AT = new Date("2026-10-02T15:30:00Z");
@@ -59,7 +59,7 @@ export type EmailSampleValues = {
   checkinCode: string;
   bibNumber: number;
   eventChecklist: string;
-  /** The hold's deadline and the time of signing (§104, §95), so every field of the set has a sample value (§NNN). */
+  /** The hold's deadline and the time of signing (§104, §95), so every field of the set has a sample value (§373). */
   holdExpiresAtFormatted: string;
   signedAtFormatted: string;
   /**
@@ -149,7 +149,7 @@ export const EMAIL_SAMPLE_FORMER_INVITER: readonly string[] = ["Florin"];
 
 /**
  * The sample's value for a field of the closed set, in one language — every field has one since
- * §NNN (email follow-up), so the preview and the legend under the editor show each of them.
+ * §373 (email follow-up), so the preview and the legend under the editor show each of them.
  */
 export function emailSampleValueOf(name: EmailCopyPlaceholder, locale: EmailLocale): string {
   const sample = EMAIL_SAMPLE[locale];
@@ -238,7 +238,7 @@ const WORD_CHARACTER = String.raw`[\p{L}\p{M}\p{N}_]`;
 const HYPHEN = String.raw`[\-‐‑]`;
 
 /**
- * The value as a whole word or phrase, on both sides, and exactly as the sample writes it (§NNN,
+ * The value as a whole word or phrase, on both sides, and exactly as the sample writes it (§373,
  * email follow-up; the re-review's nit: a value of several words matched whatever its case, and a
  * hyphen ended a word, so "the autumn cross-country season" was refused as the sample's title).
  *

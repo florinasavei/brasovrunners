@@ -90,7 +90,7 @@ type RendererDb = Parameters<EmailRenderer>[1];
 export type EventRowsReader = (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>;
 
 /**
- * The renderer for one batch of the outbox (§NNN, email follow-up): `renderOutboxMessage`, with
+ * The renderer for one batch of the outbox (§373, email follow-up): `renderOutboxMessage`, with
  * each event's texts read once for the whole batch rather than once per message.
  *
  * Both halves of a message need the event's words — the registration's language first, the other
@@ -165,7 +165,7 @@ async function renderRow(
   const eventTexts = eventId ? await eventRows(db, eventId) : [];
   const eventDetails = eventId ? eventNotificationDetailsIn(eventTexts, locale) : undefined;
   /*
-    The other language's own row, for the second half (§NNN, email follow-up). None when the event
+    The other language's own row, for the second half (§373, email follow-up). None when the event
     has no text in that language — then the row this message reads may itself be the other
     language's (the fallback above), and both halves read it, as every message did before.
   */
@@ -192,11 +192,11 @@ async function renderRow(
     eventMapUrl: eventDetails?.mapUrl ?? undefined,
     eventStravaEventUrl: eventDetails?.stravaEventUrl ?? undefined,
     eventChecklist: eventDetails?.checklist ?? undefined,
-    // In words, never the raw enum (§NNN, email follow-up review): the same table the sample and
+    // In words, never the raw enum (§373, email follow-up review): the same table the sample and
     // the legend read (`registrationStatusWords`), so a runner never reads "CONFIRMED".
     currentStatus: registration ? registrationStatusWords(registration.status, locale) : undefined,
     // The other language's own words, for the bilingual message's second half — never the first
-    // half's language repeated under the other language's sentence (§NNN, email follow-up).
+    // half's language repeated under the other language's sentence (§373, email follow-up).
     currentStatusOther: registration ? registrationStatusWords(registration.status, otherLocale(locale)) : undefined,
     // The footer line is there whenever somebody can answer (§81).
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
@@ -218,7 +218,7 @@ async function renderRow(
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
   /*
-    The second half in its own language's words (§NNN, email follow-up; the owner: "multi-lingual,
+    The second half in its own language's words (§373, email follow-up; the owner: "multi-lingual,
     always"). The title, "what to bring" and the place's name are the translation's, so the English
     half of a Romanian registrant's message read the Romanian checklist until now. The other
     language's own values, and nothing else: a checklist written in one language only is said in

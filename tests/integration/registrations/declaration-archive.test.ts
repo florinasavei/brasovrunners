@@ -116,7 +116,7 @@ describe("the club's archive copy (§99)", () => {
 
     const message = await renderOutboxMessage({ ...archive!, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.to).toBe(ARCHIVE);
-    // Searchable by who and for what; each half names the event in its own language (§96, §NNN
+    // Searchable by who and for what; each half names the event in its own language (§96, §373
     // email follow-up — it named it in the row's language in both until then).
     expect(message.subject).toBe("Declarație semnată: Ana Popescu — Crosul aniversar / Signed declaration: Ana Popescu — The anniversary cross");
     expect(message.attachments).toHaveLength(1);
