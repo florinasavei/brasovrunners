@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * BR-REQ-011-01 criterion 19 (`DECISIONS.md` §328) — the place to be announced, in a browser.
@@ -25,7 +26,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
@@ -44,13 +45,16 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(field("event.locationName")).not.toHaveAttribute("required", "");
     await expect(field("event.locationName")).toBeHidden();
     await expect(field("event.mapUrl")).toBeHidden();
+    // Each language's own name for the place hides with them, in the same box (§328, §NNN).
+    await expect(languageTab(page, "place", "ro")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
 
     await field("translations.ro.title").fill(`Locație neanunțată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Locul se anunță curând.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Place to be announced ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "The place is announced soon.");
     await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
@@ -77,12 +81,16 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     // Announcing: the switch off, one save, and the venue is public — nobody is emailed.
     await page.goto(editorUrl);
     await hydrated(page);
+    // The Locul box is folded on the editor, and its closed line says the place is to come.
+    const place = await openEditorBox(page, "Locul");
+    await expect(place.locator(":scope > summary")).toContainText("Se anunță mai târziu");
     await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
     await expect(field("event.locationName")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
     await page.getByRole("switch", { name: "Locația se anunță mai târziu" }).uncheck();
     await expect(field("event.locationName")).toBeVisible();
     await expect(field("event.locationName")).toHaveAttribute("required", "");
+    await expect(languageTab(page, "place", "en")).toBeVisible();
     // The event is live, so the save carries the live-edit acknowledgement, as every such save does.
     await page.locator('[name="acknowledgeLiveEdit"]').check();
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();

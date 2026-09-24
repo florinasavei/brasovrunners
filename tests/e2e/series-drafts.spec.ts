@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * `DECISIONS.md` §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
@@ -21,7 +22,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const englishSlug = `monthly-cross-${suffix}`;
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
@@ -42,14 +43,16 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // that this one is deliberately left to make drafts instead.
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    await field("event.startsAtDate").fill(ymd(first));
-    await field("event.startsAtTime").fill("09:00");
+    // A date and a 24-hour time, each on MUI's picker (`DECISIONS.md` §70, §303).
+    await fillDateField(page, "Începutul evenimentului", ymd(first));
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Un cros lunar, pentru seria de ciorne.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Monthly cross ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "A monthly cross, for the drafts series.");
     await page.getByRole("button", { name: "Creează și publică" }).click();
@@ -59,13 +62,16 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     const main = page.locator("#main");
     await expect(main.getByText("Publicat", { exact: true })).toBeVisible();
 
-    // The tick first, the frequency after it (§169): "Publică edițiile create" stays unticked —
-    // this is the case the whole feature is about.
-    await main.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
-    await field("until").fill(ymd(new Date(first.getTime() + 14 * DAY)));
-    await expect(field("publish")).not.toBeChecked();
-    await main.getByRole("button", { name: "Creează edițiile" }).click();
-    await page.getByRole("dialog", { name: "Creezi edițiile?" }).getByRole("button", { name: "Creează edițiile" }).click();
+    // The tick first, the frequency after it (§169), in the Recurență box. "Publică datele noi
+    // automat" is ticked by default now (§NNN) and is unticked here — this is the case the whole
+    // feature is about.
+    const recurrence = await openEditorBox(page, "Recurență");
+    await recurrence.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
+    await fillDateField(page, "Până la (opțional)", ymd(new Date(first.getTime() + 14 * DAY)));
+    await expect(field("publish")).toBeChecked();
+    await recurrence.getByRole("checkbox", { name: "Publică datele noi automat" }).uncheck();
+    await recurrence.getByRole("button", { name: "Creează datele" }).click();
+    await page.getByRole("dialog", { name: "Creezi datele?" }).getByRole("button", { name: "Creează datele" }).click();
     // Two Sundays after the source, both drafts: the alert already reads as Romanian ("2 date").
     await expect(page.locator("#admin-alert")).toContainText("2 date create acum", { timeout: 15_000 });
     await hydrated(page);
@@ -74,7 +80,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // live but the rule said not to — the explanation's own words for that state.
     const repeatPublish = main.getByTestId("repeat-publish");
     await expect(repeatPublish).toContainText("publicarea automată e oprită");
-    await expect(repeatPublish.getByRole("button", { name: "Publică datele noi automat" })).toBeVisible();
+    await expect(repeatPublish.getByRole("checkbox", { name: "Publică datele noi automat" })).not.toBeChecked();
 
     // The list: the bare "Ciornă · 2 date" chip is gone, replaced by the named line — a single
     // "Publicat · 1 dată" chip is now everything the status column says about the series' state.
@@ -108,7 +114,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await firstDraftLink.click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     await hydrated(page);
-    await expect(page.locator("#main").getByText("Ciornă", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("editor-heading").locator("xpath=..").getByText("Ciornă", { exact: true })).toBeVisible();
 
     // Back on the list, then the source (the title link points at the next occurrence, which is
     // this series' first and only published date): the switch the hint pointed at. Turning it on
@@ -117,7 +123,8 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await hydrated(page);
     await row.getByRole("link", { name: title, exact: true }).click();
     await hydrated(page);
-    await main.getByTestId("repeat-publish").getByRole("button", { name: "Publică datele noi automat" }).click();
+    await main.getByTestId("repeat-publish").getByRole("checkbox", { name: "Publică datele noi automat" }).check();
+    await main.getByTestId("repeat-publish").getByRole("button", { name: "Salvează setarea" }).click();
     await expect(page.locator("#admin-alert")).toContainText("Publicarea automată a fost pornită", { timeout: 15_000 });
     await expect(main.getByTestId("repeat-publish")).toContainText("Datele noi ale seriei se publică automat");
   });

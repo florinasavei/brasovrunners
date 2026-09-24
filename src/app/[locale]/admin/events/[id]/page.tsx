@@ -414,12 +414,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <>
               {/* S1 — open: the state is the first thing checked (§170). Its own forms: a transition
                   is not an edit, and it carries only the event's version. */}
-              <Panel collapsible openWhen={{ inUse: true }} id="box-publication" title={t("editor.publicationSection")} aside={EDITORIAL_STATUS_LABEL[event.editorialStatus]}>
+              {/* The state and the version are the chips under the page's heading, once: a second
+                  copy here was two answers to one question on a phone's first screen. */}
+              <Panel collapsible openWhen={{ inUse: true }} id="box-publication" title={t("editor.publicationSection")}>
                 <Stack spacing={1.5}>
-                  <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-                    <Chip size="small" label={EDITORIAL_STATUS_LABEL[event.editorialStatus]} />
-                    <Chip size="small" variant="outlined" label={t("editor.version", { version: event.version })} />
-                  </Stack>
                   {live && <Alert severity="warning">{t("editor.liveWarning")}</Alert>}
                   {gapLines.length > 0 && (
                     <Box data-testid="missing-for-publish">

@@ -1,4 +1,40 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+
+/** The language strips of the event editor, by the box that holds each (§NNN, `idPrefix`). */
+export type EditorStrip = "title" | "description" | "place" | "programme" | "rules" | "address";
+
+const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * A box (or card) of the event editor by its title (§NNN): the `<details>` whose own summary's
+ * heading begins with it. "Begins", because the heading carries the box's closed line after the
+ * title — "Locul Parcul Titulescu · hartă" — and its "23 înscriși" chip.
+ */
+export function editorBox(scope: Page | Locator, title: string): Locator {
+  const page = "page" in scope && typeof scope.page === "function" ? scope.page() : (scope as Page);
+  return scope
+    .locator("summary")
+    .filter({ has: page.getByRole("heading", { name: new RegExp(`^${escaped(title)}`) }) })
+    .first()
+    .locator("xpath=..");
+}
+
+/** Open a box of the event editor by its title, the way a person does (`openFold`), and return it. */
+export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {
+  const box = editorBox(scope, title);
+  await openFold(box);
+  return box;
+}
+
+/** One language's tab of one box's strip: `#title-tab-en`, `#address-tab-ro`. */
+export function languageTab(page: Page, strip: EditorStrip, locale: "ro" | "en"): Locator {
+  return page.locator(`#${strip}-tab-${locale}`);
+}
+
+/** The panel under that tab. */
+export function languagePanel(page: Page, strip: EditorStrip, locale: "ro" | "en"): Locator {
+  return page.locator(`#${strip}-panel-${locale}`);
+}
 
 /**
  * Open a backoffice fold, the way a person does: activate its summary (`DECISIONS.md` §336 —

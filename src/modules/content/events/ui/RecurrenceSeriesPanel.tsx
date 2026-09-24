@@ -64,7 +64,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
   const publishState = publish ? (sourceLive ? t("editor.repeatPublishOn") : t("editor.repeatPublishWaiting")) : t("editor.repeatPublishOff");
 
   return (
-    <Panel collapsible openWhen={{ inUse: true }} id="box-recurrence" title={t("editor.repeatSection")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
+    <Panel collapsible openWhen={{ inUse: true }} id="box-recurrence" title={t("editor.boxes.recurrence.title")} aside={ruleSentence ?? t("editor.repeatStopped")} data-testid="recurrence-series">
       <Stack spacing={1.5}>
         <Box>
           <Typography variant="subtitle2" component="p" sx={{ fontWeight: 600 }}>

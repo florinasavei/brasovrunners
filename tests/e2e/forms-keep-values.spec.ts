@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { openFold } from "./support/fold";
+import { editorBox, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §315 on a small form — adding a colleague.
@@ -72,8 +72,9 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await field("event.locationName").fill("Parcul Noua");
     await field("translations.ro.title").fill(`Versiune ${suffix}`);
     await field("translations.ro.slug").fill(`versiune-${suffix}`);
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Version ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`version-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
@@ -93,6 +94,7 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     // The colleague saves in the meantime.
     await page.goto(editor);
     await hydrated(page);
+    await openEditorBox(page, "Locul");
     await field("event.locationName").fill("Colegul a scris asta");
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page).toHaveURL(/saved=event/);
@@ -100,6 +102,8 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     // The stale press is refused, and what was typed is still in its box.
     const box = stale.locator('[name="event.locationName"]');
     const save = stale.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true });
+    // A `<details>` opens without JavaScript: the Locul box, the way a person opens it.
+    await openFold(editorBox(stale, "Locul"));
     await box.fill("Eu am scris asta");
     let posted = stale.waitForResponse((response) => response.request().method() === "POST");
     await save.click();
@@ -117,5 +121,53 @@ test.describe("§315 a stale save stays refused with JavaScript off", () => {
     await page.reload();
     await expect(field("event.locationName")).toHaveValue("Colegul a scris asta");
     await scriptless.close();
+  });
+});
+
+/*
+  §315 and the editor's boxes (§NNN): a refusal whose field sits in a card three folds deep. An
+  internal registration needs an approved declaration — a rule only the server can judge (the
+  select has no `required`: the mode decides) — and the declaration is in "Participare și
+  înscrieri" › "Condiții de participare și declarația", both shut on arrival. The refusal must
+  open both, name the card in its summary, and keep everything typed.
+*/
+test.describe("§315 a refusal inside a closed card opens it", () => {
+  test("an internal registration with no declaration comes back with its card open and every box kept", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await fillDateField(page, "Începutul evenimentului", "2027-06-20");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Noua");
+    await field("translations.ro.title").fill(`Fără declarație ${suffix}`);
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`No declaration ${suffix}`);
+    // The addresses fill themselves from the titles (`SlugFromTitle`).
+    await expect(field("translations.en.slug")).toHaveValue(`no-declaration-${suffix}`);
+
+    const registration = await openEditorBox(page, "Participare și înscrieri");
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+    await field("event.capacity").fill("40");
+    // Folded again, so the refusal is what has to open it.
+    await registration.locator(":scope > summary").press("Enter");
+    await expect(registration).not.toHaveAttribute("open", "");
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Condiții de participare și declarația › Declarația pe care o semnează participantul" })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/events\/new$/);
+    await expect(registration).toHaveAttribute("open", "");
+    await expect(editorBox(page, "Condiții de participare și declarația")).toHaveAttribute("open", "");
+    await expect(field("event.capacity")).toHaveValue("40");
+    await expect(field("event.registrationMode")).toHaveValue("INTERNAL");
+    await expect(field("translations.ro.title")).toHaveValue(`Fără declarație ${suffix}`);
+    await expect(field("translations.ro.slug")).toHaveValue(`fara-declaratie-${suffix}`);
   });
 });

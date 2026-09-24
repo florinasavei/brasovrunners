@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
 import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
+import { editorBox, languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -100,13 +101,17 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     await expect(page.getByRole("button", { name: "Publică" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
 
-    // The words are theirs: the Romanian title is a field, not a sentence about permissions.
-    const romanian = page.getByRole("tabpanel", { name: /Română/ });
+    // The words are theirs: the Romanian title is a field, not a sentence about permissions —
+    // in the "Titlu și rezumat" box, shut on arrival like every box of the editor (§NNN).
+    const titles = await openEditorBox(page, "Titlu și rezumat");
+    const romanian = titles.getByRole("tabpanel", { name: /Română/ });
     await expect(romanian.getByRole("textbox", { name: "Titlu", exact: true })).toBeVisible();
-    await expect(romanian.getByText(/Nu poți edita acest text/)).toHaveCount(0);
+    await expect(romanian.getByText(/Textele le scrie/)).toHaveCount(0);
 
-    // A copywriter owns no settings, and the panel says so rather than being missing.
-    await expect(page.getByText(/Doar un editor sau un administrator/)).toBeVisible();
+    // A copywriter owns no settings, and each settings box says so rather than being missing.
+    const kind = await openEditorBox(page, "Ce fel de eveniment");
+    await expect(kind.getByText("Setările le schimbă un Organizator sau un Administrator.")).toBeVisible();
+    await expect(kind.getByRole("combobox", { name: /Tip eveniment/ })).toHaveCount(0);
   });
 
   test("takes a volunteer to the desk and offers only the desk and the guide", async ({ page }) => {
@@ -156,8 +161,10 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // in view, the English one behind its tab, and a hidden box cannot be filled.
     await field("translations.ro.title").fill(`Cros de probă ${suffix}`);
     await field("translations.ro.slug").fill(`cros-de-proba-${suffix}`);
-    await page.getByRole("tab", { name: /English/ }).click();
+    // Every box with per-language text has its own Română | English tabs (§NNN).
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Trial cross ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`trial-cross-${suffix}`);
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -165,8 +172,9 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // Straight to the new event's own page, as a draft: nothing is published by being created.
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
-    // The content panels are tabs now, one per language, Romanian first.
-    await expect(page.getByRole("tab", { name: /English/ })).toBeVisible();
+    // The same boxes as the create page, each in its place, with the English tab behind Română.
+    await openEditorBox(page, "Titlu și rezumat");
+    await expect(languageTab(page, "title", "en")).toBeVisible();
   });
 
   /*
@@ -189,12 +197,13 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
-    const romanian = page.locator("#locale-panel-ro");
+    const romanian = languagePanel(page, "title", "ro");
     await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("Zece kilometri prin parc.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Untitled ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`untitled-${suffix}`);
 
     // The three islands that rebuild themselves from the posted names after a refusal
@@ -203,12 +212,15 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Alt eveniment" }).click();
     // "Ora" also labels the event's own time of day, already filled above: the row's boxes are
-    // looked up inside the row, never by where they fall on the page.
+    // looked up inside the row, never by where they fall on the page. The programme and the
+    // partners are boxes of their own, shut on the create page (§NNN).
+    await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
     await fillDateField(row, "Data", "2027-05-02");
     await fillTimeField(row, "Ora", "10:00");
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
+    await openEditorBox(page, "Parteneri");
     await field("event.coHosts[0].name").fill("Clubul Prietenilor");
     await field("event.coHosts[0].url").fill("https://example.org/prieteni");
     await field("repeat.on").check();
@@ -216,6 +228,10 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The button says why it waits, naming the language as well as the box.
     await expect(page.getByText("Completează mai întâi: Română: Titlu")).toBeVisible();
+    // The refusal the browser will make, from inside a shut box: the title box is folded again,
+    // and the press must open it to point at the title (`ActionForm`'s `onInvalidCapture`).
+    await editorBox(page, "Titlu și rezumat").locator(":scope > summary").press("Enter");
+    await expect(editorBox(page, "Titlu și rezumat")).not.toHaveAttribute("open", "");
 
     // The browser's own refusal: nothing leaves, the Romanian tab comes forward on its title.
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -231,7 +247,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    await expect(refusal.getByRole("link", { name: "Română: Titlu" })).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Titlu și rezumat › Română › Titlu" })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
     await expect(field("event.locationName")).toHaveValue("Parcul Tractorul");
     await expect(field("event.startsAtDate")).toHaveValue("2027-05-02");
@@ -285,12 +301,13 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
-    const romanian = page.locator("#locale-panel-ro");
+    const romanian = languagePanel(page, "title", "ro");
     await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("O serie care se termină înainte să înceapă.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Refused series ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`refused-series-${suffix}`);
 
     await field("repeat.on").check();
@@ -303,7 +320,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // The server's refusal names the end and links to it; the press opened nothing.
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    await expect(refusal.getByRole("link", { name: "Până la (opțional)" })).toHaveAttribute("href", "#field-repeat.until");
+    await expect(refusal.getByRole("link", { name: "Recurență › Până la (opțional)" })).toHaveAttribute("href", "#field-repeat.until");
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
 
     // Every box as it was typed: the words, the rich summary, and the whole repeat rule.
@@ -336,7 +353,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
@@ -350,13 +367,20 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await summary("ro", "Creat și publicat într-o singură apăsare.");
 
     // The publish button says what publication still needs; the English tab is empty.
-    await expect(page.getByText(/Nu se poate publica încă — lipsește: English: Titlu/)).toBeVisible();
+    await expect(page.getByText(/Nu se poate publica încă — lipsește: Titlu și rezumat › English › Titlu/)).toBeVisible();
+    // The Publicare box lists every gap by box and tab, from the same check (§NNN).
+    const publication = await openEditorBox(page, "Publicare");
+    await expect(publication.getByTestId("missing-for-publish").getByRole("link", { name: "Titlu și rezumat › English › Titlu" })).toBeVisible();
 
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`In one go ${suffix}`);
+    // The English address fills itself from the title until it is typed (`SlugFromTitle`).
+    await expect(field("translations.en.slug")).toHaveValue(`in-one-go-${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "Created and published in a single press.");
     await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(publication.getByText("Nu lipsește nimic: evenimentul poate fi publicat.")).toBeVisible();
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
@@ -399,8 +423,8 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
     // A staff preview still renders the draft, with a notice saying what it is.
     await page.goto(editorUrl);
     await hydrated(page);
-    const romanian = page.getByRole("tabpanel", { name: /Română/ });
-    await romanian.getByRole("link", { name: "Previzualizare" }).click();
+    // The previews are in the Publicare box, one per language (§NNN).
+    await page.locator("#box-publication").getByRole("link", { name: /^Română/ }).click();
     // Wait for the navigation itself before reading the document: what follows inspects the
     // page's head, and mid-transition that head belongs to two routes at once.
     await expect(page).toHaveURL(/\/previzualizare\/evenimente\//);
@@ -484,8 +508,9 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Program după reîncărcare ${suffix}`);
     await field("translations.ro.slug").fill(slug);
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Programme after reload ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`programme-after-reload-${suffix}`);
 
     // A type with a programme (§111), and one row on it — the same pattern the refused-create
@@ -494,6 +519,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     // row (`programmeRow`), never by where they fall on the page (re-review, finding 1).
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Alt eveniment" }).click();
+    await openEditorBox(page, "Programul zilei și ce să aduci");
     const row = programmeRow(page, 0);
     await fillDateField(row, "Data", "2027-05-10");
     await fillTimeField(row, "Ora", "10:00");
@@ -516,6 +542,8 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await loadAfresh(page);
 
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
+    // "Data și ora" is folded on the editor (§NNN).
+    await openEditorBox(page, "Data și ora");
     await fillDateField(page, "Începutul evenimentului", "2027-05-13");
     await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
     await expect(field("event.schedule[0].date")).toHaveValue("2027-05-13");
@@ -555,8 +583,9 @@ test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-y
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Ceas 24h ${suffix}`);
     await field("translations.ro.slug").fill(slug);
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`24-hour clock ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`24-hour-clock-${suffix}`);
 
     // The event's own boxes: the first "Ora" on the page is the event's time of day, above any
@@ -582,7 +611,83 @@ test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-y
     // A full page load: the scriptless box's own hydration swap is where finding 1's bug lived,
     // and it is the same swap this display format has to survive.
     await loadAfresh(page);
+    await openEditorBox(page, "Data și ora");
 
     await readsTheClubsWay();
+  });
+});
+
+/*
+  The editor's boxes (§NNN): the weekly group run in a minute — the type is already a group run,
+  the addresses fill themselves from the titles, so it is the titles, the summaries, the date, the
+  place, the repeat tick with Monday and Wednesday, and "Creează și publică". The date is far past
+  the eight weeks a series is created into (§122), so this makes one event, not a series of them;
+  the recurrence is stopped and the event taken off the site at the end.
+*/
+test.describe("BR-REQ-050-02 the weekly group run, created in one page (§NNN)", () => {
+  test("type by default, titles, summaries, date, place, Monday and Wednesday, create and publish", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+    const summary = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+    // A Monday some twenty weeks away: outside the horizon, so the series makes nothing yet.
+    const DAY = 86_400_000;
+    const monday = new Date(Date.now() + 140 * DAY);
+    while (monday.getUTCDay() !== 1) monday.setTime(monday.getTime() + DAY);
+    const ymd = monday.toISOString().slice(0, 10);
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+
+    // The type is a group run until somebody says otherwise, and a group run has no registration.
+    await expect(page.getByRole("combobox", { name: /Tip eveniment/ })).toContainText("Alergare de grup");
+
+    await field("translations.ro.title").fill(`Alergare de luni ${suffix}`);
+    await expect(field("translations.ro.slug")).toHaveValue(`alergare-de-luni-${suffix}`);
+    await summary("ro", "Tura de luni seara, prin parc.");
+    await languageTab(page, "title", "en").click();
+    await field("translations.en.title").fill(`Monday run ${suffix}`);
+    await expect(field("translations.en.slug")).toHaveValue(`monday-run-${suffix}`);
+    await summary("en", "The Monday evening run, through the park.");
+    await fillDateField(page, "Începutul evenimentului", ymd);
+    await fillTimeField(page, "Ora", "18:30");
+    await field("event.locationName").fill("Parcul Titulescu");
+
+    // Recurrence, in the side column — first on a phone: the event's own day follows the date
+    // typed above, ticked and locked; Wednesday is added.
+    const recurrence = editorBox(page, "Recurență");
+    await recurrence.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
+    await expect(recurrence.getByRole("checkbox", { name: "Lu" })).toBeChecked();
+    await expect(recurrence.getByRole("checkbox", { name: "Lu" })).toBeDisabled();
+    await recurrence.getByRole("checkbox", { name: "Mi" }).check();
+    await expect(recurrence.getByTestId("repeat-rule-sentence")).toContainText("În fiecare luni și miercuri, la 18:30 — la nesfârșit.");
+    await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele opt săptămâni");
+
+    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await page.getByRole("button", { name: "Creează și publică" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
+    await hydrated(page);
+    const editorUrl = new URL(page.url()).pathname;
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+    const series = page.getByTestId("recurrence-series");
+    await expect(series).toContainText("În fiecare luni și miercuri, la 18:30 — la nesfârșit");
+    await expect(series.getByTestId("repeat-publish")).toContainText("se publică automat");
+
+    expect((await page.goto(`/ro/evenimente/alergare-de-luni-${suffix}`))?.status()).toBe(200);
+
+    // Tidy: the rule stopped, then off the site.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await page.getByTestId("recurrence-series").getByRole("button", { name: "Oprește recurența" }).click();
+    await page.getByRole("dialog", { name: "Oprește recurența" }).getByRole("button", { name: "Oprește recurența" }).click();
+    await expect(page.locator("#admin-alert")).toContainText("Seria e oprită", { timeout: 15_000 });
+    await hydrated(page);
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });

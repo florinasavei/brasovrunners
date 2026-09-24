@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { languageTab, openEditorBox } from "./support/fold";
 
 /**
  * `DECISIONS.md` §331 — "Anunță participanții despre schimbare", end to end. An organizer makes a
@@ -32,15 +33,19 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await fillDateField(page, "Începutul evenimentului", day);
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
+    // Everything about registration is one box, and the declaration is in its own card (§NNN).
+    await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("10");
+    await openEditorBox(page, "Condiții de participare și declarația");
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
     await field("translations.ro.title").fill(`Cursa anunțată ${suffix}`);
     await field("translations.ro.slug").fill(`cursa-anuntata-${suffix}`);
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Announced race ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`announced-race-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/, { timeout: 30_000 });
@@ -80,7 +85,9 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await notify.check();
     await expect(field("notice.note")).toBeVisible();
 
-    // A new meeting point, and a note.
+    // A new meeting point, in the Locul box — amber now, with the one registration on its chip.
+    const place = await openEditorBox(page, "Locul");
+    await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     await field("notice.note").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
@@ -89,7 +96,8 @@ test.describe("§331 the participants hear about a change when the organizer ask
     // And the box is unticked again: the next save emails nobody unless asked.
     await expect(page.getByRole("checkbox", { name: "Anunță participanții despre schimbare" })).not.toBeChecked();
 
-    // Cancelling: the reason and "tell them", ticked, appear with the status.
+    // Cancelling: the reason and "tell them", ticked, appear with the status, in its box.
+    await openEditorBox(page, "Starea evenimentului");
     await page.getByRole("combobox", { name: "Starea evenimentului" }).click();
     await page.getByRole("option", { name: "Anulat" }).click();
     const cancel = page.getByTestId("cancel-fields");

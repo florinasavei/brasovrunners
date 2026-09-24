@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { FEATURED, hydrated, signIn } from "./support/featured-event";
+import { ensureRegistrationIsOpen, hydrated, signIn } from "./support/featured-event";
+import { openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-038-01, `DECISIONS.md` §301 and §317 — the bib's footer is the club's to compose, and
@@ -13,15 +14,19 @@ import { FEATURED, hydrated, signIn } from "./support/featured-event";
 test.describe("§317 the footer, composed in the designer", () => {
   test("switching the email off redraws the preview without it, and the club's line joins it", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin");
-    await page.getByRole("link", { name: FEATURED.title }).first().click();
-    await expect(page).toHaveURL(/\/admin\/events\//);
+    // Registration on the site, which is where race numbers exist (§NNN): converges, never saves
+    // when another spec already did.
+    await ensureRegistrationIsOpen(page);
+    await page.reload();
     await hydrated(page);
 
     // The editor renders at all: the first version of this panel failed the whole page on the
-    // client (a shared `sx` object, see `BibDesignPanel`), which no unit test could see.
+    // client (a shared `sx` object, see `BibDesignPanel`), which no unit test could see. It is
+    // a card inside a card now: Participare și înscrieri › Numere de concurs (BIB) › this.
+    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Numere de concurs (BIB)");
     const panel = page.getByTestId("bib-design");
-    await panel.locator("summary").click();
+    await openFold(panel);
     const preview = page.getByTestId("bib-design-preview").locator("img");
     await expect(preview).toHaveAttribute("src", /[?&]showEmail=1(&|$)/);
 

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
+import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 import { ensureRegistrationIsOpen, FEATURED, fillDateField, fillTimeField, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -726,7 +727,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     const slug = `cros-pe-varste-${suffix}`;
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
-      const panel = page.locator(`#locale-panel-${locale}`);
+      const panel = languagePanel(page, "title", locale);
       await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
@@ -751,9 +752,12 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await fillDateField(page, "Începutul evenimentului", "2027-05-03");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    // Registration is one box; who may enter and what they sign is its own card (§NNN).
+    await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("50");
+    await openEditorBox(page, "Condiții de participare și declarația");
     // The box offers the club's fourteen until the organizer says otherwise.
     await expect(field("event.minAge")).toHaveValue("14");
     await field("event.minAge").fill("16");
@@ -762,8 +766,9 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await field("translations.ro.title").fill(`Cros pe vârste ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Un concurs de la șaisprezece ani.");
-    await page.getByRole("tab", { name: /English/ }).click();
+    await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Age-banded cross ${suffix}`);
+    await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`age-banded-cross-${suffix}`);
     await summary("en", "A race from sixteen.");
     await page.getByRole("button", { name: "Creează și publică" }).click();
@@ -787,6 +792,8 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await page.goto(editorUrl);
       await hydrated(page);
       await expect(field("event.minAge")).toHaveValue("16");
+      await openEditorBox(page, "Participare și înscrieri");
+      await openEditorBox(page, "Condiții de participare și declarația");
       await field("event.minAge").fill("0");
       const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
       if (await acknowledge.count()) await acknowledge.check();
