@@ -34,6 +34,8 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
     expect(labels["event.links[0].kind"]).toBe("Linkul 1: alege tipul din listă");
     // The whole list, for "more than twelve".
     expect(labels["event.links"]).toBe("Linkuri și fișiere: cel mult 12 pe un eveniment");
+    // A partner's link, named by both the card and the row.
+    expect(labels["event.coHosts[1].links[2].url"]).toBe("Partenerul 2, linkul 3: adresa trebuie să înceapă cu https://");
   });
 
   it("names them in English on the English backoffice", async () => {
@@ -42,5 +44,28 @@ describe("BR-REQ-011-01 criterion 20 the refusal summary names the link's row", 
     const labels = await eventFormFieldLabels();
     expect(labels["event.links[1].url"]).toBe("Link 2: the address must start with https://");
     expect(labels["event.links"]).toBe("Links and files: at most 12 on one event");
+  });
+});
+
+/**
+ * `costRule` (`content/events/fields.ts`) names `event.costAmount` only for a `PAID` event and
+ * `event.costUrl` only for a `DONATION` one, so each has one real label — never the raw name a
+ * caller sees when `ActionForm.labelOf` finds none (§343).
+ */
+describe("the cost amount and the donation link are named, not left as their own path", () => {
+  it("gives «Suma» and «Link pentru donație» in Romanian", async () => {
+    catalogue = ro;
+    locale = "ro";
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.costAmount"]).toBe("Suma");
+    expect(labels["event.costUrl"]).toBe("Link pentru donație");
+  });
+
+  it("gives «Amount» and «Donation link» in English", async () => {
+    catalogue = en;
+    locale = "en";
+    const labels = await eventFormFieldLabels();
+    expect(labels["event.costAmount"]).toBe("Amount");
+    expect(labels["event.costUrl"]).toBe("Donation link");
   });
 });

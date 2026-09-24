@@ -4,8 +4,18 @@ import { parseLocalizedPath } from "@/i18n/alternate-path";
 import type { Locale } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { findPublishedAlbumBySlug, listPublishedAlbums } from "@/modules/content/gallery/repository";
-import { findPublishedPageBySlug, listPublishedPages } from "@/modules/content/pages/repository";
+import {
+  findPublishedAlbumBySlug,
+  findPublishedAlbumTranslations,
+  findPublishedAlbumTranslationsForAlbums,
+  listPublishedAlbums,
+} from "@/modules/content/gallery/repository";
+import {
+  findPublishedPageBySlug,
+  findPublishedPageTranslations,
+  findPublishedPageTranslationsForPages,
+  listPublishedPages,
+} from "@/modules/content/pages/repository";
 import type { EventType } from "@/modules/events/domain/event-type";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
@@ -13,6 +23,7 @@ import {
   findLatestPastEvent,
   findPublishedEventBySlug,
   findPublishedTranslations,
+  findPublishedTranslationsForEvents,
   listPastEvents,
   listPublishedEventEndings,
   listPublishedEvents,
@@ -125,16 +136,47 @@ export async function cachedPublishedTranslations(eventId: string) {
 }
 
 /**
- * The sitemap's events: the address and the publication date, and nothing else.
+ * The sitemap's events: the address, the publication date and every published locale's own slug
+ * (the entry's `hreflang` alternates, §342 canonical and hreflang), and nothing else.
  *
  * Narrowed before it is cached, because every published event is a lot of rich text to keep for
- * two fields — and Vercel refuses to cache an entry over two megabytes, which a few seasons of
- * weekly runs with their descriptions would reach.
+ * three fields — and Vercel refuses to cache an entry over two megabytes, which a few seasons of
+ * weekly runs with their descriptions would reach. The alternates come from one query for the
+ * whole list, grouped here, never one query per event.
  */
 export async function cachedSitemapEvents(locale: Locale) {
-  return publicRead(["events.sitemap", locale], ["events"], async () =>
-    (await listPublishedEvents(getDb(), locale)).map((event) => ({ slug: event.slug, publishedAt: event.publishedAt })),
-  );
+  return publicRead(["events.sitemap", locale], ["events"], async () => {
+    const db = getDb();
+    const rows = await listPublishedEvents(db, locale);
+    const translations = groupById(
+      await findPublishedTranslationsForEvents(db, rows.map((event) => event.id)),
+      (row) => row.eventId,
+    );
+    return rows.map((event) => ({
+      slug: event.slug,
+      publishedAt: event.publishedAt,
+      translations: translations.get(event.id) ?? [],
+    }));
+  });
+}
+
+/**
+ * Groups a flat "one row per (id, locale)" read into `id → its locales and slugs` — what turns
+ * "one lookup per event/page/album" into one lookup for the whole sitemap (§342 canonical and
+ * hreflang). The id is left off each row: the cache keeps only what the sitemap prints.
+ */
+function groupById<T extends { locale: Locale; slug: string }>(
+  rows: readonly T[],
+  idOf: (row: T) => string,
+): Map<string, Array<{ locale: Locale; slug: string }>> {
+  const groups = new Map<string, Array<{ locale: Locale; slug: string }>>();
+  for (const row of rows) {
+    const id = idOf(row);
+    const group = groups.get(id) ?? [];
+    group.push({ locale: row.locale, slug: row.slug });
+    groups.set(id, group);
+  }
+  return groups;
 }
 
 // --- Places: what registrations change on a public page ---------------------------------------
@@ -148,9 +190,14 @@ export async function cachedSitemapEvents(locale: Locale) {
  * key. So the number served is the number the formula gives for this instant. It is still a
  * page render and not a decision: the form and the allocator count again, under the lock.
  *
+ * It carries the event's own number of places beside the free ones (§346 public fill count):
+ * "12 înscriși din 50 de locuri" is the same count read against the capacity of the very row the
+ * formula counted, so the two lines beside the button come from one internal read and one cache
+ * entry — never a second formula, and never a query per visitor.
+ *
  * `null` for an uncapped event, and for one that no longer exists.
  */
-export async function cachedPublicAvailability(eventId: string, now: Date): Promise<number | null> {
+export async function cachedPublicAvailability(eventId: string, now: Date): Promise<PublicAvailability | null> {
   const expiries = await publicRead(["places.offer-expiries", eventId], ["places", "events"], () =>
     listOfferExpiries(getDb(), eventId),
   );
@@ -158,9 +205,14 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
-    return event ? readPublicAvailability(db, event, now) : null;
+    if (!event || event.capacity === null) return null;
+    const available = await readPublicAvailability(db, event, now);
+    return available === null ? null : { available, capacity: event.capacity };
   });
 }
+
+/** What `cachedPublicAvailability` answers for a capped event: its free places, and its size. */
+export type PublicAvailability = { available: number; capacity: number };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */
 export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number }> {
@@ -206,7 +258,25 @@ export async function cachedPublishedPageBySlug(locale: Locale, slug: string) {
   return readBySlug(slug, ["pages.by-slug", locale, slug], ["pages"], () => findPublishedPageBySlug(getDb(), locale, slug));
 }
 
-/** `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation, the sitemap. */
+/** `findPublishedPageTranslations`: a standing page's `hreflang` alternates (§342 canonical and hreflang). */
+export async function cachedPublishedPageTranslations(pageId: string) {
+  return publicRead(["pages.translations", pageId], ["pages"], () => findPublishedPageTranslations(getDb(), pageId));
+}
+
+/** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */
+export async function cachedSitemapPages(locale: Locale) {
+  return publicRead(["pages.sitemap", locale], ["pages"], async () => {
+    const db = getDb();
+    const rows = await listPublishedPages(db, locale);
+    const translations = groupById(
+      await findPublishedPageTranslationsForPages(db, rows.map((page) => page.id)),
+      (row) => row.pageId,
+    );
+    return rows.map((page) => ({ slug: page.slug, updatedAt: page.updatedAt, translations: translations.get(page.id) ?? [] }));
+  });
+}
+
+/** `listPublishedAlbums`: the gallery, the "Galerie" entry in the navigation. */
 export async function cachedPublishedAlbums(locale: Locale) {
   return publicRead(["gallery.published", locale], ["gallery"], () => listPublishedAlbums(getDb(), locale));
 }
@@ -216,6 +286,24 @@ export async function cachedPublishedAlbumBySlug(locale: Locale, slug: string) {
   return readBySlug(slug, ["gallery.by-slug", locale, slug], ["gallery", "events"], () =>
     findPublishedAlbumBySlug(getDb(), locale, slug),
   );
+}
+
+/** `findPublishedAlbumTranslations`: an album's `hreflang` alternates (§342 canonical and hreflang). */
+export async function cachedPublishedAlbumTranslations(albumId: string) {
+  return publicRead(["gallery.translations", albumId], ["gallery"], () => findPublishedAlbumTranslations(getDb(), albumId));
+}
+
+/** The sitemap's albums: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */
+export async function cachedSitemapAlbums(locale: Locale) {
+  return publicRead(["gallery.sitemap", locale], ["gallery"], async () => {
+    const db = getDb();
+    const rows = await listPublishedAlbums(db, locale);
+    const translations = groupById(
+      await findPublishedAlbumTranslationsForAlbums(db, rows.map((album) => album.id)),
+      (row) => row.albumId,
+    );
+    return rows.map((album) => ({ slug: album.slug, updatedAt: album.updatedAt, translations: translations.get(album.id) ?? [] }));
+  });
 }
 
 // --- Settings ---------------------------------------------------------------------------------

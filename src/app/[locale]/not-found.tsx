@@ -11,7 +11,9 @@ export default async function NotFound() {
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>
-      <ButtonLink href="/" variant="contained">
+      {/* "/events", not "/": the root itself 308-redirects to the listing
+          (`app/[locale]/page.tsx`), the same reason `LogoLink` names (§342). */}
+      <ButtonLink href="/events" variant="contained">
         {t("back")}
       </ButtonLink>
     </Container>

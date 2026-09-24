@@ -186,6 +186,10 @@ describe("§333 the public reads", () => {
     "src/app/api/locale/route.ts",
     "src/modules/events/ui/RegistrationCta.tsx",
     "src/modules/events/ui/StartList.tsx",
+    // What the pages' metadata and the sitemap build their canonical and hreflang from (§342
+    // canonical and hreflang): written before this cache, and first merged reading the pool.
+    "src/modules/legal-documents/public-page.ts",
+    "src/modules/seo/alternates.ts",
   ])("%s reads through the public cache, never the database", (file) => {
     // The import, not the name: a comment may explain `getDb()`, but nothing can call it unasked.
     expect(readFileSync(file, "utf8")).not.toMatch(/from "@\/db\/client"/);

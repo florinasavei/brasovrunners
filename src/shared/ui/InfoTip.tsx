@@ -3,6 +3,7 @@
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
 
 /**
  * An "i" that says a sentence on hover, on focus, or while a thumb rests on it — for the
@@ -17,13 +18,13 @@ export default function InfoTip({ text }: { text: string }) {
       title={text}
       arrow
       enterTouchDelay={0}
-      leaveTouchDelay={6_000}
+      leaveTouchDelay={readingTimeMs(text)}
       /*
         Newlines in the text are lines in the tooltip (§257). A sentence is unaffected — it has
-        none — and a list written as one line per item now reads as a list. The width is capped
-        a little wider than MUI's default so a step does not wrap in the middle of itself.
+        none — and a list written as one line per item reads as a list. The style is the one
+        `Hint` uses (`tooltip-text.ts`, §341), so the two kinds of tooltip read alike.
       */
-      slotProps={{ tooltip: { sx: { whiteSpace: "pre-line", maxWidth: 360 } } }}
+      slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
     >
       <IconButton aria-label={text} size="small" sx={{ minHeight: 44, minWidth: 44 }}>
         <InfoOutlinedIcon fontSize="small" />

@@ -1,4 +1,4 @@
-import { type AnyColumn, and, asc, desc, eq, gte, isNull, lt, type SQL, sql } from "drizzle-orm";
+import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -117,6 +117,10 @@ const PUBLIC_COLUMNS = {
   locationToBeAnnounced: events.locationToBeAnnounced,
   difficulty: events.difficulty,
   costType: events.costType,
+  // What a paid event costs, or what a donation suggests, and where either is paid (§343) —
+  // free text and an https link, read only through the phrase each surface builds from them.
+  costAmount: events.costAmount,
+  costUrl: events.costUrl,
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
@@ -195,6 +199,27 @@ export async function findPublishedTranslations(db: Database, eventId: string) {
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
     .where(and(eq(eventTranslations.eventId, eventId), eq(events.editorialStatus, "PUBLISHED")));
+}
+
+/**
+ * The same, for every event in `eventIds` at once — the sitemap's own twin of the single-event
+ * version above (§342). Building the whole file with `findPublishedTranslations` per row asks
+ * one query per event, and a weekly series is dozens of dated rows: this asks one query for the
+ * lot, grouped by `eventId`, and costs nothing extra when the list is a single event.
+ *
+ * `eventIds` is trusted to already be published rows — `listPublishedEvents`'s own — so the
+ * join's `editorialStatus` check here is belt and braces rather than the filter doing the work.
+ */
+export async function findPublishedTranslationsForEvents(
+  db: Database,
+  eventIds: readonly string[],
+): Promise<Array<{ eventId: string; locale: Locale; slug: string }>> {
+  if (eventIds.length === 0) return [];
+  return db
+    .select({ eventId: eventTranslations.eventId, locale: eventTranslations.locale, slug: eventTranslations.slug })
+    .from(eventTranslations)
+    .innerJoin(events, eq(events.id, eventTranslations.eventId))
+    .where(and(inArray(eventTranslations.eventId, eventIds as string[]), eq(events.editorialStatus, "PUBLISHED")));
 }
 
 /**

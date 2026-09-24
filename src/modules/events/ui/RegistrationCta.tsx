@@ -4,14 +4,15 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { unstable_rethrow } from "next/navigation";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { accentOnHover } from "@/theme/surfaces";
-import { registrationCta } from "../domain/registration-cta";
+import { publicFill, registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
+import { fillPhrase } from "./counted-phrases";
 
 /**
  * The one way in to registration, on the two pages a visitor actually reads.
@@ -23,7 +24,9 @@ import type { PublicEvent } from "../repository";
  *
  * The count comes from `readPublicAvailability`, which is the allocator's own formula
  * (AGENTS.md §10.6). Nothing here counts anything itself, and nothing here mutates: this is a
- * page render, not a capacity decision.
+ * page render, not a capacity decision. "12 înscriși din 50 de locuri" (§346) is the same count
+ * read against the event's own number of places — `publicFill`, arithmetic on the two numbers
+ * this already holds, never a second query.
  */
 export default async function RegistrationCta({
   event,
@@ -37,6 +40,7 @@ export default async function RegistrationCta({
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
+  const locale = await getLocale();
 
   /**
    * Only an open internal event costs a query.
@@ -48,6 +52,9 @@ export default async function RegistrationCta({
    * the query this avoids.
    */
   let availablePlaces: number | null = null;
+  // The event's own number of places, from the same row the count was read against: the
+  // "out of" of §346's sentence. Null for an uncapped event, and for every event not read here.
+  let capacity: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
       /*
@@ -55,9 +62,14 @@ export default async function RegistrationCta({
         registration that moves expires it, and the one input the clock changes — a waiting-list
         offer lapsing — is part of its key (`public-cache/reads.ts#cachedPublicAvailability`).
         Without it, an open race's page woke the database for every visitor during exactly the
-        weeks the page is read most.
+        weeks the page is read most. The same entry carries the event's size beside the free
+        places (§346 public fill count), so the fill line costs nothing more.
       */
-      availablePlaces = await cachedPublicAvailability(event.id, now);
+      const availability = await cachedPublicAvailability(event.id, now);
+      if (availability) {
+        availablePlaces = availability.available;
+        capacity = availability.capacity;
+      }
     } catch (error) {
       /*
         The one thing on a page that is never served from a copy (§281).
@@ -103,6 +115,9 @@ export default async function RegistrationCta({
   }
 
   if (cta.kind === "OPEN" || cta.kind === "FULL") {
+    // How full it is (§346): the free places read against the event's size. Null — and nothing
+    // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
+    const fill = publicFill(capacity, availablePlaces);
     return (
       <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
         <ButtonLink
@@ -115,6 +130,12 @@ export default async function RegistrationCta({
         >
           {cta.kind === "FULL" ? t("cta.joinWaitingList") : t("cta.register")}
         </ButtonLink>
+
+        {fill && (
+          <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
+            {fillPhrase(t, locale, fill)}
+          </Typography>
+        )}
 
         {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4). */}
         {cta.kind === "FULL" ? (

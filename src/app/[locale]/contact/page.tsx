@@ -26,6 +26,7 @@ import {
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
+import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
@@ -48,7 +49,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Contact" });
-  return { title: t("title"), description: t("intro") };
+  return {
+    title: t("title"),
+    description: t("intro"),
+    /*
+      One page per language, whatever `?sent=`, `?error=`, `?fields=` or `?about=` adds (§342):
+      each is this same form, before or after a submission, never distinct content.
+    */
+    alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/contact")),
+  };
 }
 
 const fieldId = (name: string) => `c-${name}`;

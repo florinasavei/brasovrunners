@@ -13,6 +13,8 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import type { PublicAlbumSummary } from "@/modules/content/gallery/repository";
 import { cachedPublishedAlbums } from "@/modules/public-cache/reads";
+import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
+import { env } from "@/shared/config/env";
 import CardLink from "@/shared/ui/CardLink";
 import ContactLink from "@/shared/ui/ContactLink";
 import { GalleryGridSkeleton } from "@/shared/ui/PublicSkeleton";
@@ -28,7 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Gallery" });
-  return { title: t("title"), description: t("intro") };
+  return {
+    title: t("title"),
+    description: t("intro"),
+    alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/gallery")),
+  };
 }
 
 /**

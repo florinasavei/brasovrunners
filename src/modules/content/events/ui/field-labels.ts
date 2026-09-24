@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { MAX_CO_HOST_LINK_LABEL, MAX_CO_HOST_LINKS, MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
 import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
 
 /**
@@ -49,6 +50,11 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.externalRegistrationUrl": t("editor.externalRegistrationUrl"),
     "event.difficulty": t("editor.fields.difficulty"),
     "event.costType": t("editor.fields.costType"),
+    // `costRule` (`content/events/fields.ts`) never names `costAmount` outside `PAID` nor
+    // `costUrl` outside `DONATION`, so each name has exactly one meaning to the organizer who
+    // reads it back — the same box `CostFields` relabels by the chosen kind (§343).
+    "event.costAmount": t("editor.costAmount"),
+    "event.costUrl": t("editor.costDonationUrl"),
     "event.routeUrl": t("editor.routeUrl"),
     "event.distanceMeters": t("editor.distanceMeters"),
     "event.elevationGainMeters": t("editor.elevationGainMeters"),
@@ -56,8 +62,6 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.facebookEventUrl": t("editor.facebookEventUrl"),
     "event.featured": t("editor.featured"),
     "event.isSpecial": t("editor.special"),
-    "event.coHosts[].name": `${t("editor.coHostSection")}: ${t("editor.coHostName")}`,
-    "event.coHosts[].url": `${t("editor.coHostSection")}: ${t("editor.coHostUrl")}`,
     "event.schedule[].date": `${t("editor.programmeSection")}: ${t("editor.programmeRows.date")}`,
     "event.schedule[].time": `${t("editor.programmeSection")}: ${t("editor.programmeRows.time")}`,
     "event.schedule[].endTime": `${t("editor.programmeSection")}: ${t("editor.programmeRows.endTime")}`,
@@ -91,6 +95,41 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     labels[`event.links[${index}].kind`] = t("editor.linkRows.kindError", { n });
     labels[`event.links[${index}].labelRo`] = t("editor.linkRows.labelRoError", { n, max: MAX_EVENT_LINK_LABEL });
     labels[`event.links[${index}].labelEn`] = t("editor.linkRows.labelEnError", { n, max: MAX_EVENT_LINK_LABEL });
+  }
+
+  /*
+    The partners (§168) and their links (§344), named **by card and by row** — "Partenerul 2,
+    linkul 3: adresa trebuie să înceapă cu https://" — the same reasoning the plain links above
+    follow, one level deeper: a link is wrong on one partner's one row, and naming only "Parteneri"
+    would leave an organizer with eight cards to search. The unindexed entries are the fallback
+    for a name past either ceiling; `ActionForm` tries the exact name first.
+  */
+  labels["event.coHosts"] = t("editor.coHostRows.tooMany", { max: MAX_CO_HOSTS });
+  labels["event.coHosts[].name"] = `${t("editor.coHostSection")}: ${t("editor.coHostRows.name")}`;
+  labels["event.coHosts[].links"] = t("editor.coHostRows.tooManyLinksGeneric", { max: MAX_CO_HOST_LINKS });
+  labels["event.coHosts[].links[].kind"] = `${t("editor.coHostSection")}: ${t("editor.coHostRows.kind")}`;
+  labels["event.coHosts[].links[].url"] = `${t("editor.coHostSection")}: ${t("editor.coHostRows.url")}`;
+  labels["event.coHosts[].links[].labelRo"] = `${t("editor.coHostSection")}: ${t("editor.coHostRows.labelRo")}`;
+  labels["event.coHosts[].links[].labelEn"] = `${t("editor.coHostSection")}: ${t("editor.coHostRows.labelEn")}`;
+  for (let p = 0; p < MAX_CO_HOSTS; p += 1) {
+    const partnerNumber = p + 1;
+    labels[`event.coHosts[${p}].name`] = t("editor.coHostRows.nameError", { p: partnerNumber });
+    labels[`event.coHosts[${p}].links`] = t("editor.coHostRows.tooManyLinks", { p: partnerNumber, max: MAX_CO_HOST_LINKS });
+    for (let l = 0; l < MAX_CO_HOST_LINKS; l += 1) {
+      const linkNumber = l + 1;
+      labels[`event.coHosts[${p}].links[${l}].kind`] = t("editor.coHostRows.kindError", { p: partnerNumber, l: linkNumber });
+      labels[`event.coHosts[${p}].links[${l}].url`] = t("editor.coHostRows.urlError", { p: partnerNumber, l: linkNumber });
+      labels[`event.coHosts[${p}].links[${l}].labelRo`] = t("editor.coHostRows.labelRoError", {
+        p: partnerNumber,
+        l: linkNumber,
+        max: MAX_CO_HOST_LINK_LABEL,
+      });
+      labels[`event.coHosts[${p}].links[${l}].labelEn`] = t("editor.coHostRows.labelEnError", {
+        p: partnerNumber,
+        l: linkNumber,
+        max: MAX_CO_HOST_LINK_LABEL,
+      });
+    }
   }
 
   // Every language's boxes, named with the language first, as the publication alert does.

@@ -15,6 +15,7 @@ import SignalCellularAlt2BarIcon from "@mui/icons-material/SignalCellularAlt2Bar
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
 import TerrainIcon from "@mui/icons-material/Terrain";
+import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
@@ -36,7 +37,7 @@ export type Glyph = ComponentType<SvgIconProps>;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
  * mixed the fork in the path; difficulty is one, two or three bars — the shape a phone's
  * signal uses for "how much", which needs no legend; cost is a coin, crossed out when there is
- * none.
+ * none, or a hand holding a heart for a donation — the platform takes none of the three itself.
  */
 export const TYPE_GLYPH: Record<EventType, Glyph> = {
   GROUP_RUN: DirectionsRunIcon,
@@ -60,9 +61,10 @@ export const DIFFICULTY_GLYPH: Record<"EASY" | "MODERATE" | "HARD", Glyph> = {
   HARD: SignalCellularAltIcon,
 };
 
-export const COST_GLYPH: Record<"FREE" | "PAID", Glyph> = {
+export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
   FREE: MoneyOffIcon,
   PAID: PaidIcon,
+  DONATION: VolunteerActivismIcon,
 };
 
 /**

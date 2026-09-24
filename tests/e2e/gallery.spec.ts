@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { signIn } from "./support/featured-event";
+import { fillDateField, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-054-01 — an album from the backoffice to the public site, through the browser.
@@ -23,7 +23,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await page.goto("/ro/admin/gallery/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
-    await field("takenOn").fill("2026-09-13");
+    await fillDateField(page, "Data fotografiilor", "2026-09-13");
     await field("translations.ro.title").fill(`Alergarea de duminică ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await field("translations.ro.description").fill("Pozele de la start.");

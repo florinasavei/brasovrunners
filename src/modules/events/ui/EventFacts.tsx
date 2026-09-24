@@ -11,10 +11,12 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import SocialIcon from "@/shared/ui/SocialIcon";
-import { readCoHosts } from "../domain/co-hosts";
+import { coHostLinkHost, coHostLinkLabel, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
+import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
+import CoHostLinkGlyph from "./co-host-glyphs";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 
 /**
@@ -63,6 +65,7 @@ export default async function EventFacts({
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
+  const locale = (await getLocale()) as "ro" | "en";
   const compact = variant === "compact";
 
   const distance = distanceInKm(event.distanceMeters);
@@ -97,7 +100,7 @@ export default async function EventFacts({
   );
 
   // A word with its glyph in front, for the closed sets (§112); the word is what is read.
-  const withGlyph = (Icon: Glyph, word: string) => (
+  const withGlyph = (Icon: Glyph, word: ReactNode) => (
     <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
       <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
       {word}
@@ -139,7 +142,40 @@ export default async function EventFacts({
   if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
   // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
   if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
-  if (event.costType) route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+  /*
+    The cost (§343): the card keeps the closed set's short word, exactly as before — a coin, a
+    hand holding a heart, "Cu taxă", "Donație". The full page says more, the way the meeting
+    point becomes its own map link: a paid event's amount, with "plata pe {host}" as a second,
+    separate link when the club gave one; a donation's whole phrase is the link to give at,
+    with the suggested amount after it when the club stated one. Never a raw URL, only the host
+    a runner recognises (`costUrlHost`), the same rule "Linkuri și fișiere" follows (§332).
+  */
+  if (event.costType === "PAID" && compact) {
+    route.push(withGlyph(COST_GLYPH.PAID, t("costValues.PAID")));
+  } else if (event.costType === "PAID") {
+    route.push(withGlyph(COST_GLYPH.PAID, event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID")));
+    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+    if (event.costUrl && host) {
+      route.push(links ? outLink(event.costUrl, t("costPaidWhere", { host })) : t("costPaidWhere", { host }));
+    }
+  } else if (event.costType === "DONATION" && compact) {
+    route.push(withGlyph(COST_GLYPH.DONATION, t("costValues.DONATION")));
+  } else if (event.costType === "DONATION") {
+    const host = event.costUrl ? costUrlHost(event.costUrl) : null;
+    route.push(
+      withGlyph(
+        COST_GLYPH.DONATION,
+        event.costUrl && host
+          ? links
+            ? outLink(event.costUrl, t("costDonation", { host }))
+            : t("costDonation", { host })
+          : t("costValues.DONATION"),
+      ),
+    );
+    if (event.costAmount) route.push(t("costDonationSuggested", { amount: event.costAmount }));
+  } else if (event.costType) {
+    route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
+  }
   if (!compact && links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
   if (!compact && links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
   // The Facebook event (§144): where the club's people say "going".
@@ -148,22 +184,73 @@ export default async function EventFacts({
   /**
    * The organizations the event is held with (§168), as one sentence: "Împreună cu A, B și C",
    * joined the way the reader's language joins a list — `format.list`, never a hand-rolled
-   * comma and an "and". Each partner that has a page is its own link inside that sentence,
-   * which is why the joined elements are built rather than a joined string, except where the
-   * facts may carry no links at all (a card that is itself one link).
+   * comma and an "and". A partner may carry any number of links now (§344), and a sentence has
+   * room for one, so each name is its own link to the partner's own site — its first link if it
+   * named no site — except where the facts may carry no links at all (a card that is itself one
+   * link). The compact card and the listing's featured hero keep this sentence exactly (§169);
+   * only the event page's stacked facts do not, below.
    */
   const coHosts = readCoHosts(event);
   const coHostNames = coHosts.map((host) => host.name);
+  const coHostPrimaryLinks = coHosts.map((host) => primaryCoHostLink(host));
   const coHostSentence = () => {
-    if (!links || coHosts.every((host) => host.url === null)) return format.list(coHostNames);
+    if (!links || coHostPrimaryLinks.every((link) => link === null)) return format.list(coHostNames);
     return (
       <>
         {format.list(
-          coHosts.map((host, index) => (
-            <Fragment key={index}>{host.url ? outLink(host.url, host.name) : host.name}</Fragment>
-          )),
+          coHosts.map((host, index) => {
+            const primary = coHostPrimaryLinks[index];
+            return <Fragment key={index}>{primary ? outLink(primary.url, host.name) : host.name}</Fragment>;
+          }),
         )}
       </>
+    );
+  };
+
+  /**
+   * One partner, in full, for the page's own "Împreună cu" (§344; the owner: "this can have
+   * multiple links, so it should be a card, it's like: partner link, partner event, etc"): its
+   * name, then every link it carries as its own compact row — the kind's glyph, the club's own
+   * label or the kind's word, and the host in small text underneath, the same reading
+   * `EventLinks` gives "Linkuri și fișiere" (§332). A partner with no links is just its name.
+   *
+   * Plain `<span>`s throughout, never a `<ul>`: this sits inside `pieces()`'s bare `<span>` when
+   * there is only one partner, and a list has no business nested in an inline element. `links`
+   * gates it exactly as it gates every other link on this component — false inside a card that
+   * is itself one link (`EventCard`), where this is never called at all.
+   */
+  const partnerFacts = (host: (typeof coHosts)[number]) => {
+    if (host.links.length === 0) return <>{host.name}</>;
+    return (
+      <Box component="span" sx={{ display: "inline-flex", flexDirection: "column", rowGap: 0.5, verticalAlign: "top" }}>
+        <Box component="span">{host.name}</Box>
+        <Box component="span" sx={{ display: "flex", flexDirection: "column", rowGap: 0.5 }}>
+          {host.links.map((link, index) => {
+            const linkDomain = coHostLinkHost(link.url);
+            return (
+              <Link
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+              >
+                <CoHostLinkGlyph kind={link.kind} size={18} />
+                <Box component="span" sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                  <Box component="span" sx={{ overflowWrap: "anywhere" }}>
+                    {coHostLinkLabel(link, locale) ?? t(`coHostLinks.kinds.${link.kind}`)}
+                  </Box>
+                  {linkDomain && (
+                    <Typography component="span" variant="caption" color="text.secondary" sx={{ overflowWrap: "anywhere", lineHeight: 1.3 }}>
+                      {linkDomain}
+                    </Typography>
+                  )}
+                </Box>
+              </Link>
+            );
+          })}
+        </Box>
+      </Box>
     );
   };
 
@@ -275,11 +362,24 @@ export default async function EventFacts({
     { label: t("when"), icon: CalendarMonthIcon, value: when },
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
-  // Held with other organizations (§121, §168): "A, B și C", each a link to its own page.
-  // One piece, not one per partner: the list is a sentence, and a bullet before each name
-  // would read as three separate facts rather than as who the event is held with.
+  // Held with other organizations (§121, §168). On the event page (`stacked`), each its own card
+  // of links now (§344 partners with many links; the owner: "it should be a card, it's like:
+  // partner link, partner event, etc"): one piece per partner, so two or more partners read as
+  // their own rows — the bullets `stack()` already draws for any line with more than one piece —
+  // each carrying every link it has, not the one a joined sentence could fit.
+  //
+  // Everywhere else the plain sentence (`coHostSentence`, above), exactly as the listing card
+  // says it: the featured hero on the listing is a summary above the fold like the cards, and a
+  // column of every partner's links there would push the button the hero exists for below the
+  // screen — the same reason the hero's facts are not `stacked` in the first place.
   if (coHosts.length > 0) {
-    lines.push({ label: t("coHost"), icon: HandshakeIcon, value: [coHostSentence()] });
+    lines.push({
+      label: t("coHost"),
+      icon: HandshakeIcon,
+      value: stacked
+        ? coHosts.map((host, index) => <Fragment key={index}>{links ? partnerFacts(host) : host.name}</Fragment>)
+        : [coHostSentence()],
+    });
   }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
   /*
@@ -291,7 +391,6 @@ export default async function EventFacts({
   */
   if (stacked && hasAgeRule(event)) {
     const rt = await getTranslations("Registration");
-    const locale = await getLocale();
     lines.push({
       label: t("age"),
       icon: CakeIcon,

@@ -109,6 +109,12 @@ describe("the event form's names", () => {
     expect(eventFormFieldName("raceStartsAt")).toBe("event.raceStartsAtDate");
     expect(eventFormFieldName("scheduleRows.2.time")).toBe("event.schedule[2].time");
     expect(eventFormFieldName("coHosts.0.url")).toBe("event.coHosts[0].url");
+    // A partner's link, by both indices — the more specific shape, checked first.
+    expect(eventFormFieldName("coHosts.1.links.2.url")).toBe("event.coHosts[1].links[2].url");
+    // A partner's own link list — "too many links on this card".
+    expect(eventFormFieldName("coHosts.0.links")).toBe("event.coHosts[0].links");
+    // The whole list of partners — "too many partners on this event".
+    expect(eventFormFieldName("coHosts")).toBe("event.coHosts");
   });
 
   it("passes the create form's repeat rule through, and points the plain summary at the rich box", () => {
