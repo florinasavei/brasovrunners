@@ -126,7 +126,8 @@ export const dynamic = "force-dynamic";
  * **Once people have registered** (real ones: a test row is counted nowhere the club looks,
  * §12.6), the five boxes whose change reaches them — date, place, programme, registration, and
  * the status card inside "Ce fel de eveniment" — are amber, wear the count, and say in one line
- * what a change does.
+ * what a change does. "Ce fel de eveniment" is amber and wears the count too, closed, because the
+ * status card is inside it (§NNN); the sentence stays in the card.
  *
  * The interface hides what a role may not do, and that is a courtesy rather than the rule — every
  * button here is checked again in the action behind it (BR-REQ-060-01). A role that may not read
@@ -608,7 +609,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <EditorGroup label={t("editor.groups.event")} />
                   {/* 1 — the type, and inside it the three cards about the event itself (§NNN):
                       1.1 the status, 1.2 the course, 1.3 the links and files. */}
-                  <KindBox {...box} registered={realCount} locale={locale}>
+                  <KindBox {...box} risk={risk} registered={realCount} locale={locale}>
                     <StatusBox {...box} risk={risk} notice={notice} />
                     <CourseBox {...box} />
                     <LinksBox {...box} locale={locale} />

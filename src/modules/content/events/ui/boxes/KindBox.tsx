@@ -27,10 +27,18 @@ import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
  * editor, where the closed line is the top of the fact sheet: the type, the status, the course in
  * two or three words and the number of links (`kindSummary`). With people registered, choosing
  * "Alergare de grup" says in amber what happens to them — a warning, never a lock.
+ *
+ * **With people registered, the box itself is amber and wears the count** (§350), because the
+ * status card inside it is one of the five whose change reaches them, and a closed box has to say
+ * so without being opened. The sentence about what a change does stays in the card it is about.
+ *
+ * A role that may only read the settings is told so once, here, in place of the type; the three
+ * cards are then their headings and their lines, with nothing to open.
  */
 export default async function KindBox({
   event,
   mayEditSettings,
+  risk,
   registered = 0,
   locale,
   children,
@@ -62,7 +70,15 @@ export default async function KindBox({
   );
 
   return (
-    <Panel collapsible id="box-kind" title={t("editor.boxes.kind.title")} aside={aside} openWhen={{ attention: event === null }}>
+    <Panel
+      collapsible
+      id="box-kind"
+      title={t("editor.boxes.kind.title")}
+      aside={aside}
+      openWhen={{ attention: event === null }}
+      tone={risk ? "risk" : "default"}
+      badge={risk?.chip}
+    >
       <Stack spacing={2}>
         {mayEditSettings ? (
           <Stack spacing={1.5}>
@@ -96,8 +112,8 @@ export default async function KindBox({
         ) : (
           <SettingsReadOnly />
         )}
-        {/* 1.1–1.3 — each a named card with its own closed line; each says for itself when the
-            reader may only read it. */}
+        {/* 1.1–1.3 — each a named card with its own closed line; for a reader who may only read
+            them, the line alone, under the one sentence above. */}
         {children}
       </Stack>
     </Panel>

@@ -83,10 +83,14 @@ describe("the create page is the editor's page", () => {
 
   it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
     expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    // The card is there, so the two pages look the same (§NNN) — handed no notice, it is read-only.
+    // The card is there, so the two pages look the same (§NNN) — handed no event, it is read-only.
     expect(CREATE).toContain("<StatusBox {...box} />");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
-    const createBranch = status.slice(at(status, "event === null || !notice ? ("), at(status, "<RecallField"));
+    // Keyed on the create page alone: a saved event always comes with its notice, by type, so it
+    // can never fall into the read-only "Programat" that posts nothing.
+    expect(status).toContain("{ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice }");
+    expect(status).not.toContain("!notice");
+    const createBranch = status.slice(at(status, "if (event === null) {"), at(status, "<RecallField"));
     expect(createBranch).toContain('data-testid="status-on-create"');
     expect(createBranch).toContain("disabled");
     expect(createBranch).not.toContain("name=");

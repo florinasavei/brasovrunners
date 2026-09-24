@@ -6,10 +6,21 @@ import { EVENT_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels
 import RecallField from "@/shared/forms/recall";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
+import type { EditableEvent } from "../../repository";
 import { EventCancelFields, type EventNoticeLabels } from "../EventNoticeFields";
-import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly } from "./box-kit";
+import { BoxNote, type BoxProps, RiskLine } from "./box-kit";
 
 const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
+
+/** The cancellation's words and counts (§331). */
+type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength: number };
+
+/**
+ * The create page hands no event and no notice; the editor hands both, always — the type says so,
+ * so a saved event (possibly cancelled) can never fall into the create page's read-only
+ * "Programat", which posts nothing.
+ */
+type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
  * Card 1.1, "Starea evenimentului" (§350, §NNN) — the first card inside "Ce fel de eveniment", on
@@ -24,63 +35,62 @@ const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
  * an event that was not cancelled, the cancellation's reason and its "tell them" appear under the
  * select (§331) — they read the select by name. With people registered the card is amber and says
  * what a cancellation does to them.
+ *
+ * For a role that may only read the settings, the card is its heading and its line — the status,
+ * and the amber count when people are registered — and nothing to open: the first box says once
+ * that the settings are not theirs (§NNN).
  */
-export default async function StatusBox({
-  event,
-  mayEditSettings,
-  risk,
-  notice,
-}: BoxProps & {
-  /** The cancellation's words and counts (§331); the editor's only — create has nobody to tell. */
-  notice?: { labels: EventNoticeLabels; offerNotice: boolean; maxLength: number };
-}) {
+export default async function StatusBox({ event, mayEditSettings, risk, notice }: StatusBoxProps) {
   const t = await getTranslations("Admin");
-  const status = event?.eventStatus ?? "SCHEDULED";
-  return (
-    <Panel
-      collapsible
-      level={3}
-      id="box-status"
-      title={t("editor.boxes.status.title")}
-      aside={EVENT_STATUS_LABEL[status]}
-      tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
-    >
-      {risk && <RiskLine>{t("editor.risk.status", { count: risk.count })}</RiskLine>}
-      {!mayEditSettings ? (
-        <SettingsReadOnly />
-      ) : event === null || !notice ? (
+  const card = {
+    level: 3,
+    id: "box-status",
+    title: t("editor.boxes.status.title"),
+    aside: EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"],
+    tone: risk ? "risk" : "default",
+    badge: risk?.chip,
+  } as const;
+  if (!mayEditSettings) return <Panel {...card} />;
+
+  if (event === null) {
+    return (
+      <Panel collapsible {...card}>
         <Stack spacing={1} data-testid="status-on-create">
           {/* No name: the page's hidden `event.eventStatus` is what posts. */}
           <TextField label={t("editor.eventStatus")} defaultValue={EVENT_STATUS_LABEL.SCHEDULED} disabled sx={{ maxWidth: 320 }} />
           <BoxNote>{t("editor.boxes.status.createNote")}</BoxNote>
         </Stack>
-      ) : (
-        <Stack spacing={2}>
-          <RecallField
-            select
-            name="event.eventStatus"
-            label={t("editor.eventStatus")}
-            defaultValue={event.eventStatus}
-            required={eventInputConstraints("eventStatus").required}
-            sx={{ maxWidth: 320 }}
-          >
-            {EVENT_STATUSES.map((value) => (
-              <MenuItem key={value} value={value}>
-                {EVENT_STATUS_LABEL[value]}
-              </MenuItem>
-            ))}
-          </RecallField>
-          <EventCancelFields
-            statusSelectName="event.eventStatus"
-            initialStatus={event.eventStatus}
-            wasCancelled={event.eventStatus === "CANCELLED"}
-            offerNotice={notice.offerNotice}
-            maxLength={notice.maxLength}
-            labels={notice.labels}
-          />
-        </Stack>
-      )}
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel collapsible {...card}>
+      {risk && <RiskLine>{t("editor.risk.status", { count: risk.count })}</RiskLine>}
+      <Stack spacing={2}>
+        <RecallField
+          select
+          name="event.eventStatus"
+          label={t("editor.eventStatus")}
+          defaultValue={event.eventStatus}
+          required={eventInputConstraints("eventStatus").required}
+          sx={{ maxWidth: 320 }}
+        >
+          {EVENT_STATUSES.map((value) => (
+            <MenuItem key={value} value={value}>
+              {EVENT_STATUS_LABEL[value]}
+            </MenuItem>
+          ))}
+        </RecallField>
+        <EventCancelFields
+          statusSelectName="event.eventStatus"
+          initialStatus={event.eventStatus}
+          wasCancelled={event.eventStatus === "CANCELLED"}
+          offerNotice={notice.offerNotice}
+          maxLength={notice.maxLength}
+          labels={notice.labels}
+        />
+      </Stack>
     </Panel>
   );
 }

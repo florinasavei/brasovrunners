@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EditableEvent } from "@/modules/content/events/repository";
+import type { RiskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import type { FoldNode } from "@/shared/ui/fold";
 
 /**
@@ -32,6 +33,18 @@ vi.mock("next-intl/server", async () => {
       createTranslator({ locale: currentLocale, messages: currentLocale === "ro" ? ro : en, namespace: namespace as "Admin" }),
     getLocale: async () => currentLocale,
   };
+});
+
+/*
+  "Setările le schimbă…" is an async Server Component, drawn inside the first box, and a string
+  renderer cannot wait for one nested in a tree; the same words, drawn synchronously, and counted
+  the same.
+*/
+vi.mock("@/modules/content/events/ui/boxes/box-kit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/content/events/ui/boxes/box-kit")>();
+  const { createElement } = await import("react");
+  const ro = (await import("../../../messages/ro.json")).default;
+  return { ...actual, SettingsReadOnly: () => createElement("p", null, ro.Admin.editor.boxes.settingsReadOnly) };
 });
 
 const { default: KindBox } = await import("@/modules/content/events/ui/boxes/KindBox");
@@ -63,9 +76,15 @@ const EVENT = {
   routeUrl: "https://routes.example.test/tampa",
   stravaEventUrl: STRAVA,
   facebookEventUrl: null,
-  links: [{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: null }],
+  links: [{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: "The route" }],
   timezone: "Europe/Bucharest",
 } as unknown as EditableEvent;
+
+/** The same event with its link's label in Romanian only — what the next save refuses (§354). */
+const ONE_LANGUAGE_LABEL = { ...EVENT, links: [{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: null }] } as unknown as EditableEvent;
+
+/** "23 înscriși": the mark a box that reaches people wears (§350). */
+const RISK: RiskMark = { count: 23, chip: "23 înscriși" };
 
 const NOTICE = {
   labels: {
@@ -79,23 +98,35 @@ const NOTICE = {
     cancelReasonHelp: "",
     cancelNotify: "Anunță-i",
     cancelNotifyHelp: "",
+    languageRo: "Română",
+    languageEn: "English",
+    identical: "",
   },
   offerNotice: true,
   maxLength: 500,
 };
 
-/** The first box with its three cards, exactly as a page hands them in, rendered to HTML. */
-async function firstBox(event: EditableEvent | null, locale: "ro" | "en" = "ro"): Promise<string> {
+type BoxOptions = { locale?: "ro" | "en"; mayEditSettings?: boolean; risk?: RiskMark | null };
+
+/**
+ * The first box with its three cards, exactly as a page hands them in, rendered to HTML: the
+ * editor hands the status card its notice and the first box and the status card the risk mark;
+ * the create page hands neither.
+ */
+async function firstBox(event: EditableEvent | null, { locale = "ro", mayEditSettings = true, risk = null }: BoxOptions = {}): Promise<string> {
   currentLocale = locale;
-  const box = { event, mayEditSettings: true } as const;
+  const box = { event, mayEditSettings } as const;
   const cards: ReactNode[] = [
-    event ? await StatusBox({ ...box, notice: NOTICE }) : await StatusBox(box),
+    event ? await StatusBox({ event, mayEditSettings, risk, notice: NOTICE }) : await StatusBox({ event: null, mayEditSettings }),
     await CourseBox(box),
     await LinksBox({ ...box, locale }),
   ];
-  const element = (await KindBox({ ...box, locale, children: cards })) as ReactElement;
+  const element = (await KindBox({ ...box, risk, locale, children: cards })) as ReactElement;
   return markup(renderToStaticMarkup(element));
 }
+
+/** The first box's own summary: everything before the first card, which a closed box shows. */
+const kindSummaryOf = (html: string): string => html.slice(0, html.indexOf("</summary>"));
 
 /** Every `<details …>` opening tag, in document order. */
 const foldTags = (html: string): string[] => html.match(/<details[^>]*>/g) ?? [];
@@ -164,7 +195,7 @@ describe("§NNN the first box holds the status, the course and the links", () =>
   });
 
   it("says the same in English on the English backoffice", async () => {
-    const html = await firstBox(EVENT, "en");
+    const html = await firstBox(EVENT, { locale: "en" });
     expect(html).toContain("Group run · Programat · Asphalt · Easy · 10 km · 2 links");
     for (const name of ["Event status", "The course", "Links and files"]) expect(html).toMatch(new RegExp(`<h3[^>]*>${name}<span`));
   });
@@ -174,6 +205,65 @@ describe("§NNN the first box holds the status, the course and the links", () =>
     for (const name of ["event.eventStatus", "event.surface", "event.difficulty", "event.distanceMeters", "event.elevationGainMeters", "event.routeUrl", "event.stravaEventUrl", "event.facebookEventUrl", "event.links[0].url"]) {
       expect(html, name).toContain(`name="${name}"`);
     }
+  });
+
+  it("repeats the links card's «etichetă într-o singură limbă» on the box's line, seen with both folds shut (§354)", async () => {
+    expect(kindSummaryOf(await firstBox(EVENT))).not.toContain("etichetă într-o singură limbă");
+    const html = await firstBox(ONE_LANGUAGE_LABEL);
+    expect(kindSummaryOf(html)).toContain("Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri · etichetă într-o singură limbă");
+    // And on the card's own line, where §354 put it.
+    expect(html).toContain("Strava · 1 link (Traseul (GPX)) · etichetă într-o singură limbă");
+    expect(kindSummaryOf(await firstBox(ONE_LANGUAGE_LABEL, { locale: "en" }))).toContain("2 links · label in one language only");
+  });
+});
+
+describe("§NNN with people registered, the closed first box says so (§350)", () => {
+  it("wears the count on the box's own summary and on the status card, and on neither of the other cards", async () => {
+    const html = await firstBox(EVENT, { risk: RISK });
+    expect(kindSummaryOf(html)).toContain("23 înscriși");
+    const status = html.slice(html.indexOf('id="box-status"'), html.indexOf('id="box-course"'));
+    expect(status).toContain("23 înscriși");
+    expect(html.slice(html.indexOf('id="box-course"'))).not.toContain("23 înscriși");
+    // The sentence about what a change does stays in the card it is about: one risk line in all.
+    expect(html.match(/data-testid="risk-line"/g)).toHaveLength(1);
+    expect(status).toContain('data-testid="risk-line"');
+    // Amber, like the status card: the tone is a border, so it is read off the source.
+    const kind = read("src/modules/content/events/ui/boxes/KindBox.tsx");
+    expect(kind).toContain('tone={risk ? "risk" : "default"}');
+    expect(kind).toContain("badge={risk?.chip}");
+  });
+
+  it("wears nothing without real registrations, and nothing on the create page", async () => {
+    for (const html of [await firstBox(EVENT), await firstBox(null)]) {
+      expect(html).not.toContain("23 înscriși");
+      expect(html).not.toContain('data-testid="risk-line"');
+    }
+  });
+});
+
+describe("§NNN a role that may only read the settings is told once", () => {
+  it("says it once, in the box, and shows each card as its heading and its line, with nothing to open", async () => {
+    const html = await firstBox(EVENT, { mayEditSettings: false, risk: RISK });
+    expect(html.match(/Setările le schimbă un Organizator sau un Administrator\./g)).toHaveLength(1);
+    // The only fold is the box: each card is a section — its heading, its line, no toggle, no body.
+    expect(foldTags(html).map(idOf)).toEqual(["box-kind"]);
+    const cards = [
+      ["box-status", "Starea evenimentului", "Programat"],
+      ["box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · traseu"],
+      ["box-links", "Linkuri și fișiere", "Strava · 1 link (Traseul (GPX))"],
+    ] as const;
+    for (const [id, name, line] of cards) {
+      const section = html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)</section>`))?.[1] ?? "";
+      expect(section, id).toMatch(new RegExp(`^<h3[^>]*>${name}`));
+      expect(section, id).toContain(line);
+      // The heading is the whole card.
+      expect(section.replace(/<h3[\s\S]*<\/h3>/, ""), id).toBe("");
+    }
+    // The status card still wears the count, and so does the box; nothing is posted or offered.
+    expect(kindSummaryOf(html)).toContain("23 înscriși");
+    expect(html.slice(html.indexOf('id="box-status"'), html.indexOf('id="box-course"'))).toContain("23 înscriși");
+    expect(html).not.toMatch(/name="event\./);
+    expect(html).not.toContain('data-testid="risk-line"');
   });
 });
 
@@ -203,7 +293,7 @@ describe("§NNN the create page's first box looks the same", () => {
   });
 
   it("says so in English too", async () => {
-    const html = await firstBox(null, "en");
+    const html = await firstBox(null, { locale: "en" });
     expect(html).toContain("A new event starts as scheduled (Programat); its status can be changed once the event exists.");
     expect(html).toContain("Group run · Programat");
   });

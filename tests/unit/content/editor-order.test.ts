@@ -80,14 +80,17 @@ describe("§350 the editor's boxes, in order", () => {
       // Nothing else went in with them.
       expect(first.match(/<[A-Z]\w*Box\b/g), page).toEqual(["<KindBox", "<StatusBox", "<CourseBox", "<LinksBox"]);
     }
-    // Named level-3 cards with their own ids, so a deep link or a refusal still lands on them.
+    // Named level-3 cards with their own ids, so a deep link or a refusal still lands on them —
+    // a fold for whoever may change it, the same heading and id without the fold for a reader.
     for (const [file, id] of [
       ["StatusBox", "box-status"],
       ["CourseBox", "box-course"],
       ["LinksBox", "box-links"],
     ] as const) {
       const source = read(`src/modules/content/events/ui/boxes/${file}.tsx`);
-      expect(source, file).toMatch(new RegExp(`<Panel\\s+collapsible\\s+level=\\{3\\}\\s+id="${id}"`));
+      expect(source, file).toMatch(new RegExp(`level: 3,\\s+id: "${id}"`));
+      expect(source, file).toContain("<Panel collapsible {...card}>");
+      expect(source, file).toContain("if (!mayEditSettings) return <Panel {...card} />;");
     }
   });
 
@@ -132,8 +135,12 @@ describe("§350 the editor's boxes, in order", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
-    // The opening tag only: the first box holds the status card, which is marked on its own (§NNN).
-    for (const box of ["<KindBox", "<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
+    // The first box holds the status card, so it wears the mark too — closed, it is the only place
+    // the count can be seen (§350, §NNN). Its opening tag only: the cards inside are read above.
+    const kind = at(EDIT, "<KindBox");
+    expect(EDIT.slice(kind, EDIT.indexOf(">", kind) + 1)).toContain("risk={risk}");
+    // The course and the links sit in the same box and reach nobody; nor do the partners or the promotion.
+    for (const box of ["<CourseBox", "<LinksBox", "<CoHostsBox", "<PromotionBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }
