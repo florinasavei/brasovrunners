@@ -30,7 +30,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
 });
 vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
 vi.mock("@/infrastructure/email/sender", () => ({ createEmailSenderForEnvironment: () => ({ sender: {} }) }));
-vi.mock("@/modules/notifications/render", () => ({ renderOutboxMessage: async () => ({}) }));
+vi.mock("@/modules/notifications/render", () => ({ createOutboxRenderer: () => async () => ({}) }));
 vi.mock("@/modules/notifications/delivery-timing", () => ({ readDeliveryTiming: async () => ({ timing: state.timing }) }));
 vi.mock("@/modules/notifications/outbox", () => ({
   processOutboxBatch: async () => {

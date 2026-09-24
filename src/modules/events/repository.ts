@@ -425,7 +425,30 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
   eventId: string,
   locale: Locale,
 ) {
-  const rows = await db
+  return eventNotificationDetailsIn(await findEventNotificationRows(db, eventId), locale);
+}
+
+/** One language's row of `findEventNotificationRows`, or the first there is when it has none. */
+export function eventNotificationDetailsIn<R extends { locale: Locale }>(rows: readonly R[], locale: Locale) {
+  return rows.find((row) => row.locale === locale) ?? rows[0];
+}
+
+export type EventNotificationRow = Awaited<ReturnType<typeof findEventNotificationRows>>[number];
+
+/**
+ * Every language's row of what an email needs about one event, in one query — the same query
+ * `findEventNotificationDetails` always ran, which already read each translation and kept one.
+ *
+ * The send path keeps them all (§NNN, email follow-up): each half of the bilingual message reads
+ * its own language's title, "what to bring" and name for the place, so the English half of a
+ * Romanian registrant's message is English (`notifications/render.ts`, read once per event per
+ * batch).
+ */
+export async function findEventNotificationRows<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  eventId: string,
+) {
+  return db
     .select({
       locale: eventTranslations.locale,
       title: eventTranslations.title,
@@ -458,8 +481,6 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
     .where(eq(eventTranslations.eventId, eventId));
-
-  return rows.find((row) => row.locale === locale) ?? rows[0];
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */

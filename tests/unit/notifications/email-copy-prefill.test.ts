@@ -289,7 +289,8 @@ describe("§NNN what goes out is what went out before", () => {
     for (const value of ["The autumn cross", "EXAMPL", "42", "Water, a rain jacket, good spirits"]) expect(confirmed).toContain(value);
 
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
-    expect(page).toContain("const sample = emailSampleData(emailLocale);");
+    // Per message since the email follow-up (§NNN): the sample minus the fields the message never carries.
+    expect(page).toContain("const sample = emailSampleFor(messageType, emailLocale);");
     expect(page).toContain("renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy)");
     expect(page).toContain("shipped={emailCopyPrefill(messageType, emailLocale)}");
     expect(page).not.toMatch(/buildTemplateContent\(messageType, emailLocale, sample/);
@@ -434,8 +435,11 @@ describe("§NNN the save refuses a sample value", () => {
     });
   }
 
-  it("finds a value of several words whatever its case, and a single word only as itself", () => {
-    expect(emailSampleLiteralsIn("CROSUL DE TOAMNĂ vine.", "EVENT_REMINDER").map((literal) => literal.value)).toEqual(["Crosul de toamnă"]);
+  it("finds every value exactly as the sample writes it, and a single word only as itself", () => {
+    // Case-sensitive since the email follow-up (§NNN): the old starting text carried the value
+    // verbatim, and a case-blind match only added club prose (`email-sample-guard.test.ts`).
+    expect(emailSampleLiteralsIn("Crosul de toamnă vine.", "EVENT_REMINDER").map((literal) => literal.value)).toEqual(["Crosul de toamnă"]);
+    expect(emailSampleLiteralsIn("CROSUL DE TOAMNĂ vine.", "EVENT_REMINDER")).toEqual([]);
     // "for example", "EXAMPLE", "exemplu" are not the desk code.
     expect(emailSampleLiteralsIn("For example, EXAMPLE or exemplu.", "EVENT_REMINDER")).toEqual([]);
   });
@@ -475,7 +479,10 @@ describe("§NNN the save refuses a sample value", () => {
 });
 
 describe("§NNN \"Înlocuiește cu câmpurile\" rewrites a saved text to its fields", () => {
-  const STRUCTURAL = new Set<EmailMessageType>(["COMPLETE_DECLARATION", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "EVENT_THANKS"]);
+  // The thank-you's "results at the link below" is the one branch the sample takes and the starting
+  // text does not; the hold's deadline and the time of signing have a sample value since the email
+  // follow-up (§NNN), so the declaration's three messages come back as today's starting text too.
+  const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS"]);
 
   /** What the old editor handed a Redactor: the platform's words rendered with the page's sample. */
   function oldStartingText(messageType: EmailMessageType, locale: "ro" | "en") {
@@ -488,7 +495,7 @@ describe("§NNN \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
       it(`${messageType} (${locale}): the old starting text, saved as plain words and as the old editor's document, comes back with no sample value`, () => {
         const old = oldStartingText(messageType, locale);
         const prefill = emailCopyPrefill(messageType, locale);
-        const expected = EXPECTED[messageType].filter((name) => name !== "holdExpiresAtFormatted" && name !== "signedAtFormatted");
+        const expected = EXPECTED[messageType];
 
         // Plain paragraphs, as an entry written before §270 has them.
         const plain = replaceSampleValues(old, messageType, locale);
@@ -505,8 +512,8 @@ describe("§NNN \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
         expect(JSON.stringify(body)).not.toContain("**");
         expect(emailSchemaAccepts(messageType, locale, formatted)).toBe(true);
         // Where the old text was the platform's sentence for sentence, the result is today's starting
-        // text. Not where the old one took another branch: the hold's deadline and the time of signing,
-        // which the sample never had, and the thank-you's "results at the link below", which it did.
+        // text. Not where the old one took another branch: the thank-you's "results at the link
+        // below", which the sample has and the starting text does not (`STRUCTURAL`).
         if (!STRUCTURAL.has(messageType)) {
           expect(formatted.paragraphs).toEqual(prefill.paragraphs);
           expect(body.content).toHaveLength(prefill.paragraphs.length);

@@ -31,7 +31,7 @@ export function drainOutboxAfterResponse(): void {
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { renderOutboxMessage }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
+        const [{ processOutboxBatch }, { createOutboxRenderer }, { readDeliveryTiming }, { nextOutboxWork }] = await Promise.all([
           import("./outbox"),
           import("./render"),
           import("./delivery-timing"),
@@ -61,7 +61,8 @@ export function drainOutboxAfterResponse(): void {
         }
 
         const { sender } = createEmailSenderForEnvironment(env);
-        await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: new Date() });
+        // One renderer per batch: each event's words are read once for it (§NNN, email follow-up).
+        await processOutboxBatch(db, { sender, render: createOutboxRenderer(), now: new Date() });
         /*
           Whatever the drain could not send — a retry after a transient failure, a row deferred to
           the allowance reset, a batch longer than twenty — is the outbox job's again, and the job

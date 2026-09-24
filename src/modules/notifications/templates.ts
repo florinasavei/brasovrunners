@@ -261,6 +261,14 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+    /*
+      The event's own words in the second half's language (§NNN, email follow-up): its title — in
+      the second subject too, and in a `{eventTitle}` of the club's words for that language — and
+      what to bring, or nothing when that language has none. Absent when the event has no text in
+      the other language: both halves read the row's, as before.
+    */
+    ...(data.eventTitleOther ? { eventTitle: data.eventTitleOther } : {}),
+    ...(data.eventChecklistOther !== undefined ? { eventChecklist: data.eventChecklistOther ?? undefined } : {}),
   };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
   const a = renderContent(first, locale);
@@ -293,10 +301,13 @@ export type TemplateData = {
    */
   bibProvisional?: boolean;
   eventTitle?: string;
+  /** The event's title in the other language, for the bilingual message's second half (§NNN, email follow-up). */
+  eventTitleOther?: string;
   eventLocationName?: string;
   /**
-   * The place in the other language's words, for the bilingual message's second half — set only
-   * while the place is to be announced (§328), when the "place" is a sentence and not a name.
+   * The place in the other language's words, for the bilingual message's second half: that
+   * language's own name for it (§NNN, email follow-up), or while the place is to be announced
+   * (§328) the sentence that says so. Absent: the second half reads `eventLocationName`.
    */
   eventLocationNameOther?: string;
   eventStartsAtFormatted?: string;
@@ -315,6 +326,12 @@ export type TemplateData = {
   eventStravaEventUrl?: string;
   /** "What to bring", the translation's one line (§81). */
   eventChecklist?: string;
+  /**
+   * The same line in the other language, for the second half (§NNN, email follow-up); `null` when
+   * that language has none, and the second half then says nothing rather than the first half's
+   * words. Absent when the other language was not read — both halves read `eventChecklist`.
+   */
+  eventChecklistOther?: string | null;
   /** Set when the club has a reply address: the footer says to use it. */
   replyTo?: string;
   /** The thank-you's optional link — results, photos (§82). Carried in the payload, not a token. */

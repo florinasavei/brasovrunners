@@ -10,7 +10,13 @@ import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeText } from "@/modules/events/domain/event-changes";
 import { readEventLinks } from "@/modules/events/domain/links";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
+import {
+  type EventNotificationRow,
+  eventNotificationDetailsIn,
+  findEventNotificationRows,
+  findEventStartsAt,
+  findPublishedEventBySlug,
+} from "@/modules/events/repository";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
@@ -76,7 +82,53 @@ const ROUTE_BY_PURPOSE: Record<
 /** A sensible default when the triggering registration has no deadline of its own to borrow. */
 const DEFAULT_TOKEN_HOURS = 14 * 24;
 
-export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now) => {
+type RendererDb = Parameters<EmailRenderer>[1];
+
+/** Every language's row of what a message needs about one event (`findEventNotificationRows`). */
+export type EventRowsReader = (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>;
+
+/**
+ * The renderer for one batch of the outbox (§NNN, email follow-up): `renderOutboxMessage`, with
+ * each event's texts read once for the whole batch rather than once per message.
+ *
+ * Both halves of a message need the event's words — the registration's language first, the other
+ * language after the rule (§96) — and one query already brings every language's row
+ * (`findEventNotificationRows`). A batch of twenty reminders for one race is then one read, not
+ * twenty, and not the forty a second read per half would have been. Everything else stays per
+ * message: the registration, the participant and the token are the row's own.
+ *
+ * One renderer per `processOutboxBatch` call, never a module-level memo: the event's words are
+ * read at send time (§331 — nothing an event held before a save reaches a runner), and a batch
+ * lasts seconds, so the reads a batch shares are as fresh as the batch. A read that fails is not
+ * remembered — the next row of the batch asks again — because a failed render is final
+ * (`AGENTS.md` §16.1, `processOutboxBatch`).
+ *
+ * `readEventRows` is the seam a test counts reads through; the send path passes nothing.
+ */
+export function createOutboxRenderer(options: { readEventRows?: EventRowsReader } = {}): EmailRenderer {
+  const read: EventRowsReader = options.readEventRows ?? ((db, eventId) => findEventNotificationRows(db, eventId));
+  const byEvent = new Map<string, Promise<readonly EventNotificationRow[]>>();
+  const eventRows = (db: RendererDb, eventId: string) => {
+    let rows = byEvent.get(eventId);
+    if (!rows) {
+      rows = read(db, eventId);
+      rows.catch(() => byEvent.delete(eventId));
+      byEvent.set(eventId, rows);
+    }
+    return rows;
+  };
+  return (row, db, now) => renderRow(row, db, now, eventRows);
+}
+
+/** One message on its own — a renderer whose batch is this one row (tests, one-off callers). */
+export const renderOutboxMessage: EmailRenderer = (row, db, now) => createOutboxRenderer()(row, db, now);
+
+async function renderRow(
+  row: OutboxRow,
+  db: RendererDb,
+  now: Date,
+  eventRows: (db: RendererDb, eventId: string) => Promise<readonly EventNotificationRow[]>,
+): Promise<OutgoingEmail> {
   const locale = row.locale as Locale;
 
   /*
@@ -107,7 +159,15 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // nobody's registration (§146), from the payload's id, so a renamed event renders right.
   const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
-  const eventDetails = eventId ? await findEventNotificationDetails(db, eventId, locale) : undefined;
+  // Every language's texts of the event, from the batch's one read of it (`createOutboxRenderer`).
+  const eventTexts = eventId ? await eventRows(db, eventId) : [];
+  const eventDetails = eventId ? eventNotificationDetailsIn(eventTexts, locale) : undefined;
+  /*
+    The other language's own row, for the second half (§NNN, email follow-up). None when the event
+    has no text in that language — then the row this message reads may itself be the other
+    language's (the fallback above), and both halves read it, as every message did before.
+  */
+  const otherDetails = eventTexts.find((candidate) => candidate.locale === otherLocale(locale) && candidate !== eventDetails);
   // The place is not announced yet (§328): the query has withheld the place and the map, and the
   // facts line — and a `{eventLocationName}` in the club's own copy — says so in the page's words,
   // each half of the bilingual message in its own language.
@@ -146,6 +206,20 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
     contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
+  /*
+    The second half in its own language's words (§NNN, email follow-up; the owner: "multi-lingual,
+    always"). The title, "what to bring" and the place's name are the translation's, so the English
+    half of a Romanian registrant's message read the Romanian checklist until now. The other
+    language's own values, and nothing else: a checklist written in one language only is said in
+    that language's half and left out of the other (`null`), never repeated in the wrong language.
+    A place to be announced is the sentence above, in each half's own words (§328); a place with no
+    name in the other language keeps the row's.
+  */
+  if (otherDetails) {
+    data.eventTitleOther = otherDetails.title;
+    data.eventChecklistOther = otherDetails.checklist ?? null;
+    if (!placeLater && otherDetails.locationName) data.eventLocationNameOther = otherDetails.locationName;
+  }
   // The subject's "[Copie club]" and the line that says the personal links were taken out.
   if (clubCopy) data.clubCopy = true;
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
@@ -436,7 +510,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     cc: addresses(payload.cc),
     bcc: addresses(payload.bcc),
   });
-};
+}
 
 /**
  * "duminică, 11 oct. 2026, 09:00" / "Sunday, 11 Oct 2026, 09:00", in the event's zone (§349).
