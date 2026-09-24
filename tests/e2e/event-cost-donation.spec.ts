@@ -78,12 +78,16 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     const editorUrl = page.url();
 
     await page.goto(`/ro/evenimente/${slug}`);
-    const cost = page.locator("dd").filter({ hasText: "Donație" });
+    // The cost is its own row since §NNN: a «Donație» pill under «Cost», then where to give.
+    const cost = page.locator("dt", { hasText: /^Cost$/ }).locator("xpath=following-sibling::dd[1]");
     await expect(cost).toBeVisible();
-    const link = cost.getByRole("link", { name: /Donație: pe donate\.example\.test/ });
+    await expect(cost.locator(".MuiChip-root")).toHaveText("Donație");
+    const link = cost.getByRole("link", { name: /Donează pe donate\.example\.test/ });
     await expect(link).toHaveAttribute("href", DONATION_LINK);
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", /noopener/);
+    // A thumb's 44 pixels, on the phone and the desktop alike (BR-REQ-041-01 criterion 6).
+    expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(cost).toContainText("sugerat 50 lei");
     // The platform takes no money itself — the club's own words say so on the editor, and the
     // page never claims a price it cannot honour: no raw currency amount is invented for JSON-LD.
@@ -94,7 +98,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
 
     // The English page says it in English, from the same row.
     await page.goto(`/en/events/${englishSlug}`);
-    await expect(page.getByRole("link", { name: /Donation: on donate\.example\.test/ })).toHaveAttribute("href", DONATION_LINK);
+    await expect(page.getByRole("link", { name: /Donate on donate\.example\.test/ })).toHaveAttribute("href", DONATION_LINK);
 
     // Off the site again.
     await page.goto(editorUrl);

@@ -96,7 +96,6 @@
     "gatheringTime": "Ora de întâlnire",
     "gatheringAt": "întâlnire la {time}",
     "raceStartAt": "start la {time}",
-    "startAt": "începe la {time}",
     "when": "Când",
     "where": "Unde",
     "raceStartTime": "Startul cursei",
@@ -144,6 +143,7 @@
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
+    "elevationShort": "{m} m D+",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -242,6 +242,7 @@
     "costPaidAmount": "Taxă: {amount}",
     "costPaidWhere": "plata pe {host}",
     "costDonation": "Donație: pe {host}",
+    "costDonateOn": "Donează pe {host}",
     "costDonationSuggested": "sugerat {amount}",
     "series": {
       "weekly": "În fiecare {days}",

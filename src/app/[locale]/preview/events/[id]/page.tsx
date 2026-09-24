@@ -2,8 +2,6 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
-import MuiLink from "@mui/material/Link";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
@@ -195,24 +193,7 @@ export default async function PreviewEventPage({ params }: Props) {
         </Box>
       )}
 
-      {preview.locationAddress && (
-        <Stack sx={{ mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            {preview.mapUrl ? (
-              <MuiLink
-                href={preview.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-              >
-                {preview.locationAddress}
-              </MuiLink>
-            ) : (
-              preview.locationAddress
-            )}
-          </Typography>
-        </Stack>
-      )}
+      {/* The address is the second line of "Unde" in the facts above (§NNN), as on the public page. */}
     </Container>
   );
 }
