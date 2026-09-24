@@ -57,7 +57,7 @@ describe("§NNN the organizer's message to an event's participants", () => {
     organizer = await staff("MODERATOR", "organizer@dev.test", "Dani Organizatorul");
   });
 
-  async function staff(role: StaffRole, email: string, displayName = role) {
+  async function staff(role: StaffRole, email: string, displayName: string = role) {
     const [row] = await db.insert(staffUsers).values({ email, displayName, role }).returning();
     return row;
   }
