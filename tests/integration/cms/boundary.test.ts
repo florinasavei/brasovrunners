@@ -43,7 +43,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     title: "Crosul aniversar",
     excerpt: "",
     checklist: "",
-    locationName: "",
     seoTitle: "",
     seoDescription: "",
   };
@@ -95,9 +94,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "excerpt",
       // The short description as the editor posts it (`DECISIONS.md` §73); `excerpt` is derived.
       "excerptBody",
-      // The place's *name* in this language (migration `0058`) — the one part of §36's move
-      // the owner took back. The meeting point itself is still the event's.
-      "locationName",
+      // Not the place's name: it is stored on this row (migration `0059`) but asked once per
+      // language in the Locul box and written by the event's own save, the Organizer's (§362).
       // The rules, per language (`DECISIONS.md` §96).
       "rules",
       // The programme, per language (`DECISIONS.md` §96).
@@ -115,6 +113,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     ["capacity, which belongs to the event row rather than to one language", "capacity"],
     ["the record id", "id"],
     ["the stored body column itself — the form posts `body`, validated, never the column", "bodyJson"],
+    // A text save never moves the meeting point (§362): the place's name in each language is the
+    // event's, asked in the Locul box and saved with the event's fields.
+    ["the place's name, which is the event's in both languages and saved with its fields", "locationName"],
   ])("refuses a save that also posts %s", async (_name, field) => {
     const translation = await seedDraft();
 
@@ -183,6 +184,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like
       // every other one, which is the property this test exists to keep.
       "/admin/events/[id]/erase",
+      // The organizer's own message to the event's participants (§364): written by hand, per send.
+      "/admin/events/[id]/mesaje",
       // The emergency sheet (§322), printed and carried on race day: by hand, like the rest.
       "/admin/events/[id]/urgente",
       "/admin/events/new",

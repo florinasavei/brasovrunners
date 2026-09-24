@@ -27,6 +27,7 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
       await fillDateField(page, "Începutul evenimentului", date);
       await fillTimeField(page, "Ora", "18:30");
       await field("event.locationName").fill("Parcul Tractorul");
+      await field("event.locationNameEn").fill("Parcul Tractorul");
       // One language per tab on the create form too, as on the editor.
       await field("translations.ro.title").fill(title);
       await field("translations.ro.slug").fill(`serie-de-proba-${suffix}-${index}`);

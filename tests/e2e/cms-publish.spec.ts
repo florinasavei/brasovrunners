@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
 import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
-import { editorBox, languagePanel, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -161,9 +161,9 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §345).
     await fillDateField(page, "Începutul evenimentului", "2027-05-01");
     await fillTimeField(page, "Ora", "09:00");
-    // The meeting point is asked once, in Settings: it is the same place whichever language the
-    // page is read in (`DECISIONS.md` §36).
+    // The meeting point is asked once per language, side by side in the Locul box (§362).
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     // The languages are the editor's own tabs on the create form too: the Romanian panel is
     // in view, the English one behind its tab, and a hidden box cannot be filled.
     await field("translations.ro.title").fill(`Cros de probă ${suffix}`);
@@ -203,9 +203,10 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await fillDateField(page, "Începutul evenimentului", "2027-05-02");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
     const romanian = languagePanel(page, "title", "ro");
-    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await openFold(romanian.locator('[data-rich-text-fold="translations.ro.excerptBody"]'));
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("Zece kilometri prin parc.");
     await languageTab(page, "title", "en").click();
@@ -306,10 +307,11 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await fillDateField(page, "Începutul evenimentului", "2027-05-04");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     const romanian = languagePanel(page, "title", "ro");
-    await romanian.locator("summary").filter({ hasText: "Rezumat" }).click();
+    await openFold(romanian.locator('[data-rich-text-fold="translations.ro.excerptBody"]'));
     await romanian.locator('[data-rich-text="translations.ro.excerptBody"] [data-field]').click();
     await page.keyboard.type("O serie care se termină înainte să înceapă.");
     await languageTab(page, "title", "en").click();
@@ -361,7 +363,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -369,6 +371,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await fillDateField(page, "Începutul evenimentului", "2027-05-03");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Dintr-un foc ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await summary("ro", "Creat și publicat într-o singură apăsare.");
@@ -513,6 +516,7 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
     await fillDateField(page, "Începutul evenimentului", "2027-05-10");
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Program după reîncărcare ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await languageTab(page, "title", "en").click();
@@ -588,6 +592,7 @@ test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-y
     await fillDateField(page, "Începutul evenimentului", "2027-09-30");
     await fillTimeField(page, "Ora", "19:00");
     await field("event.locationName").fill("Parcul Tractorul");
+    await field("event.locationNameEn").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Ceas 24h ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await languageTab(page, "title", "en").click();
@@ -637,7 +642,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const summary = async (locale: "ro" | "en", text: string) => {
       const panel = languagePanel(page, "title", locale);
-      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
       await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
       await page.keyboard.type(text);
     };
@@ -664,6 +669,14 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await fillDateField(page, "Începutul evenimentului", ymd);
     await fillTimeField(page, "Ora", "18:30");
     await field("event.locationName").fill("Parcul Titulescu");
+    // "Parcul Titulescu" is its name in English too: one press copies it into the English box (§362).
+    await expect(page.getByTestId("place-copy-to-english")).toBeEnabled();
+    await page.getByTestId("place-copy-to-english").click();
+    await expect(field("event.locationNameEn")).toHaveValue("Parcul Titulescu");
+    await expect(page.getByTestId("place-copy-to-english")).toBeDisabled();
+    // While the two agree, the English follows what is typed in Romanian (found by review).
+    await field("event.locationName").fill("Parcul Nicolae Titulescu");
+    await expect(field("event.locationNameEn")).toHaveValue("Parcul Nicolae Titulescu");
 
     // Recurrence, in the side column — first on a phone: the event's own day follows the date
     // typed above, ticked and locked; Wednesday is added.

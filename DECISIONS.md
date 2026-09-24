@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.79-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.81-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.79-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.81-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14639,3 +14639,217 @@ The editors are client islands, so the glyph is passed as the component itself, 
 - checks that none of the old characters remains in either editor's code.
 
 Baseline `BR-V1.79-2026-09-24`.
+
+## 362. The meeting point, asked once per language
+
+**2026-09-24.** The owner, of the editor's Locul box, with a screenshot: "There is some redundance on this meeting spot location". The box asked for the place twice: a shared "Punct de întâlnire", then "Denumirea locului (în această limbă)" on Română | English tabs, which in practice held the same text again.
+
+**Decision.** The box asks "Punct de întâlnire" once per language: two boxes, Română and English, side by side from `sm` and stacked on a phone. Both are required unless the place is to be announced; §328 hides and keeps them. The map link stays one field, because a link has no language.
+
+- **Storage, no migration.** The Romanian box writes `events.location_name`, which the desk, the backoffice and every reader without a language read, and the Romanian row's `location_name`. The English box always writes the English row's `location_name`, even when it matches the Romanian, so no English page borrows the Romanian words.
+- **Opening values.** Each box opens with what its page shows today (`place.ts#placeInBox`): the row's own name, else the event's, with an older event's street address folded in. An event saved before this opens unchanged.
+- **Whose field it is.** The names belong to the event, not the words. The event save writes them (the Organizer's save, §207) under the event row's version. A text save refuses a `locationName`, so a Redactor saving in the same minute is never refused over a place she did not touch.
+- **Readers.** Each reader reads its own language's name: the page, the preview, the emails, the calendar file, the JSON-LD and the declaration's `{{eventLocation}}`. In a bilingual email, each half names its own language's place.
+- **Publication.** A missing English place is refused like a missing translation, judged by what the page would show, so older events still publish.
+- **"Did the place move."** There is one rule for this: `place.ts#placeShown`, which is what the page shows with spacing normalised. The series edit and the participants' notice both use it. A series save carries a place moved in either language to every date it reaches. The first save of an older event moves no date's place and announces nothing.
+
+**The copy button.** "Același nume și în engleză" fills an **empty** English box only. It never replaces a name already there: on a phone, the 44-pixel button sits right under the English box, and one tap would replace "Tractorul Park" in a way the browser's undo cannot reverse (found by review).
+
+**The English follows the Romanian while they agree** (found by review). An older event's English page had no name of its own, so its English box opens with the Romanian words. Moving only the Romanian used to save the old place as that date's English name. A series save then sent the new Romanian name to every other date, whose English pages follow it, so the edited date's English page kept the old meeting point on its own.
+- **In the editor:** while the two boxes say the same non-empty place, typing in Romanian writes the English box too.
+- **On the server,** for any save: `englishNameAfterSave` gives the English row the new Romanian name when all three hold:
+  - the English row had no name of its own;
+  - the English box posted exactly what the English page showed;
+  - the Romanian place moved.
+- **An English name of its own is never written over.** When the Romanian moves away from it, a line under the English box says the English still names the old place, and the organizer decides.
+
+Found on the way: in MUI's `sx`, `width: 1` means 100%. The visually hidden half of each label pushed the 320px create page to 342px, so taps below the box landed beside their targets. Sizes are strings now.
+
+Found by re-review and settled in the round before the crash (a5a72dad), then checked again in this one: the server's rule that lets an older event's English name follow its Romanian one (`place.ts#englishNameAfterSave`) never fills a blank English box. A blank box is saved blank. So an event whose place is to be announced (§328), with only the Romanian venue typed, keeps its English row empty, and `placeRule` asks for the English name when the switch goes off. The owner's rule is "multi-lingual, always": the English name stays required unless the place is to be announced, and the Romanian is never written into it by the server. The English follows the Romanian only when all three hold:
+- neither language's row had a name of its own;
+- the English box posted exactly what the English page showed;
+- the Romanian moved.
+
+When the Romanian row had a name of its own, the two pages already said different things. The English is then kept as posted, as the amber line under the English box says ("În engleză scrie tot „{place}”").
+
+Once JavaScript runs in it, the editor's Locul box posts `event.placeNamesAsTyped` (the constant is in `form-names.ts`, not in the "use client" file). The service then keeps both names as posted: the box already made the English follow on the screen, and what it holds is what the organizer left there, including an English box put back to the old name. The server's HTML carries no marker, so a save without JavaScript, from a script or from a test gets the server rule.
+
+The tests read no source line for the place except one layout guard: the unseen half of each label stays one pixel wide, never MUI's `1` (100%), because a label-wide span pushed a 320-pixel page sideways. The refusal summary's labels for the two boxes are checked by calling `eventFormFieldLabels` against the shipped Romanian catalogue, not by reading the file.
+
+**Found by CI on this batch (PR #159), second round.** Two e2e failures, neither in the code this section changed.
+
+- **§358's refusal spec** (`forms-keep-values.spec.ts`, "a link label in Romanian only…") was merged at the same time as this section and filled only the Romanian meeting point. With the English box required, the browser refused the press ("Completează mai întâi: Punct de întâlnire (English)"), so the server's refusal the test asserts never rendered. The spec now fills both boxes, as this section's own spec updates did. No other spec fills the Romanian place on the create page without the English one.
+- **"Înlocuiește cu câmpurile"** (`email-copy-fields.spec.ts`, §359) failed once in CI, passed on the retry, and failed every time on a loaded laptop. The action was never reached: no request left the page. The rich-text editor builds Tiptap only in the browser, after hydration (`immediatelyRender: false`), and until then its writing area was an empty `div`. When Tiptap mounted, the area grew to its 240-pixel minimum plus padding, and everything under it moved down 272 pixels. On `/admin/emails` that is every message's "Salvează textul" and "Înlocuiește cu câmpurile". A press in that first second landed on the gap the button had just left and did nothing, with no refusal and no answer. On a phone, a real organizer can hit this; it is not only a test artifact.
+
+**Decision.** Until Tiptap has mounted, the writing area is an empty, aria-hidden box of exactly the same minimum height and padding: one object, `WRITING_AREA_BOX`, sets both. The box leaves in the same render that brings Tiptap's element in (Tiptap's `EditorContent` attaches it when it mounts, before the browser paints), so nothing under an editor moves when the editor loads. The spec was left as it was, pressing without waiting for hydration: it now checks that a press in that moment reaches its button. The legal documents' editor (`LegalBodyEditor`) is built the same way and is not changed here.
+
+Baseline `BR-V1.80-2026-09-24`.
+
+## 363. The floating bars are lifted on what they render, and a fold keeps its state across the language tabs
+
+**2026-09-24. The owner, twice about the backoffice text editors.** First, with a screenshot of the event description: text selected and three empty rounded buttons over it, only the tooltip "Îngroșat" readable: "I can't see these buttons in the rich text editor". Second: "I would like to keep the expand/collapsed state while changing the language tab in the event editor."
+
+### The bars over a selection and over a table (amends §361)
+
+§361 lifted both floating bars above the editor's sticky toolbar (`zIndex: 2`) by passing `style={{ zIndex: 3 }}` to Tiptap's `BubbleMenu`. It worked under `next dev` and nowhere else. Tiptap 3.31 copies `style`, `className` and the `data-*`/`aria-*` props onto the menu's element in a helper, `useMenuElementProps`. Its loops for style and attributes are written as a `new Set([...])` annotated `@__PURE__` with `.forEach(…)` called on it. The production minifier takes the annotation for the whole call, finds the result unused and deletes it: the built chunk has no style code at all. In production the bar had no stacking order. A word selected on the first lines puts the bar over the toolbar, and the toolbar painted over it, so the owner saw the bottoms of the three buttons below the toolbar with their glyphs behind it. The table's bar had the same fault, so the thing §361 fixed for tables at the top of the body never shipped either.
+
+**Decision.** The order is set on the bar's own `Paper`, which React renders and Emotion styles: `position: relative; z-index: 3` (`FLOATING_BAR_SX`). While shown, the menu element has `z-index: auto` and `opacity: 1`, so it makes no stacking context, and the Paper is stacked with the toolbar. `BubbleMenu` is given only the plugin's own props (`editor`, `pluginKey`, `shouldShow`, `options`, and the delays, `appendTo` and `getReferencedVirtualElement`), and a unit test refuses anything else. Whatever a bar needs goes on what it renders, including the `data-floating-bar` attribute the tests find it by.
+
+**Refused.**
+- A `yarn patch` of Tiptap: a dependency change for one line of our own styling, and it would be undone by the next upgrade.
+- `className` on `BubbleMenu`: `syncClassName` survives today's minifier, but it rides the same fragile helper.
+- Waiting for an upstream fix.
+
+**How it stays fixed.** An e2e check (`tests/e2e/support/floating-bar.ts`) selects a word on the first line and puts the caret in a table. For every button of the bar that appears, it requires a glyph with a non-zero box, a fill that is neither transparent nor the bar's surface, and a hit test at the glyph's centre that lands in its own button. A bounding box and a colour were right all along; only the hit test sees the toolbar on top. Run against a build of the fix without the z-index, it fails on both viewports and in both editors; with the fix it passes. The e2e suite runs on a production build, which is where this fault lived. The legal documents' editor has no floating bar. The email words' editor has the selection bar and is fixed by the same change.
+
+### A fold and its twin in the other language
+
+The event editor gives every box with per-language text its own Română | English tabs (§350). Inside a panel, the summary, the description, the programme's notes and the rules are folds that mount their editor when opened (§96). Each language had its own fold state, so what the organizer opened in Romanian was closed in English.
+
+**Decision.** A fold inside a language strip and its twin in the other language are one fold.
+- **Key.** The fold's name with the panel's language segment taken out: `translations.ro.body` and `translations.en.body` are both `translations.*.body` (`twinFoldKey` in `shared/ui/fold.ts`). No caller had to change.
+- **Store.** The strip (`LocaleTabPanels`) holds one small store per strip for its life (`createTwinFoldStore`) and hands it to each panel with the panel's language and whether it is on top (`TwinFoldProvider`). A fold reads it through `useTwinFold`, with `useSyncExternalStore`, so only the fold whose key changed re-renders. Typing elsewhere in the strip moves the tabs' marks and re-renders nothing inside.
+- **The attribute and `toggle`.** The fold's `open` attribute is driven by the store, and its `toggle` event feeds the store. A press on the summary, a refusal opening the folds around a box (`revealField` / `openFoldsAround`, §336, §358) and the twin's change all end in one `set`, which does nothing when the value is already there.
+- **Server rendering.** The store is empty on the server and on the first client render, so the HTML is what it was (closed) and a browser without JavaScript folds as before.
+- **Refused saves.** A refused save keeps the state: the lazy editor re-mounts on the answer's generation (§315), but the strip holding the store does not.
+- **The hidden twin.** A twin that opened behind a hidden tab mounts its editor when its tab comes forward, not before. Two Tiptap instances for one press would bring back §96's cost, for a language nobody is looking at yet.
+
+**Once mounted, a lazy editor stays mounted.** Closing the fold used to swap the editor for the hidden field that carries the stored document, so text typed and then folded away was replaced at the save by what the page was loaded with. With twins, that would be a whole language's typing lost to a click in the other one. A closed fold now hides the editor; it does not unmount it.
+
+**Refused.**
+- One page-wide language switch: §350 removed it for good reasons.
+- Remembering fold state across reloads (localStorage): a closed fold on arrival is §336's rule.
+- Mounting both editors at once.
+
+**Consequence for the tests.** A spec that opened the Romanian summary and then clicked the English one closed the twin that was already open. Such steps use the idempotent `openFold`.
+
+Baseline `BR-V1.81-2026-09-24`.
+
+## 364. The organizer writes to an event's participants: a message per send, in both languages, to the group they choose
+
+**Context.** The owner, 2026-09-24: "I also want to be able to send custom emails to people, in case something happens, e.g. bad weather, cancelled event, etc!" §331 gave the platform two notices: "Detalii actualizate" and "Eveniment anulat". Both carry the platform's sentences, and the organizer's words ride on them only as a note beside a save. Nothing let the organizer simply say something: the storm, the start moved an hour, the car park closed.
+
+**Decided.**
+
+1. **Its own page under the event.** It is `/admin/events/[id]/mesaje`, and two places link to it:
+   - the editor's immediate actions (the "Înscrierile primite" box, `announce` glyph);
+   - the registrations list, when one event is selected.
+
+   It is a page rather than a box in the editor for three reasons. The preview is a whole email in a sandboxed frame. The history belongs beside it. The editor is one form, one save, and a message is its own act, never a side effect of a save (§9, §331.1).
+2. **Who hears it, chosen, with live counts.** The page offers four groups (`domain/organizer-message.ts#AUDIENCE_STATUSES`):
+   - `ALL_ACTIVE`: exactly §331's `EVENT_NOTICE_STATUSES`, held to it by a test;
+   - `CONFIRMED`;
+   - `WAITLIST`: `WAITLISTED` and `WAITLIST_OFFERED`, because somebody offered a place is still waiting until they sign;
+   - `PENDING_DECLARATION`.
+
+   The last three partition the first. The rest of the rule:
+   - Never `CANCELLED`, `EXPIRED` or `PENDING_EMAIL_CONFIRMATION`, for §331's reasons.
+   - Test rows are written to like real ones and counted apart, as §331 does (`AGENTS.md` §12.6). `enqueueEmail` gives them no club copy.
+   - Before the press the page shows the real count, the test count, and the messages including the club's copies (`organizerMessageCost`). It also shows what the plan has left (§100) minus what already waits.
+   - When the send is larger than that, the page says how many leave now and how many wait for the reset (`organizerMessageDeferral`). It never refuses: the outbox already defers (§40).
+3. **The words: subject and body, Română and English, both required.**
+   - A refusal names every empty box, and the rest comes back as typed (§315).
+   - The text is plain. A blank line starts a paragraph and a single break stays a line. It is escaped, and no `**`/`__` is read inside it, as for §331's note.
+   - Ceilings: subject 150 characters in each language, body 4 000.
+   - The subject a runner receives joins the two languages with " / " (§96) after the placeholders are filled, so it can run to more than twice 150. That is accepted: a mail client cuts a long subject short and the provider does not refuse it, the stored §247 wording of every other type allows 200 per language, and 150 keeps the registrant's own language, which comes first, whole.
+   - The placeholders are a closed subset of §247's: `{participantName}`, `{eventTitle}`, `{eventStartsAtFormatted}`, `{eventLocationName}`, `{bibNumber}`, `{eventChecklist}`.
+   - Anything else in braces is refused by name (`MESSAGE_UNKNOWN_PLACEHOLDER`). That includes the §247 names this message never fills: `{staffRole}`, `{holdExpiresAtFormatted}`, `{signedAtFormatted}`, and the desk code `{checkinCode}`, which only the participant may hold.
+   - `{bibNumber}` is the settled number only. A provisional one would print without the line that says it can still move (§237).
+   - The same-words-twice warning of §354 shows under the body.
+4. **The preview is the real email.** Each pause in typing (500 ms) asks the server (`previewParticipantMessageAction`) to render the words through `renderBilingual`, the template the outbox sends with.
+   - It uses the event's own facts, read now in both languages, and a made-up runner (Ana Popescu, 42).
+   - Two tabs show the Romanian registrant's copy and the English one, like `/admin/emails`.
+   - Unknown placeholders are named above it before any press.
+   - Nothing is queued and nothing is minted.
+5. **Sending: `ORGANIZER_MESSAGE`.** Migration `0068_organizer_message` adds one enum value, expand only (renumbered at integration).
+   - One row per registration, in its language, with payload `{ subject: { ro, en }, body: { ro, en } }`.
+   - The key is `organizer-message:<send id>:registration:<id>`, and `requested_by_staff_user_id` is the sender.
+   - The message is rendered in the one card: the facts line, one framing sentence, the organizer's words, and the event's page as the button. It has the usual links plus "Înscrierile mele" by address (§77).
+   - No token, no attachment, and the privacy line (§323).
+   - The club's copies follow the participant list through `enqueueEmail` (§320), and tracking is off in the adapter.
+   - The second half's placeholders read the second language's facts: the title, what to bring and the place's own name. This costs one extra event read per row. §354 left this undone for the other types and it stays so there; here the organizer writes `{eventTitle}` into both halves, and an English sentence carrying the Romanian title is what "bilingual always" forbids.
+   - A payload that cannot be read renders the platform's fallback subject and framing sentence.
+6. **Idempotent.** The page mints a `sendId` on every render, and the form re-mounts on it, so the boxes are empty after a send.
+   - The send takes the event row's lock (`lockEventForCapacity`, the one every allocation takes) and looks for an audit row carrying that id first.
+   - A second press of the same form finds it and queues nothing: "fusese deja trimis".
+   - A registrant who arrived between the two presses is not written to either.
+   - The outbox keys would refuse the same rows anyway.
+   - An empty group queues and audits nothing, and the refusal names the group (`NO_RECIPIENTS`).
+7. **Who may send: `canMessageParticipants` = `canEditEventFields && canReadRegistrations`.** That is the Organizer, the Administrator and the Superadministrator. It is asserted in the service; the page answers 404 and the preview answers nothing for anybody else.
+   - **This narrows §331's set, and the owner has not confirmed it yet.** §331's notices need only `canEditEventFields`, so the Tehnic role (`DEV`) may send the update and cancellation notices, free-text note included. Those go out only with a save of the event itself, with the note under the platform's sentences and sent to everybody active. This message stands alone: whatever was typed, to a group the sender picks from the registrations' states. That makes it an act on the participant list, and `DEV` is the role that never receives the list (§38, §289).
+   - Should the owner want §331's set instead, the predicate becomes `canEditEventFields` alone. That is one line in `roles.ts`, plus the role rows of the unit, integration and e2e tests.
+   - The volunteer and the Redactor are out, as they are out of the event's settings.
+8. **Audit and history.** `event.participant_message_sent` on the event records the actor, `{ sendId, audience, recipients, test, subject: { ro, en } }`. It never records an address or the body (§12.12: no email body). "Mesaje trimise" under the composer shows the last twenty: the date, the subject as written in the backoffice's language (the Romanian one when a row carries no other), the group, how many, and who.
+9. **`/admin/emails`** has a card for the type, previewed with a sample message in both languages. It says the text is written per send on the event's page. The §247 copy editor refuses the type, and `buildTemplateContent` ignores any stored wording for it.
+10. **A cancelled event can still be written to.** §331.7's "goes quiet" is about the platform's machinery. This is an explicit human act, like the cancellation notice itself: a new date, a refund of the entry fee. The page says so.
+11. **The privacy notice template** (section 5, both languages) now names "the organizers' announcements about the event you registered for", on the same basis, art. 6(1)(b), not marketing. The §331 notices were missing from it too. It also says the organizers' own words are the one text an outbox row keeps. It has no effect until the club approves a new version.
+
+**Rejected.**
+- A note box on the editor's save, like §331's. It ties a message to a save and a version, and the editor is one form.
+- Writing to `PENDING_EMAIL_CONFIRMATION`: nobody has vouched for that address.
+- Refusing a send larger than today's allowance. The outbox defers, and a refusal would drop the storm warning.
+- Keeping the body in the audit row.
+- Making the type a §247-editable template: the words are per send.
+- The rich-text editor (§270). A plain box is what somebody types on a phone at six in the morning, and a Tiptap island is cost the brief did not need. It can be added if asked.
+- Lowering the subject ceiling so the joined subject stays under 150–200 characters: it would squeeze a message's own language to about 75 characters, to save a line that the mail client cuts anyway.
+
+**Not done.**
+- **"All dates of the series ahead" is left out.** Each date is its own event with its own registrants. A series-wide send would turn the counts, the preview's facts, the confirmation and the audit into per-date lists. §331's series save does that fan-out and could be reused, but not simply. Each date's page has its own composer, and the page says so on a series date.
+- No scheduling for later, and no attachment: a new GPX goes on the page's "Linkuri și fișiere" (§332), which the message links.
+- `enqueueEmail` schedules one after-response drain per row, as §331's notices already do; concurrent drains are safe (`SKIP LOCKED`).
+
+**Tests.**
+- Unit: `notifications/organizer-message.test.ts` covers:
+  - the groups and the §331 set;
+  - roles;
+  - both languages required;
+  - placeholders refused by name;
+  - ceilings, paragraphs, the payload reader, cost and deferral;
+  - rendering per language with each half's own words and facts, escaping, the fallback, stored wording ignored, the club copy.
+- Integration: `notifications/participant-messages.test.ts` covers:
+  - the enum migration;
+  - counts with every status and a test row;
+  - one row per recipient with both languages;
+  - a double press, with a registrant arriving in between;
+  - an empty group;
+  - refusals;
+  - roles, preview included;
+  - the audit row without addresses or body, and the history;
+  - per-language rendering and no token;
+  - `{bibNumber}` settled only;
+  - club copies for real rows only, each picked by its registration and rendered in its registrant's language ("[Copie club]" for a Romanian registrant, "[Club copy]" for an English one), because neither the send nor the outbox orders them;
+  - the preview;
+  - the copy editor refusing the type.
+- `cms/boundary.test.ts` gains the route.
+- e2e: `participant-message.spec.ts` runs on the phone and the desktop.
+
+Without the event's title (a row whose title could not be read, or an empty one), the organizer's message names no event rather than the club: the subject falls back to "Un mesaj despre evenimentul la care te-ai înscris" / "A message about the event you registered for", and the platform's one sentence to "Un mesaj de la organizatorii evenimentului la care te-ai înscris:" / "A message from the organizers of the event you registered for:" — the rule §357 set for the cancellation, and the reason the club's name appears in `templates.ts` only through `CLUB_NAME`. The organizer's own subject, when it is there, still wins over the fallback.
+
+The branch now sits on qa's §359. The organizer's sample message on /admin/emails ("Vreme rea la {eventTitle}: startul se mută la 10:00" / "Bad weather at {eventTitle}…", a body greeting {participantName}) is kept in `EMAIL_SAMPLE` in `domain/email-sample.ts` with the other sample values. It reaches the page through `emailSampleData`, like every other preview, so the preview and §359's guard read one constant. The guard does not list it as a value to refuse, just as it leaves out the note and the reason from §331. It holds only placeholders and ordinary words, and it is never part of an editor's text.
+
+The organizer's card is the only one on /admin/emails with no words to edit. It previews the sample message and says the text is written per send on the event's page. It reads no stored wording (`own` is null) and asks for no sample-value languages, so it never raises the amber marker and never opens the card of cards for attention. This matches the other two places that already treat the type as written per send: the §247 save refuses an entry for it, and `buildTemplateContent` ignores one. The §359 per-type tests run over the twenty types that have an editor. The organizer's card is pinned by its own block.
+
+`renderBilingual` now takes the other language's title and checklist (`eventTitleOther`, `eventChecklistOther`) only for ORGANIZER_MESSAGE. Before, the rule was a comment on `TemplateData` and the send path simply never set them for other types. It is now enforced where they are read. So the one sample can carry both, the organizer card's English half shows the English title as the send does, and every other message's second half still reads the registrant's language, as §354 left it.
+
+The composer's preview no longer shows one language's copy under the other tab. The pause after typing is a small object (`ui/preview-pause.ts`). A tab picked cancels it and asks at once for that tab. A pause that runs out asks for the tab open then, not the tab open when the key was pressed.
+
+The composer's preview is addressed to the same made-up runner as every /admin/emails preview. Her name and race number come from `EMAIL_SAMPLE` in `domain/email-sample.ts`, and the page's help line above the preview ("…for a sample participant, {name}, number {bibNumber}") is filled on the server from that same constant. The branch's own copy (`PREVIEW_PARTICIPANT`) is gone. The line and the preview cannot name two different people, and a change to the sample reaches both, as §359 already set for the sample and its guard.
+
+Test-only: the §359 e2e spec (`email-copy-fields.spec.ts`) now waits for the page to finish loading its scripts before it presses "Înlocuiește cu câmpurile" or "Salvează textul". Every check before the press already holds on the server's HTML, so on a warm production build the press could land before the page was interactive and be dropped: no refusal, no banner, nothing saved. CI's slower single worker had not shown this.
+
+Baseline `BR-V1.81-2026-09-24`.
+
+## 365. A phone's footer is two short lines: the build stamp in the fold, RO and EN side by side
+
+**Context.** The owner, 2026-09-24, with a 360-pixel screenshot: "next prio is the footer on mobile… it now takes way too much space, and version shows by default." §324 gave the phone's bar a second line, with the privacy notice ("Confidențialitate") and the language on it. Under that bar the layout still rendered `BuildBadge`, and below `md` that was a third line of footer. Every visitor read "app-ver · BR-V1.77 · 960b3c0 · 2026-09-24 17:12" on every page. Measured on production builds at 320, 360 and 390 pixels, on a page three screens long: the sticky bar was 89px on every screen (two 44px lines and the border), and 127px at the page's end from the bar's top to the document's end. The language switcher on the second line was RO stacked over EN: two 22px lines, stretched to one 44px target by a pseudo-element. From `md` the badge floated in the bottom-right corner.
+
+**Decision.**
+- *The build stamp is the last line of the "Despre club" fold* (`shared/ui/BuildBadge.tsx`, rendered by `SiteFooter`; the layout no longer renders it). It is on screen at no width and in no environment until somebody opens the fold. It is still the staff entrance (§34): a double-click, a long press on a phone, or `Enter` when focused. One tap still does nothing, so a tap in the open fold is not a trap. It is a quiet 44px line of the panel, as wide as its words, and wraps instead of being cut. Where `STAFF_AUTH_MODE=disabled` it is an inert label. One rule for every environment: QA already says it is QA in words above the header (`EnvironmentNotice`), and a rule keyed on the environment could only be tested on a production build. `/api/health` and `/devs` report the same values.
+- *RO and EN side by side at every width* (`shared/ui/LocaleSwitcher.tsx`), each link a 44px target. The phone's switcher has not been on the header row since §262 (the header's copy is `display: none` below `sm`). It sits on the footer's second line beside the privacy notice, where about 100 pixels are free. The stack and its `::before` hit-area extension are gone.
+- *The bar stays two 44px lines on a phone and one from `sm`, sticky at `bottom: 0` at every scroll position.* It is 89px with its border, the same as before, and now has nothing under it. `scroll-padding-bottom` stays 96px on a phone and 52 from 600px (BR-REQ-041-01 criterion 22).
+
+**Considered and refused: one floating line on a phone.** A negative sticky offset (`bottom: -44px` below `sm`) makes the bar float one line, 45px, while the page scrolls, and rest two lines tall at the page's end. A `:has(:focus-visible)` rule would raise it for the keyboard. The review refused it. It takes the privacy notice off the always-visible bar that BR-REQ-041-01 criterion 21 and §323 put it on ("from any page without opening anything", GDPR art. 12). It does the same to a phone's only language switch. And `:focus-visible` does not follow a screen reader's own cursor (VoiceOver swipe, TalkBack), so a link could be focused under the screen's edge. That is a change to a documented rule and the owner's to make; it is asked of him separately. The ask as given (at most two short rows, RO | EN inline, the stamp not shown by default) is met without it.
+
+**Consequences.** A phone's footer is 89px at every scroll position, with nothing under it; at a page's end it was 127px. From 600px up it is 45px and nothing floats in the corner. The stamp costs a visitor nothing and costs staff one tap, opening the fold. The e2e suite measures it (`tests/e2e/footer.spec.ts`, `tests/e2e/build-badge.spec.ts`). `tests/unit/shared/site-footer.test.ts` pins it on every commit: the stamp only inside the fold's panel, no `BuildBadge` in the layout, sticky `bottom: 0` with no negative offset, the privacy link and the language outside the fold, the 96/52 reserve, and RO/EN as a row of 44px targets.
+
+Baseline `BR-V1.81-2026-09-24`.

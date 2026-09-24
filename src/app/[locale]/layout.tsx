@@ -13,7 +13,6 @@ import { PUBLIC_CLIENT_MESSAGES, pickMessages } from "@/i18n/client-messages";
 import { missingMessagesAreLoud } from "@/i18n/errors";
 import IntlErrorHandling from "@/i18n/IntlErrorHandling";
 import { routing } from "@/i18n/routing";
-import BuildBadge from "@/shared/ui/BuildBadge";
 import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
@@ -174,8 +173,8 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </Box>
                   <SiteHeader />
                   <Box sx={{ flex: 1 }}>{children}</Box>
+                  {/* The build stamp is the last line of the footer's fold (§365), not a label of its own. */}
                   <SiteFooter />
-                  <BuildBadge />
                 </Box>
               </IntlErrorHandling>
             </NextIntlClientProvider>
