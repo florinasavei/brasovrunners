@@ -44,8 +44,8 @@ import { findRegistrationById } from "./repository";
  * leaves the list the moment the row changes and returns the same way. The public page reads the
  * list through the public cache (§333), and the write below expires it before the request ends,
  * so the next visitor asks the database again — the choice still reaches the page at once, and
- * §281's last good copy is still never consulted for it. §186's "Participant anonim" count picks
- * the row up on the other side of the same column.
+ * §281's last good copy is still never consulted for it. §186's "Participant (nume ascuns)" count
+ * picks the row up on the other side of the same column.
  *
  * "Set", not "flip": the form carries the choice it is making, so a double submission — or a
  * choice made from two tabs — lands on the state the button said, and a second identical

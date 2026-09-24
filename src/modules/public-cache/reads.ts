@@ -190,9 +190,14 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * key. So the number served is the number the formula gives for this instant. It is still a
  * page render and not a decision: the form and the allocator count again, under the lock.
  *
+ * It carries the event's own number of places beside the free ones (§NNN public fill count):
+ * "12 înscriși din 50 de locuri" is the same count read against the capacity of the very row the
+ * formula counted, so the two lines beside the button come from one internal read and one cache
+ * entry — never a second formula, and never a query per visitor.
+ *
  * `null` for an uncapped event, and for one that no longer exists.
  */
-export async function cachedPublicAvailability(eventId: string, now: Date): Promise<number | null> {
+export async function cachedPublicAvailability(eventId: string, now: Date): Promise<PublicAvailability | null> {
   const expiries = await publicRead(["places.offer-expiries", eventId], ["places", "events"], () =>
     listOfferExpiries(getDb(), eventId),
   );
@@ -200,9 +205,14 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
-    return event ? readPublicAvailability(db, event, now) : null;
+    if (!event || event.capacity === null) return null;
+    const available = await readPublicAvailability(db, event, now);
+    return available === null ? null : { available, capacity: event.capacity };
   });
 }
+
+/** What `cachedPublicAvailability` answers for a capped event: its free places, and its size. */
+export type PublicAvailability = { available: number; capacity: number };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */
 export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number }> {

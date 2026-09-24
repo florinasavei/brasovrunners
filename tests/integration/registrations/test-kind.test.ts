@@ -10,9 +10,11 @@ import {
 } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { publicFill } from "@/modules/events/domain/registration-cta";
 import {
   confirmEmail,
   type EventForRegistration,
+  readPublicAvailability,
   submitRegistration,
 } from "@/modules/registrations/service";
 import {
@@ -199,6 +201,24 @@ describe("registrations.kind — a test registration is a real one to the queue"
     const real = await registerAndConfirm(db, event, "ana@example.test", "REAL");
 
     expect(real.status).toBe("WAITLISTED");
+  });
+
+  /**
+   * §NNN / AGENTS.md §12.6: `readPublicAvailability` counts a `TEST` hold exactly like a REAL
+   * one, so the "N înscriși din capacity locuri" line on the event page (`publicFill`) is the
+   * same arithmetic on the same number the button already reads — never a second, REAL-only
+   * count that could disagree with it. A `TEST` row cannot exist in production (asserted above),
+   * so this is only ever true on QA and locally, which is exactly where the mix is observed.
+   */
+  it("counts a TEST hold in the public fill exactly like a REAL one", async () => {
+    const event = await createInternalEvent(db, 2);
+
+    await registerAndConfirm(db, event, "ana@example.test", "REAL");
+    await registerAndConfirm(db, event, `demo-1@${TEST_PARTICIPANT_EMAIL_DOMAIN}`, "TEST");
+
+    const availablePlaces = await readPublicAvailability(db, event, NOW);
+    expect(availablePlaces).toBe(0);
+    expect(publicFill(event.capacity, availablePlaces)).toEqual({ taken: 2, capacity: 2 });
   });
 
   describe("the backoffice tool", () => {

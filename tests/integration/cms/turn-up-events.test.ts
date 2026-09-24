@@ -91,6 +91,22 @@ beforeEach(async () => {
     translations,
     now: NOW,
   });
+  // §NNN: publishing a start list (RACE_FIELDS asks for one) is refused without an approved,
+  // effective privacy notice — an unrelated fixture here, since this file is about the
+  // registration block, not the disclosure itself.
+  const noticeTranslations = [
+    { locale: "ro" as const, title: "Confidențialitate", body: { sections: [{ paragraphs: ["Text."] }] } },
+    { locale: "en" as const, title: "Privacy", body: { sections: [{ paragraphs: ["Text."] }] } },
+  ];
+  await insertLegalDocumentVersion(db, {
+    key: "PRIVACY_NOTICE",
+    version: 1,
+    effectiveAt: NOW,
+    isApproved: true,
+    contentSha256: computeContentHash(noticeTranslations),
+    translations: noticeTranslations,
+    now: NOW,
+  });
 });
 
 async function createDraft(type: "RACE" | "GROUP_RUN") {
