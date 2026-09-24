@@ -53,8 +53,9 @@ const LEGACY_CO_HOST_LINK_KIND: CoHostLinkKind = "SITE";
 export const isCoHostUrl = (value: string) => /^https:\/\/\S+$/i.test(value) && value.length <= MAX_CO_HOST_LINK_URL;
 
 /**
- * The scheme written in lower case, so a pasted "HTTPS://…" satisfies the database's own check —
- * the same courtesy `normalizeEventLinkUrl` does for "Linkuri și fișiere" (§332).
+ * The scheme written in lower case, so a pasted "HTTPS://…" stores, compares and renders the
+ * same as one typed lower case — the same courtesy `normalizeEventLinkUrl` does for "Linkuri și
+ * fișiere" (§332).
  */
 export const normalizeCoHostUrl = (value: string) => value.replace(/^https:\/\//i, "https://");
 
@@ -124,8 +125,8 @@ const coHostSchema = z
             return parsed.success ? [parsed.data] : [];
           })
           .slice(0, MAX_CO_HOST_LINKS)
-      : typeof row.url === "string" && isCoHostUrl(row.url)
-        ? [{ kind: LEGACY_CO_HOST_LINK_KIND, url: row.url, labelRo: null, labelEn: null }]
+      : typeof row.url === "string" && isCoHostUrl(row.url.trim())
+        ? [{ kind: LEGACY_CO_HOST_LINK_KIND, url: row.url.trim(), labelRo: null, labelEn: null }]
         : [];
     return { name: row.name, links };
   });
