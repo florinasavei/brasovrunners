@@ -108,7 +108,7 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
  * points at, so a search engine reads one organization across the whole site; a partner is a
  * plain Organization with a name and, when it named one, its `url` — its own site (§344), or
  * its first link if it named no site — and, on a page whose language is known, the partnership's
- * `description` in that language (§NNN), by the same both-or-neither reading the page's own card
+ * `description` in that language (§352), by the same both-or-neither reading the page's own card
  * uses (`coHostDescription`): the block never says in English what only the Romanian page says.
  */
 function organizers(event: PublicEvent, organizationName: string, locale?: "ro" | "en") {
@@ -161,7 +161,7 @@ function eventPlace(event: PublicEvent) {
 
 /**
  * BR-REQ-052-02 criteria 2 and 4. `locale` is the page's language: the one thing the public row
- * does not carry, and what a partner's description needs to be said in (§NNN). Left out, the
+ * does not carry, and what a partner's description needs to be said in (§352). Left out, the
  * partners are named without one — never in a language guessed for them.
  */
 export function sportsEventJsonLd(

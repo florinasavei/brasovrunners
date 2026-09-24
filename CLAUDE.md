@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.73-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.74-2026-09-24 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.73-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.74-2026-09-24`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -216,6 +216,10 @@ sections and in `CHANGELOG.md`.
   allocator's lock at every door (§348); every date a person reads carries its weekday in the reader's language,
   through one helper, `src/i18n/dates.ts` (§349); the event create page and editor are one layout — Publicare and
   Recurență beside fourteen named cards in three groups, per-card RO/EN tabs, the series scope as three choices (§350).
+- **Batch 5 (2026-09-24):** a series' draft line says "N date noi, create automat, nu sunt pe site" and carries
+  „Publică” and „Publică automat de acum” on the row (§351); a partner card has a short description of the partnership
+  in both languages, its registration link first, and **every optional text the club types is both languages or neither**,
+  refused at save — the owner's rule "multi-lingual, always" (§352, `src/shared/forms/both-languages.ts`).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

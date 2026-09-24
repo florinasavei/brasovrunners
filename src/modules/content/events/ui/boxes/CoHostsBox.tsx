@@ -21,7 +21,7 @@ import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
  * the partner cards were built with. The rows are read through the one function that decides which
  * shape a stored row means — its list of links, its one legacy link, or the two columns before the
  * list — so an event saved by any earlier release opens with the partner it has, and the first
- * save writes it as a card. The description (§NNN) opens as stored, both languages or one: a half
+ * save writes it as a card. The description (§352) opens as stored, both languages or one: a half
  * written somewhere else is shown so it can be completed, and the save refuses it until it is.
  */
 export default async function CoHostsBox({ event, mayEditSettings, locale }: BoxProps & { locale: string }) {

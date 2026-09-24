@@ -136,7 +136,7 @@ describe("BR-REQ-011-01 criterion 16 the partners' cards on the event page", () 
 });
 
 /**
- * §NNN — the Brașov Running Festival's card: the partner's name, what the partnership is in the
+ * §352 — the Brașov Running Festival's card: the partner's name, what the partnership is in the
  * reader's language, and where to register with it, first among its links.
  */
 const FESTIVAL = {
@@ -149,7 +149,7 @@ const FESTIVAL = {
   ],
 };
 
-describe("BR-REQ-011-01 criterion 16 the partnership's description and the partner's registration link (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 the partnership's description and the partner's registration link (§352)", () => {
   it("shows the Romanian description on the Romanian page, between the name and the links", async () => {
     currentLocale = "ro";
     const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: [FESTIVAL] }), now: NOW, stacked: true }));

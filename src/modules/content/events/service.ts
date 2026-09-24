@@ -734,7 +734,7 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
 }
 
 /**
- * Both languages or neither, for the event's optional texts (§NNN; the owner: "I want
+ * Both languages or neither, for the event's optional texts (§352; the owner: "I want
  * multi-lingual, always"): the description, the rules, the programme's notes, what to bring, and
  * the two search-engine overrides. Each is optional; none may be written in one language and left
  * empty in the other. Refused on the empty side's box (`translations.<locale>.<field>`), so the
@@ -1617,7 +1617,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     }
 
     /*
-      Both languages or neither (§NNN), on the two languages exactly as this save leaves them —
+      Both languages or neither (§352), on the two languages exactly as this save leaves them —
       inside the transaction, so a refusal writes nothing. Only when this save carries both: the
       editor posts both for anybody who may write both, and a save that carries one language (a
       reader who may write only that one, a script) is not refused over the other language's text,
@@ -1722,7 +1722,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   const parsed = normalizeForMode(normalizeForType(parseOrThrow(newEventSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
-  // Each language's columns, once: checked for both-or-neither (§NNN) before anything is written,
+  // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
   // then inserted exactly as checked.
   const translationColumns = {
     ro: translationColumnsFrom(parsed.translations.ro, parsed.type),

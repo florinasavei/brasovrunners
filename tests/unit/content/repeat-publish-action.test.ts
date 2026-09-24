@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN — "Publică automat de acum" on the events list's draft line posts to the
+ * `DECISIONS.md` §351 — "Publică automat de acum" on the events list's draft line posts to the
  * same Server Action as the Recurență box (`setRepeatPublishAction`), aimed at the series' source,
  * and lands back on the list rather than in the editor.
  *
@@ -48,7 +48,7 @@ beforeEach(() => {
   redirected.length = 0;
 });
 
-describe("§NNN setRepeatPublishAction from the list's draft line", () => {
+describe("§351 setRepeatPublishAction from the list's draft line", () => {
   it("switches the posted event — the line posts the series' source — on, and returns to the list with its banner", async () => {
     const to = await post({ uiLocale: "ro", eventId: "source-id", publish: "on", returnTo: "list" });
     expect(setRepeatPublish).toHaveBeenCalledTimes(1);

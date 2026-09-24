@@ -113,7 +113,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   */
   labels["event.coHosts"] = t("editor.coHostRows.tooMany", { max: MAX_CO_HOSTS });
   labels["event.coHosts[].name"] = inBox("coHosts", t("editor.coHostRows.name"));
-  // What the partnership is (§NNN): the box's own heading and its language, as the boxes say it.
+  // What the partnership is (§352): the box's own heading and its language, as the boxes say it.
   labels["event.coHosts[].descriptionRo"] = inBox("coHosts", `${t("editor.coHostRows.about")} (${tSite("languageName.ro")})`);
   labels["event.coHosts[].descriptionEn"] = inBox("coHosts", `${t("editor.coHostRows.about")} (${tSite("languageName.en")})`);
   labels["event.coHosts[].links"] = t("editor.coHostRows.tooManyLinksGeneric", { max: MAX_CO_HOST_LINKS });
@@ -125,7 +125,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     const partnerNumber = p + 1;
     labels[`event.coHosts[${p}].name`] = t("editor.coHostRows.nameError", { p: partnerNumber });
     // "Partenerul 1 — despre parteneriat (English): …": the empty side of a one-language text
-    // (§NNN), which is the only side a both-or-neither refusal ever names.
+    // (§352), which is the only side a both-or-neither refusal ever names.
     labels[`event.coHosts[${p}].descriptionRo`] = t("editor.coHostRows.descriptionRoError", { p: partnerNumber, max: MAX_CO_HOST_DESCRIPTION });
     labels[`event.coHosts[${p}].descriptionEn`] = t("editor.coHostRows.descriptionEnError", { p: partnerNumber, max: MAX_CO_HOST_DESCRIPTION });
     labels[`event.coHosts[${p}].links`] = t("editor.coHostRows.tooManyLinks", { p: partnerNumber, max: MAX_CO_HOST_LINKS });

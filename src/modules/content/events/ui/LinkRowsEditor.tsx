@@ -121,7 +121,7 @@ function LinkRowsEditorIsland({
             sx={{
               p: 1.5,
               border: 1,
-              // A label refused for being in one language only (§NNN) marks its row too.
+              // A label refused for being in one language only (§352) marks its row too.
               borderColor: (["url", "kind", "labelRo", "labelEn"] as const).some((field) => recall.named(name(field))) ? "error.main" : "divider",
               borderRadius: 1,
             }}

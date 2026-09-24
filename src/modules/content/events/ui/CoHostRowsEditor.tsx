@@ -32,7 +32,7 @@ const EMPTY: CoHostRowValue = { name: "", descriptionRo: "", descriptionEn: "", 
 
 /**
  * The cards as a refused submit posted them, gathered by both indices from
- * `event.coHosts[p].name`, `event.coHosts[p].descriptionRo` / `.descriptionEn` (§NNN) and
+ * `event.coHosts[p].name`, `event.coHosts[p].descriptionRo` / `.descriptionEn` (§352) and
  * `event.coHosts[p].links[l].<box>` (§315) — the same reading `recalledRows` gives the plain
  * links, one level deeper for the partner a link belongs to.
  */
@@ -100,7 +100,7 @@ function makePartnerRow(value: CoHostRowValue, key: number): PartnerRow {
  * The organizations the event is held with, in the editor (`DECISIONS.md` §168; the owner,
  * §344: "this can have multiple links, so it should be a card, it's like: partner link, partner
  * event, etc"): one boxed card per partner, titled with its name — "Partener nou" while it has
- * none — holding the name box, "Despre parteneriat" in Română and English side by side (§NNN, both
+ * none — holding the name box, "Despre parteneriat" in Română and English side by side (§352, both
  * or neither), and the partner's own links, each a row with its kind, address and a label in each
  * language, the same four boxes `LinkRowsEditor` carries for "Linkuri și fișiere" (§332).
  *
@@ -131,7 +131,7 @@ function CoHostRowsEditorIsland({
     moveDown: string;
     partnerNew: string;
     name: string;
-    /** "Despre parteneriat" (§NNN): the heading over the two description boxes. */
+    /** "Despre parteneriat" (§352): the heading over the two description boxes. */
     about: string;
     /** The two boxes' own labels: each language in its own words, "Română" and "English". */
     descriptionRo: string;
@@ -257,7 +257,7 @@ function CoHostRowsEditorIsland({
               />
 
               {/*
-                What the partnership is (§NNN), right under the name — the order the page reads it
+                What the partnership is (§352), right under the name — the order the page reads it
                 in. Two boxes, one per language, side by side from `sm`: both or neither, so they
                 are always seen together, never behind a tab. Ordinary uncontrolled inputs like the
                 name, so moving a card carries what was typed in them.

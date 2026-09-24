@@ -53,7 +53,7 @@ const card = (
   links: links.map((link) => ({ kind: "SITE", url: "", labelRo: "", labelEn: "", ...link })),
 });
 
-/** A partner as the schema hands it to the service: no description unless one was typed (§NNN). */
+/** A partner as the schema hands it to the service: no description unless one was typed (§352). */
 const saved = (name: string, links: unknown[] = []) => ({ name, descriptionRo: null, descriptionEn: null, links });
 
 const pathsOf = (parsed: ReturnType<typeof parse>) => (parsed.error?.issues ?? []).map((issue) => issue.path.join("."));
@@ -129,7 +129,7 @@ describe("BR-REQ-011-01 criterion 16 one partner's links, as the editor posts th
     ]);
   });
 
-  it("refuses a label of the club's own in one language only, on the empty side — both or neither (§NNN)", () => {
+  it("refuses a label of the club's own in one language only, on the empty side — both or neither (§352)", () => {
     const englishMissing = parse([card("Salvamont", [{ url: "https://example.test/s" }, { url: "https://facebook.com/s", labelRo: "Pagina noastră" }])]);
     expect(englishMissing.success).toBe(false);
     expect(pathsOf(englishMissing)).toEqual(["coHosts.0.links.1.labelEn"]);
@@ -178,10 +178,10 @@ describe("BR-REQ-011-01 criterion 15 the special mark a form may post", () => {
 });
 
 /**
- * BR-REQ-011-01 criterion 16 (§NNN) — what the partnership is, one short paragraph in each
+ * BR-REQ-011-01 criterion 16 (§352) — what the partnership is, one short paragraph in each
  * language, and never in one language alone.
  */
-describe("BR-REQ-011-01 criterion 16 a partner's description, as the editor posts it (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 a partner's description, as the editor posts it (§352)", () => {
   it("keeps a description written in both languages, as one paragraph each", () => {
     const parsed = parse([
       card("Brașov Running Festival", [{ kind: "REGISTRATION", url: "https://festival.example.test/inscriere" }], {

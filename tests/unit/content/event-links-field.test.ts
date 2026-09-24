@@ -62,7 +62,7 @@ describe("BR-REQ-011-01 criterion 20 the links a form may post", () => {
     ]);
   });
 
-  it("refuses a label in one language only, on the empty side — both or neither (§NNN)", () => {
+  it("refuses a label in one language only, on the empty side — both or neither (§352)", () => {
     expect(issuesOf([{ kind: "GPX", url: DRIVE, labelRo: "Traseul de 21 km", labelEn: "" }])).toEqual([
       { path: "links.0.labelEn", message: "link 1: the label is written in Romanian only; write it in English too, or in neither" },
     ]);

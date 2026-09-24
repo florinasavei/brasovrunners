@@ -47,7 +47,7 @@ export function seriesDrafts<M extends SeriesDraftMember>(
   reason: DraftReason | null;
   /**
    * The date that holds the series' rule — the event the series was started from, which the
-   * line's "Publică automat de acum" switches and its "Deschide seria" opens (§NNN). Null for a
+   * line's "Publică automat de acum" switches and its "Deschide seria" opens (§351). Null for a
    * set of dates with no rule among them.
    */
   source: M | null;
@@ -69,7 +69,7 @@ export function seriesDrafts<M extends SeriesDraftMember>(
 }
 
 /**
- * What the draft line offers to do about its drafts, by why they are drafts (§NNN) — before the
+ * What the draft line offers to do about its drafts, by why they are drafts (§351) — before the
  * viewer's role is asked; the page renders a remedy only for a role the server would let use it.
  *
  * The owner, of the line and the paragraphs behind its "?": "ai pus grămadă de text degeaba în

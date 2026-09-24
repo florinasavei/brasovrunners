@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languageTab, openEditorBox } from "./support/fold";
 
 /**
- * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344 and §NNN) — a partner is a
+ * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §344 and §352) — a partner is a
  * card of its own now, in the editor and on the page: its name, what the partnership is in both
  * languages, and its links, where to register with it first.
  *
@@ -54,7 +54,7 @@ test("the editor adds a partner with its description and three links, refuses th
   const coHostsSection = page.locator('[id="field-event.coHosts"]');
   await field("event.coHosts[0].name").fill(partnerName);
   await expect(coHostsSection.getByRole("group", { name: "Despre parteneriat" })).toBeVisible();
-  // Romanian only, for now: the save must refuse it (§NNN, both languages or neither).
+  // Romanian only, for now: the save must refuse it (§352, both languages or neither).
   await field("event.coHosts[0].descriptionRo").fill(ABOUT_RO);
 
   // Named with the partner (§347, batch integration): "Linkuri și fișiere" has its own "Linkul 1".

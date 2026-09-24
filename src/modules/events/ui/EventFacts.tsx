@@ -209,7 +209,7 @@ export default async function EventFacts({
    * label or the kind's word, and the host in small text underneath, the same reading
    * `EventLinks` gives "Linkuri și fișiere" (§332). A partner with no links is just its name.
    *
-   * Between the name and the links, what the partnership is (§NNN; the owner, for the Brașov
+   * Between the name and the links, what the partnership is (§352; the owner, for the Brașov
    * Running Festival: "a short description of the partnership") — in the reader's language and
    * only when the club wrote it in both (`coHostDescription`): never the Romanian sentence on the
    * English page, and never a partnership described on one page and silent on the other. Where to

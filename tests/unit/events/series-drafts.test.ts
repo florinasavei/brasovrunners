@@ -6,7 +6,7 @@ import { draftRemedies, seriesDrafts } from "@/modules/events/domain/series-draf
  * date": "ce înseamnă această 1 ciornă?". `seriesDrafts` names the dates a series is missing
  * from the site, soonest-first among the ones still ahead, why `materializeSeries`
  * (`src/modules/content/events/service.ts`) made them drafts — the rule's own switch is off, or
- * its source is not published — and which date holds the rule; `draftRemedies` (§NNN) says what
+ * its source is not published — and which date holds the rule; `draftRemedies` (§351) says what
  * the line offers to do about each case.
  */
 describe("§341 seriesDrafts — the dates a series is missing from the site", () => {
@@ -99,7 +99,7 @@ describe("§341 seriesDrafts — the dates a series is missing from the site", (
     expect(answer.source).toBeNull();
   });
 
-  it("hands back the date that holds the rule — the one the auto-publish switch and 'Deschide seria' aim at (§NNN)", () => {
+  it("hands back the date that holds the rule — the one the auto-publish switch and 'Deschide seria' aim at (§351)", () => {
     // The source is not necessarily first in the list the page hands over, nor still ahead.
     const holder = { ...source({ cadence: "WEEKLY", weekdays: [], until: null, publish: false }), id: "source" };
     const members = [{ ...child("2026-01-08", "DRAFT"), id: "copy-1" }, holder, { ...child("2026-01-15", "DRAFT"), id: "copy-2" }];
@@ -109,7 +109,7 @@ describe("§341 seriesDrafts — the dates a series is missing from the site", (
   });
 });
 
-describe("§NNN draftRemedies — what the draft line offers, by why the dates are drafts", () => {
+describe("§351 draftRemedies — what the draft line offers, by why the dates are drafts", () => {
   it("offers both 'Publică' and the rule's switch for dates the series made with auto-publish off", () => {
     expect(draftRemedies("autoPublishOff")).toEqual({ publish: true, autoPublish: true, openSource: false });
   });

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import SeriesDraftLine, { type SeriesDraftLineProps } from "@/modules/content/events/ui/SeriesDraftLine";
 
 /**
- * `DECISIONS.md` §341, §NNN — the events list's line for a series' draft dates.
+ * `DECISIONS.md` §341, §351 — the events list's line for a series' draft dates.
  *
  * The owner, 2026-09-24, of "1 dată în ciornă — nu apare pe site: lun., 16 nov. (?)" and the
  * paragraphs behind its "?": "tot nu e clar ce e cu data asta în ciornă… ai pus grămadă de text
@@ -56,7 +56,7 @@ function forms(html: string): Array<{ fields: Map<string, string[]>; html: strin
   });
 }
 
-describe("§NNN SeriesDraftLine — the words, the dates and the fix on one line", () => {
+describe("§351 SeriesDraftLine — the words, the dates and the fix on one line", () => {
   it("says what the dates are, links each to its editor, and keeps a short '?'", () => {
     const html = render({});
     expect(html).toContain("2 date noi, create automat, nu sunt pe site:");
@@ -119,7 +119,7 @@ describe("§NNN SeriesDraftLine — the words, the dates and the fix on one line
   });
 });
 
-describe("§341 §NNN the events list's wiring of the draft line", () => {
+describe("§341 §351 the events list's wiring of the draft line", () => {
   it("hides the bare 'Ciornă · N date' chip for a series — the line replaces it", () => {
     expect(page).toContain('.filter(([status]) => !(isSeries && status === "DRAFT"))');
   });
@@ -253,7 +253,7 @@ describe("§341 the editor's repeat-publish switch", () => {
     expect(panel).toContain('<CheckboxField name="publish" defaultChecked={publish}>');
     expect(panel).toContain("<form action={actions.setRepeatPublish}>");
     expect(editor).toContain("actions={{ setRepeatPublish: setRepeatPublishAction, stopRepeat: stopRepeatAction }}");
-    // The box posts no `returnTo`, so its press still lands on the editor (§NNN).
+    // The box posts no `returnTo`, so its press still lands on the editor (§351).
     expect(panel).not.toContain('name="returnTo"');
   });
 

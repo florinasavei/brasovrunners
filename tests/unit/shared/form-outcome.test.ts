@@ -115,10 +115,10 @@ describe("the event form's names", () => {
     expect(eventFormFieldName("coHosts.0.links")).toBe("event.coHosts[0].links");
     // The whole list of partners — "too many partners on this event".
     expect(eventFormFieldName("coHosts")).toBe("event.coHosts");
-    // A partner's description in one language only (§NNN): the card's own empty box.
+    // A partner's description in one language only (§352): the card's own empty box.
     expect(eventFormFieldName("coHosts.0.descriptionEn")).toBe("event.coHosts[0].descriptionEn");
     expect(eventFormFieldName("coHosts.1.links.0.labelRo")).toBe("event.coHosts[1].links[0].labelRo");
-    // An event text in one language only (§NNN): the other language's box, as the form posts it.
+    // An event text in one language only (§352): the other language's box, as the form posts it.
     expect(eventFormFieldName("translations.en.body")).toBe("translations.en.body");
   });
 

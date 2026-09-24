@@ -150,7 +150,7 @@ function eventFieldsFrom(form: FormData) {
 
   /**
    * The partners (§168) and their links (§344), posted as `event.coHosts[p].name`,
-   * `event.coHosts[p].descriptionRo` / `.descriptionEn` (§NNN) and
+   * `event.coHosts[p].descriptionRo` / `.descriptionEn` (§352) and
    * `event.coHosts[p].links[l].<box>` by `CoHostRowsEditor` — gathered by both indices, blanks
    * included; `fields.ts` drops the spare card and the spare link row, and refuses a card with
    * a link and no name, a link with no address, or a text in one language only, naming both
@@ -159,7 +159,7 @@ function eventFieldsFrom(form: FormData) {
   const coHosts: Array<{ name?: string; descriptionRo?: string; descriptionEn?: string; links: Array<Record<string, string>> }> = [];
   for (const [key, entry] of form.entries()) {
     if (typeof entry !== "string") continue;
-    // The card's own boxes: its name, and what the partnership is in each language (§NNN).
+    // The card's own boxes: its name, and what the partnership is in each language (§352).
     const cardMatch = /^event\.coHosts\[(\d+)\]\.(name|descriptionRo|descriptionEn)$/.exec(key);
     if (cardMatch) {
       const p = Number(cardMatch[1]);
@@ -710,7 +710,7 @@ export async function stopRepeatAction(form: FormData): Promise<void> {
  * publishes); a draft source is not refused — the switch is stored and waits until the source is
  * live (`setRepeatPublish`).
  *
- * Also posted from the events list's draft line, "Publică automat de acum" (§NNN), which aims it
+ * Also posted from the events list's draft line, "Publică automat de acum" (§351), which aims it
  * at the source with `publish=on` and `returnTo=list`: that press lands back on the list, where
  * the line it came from still shows the dates already created. Only the word `list` is read,
  * never an address, so nothing posted can choose where the redirect goes — anything else is the

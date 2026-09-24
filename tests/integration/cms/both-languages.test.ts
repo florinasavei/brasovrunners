@@ -10,7 +10,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * Both languages or neither (§NNN; the owner, 2026-09-24: "I want multi-lingual, always"), through
+ * Both languages or neither (§352; the owner, 2026-09-24: "I want multi-lingual, always"), through
  * the one save and the one create the editor posts to.
  *
  * A partner's description (new with this rule), a partner link's label, and the event's optional
@@ -123,7 +123,7 @@ async function save(eventId: string, changes: Record<string, unknown>, texts: Pa
   });
 }
 
-describe("BR-REQ-011-01 criterion 16 a partner's description, saved and read (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 a partner's description, saved and read (§352)", () => {
   it("stores both languages in the partner's card and the public page reads each in its own language", async () => {
     const { event, published } = await createEventAndPublish(db, {
       actor: admin,
@@ -197,7 +197,7 @@ describe("BR-REQ-011-01 criterion 16 a partner's description, saved and read (§
   });
 });
 
-describe("BR-REQ-050-01 the event's optional texts: both languages or neither (§NNN)", () => {
+describe("BR-REQ-050-01 the event's optional texts: both languages or neither (§352)", () => {
   it.each([
     ["the description", { ro: { body: doc("Traseul trece prin centru.") } }, "translations.en.body"],
     ["the rules", { en: { rules: doc("Headphones are not allowed.") } }, "translations.ro.rules"],

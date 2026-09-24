@@ -394,7 +394,7 @@ type CoHostEvent = Parameters<typeof readCoHosts>[0];
 /**
  * Box 12: `Împreună cu Brașov Running Festival · 2 linkuri · cu descriere`, or `Fără parteneri`.
  *
- * The links are counted across every card; the description (§NNN) is one word — "cu descriere"
+ * The links are counted across every card; the description (§352) is one word — "cu descriere"
  * when a card carries it in both languages — and says "descriere într-o singură limbă" instead
  * whenever a card holds half a pair, because that card is the one the next save will refuse and
  * the closed line is where the organizer sees it first.

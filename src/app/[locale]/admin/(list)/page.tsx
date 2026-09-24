@@ -210,7 +210,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   };
 
   /*
-    The draft line's opening words (§NNN), by why the dates are drafts — the owner: "practic asta
+    The draft line's opening words (§351), by why the dates are drafts — the owner: "practic asta
     e data din aia de viitor generată automat?". A date the series made by itself says so: "1 dată
     nouă, creată automat, nu e pe site:"; the adjective and the verb agree with the count, so each
     count form is its own key (no ICU plurals, `docs/VIBECODING.md`).
@@ -349,7 +349,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           1 date": "ce înseamnă această 1 ciornă?"). A draft date is a date the site does not
           show, and the chip said neither that nor which date nor why: the line names the dates,
           each a link to its editor, says what they are — created by the series itself, or
-          waiting on a source that is not published — and carries the fix (§NNN): "Publică" for
+          waiting on a source that is not published — and carries the fix (§351): "Publică" for
           exactly these dates, "Publică automat de acum" for the rule, or "Deschide seria".
         */
         const { drafts, reason, source } = isSeries
@@ -513,7 +513,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {saved === "eventErased" && (
           <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
         )}
-        {/* The draft line's "Publică automat de acum" lands here (§NNN): the dates already made
+        {/* The draft line's "Publică automat de acum" lands here (§351): the dates already made
             are still listed below, and this says why and what they need. */}
         {saved === "repeatPublishOn" && (
           <Alert severity="success">{t("events.seriesAutoPublishStarted", { button: t("events.seriesDraftsPublish") })}</Alert>

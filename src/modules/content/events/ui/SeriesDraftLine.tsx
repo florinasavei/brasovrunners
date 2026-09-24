@@ -13,7 +13,7 @@ type Confirmed = { label: string; confirmTitle: string; confirmBody: string; con
 
 /**
  * "1 dată nouă, creată automat, nu e pe site: lun., 16 nov. [Publică] [Publică automat de acum]"
- * — the series row's line for the dates the site is missing (`DECISIONS.md` §341, §NNN).
+ * — the series row's line for the dates the site is missing (`DECISIONS.md` §341, §351).
  *
  * The owner, of the line it replaced and its "?": "tot nu e clar ce e cu data asta în ciornă… ai
  * pus grămadă de text degeaba în tooltip… practic asta e data din aia de viitor generată

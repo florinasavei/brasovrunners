@@ -24,7 +24,7 @@ export const MAX_CO_HOST_LINK_LABEL = 80;
 /** Longer than any share link a partner's own site, event platform or social profile makes. */
 export const MAX_CO_HOST_LINK_URL = 2000;
 /**
- * What the partnership is, in a sentence or two (§NNN; the owner, for the Brașov Running
+ * What the partnership is, in a sentence or two (§352; the owner, for the Brașov Running
  * Festival's card: "a short description of the partnership") — one short paragraph under the
  * partner's name, not an article. Three hundred characters is two full sentences.
  */
@@ -84,7 +84,7 @@ export type CoHostLink = {
 export type CoHost = {
   name: string;
   /**
-   * What the partnership is, in each language, as stored (§NNN) — or null. **A public surface
+   * What the partnership is, in each language, as stored (§352) — or null. **A public surface
    * never reads these two directly**: it asks `coHostDescription`, which answers only when both
    * are written, so a row that somehow holds one language is shown in neither and the English
    * page never carries the Romanian sentence. The editor reads them as they are, so a half-written
@@ -143,7 +143,7 @@ function readDescription(value: unknown): string | null {
  * silently "no link", exactly as the two columns before the list ever did, and an unreadable
  * entry inside `links` is dropped rather than taking the rest of the partner's links with it.
  * A name is still required — a partner without one is nothing to render. The description
- * (§NNN) is read the same forgiving way (`readDescription`): every older shape has none, and
+ * (§352) is read the same forgiving way (`readDescription`): every older shape has none, and
  * reads with both languages null.
  */
 const coHostSchema = z
@@ -211,7 +211,7 @@ export function readCoHosts(row: CoHostSource): CoHost[] {
 /**
  * What the partnership is, in the reader's language — or null, which the page renders as nothing.
  *
- * **Both or neither** (§NNN; the owner: "I want multi-lingual, always"): the save refuses a
+ * **Both or neither** (§352; the owner: "I want multi-lingual, always"): the save refuses a
  * description written in one language only, and this is the same rule on the way out, for a row
  * that reached the column some other way (a hand-written `UPDATE`, a release that saved it
  * before the rule). Half a pair answers null in *both* languages: the Romanian page does not

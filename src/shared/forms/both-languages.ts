@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 /**
- * Both languages or neither (§NNN; the owner, 2026-09-24: "I want multi-lingual, always").
+ * Both languages or neither (§352; the owner, 2026-09-24: "I want multi-lingual, always").
  *
  * Every text the club types for a page is Romanian **and** English. A text that is optional is
  * optional in both at once: written in both, or left empty in both. One side written and the

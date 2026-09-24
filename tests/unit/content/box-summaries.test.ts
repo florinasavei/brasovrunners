@@ -200,7 +200,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(coHostsSummary(words, { coHosts: [{ name: "Salvamont" }, { name: "Decathlon" }], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Salvamont și Decathlon",
     );
-    // The partner's links counted, and its description in one word (§NNN)…
+    // The partner's links counted, and its description in one word (§352)…
     const festival = {
       name: "Brașov Running Festival",
       descriptionRo: "Alergăm împreună.",

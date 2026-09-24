@@ -127,7 +127,7 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
-  it("says what the partnership is in the page's language, and only when the club wrote it in both (§NNN)", () => {
+  it("says what the partnership is in the page's language, and only when the club wrote it in both (§352)", () => {
     const festival = (descriptionEn: string | null) =>
       baseEvent({
         coHosts: [

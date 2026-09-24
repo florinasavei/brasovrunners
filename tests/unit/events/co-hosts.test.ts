@@ -30,7 +30,7 @@ const row = (values: Partial<Parameters<typeof readCoHosts>[0]> = {}) => ({
 /** A site link, the one a bare `url` — old column or old list entry — always meant (§168). */
 const site = (url: string) => [{ kind: "SITE", url, labelRo: null, labelEn: null }];
 
-/** A partner as `readCoHosts` answers it: no description unless the row stored one (§NNN). */
+/** A partner as `readCoHosts` answers it: no description unless the row stored one (§352). */
 const host = (name: string, links: unknown[] = []) => ({ name, descriptionRo: null, descriptionEn: null, links });
 
 describe("BR-REQ-011-01 criterion 16 reading an event's partners", () => {
@@ -190,7 +190,7 @@ describe("BR-REQ-011-01 criterion 16 a partner link's label and host, in each la
 });
 
 /**
- * BR-REQ-011-01 criterion 16 (§NNN) — what the partnership is, in a sentence or two per language,
+ * BR-REQ-011-01 criterion 16 (§352) — what the partnership is, in a sentence or two per language,
  * stored inside the same `co_hosts` list and read as leniently as the rest of the card.
  */
 describe("BR-REQ-011-01 criterion 16 a partner's description, as stored", () => {
@@ -233,7 +233,7 @@ describe("BR-REQ-011-01 criterion 16 a partner's description, as stored", () => 
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 a partner's description on a public page: both languages or neither (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 a partner's description on a public page: both languages or neither (§352)", () => {
   it("is the reader's language when the club wrote both", () => {
     const partner = { descriptionRo: "Alergăm împreună.", descriptionEn: "We run together." };
     expect(coHostDescription(partner, "ro")).toBe("Alergăm împreună.");
@@ -252,7 +252,7 @@ describe("BR-REQ-011-01 criterion 16 a partner's description on a public page: b
   });
 });
 
-describe("BR-REQ-011-01 criterion 16 a partner's links in the page's order (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 a partner's links in the page's order (§352)", () => {
   it("puts where to register first, and the rest in the club's own order", () => {
     const links = [
       { kind: "SITE" as const, url: "https://a.test", labelRo: null, labelEn: null },

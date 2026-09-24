@@ -166,7 +166,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           eventUrl(locale, slug),
           tSite("name"),
           [absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/opengraph-image`), absoluteUrl(env.APP_BASE_URL, `/${locale}/events/${slug}/share-image`)],
-          // The page's language, for what a partnership is (§NNN) — said in this language or not at all.
+          // The page's language, for what a partnership is (§352) — said in this language or not at all.
           locale,
         )}
       />

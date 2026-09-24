@@ -4,7 +4,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox } from "./support/fold";
 
 /**
- * `DECISIONS.md` §341, §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
+ * `DECISIONS.md` §341, §351 — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
  * 1 date": "ce înseamnă această 1 ciornă?", and then of the line that replaced the chip: "tot nu
  * e clar ce e cu data asta în ciornă… ai pus grămadă de text degeaba în tooltip… practic asta e
  * data din aia de viitor generată automat?".

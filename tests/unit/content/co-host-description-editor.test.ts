@@ -10,7 +10,7 @@ import { htmlConstraints } from "@/shared/forms/constraints";
 import { RecallProvider } from "@/shared/forms/recall";
 
 /**
- * BR-REQ-011-01 criterion 16 (§NNN) — "Despre parteneriat" in the partner's card: two boxes,
+ * BR-REQ-011-01 criterion 16 (§352) — "Despre parteneriat" in the partner's card: two boxes,
  * Română and English, right under the partner's name, whose ceiling is read off the schema, and
  * which come back exactly as typed after a refused save (§315) with the empty side marked.
  */
@@ -76,7 +76,7 @@ function textarea(html: string, name: string): { tag: string; value: string } {
   return { tag: match?.[1] ?? "", value: match?.[2] ?? "" };
 }
 
-describe("BR-REQ-011-01 criterion 16 the partner's description in the editor (§NNN)", () => {
+describe("BR-REQ-011-01 criterion 16 the partner's description in the editor (§352)", () => {
   it("reads the boxes' ceiling off the schema, so the browser refuses what the server would", () => {
     expect(CONSTRAINTS.description).toEqual({ maxLength: MAX_CO_HOST_DESCRIPTION });
   });
