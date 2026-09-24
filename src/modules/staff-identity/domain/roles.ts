@@ -326,6 +326,26 @@ export function canReadRegistrations(role: StaffRole): boolean {
 }
 
 /**
+ * **Writing to an event's participants in the club's own words (§NNN)** — "Trimite un mesaj
+ * participanților": bad weather, a changed start, anything the organizer has to tell the people
+ * registered for one event.
+ *
+ * Whoever may tell them about a change today (`canEditEventFields`, the §331 update notice) and
+ * may also read who they are (`canReadRegistrations`) — so the Organizer, the Administrator and
+ * the Superadministrator. Written as the conjunction rather than as a new list, so that moving
+ * either boundary moves this with it.
+ *
+ * **The Tehnic role is out on purpose**, although it outranks the Organizer and may save an
+ * event's fields: a free-form message to every registrant is an act on the participant list, and
+ * `DEV` is the role that never receives it (§38, §289). The update notice carries the platform's
+ * sentences and the facts of the event; this carries whatever was typed. The volunteer and the
+ * Redactor are out as they are out of the event's settings.
+ */
+export function canMessageParticipants(role: StaffRole): boolean {
+  return canEditEventFields(role) && canReadRegistrations(role);
+}
+
+/**
  * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
  * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
  * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.

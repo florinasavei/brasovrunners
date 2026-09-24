@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -147,6 +148,9 @@ export type ActionIconName =
   | "download"
   | "send"
   | "resend"
+  // Writing to an event's participants in the club's own words (§NNN): the loudspeaker, because
+  // it is an announcement to many, not one message sent again.
+  | "announce"
   // People and settings.
   | "revoke"
   | "role"
@@ -214,6 +218,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   download: DownloadIcon,
   send: SendIcon,
   resend: ForwardToInboxIcon,
+  announce: CampaignIcon,
 
   revoke: PersonOffIcon,
   role: ManageAccountsIcon,

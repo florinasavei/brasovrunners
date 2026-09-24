@@ -139,6 +139,12 @@ export const routing = defineRouting({
      * the paper it replaces, in both locales, because it is printed and handed over.
      */
     "/admin/events/[id]/urgente": "/admin/events/[id]/urgente",
+    /**
+     * "Trimite un mesaj participanților" (§NNN): the organizer writes to the people registered for
+     * one event, in both languages, and sees what was sent before. One spelling in both locales,
+     * like `urgente`: a backoffice address, read by the club.
+     */
+    "/admin/events/[id]/mesaje": "/admin/events/[id]/mesaje",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",
