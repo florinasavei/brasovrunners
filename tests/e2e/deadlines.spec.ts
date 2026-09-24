@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser } from "@playwright/test";
 import pg from "pg";
 import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
@@ -23,10 +23,13 @@ function databaseUrl(): string {
 
 /**
  * The defaults back, through the panel — the save drops the server's copy and expires the public
- * pages' cached one, which a bare `DELETE` would not. Should the page itself be what broke, the row
+ * pages' cached one, which a bare `DELETE` would not. In a browser context of its own, signed in
+ * afresh, whatever the test's page was left doing. Should the page itself be what broke, the row
  * goes anyway (no row reads as the defaults), so the database is right even if a cache lags a minute.
  */
-async function restoreDefaults(page: Page, defaults: Record<string, string>): Promise<void> {
+async function restoreDefaults(browser: Browser, defaults: Record<string, string>): Promise<void> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
   try {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");
@@ -43,6 +46,8 @@ async function restoreDefaults(page: Page, defaults: Record<string, string>): Pr
     } finally {
       await client.end();
     }
+  } finally {
+    await context.close();
   }
 }
 test.describe("§NNN the club's deadlines on /admin/emails", () => {
@@ -60,9 +65,13 @@ test.describe("§NNN the club's deadlines on /admin/emails", () => {
     seriesHorizonDays: "56",
   };
 
-  test.afterEach(async ({ page }) => {
-    if (test.info().project.name !== "desktop") return;
-    await restoreDefaults(page, DEFAULTS);
+  // Set by a test that is about to save; the restore runs only then, with time of its own.
+  let changed = false;
+  test.afterEach(async ({ browser }) => {
+    if (!changed) return;
+    changed = false;
+    test.setTimeout(test.info().timeout + 60_000);
+    await restoreDefaults(browser, DEFAULTS);
   });
 
   test("an Administrator changes a deadline, and the page says it", async ({ page }) => {
@@ -78,6 +87,7 @@ test.describe("§NNN the club's deadlines on /admin/emails", () => {
     for (const [name, value] of Object.entries(DEFAULTS)) await expect(panel.locator(`input[name="${name}"]`)).toHaveValue(value);
 
     // Three days for the reminder.
+    changed = true;
     await panel.locator('input[name="reminderHours"]').fill("72");
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
     await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
