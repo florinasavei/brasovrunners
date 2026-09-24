@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
+import type { FoldOpenWhen } from "@/shared/ui/fold";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -20,6 +21,8 @@ type Props = {
   declarations: DeclarationCopies;
   /** Who may change these lists (§291): the Administrator; `updateClubNotices` refuses anybody else. */
   mayEdit: boolean;
+  /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§NNN). */
+  openWhen?: FoldOpenWhen;
 };
 
 /**
@@ -37,14 +40,28 @@ type Props = {
  * mailbox nobody on the message can see, which is exactly why somebody asks for it and exactly
  * why the person setting it should be looking at those words when they do.
  */
-export default async function ClubNoticesPanel({ locale, notices, declarations, mayEdit }: Props) {
+export default async function ClubNoticesPanel({ locale, notices, declarations, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  /*
+    How many mailboxes receive anything from these lists, for the closed fold's summary (§NNN):
+    the declaration copy as it resolves (the setting, or `DECLARATIONS_ARCHIVE_TO`), the
+    confirmation notices and the hidden copies of the participants' messages. A mailbox on two
+    lists is one mailbox, compared without case the way the lists themselves drop a repeat.
+  */
+  const mailboxes = new Set(
+    [declarations.to, ...declarations.cc, ...declarations.bcc, ...notices.confirmations.to, ...notices.participants.bcc]
+      .filter((address): address is string => Boolean(address))
+      .map((address) => address.toLowerCase()),
+  ).size;
 
   return (
     <Panel
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
+      aside={t("emails.clubNotices.aside", { count: mailboxes })}
       collapsible
+      openWhen={openWhen}
+      id="club-notices"
       data-testid="club-notices"
     >
 

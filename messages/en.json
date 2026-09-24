@@ -2057,6 +2057,8 @@
       "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere.",
       "link": "See the emails participants receive →",
       "subject": "Subject",
+      "aside": "{count} messages · {language}",
+      "langLabel": "The language you see and write the messages in:",
       "lang": {
         "ro": "Română",
         "en": "English"
@@ -2105,8 +2107,31 @@
         "EVENT_UPDATE_NOTICE": "Only when an organizer ticks “Tell participants about the change” while saving the event, and only if the place, the date and time or the programme changed, or they wrote a note. One email to every active registration (waiting for the declaration, on the waiting list, offered a place, confirmed), in its language; the place and time are the ones at sending time. No token: the button leads to the event's page. Unticked, nothing is sent.",
         "EVENT_CANCELLED": "When an organizer sets the event's status to “Cancelled” and leaves “Tell the participants” ticked. With the reason they wrote, to every active registration, in its language. The registrations are not cancelled; no token and no action link."
       },
+      "whenShort": {
+        "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
+        "COMPLETE_DECLARATION": "after the address is confirmed, when there is a place",
+        "WAITLIST_JOINED": "after the address is confirmed, when the event is full",
+        "WAITLIST_SPOT_OFFER": "when a place frees up",
+        "REGISTRATION_CONFIRMED": "after the declaration is signed",
+        "REGISTRATION_CANCELLED": "on a withdrawal or a cancellation",
+        "WAITLIST_OFFER_EXPIRED": "when the offer's 24 hours pass",
+        "REGISTRATION_MANAGE_LINK": "on request, “Resend the link”",
+        "PROFILE_MANAGE_LINK": "on request, every registration",
+        "REGISTRATION_STATE_NOTICE": "resent by an organizer",
+        "EVENT_REMINDER": "two days before the start",
+        "EVENT_THANKS": "by hand, after the event",
+        "DECLARATION_SIGNED": "after the declaration is signed, with the PDF",
+        "DECLARATION_ARCHIVE": "with each signed declaration, to the archive",
+        "BIB_ASSIGNED": "when an organizer sets the number by hand",
+        "STAFF_INVITATION": "when a colleague is added",
+        "REGISTRATION_OPENED": "when registration opens",
+        "CLUB_CONFIRMATION_NOTICE": "on every confirmation, to the club",
+        "EVENT_UPDATE_NOTICE": "only when an organizer announces a change",
+        "EVENT_CANCELLED": "when the event is cancelled, if ticked"
+      },
       "clubNotices": {
         "title": "The club's copies",
+        "aside": "Addresses receiving copies: {count}",
         "intro": "Who at the club receives a copy of a signed declaration, who is told when somebody confirms their registration, and who receives a hidden copy of the emails to participants. Club addresses, never a participant's.",
         "participantsInForce": "Hidden copy of the emails to participants: {bcc}.",
         "source": {
@@ -2164,6 +2189,11 @@
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
         "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
+        "aside": {
+          "day": "Plan {plan} · {sent} of {allowance} today",
+          "month": "Plan {plan} · {sent} of {allowance} this month",
+          "none": "Plan {plan} · no limit"
+        },
         "status": {
           "day": "Plan {plan}: {sent} of {allowance} messages sent today, {remaining} left; waiting: {waiting}.",
           "month": "Plan {plan}: {sent} of {allowance} messages sent this month, {remaining} left; no daily limit; waiting: {waiting}.",
@@ -2194,6 +2224,8 @@
       },
       "contacts": {
         "title": "Who receives the contact messages",
+        "aside": "They currently reach: {to}",
+        "asideNobody": "nobody",
         "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another, “Hidden copy (Bcc)” get a copy without appearing in the message. Saved here, with no redeploy.",
         "source": {
           "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",

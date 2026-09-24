@@ -179,11 +179,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       {/*
         Adding a colleague is a nine-field form and a rare act — twice a season — above the list
-        that is read every time. It is a panel of its own now (§269) and it folds, but it starts
-        open: a closed `<details>` is not in the accessibility tree, so a form that begins shut
-        is a form a screen reader cannot find.
+        that is read every time. It is a panel of its own (§269), and since §NNN it starts closed
+        like every backoffice fold: its heading is a real `h2` in the summary, which a screen
+        reader finds while the fold is shut. A refused add keeps the fold the person opened
+        (§315); a successful one is shown in the list below and in the banner, so it does not
+        reopen an empty form.
       */}
-      <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
+      <Panel title={t("staff.inviteTitle")} collapsible id="staff-invite" data-testid="staff-invite">
         {/* A refused address or name comes back in its box, named in the summary (§315); the
             browser refuses first what the schema would (`staffInviteConstraints`). */}
         <ActionForm

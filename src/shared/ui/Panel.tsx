@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { BOXED_DISCLOSURE_SX } from "./disclosure";
+import { type FoldOpenWhen, opensByItself } from "./fold";
 
 type Props = {
   /** The heading, and — when the panel folds — the words that open it. */
@@ -10,14 +11,23 @@ type Props = {
   intro?: string;
   /**
    * A figure or a state beside the title, which stays readable while the panel is closed: how
-   * many bibs are printed, how many messages wait. A closed fold that says nothing is a fold
-   * nobody opens.
+   * many bibs are printed, how many messages wait, which plan the account is on, where the
+   * contact messages go. A closed fold that says nothing is a fold nobody opens.
    */
   aside?: ReactNode;
   /** Whether the panel folds at all. A panel that holds one line does not need to. */
   collapsible?: boolean;
-  /** Open on arrival. Ignored unless `collapsible`. */
-  defaultOpen?: boolean;
+  /**
+   * Why this fold opens by itself (`shared/ui/fold.ts`, §NNN). Closed when absent or when no
+   * reason holds. Ignored unless `collapsible`.
+   */
+  openWhen?: FoldOpenWhen;
+  /**
+   * The heading's level: 2 for a panel on the screen, 3 for a fold inside one — the message
+   * cards inside "Emailurile trimise participanților" — so the heading list a screen reader
+   * navigates by has the same shape as the screen.
+   */
+  level?: 2 | 3;
   id?: string;
   "data-testid"?: string;
   children: ReactNode;
@@ -33,11 +43,17 @@ type Props = {
  * screen every time. A box says where one thing ends, and a fold takes the ones that are not
  * today's work out of the way without hiding that they exist.
  *
- * **A panel that holds a form starts open.** A closed `<details>` is not in the accessibility
- * tree at all — a screen reader cannot find its heading, and neither could the e2e suite, which
- * is how this was caught. So `defaultOpen={false}` is for what is *read* and only when there is
- * nothing in it to act on: the outbox queue with nothing waiting. Everything with a control in
- * it folds on request and not on arrival.
+ * **A fold starts closed, and opens by itself when it holds something to see** (§NNN, reversing
+ * §269's "a panel that holds a form starts open"; the owner, 2026-09-23: "I would like the
+ * accordions to be closed by default"). §269's reason was a heading nobody could find, and it
+ * was the heading's fault rather than the fold's: the heading was once the `<summary>` itself
+ * with a heading's typography, which carries no heading role. It is a real `h2` inside the
+ * summary now, and a summary is rendered while its fold is shut — so the heading list and the
+ * e2e suite find every closed panel by name, and what is out of sight is only the body. What
+ * still has to be seen is opened by `openWhen`, which names why: a refusal from the panel's own
+ * form, its own save, something that asks for action, a filter or a language shaping the page.
+ * A kept form's refusal (§315) and a `#fragment` are handled beside it — `shared/ui/fold.ts`
+ * says where.
  *
  * **A Server Component over `<details>`, never client state.** The same reasoning `SubNav`
  * records: the backoffice works with JavaScript off, and a panel whose open state lived in
@@ -56,7 +72,8 @@ export default function Panel({
   intro,
   aside,
   collapsible = false,
-  defaultOpen = true,
+  openWhen,
+  level = 2,
   id,
   "data-testid": testId,
   children,
@@ -75,6 +92,10 @@ export default function Panel({
         scrollMarginTop: 16,
       } as const);
 
+  const headingTag = level === 3 ? "h3" : "h2";
+  // A fold inside a panel reads a step smaller, so the card and its cards are told apart.
+  const headingSize = level === 3 ? "1rem" : "1.1rem";
+
   const heading = (
     <>
       {title}
@@ -89,7 +110,7 @@ export default function Panel({
   if (!collapsible) {
     return (
       <Box component="section" id={id} data-testid={testId} sx={frame}>
-        <Typography variant="h2" sx={{ fontSize: "1.1rem" }}>
+        <Typography component={headingTag} variant="h2" sx={{ fontSize: headingSize }}>
           {heading}
         </Typography>
         {intro && (
@@ -103,7 +124,7 @@ export default function Panel({
   }
 
   return (
-    <Box component="details" id={id} data-testid={testId} open={defaultOpen || undefined} sx={frame}>
+    <Box component="details" id={id} data-testid={testId} open={opensByItself(openWhen) || undefined} sx={frame}>
       {/*
         The heading is an `h2` **inside** the summary, not the summary itself.
 
@@ -117,7 +138,7 @@ export default function Panel({
         and Safari drop the marker when it is).
       */}
       <Box component="summary">
-        <Typography component="h2" variant="h2" sx={{ fontSize: "1.1rem", display: "inline" }}>
+        <Typography component={headingTag} variant="h2" sx={{ fontSize: headingSize, display: "inline" }}>
           {heading}
         </Typography>
       </Box>
