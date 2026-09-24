@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import ro from "../../../messages/ro.json";
 import { eventInputConstraints } from "@/modules/content/events/constraints";
 import { eventFieldsSchema, newEventSchema } from "@/modules/content/events/fields";
-import { eventFormFieldName } from "@/modules/content/events/form-names";
+import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD } from "@/modules/content/events/form-names";
 import { placeSummary, type SummaryTranslation, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
 import PlaceToBeAnnounced from "@/modules/content/events/ui/PlaceToBeAnnounced";
 import { eventChangesToAnnounce, type EventChangeFacts } from "@/modules/events/domain/event-changes";
@@ -160,6 +160,22 @@ describe("BR-REQ-011-01 criterion 30 an older event's English name follows its R
     // The first save of an older event, nothing moved: both rows take the page's name.
     expect(englishNameAfterSave(older, { ro: null, en: null }, { ro: "Parcul Tractorul", en: "Parcul Tractorul" })).toBe("Parcul Tractorul");
   });
+
+  it("never fills a blank English box: an event with no place yet does not get the Romanian one in English (found by re-review)", () => {
+    // The place to be announced, nothing named yet; the organizer types only the Romanian venue.
+    const noPlace = { locationName: null, locationAddress: null };
+    expect(englishNameAfterSave(noPlace, { ro: null, en: null }, { ro: "Sala Sporturilor", en: null })).toBeNull();
+    expect(englishNameAfterSave(noPlace, { ro: null, en: null }, { ro: "Sala Sporturilor", en: "  " })).toBe("  ");
+    // An older event's blank English box is the organizer's too.
+    expect(englishNameAfterSave(older, { ro: null, en: null }, { ro: "Parcul Titulescu", en: null })).toBeNull();
+  });
+
+  it("keeps the English as posted when the Romanian row had a name of its own, as the editor's line says (found by re-review)", () => {
+    // The two pages already said different things: the Romanian its own name, the English the event's.
+    const rows = { ro: "Parcul Tractorul, intrarea nord", en: null };
+    expect(englishNameAfterSave(older, rows, { ro: "Parcul Titulescu", en: "Parcul Tractorul" })).toBe("Parcul Tractorul");
+    expect(englishLeftBehind({ ro: "Parcul Tractorul, intrarea nord", en: "Parcul Tractorul" }, { ro: "Parcul Titulescu", en: "Parcul Tractorul" })).toBe(true);
+  });
 });
 
 describe("BR-REQ-011-01 criterion 30 the English box while the Romanian is typed", () => {
@@ -278,19 +294,17 @@ describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
     expect(render("Parcul Tractorul", "Tractorul Park", both)).not.toContain("place-english-left-behind");
   });
 
-  it("is a thumb's size, and fills the box through the input's own setter so every watcher sees it", () => {
+  it("keeps the unseen half of each label one pixel wide, never MUI's `1` (100%)", () => {
+    // A label-wide span pushed a 320-pixel page sideways. The copy and the following themselves
+    // are the pure rules above and the e2e steps (`cms-publish`, `event-notices`).
     const island = read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx");
-    expect(island).toContain("sx={{ ...TAP_TARGET, alignSelf: \"flex-start\", textTransform: \"none\" }}");
-    expect(island).toContain('Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, text)');
-    expect(island).toContain('input.dispatchEvent(new Event("input", { bubbles: true }))');
-    // The copy asks the rule before it writes, and the Romanian box moves a linked English one.
-    expect(island).toContain("if (mayCopyToEnglish(ro, en)) writeEnglish(enBox.current, ro.trim());");
-    expect(island).toContain("if (englishFollowsTyping(ro, en)) writeEnglish(box.form?.elements.namedItem(EN_NAME), text);");
-    expect(island).toContain("disabled={!mayCopyToEnglish(ro, en)}");
-    // The unseen half of each label is one pixel, not MUI's `1` (100%): a label-wide span pushed a
-    // 320-pixel page sideways.
     expect(island).toContain('width: "1px"');
     expect(island).not.toMatch(/width: 1,/);
+  });
+
+  it("says its English name is final only once it runs: the server's HTML carries no marker (found by re-review)", () => {
+    // With JavaScript off nothing followed on the screen, so the service's rule is the whole answer.
+    expect(render("Parcul Tractorul", "Parcul Tractorul")).not.toContain(PLACE_NAMES_AS_TYPED_FIELD);
   });
 });
 

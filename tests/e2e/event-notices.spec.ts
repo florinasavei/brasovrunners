@@ -102,6 +102,8 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(place.getByTestId("place-copy-to-english")).toBeDisabled();
     await field("event.locationNameEn").fill(`Poiana Brașov ${suffix}`);
     await expect(place.getByTestId("place-english-left-behind")).toHaveCount(0);
+    // The box ran here, so the save keeps its English as it stands (found by re-review).
+    await expect(place.locator('input[name="event.placeNamesAsTyped"]')).toHaveValue("1");
     // The same words in both boxes: the amber line, before anything is saved.
     await field("notice.noteRo").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await field("notice.noteEn").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");

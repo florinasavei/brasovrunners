@@ -1356,6 +1356,15 @@ export type SaveEventAndTranslationsInput = {
   notice?: EventNoticeRequest;
   /** Required when the save moves the event to CANCELLED (§331): the reason, and whether to tell. */
   cancellation?: EventCancellationRequest;
+  /**
+   * The Locul box's names were typed in the editor with JavaScript running (§NNN, found by
+   * re-review): its English box already followed the Romanian one on the screen while the two
+   * agreed, and what it holds now is what the organizer left there — "Tractorul Park" put back
+   * after the Romanian became "Parcul Tractorul" included, under the line that says so. Both
+   * names are then kept as posted. Absent — no JavaScript, a script, a test — an older event's
+   * English follows its Romanian on the server instead (`place.ts#englishNameAfterSave`).
+   */
+  placeNamesAsTyped?: boolean;
   now?: Date;
 };
 
@@ -1721,8 +1730,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     let savedEvent: EditableEvent = current;
     const savedTranslations: EditableTranslation[] = [];
     // The place's name in each language, when the event's fields are part of this save (§NNN) —
-    // an older event's English following its Romanian when only the Romanian moved.
-    const names: PlaceNames = parsedEventFields ? namesAfterSave(current, existingTranslations, placeNamesFrom(parsedEventFields)) : {};
+    // an older event's English following its Romanian when only the Romanian moved, unless the
+    // editor's box did that on the screen already and the organizer saw what it holds.
+    const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
+    const names: PlaceNames = input.placeNamesAsTyped ? posted : namesAfterSave(current, existingTranslations, posted);
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,

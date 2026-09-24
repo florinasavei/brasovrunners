@@ -8,12 +8,13 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { englishFollowsTyping, englishLeftBehind, mayCopyToEnglish } from "@/modules/events/domain/place";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { fillIn } from "@/shared/forms/fill-in";
 import RecallField, { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { PLACE_NAMES_AS_TYPED_FIELD } from "../form-names";
 import { ShownWhen } from "./OnlyForType";
 
 /** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
@@ -21,6 +22,8 @@ const SWITCH_NAME = "event.locationToBeAnnounced";
 /** The two boxes of "Punct de întâlnire" (§NNN), by the names `eventFieldsFrom` reads. */
 const RO_NAME = "event.locationName";
 const EN_NAME = "event.locationNameEn";
+/** Nothing to listen to: whether the island runs is settled once it has hydrated. */
+const noChanges = () => () => {};
 
 /** A box's constraints as the Locul box read them off the schema (§315): plain data, never zod. */
 type BoxConstraints = ReturnType<typeof textFieldConstraints>;
@@ -103,6 +106,13 @@ const UNSEEN = {
  * the Romanian moves away from it, a line under the box says the English still names the old
  * place (`englishLeftBehind`), and the organizer decides.
  *
+ * **What the screen shows is what is saved** (found by re-review). Once the island runs it posts
+ * `PLACE_NAMES_AS_TYPED_FIELD`, and the service then keeps the English box as posted instead of
+ * making it follow a second time: the following already happened here, in view, so an English box
+ * put back to the old name — "Tractorul Park" after the Romanian became "Parcul Tractorul" — is the
+ * organizer's answer to the line above, not an oversight. The server's HTML carries no marker, so a
+ * save with JavaScript off still gets the server's rule.
+ *
  * A client island because the `required` attribute is what changes, and MUI marks a required
  * label itself; a server-rendered box would ask for a place the server no longer wants. With
  * JavaScript off the boxes keep the state they were rendered with, the copy button does nothing,
@@ -127,6 +137,13 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
   const own = useRef<HTMLDivElement>(null);
   const enBox = useRef<HTMLInputElement>(null);
   const mounted = useRef(false);
+  // False in the server's HTML and while hydrating, true from then on: only a box that can follow
+  // on the screen says its English name is final.
+  const running = useSyncExternalStore(
+    noChanges,
+    () => true,
+    () => false,
+  );
 
   /*
     The form's own watchers — the create button's "lipsește: …" and the save button's named hint
@@ -241,6 +258,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
             <Typography component="legend" variant="subtitle2" sx={{ p: 0, mb: 1.5 }}>
               {labels.meetingPoint}
             </Typography>
+            {running && <input type="hidden" name={PLACE_NAMES_AS_TYPED_FIELD} value="1" />}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>{nameBox(RO_NAME, labels.ro, names.ro, onRomanian)}</Box>
               <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>

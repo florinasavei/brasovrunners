@@ -244,6 +244,38 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§NNN
       expect(await namesOf(event.id)).toEqual({ ro: "Parcul Titulescu", en: "Parcul Titulescu" });
     });
 
+    it("keeps the English the editor posted once its box ran: put back to the old name, it stays (found by re-review)", async () => {
+      // The box followed the Romanian on the screen, and the organizer put the English back —
+      // "Parcul Tractorul" is its English name too, under the line that says the English stayed.
+      const event = await legacy({ locationAddress: null });
+      await saveEventAndTranslations(db, {
+        actor: organizer,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: RO_PLACE },
+        translations: [],
+        placeNamesAsTyped: true,
+        now: NOW,
+      });
+      expect(await namesOf(event.id)).toEqual({ ro: "Parcul Titulescu", en: RO_PLACE });
+    });
+
+    it("keeps the English as posted when the Romanian row had a name of its own (found by re-review)", async () => {
+      // The pages already said different things; the editor's line says the English stayed, and it does.
+      const event = await legacy();
+      await db.update(eventTranslations).set({ locationName: "Parcul Tractorul, intrarea nord" }).where(eq(eventTranslations.locale, "ro"));
+      const englishBox = placeInBox(event, null);
+      await saveEventAndTranslations(db, {
+        actor: organizer,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, locationName: "Parcul Titulescu", locationNameEn: englishBox },
+        translations: [],
+        now: NOW,
+      });
+      expect(await namesOf(event.id)).toEqual({ ro: "Parcul Titulescu", en: englishBox });
+    });
+
     it("is refused publication without a place its English page could show, naming the English box", async () => {
       // The meeting point typed only as the Romanian row's own name: the English page would show nothing.
       const event = await legacy({ locationName: null, locationAddress: null });
@@ -252,6 +284,23 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§NNN
       const refused = await transitionEvent(db, { actor: admin, eventId: event.id, expectedVersion: event.version, to: "PUBLISHED", now: NOW }).catch((error: unknown) => error);
       expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
       expect(isDomainError(refused) && refused.message).toContain("locationNameEn");
+    });
+  });
+
+  describe("a place to be announced (§328) — found by re-review", () => {
+    it("never fills a blank English box with the Romanian venue, so the switch cannot go off without an English name", async () => {
+      const created = await create({ locationToBeAnnounced: true, locationName: "", locationNameEn: "" });
+      expect(await namesOf(created.id)).toEqual({ ro: null, en: null });
+
+      // The venue is known in Romanian; the English box is left for later, as the switch allows.
+      await saveAsOrganizer(created.id, { locationToBeAnnounced: true, locationName: "Sala Sporturilor", locationNameEn: "" });
+      expect(await namesOf(created.id)).toEqual({ ro: "Sala Sporturilor", en: null });
+
+      // Announcing it asks for the English name, as it asks for the Romanian one.
+      expect(await refusalOf(saveAsOrganizer(created.id, { locationName: "Sala Sporturilor", locationNameEn: "" }))).toEqual({
+        code: "VALIDATION_ERROR",
+        fields: ["locationNameEn"],
+      });
     });
   });
 

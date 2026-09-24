@@ -19,7 +19,7 @@ import {
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
-import { eventFormFieldName, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
@@ -537,6 +537,8 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
         form.has("cancel.reasonRo") || form.has("cancel.reasonEn")
           ? { reason: { ro: text(form, "cancel.reasonRo"), en: text(form, "cancel.reasonEn") }, notify: form.get("cancel.notify") === "on" }
           : undefined,
+      // The Locul box ran in the browser (§NNN): its English name is the organizer's as it stands.
+      placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
     });
     // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
     // So does what the participants were told (§331): the kind and the count, never who.

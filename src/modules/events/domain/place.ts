@@ -79,18 +79,31 @@ export function placeShown(event: { locationName: string | null; locationAddress
  * kept the old one. Here the English page follows the Romanian, as it always had: the English box
  * posted exactly what the English page showed, and the Romanian place is not the one it showed.
  *
- * Nothing else is touched: an English row with a name of its own keeps what was posted, and so
- * does an English box the organizer changed. The editor's box does the same while it is typed
- * (`englishFollowsTyping`); this is the rule for a save that did not come through it.
+ * Nothing else is touched (found by re-review), so the save never says something the editor did not:
+ * - **a blank English box stays blank.** An event with no place yet shows "" in English, and a
+ *   blank box posted with the switch on (§328) "equals" that — but it is the organizer's to fill,
+ *   and `placeRule` asks for it when the switch goes off. Filled here, the English page would name
+ *   the place in Romanian and nothing would ever ask again;
+ * - **a name of its own in either language keeps what was posted.** An English row with one is the
+ *   organizer's; and when only the Romanian row had one, the two pages already said different
+ *   things, so the editor's line under the English box says the English stayed — and it does;
+ * - **an English box the organizer changed** is theirs.
+ *
+ * The editor's box does the same while it is typed (`englishFollowsTyping`), and a save from the
+ * editor with JavaScript running skips this rule altogether (`placeNamesAsTyped` in the service):
+ * what its English box holds is what the organizer left there, put back to the old name included.
+ * This is the rule for a save that did not come through it.
  */
 export function englishNameAfterSave(
   before: { locationName: string | null; locationAddress: string | null },
   rows: { ro: string | null | undefined; en: string | null | undefined },
   posted: { ro: string | null; en: string | null },
 ): string | null {
-  if (spoken(rows.en) !== "") return posted.en;
-  if (spoken(posted.en) !== placeShown(before, null)) return posted.en;
-  if (spoken(posted.ro) === placeShown(before, rows.ro)) return posted.en;
+  if (spoken(posted.en) === "") return posted.en;
+  if (spoken(rows.en) !== "" || spoken(rows.ro) !== "") return posted.en;
+  const shown = placeShown(before, null);
+  if (spoken(posted.en) !== shown) return posted.en;
+  if (spoken(posted.ro) === shown) return posted.en;
   return posted.ro;
 }
 
