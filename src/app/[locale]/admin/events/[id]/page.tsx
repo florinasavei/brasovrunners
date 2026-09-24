@@ -50,6 +50,7 @@ import {
   canEditEventFields,
   canEditTranslation,
   canManageRegistrations,
+  canMessageParticipants,
   canReadContent,
   canReadRegistrations,
   canManageTestRegistrations,
@@ -738,6 +739,20 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
                         </GlyphButton>
+                        {/* A message of the organizer's own to this event's registrants (§NNN): bad
+                            weather, a changed start — its own page, with the preview and the history. */}
+                        {canMessageParticipants(staffUser.role) && (
+                          <GlyphButton
+                            icon="announce"
+                            href={getPathname({ locale, href: { pathname: "/admin/events/[id]/mesaje", params: { id: event.id } } })}
+                            variant="outlined"
+                            size="small"
+                            sx={{ minHeight: 44 }}
+                            data-testid="participant-message-link"
+                          >
+                            {t("participantMessages.link")}
+                          </GlyphButton>
+                        )}
                         {/* The emergency sheet (§322): the Organizer is the one on the course with it. */}
                         <GlyphButton
                           icon="emergency"

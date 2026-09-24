@@ -47,6 +47,15 @@ type Props = {
 const NEVER_QUEUED = NEVER_QUEUED_MESSAGE_TYPES;
 
 /**
+ * The organizer's message (§NNN) is written per send, on the event's page: its card previews the
+ * sample one (`domain/email-sample.ts`) and says where it is written, with no words editor under
+ * it and no sample-value warning over it.
+ */
+function perSend(messageType: EmailMessageType): boolean {
+  return messageType === "ORGANIZER_MESSAGE";
+}
+
+/**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
  * a save — so it may never be served from a cache. Without this the panel showed the values
  * it had before the press (found on 2026-09-20: clearing the recipients wrote the row and the
@@ -138,7 +147,12 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // and through the club's own words where it has written some (§247), so the preview is
     // what a participant will actually receive rather than what the platform ships.
     const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
-    const own = copyFor(written.copy, messageType, emailLocale);
+    /*
+      The organizer's message has no stored words to read or warn about (§NNN): it is written per
+      send, the save refuses an entry for it and the send ignores one, so a hand-made entry in the
+      setting is neither shown nor flagged here — the card would be saying something untrue.
+    */
+    const own = perSend(messageType) ? null : copyFor(written.copy, messageType, emailLocale);
     /*
       A saved text that still holds a value of the sample (§359): saved from the editor before it
       started from the fields, every participant would read "Crosul de toamnă" whatever their event.
@@ -151,7 +165,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       closed card names the language to switch to; the warning and the button above stay with the
       language being edited.
     */
-    const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];
+    const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];
     return { messageType, content, own, samples, sampleLanguages };
   });
   const anySamples = cards.some((card) => card.sampleLanguages.length > 0);
@@ -243,8 +257,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
             // The card whose words were just saved opens with the card around it, so the preview
             // that changed is the first thing in view (§336).
             justSaved: copySaved && savedMessage === messageType,
-            // The words, for whoever writes them (§103, §247). Under the preview it changes.
-            editor: mayWrite ? (
+            // The words, for whoever writes them (§103, §247). Under the preview it changes. The
+            // organizer's message has none to keep: it is written per send, on the event's page (§NNN).
+            editor: perSend(messageType) ? (
+              <Alert severity="info" sx={{ mb: 2 }} data-testid="email-per-send">
+                {t("emails.perSend")}
+              </Alert>
+            ) : mayWrite ? (
               <EmailCopyEditor
                 locale={locale}
                 emailLocale={emailLocale}
