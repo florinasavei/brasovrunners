@@ -38,6 +38,9 @@ const LAUNCHED: OwnerTaskInputs = {
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
   contactFormConfigured: true,
+  // Production's own numbers set on Neon the evening of 2026-09-23: a 100 CU-hour quota, well
+  // under a fifth spent.
+  neonQuota: { quotaCuHours: 100, usedCuHours: 12.34 },
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -184,6 +187,7 @@ describe("owner tasks", () => {
       "vercelUsage",
       "contactForm",
       "roDomain",
+      "neonLimits",
     ]);
   });
 
@@ -277,6 +281,76 @@ describe("the invitation key row (§288)", () => {
 });
 
 /**
+ * The database's monthly compute-time limit (§NNN; the owner, 2026-09-23, after $1.09 in two
+ * days of Launch: "I want toggles in my admin area, so I can throttle myself when needed").
+ *
+ * `owner-tasks.ts`'s one rule is that nothing here is ticked by hand, so the three states this
+ * row can be in must come from the same reading `readNeonConsumption` already makes for the
+ * Costuri panel — never a second request, and never a setting an Administrator could tick
+ * without a quota actually existing on Neon.
+ */
+describe("BR-REQ-090-07 criterion 11 — the database limit row (§NNN)", () => {
+  const limitsRow = (neonQuota: OwnerTaskInputs["neonQuota"], appEnv: OwnerTaskInputs["appEnv"] = LAUNCHED.appEnv) =>
+    ownerTasks({ ...LAUNCHED, appEnv, neonQuota }).find((task) => task.id === "neonLimits");
+
+  it("is open with no quota set, and open too when Neon could not be read at all", () => {
+    expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, "qa")).toMatchObject({
+      state: "open",
+      owner: "club",
+      kind: "decision",
+    });
+    // `null` is what the page passes when `readNeonConsumption` itself failed — "there is none"
+    // and "we could not check" ask for the same next step, so both read the same state, on
+    // every environment, production included.
+    expect(limitsRow(null, "qa")?.state).toBe("open");
+    expect(limitsRow(null, "production")?.state).toBe("open");
+  });
+
+  it("is open on production with no quota too — the owner capped production (SETUP.md §40), so no limit is a limit owed", () => {
+    // The earlier reading of production's "no quota" as the card's own advice is gone with that
+    // advice: the card recommends a limit with room everywhere, and the row agrees with it.
+    for (const appEnv of ["production", "local", "test", "qa"] as const) {
+      expect(limitsRow({ quotaCuHours: null, usedCuHours: 0 }, appEnv), appEnv).toMatchObject({ state: "open", text: undefined });
+    }
+  });
+
+  it("is done once a quota exists and this period is comfortably under it", () => {
+    expect(limitsRow({ quotaCuHours: 100, usedCuHours: 12.34 })?.state).toBe("done");
+    // Just under the 80% line: still done.
+    expect(limitsRow({ quotaCuHours: 100, usedCuHours: 79.9 })?.state).toBe("done");
+  });
+
+  it("turns broken — red — at 80% of the quota, before Neon would suspend the database at 100%", () => {
+    expect(limitsRow({ quotaCuHours: 100, usedCuHours: 80 })).toMatchObject({ state: "broken", text: "broken" });
+    expect(limitsRow({ quotaCuHours: 30, usedCuHours: 27 })?.state).toBe("broken"); // QA's own quota
+    expect(limitsRow({ quotaCuHours: 100, usedCuHours: 100 })?.state).toBe("broken");
+    // The default sentence pair otherwise: `done`'s own text, and `todo` while it is open.
+    expect(limitsRow({ quotaCuHours: 100, usedCuHours: 12.34 })?.text).toBeUndefined();
+    expect(limitsRow(null)?.text).toBeUndefined();
+  });
+
+  it("never blocks a registration, whatever the spend", () => {
+    for (const neonQuota of [null, { quotaCuHours: null, usedCuHours: 0 }, { quotaCuHours: 100, usedCuHours: 100 }]) {
+      expect(ownerTasks({ ...LAUNCHED, neonQuota }).some((task) => task.state === "blocking")).toBe(false);
+    }
+  });
+
+  it("points at sentences and steps both catalogues carry", () => {
+    for (const catalogue of [ro, en]) {
+      const row = catalogue.Admin.tasks.items.neonLimits;
+      expect(typeof row.title).toBe("string");
+      expect(typeof row.todo).toBe("string");
+      expect(typeof row.broken).toBe("string");
+      expect(typeof row.done).toBe("string");
+      // The sentence that called production's missing limit "what this screen recommends" is gone.
+      expect(row).not.toHaveProperty("recommendedProduction");
+      expect(Array.isArray(row.how)).toBe(true);
+      expect(row.how.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+/**
  * The counter and the two filters (§150; the owner: "show a counter of how many items are
  * pending, and a filter by issue type and owner"). Pure over the list, so the page's chips
  * and its "De făcut: N · Gata: M" line are tested here without a browser.
@@ -330,8 +404,9 @@ describe("the counter and the filters", () => {
     const clubOpen = filterTasks(tasks, { owner: "club" });
     expect(clubOpen.map((task) => task.state)).toEqual(sortTasks(clubOpen).map((task) => task.state));
 
-    // The counter follows the filter: it counts the rows shown, not the board.
-    expect(countTasks(filterTasks(tasks, { kind: "decision" }))).toEqual({ pending: 1, done: 1 });
+    // The counter follows the filter: it counts the rows shown, not the board — three
+    // decision-kind rows now that neonLimits is one (§NNN), and MIXED leaves it inherited "done".
+    expect(countTasks(filterTasks(tasks, { kind: "decision" }))).toEqual({ pending: 1, done: 2 });
   });
 
   it("reads a query value only from the closed sets", () => {

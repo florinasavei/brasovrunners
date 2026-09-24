@@ -131,6 +131,12 @@ export type AuditAction =
   | "neon_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§NNN). */
   | "job_cadence.changed"
+  /**
+   * The database's brakes changed from `/admin/tasks` (§NNN): the compute's size ceiling and the
+   * period's CU-hour limit, from and to as Neon stated them before and after — never the request —
+   * with what was asked, the environment, and whether all of it was applied.
+   */
+  | "neon_limits.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
