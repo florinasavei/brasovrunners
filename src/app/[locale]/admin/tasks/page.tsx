@@ -51,6 +51,10 @@ import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock } from "@/modules/diagnostics/domain/neon-plan";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
+import { readJobCadence } from "@/modules/jobs/cadence";
+import { describeJob } from "@/modules/jobs/overview";
+import type { JobName } from "@/modules/jobs/schedule";
+import JobCadencePanel from "@/modules/jobs/ui/JobCadencePanel";
 import { neonCuHoursPerDay, projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
@@ -313,6 +317,25 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     consumption: neon.ok ? neon.consumption : null,
     now,
   });
+  /*
+    The owner's throttle, beside the plan it pays (§NNN): the minimum interval between two real
+    runs, and what each job did with it — read only for the panel that shows it, since the
+    overview asks the cache and, when the cache does not answer here, the database.
+  */
+  const jobCadence = await readJobCadence(db);
+  const jobOverviews =
+    panel === "costs"
+      ? await Promise.all(
+          jobs.map((job) =>
+            describeJob(db, {
+              job: job.jobName as JobName,
+              now,
+              cadenceMinutes: jobCadence.minutes,
+              lastFinishedAt: job.lastFinishedAt,
+            }),
+          ),
+        )
+      : [];
   const facts = {
     databaseBytes,
     neonPlan: neonPlan.plan,
@@ -412,6 +435,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
         {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
+        {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{tErrors(query.error)}</Alert>}
       </Box>
 
@@ -587,6 +611,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           same reason the Mailgun panel carries it (§291).
         */}
         <NeonPlanPanel locale={locale} plan={neonPlan} block={neonBlock} mayEdit={canManageRegistrations(actor.role)} />
+
+        {/* How often the platform may wake the database for its scheduled work (§NNN) — the
+            throttle the owner asked for, beside the plan that bills each wake. */}
+        <JobCadencePanel locale={locale} cadence={jobCadence} jobs={jobOverviews} mayEdit={canManageRegistrations(actor.role)} />
 
         {/*
           The money, and the answer before the table that justifies it: what the club pays today,

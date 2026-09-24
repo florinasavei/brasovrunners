@@ -5,6 +5,7 @@ import { registrationInterests } from "@/db/schema/registration-interests";
 import type { Database } from "@/db/types";
 import { registrationState, type RegistrationWindowInput } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -88,6 +89,8 @@ export async function registerInterest<T extends Record<string, unknown>>(
       createdAt: now,
     })
     .onConflictDoNothing({ target: [registrationInterests.eventId, registrationInterests.canonicalEmail] });
+  // The announcement is due when the window opens; the job is told if that is soon (§NNN).
+  wakeJobs("registration-maintenance", event.registrationOpensAt ?? event.publishedAt ?? now, now);
 }
 
 /** How many addresses wait for one event's announcement — the count the organizer sees. */

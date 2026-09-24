@@ -1,7 +1,10 @@
 import { desc, eq } from "drizzle-orm";
 import { jobRuns } from "@/db/schema/job-runs";
 import type { Database } from "@/db/types";
+import { readJobCadence } from "./cadence";
 import { jobStalenessThresholdMs } from "./quiet-hours";
+import { isJobName, NEXT_DUE_CAP_MINUTES, SLOT_MINUTES } from "./schedule";
+import { readLastPing } from "./schedule-cache";
 
 /**
  * Job liveness (AGENTS.md §12.12, §16.2): "the health check reports degraded when the last
@@ -9,9 +12,31 @@ import { jobStalenessThresholdMs } from "./quiet-hours";
  * monitor cadence in force — fifteen minutes by day, hourly at night, club time
  * (`quiet-hours.ts`, `DECISIONS.md` §68) — as twice the cadence plus a run, so one slow run
  * never flips the check before the next has had a chance. Both jobs share it.
+ *
+ * Since §NNN a ping with nothing to do answers from the cache and writes no `job_runs` row, so
+ * "alive" is two questions, and the check must not cry wolf on either:
+ *
+ * - **Is the pinger still calling?** Measured against the last *ping*, skipped or real — read
+ *   from the same cache the skip uses (`readLastPing`), or the last real run when that is newer —
+ *   with the threshold it always had. No ping at all for twice the cadence plus five minutes is
+ *   `stale`, exactly as before; pings every fifteen minutes that all skip are `ok`.
+ * - **Does a real run still happen?** Measured against the last `job_runs` row, with the longest
+ *   quiet a run may promise added to the same threshold: an hour (the cap), or the
+ *   Administrator's minimum interval when that is longer (`cadence.ts`). A club that set two
+ *   hours sees a real run every two hours and reads `ok`, rather than being paged by its own
+ *   throttle.
+ *
+ * The cache answering nothing — evicted, or a caller outside a request — leaves the last real
+ * run as the last ping, which is the check exactly as it was before §NNN.
  */
 
-export type JobHealth = { jobName: string; status: "ok" | "stale" | "never_run"; lastFinishedAt: string | null };
+export type JobHealth = {
+  jobName: string;
+  status: "ok" | "stale" | "never_run";
+  lastFinishedAt: string | null;
+  /** The newest ping the cache remembers, skipped or real; null when it remembers none. */
+  lastPingAt: string | null;
+};
 
 export async function checkJobHealth<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -25,15 +50,25 @@ export async function checkJobHealth<T extends Record<string, unknown>>(
     .orderBy(desc(jobRuns.startedAt))
     .limit(1);
 
+  const pingThresholdMs = jobStalenessThresholdMs(now);
+  const ping = isJobName(jobName) ? await readLastPing(jobName, now, pingThresholdMs + SLOT_MINUTES * 60_000) : null;
+  const lastPingAt = ping ? ping.at : null;
+
   if (!latest?.finishedAt) {
-    return { jobName, status: "never_run", lastFinishedAt: null };
+    return { jobName, status: "never_run", lastFinishedAt: null, lastPingAt };
   }
 
-  const stale = now.getTime() - latest.finishedAt.getTime() > jobStalenessThresholdMs(now);
+  const lastRun = latest.finishedAt.getTime();
+  const lastSeen = Math.max(lastRun, ping ? Date.parse(ping.at) : 0);
+  const { minutes: cadenceMinutes } = await readJobCadence(db);
+  const realRunThresholdMs = Math.max(NEXT_DUE_CAP_MINUTES, cadenceMinutes) * 60_000 + pingThresholdMs;
+
+  const stale = now.getTime() - lastSeen > pingThresholdMs || now.getTime() - lastRun > realRunThresholdMs;
 
   return {
     jobName,
     status: stale ? "stale" : "ok",
     lastFinishedAt: latest.finishedAt.toISOString(),
+    lastPingAt,
   };
 }

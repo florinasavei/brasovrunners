@@ -41,6 +41,13 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   interestsNotified: number;
   /** Race numbers settled by a registration window closing in this run (§214). */
   bibsSettled: number;
+  /**
+   * The failures the very next run could repair — an event's queue work, a reminder, a
+   * confirmation, an announcement — as opposed to the tidying ones (retention, pictures, series).
+   * Above zero, the run promises the pings no quiet, so the next ping tries again rather than
+   * the next hour (§NNN).
+   */
+  retryableErrorCount: number;
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
@@ -48,6 +55,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
   let errorCount = 0;
+  let retryableErrorCount = 0;
   /**
    * Everyone numbered by a close in this run, collected across the per-event transactions and
    * written to afterwards (§214).
@@ -113,6 +121,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
       // One event's failure must not stop the run from reaching the rest — each event's work
       // is independent, and the next run retries whatever this one could not finish.
       errorCount += 1;
+      retryableErrorCount += 1;
     }
   }
 
@@ -161,6 +170,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     remindersQueued = await queueEventReminders(db, now);
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
   // The participation confirmations (§104), the same way: once per registration when the
   // event's window opens; a failure is a late reminder, not a failed run.
@@ -169,6 +179,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     confirmationsQueued = await queueParticipationConfirmations(db, now);
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
   // "Registration is open" (§146): to every address left on the event's page while the window
   // was ahead, once, the row gone with the message; the rows of an event that will never open
@@ -178,6 +189,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     interestsNotified = (await queueRegistrationOpenedMessages(db, now)).queued;
   } catch {
     errorCount += 1;
+    retryableErrorCount += 1;
   }
 
   /**
@@ -233,5 +245,15 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued, interestsNotified, bibsSettled };
+  return {
+    eventsProcessed: eventIds.length,
+    errorCount,
+    prunedRows,
+    orphanPicturesDeleted,
+    remindersQueued,
+    confirmationsQueued,
+    interestsNotified,
+    bibsSettled,
+    retryableErrorCount,
+  };
 }
