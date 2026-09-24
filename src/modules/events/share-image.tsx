@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { COLOR } from "@/theme/brand";
+import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { formatDay, formatTime } from "@/i18n/dates";
@@ -89,8 +89,9 @@ export async function eventShareImage(
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <div style={{ width: 14, height: 44, background: COLOR.orange, borderRadius: 4 }} />
+            {/* The platform's one constant (§215, §357), upper-cased by the style, never the name written in. */}
             <div style={{ fontSize: square ? 36 : 32, fontWeight: 700, letterSpacing: 6, textTransform: "uppercase" }}>
-              Brașov Runners
+              {CLUB_NAME}
             </div>
           </div>
           <div

@@ -200,21 +200,23 @@ export const FONT = {
  * is not translated. `tests/unit/theme/brand.test.ts` asserts it stays ASCII — put an ș in
  * here and Facón cannot render it.
  *
- * The club's actual name, correctly spelled, lives in `messages/*.json` under `Site.name` and
- * is what prose, page titles and the header link's accessible name use.
+ * The club's actual name, correctly spelled, is `CLUB_NAME` below, and is what prose, page
+ * titles and the header link's accessible name use.
  */
 export const WORDMARK = "BRASOV RUNNERS";
 
 /**
- * The club's name as it is **stored in a record** — a runner's club on their registration, and
- * whatever else has to hold the name as data rather than show it as words (`DECISIONS.md` §215).
+ * The club's name — the **one** place it is written (§NNN). A runner's club on their
+ * registration (`DECISIONS.md` §215), the From line's default, the page title, the header's and
+ * the wordmark's accessible name, the JSON-LD organiser, the share pictures, the calendar, the
+ * PDFs' Author, and every catalogue sentence that names the club, which takes it as `{club}`.
  *
- * A constant and not `Site.name`, although the two are the same string and a test asserts they
- * stay so. The reason is the difference between a translation and a fact: `Site.name` is read
- * per request in the reader's locale and is free to differ between them one day, while a club
- * written into a registration must be the same string for a Romanian and an English submission
- * or the export has two clubs again. The same distinction `WORDMARK` draws above, from the
- * other side.
+ * Until §NNN the catalogues carried a second copy under `Site.name`, "free to differ between
+ * the locales one day". A proper name is not translated, and two copies are two things to rename
+ * and one to forget, so the catalogues no longer hold the name at all:
+ * `tests/unit/notifications/no-hardcoded-values.test.ts` refuses it in `src/` outside this file
+ * and the seeds, and in every message of both catalogues. The same distinction `WORDMARK` draws
+ * above, from the other side: that is a logotype, this is the name.
  */
 export const CLUB_NAME = "Brașov Runners";
 

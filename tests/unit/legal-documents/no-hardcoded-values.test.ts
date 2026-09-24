@@ -4,6 +4,13 @@ import { SAMPLE_DOCUMENTS } from "@/db/seeds/sample-legal-documents";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import {
+  DECLARATION_TOKENS,
+  TOKEN_EXAMPLE_EVENT_STARTS_AT,
+  TOKEN_EXAMPLE_SIGNED_AT,
+} from "@/modules/legal-documents/templates/tokens";
+import { declarantValues } from "@/modules/registrations/signed-declaration";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { CLUB_NAME, WORDMARK } from "@/theme/brand";
 
 /**
@@ -105,5 +112,42 @@ describe("§357 no hardcoded value in a legal template", () => {
     const en = texts(LEGAL_TEMPLATES.TERMS.en.body).join(" ");
     expect(ro).toContain("instanțele de la sediul clubului");
     expect(en).toContain("the courts of the club's registered seat");
+  });
+});
+
+describe("§NNN the declaration's token legend: made-up examples, in both languages", () => {
+  const example = (token: string) => DECLARATION_TOKENS.find((entry) => entry.token === token)!.example;
+
+  it("gives every token an example in each language, and none names the club or its town", () => {
+    for (const entry of DECLARATION_TOKENS) {
+      for (const locale of ["ro", "en"] as const) {
+        const value = entry.example[locale];
+        expect(value.trim(), `${entry.token} ${locale}`).not.toBe("");
+        for (const name of [CLUB_NAME, WORDMARK, CLUB_LOCALITY]) expect(fold(value), `${entry.token} ${locale}`).not.toContain(fold(name));
+      }
+    }
+  });
+
+  it("calls the example event a made-up title, in each language", () => {
+    expect(example("{{event}}")).toEqual({ ro: "Crosul de toamnă", en: "The autumn cross" });
+  });
+
+  it("writes the example dates with the helper a signature uses, in each language (§349)", () => {
+    for (const locale of ["ro", "en"] as const) {
+      expect(example("{{eventDate}}")[locale]).toBe(
+        formatDay(TOKEN_EXAMPLE_EVENT_STARTS_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+      );
+      expect(example("{{signedAt}}")[locale]).toBe(
+        formatDay(TOKEN_EXAMPLE_SIGNED_AT, { locale, timeZone: CLUB_TIME_ZONE, style: "long", withTime: true, position: "inline" }),
+      );
+    }
+    expect(example("{{eventDate}}")).toEqual({ ro: "sâmbătă, 21 nov. 2026", en: "Saturday, 21 Nov 2026" });
+    expect(example("{{signedAt}}").ro).toBe("duminică, 20 sept. 2026, 19:42");
+  });
+
+  it("gives the declarant the words a minor's signature actually produces", () => {
+    for (const locale of ["ro", "en"] as const) {
+      expect(example("{{declarant}}")[locale]).toBe(declarantValues("Ana Popescu", "Mihai Popescu", locale).declarant);
+    }
   });
 });

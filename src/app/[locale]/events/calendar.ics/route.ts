@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
-import { buildCalendar } from "@/modules/events/ical";
+import { buildCalendar, calendarFeedFileName } from "@/modules/events/ical";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 
@@ -48,7 +48,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   return new Response(body, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": `inline; filename="brasov-runners-${known}.ics"`,
+      // The club's name from the platform's constant (§357), never written in: "brasov-runners-ro.ics".
+      "Content-Disposition": `inline; filename="${calendarFeedFileName(known)}"`,
       "Cache-Control": "no-cache",
     },
   });

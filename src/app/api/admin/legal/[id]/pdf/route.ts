@@ -10,6 +10,7 @@ import { findVersionWithTranslations } from "@/modules/legal-documents/repositor
 import { atLeast } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * A legal document version, downloaded as a PDF in one language (BR-REQ-053-03).
@@ -50,7 +51,6 @@ export async function GET(
   // The words come from the catalogue in the document's own language, not the reader's: a
   // Romanian declaration downloaded from the English backoffice is still a Romanian document.
   const t = await getTranslations({ locale, namespace: "Admin" });
-  const site = await getTranslations({ locale, namespace: "Site" });
   const now = new Date();
 
   const pdf = await renderLegalDocumentPdf({
@@ -63,7 +63,9 @@ export async function GET(
     locale,
     generatedAt: now,
     labels: {
-      organization: site("name"),
+      // The PDF's Author: the platform's one constant (§357, §NNN), as the declaration and the
+      // bib sheet already carry it — never a second copy of the name kept in the catalogue.
+      organization: CLUB_NAME,
       version: t("legal.pdf.version", { version: document.version }),
       effectiveFrom: t("legal.pdf.effectiveFrom", {
         date: formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),

@@ -64,6 +64,7 @@ import {
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
+import { CLUB_NAME } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -1014,7 +1015,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <TextField
             select
             name="clubMember"
-            label={t("registrations.clubMemberLabel")}
+            label={t("registrations.clubMemberLabel", { club: CLUB_NAME })}
             defaultValue={clubMember === "1" ? "1" : ""}
             sx={{ minWidth: 220 }}
           >
