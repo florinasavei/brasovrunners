@@ -25,23 +25,25 @@ import type { HtmlConstraints } from "@/shared/forms/constraints";
 import { useRecall } from "@/shared/forms/recall";
 
 export type CoHostLinkRowValue = { kind: string; url: string; labelRo: string; labelEn: string };
-export type CoHostRowValue = { name: string; links: CoHostLinkRowValue[] };
+export type CoHostRowValue = { name: string; descriptionRo: string; descriptionEn: string; links: CoHostLinkRowValue[] };
 
 const EMPTY_LINK: CoHostLinkRowValue = { kind: DEFAULT_CO_HOST_LINK_KIND, url: "", labelRo: "", labelEn: "" };
-const EMPTY: CoHostRowValue = { name: "", links: [] };
+const EMPTY: CoHostRowValue = { name: "", descriptionRo: "", descriptionEn: "", links: [] };
 
 /**
  * The cards as a refused submit posted them, gathered by both indices from
- * `event.coHosts[p].name` and `event.coHosts[p].links[l].<box>` (§315) — the same reading
- * `recalledRows` gives the plain links, one level deeper for the partner a link belongs to.
+ * `event.coHosts[p].name`, `event.coHosts[p].descriptionRo` / `.descriptionEn` (§NNN) and
+ * `event.coHosts[p].links[l].<box>` (§315) — the same reading `recalledRows` gives the plain
+ * links, one level deeper for the partner a link belongs to.
  */
 function recalledRows(names: string[], value: (name: string) => string | undefined): CoHostRowValue[] {
   const rows: CoHostRowValue[] = [];
   for (const name of names) {
-    const nameMatch = /^event\.coHosts\[(\d+)\]\.name$/.exec(name);
-    if (nameMatch) {
-      const p = Number(nameMatch[1]);
-      rows[p] = { name: value(name) ?? "", links: rows[p]?.links ?? [] };
+    const cardMatch = /^event\.coHosts\[(\d+)\]\.(name|descriptionRo|descriptionEn)$/.exec(name);
+    if (cardMatch) {
+      const p = Number(cardMatch[1]);
+      const box = cardMatch[2] as "name" | "descriptionRo" | "descriptionEn";
+      rows[p] = { ...(rows[p] ?? EMPTY), [box]: value(name) ?? "" };
       continue;
     }
     const linkMatch = /^event\.coHosts\[(\d+)\]\.links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(name);
@@ -52,12 +54,12 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
       const partner = rows[p] ?? EMPTY;
       const links = [...partner.links];
       links[l] = { ...(links[l] ?? EMPTY_LINK), [box]: value(name) ?? "" };
-      rows[p] = { name: partner.name, links };
+      rows[p] = { ...partner, links };
     }
   }
   return rows
     .filter((row): row is CoHostRowValue => row !== undefined)
-    .map((row) => ({ name: row.name, links: row.links.filter((link): link is CoHostLinkRowValue => link !== undefined) }));
+    .map((row) => ({ ...row, links: row.links.filter((link): link is CoHostLinkRowValue => link !== undefined) }));
 }
 
 /**
@@ -71,20 +73,36 @@ export default function CoHostRowsEditor(props: ComponentProps<typeof CoHostRows
 }
 
 type LinkRow = { key: number; value: CoHostLinkRowValue };
-type PartnerRow = { key: number; name: string; title: string; links: LinkRow[]; nextLinkKey: number };
+type PartnerRow = {
+  key: number;
+  name: string;
+  title: string;
+  descriptionRo: string;
+  descriptionEn: string;
+  links: LinkRow[];
+  nextLinkKey: number;
+};
 
 function makePartnerRow(value: CoHostRowValue, key: number): PartnerRow {
   const links = value.links.length > 0 ? value.links : [EMPTY_LINK];
-  return { key, name: value.name, title: value.name, links: links.map((link, index) => ({ key: index, value: link })), nextLinkKey: links.length };
+  return {
+    key,
+    name: value.name,
+    title: value.name,
+    descriptionRo: value.descriptionRo,
+    descriptionEn: value.descriptionEn,
+    links: links.map((link, index) => ({ key: index, value: link })),
+    nextLinkKey: links.length,
+  };
 }
 
 /**
  * The organizations the event is held with, in the editor (`DECISIONS.md` §168; the owner,
  * §344: "this can have multiple links, so it should be a card, it's like: partner link, partner
  * event, etc"): one boxed card per partner, titled with its name — "Partener nou" while it has
- * none — holding the name box and the partner's own links, each a row with its kind, address and
- * a label in each language, the same four boxes `LinkRowsEditor` carries for "Linkuri și
- * fișiere" (§332).
+ * none — holding the name box, "Despre parteneriat" in Română and English side by side (§NNN, both
+ * or neither), and the partner's own links, each a row with its kind, address and a label in each
+ * language, the same four boxes `LinkRowsEditor` carries for "Linkuri și fișiere" (§332).
  *
  * A client island for what a form cannot do by itself — add or remove a card, move one, and the
  * same three for a card's own links — and nothing else: every box is an ordinary uncontrolled
@@ -113,6 +131,13 @@ function CoHostRowsEditorIsland({
     moveDown: string;
     partnerNew: string;
     name: string;
+    /** "Despre parteneriat" (§NNN): the heading over the two description boxes. */
+    about: string;
+    /** The two boxes' own labels: each language in its own words, "Română" and "English". */
+    descriptionRo: string;
+    descriptionEn: string;
+    /** One line under both: optional, in both languages, a sentence or two, shown under the name. */
+    descriptionHelp: string;
     kind: string;
     url: string;
     labelRo: string;
@@ -132,8 +157,11 @@ function CoHostRowsEditorIsland({
   };
   /** Each link kind's word, already translated — the same word the page shows when a label is empty. */
   kindLabels: Record<CoHostLinkKind, string>;
-  /** The link boxes' HTML constraints, read off `fields.ts#coHostLinkRowSchema` by the Server Component (§315). */
-  constraints: { url: HtmlConstraints; label: HtmlConstraints };
+  /**
+   * The boxes' HTML constraints, read off `fields.ts#coHostLinkRowSchema` (the link's address and
+   * label) and `fields.ts#coHostRowSchema` (the description's ceiling) by the Server Component (§315).
+   */
+  constraints: { url: HtmlConstraints; label: HtmlConstraints; description: HtmlConstraints };
 }) {
   // Which boxes a refusal named, so each marks itself; the summary links here by `fieldId`.
   const recall = useRecall();
@@ -192,9 +220,13 @@ function CoHostRowsEditorIsland({
 
   return (
     <Stack spacing={2} id={recall.idOf("event.coHosts")} tabIndex={-1} sx={{ outline: "none" }}>
-      {rows.map(({ key, name, title, links }, index) => {
+      {rows.map(({ key, name, title, descriptionRo, descriptionEn, links }, index) => {
         const n = index + 1;
         const nameField = `event.coHosts[${index}].name`;
+        const descriptionField = (language: "Ro" | "En") => `event.coHosts[${index}].description${language}`;
+        // Keyed on the card, not its position, so a moved card keeps its heading's and help's ids.
+        const aboutId = `co-host-${key}-about`;
+        const aboutHelpId = `co-host-${key}-about-help`;
         return (
           <Box key={key} sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}>
             <Stack spacing={1.5}>
@@ -224,6 +256,46 @@ function CoHostRowsEditorIsland({
                 fullWidth
               />
 
+              {/*
+                What the partnership is (§NNN), right under the name — the order the page reads it
+                in. Two boxes, one per language, side by side from `sm`: both or neither, so they
+                are always seen together, never behind a tab. Ordinary uncontrolled inputs like the
+                name, so moving a card carries what was typed in them.
+              */}
+              <Stack spacing={1} role="group" aria-labelledby={aboutId} aria-describedby={aboutHelpId}>
+                <Typography id={aboutId} variant="body2" sx={{ fontWeight: 600 }}>
+                  {labels.about}
+                </Typography>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                  {(
+                    [
+                      ["Ro", labels.descriptionRo, descriptionRo],
+                      ["En", labels.descriptionEn, descriptionEn],
+                    ] as const
+                  ).map(([language, label, initialValue]) => {
+                    const field = descriptionField(language);
+                    return (
+                      <TextField
+                        key={language}
+                        name={field}
+                        id={recall.idOf(field)}
+                        error={recall.named(field)}
+                        label={label}
+                        defaultValue={initialValue}
+                        multiline
+                        minRows={2}
+                        maxRows={5}
+                        fullWidth
+                        slotProps={{ htmlInput: { ...constraints.description, "aria-describedby": aboutHelpId } }}
+                      />
+                    );
+                  })}
+                </Stack>
+                <Typography id={aboutHelpId} variant="caption" color="text.secondary">
+                  {labels.descriptionHelp}
+                </Typography>
+              </Stack>
+
               <Stack spacing={1} id={recall.idOf(`event.coHosts[${index}].links`)} tabIndex={-1} sx={{ outline: "none" }}>
                 {links.map(({ key: linkKey, value }, linkIndex) => {
                   const box = (field: keyof CoHostLinkRowValue) => `event.coHosts[${index}].links[${linkIndex}].${field}`;
@@ -238,7 +310,7 @@ function CoHostRowsEditorIsland({
                       sx={{
                         p: 1.5,
                         border: 1,
-                        borderColor: recall.named(box("url")) || recall.named(box("kind")) ? "error.main" : "divider",
+                        borderColor: (["url", "kind", "labelRo", "labelEn"] as const).some((field) => recall.named(box(field))) ? "error.main" : "divider",
                         borderRadius: 1,
                       }}
                     >

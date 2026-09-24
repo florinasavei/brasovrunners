@@ -53,14 +53,14 @@ const POSTED = {
       name: "Clubul partener",
       links: [
         { kind: "SITE", url: SITE, labelRo: "", labelEn: "" },
-        { kind: "FACEBOOK", url: FACEBOOK, labelRo: "Pagina lor", labelEn: "" },
+        { kind: "FACEBOOK", url: FACEBOOK, labelRo: "Pagina lor", labelEn: "Their page" },
         { kind: "SITE", url: "", labelRo: "", labelEn: "" },
       ],
     },
     { name: "", links: [] },
   ],
   links: [
-    { kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: "" },
+    { kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: "The route" },
     { kind: "OTHER", url: "", labelRo: "", labelEn: "" },
   ],
   locationName: "Sala secretă",
@@ -161,14 +161,16 @@ describe("§347 the event form's five new boxes, created and saved together", ()
     expect(readCoHosts(row)).toEqual([
       {
         name: "Clubul partener",
+        descriptionRo: null,
+        descriptionEn: null,
         links: [
           { kind: "SITE", url: SITE, labelRo: null, labelEn: null },
-          { kind: "FACEBOOK", url: FACEBOOK, labelRo: "Pagina lor", labelEn: null },
+          { kind: "FACEBOOK", url: FACEBOOK, labelRo: "Pagina lor", labelEn: "Their page" },
         ],
       },
     ]);
     // The links, without the spare line.
-    expect(readEventLinks(row.links)).toEqual([{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: null }]);
+    expect(readEventLinks(row.links)).toEqual([{ kind: "GPX", url: GPX, labelRo: "Traseul", labelEn: "The route" }]);
     // The place: kept as typed for staff, and marked as not announced.
     expect(row).toMatchObject({ locationName: "Sala secretă", locationToBeAnnounced: true, mapUrl: "https://maps.example.test/sala" });
 
@@ -209,7 +211,7 @@ describe("§347 the event form's five new boxes, created and saved together", ()
   it.each([
     [
       "a partner's link with no address",
-      { coHosts: [{ name: "Clubul partener", links: [{ kind: "SITE", url: "", labelRo: "Site", labelEn: "" }] }] },
+      { coHosts: [{ name: "Clubul partener", links: [{ kind: "SITE", url: "", labelRo: "Site", labelEn: "Site" }] }] },
       "coHosts.0.links.0.url",
       "event.coHosts[0].links[0].url",
     ],

@@ -200,6 +200,23 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(coHostsSummary(words, { coHosts: [{ name: "Salvamont" }, { name: "Decathlon" }], coHostName: null, coHostUrl: null }, "ro")).toBe(
       "Împreună cu Salvamont și Decathlon",
     );
+    // The partner's links counted, and its description in one word (§NNN)…
+    const festival = {
+      name: "Brașov Running Festival",
+      descriptionRo: "Alergăm împreună.",
+      descriptionEn: "We run together.",
+      links: [
+        { kind: "SITE", url: "https://festival.example.test" },
+        { kind: "REGISTRATION", url: "https://festival.example.test/inscriere" },
+      ],
+    };
+    expect(coHostsSummary(words, { coHosts: [festival], coHostName: null, coHostUrl: null }, "ro")).toBe(
+      "Împreună cu Brașov Running Festival · 2 linkuri · cu descriere",
+    );
+    // …and a description in one language only named, since the next save will refuse it.
+    expect(coHostsSummary(words, { coHosts: [{ ...festival, descriptionEn: null, links: [] }], coHostName: null, coHostUrl: null }, "ro")).toBe(
+      "Împreună cu Brașov Running Festival · descriere într-o singură limbă",
+    );
     expect(promotionSummary(words, null)).toBe("Nimic în evidență");
     expect(promotionSummary(words, { featured: true, isSpecial: true })).toBe("Eveniment principal · Ediție specială");
   });
