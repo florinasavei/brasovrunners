@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, pickerGroup, programmeRow, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -146,9 +146,9 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
-    // A date and a time, two fields, each with the browser's own picker (`DECISIONS.md` §70).
-    await field("event.startsAtDate").fill("2027-05-01");
-    await field("event.startsAtTime").fill("09:00");
+    // A date and a time, each on MUI's picker (`DECISIONS.md` §70, §NNN).
+    await fillDateField(page, "Începutul evenimentului", "2027-05-01");
+    await fillTimeField(page, "Ora", "09:00");
     // The meeting point is asked once, in Settings: it is the same place whichever language the
     // page is read in (`DECISIONS.md` §36).
     await field("event.locationName").fill("Parcul Tractorul");
@@ -185,8 +185,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await field("event.startsAtDate").fill("2027-05-02");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-02");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.slug").fill(`fara-titlu-${suffix}`);
     const romanian = page.locator("#locale-panel-ro");
@@ -202,8 +202,11 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // one programme row, one partner, and the repeat tick with a cadence that is not the default.
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Alt eveniment" }).click();
-    await field("event.schedule[0].date").fill("2027-05-02");
-    await field("event.schedule[0].time").fill("10:00");
+    // "Ora" also labels the event's own time of day, already filled above: the row's boxes are
+    // looked up inside the row, never by where they fall on the page.
+    const row = programmeRow(page, 0);
+    await fillDateField(row, "Data", "2027-05-02");
+    await fillTimeField(row, "Ora", "10:00");
     await field("event.schedule[0].ro").fill("Startul");
     await field("event.schedule[0].en").fill("The start");
     await field("event.coHosts[0].name").fill("Clubul Prietenilor");
@@ -277,8 +280,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     const field = (name: string) => page.locator(`[name="${name}"]`);
     const wednesday = page.locator('[name="weekday"][value="3"]');
 
-    await field("event.startsAtDate").fill("2027-05-04");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-04");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Serie refuzată ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -292,7 +295,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
 
     await field("repeat.on").check();
     await field("repeat.cadence").selectOption("FORTNIGHTLY");
-    await field("repeat.until").fill("2027-05-01");
+    await fillDateField(page, "Până la (opțional)", "2027-05-01");
     await wednesday.check();
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -339,8 +342,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
       await page.keyboard.type(text);
     };
 
-    await field("event.startsAtDate").fill("2027-05-03");
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-03");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Dintr-un foc ${suffix}`);
     await field("translations.ro.slug").fill(slug);
@@ -431,5 +434,155 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
 
     expect((await page.goto(`/ro/evenimente/${event.slug}`))?.status()).toBe(200);
     expect((await page.goto(`/en/events/${event.englishSlug}`))?.status()).toBe(200);
+  });
+});
+
+/**
+ * A full page load of the editor a save just landed on, and proof that it was one.
+ *
+ * The address a save lands on ends in `#admin-alert` (the saved notice), so `page.goto(page.url())`
+ * from there is a jump to a fragment of the same document: nothing reloads, nothing hydrates, and
+ * a spec about hydration passes whatever the code does — which is what the first version of the
+ * two specs below did, against the build with the fix and the build without it alike. The bare
+ * path is a new document; the marker set on the old window being gone is what says so.
+ */
+async function loadAfresh(page: Page) {
+  const path = new URL(page.url()).pathname;
+  await page.evaluate(() => {
+    (window as Window & { sameDocument?: boolean }).sameDocument = true;
+  });
+  await page.goto(path);
+  await hydrated(page);
+  expect(await page.evaluate(() => (window as Window & { sameDocument?: boolean }).sameDocument)).toBeUndefined();
+}
+
+/*
+  §117, §NNN, review finding 1. Client-side navigation from the events list never showed this:
+  the picker there is already running by the time `ScheduleRowsEditorIsland` mounts, so its
+  listener lands on the real box from the start. Only a full page load hits the gap —
+  `useIslandRunning`'s `useSyncExternalStore` swaps the scriptless box for the picker in a
+  passive effect that runs after this island's own, so a listener attached to the element
+  `findStartDateInput` returns at that moment is attached to a node about to be unmounted.
+
+  Both pages a person lands on that way are checked: the create page (the spec opens it with
+  `page.goto`, a full load) and the editor (`loadAfresh`). Run against a build of
+  `ScheduleRowsEditor.tsx` as it was before the fix, the row stays on its first date on each.
+*/
+test.describe("BR-REQ-050-02 the programme follows the start date after a full page load (§117, §NNN)", () => {
+  test("moves the row's date when the picker replaces the scriptless box during hydration", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `program-dupa-reincarcare-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    // A new document, not the client navigation a click on "Eveniment nou" would be.
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await fillDateField(page, "Începutul evenimentului", "2027-05-10");
+    await fillTimeField(page, "Ora", "09:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Program după reîncărcare ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`Programme after reload ${suffix}`);
+    await field("translations.en.slug").fill(`programme-after-reload-${suffix}`);
+
+    // A type with a programme (§111), and one row on it — the same pattern the refused-create
+    // spec above uses. The editor opens on one row, so there is exactly one "Data" on the page,
+    // and "Ora" is also the event's own time of day: the row's boxes are looked up inside the
+    // row (`programmeRow`), never by where they fall on the page (re-review, finding 1).
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Alt eveniment" }).click();
+    const row = programmeRow(page, 0);
+    await fillDateField(row, "Data", "2027-05-10");
+    await fillTimeField(row, "Ora", "10:00");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-10");
+    await expect(field("event.schedule[0].time")).toHaveValue("10:00");
+    await field("event.schedule[0].ro").fill("Startul");
+    await field("event.schedule[0].en").fill("The start");
+
+    // The create page. The bug: without the fix the row stays on "2027-05-10", because the
+    // listener died with the scriptless box before the picker's own change ever reached it.
+    await fillDateField(page, "Începutul evenimentului", "2027-05-12");
+    await expect(field("event.startsAtDate")).toHaveValue("2027-05-12");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+
+    // The editor, on the full load the finding names — never the client navigation that just
+    // landed here, and never the fragment jump `page.goto(page.url())` would be.
+    await loadAfresh(page);
+
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-12");
+    await fillDateField(page, "Începutul evenimentului", "2027-05-13");
+    await expect(field("event.startsAtDate")).toHaveValue("2027-05-13");
+    await expect(field("event.schedule[0].date")).toHaveValue("2027-05-13");
+  });
+});
+
+/*
+  §NNN, review finding 2. Every existing assertion on a picker's format reads the hidden posted
+  input (`YYYY-MM-DD` / `HH:mm`), which says nothing about what the picker *shows* — and every
+  one of them is a morning time, where 12-hour and 24-hour read the same digits. This asserts
+  what the picker box itself renders instead, on an afternoon hour, before and after a save and
+  a full reload.
+
+  Not the box's text (re-review, finding 2): the element MUI names with the label is the whole
+  outlined input, and its notch repeats the label inside it, so its `textContent` is
+  "19:00Ora" — never "19:00". What a person reads is the sections, one `spinbutton` each, in the
+  order the format puts them, and the separators between them, which MUI's own unnamed input
+  carries as its value ("30.09.2027") beside the hidden one the form posts ("2027-09-30").
+*/
+async function expectPickerShows(group: Locator, sections: string[], shown: string) {
+  await expect(group.getByRole("spinbutton")).toHaveText(sections);
+  await expect(group.locator("input")).toHaveValue(shown);
+}
+
+test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-year, not only post that way (§303, §NNN)", () => {
+  test("shows 19:00 with no AM/PM and 30.09.2027 in day, month, year order — before and after saving", async ({ page }) => {
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const slug = `ceas-24h-${suffix}`;
+
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await fillDateField(page, "Începutul evenimentului", "2027-09-30");
+    await fillTimeField(page, "Ora", "19:00");
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Ceas 24h ${suffix}`);
+    await field("translations.ro.slug").fill(slug);
+    await page.getByRole("tab", { name: /English/ }).click();
+    await field("translations.en.title").fill(`24-hour clock ${suffix}`);
+    await field("translations.en.slug").fill(`24-hour-clock-${suffix}`);
+
+    // The event's own boxes: the first "Ora" on the page is the event's time of day, above any
+    // programme row's.
+    const dateGroup = pickerGroup(page, "Începutul evenimentului");
+    const timeGroup = pickerGroup(page, "Ora");
+    const readsTheClubsWay = async () => {
+      // Day, month, year — three sections in that order, never month first.
+      await expectPickerShows(dateGroup, ["30", "09", "2027"], "30.09.2027");
+      // Two sections and no third: a 12-hour clock would add the AM/PM one and show "07".
+      await expectPickerShows(timeGroup, ["19", "00"], "19:00");
+      await expect(timeGroup).not.toContainText(/AM|PM/i);
+      // What the form posts is still the service's shape, untouched by what the box shows.
+      await expect(field("event.startsAtDate")).toHaveValue("2027-09-30");
+      await expect(field("event.startsAtTime")).toHaveValue("19:00");
+    };
+
+    await readsTheClubsWay();
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+
+    // A full page load: the scriptless box's own hydration swap is where finding 1's bug lived,
+    // and it is the same swap this display format has to survive.
+    await loadAfresh(page);
+
+    await readsTheClubsWay();
   });
 });

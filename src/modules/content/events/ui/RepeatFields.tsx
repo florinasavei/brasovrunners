@@ -2,9 +2,10 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
+import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
 
 /**
  * How an event repeats (BR-REQ-050-02 criterion 7, §122): the cadence, the days of the week,
@@ -25,8 +26,9 @@ import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
  * The enum value stays in the domain for the rows that carry it.
  *
  * After a refused submit every one of them comes back as it was chosen (`DECISIONS.md` §315): the
- * cadence and the end are `RecallField`s, the weekday ticks `CheckboxField`s, which read the
- * form's returned state wherever the form is an `ActionForm`.
+ * cadence is a `RecallField`, the end a `DateField` (`30.09.2026`, day first, on MUI's picker —
+ * `DECISIONS.md` §NNN), the weekday ticks `CheckboxField`s, which read the form's returned state
+ * wherever the form is an `ActionForm`.
  */
 export default async function RepeatFields({
   prefix = "",
@@ -57,13 +59,11 @@ export default async function RepeatFields({
             </option>
           ))}
         </RecallField>
-        <RecallField
+        <DateField
           name={name("until")}
-          type="date"
           label={t("editor.repeatUntil")}
           helperText={t("editor.repeatUntilHelp")}
           size="small"
-          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ width: 220 }}
         />
       </Stack>

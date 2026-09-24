@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * `DECISIONS.md` §331 — "Anunță participanții despre schimbare", end to end. An organizer makes a
@@ -29,8 +29,8 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await hydrated(page);
     await page.getByRole("combobox", { name: "Tip eveniment" }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await field("event.startsAtDate").fill(day);
-    await field("event.startsAtTime").fill("09:00");
+    await fillDateField(page, "Începutul evenimentului", day);
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
