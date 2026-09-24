@@ -347,15 +347,24 @@ export default async function EventFacts({
     inside one.
 
     The card's form (§366, amended §NNN — the owner, 2026-09-24, of the row whose clock and time had
-    wrapped to a second line: "This should be on a single line on a phone") never wraps: `nowrap`
-    on the row, every piece and the lead (a series card's "Următoarea:") kept whole. What used to
-    make the line too wide at 320 pixels — the year in the date — is dropped there instead (`date`,
-    above); nothing here still relies on wrapping to fit.
+    wrapped to a second line: "This should be on a single line on a phone") is `nowrap` on the row,
+    every piece kept whole — except a race's two named times (`card.wrap`, below), which still break
+    between whole pieces exactly as the page does: at 320 pixels "[calendar] Sâmbătă … · [clock]
+    întâlnire la 09:00 · start la 10:00" is about 390 pixels against the card's 226, and `nowrap`
+    would have the card's own `overflow: hidden` clip the start time silently rather than stop the
+    line wrapping, which loses the one time a runner must not miss.
+
+    A series card's own lead ("Următoarea:") is the other width the amendment measured: with the
+    year already dropped (`date`, above) the lead still does not fit next to the date, the clock
+    and the time at 320 pixels ("Următoarea: Luni, 28 sept. · [clock] 18:30" is about 245 pixels
+    against 226). `§366`'s own measurement named the fix this amendment takes: no lead below a
+    breakpoint (a screen reader still reads it — it is in the markup, only hidden by width, the
+    same trick `date` already plays with the year).
   */
-  const flow = (items: ReactNode[], card?: { lead?: string }) => (
-    <Box sx={{ display: "flex", flexWrap: card ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
+  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean }) => (
+    <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: 0.75, minWidth: 0 }}>
       {card?.lead && (
-        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0 }}>
+        <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, display: { xs: "none", sm: "inline" } }}>
           {card.lead}
         </Box>
       )}
@@ -493,8 +502,9 @@ export default async function EventFacts({
 
     return (
       <Box data-testid="card-facts" sx={{ display: "grid", rowGap: LINE_GAP, minWidth: 0 }}>
-        {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead }))}
+        {/* "Duminică, 27 sept. 2026 · [clock] 10:00" — on a series card "Următoarea: …" in front (§113);
+            a race's gathering and start time may still wrap between whole pieces (§366, amended §NNN). */}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX), { lead: whenLead, wrap: !!event.raceStartsAt }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
@@ -535,15 +545,22 @@ export default async function EventFacts({
 
     /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
        cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2).
-       This is the hero's line; the event page (§356) and the listing card (§366) draw pills. */
+       This is the hero's line; the event page (§356) and the listing card (§366) draw pills.
+
+       Same order as `orderRoutePills` (§366, amended §NNN — the owner, 2026-09-24, of "8 km · 250 m
+       D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
+       elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
+       beside the event's type already says it, so difficulty leads here, before distance and
+       elevation. Difficulty carries its own glyph (§112: bars for how hard); distance and elevation
+       do not, on the hero as before. */
     const route: ReactNode[] = [];
+    if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
     if (distance !== null) {
       // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
-    if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
+    // The coin for the cost, below, is the closed set's other glyph (§112).
     /*
       The cost (§343): the card keeps the closed set's short word — "Cu taxă", "Donație", in its
       pill (§366). The hero says more, the way the meeting point becomes its own map link: a paid

@@ -318,6 +318,17 @@ describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => 
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
+  it("orders the hero's route the same way as the card's and the page's pills — difficulty before distance and elevation (§366, amended §NNN)", async () => {
+    // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
+    // terrain type, difficulty, distance, elevation". The hero has no surface pill of its own.
+    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
+    const route = row(html, "Traseu");
+    const text = route.dd.replace(/<[^>]+>/g, "");
+    expect(text.indexOf("Ușor")).toBeGreaterThan(-1);
+    expect(text.indexOf("Ușor")).toBeLessThan(text.indexOf("10 km"));
+    expect(text.indexOf("10 km")).toBeLessThan(text.indexOf("300 m diferență de nivel"));
+  });
+
   it("the featured hero's clock is the size of its other glyphs — eighteen pixels, three under the baseline (§366)", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW }));
     const when = row(html, "Când");
@@ -503,16 +514,43 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(source).toContain('year: false');
   });
 
-  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), the row never wrapping (§366, amended §NNN)", async () => {
+  it("puts a series card's «Următoarea:» on the date's own line, before it (§113), and hides it below a breakpoint so the row fits at 320 pixels (§366, amended §NNN)", async () => {
     const html = await card({}, { whenLead: "Următoarea:" });
     const when = line(html, "when").inner;
     // The lead comes before the date, which comes before the time — the calendar glyph is first
-    // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row).
+    // of all, ahead of every piece of text (`cardLine`'s icon, then `flow`'s row). It is still in
+    // the markup — a screen reader reads it — even though a phone no longer shows it beside the
+    // date, the clock and the time (below): measured (§366, amended §NNN), the four together do
+    // not fit the card's 226 pixels at 320, the width the amendment's own note named as the fix.
     expect(when.indexOf("Următoarea:")).toBeGreaterThan(-1);
     expect(when.indexOf("Următoarea:")).toBeLessThan(when.indexOf("Sâmbătă, 26 sept."));
     expect(when.indexOf("Sâmbătă, 26 sept.")).toBeLessThan(when.indexOf("08:00"));
     // Not a line of its own above the facts.
     expect(lines(html)[0]?.key).toBe("when");
+    // Hidden below `sm`, back from `sm` up — the same trick the date's own year already plays.
+    const leadClass = /<span\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>Următoarea:<\/span>/.exec(when)?.[1] ?? "";
+    expect(leadClass).not.toBe("");
+    expect(html).toContain(`@media (min-width:0px){.${leadClass}{display:none;}}`);
+    expect(html).toContain(`@media (min-width:600px){.${leadClass}{display:inline;}}`);
+  });
+
+  it("lets a race's two named times wrap onto their own line rather than have the card clip the start time (§366, amended §NNN)", async () => {
+    const withTwoTimes = await card({ raceStartsAt: new Date("2026-09-26T07:00:00Z") });
+    const when = line(withTwoTimes, "when").inner;
+    // Both times are whole in the markup — the gathering time and the race's own start.
+    expect(when).toContain("08:00");
+    expect(when).toContain("10:00");
+    // The row itself (`flow`'s own box, the second `<div>` inside the line — the first is
+    // `cardLine`'s wrapper): wraps between whole pieces rather than clipping the start time,
+    // unlike an ordinary card's row, which stays `nowrap`.
+    const rowTag = ([...when.matchAll(/<div\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>/g)][1] ?? [])[0] ?? "";
+    expect(rowTag).not.toBe("");
+    expect(ruleOf(withTwoTimes, rowTag)).toContain("flex-wrap:wrap");
+    const plain = await card();
+    const plainWhen = line(plain, "when").inner;
+    const plainRowTag = ([...plainWhen.matchAll(/<div\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>/g)][1] ?? [])[0] ?? "";
+    expect(plainRowTag).not.toBe("");
+    expect(ruleOf(plain, plainRowTag)).toContain("flex-wrap:nowrap");
   });
 
   it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {

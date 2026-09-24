@@ -311,11 +311,13 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(text(when)).toContain("10:00");
   });
 
-  it("never wraps the when line onto a second line (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", () => {
-    // `flow`'s row is `nowrap` only for a card, and its glyphs and pieces never shrink, so the
-    // row cannot break between the lead, the date, the clock and the time.
+  it("never wraps the when line onto a second line, except a race's two named times (§366, amended §NNN — the owner: \"This should be on a single line on a phone\")", () => {
+    // `flow`'s row is `nowrap` only for a card, and only while it is not a race's two named
+    // times (`card.wrap`, which stays `wrap` so a race's start time cannot be clipped, §366
+    // amended §NNN) — and its glyphs and pieces never shrink, so the row cannot break inside a
+    // piece, only between whole ones.
     const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
-    expect(source).toMatch(/flexWrap:\s*card\s*\?\s*"nowrap"\s*:\s*"wrap"/);
+    expect(source).toMatch(/flexWrap:\s*card\s*&&\s*!card\.wrap\s*\?\s*"nowrap"\s*:\s*"wrap"/);
     expect(source).toContain("flexShrink: 0");
   });
 
