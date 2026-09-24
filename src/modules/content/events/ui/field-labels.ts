@@ -1,7 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { MAX_CO_HOST_DESCRIPTION, MAX_CO_HOST_LINK_LABEL, MAX_CO_HOST_LINKS, MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
+import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { MAX_EVENT_LINK_LABEL, MAX_EVENT_LINKS } from "@/modules/events/domain/links";
+import type { IdenticalLabels } from "./publish-check";
 
 /**
  * The label of every box on the event form, by the `name` it posts — for the refusal summary
@@ -74,9 +76,15 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.schedule[].ro": inBox("programme", t("editor.programmeRows.ro")),
     "event.schedule[].en": inBox("programme", t("editor.programmeRows.en")),
     "event.schedule[].place": inBox("programme", t("editor.programmeRows.place")),
-    // In the Salvare box (§331): what changed; in the status box: why the event is cancelled.
-    "notice.note": inBox("save", t("editor.notice.note")),
-    "cancel.reason": inBox("status", t("editor.notice.cancelReason")),
+    /*
+      In the Salvare box (§331): what changed; in the status box: why the event is cancelled — one
+      box per language (§354, bilingual everywhere), each named with its language and what it
+      needs, since a both-or-neither refusal names only the empty side.
+    */
+    "notice.noteRo": inBox("save", t("editor.notice.noteRoError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "notice.noteEn": inBox("save", t("editor.notice.noteEnError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonRo": inBox("status", t("editor.notice.cancelReasonRoError", { max: EVENT_NOTICE_TEXT_MAX })),
+    "cancel.reasonEn": inBox("status", t("editor.notice.cancelReasonEnError", { max: EVENT_NOTICE_TEXT_MAX })),
     "repeat.cadence": inBox("recurrence", t("editor.repeatCadence")),
     "repeat.until": inBox("recurrence", t("editor.repeatUntil")),
     weekday: inBox("recurrence", t("editor.repeatWeekdays")),
@@ -168,4 +176,34 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   }
 
   return labels;
+}
+
+/**
+ * The words the Publicare box names a text by when its English is its Romanian word for word
+ * (§354, bilingual everywhere): the box's title, the partner's number, the language and the
+ * field, as the boxes themselves say them — "Descrierea evenimentului › English › Descriere".
+ */
+export async function identicalTextLabels(): Promise<IdenticalLabels> {
+  const t = await getTranslations("Admin");
+  const tSite = await getTranslations("Site");
+  return {
+    boxes: {
+      titleSummary: t("editor.boxes.titleSummary.title"),
+      description: t("editor.boxes.description.title"),
+      programme: t("editor.boxes.programme.title"),
+      rules: t("editor.boxes.rules.title"),
+      coHosts: t("editor.boxes.coHosts.title"),
+    },
+    fields: {
+      excerpt: t("editor.boxes.summaryLabel"),
+      body: t("editor.fields.body"),
+      schedule: t("editor.fields.scheduleNotes"),
+      checklist: t("editor.fields.checklist"),
+      rules: t("editor.fields.rules"),
+      coHostDescription: t("editor.coHostRows.about"),
+    },
+    languages: Object.fromEntries(routing.locales.map((locale) => [locale, tSite(`languageName.${locale}`)])),
+    // The card's number is filled in by `identicalTextLabel`, so the placeholder travels as itself.
+    partner: t("editor.identical.partner", { p: "{p}" }),
+  };
 }

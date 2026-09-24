@@ -29,13 +29,25 @@ if (appEnv !== "local" && appEnv !== "test") {
 
 // A second, independent guard. APP_ENV is a variable someone can set wrongly; the host in the
 // connection string is what actually decides which database is destroyed.
-const host = (() => {
+const parsed = (() => {
   try {
-    return new URL(url).hostname;
+    return new URL(url);
   } catch {
-    return "";
+    return null;
   }
 })();
+const host = parsed?.hostname ?? "";
+// The database and role the URL names — a worktree's own `brasov_runners_wf…` database, say. The
+// docker fallback below must reset exactly this one: it used to name `brasov_runners` outright, so
+// a worktree without psql on PATH dropped the MAIN checkout's database and then migrated and seeded
+// its own (reported 2026-09-24 by the payload-diet agent, which reset its database by hand instead).
+const database = parsed ? decodeURIComponent(parsed.pathname.replace(/^\//, "")) : "";
+const role = parsed ? decodeURIComponent(parsed.username) : "";
+
+if (!database || !role) {
+  console.error("db:reset:local — DATABASE_URL names no database or no user; refusing to guess which one to drop.");
+  process.exit(1);
+}
 
 if (!["localhost", "127.0.0.1", "::1", "db"].includes(host)) {
   console.error(
@@ -47,15 +59,15 @@ if (!["localhost", "127.0.0.1", "::1", "db"].includes(host)) {
 
 const sql = "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA public;";
 
-console.log(`db:reset:local — dropping and recreating schemas on ${host}`);
+console.log(`db:reset:local — dropping and recreating schemas in "${database}" on ${host}`);
 const dropped = spawnSync("psql", [url, "-v", "ON_ERROR_STOP=1", "-c", sql], { stdio: "inherit" });
 
 if (dropped.error || dropped.status !== 0) {
   // psql is not always on PATH on Windows; the container always has it.
-  console.log("db:reset:local — psql unavailable locally, using the docker container instead");
+  console.log(`db:reset:local — psql unavailable locally, using the docker container instead (database "${database}")`);
   const viaDocker = spawnSync(
     "docker",
-    ["exec", "brasovrunners-db", "psql", "-U", "brasov_runners", "-d", "brasov_runners", "-v", "ON_ERROR_STOP=1", "-c", sql],
+    ["exec", "brasovrunners-db", "psql", "-U", role, "-d", database, "-v", "ON_ERROR_STOP=1", "-c", sql],
     { stdio: "inherit" },
   );
   if (viaDocker.status !== 0) {
