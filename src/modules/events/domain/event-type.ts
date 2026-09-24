@@ -84,6 +84,19 @@ export function takesRegistrations(type: EventType): boolean {
   return !TURN_UP_TYPES.includes(type);
 }
 
+/**
+ * Whether the event's age rule is said in public — on its page, in its structured data (§329).
+ *
+ * Only where the club takes the registrations itself: that is the one place the platform counts
+ * `min_age` (`submitRegistration`). An event one turns up to has no registration to be too young
+ * for (§111), an event registered elsewhere follows the other organizer's rule, and one with no
+ * registration at all has nobody to refuse — stating the club's number on any of them would be a
+ * rule nothing enforces.
+ */
+export function hasAgeRule(event: { type: EventType; registrationMode: "NONE" | "INTERNAL" | "EXTERNAL" }): boolean {
+  return takesRegistrations(event.type) && event.registrationMode === "INTERNAL";
+}
+
 /** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */
 export function hasProgramme(type: EventType): boolean {
   return !TURN_UP_TYPES.includes(type);

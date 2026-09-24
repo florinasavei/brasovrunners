@@ -21,3 +21,12 @@ export function calendarLabels(locale: "ro" | "en"): CalendarLabels {
     t: createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: "Event" }) as CalendarLabels["t"],
   };
 }
+
+/**
+ * "Locația se anunță în curând" outside a request (§328): the emails' facts line and a
+ * `{eventLocationName}` in the club's own copy, in the same words — the same key — as the page,
+ * the card and the calendar.
+ */
+export function placeToBeAnnouncedWords(locale: "ro" | "en"): string {
+  return calendarLabels(locale).t("locationToBeAnnounced");
+}

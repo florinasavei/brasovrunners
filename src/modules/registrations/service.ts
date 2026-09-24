@@ -15,7 +15,7 @@ import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
-import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -23,6 +23,7 @@ import {
   findParticipantByCanonicalEmail,
   markEmailVerified,
 } from "@/modules/participants/repository";
+import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { maintenanceDueFor } from "@/modules/jobs/schedule";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
@@ -32,9 +33,9 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
-import { expectedSignatureName, signatureNameMatches } from "./domain/signature-name";
+import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
-import { dayIn } from "./domain/age";
+import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import {
   declarationSigningSchema,
   isMinorOn,
@@ -90,6 +91,13 @@ export type EventForRegistration = {
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
    */
   timezone?: string;
+  /**
+   * The event's own minimum age (`events.min_age`, §329), counted on that day at every door.
+   * The three callers that submit read it off the row and pass it; absent on a partial row
+   * means the column's default, `MIN_PARTICIPANT_AGE` — the same fourteen the column gives an
+   * event nobody set a number on, so a fixture built without it counts what the row holds.
+   */
+  minAge?: number;
 };
 
 /** `events.timezone`'s column default: what a partial `EventForRegistration` is read in. */
@@ -359,7 +367,17 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
 ): Promise<number> {
+  /*
+    A cancelled event's queue stands still (§331). Nobody is offered a place in a race that will
+    not run — the offer's email would be a link that answers "cancelled" — and no hold is
+    released either: the registrations keep their status as the record of who had entered, and
+    a race that is put back on finds its queue where it left it. Every caller passes the row it
+    read under the event lock, so the status here is the one a concurrent cancellation left.
+  */
+  if (event.eventStatus === "CANCELLED") return 0;
   await repo.expireStaleHolds(db, event, now);
+  // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
+  if (event.eventStatus !== "SCHEDULED") return 0;
 
   // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
   // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
@@ -662,7 +680,8 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
 
   // Counted before anything is looked up, so a script cannot use the lookup itself as the
   // signal, and counted even when refused (`consumeRateLimit`).
-  const verdict = await consumeRateLimit(db, "link-request", identity.canonicalEmail, now);
+  // Hashed (§322): the bucket needs equality, not the address.
+  const verdict = await consumeRateLimit(db, "link-request", emailBucketKey("link-request", identity.canonicalEmail), now);
   if (!verdict.allowed) return;
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -672,6 +691,14 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
     ? await repo.findRegistrationByEventAndParticipant(db, input.eventId, participant.id)
     : await repo.findLatestActiveRegistrationForParticipant(db, participant.id);
   if (!registration || !isActiveStatus(registration.status)) return;
+  // A cancelled event hands out no link (§331): each would open onto "this event is cancelled",
+  // and its participants were told so in a message of its own. The same silent answer as above.
+  // Asked without an event, the lookup has already passed over cancelled ones, so a runner with
+  // another race still gets that one's link rather than nothing.
+  if (input.eventId) {
+    const event = await repo.findEventForAllocation(db, registration.eventId);
+    if (!event || event.eventStatus === "CANCELLED") return;
+  }
 
   const messageType = deriveAllowedResendMessageType(registration.status);
   if (!messageType) return;
@@ -727,7 +754,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * goes through exactly the path a real one does (AGENTS.md §12.6).
    */
   /*
-    …and one rule is added here for every caller alike: fourteen on the day of the event (§321).
+    …and one rule is added here for every caller alike: the event's own minimum age on the day
+    of the event (§321; the number is the event's since §329, fourteen unless set otherwise).
 
     Here because this is the first line that knows the event, and the one door every
     registration passes — the public form, a staff entry and the desk's walk-in behind it, a
@@ -739,7 +767,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
   const schema = (
     origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema
-  ).superRefine(minimumAgeRule(eventDay));
+  ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     throw new DomainError(
@@ -840,7 +868,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * and authorized.
    */
   if (origin.source === "PUBLIC") {
-    const verdict = await consumeRateLimit(db, "registration-submit", identity.canonicalEmail, now);
+    // Hashed (§322): the bucket needs equality, not the address.
+    const verdict = await consumeRateLimit(db, "registration-submit", emailBucketKey("registration-submit", identity.canonicalEmail), now);
     if (!verdict.allowed) {
       // The event and the verdict, never the address (§14.5) — as the anti-bot refusals log.
       console.warn(`[registration] refused as throttled, event ${event.id}`);
@@ -862,6 +891,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    */
   const legalName = composeLegalName(input.firstName, input.lastName);
   const healthNotes = input.healthConsent && input.healthNotes ? input.healthNotes : null;
+  const minor = Boolean(input.birthDate && isMinorOn(input.birthDate, now));
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -889,9 +919,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
      */
     clubName: input.clubMemberDeclared ? CLUB_NAME : (input.clubName ?? null),
     // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
-    guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
-    stravaUrl: input.stravaUrl ?? null,
-    instagramHandle: input.instagramHandle ?? null,
+    guardianName: minor && input.guardianName ? input.guardianName : null,
+    /*
+      Never for a minor (§323): the privacy notice says the club keeps no Strava or Instagram
+      of a child, and the form hides the two boxes once the birth date says under eighteen —
+      this is the same rule for a form posted without JavaScript, or typed in before the date.
+      Minor on the day of registering, as the guardian rule above: that is when the consent
+      would be given, and a runner under eighteen at the race is under eighteen today too.
+    */
+    stravaUrl: minor ? null : (input.stravaUrl ?? null),
+    instagramHandle: minor ? null : (input.instagramHandle ?? null),
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,
@@ -1146,6 +1183,17 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       return { registration: current, allocated: false };
     }
 
+    /*
+      The event is not being run any more (§331): cancelled, or over. Confirming the address
+      would allocate a place, draw a provisional number and send "sign the declaration" for a
+      race that will not happen — so nothing is written and nothing is sent. The registration is
+      returned still unconfirmed, which is how the confirmation page knows to say why rather
+      than "confirmed, now sign" (`registrations/confirm/[token]/actions.ts`), and it lapses with
+      the other unconfirmed ones after 48 hours. Read under the event lock, so a cancellation
+      that lands between the click and this line is the one that counts.
+    */
+    if (lockedEvent.eventStatus !== "SCHEDULED") return { registration: current, allocated: false };
+
     await markEmailVerified(tx, current.participantId, now);
     const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
     await enqueueAllocationEmail(
@@ -1167,6 +1215,23 @@ export async function confirmEmail<T extends Record<string, unknown>>(
 }
 
 // --- §15.3 Declaration signing, and offer acceptance (the same act) ------------------------
+
+/**
+ * Bind the signature to the text that was read (BR-REQ-033-02 criterion 6, DECISIONS.md §57).
+ * The page posts the id and hash of the version it rendered; a newer version approved in
+ * between makes the two disagree, and recording the current one would stamp a text the
+ * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
+ * whole transaction, token spend included, so the same link re-renders the current text.
+ *
+ * Asked before anything else is read from the text (§330): who signs and which documents are
+ * asked come from it, and must come from the text the page showed.
+ */
+function declarationChanged(version: number): DomainError {
+  return new DomainError(
+    "CONFLICT",
+    `DECLARATION_CHANGED: the declaration that was read is not the current approved version ${version}; the participant must read the current text and sign again`,
+  );
+}
 
 export async function signDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1225,8 +1290,54 @@ export async function signDeclaration<T extends Record<string, unknown>>(
      * What is recorded stays what was typed, casing and diacritics and all: the rule decides
      * whether the signature is accepted, never what it says.
      */
-    if (!signatureNameMatches(parsed.data.typedName, expectedSignatureName(before))) {
-      throw new DomainError("VALIDATION_ERROR", "typedName: the signature is not the declarant's name", ["typedName"]);
+    /*
+      The text this signature binds to: the version current for this registration's language,
+      read once, before anything is compared (§330). Who signs and which documents are asked are
+      read from it, so it has to be the text the page showed — and that is checked first: the
+      page posts the id and hash of the version it rendered, and a newer version approved in
+      between is refused here with CONFLICT (`declarationChanged`, BR-REQ-033-02 criterion 6,
+      §57) rather than as a refusal of a box the page never had, or a box the page had ignored.
+      Never a flag the page posts: the server reads the text itself.
+    */
+    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", before.locale, now);
+    if (document && (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256)) {
+      throw declarationChanged(document.version);
+    }
+
+    /*
+      A minor's declaration is signed twice at this one press (§330) — by the parent, in
+      `typedName` as above, and by the minor, in `minorTypedName`, with the name they were
+      registered under — when the text asks the minor to sign: when it names the minor's own
+      document, `{{participantIdDocument}}` (`asksForMinorSignature`). A text approved before that
+      (the parent declares, with the parent's document, §108) is signed as it always was: once, by
+      the parent, and the minor's boxes are neither asked nor kept, whatever was posted in them —
+      the privacy notice approved beside such a text says nothing of a minor's own identity
+      number. Both names are compared here, together, so a press with both wrong is told about
+      both boxes at once — `mismatchedSignatures` is the function the page marks the boxes with,
+      so the refusal and the red boxes name the same ones.
+    */
+    const expected = expectedSignatures(before, { minorSigns: document ? asksForMinorSignature(document.body) : false });
+    const wrongSignatures = mismatchedSignatures(parsed.data, expected);
+    if (wrongSignatures.length > 0) {
+      throw new DomainError("VALIDATION_ERROR", `${wrongSignatures.join(", ")}: the signature is not the name expected`, wrongSignatures);
+    }
+    const signedByMinorToo = expected.minorTypedName !== null;
+
+    /*
+      The identity documents, asked for before anything moves too (§330), for the reason the names
+      are: a refusal must never reach the allocator. A text naming any of the three document
+      fields (`asksForIdDocument`) asks for the declarant's document, and — when the minor signs
+      too — the minor's as well. Each missing one is named, so the page can say which box.
+    */
+    const needsIdDocument = document ? asksForIdDocument(document.body) : false;
+    if (needsIdDocument) {
+      const missing = [
+        ...(signedByMinorToo && !parsed.data.minorIdDocument ? ["minorIdDocument"] : []),
+        ...(!parsed.data.idDocument ? ["idDocument"] : []),
+      ];
+      if (missing.length > 0) {
+        throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: the declaration names an identity document`, missing);
+      }
     }
 
     // Re-verify the hold is still live at the moment of signing — never trusting that it was
@@ -1244,32 +1355,19 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       if (current.status === "WAITLISTED") return { registration: current, offered: 1 }; // no declaration requested yet
     }
 
-    const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
+    // Read above, before the hold was touched: the registration's language does not change under
+    // the expiry, so it is the version current for `current.locale` too — and it was bound to
+    // the version the page rendered there (`declarationChanged`).
     if (!document) {
       throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
     }
 
-    /**
-     * Bind the signature to the text that was read (BR-REQ-033-02 criterion 6, DECISIONS.md §57).
-     * The page posts the id and hash of the version it rendered; a newer version approved in
-     * between makes the two disagree, and recording the current one would stamp a text the
-     * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
-     * whole transaction, token spend included, so the same link re-renders the current text.
-     */
-    if (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256) {
-      throw new DomainError(
-        "CONFLICT",
-        `DECLARATION_CHANGED: the declaration that was read is not the current approved version ${document.version}; the participant must read the current text and sign again`,
-      );
-    }
-
-    // The identity document, when the declaration's own text names it (§95): the club hands
-    // out kits against it, so a signature without one is not the declaration the club wrote.
-    const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
-    if (asksForIdDocument && !parsed.data.idDocument) {
-      throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
-    }
-
+    /*
+      The identity documents were required above, when the text names one (§95: the club hands
+      out kits against it, so a signature without one is not the declaration the club wrote), and
+      are stored only then. The minor's signature and document ride on the same row (§330): one
+      acceptance, one instant, one text, signed by both.
+    */
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -1277,7 +1375,9 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
-      idDocument: asksForIdDocument ? parsed.data.idDocument : null,
+      idDocument: needsIdDocument ? parsed.data.idDocument : null,
+      minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
+      minorIdDocument: signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null,
       acceptedAt: now,
     });
 
@@ -1428,13 +1528,25 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   if (!document) {
     throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
   }
+  /*
+    Who signed the paper, as the row records it (§330). An adult's paper carries one signature:
+    the registered name. A minor's carries the parent's, as the declarant (`typed_name`, the same
+    person `expectedSignatures` wants online) — and, when the declaration in effect asks the minor
+    to sign (`asksForMinorSignature`, the same gate as online), the minor's beside it
+    (`minor_typed_name`): the staff member who presses "Confirmă pe hârtie" attests exactly that,
+    and the button says so on a minor's row only then. Under a text that does not ask it the paper
+    is the one the parent signed alone, and the row records that and nothing more. Nobody on staff
+    signs anything; the documents stay on the paper, as they always have.
+  */
+  const signers = expectedSignatures(current, { minorSigns: asksForMinorSignature(document.body) });
   await repo.insertDeclarationAcceptance(tx, {
     registrationId: current.id,
     legalDocumentId: document.id,
     declarationVersion: document.version,
     contentSha256: document.contentSha256,
     locale: current.locale,
-    typedName: current.registeredName,
+    typedName: signers.typedName,
+    minorTypedName: signers.minorTypedName,
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
@@ -1502,6 +1614,11 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
     if (current.status === "CONFIRMED") return current;
+    // No desk for a race that will not run (§331): a paper confirmation here would allocate and
+    // send "you are in" for a cancelled event, exactly what `signDeclaration` refuses online.
+    if (lockedEvent.eventStatus === "CANCELLED") {
+      throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
+    }
 
     if (current.status === "PENDING_EMAIL_CONFIRMATION") {
       await tx
@@ -1542,6 +1659,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
     const locked = withLockedRow(event, lockedEvent);
+    // As at the desk's confirmation (§331): nobody is given a place in a cancelled race.
+    if (locked.eventStatus === "CANCELLED") {
+      throw new DomainError("VALIDATION_ERROR", "the event is CANCELLED");
+    }
     await repo.expireStaleHolds(tx, locked, now);
 
     const current = await repo.findRegistrationById(tx, registrationId);
@@ -1596,6 +1717,11 @@ export async function checkIn<T extends Record<string, unknown>>(
   if (event?.eventStatus === "COMPLETED") {
     throw new DomainError("VALIDATION_ERROR", "the event is completed; the desk is closed");
   }
+  // Nor at a race that will not run (§331): a check-in there would put somebody on the
+  // thank-you's list for an event that never happened.
+  if (event?.eventStatus === "CANCELLED") {
+    throw new DomainError("VALIDATION_ERROR", "the event is cancelled; the desk is closed");
+  }
   if (current.checkedInAt) return current;
   const [updated] = await db
     .update(registrations)
@@ -1625,6 +1751,13 @@ export async function unregister<T extends Record<string, unknown>>(
   registrationId: string,
   source: "PARTICIPANT" | "ADMIN",
   now: Date,
+  /**
+   * `notify: false` when the cancellation is the first half of an erasure (§322): the place is
+   * released exactly as for any cancellation, and no "your registration is cancelled" is queued
+   * to a person who asked to be forgotten — a message the erasure would delete a moment later,
+   * or that a drain between the two would already have sent.
+   */
+  options: { notify?: boolean } = {},
 ): Promise<Registration> {
   const unregistered = await db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
@@ -1651,16 +1784,18 @@ export async function unregister<T extends Record<string, unknown>>(
       throw new DomainError("CONFLICT", "this registration changed state concurrently");
     }
 
-    await enqueueEmail(tx, {
-      participantId: cancelled.participantId,
-      registrationId: cancelled.id,
-      messageType: "REGISTRATION_CANCELLED",
-      locale: cancelled.locale,
-      recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
-      payload: {},
-      idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
-      now,
-    });
+    if (options.notify !== false) {
+      await enqueueEmail(tx, {
+        participantId: cancelled.participantId,
+        registrationId: cancelled.id,
+        messageType: "REGISTRATION_CANCELLED",
+        locale: cancelled.locale,
+        recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
+        payload: {},
+        idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
+        now,
+      });
+    }
 
     const offered = await fillAvailableSpots(tx, withLockedRow(event, lockedEvent), now);
 

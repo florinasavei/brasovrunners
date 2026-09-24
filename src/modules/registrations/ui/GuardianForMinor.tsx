@@ -1,8 +1,8 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { type ReactNode, useCallback, useSyncExternalStore } from "react";
-import { isMinorOn } from "../domain/age";
+import type { ReactNode } from "react";
+import { useBirthDateSaysMinor } from "./use-birth-date-minor";
 
 /**
  * The parent or guardian's name, shown when the birth date says the runner is a minor
@@ -26,14 +26,8 @@ import { isMinorOn } from "../domain/age";
  * block renders open whatever the date box currently holds, so an error never points at something
  * invisible.
  *
- * ## Why `useSyncExternalStore` and not an effect
- *
- * The date field is somebody else's DOM — a Server Component's MUI `TextField`, carrying native
- * validation (`min`, `max`, `required`) that lifting it into this island would trade for
- * hand-written validation on the one form that has to work everywhere. So this island subscribes
- * to that input rather than owning it, which is exactly what `useSyncExternalStore` is for: React
- * reads the value during render instead of writing state from an effect, which is both correct
- * under concurrent rendering and what `react-hooks/set-state-in-effect` asks for.
+ * The date is read by `useBirthDateSaysMinor`, which says why it subscribes to the input rather
+ * than owning it; the socials block uses the same reading the other way round (`HiddenForMinor`).
  */
 export default function GuardianForMinor({
   birthDateId,
@@ -44,33 +38,10 @@ export default function GuardianForMinor({
   forceOpen?: boolean;
   children: ReactNode;
 }) {
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      const input = document.getElementById(birthDateId);
-      if (!(input instanceof HTMLInputElement)) return () => {};
-      // `input` for typing, `change` for the picker and for autofill.
-      input.addEventListener("input", onStoreChange);
-      input.addEventListener("change", onStoreChange);
-      return () => {
-        input.removeEventListener("input", onStoreChange);
-        input.removeEventListener("change", onStoreChange);
-      };
-    },
-    [birthDateId],
-  );
-
-  const birthDate = useSyncExternalStore(
-    subscribe,
-    () => {
-      const input = document.getElementById(birthDateId);
-      return input instanceof HTMLInputElement ? input.value : "";
-    },
-    // On the server there is no input and nothing typed, so the block renders closed — and the
-    // `<noscript>` rule below is what keeps it reachable when that markup is all there will be.
-    () => "",
-  );
-
-  const open = forceOpen || (birthDate !== "" && isMinorOn(birthDate, new Date()));
+  // On the server there is no input and nothing typed, so the block renders closed — and the
+  // `<noscript>` rule below is what keeps it reachable when that markup is all there will be.
+  const minor = useBirthDateSaysMinor(birthDateId);
+  const open = forceOpen || minor;
 
   return (
     <>

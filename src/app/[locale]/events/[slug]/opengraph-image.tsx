@@ -23,6 +23,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   return await eventShareImage(event, known, "og", {
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
+    locationToBeAnnounced: t("locationToBeAnnounced"),
     distanceKm: (km) => t("distanceKm", { km }),
     elevationM: (m) => t("elevationM", { m }),
   });

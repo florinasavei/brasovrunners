@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "location_to_be_announced" boolean DEFAULT false NOT NULL;

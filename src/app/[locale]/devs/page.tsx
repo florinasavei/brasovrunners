@@ -29,7 +29,7 @@ import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
-import { describeNeonBlock, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
+import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
 import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
 import MuiLink from "@mui/material/Link";
@@ -179,13 +179,14 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
   /**
-   * The Neon plan the club says it is on (§280's follow-up), and the month read against it:
-   * Free's ceilings and the red past eighty percent, or Launch's estimate at the catalogue's
-   * rates and no ceiling at all. Set on `/admin/tasks` → Costuri; this page reads it and, for
-   * a reader who may open that screen, links to it.
+   * The Neon plan, and the month read against it: Free's ceilings and the red past eighty
+   * percent, or Launch's estimate at the catalogue's rates and no ceiling at all. What Neon
+   * reports for the account when it answered (§326); the plan stated on `/admin/tasks` →
+   * Costuri when it did not — this page links there for a reader who may open that screen.
    */
   const neonPlan = await readNeonPlan(db);
-  const neonBlock = describeNeonBlock({ plan: neonPlan.plan, databaseBytes, consumption: neon.ok ? neon.consumption : null, now });
+  const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);
+  const neonBlock = describeNeonBlock({ plan: neonInForce.plan, databaseBytes, consumption: neon.ok ? neon.consumption : null, now });
   const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
 
@@ -532,8 +533,15 @@ export default async function DevsPage({ params, searchParams }: Props) {
           </Typography>
           {/* Which plan the figures are read against, and where it is set: a link for a reader who may open that screen, a sentence for the rest. */}
           <Typography variant="body2" sx={{ mb: 2 }} data-testid="neon-plan-sentence">
-            {t(`neon.plan.${neonBlock.plan}`)}{" "}
-            {canManageRegistrations(actor.role) ? (
+            {/* Neon's own answer needs no link: nothing on the costs panel would change it (§326). */}
+            {neonInForce.source === "neon" ? (
+              t(`neon.planFromNeon.${neonBlock.plan}`)
+            ) : (
+              <>
+                {t(`neon.plan.${neonBlock.plan}`)}{" "}
+              </>
+            )}
+            {neonInForce.source === "neon" ? null : canManageRegistrations(actor.role) ? (
               <Link href={{ pathname: "/admin/tasks", query: { panel: "costs" } }}>{t("neon.planLink")}</Link>
             ) : (
               t("neon.planSetBy")

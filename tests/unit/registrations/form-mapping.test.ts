@@ -83,12 +83,39 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   it("refuses the public form when a race detail is missing", () => {
-    for (const missing of ["firstName", "lastName", "birthDate", "city", "phone", "emergencyContactName", "emergencyContactPhone"]) {
+    for (const missing of ["firstName", "lastName", "birthDate", "phone", "emergencyContactName", "emergencyContactPhone"]) {
       const form = filledForm();
       form.set(missing, "");
       const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(form, "ro"));
       expect(parsed.success, `${missing} should be required on the public form`).toBe(false);
     }
+  });
+
+  /**
+   * §322 — nationality and city are optional: nothing the club does with a registration reads
+   * either, so the form asks and does not insist. Blank is absent, never an empty string.
+   */
+  it("accepts the public form with no nationality and no city, and reads blanks as absent", () => {
+    const form = filledForm({ nationality: "", city: "  " });
+    const values = readRegistrationForm(form, "ro");
+    expect(values.nationality).toBeUndefined();
+    expect(values.city).toBeUndefined();
+    expect(registrationSubmissionSchema.safeParse(values).success).toBe(true);
+    // A country that is not a two-letter code is still refused when one is given.
+    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ nationality: "Romania" }), "ro")).success).toBe(false);
+  });
+
+  /**
+   * BR-REQ-072-01 is deferred (§322): the results consent is not on the form, a box posted anyway
+   * is ignored, and every new registration records `false`.
+   */
+  it("never reads a results consent, whatever is posted", () => {
+    const form = filledForm();
+    form.set("resultsNameConsent", "on");
+    const values = readRegistrationForm(form, "ro");
+    expect(values.resultsNameConsent).toBe(false);
+    const parsed = registrationSubmissionSchema.safeParse({ ...values, resultsNameConsent: undefined });
+    expect(parsed.success && parsed.data.resultsNameConsent).toBe(false);
   });
 
   it("accepts the same gaps from an organizer entering somebody who telephoned", () => {

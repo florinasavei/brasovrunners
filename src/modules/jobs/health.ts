@@ -3,6 +3,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "./cadence";
 import { jobStalenessThresholdMs } from "./quiet-hours";
+import { RETENTION_ERROR_PREFIX } from "./retention";
 import { isJobName, NEXT_DUE_CAP_MINUTES, SLOT_MINUTES } from "./schedule";
 import { readLastPing } from "./schedule-cache";
 
@@ -28,27 +29,54 @@ import { readLastPing } from "./schedule-cache";
  *
  * The cache answering nothing — evicted, or a caller outside a request — leaves the last real
  * run as the last ping, which is the check exactly as it was before §NNN.
+ *
+ * ## `failing` (§322)
+ *
+ * A job can run on time and still not do its work. The one piece of work whose silent failure
+ * breaks a promise to the public is the retention sweep: it is what makes the privacy notice's
+ * windows true. So when the **two most recent** runs both counted errors and both wrote a
+ * retention failure into `last_error` (`retention:<steps>`, `maintenance.ts`), the job is
+ * `failing` — not `ok` — and `/api/health` answers 503 as it does for anything but `ok`, which
+ * is what the monitor emails on. Two, not one: a single lock timeout on a busy minute is
+ * retried by the next run, and an alarm for it would be an alarm people learn to ignore.
+ *
+ * "The next run" is the next *ping* since §NNN, not the next hour: a retention failure is
+ * counted as retryable (`retryableErrorCount`, `maintenance.ts`), so the run that hit it promises
+ * the pings no quiet and the next one — fifteen minutes later by day, an hour at night — runs for
+ * real. Only the Administrator's minimum interval, when one is set, holds that retry back, and
+ * then by the interval they chose.
  */
 
 export type JobHealth = {
   jobName: string;
-  status: "ok" | "stale" | "never_run";
+  status: "ok" | "stale" | "never_run" | "failing";
   lastFinishedAt: string | null;
   /** The newest ping the cache remembers, skipped or real; null when it remembers none. */
   lastPingAt: string | null;
 };
+
+/** Whether a finished run wrote a retention failure (§322). */
+function retentionFailed(run: { errorCount: number; lastError: string | null }): boolean {
+  return run.errorCount > 0 && (run.lastError ?? "").startsWith(RETENTION_ERROR_PREFIX);
+}
 
 export async function checkJobHealth<T extends Record<string, unknown>>(
   db: Database<T>,
   jobName: string,
   now: Date,
 ): Promise<JobHealth> {
-  const [latest] = await db
-    .select({ finishedAt: jobRuns.finishedAt, startedAt: jobRuns.startedAt })
+  const recent = await db
+    .select({
+      finishedAt: jobRuns.finishedAt,
+      startedAt: jobRuns.startedAt,
+      errorCount: jobRuns.errorCount,
+      lastError: jobRuns.lastError,
+    })
     .from(jobRuns)
     .where(eq(jobRuns.jobName, jobName))
     .orderBy(desc(jobRuns.startedAt))
-    .limit(1);
+    .limit(2);
+  const [latest] = recent;
 
   const pingThresholdMs = jobStalenessThresholdMs(now);
   const ping = isJobName(jobName) ? await readLastPing(jobName, now, pingThresholdMs + SLOT_MINUTES * 60_000) : null;
@@ -64,10 +92,11 @@ export async function checkJobHealth<T extends Record<string, unknown>>(
   const realRunThresholdMs = Math.max(NEXT_DUE_CAP_MINUTES, cadenceMinutes) * 60_000 + pingThresholdMs;
 
   const stale = now.getTime() - lastSeen > pingThresholdMs || now.getTime() - lastRun > realRunThresholdMs;
+  const failing = recent.length === 2 && recent.every((run) => run.finishedAt !== null && retentionFailed(run));
 
   return {
     jobName,
-    status: stale ? "stale" : "ok",
+    status: stale ? "stale" : failing ? "failing" : "ok",
     lastFinishedAt: latest.finishedAt.toISOString(),
     lastPingAt,
   };

@@ -47,7 +47,9 @@ export const declarationAcceptances = pgTable(
     locale: locale("locale").notNull(),
 
     // Explicit checkbox plus typed full name (§10.8) — not a qualified electronic signature.
-    // For `PAPER` it is the registered name, as written on the form staff hold.
+    // The declarant's: the participant's, or the parent's or guardian's for a minor (§108, §314).
+    // For `PAPER` it is the name as written on the form staff hold — the registered name, or for
+    // a minor the guardian's, with the minor's own in `minor_typed_name` (§330).
     typedName: text("typed_name").notNull(),
     /**
      * The identity document the declaration names — "posesor al CI seria BV nr. 123456" — as
@@ -56,6 +58,23 @@ export const declarationAcceptances = pgTable(
      * has it, and for acceptances recorded before the field existed.
      */
     idDocument: text("id_document"),
+    /**
+     * The minor's own signature and identity document, when a parent or guardian declares for
+     * them (`DECISIONS.md` §330, the owner: "I wanna have the ID document of the minor and the
+     * parent, and also 2 signatures!"). A minor's declaration is signed by both: `typed_name` and
+     * `id_document` above stay the **declarant's** — the parent's, as §108 and §314 already made
+     * them — and these two are the child's, typed at the same press against the name the child
+     * was registered under.
+     *
+     * Null for an adult, whose own signature and document are the two columns above, and for a
+     * minor's acceptance recorded before two signatures were asked (one signature, the parent's).
+     * `minor_typed_name` is kept as long as the row (three years, §95); `minor_id_document` is
+     * cleared with `id_document`, seven days after the event (`jobs/retention.ts`). For `PAPER`,
+     * `minor_typed_name` is the minor's registered name — the staff member attests that the paper
+     * carries both signatures — and the document is on the paper, as for `id_document`.
+     */
+    minorTypedName: text("minor_typed_name"),
+    minorIdDocument: text("minor_id_document"),
 
     method: declarationMethod("method").notNull().default("EMAIL_LINK"),
     /** Who recorded a paper signature. Required for `PAPER`, absent otherwise. */

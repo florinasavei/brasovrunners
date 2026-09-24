@@ -8,6 +8,7 @@ import type { Database } from "@/db/types";
 import { canManageTestRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
+import { ageOn, dayIn, latestBirthDateFor, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { findRegistrationByEventAndParticipant } from "./repository";
 import { confirmEmail, type EventForRegistration, submitRegistration } from "./service";
 
@@ -84,7 +85,29 @@ async function loadEvent<T extends Record<string, unknown>>(
     raceId: event.raceId,
     publishedAt: event.publishedAt,
     timezone: event.timezone,
+    // A TEST row meets the event's own minimum exactly as a real one would (§329, AGENTS.md §12.6).
+    minAge: event.minAge,
   };
+}
+
+/** The synthetic entrant's birth date since before the minimum age existed: an adult of thirty-odd. */
+const SYNTHETIC_BIRTH_DATE = "1990-01-01";
+
+/**
+ * A birth date the event's own minimum admits (§329) — the synthetic adult, unless the event asks
+ * for more years than they have (a veterans' race, say), and then exactly that many years before
+ * the event's day.
+ *
+ * The rule itself is not relaxed: the row still goes through `minimumAgeRule` like a real one
+ * (AGENTS.md §12.6). What changes is only the made-up fact it is checked against, which would
+ * otherwise make "add test registrations" fail on such an event for a reason no rehearsal is
+ * about.
+ */
+function syntheticBirthDate(event: EventForRegistration): string {
+  const eventDay = dayIn(event.startsAt, event.timezone ?? "Europe/Bucharest");
+  const minAge = event.minAge ?? MIN_PARTICIPANT_AGE;
+  const age = ageOn(SYNTHETIC_BIRTH_DATE, eventDay);
+  return age !== null && age >= minAge ? SYNTHETIC_BIRTH_DATE : latestBirthDateFor(minAge, eventDay);
 }
 
 /**
@@ -167,7 +190,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
         lastName,
         email,
         locale,
-        birthDate: "1990-01-01",
+        birthDate: syntheticBirthDate(event),
         sex: "UNSPECIFIED",
         nationality: "RO",
         city: "Brașov",
