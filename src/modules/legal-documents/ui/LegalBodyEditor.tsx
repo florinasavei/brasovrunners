@@ -1,11 +1,14 @@
 "use client";
 
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import LinkIcon from "@mui/icons-material/Link";
+import RedoIcon from "@mui/icons-material/Redo";
+import UndoIcon from "@mui/icons-material/Undo";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
 import Typography from "@mui/material/Typography";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -13,6 +16,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { type ComponentProps, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import ValidityProxy from "@/shared/forms/ValidityProxy";
+import ToolbarButton from "@/shared/ui/ToolbarButton";
 import { editorDocToText, textToEditorDoc } from "../domain/editor-doc";
 
 /**
@@ -63,6 +67,8 @@ function LegalBodyEditorIsland({
   labels: {
     heading: string;
     paragraph: string;
+    /** The word on the paragraph button (§361): "Text", beside "H2". */
+    paragraphShort: string;
     link: string;
     linkUrl: string;
     linkApply: string;
@@ -154,33 +160,39 @@ function LegalBodyEditorIsland({
         {label}
       </Typography>
       <Paper variant="outlined" sx={{ p: 1 }}>
-        <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-          <Control
+        {/*
+          Material glyphs, one face for all (§361; the owner, of the picture's emoji: "I hate this
+          image icon!"). The heading and the paragraph keep words — "H2" and "Text" are the pair
+          every word processor's style list offers — because the glyphs Material has for "a block
+          of text" are lines of text, which is what "align left" looks like in the pages' editor.
+        */}
+        <Stack direction="row" spacing={0.5} role="toolbar" aria-label={accessibleName} sx={{ flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+          <ToolbarButton
             label={labels.heading}
             text="H2"
             active={editor?.isActive("heading", { level: 2 }) ?? false}
             onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.paragraph}
-            text="¶"
+            text={labels.paragraphShort}
             active={editor?.isActive("paragraph") ?? false}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           />
-          <Control
+          <ToolbarButton
             label={labels.link}
-            text="🔗"
+            icon={LinkIcon}
             active={editor?.isActive("link") ?? false}
             onClick={() => setLinkDraft((open) => (open === null ? (editor?.getAttributes("link").href ?? "") : null))}
           />
-          <Control
+          <ToolbarButton
             label={labels.image}
-            text="🖼"
+            icon={AddPhotoAlternateIcon}
             active={imageDraft !== null}
             onClick={() => setImageDraft((open) => (open === null ? { src: "", alt: "" } : null))}
           />
-          <Control label={labels.undo} text="↶" active={false} onClick={() => editor?.chain().focus().undo().run()} />
-          <Control label={labels.redo} text="↷" active={false} onClick={() => editor?.chain().focus().redo().run()} />
+          <ToolbarButton label={labels.undo} icon={UndoIcon} active={false} onClick={() => editor?.chain().focus().undo().run()} />
+          <ToolbarButton label={labels.redo} icon={RedoIcon} active={false} onClick={() => editor?.chain().focus().redo().run()} />
         </Stack>
 
         {linkDraft !== null && (
@@ -266,35 +278,6 @@ function LegalBodyEditorIsland({
           the constraint (§315). */}
       <ValidityProxy name={name} label={accessibleName} required={text.trim() === ""} />
     </Box>
-  );
-}
-
-/** One toolbar button: 44px because this screen is worked on a phone like every other. */
-function Control({
-  label,
-  text,
-  active,
-  onClick,
-}: {
-  label: string;
-  text: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <ToggleButton
-      value={label}
-      selected={active}
-      aria-label={label}
-      title={label}
-      size="small"
-      // Keeps the caret where it is: a toolbar press must not take the selection with it.
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={onClick}
-      sx={{ minWidth: 44, minHeight: 44, px: 1, lineHeight: 1 }}
-    >
-      {text}
-    </ToggleButton>
   );
 }
 

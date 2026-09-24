@@ -1636,6 +1636,7 @@
       "editor": {
         "heading": "Titlu de secțiune",
         "paragraph": "Paragraf",
+        "paragraphShort": "Text",
         "link": "Link",
         "linkUrl": "Adresa linkului",
         "linkApply": "Pune linkul",
