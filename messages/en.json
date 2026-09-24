@@ -261,7 +261,7 @@
       },
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
-      "nextLabel": "Next",
+      "nextLabel": "Next:",
       "allDatesCount": "Upcoming dates ({count})",
       "fullDescription": "Full event description"
     },

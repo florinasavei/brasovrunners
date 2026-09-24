@@ -261,7 +261,7 @@
       },
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
-      "nextLabel": "Următoarea",
+      "nextLabel": "Următoarea:",
       "allDatesCount": "Următoarele date ({count})",
       "fullDescription": "Descrierea completă a evenimentului"
     },

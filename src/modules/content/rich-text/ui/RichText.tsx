@@ -8,6 +8,7 @@ import {
   type RichTextText,
   tableColumnFractions,
 } from "../domain/schema";
+import { shortenUrls } from "../domain/short-url";
 import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
@@ -26,8 +27,13 @@ import { tableSx } from "./table-layout";
  * It takes `unknown` on purpose: `body_json` is untyped at the database boundary, and bodies
  * written before the editor existed are still in the old section shape. `readRichText` is the one
  * place that difference is handled.
+ *
+ * `links={false}` is the listing card's reading (§NNN): a link mark is its words and a bare web
+ * address is its host ("register.hakuapp.com/…", `shortenUrls`). A card is a summary, a whole-card
+ * link must not hold a second link inside it, and a ninety-character address wrapped over two
+ * lines of a card was one of the holes the owner pointed at. The event page keeps every link.
  */
-export default function RichText({ body }: { body: unknown }) {
+export default function RichText({ body, links = true }: { body: unknown; links?: boolean }) {
   const doc = readRichText(body);
   const blocks = doc.content ?? [];
   /**
@@ -41,7 +47,7 @@ export default function RichText({ body }: { body: unknown }) {
   return (
     <>
       {blocks.map((block, index) => (
-        <Fragment key={index}>{renderBlock(block, floats)}</Fragment>
+        <Fragment key={index}>{renderBlock(block, floats, links)}</Fragment>
       ))}
       {floats && <Box sx={{ clear: "both" }} />}
     </>
@@ -53,7 +59,7 @@ export default function RichText({ body }: { body: unknown }) {
  * written before the alignment existed, and a false one emits exactly the styles it emitted
  * before: the clearing rules are not merely no-ops there, they are absent.
  */
-function renderBlock(block: RichTextBlock, floats = false): ReactNode {
+function renderBlock(block: RichTextBlock, floats = false, links = true): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
@@ -111,7 +117,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
       // alignment existed renders the markup it rendered yesterday, not a rule that says "left".
       return (
         <Typography variant="body1" sx={{ mb: 2, ...blockAlignSx(block.attrs) }}>
-          {renderInline(block.content)}
+          {renderInline(block.content, links)}
         </Typography>
       );
 
@@ -122,7 +128,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           component={block.attrs.level === 2 ? "h2" : "h3"}
           sx={{ fontSize: block.attrs.level === 2 ? "1.25rem" : "1.0625rem", fontWeight: 700, mt: 4, mb: 1, ...blockAlignSx(block.attrs) }}
         >
-          {renderInline(block.content)}
+          {renderInline(block.content, links)}
         </Typography>
       );
 
@@ -139,7 +145,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
             <li key={index}>
               {item.content.map((paragraph, paragraphIndex) => (
                 <Typography key={paragraphIndex} variant="body1" component="span">
-                  {renderInline(paragraph.content)}
+                  {renderInline(paragraph.content, links)}
                 </Typography>
               ))}
             </li>
@@ -155,7 +161,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
         >
           {block.content.map((paragraph, index) => (
             <Typography key={index} variant="body1" sx={{ mb: 1 }}>
-              {renderInline(paragraph.content)}
+              {renderInline(paragraph.content, links)}
             </Typography>
           ))}
         </Box>
@@ -227,7 +233,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
                       rowSpan={cell.attrs?.rowspan}
                     >
                       {cell.content.map((inner, innerIndex) => (
-                        <Fragment key={innerIndex}>{renderBlock(inner)}</Fragment>
+                        <Fragment key={innerIndex}>{renderBlock(inner, false, links)}</Fragment>
                       ))}
                     </Box>
                   ))}
@@ -248,15 +254,18 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
  * An off-site link opens in a new tab with `noopener noreferrer`, and a link to this site does
  * not — a rule that then applies to every body ever written, including those written before the
  * rule existed.
+ *
+ * Without `links` (a listing card, §NNN) a link mark renders nothing but its words, and every web
+ * address written as text — in a link's words or in a sentence — is shortened to its host.
  */
-function renderInline(content: RichTextText[] | undefined): ReactNode {
+function renderInline(content: RichTextText[] | undefined, links = true): ReactNode {
   return (content ?? []).map((node, index) => {
-    let rendered: ReactNode = node.text;
+    let rendered: ReactNode = links ? node.text : shortenUrls(node.text);
 
     for (const mark of node.marks ?? []) {
       if (mark.type === "bold") rendered = <strong>{rendered}</strong>;
       if (mark.type === "italic") rendered = <em>{rendered}</em>;
-      if (mark.type === "link") {
+      if (mark.type === "link" && links) {
         const external = !mark.attrs.href.startsWith("/");
         rendered = (
           <Link

@@ -137,8 +137,15 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // Open every fold, so the links are measured as a reader would see them.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
-    // Criterion 6. The whole card is the link, so this should pass comfortably — the test
-    // exists to catch a future redesign that shrinks it to a text link.
+    // Criterion 6. Every card's title is its link (§NNN) — 44 pixels tall at either width, and on
+    // a single-date card stretched over the whole card — and so is its door (§319).
+    const titles = page.locator("main ul > li h2 a");
+    expect(await titles.count()).toBeGreaterThan(0);
+    for (let i = 0; i < (await titles.count()); i += 1) {
+      const box = await titles.nth(i).boundingBox();
+      if (!box) continue;
+      expect.soft(box.height, `title link ${i} height`).toBeGreaterThanOrEqual(44);
+    }
     const links = page.locator("main a");
     const count = await links.count();
     expect(count).toBeGreaterThan(0);
@@ -147,8 +154,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
       44 on a phone, which is the design target and where a finger is the pointer; 24 — WCAG
       2.2's own minimum — on a desktop, where it is not (§175).
 
-      The criterion is about the *event* links, and those are whole cards: comfortably over 44
-      at either width, and this loop exists to catch a redesign that shrinks one to a text link.
+      The criterion is about the *event* links, and those are the cards' titles and doors: 44 at
+      either width, and this loop exists to catch a redesign that shrinks one to a text link.
       What sits beside them on the listing is the calendar and share row, and eight
       finger-sized pills across a desktop page were the loudest thing on it — the owner:
       "aceste butoane sunt mult prea mari", "these buttons must be smaller as well".

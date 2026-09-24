@@ -286,7 +286,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 });
 
-describe("BR-REQ-041-01 the hero and the cards keep their one-line forms (§169, §356)", () => {
+describe("BR-REQ-041-01 the hero keeps its one-line form (§169, §356)", () => {
   it("the featured hero: one line of pieces under «Traseu», middle dots, no pills, the cost in the route", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event({ costType: "PAID", costAmount: "50 lei" }), now: NOW }));
     expect(html).not.toContain("MuiChip-root");
@@ -298,10 +298,140 @@ describe("BR-REQ-041-01 the hero and the cards keep their one-line forms (§169,
     expect(html).not.toContain("Strada Nicolae Labiș");
   });
 
-  it("the listing card: two plain lines, no labels, no pills", async () => {
-    const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact", links: false }));
-    expect(html).not.toContain("MuiChip-root");
+});
+
+/**
+ * BR-REQ-041-01 (§NNN) — the listing card draws the event page's shapes, smaller. The owner,
+ * 2026-09-24, with a screenshot of the listing: "There is too much whitespace on these cards, it
+ * needs to be better spaced" — and in it, the pin alone on a line with the place under it, and the
+ * route as "8 km · 250 m diferență de nivel · ı Mediu" with a tiny glyph and middle dots, while
+ * the event page had just made the same facts pills (§356).
+ */
+describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's pills (§NNN)", () => {
+  const card = async (overrides: Partial<PublicEvent> = {}, extra: { links?: boolean; whenLead?: string } = {}) =>
+    renderToStaticMarkup(await EventFacts({ event: event(overrides), now: NOW, variant: "compact", links: extra.links ?? false, whenLead: extra.whenLead }));
+
+  /**
+   * The card's lines, in order: each `data-fact` element's name and its markup up to the next
+   * line (the last one's up to the end of the block). Lines are siblings, so that is the line.
+   */
+  function lines(html: string) {
+    const markup = withoutStyles(html);
+    const starts = [...markup.matchAll(/<div\b[^>]*data-fact="(\w+)"[^>]*>/g)];
+    return starts.map((match, index) => {
+      const from = (match.index ?? 0) + match[0].length;
+      const to = index + 1 < starts.length ? (starts[index + 1]?.index ?? markup.length) : markup.length;
+      // Up to the line's own closing tag: drop the trailing closers the slice carries.
+      const inner = markup.slice(from, to).replace(/(<\/div>)+$/, (closers) => closers.slice(0, -"</div>".length * (index + 1 < starts.length ? 1 : 2)));
+      return { key: match[1] ?? "", inner };
+    });
+  }
+
+  function line(html: string, key: string) {
+    const found = lines(html).find((candidate) => candidate.key === key);
+    if (!found) throw new Error(`no line ${key}: ${lines(html).map((l) => l.key).join(", ")}`);
+    return found;
+  }
+
+  it("has no labels and no list: a line for when, a line for where, then the pills", async () => {
+    const html = await card();
     expect(html).not.toContain("<dl");
-    expect(html).toContain("Sâmbătă, 26 sept. 2026");
+    expect(withoutStyles(html)).not.toMatch(/<ul\b|<li\b/);
+    expect(lines(html).map((l) => l.key)).toEqual(["when", "where", "registration", "pills"]);
+    expect(html).not.toContain("Când");
+    expect(html).not.toContain("Unde");
+  });
+
+  it("puts the pin and the place in one line element, the pin first — never the pin alone on a line", async () => {
+    const where = line(await card(), "where").inner;
+    // The glyph and the words are the two children of one flex row: the glyph stays on the first
+    // line of the words, and a long place wraps under itself.
+    expect(where).toMatch(/^<svg\b[^>]*data-testid="PlaceIcon"[^>]*>[\s\S]*?<\/svg><div\b[^>]*>Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic<\/div>$/);
+    const html = withoutStyles(await card());
+    const row = /<div\b[^>]*data-fact="where"[^>]*>/.exec(html)?.[0] ?? "";
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(row)?.[1];
+    const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(await card())?.[1] ?? "";
+    expect(rule).toContain("display:flex");
+    expect(rule).toContain("align-items:flex-start");
+  });
+
+  it("leads every line with the event page's own row glyph — one class, twenty pixels, the secondary colour", async () => {
+    const html = await card({ coHosts: [{ name: "Salvamont", links: [] }] });
+    const glyphClass = (fragment: string) => /<svg\b[^>]*class="([^"]*)"/.exec(fragment)?.[1];
+    const classes = lines(html)
+      .filter((l) => l.key !== "pills")
+      .map((l) => glyphClass(l.inner));
+    expect(classes).toHaveLength(4);
+    expect(new Set(classes).size).toBe(1);
+    // The same class the page's rows wear (§356): one style object, `ROW_ICON_SX`.
+    const pageGlyph = glyphClass(rows(await page()).at(0)?.dt ?? "");
+    expect(classes[0]).toBe(pageGlyph);
+  });
+
+  it("writes when as one line: the date with its weekday and its time, one piece that does not break", async () => {
+    const when = line(await card(), "when").inner;
+    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·08:00");
+    expect(when).toContain('style="white-space:nowrap"');
+    // The separator is hidden from a screen reader.
+    expect(when).toMatch(/<span\b[^>]*aria-hidden="true"[^>]*>·<\/span>/);
+  });
+
+  it("puts a series card's «Următoarea:» on the date's own line, before it (§113)", async () => {
+    const html = await card({}, { whenLead: "Următoarea:" });
+    expect(text(line(html, "when").inner)).toBe("Următoarea:Sâmbătă, 26 sept. 2026·08:00");
+    // Not a line of its own above the facts.
+    expect(lines(html)[0]?.key).toBe("when");
+  });
+
+  it("draws the route and the cost as the page's small outlined pills — distance, climb, difficulty, surface, cost", async () => {
+    const pills = chips(line(await card(), "pills").inner);
+    expect(pills.map((pill) => pill.label)).toEqual(["10 km", "300 m D+", "Ușor", "Asfalt", "Gratuit"]);
+    for (const pill of pills) {
+      expect(pill.outlined, pill.label).toBe(true);
+      expect(pill.small, pill.label).toBe(true);
+      expect(pill.glyph, pill.label).toContain('aria-hidden="true"');
+    }
+    // No middle dot and no "diferență de nivel" left: the pills are the separators.
+    const html = withoutStyles(await card());
+    expect(text(line(html, "pills").inner)).not.toContain("·");
+    expect(html).not.toContain("diferență de nivel");
+  });
+
+  it("in English too", async () => {
+    currentLocale = "en";
+    const pills = chips(line(await card(), "pills").inner);
+    expect(pills.map((pill) => pill.label)).toEqual(["10 km", "300 m climb", "Easy", "Asphalt", "Free"]);
+  });
+
+  it("draws no pill for what the club has not stated, and none at all when it stated nothing", async () => {
+    const some = chips(line(await card({ elevationGainMeters: null, difficulty: null, costType: null }), "pills").inner);
+    expect(some.map((pill) => pill.label)).toEqual(["10 km", "Asfalt"]);
+    const none = await card({ distanceMeters: null, elevationGainMeters: null, difficulty: null, surface: null, costType: null });
+    expect(lines(none).map((l) => l.key)).not.toContain("pills");
+    expect(none).not.toContain("MuiChip-root");
+  });
+
+  it("keeps the cost to the closed set's word on a card — no amount, no link (§343)", async () => {
+    const html = await card({ costType: "PAID", costAmount: "50 lei", costUrl: "https://revolut.me/brasovrunners" }, { links: true });
+    expect(chips(line(html, "pills").inner).at(-1)?.label).toBe("Cu taxă");
+    expect(html).not.toContain("50 lei");
+    expect(html).not.toContain("revolut.me");
+  });
+
+  it("says the place's map once, as the place, on a series card — tight, so the line is as tall as its words", async () => {
+    const html = await card({}, { links: true });
+    const anchors = [...withoutStyles(line(html, "where").inner).matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]).toContain('href="https://maps.example.test/tractorul"');
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(anchors[0] ?? "")?.[1];
+    const rule = new RegExp(`\\.${cls}\\{([^}]*)\\}`).exec(html)?.[1] ?? "";
+    expect(rule).toContain("min-height:44px");
+    expect(rule).toContain("margin-top:-10px");
+  });
+
+  it("writes the place and the partners and the state as words when the card itself is the link", async () => {
+    const html = await card({ coHosts: [{ name: "Salvamont", links: [{ kind: "SITE", url: "https://salvamont.example.test" }] }] });
+    expect(withoutStyles(html)).not.toContain("<a ");
+    expect(text(line(html, "coHost").inner)).toBe("Împreună cu Salvamont");
   });
 });

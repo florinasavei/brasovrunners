@@ -87,6 +87,20 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& p"].fontSize).toBe("0.875rem");
   });
 
+  it("reads three lines of the summary at most, and wraps anything too long for a phone (§NNN)", () => {
+    /*
+      The owner, 2026-09-24, of the listing: "There is too much whitespace on these cards". A
+      summary as long as its author made it set one card's height against its neighbour's; the
+      card now clamps it — the -webkit-box form every engine implements, counted across the
+      summary's paragraphs — and the event page carries the rest.
+    */
+    expect(CARD_EXCERPT_SX.display).toBe("-webkit-box");
+    expect(CARD_EXCERPT_SX.WebkitBoxOrient).toBe("vertical");
+    expect(CARD_EXCERPT_SX.WebkitLineClamp).toBe(3);
+    expect(CARD_EXCERPT_SX.overflow).toBe("hidden");
+    expect(CARD_EXCERPT_SX.overflowWrap).toBe("anywhere");
+  });
+
   it("leaves the event page and the hero exactly as they were", () => {
     // No figure rule at all: on a page, the width the organizer chose is the point.
     expect(Object.keys(PAGE_EXCERPT_SX)).toEqual(["color", "mb", "& p:last-of-type"]);
@@ -98,7 +112,8 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     // be cropped to the shape a card shows (§241): "on the event card I wanna be able to see
     // pictures in the preview". So there is no longer a card that drops it, and the editor's
     // help text must not claim there is.
-    const cards = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "events", "page.tsx"), "utf8");
+    // The single-date card left `events/page.tsx` for a module of its own beside the series card (§NNN).
+    const cards = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"), "utf8");
     expect(cards).not.toContain("underHero");
     expect(cards).toContain('<EventExcerpt place="card"');
     const series = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "SeriesCard.tsx"), "utf8");
@@ -113,7 +128,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     // The regression is not in the styles, it is in a card rendering `excerpt` as a string
     // again — which drops the picture silently, in both languages, on the busiest page.
     const cards = [
-      path.join(process.cwd(), "src", "app", "[locale]", "events", "page.tsx"),
+      path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"),
       path.join(process.cwd(), "src", "modules", "events", "ui", "SeriesCard.tsx"),
     ];
     for (const card of cards) {
