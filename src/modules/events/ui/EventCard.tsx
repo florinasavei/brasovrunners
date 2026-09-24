@@ -14,6 +14,7 @@ import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
+import PartnerChip from "./PartnerChip";
 
 /**
  * One event on the listing — the single-date card, beside `SeriesCard`, and since §NNN the same
@@ -65,6 +66,8 @@ export default async function EventCard({
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
+          {/* Held with a partner (§367): the handshake and the partner's name. */}
+          <PartnerChip event={event} />
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
           {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}

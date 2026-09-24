@@ -18,6 +18,8 @@ import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarEventChip from "./CalendarEventChip";
 import type { EditionNote } from "./EditionMark";
+import { readCoHosts } from "../domain/co-hosts";
+import { partnerPhrase } from "./counted-phrases";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
 
@@ -46,7 +48,8 @@ export type CalendarLayout = "grid" | "list";
  *
  * Each event is one link with its type's glyph and its surface's (§112). A race is filled in
  * the brand colour, everything else is quiet: the race is what the page advertises, the
- * Monday run is what regulars already know.
+ * Monday run is what regulars already know. An event held with a partner wears the handshake
+ * at its end (§NNN), the partner named in the entry's tooltip and accessible name.
  */
 export default async function EventCalendar({
   view,
@@ -67,6 +70,7 @@ export default async function EventCalendar({
   layout?: CalendarLayout;
 }) {
   const t = await getTranslations("Events");
+  const tEvent = await getTranslations("Event");
   const format = await getFormatter();
   const locale = (await getLocale()) as "ro" | "en";
   const rows = await events;
@@ -110,6 +114,8 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
+        // Held with a partner (§NNN): the handshake beside the entry, the words in its tooltip.
+        partner={partnerPhrase(tEvent, locale, readCoHosts(event).map((host) => host.name))}
         dense={dense}
       />
     );

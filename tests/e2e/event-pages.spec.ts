@@ -30,6 +30,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+    // One tooltip per entry, and it is MUI's (§NNN): no entry carries the browser's `title` too.
+    await expect(main.locator("[role=table] a[title], [role=table] a [title]")).toHaveCount(0);
 
     await main.getByRole("link", { name: "Listă", exact: true }).click();
     await expect(page).toHaveURL(/view=list/);
