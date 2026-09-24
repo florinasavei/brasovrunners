@@ -42,7 +42,7 @@ import { DATE_FORMATS } from "@/i18n/dates";
 const ROOT = path.resolve(__dirname, "../../..");
 // As `getMessages()` types them: the catalogue has a few arrays (`how` steps), which next-intl reads.
 const CATALOGUES = [ro, en] as unknown as AbstractIntlMessages[];
-const read =(relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
+const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {

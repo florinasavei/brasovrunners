@@ -50,7 +50,7 @@ test.describe("§NNN every island finds its words, and a public page carries onl
   test("a public page's payload carries none of the backoffice's words", async ({ request }) => {
     for (const path of ["/ro/evenimente", `/ro/evenimente/${FEATURED.slug}`]) {
       const html = await (await request.get(path)).text();
-      // Two keys only the `Admin` namespace has: the whole catalogue would bring both.
+      // Keys only the backoffice namespaces (`Admin`, `Devs`) have: the whole catalogue would bring both.
       expect(html, path).not.toContain("legalNotice");
       expect(html, path).not.toContain("botCheck");
     }
