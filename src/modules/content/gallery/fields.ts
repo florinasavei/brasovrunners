@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { routing } from "@/i18n/routing";
+import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
  * Exactly which fields the backoffice may write on an album (BR-REQ-054-01).
@@ -48,12 +49,27 @@ export const albumFieldsSchema = z
         (value) => value === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
         "the event must be chosen from the list",
       ),
-    translations: z.object(
-      Object.fromEntries(routing.locales.map((locale) => [locale, albumTranslationSchema])) as Record<
-        (typeof routing.locales)[number],
-        typeof albumTranslationSchema
-      >,
-    ),
+    /*
+      Both languages in one save — and the description, optional, is both or neither (§NNN,
+      bilingual everywhere): one language written and the other empty is refused on the empty
+      box, the rest kept (§315), so the English album page never goes without the words the
+      Romanian one carries.
+    */
+    translations: z
+      .object(
+        Object.fromEntries(routing.locales.map((locale) => [locale, albumTranslationSchema])) as Record<
+          (typeof routing.locales)[number],
+          typeof albumTranslationSchema
+        >,
+      )
+      .superRefine((translations, ctx) => {
+        refuseOneLanguage(
+          ctx,
+          { ro: translations.ro.description, en: translations.en.description },
+          { ro: ["ro", "description"], en: ["en", "description"] },
+          "the album's description",
+        );
+      }),
   })
   .strict();
 

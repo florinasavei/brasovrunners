@@ -31,7 +31,7 @@ import { AddressBox, DescriptionBox, RulesBox, TitleSummaryBox } from "@/modules
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
 import EventEditorLayout, { EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
-import { RevealLink } from "@/modules/content/events/ui/MissingForPublish";
+import { IdenticalTextsList, RevealLink } from "@/modules/content/events/ui/MissingForPublish";
 import { EventNoticeUpdateFields } from "@/modules/content/events/ui/EventNoticeFields";
 import RecurrenceSeriesPanel from "@/modules/content/events/ui/RecurrenceSeriesPanel";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
@@ -61,7 +61,9 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
-import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
+import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/events/ui/field-labels";
+import { identicalTexts, storedTextReader } from "@/modules/content/events/ui/publish-check";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -295,6 +297,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     ...missingOnEvent.map(() => ({ label: `${t("editor.boxes.place.title")} › ${t("editor.fields.locationName")}`, name: "event.locationName" })),
   ];
   const missingDetail = gapLines.map((line) => line.label).join(" · ");
+  /*
+    And what publication does not refuse but a reader would notice (§NNN, bilingual everywhere):
+    a long text whose English says the Romanian word for word — the English "Happy Monday" date
+    carries the Romanian description today. Read from what is stored, like the gaps above; the
+    boxes themselves re-read it as it is typed.
+  */
+  const identicalInEvent = identicalTexts(storedTextReader(orderedTranslations, readCoHosts(event)), routing.locales);
+  const identicalLabels = identicalInEvent.length > 0 ? await identicalTextLabels() : null;
 
   // The words the save form's refusal summary needs, and the label of every box it can name.
   const refusal = await refusalMessages(await eventFormFieldLabels());
@@ -319,6 +329,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       noticeRecipients.real + noticeRecipients.test === 0
         ? t("editor.notice.cancelCountNone")
         : `${t("editor.notice.cancelCount", { count: String(noticeRecipients.real), messages: noticeMessages, allowance: noticeAllowance })}${noticeTestNote}`,
+    // The note and the reason are written in both languages (§NNN, bilingual everywhere), each box
+    // named in its own language like every Română | English tab on this page.
+    languageRo: tSite("languageName.ro"),
+    languageEn: tSite("languageName.en"),
+    identical: t("editor.identical.warning"),
   };
   const notice = { labels: noticeLabels, offerNotice: internal, maxLength: EVENT_NOTICE_TEXT_MAX };
   const box = { event, mayEditSettings: maySaveSettings } as const;
@@ -449,6 +464,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       </Box>
                     </Box>
                   )}
+                  {identicalLabels && <IdenticalTextsList items={identicalInEvent} labels={identicalLabels} title={t("editor.identical.listTitle")} />}
                   {/* The previews, each language in its own locale, with the version it shows. */}
                   <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 1.5, alignItems: "center" }}>
                     <Typography variant="body2" color="text.secondary">

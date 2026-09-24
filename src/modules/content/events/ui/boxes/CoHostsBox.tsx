@@ -62,6 +62,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale }: Box
               descriptionRo: tSite("languageName.ro"),
               descriptionEn: tSite("languageName.en"),
               descriptionHelp: t("editor.coHostRows.descriptionHelp"),
+              identical: t("editor.identical.warning"),
               kind: t("editor.coHostRows.kind"),
               url: t("editor.coHostRows.url"),
               labelRo: t("editor.coHostRows.labelRo"),

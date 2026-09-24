@@ -21,7 +21,7 @@ import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
 import CreateDraftLine, { TickedLine } from "@/modules/content/events/ui/CreateDraftLine";
 import EventEditorLayout, { EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
-import { eventFormFieldLabels } from "@/modules/content/events/ui/field-labels";
+import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/events/ui/field-labels";
 import { MissingForPublishCount, MissingForPublishList } from "@/modules/content/events/ui/MissingForPublish";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
@@ -154,6 +154,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                     labels={gapLabels}
                     title={t("editor.publication.missingTitle")}
                     complete={t("editor.publication.nothingMissing")}
+                    // The Romanian pasted into the English box, as it is typed (§NNN): a warning, never a refusal.
+                    identical={{ labels: await identicalTextLabels(), title: t("editor.identical.listTitle") }}
                   />
                 </Stack>
               </Panel>

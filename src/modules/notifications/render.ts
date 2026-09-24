@@ -7,7 +7,7 @@ import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
-import { readEventChanges, readEventNoticeText } from "@/modules/events/domain/event-changes";
+import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
 import { readEventLinks } from "@/modules/events/domain/links";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
@@ -169,16 +169,24 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const updateChanges = row.messageType === "EVENT_UPDATE_NOTICE" ? readEventChanges((row.payloadJson as { changes?: unknown } | null)?.changes) : [];
   if (row.messageType === "EVENT_UPDATE_NOTICE") {
     data.updateChanges = updateChanges;
-    const note = readEventNoticeText((row.payloadJson as { note?: unknown } | null)?.note);
-    if (note) data.organizerNote = note;
+    /*
+      The organizer's note in this registrant's language, and the other half's in the other
+      (§NNN, bilingual everywhere). A row queued before carries one string: both halves read it,
+      as they always did (`readEventNoticeWords`).
+    */
+    const note = readEventNoticeWords((row.payloadJson as { note?: unknown } | null)?.note, locale);
+    if (note.text) data.organizerNote = note.text;
+    if (note.other) data.organizerNoteOther = note.other;
     if (updateChanges.includes("time") && eventDetails?.raceStartsAt) {
       data.eventRaceStartsAtFormatted = formatTime(eventDetails.raceStartsAt, { locale, timeZone: eventDetails.timezone });
     }
   }
-  // "{event} a fost anulat" (§331): the reason the organizer typed, and nothing to act on.
+  // "{event} a fost anulat" (§331): the reason the organizer typed, and nothing to act on — each
+  // half of the message in its own language (§NNN), or an older row's one text in both.
   if (row.messageType === "EVENT_CANCELLED") {
-    const reason = readEventNoticeText((row.payloadJson as { reason?: unknown } | null)?.reason);
-    if (reason) data.cancellationReason = reason;
+    const reason = readEventNoticeWords((row.payloadJson as { reason?: unknown } | null)?.reason, locale);
+    if (reason.text) data.cancellationReason = reason.text;
+    if (reason.other) data.cancellationReasonOther = reason.other;
   }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
   // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the

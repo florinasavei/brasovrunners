@@ -13,6 +13,10 @@ import { languageTab, openEditorBox } from "./support/fold";
  *   - choosing "Anulat" asks for the reason and "tell them" (ticked), and the banner says the
  *     event is cancelled and how many were told.
  *
+ * Bilingual everywhere (§NNN): the note and the reason are two boxes, Română and English; a note in
+ * one language only is refused on the English box with everything else kept, and the same words
+ * typed in both boxes get the amber "is it translated?" line.
+ *
  * Each Playwright project makes its own event, named by the project, so the two never share a
  * count.
  */
@@ -81,15 +85,28 @@ test.describe("§331 the participants hear about a change when the organizer ask
     const box = await notify.boundingBox();
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await expect(field("notice.note")).toBeHidden();
+    await expect(field("notice.noteRo")).toBeHidden();
     await notify.check();
-    await expect(field("notice.note")).toBeVisible();
+    await expect(field("notice.noteRo")).toBeVisible();
+    await expect(field("notice.noteEn")).toBeVisible();
 
     // A new meeting point, in the Locul box — amber now, with the one registration on its chip.
     const place = await openEditorBox(page, "Locul");
     await expect(place.getByTestId("risk-line")).toContainText("Înscrieri: 1");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
-    await field("notice.note").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
+    // The same words in both boxes: the amber line, before anything is saved.
+    await field("notice.noteRo").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
+    await field("notice.noteEn").fill("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
+    await expect(page.getByTestId("notice-note-identical")).toBeVisible();
+    // Romanian only: refused on the English box, the rest of the form kept (§315).
+    await field("notice.noteEn").fill("");
+    await expect(page.getByTestId("notice-note-identical")).toHaveCount(0);
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toContainText("Ce s-a schimbat (English)", { timeout: 30_000 });
+    await expect(field("event.locationName")).toHaveValue(`Poiana Brașov ${suffix}`);
+    await expect(field("notice.noteRo")).toHaveValue("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
+    await field("notice.noteEn").fill("We move to Poiana: the road to Tractorul is closed.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("notice-outcome")).toContainText("Emailuri „Detalii actualizate” puse la coadă: 1", { timeout: 30_000 });
     await hydrated(page);
@@ -106,7 +123,9 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await expect(page.getByTestId("cancel-count")).toContainText("„Eveniment anulat”: 1");
     // The update box is gone while the status says "Anulat".
     await expect(page.getByTestId("notice-fields")).toHaveCount(0);
-    await field("cancel.reason").fill("Avertizare meteo de cod portocaliu: traseul nu este sigur.");
+    // Why, in both languages: each registrant reads it in theirs (§NNN).
+    await field("cancel.reasonRo").fill("Avertizare meteo de cod portocaliu: traseul nu este sigur.");
+    await field("cancel.reasonEn").fill("An orange weather warning: the route is not safe.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("notice-outcome")).toContainText("Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: 1.", {
       timeout: 30_000,

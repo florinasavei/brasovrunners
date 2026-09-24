@@ -46,6 +46,19 @@ function sampleWhen(locale: EmailLocale): string {
 }
 
 /**
+ * The sample organizer's note and cancellation reason, written in both languages the way the
+ * editor now asks for them (§NNN, bilingual everywhere), so each half of a preview reads its own.
+ */
+const SAMPLE_NOTE: Record<EmailLocale, string> = {
+  ro: "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta.",
+  en: "We meet at the Livada Poștei entrance, by the map board.",
+};
+const SAMPLE_REASON: Record<EmailLocale, string> = {
+  ro: "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur.",
+  en: "An orange weather warning for Tâmpa: the route is not safe.",
+};
+
+/**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
  * a save — so it may never be served from a cache. Without this the panel showed the values
  * it had before the press (found on 2026-09-20: clearing the recipients wrote the row and the
@@ -156,10 +169,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     staffEmail: "ana.popescu@example.org",
     signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
     // "Detalii actualizate" and "Eveniment anulat" (§331): a new place and start, the
-    // organizer's note, and a reason — read only by those two messages' templates.
+    // organizer's note, and a reason — read only by those two messages' templates. Each in both
+    // languages, as the organizer now writes them (§NNN, bilingual everywhere): the previewed
+    // language's half first, the other half's own words after the rule, never the same text twice.
     updateChanges: ["place", "time"],
-    organizerNote: tRo ? "Ne vedem la intrarea dinspre Livada Poștei, lângă panoul cu harta." : "We meet at the Livada Poștei entrance, by the map board.",
-    cancellationReason: tRo ? "Avertizare meteo de cod portocaliu pentru Tâmpa: traseul nu este sigur." : "An orange weather warning for Tâmpa: the route is not safe.",
+    organizerNote: SAMPLE_NOTE[emailLocale],
+    organizerNoteOther: SAMPLE_NOTE[tRo ? "en" : "ro"],
+    cancellationReason: SAMPLE_REASON[emailLocale],
+    cancellationReasonOther: SAMPLE_REASON[tRo ? "en" : "ro"],
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 

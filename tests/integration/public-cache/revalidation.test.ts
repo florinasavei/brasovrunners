@@ -118,7 +118,7 @@ describe("§333 writes expire the public cache", () => {
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, eventStatus: "CANCELLED" },
         // Cancelling asks why since §331 (event notices); telling nobody keeps the test on the cache.
-        cancellation: { reason: "Ploaie torențială.", notify: false },
+        cancellation: { reason: { ro: "Ploaie torențială.", en: "Torrential rain." }, notify: false },
         now: NOW,
       });
 
@@ -141,7 +141,7 @@ describe("§333 writes expire the public cache", () => {
         translations: [],
         // Telling the participants writes the outbox and the audit trail, and no public row: the
         // save's own expiry is the only one, and it is the events'.
-        notice: { notify: true, note: "Locul se anunță săptămâna viitoare." },
+        notice: { notify: true, note: { ro: "Locul se anunță săptămâna viitoare.", en: "The place is announced next week." } },
         now: NOW,
       });
 

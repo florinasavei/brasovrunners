@@ -27,6 +27,7 @@ const LABELS: ComponentProps<typeof CoHostRowsEditor>["labels"] = {
   descriptionRo: "Română",
   descriptionEn: "English",
   descriptionHelp: "Opțional, în ambele limbi.",
+  identical: "Textul în engleză e identic cu cel în română — e tradus?",
   kind: "Tip",
   url: "Adresa (https://…)",
   labelRo: "Eticheta în română (opțional)",

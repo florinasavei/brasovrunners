@@ -51,7 +51,8 @@ describe("BR-REQ-054-01 the photo gallery", () => {
     eventId: "",
     translations: {
       ro: { slug: "crosul-2026", title: "Crosul aniversar 2026", description: "Pozele de la start." },
-      en: { slug: "cross-2026", title: "Anniversary cross 2026", description: "" },
+      // The description in both languages or neither (§NNN, bilingual everywhere).
+      en: { slug: "cross-2026", title: "Anniversary cross 2026", description: "Photos from the start." },
     },
   };
 

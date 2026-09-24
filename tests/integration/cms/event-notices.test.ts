@@ -28,6 +28,11 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * `WAITLIST_OFFERED`, `CONFIRMED`, `WAITLISTED`. Not an unconfirmed address, not a cancelled or
  * lapsed registration. A test registration is written to like a real one (§12.6) and counted
  * nowhere.
+ *
+ * Bilingual everywhere (§NNN): the note and the reason are typed in Romanian and in English, both
+ * or neither (the reason: both), travel as `{ ro, en }`, and each registrant's message reads the
+ * half in their language first and the other language's own text in the second half — while a
+ * row queued before, with one string, still renders as it did.
  */
 describe("§331 the participants hear about a change when the organizer asks", () => {
   let db: TestDatabase;
@@ -187,8 +192,8 @@ describe("§331 the participants hear about a change when the organizer asks", (
     input: {
       fields?: Record<string, unknown>;
       ro?: Record<string, unknown>;
-      notice?: { notify: boolean; note?: string };
-      cancellation?: { reason: string; notify: boolean };
+      notice?: { notify: boolean; note?: { ro?: string; en?: string } };
+      cancellation?: { reason: { ro?: string; en?: string }; notify: boolean };
       scope?: SeriesEditScope;
       actor?: StaffUser;
       at?: Date;
@@ -283,7 +288,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const event = await seedEvent();
     await seedRegistrations(event.id, EVERYONE);
 
-    const result = await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: false, note: "Ignored, since nobody asked." } });
+    const result = await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: false, note: { ro: "Ignorat.", en: "Ignored, since nobody asked." } } });
     expect(result.notice).toBeUndefined();
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.update_notice_sent"))).toHaveLength(0);
@@ -300,15 +305,24 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(quiet.notice).toEqual({ kind: "nothingToTell" });
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
 
-    // A note is a thing the organizer chose to say: it goes, on its own, escaped as plain text.
-    const note = "Aduceți frontala: <b>**startul**</b> e pe întuneric.\r\nParcarea e închisă.";
+    // A note is a thing the organizer chose to say: it goes, on its own, escaped as plain text —
+    // written in both languages (§NNN), and it travels as both.
+    const note = { ro: "Aduceți frontala: <b>**startul**</b> e pe întuneric.\r\nParcarea e închisă.", en: "Bring a head torch: the start is in the dark.\nThe car park is closed." };
     const said = await save(event.id, { ro: { excerpt: "Rapid și plat, pe întuneric." }, notice: { notify: true, note } });
     expect(said.notice).toEqual({ kind: "update", queued: 4, changes: [] });
     const [first] = await queued("EVENT_UPDATE_NOTICE");
-    expect(first.payloadJson).toEqual({ changes: [], note: "Aduceți frontala: <b>**startul**</b> e pe întuneric.\nParcarea e închisă." });
+    expect(first.payloadJson).toEqual({
+      changes: [],
+      note: { ro: "Aduceți frontala: <b>**startul**</b> e pe întuneric.\nParcarea e închisă.", en: "Bring a head torch: the start is in the dark.\nThe car park is closed." },
+    });
     const message = await renderOutboxMessage(first, db, NOW);
     expect(message.text).toContain("Mesajul organizatorilor:");
     expect(message.text).toContain("Parcarea e închisă.");
+    // Each half in its own language: the Romanian under the Romanian label, the English under the
+    // English one — never the Romanian text in the English half.
+    expect(message.text).toContain("A message from the organizers:\nBring a head torch: the start is in the dark.\nThe car park is closed.");
+    const englishHalf = message.text.slice(message.text.indexOf("— — —"));
+    expect(englishHalf).not.toContain("Parcarea e închisă.");
     // No markup of the organizer's reaches the page, and their asterisks stay asterisks.
     expect(message.html).toContain("&lt;b&gt;**startul**&lt;/b&gt;");
     expect(message.html).not.toContain("<strong>startul</strong>");
@@ -355,10 +369,71 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const event = await seedEvent();
     await seedRegistrations(event.id, [{ name: "ana", status: "CONFIRMED" }]);
 
-    const refusal = await refusalOf(save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true, note: "x".repeat(501) } }));
-    expect(refusal).toEqual({ code: "VALIDATION_ERROR", fields: ["notice.note"] });
+    const refusal = await refusalOf(
+      save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true, note: { ro: "Scurt.", en: "x".repeat(501) } } }),
+    );
+    expect(refusal).toEqual({ code: "VALIDATION_ERROR", fields: ["notice.noteEn"] });
     expect((await reload(event.id)).locationName).toBe("Parcul Tractorul");
     expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
+  });
+
+  it("refuses a note written in one language only, naming the empty box, and writes nothing (§NNN)", async () => {
+    const event = await seedEvent();
+    await seedRegistrations(event.id, [{ name: "ana", status: "CONFIRMED" }]);
+
+    const romanianOnly = await refusalOf(
+      save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true, note: { ro: "Parcarea e închisă.", en: "   " } } }),
+    );
+    expect(romanianOnly).toEqual({ code: "VALIDATION_ERROR", fields: ["notice.noteEn"] });
+    const englishOnly = await refusalOf(
+      save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true, note: { ro: "", en: "The car park is closed." } } }),
+    );
+    expect(englishOnly).toEqual({ code: "VALIDATION_ERROR", fields: ["notice.noteRo"] });
+    expect((await reload(event.id)).locationName).toBe("Parcul Tractorul");
+    expect(await queued("EVENT_UPDATE_NOTICE")).toHaveLength(0);
+
+    // Unticked, the half is ignored like any note nobody asked to send.
+    expect((await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: false, note: { ro: "Doar în română." } } })).notice).toBeUndefined();
+  });
+
+  it("an English registrant reads the English note first and the Romanian one second (§NNN)", async () => {
+    const event = await seedEvent();
+    const [bogdan] = await seedRegistrations(event.id, [{ name: "bogdan", status: "CONFIRMED", locale: "en" }]);
+
+    await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true, note: { ro: "Ne mutăm la Poiana.", en: "We move to Poiana." } } });
+    const [row] = await queued("EVENT_UPDATE_NOTICE");
+    expect(row.registrationId).toBe(bogdan.id);
+    const message = await renderOutboxMessage(row, db, NOW);
+    const divider = message.text.indexOf("— — —");
+    expect(message.text.slice(0, divider)).toContain("A message from the organizers:\nWe move to Poiana.");
+    expect(message.text.slice(0, divider)).not.toContain("Ne mutăm la Poiana.");
+    expect(message.text.slice(divider)).toContain("Mesajul organizatorilor:\nNe mutăm la Poiana.");
+    // And the audit row keeps both, as the organizer wrote them.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.update_notice_sent"));
+    expect(audit.metadataJson).toMatchObject({ note: { ro: "Ne mutăm la Poiana.", en: "We move to Poiana." } });
+  });
+
+  it("a row queued before the note was written twice renders its one text in both halves, as it did; half a pair renders none", async () => {
+    const event = await seedEvent();
+    await seedRegistrations(event.id, [{ name: "ana", status: "CONFIRMED" }]);
+    await save(event.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true } });
+    const [row] = await queued("EVENT_UPDATE_NOTICE");
+
+    // The shape every row had before §NNN: one string.
+    const legacy = await renderOutboxMessage({ ...row, payloadJson: { changes: ["place"], note: "Parcarea e închisă." } }, db, NOW);
+    expect(legacy.text).toContain("Mesajul organizatorilor:\nParcarea e închisă.");
+    expect(legacy.text).toContain("A message from the organizers:\nParcarea e închisă.");
+
+    // A hand-made row with one language of the pair: shown in neither half, the rest still sent.
+    const half = await renderOutboxMessage({ ...row, payloadJson: { changes: ["place"], note: { ro: "Doar în română." } } }, db, NOW);
+    expect(half.text).not.toContain("Doar în română.");
+    expect(half.text).not.toContain("Mesajul organizatorilor:");
+    expect(half.text).toContain("Locul de întâlnire este acum: Poiana Brașov.");
+
+    // And a legacy cancellation's one reason, in both halves.
+    const cancelled = await renderOutboxMessage({ ...row, messageType: "EVENT_CANCELLED", payloadJson: { reason: "Ploaie torențială." } }, db, NOW);
+    expect(cancelled.text).toContain("Motivul:\nPloaie torențială.");
+    expect(cancelled.text).toContain("The reason:\nPloaie torențială.");
   });
 
   it("a role that may not save the event row may not tell its participants, whatever it posts", async () => {
@@ -371,7 +446,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
         actor: copywriter,
         eventId: event.id,
         translations: [{ translationId: ro.id, expectedVersion: ro.version, fields: { slug: ro.slug, title: "Cursa", excerpt: "Rapid.", seoTitle: "", seoDescription: "" } }],
-        notice: { notify: true, note: "Salut" },
+        notice: { notify: true, note: { ro: "Salut", en: "Hello" } },
         now: NOW,
       }),
     );
@@ -383,29 +458,45 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const event = await seedEvent();
     const rows = await seedRegistrations(event.id, EVERYONE);
 
-    // No reason, no cancellation: the save is refused naming the box, and nothing is written.
-    expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" } }))).toEqual({ code: "VALIDATION_ERROR", fields: ["cancel.reason"] });
-    expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: "   ", notify: true } }))).toEqual({
+    // No reason, no cancellation: the save is refused naming both boxes (the reason is required in
+    // each language, §NNN), and nothing is written.
+    expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" } }))).toEqual({
       code: "VALIDATION_ERROR",
-      fields: ["cancel.reason"],
+      fields: ["cancel.reasonRo", "cancel.reasonEn"],
+    });
+    expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: { ro: "   ", en: " " }, notify: true } }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["cancel.reasonRo", "cancel.reasonEn"],
+    });
+    // One language only: the empty one is named.
+    expect(await refusalOf(save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: { ro: "Ploaie.", en: "" }, notify: true } }))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["cancel.reasonEn"],
     });
     expect((await reload(event.id)).eventStatus).toBe("SCHEDULED");
 
-    const reason = "Avertizare meteo de cod portocaliu: traseul nu este sigur.";
+    const reason = { ro: "Avertizare meteo de cod portocaliu: traseul nu este sigur.", en: "An orange weather warning: the route is not safe." };
     const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason, notify: true } });
     expect(result.notice).toEqual({ kind: "cancelled", queued: 4, notified: true });
     expect((await reload(event.id)).eventStatus).toBe("CANCELLED");
 
     const notices = await queued("EVENT_CANCELLED");
     expect(notices).toHaveLength(5);
-    expect(notices.every((row) => (row.payloadJson as { reason: string }).reason === reason)).toBe(true);
+    // Both languages travel, whichever language the registration is in.
+    for (const row of notices) expect(row.payloadJson).toEqual({ reason });
     const ana = notices.find((row) => row.registrationId === rows.find((r) => r.registeredName === "ana")!.id)!;
     const message = await renderOutboxMessage(ana, db, NOW);
     expect(message.subject).toContain("Evenimentul „Cursa de toamnă” a fost anulat");
-    expect(message.text).toContain("Motivul:");
-    expect(message.text).toContain(reason);
+    expect(message.text).toContain(`Motivul:\n${reason.ro}`);
+    expect(message.text).toContain(`The reason:\n${reason.en}`);
     expect(message.text).toContain("nu trebuie să faci nimic");
     expect(message.text).toContain("Scrie-ne");
+    // Bogdan registered in English: the English reason first, and never the Romanian in his half.
+    const bogdan = notices.find((row) => row.registrationId === rows.find((r) => r.registeredName === "bogdan")!.id)!;
+    const english = await renderOutboxMessage(bogdan, db, NOW);
+    const divider = english.text.indexOf("— — —");
+    expect(english.text.slice(0, divider)).toContain(`The reason:\n${reason.en}`);
+    expect(english.text.slice(0, divider)).not.toContain(reason.ro);
 
     // Nobody's registration was touched: the cancellation is the event's, not theirs.
     const after = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
@@ -422,11 +513,12 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const event = await seedEvent();
     await seedRegistrations(event.id, EVERYONE);
 
-    const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: "Traseul este închis.", notify: false } });
+    const reason = { ro: "Traseul este închis.", en: "The route is closed." };
+    const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason, notify: false } });
     expect(result.notice).toEqual({ kind: "cancelled", queued: 0, notified: false });
     expect(await queued("EVENT_CANCELLED")).toHaveLength(0);
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"));
-    expect(audit.metadataJson).toMatchObject({ reason: "Traseul este închis.", notified: false, recipients: 0 });
+    expect(audit.metadataJson).toMatchObject({ reason, notified: false, recipients: 0 });
 
     // A later save of the cancelled event is not a second cancellation: no reason asked, nothing sent.
     expect((await save(event.id, { fields: { capacity: "25" }, notice: { notify: true } })).notice).toBeUndefined();
@@ -445,13 +537,14 @@ describe("§331 the participants hear about a change when the organizer asks", (
     });
 
     // The editor draws no "tell them" box for it, so the form posts the reason alone.
-    const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: "Ploaie torențială.", notify: false } });
+    const reason = { ro: "Ploaie torențială.", en: "Torrential rain." };
+    const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason, notify: false } });
     expect(result.notice).toEqual({ kind: "cancelledNobodyToTell" });
     expect((await reload(event.id)).eventStatus).toBe("CANCELLED");
     expect(await queued("EVENT_CANCELLED")).toHaveLength(0);
     // Still asked why, and still recorded who and why.
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"));
-    expect(audit.metadataJson).toMatchObject({ reason: "Ploaie torențială.", notified: false, recipients: 0 });
+    expect(audit.metadataJson).toMatchObject({ reason, notified: false, recipients: 0 });
   });
 
   it("a series save that cancels a date already run records it too, and tells its runners nothing", async () => {
@@ -469,7 +562,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const [bogdansEntry] = await seedRegistrations(ran.id, [{ name: "bogdan", status: "CONFIRMED" }]);
     await seedRegistrations(upcoming.id, [{ name: "carmen", status: "CONFIRMED" }]);
 
-    const reason = "Parcul este închis până la primăvară.";
+    const reason = { ro: "Parcul este închis până la primăvară.", en: "The park is closed until spring." };
     const result = await save(source.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason, notify: true }, scope: "all" });
     expect(result.appliedTo).toBe(dates.length);
     // The banner counts messages: Ana's and Carmen's, not Bogdan's — his morning is over.

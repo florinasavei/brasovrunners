@@ -776,8 +776,8 @@
         "remove": "Remove row",
         "empty": "No rows yet."
       },
-      "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
-      "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email, the reminder and the calendar entry.",
+      "rulesHelp": "Optional, in both languages or neither. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
+      "checklistHelp": "Optional, in both languages or neither, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email, the reminder and the calendar entry.",
       "type": "Event type",
       "typeHelp": "A group run is simply turned up to: no registration, no participants, no programme. A race has all of them; a hike, a coffee, an equipment test and another event may take registrations; an external event is somebody else's — its registration is on their page.",
       "surface": "Surface",
@@ -924,7 +924,7 @@
         "tooManyLinksGeneric": "A partner can carry at most {max} links",
         "tooMany": "Partners: at most {max} on one event"
       },
-      "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional in each language: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
+      "linksHelp": "Optional, at most {max}. The GPX track, the map, the extended rules, a form, the photo album, the results — a link to wherever the file lives: Google Drive, Dropbox, OneDrive, Strava, Garmin. Share the file with “Anyone with the link”, or runners meet a request for access. The label is optional, in both languages or neither: without one, the page shows the kind (“Route (GPX)”) in the reader's language, and the site the link opens on appears under it. Links travel to every date of a series, like the route.",
       "linkRows": {
         "kind": "Kind",
         "url": "Address (https://…)",
@@ -945,7 +945,7 @@
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. A recurring Strava event keeps one address for every date, so the series inherits it from the source event; any one date can change its own.",
       "facebookEventUrl": "Link to the Facebook event",
       "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
-      "bodyHelp": "The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
+      "bodyHelp": "Optional, in both languages or neither. The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
       "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
@@ -1033,11 +1033,11 @@
         "countNone": "Nobody is registered for this date right now, so the box sends no email.",
         "countSeries": "If the change also reaches other dates of the series, their participants are told too, once each, about their own date.",
         "note": "What changed (optional)",
-        "noteHelp": "Plain text, at most {max} characters. It appears in the email under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
+        "noteHelp": "Optional, in both languages or neither · plain text, at most {max} characters each. Each participant gets it in the language they registered in, under “A message from the organizers”; without it, the email goes only if the place, the date and time or the programme changed.",
         "cancelTitle": "You are cancelling the event",
         "cancelIntro": "The registrations stay as they are, as a record: nobody is withdrawn and no status changes. No more places are offered, no numbers are given and no automatic emails go out for this event.",
         "cancelReason": "Why the event is cancelled",
-        "cancelReasonHelp": "Required. Plain text, at most {max} characters. It appears in the email to the participants and in the audit log, with your name.",
+        "cancelReasonHelp": "Required, in both languages · plain text, at most {max} characters each. Each participant gets it in the language they registered in; it also appears in the audit log, with your name.",
         "cancelNotify": "Tell the participants that the event is cancelled",
         "cancelCount": "Participants who would get the “Event cancelled” email: {count}. Messages including the club's copies: {messages} — they count against the Mailgun allowance ({allowance}).",
         "cancelCountNone": "Nobody is registered right now, so no email goes out.",
@@ -1051,7 +1051,11 @@
           "cancelledQuiet": "The event is cancelled. The participants were not told, because the box was unticked.",
           "cancelledNobody": "The event is cancelled. It takes no registrations on this site, so there was nobody to email. The reason is in the audit log."
         },
-        "countTest": "Test registrations, which get the email too and are counted nowhere: {test}."
+        "countTest": "Test registrations, which get the email too and are counted nowhere: {test}.",
+        "noteRoError": "What changed (Română): write the note in both languages or neither, at most {max} characters",
+        "noteEnError": "What changed (English): write the note in both languages or neither, at most {max} characters",
+        "cancelReasonRoError": "Why the event is cancelled (Română): required in both languages, at most {max} characters",
+        "cancelReasonEnError": "Why the event is cancelled (English): required in both languages, at most {max} characters"
       },
       "untitled": "(untitled)",
       "immediateActions": "Immediate actions — they do not go through “Save”",
@@ -1206,16 +1210,12 @@
           "empty": "empty",
           "nothing": "Nothing filled in",
           "separator": " · ",
+          "oneLanguage": "to write in {language} too (both languages or neither)",
+          "identical": "{language} same as {source}",
           "titleSummary": {
             "missingTitle": "title missing ({language})",
             "missingSummary": "summary missing ({language})",
             "untitled": "untitled"
-          },
-          "description": {
-            "fallback": "the {language} page shows the summary"
-          },
-          "rules": {
-            "none": "the {language} page has no rules"
           },
           "when": {
             "none": "No date chosen yet",
@@ -1299,7 +1299,8 @@
               "few": "{count} links",
               "other": "{count} links"
             },
-            "none": "No links"
+            "none": "No links",
+            "labelOneLanguage": "label in one language only"
           },
           "coHosts": {
             "with": "Together with {names}",
@@ -1314,9 +1315,16 @@
           },
           "address": {
             "locked": "locked after publication",
-            "none": "no address"
+            "none": "no address",
+            "seoOneLanguage": "SEO in one language only"
           }
         }
+      },
+      "identical": {
+        "warning": "The English text is identical to the Romanian one — is it translated?",
+        "tab": "same as Romanian",
+        "listTitle": "To check: the English text is identical to the Romanian one (does not block publication)",
+        "partner": "Partner {p}"
       }
     },
     "preview": {
@@ -2198,7 +2206,9 @@
         "body": "Text",
         "seoTitle": "SEO title",
         "seoDescription": "SEO description"
-      }
+      },
+      "seoHelp": "Optional, for search engines — in both languages or neither.",
+      "bothOrNeither": "write it in both languages or neither"
     },
     "pictures": {
       "title": "Pictures",
@@ -2279,7 +2289,9 @@
         "description": "Description"
       },
       "tabAlbums": "Albums",
-      "tabPictures": "Pictures"
+      "tabPictures": "Pictures",
+      "descriptionHelp": "Optional — in both languages or neither.",
+      "bothOrNeither": "write it in both languages or neither"
     },
     "thanks": {
       "title": "After the race",
@@ -2664,14 +2676,14 @@
             "A YouTube film: in the editor, the “YouTube” button → paste the film's address → “Add the film”. Click the film to give it a caption. On the page it appears closed, “Watch the film”; it loads only when the reader presses.",
             "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; the Administrator publishes it.",
             "Not yours, and not needed: the event's settings (date, places, registration), publishing, the gallery, the registrations. If a text depends on a wrong setting, tell the Organizer.",
-            "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too."
+            "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too. An optional text — the description, the rules, the programme's notes, what to bring, the SEO fields, on events and on pages — is written in both languages or neither: the save refuses one language only and points at the box left empty, with everything you typed kept. If the English text is identical to the Romanian one, the editor asks whether it is translated — a warning, it blocks nothing."
           ]
         },
         {
           "title": "Organizer — events and numbers",
           "who": "Role: Organizer or above.",
           "steps": [
-            "The Administrator creates the event (“New event”, “Duplicate”, “Repeat”). You open it from “Events” and look after the Settings: the type, the date, the gun time, the duration, the meeting point, the address, the map link, the distance, the route, the difficulty, the cost.",
+            "The Administrator creates the event (“New event”, “Duplicate”, “Repeat”). You open it from “Events” and look after the Settings: the type, the date, the gun time, the duration, the meeting point, the address, the map link, the distance, the route, the difficulty, the cost. When you cancel the event or tell the participants about a change, you write the reason or the note in Romanian and in English: each participant gets it in the language they registered in.",
             "Registrations: in Settings choose “Local registration”, set the capacity and the window, the participation window (how many days before a confirmation is asked, and when it expires), the bib band and the approved declaration.",
             "The words — the title, the summary, the description, the rules, the programme — are the Redactor's or the Administrator's. You can read them and cannot save them; if a text is wrong, tell the Administrator.",
             "Publishing: you press “Submit for review”. “Publish” is the Administrator's, as are taking a live event down and archiving one. Both languages go live together; an incomplete language blocks publishing.",

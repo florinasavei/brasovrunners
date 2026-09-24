@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { routing } from "@/i18n/routing";
+import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
  * What an organizer types into the page editor (BR-REQ-050-03).
@@ -75,6 +76,12 @@ export type PageTranslationInput = z.infer<typeof pageTranslationSchema>;
  * Publication is one state for the whole page and requires every locale to be complete
  * (`AGENTS.md` §11.2), so the editor asks for both from the beginning rather than letting a page
  * exist in one language and discover the rule at the moment somebody tries to publish it.
+ *
+ * The two search-engine texts are optional, and optional in both languages at once (§NNN,
+ * bilingual everywhere — the rule the event's own two overrides follow): a title or a description
+ * for Google written in one language and left empty in the other is refused on the empty box,
+ * every other box kept (§315). The editor posts both languages in one save, so the rule is read
+ * here, where both are known, and never has to wait for a second save.
  */
 export const pageFieldsSchema = z.object({
   navOrder: z
@@ -82,12 +89,23 @@ export const pageFieldsSchema = z.object({
     .trim()
     .transform((value) => (value === "" ? 0 : Number(value)))
     .pipe(z.number().int().min(0).max(1000)),
-  translations: z.object(
-    Object.fromEntries(routing.locales.map((locale) => [locale, pageTranslationSchema])) as Record<
-      (typeof routing.locales)[number],
-      typeof pageTranslationSchema
-    >,
-  ),
+  translations: z
+    .object(
+      Object.fromEntries(routing.locales.map((locale) => [locale, pageTranslationSchema])) as Record<
+        (typeof routing.locales)[number],
+        typeof pageTranslationSchema
+      >,
+    )
+    .superRefine((translations, ctx) => {
+      for (const field of ["seoTitle", "seoDescription"] as const) {
+        refuseOneLanguage(
+          ctx,
+          { ro: translations.ro[field], en: translations.en[field] },
+          { ro: ["ro", field], en: ["en", field] },
+          `the page's ${field === "seoTitle" ? "search-engine title" : "search-engine description"}`,
+        );
+      }
+    }),
 });
 
 export type PageFieldsInput = z.infer<typeof pageFieldsSchema>;

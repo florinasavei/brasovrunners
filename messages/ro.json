@@ -776,8 +776,8 @@
         "remove": "Șterge rândul",
         "empty": "Niciun rând încă."
       },
-      "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
-      "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare, în reminder și în intrarea din calendar.",
+      "rulesHelp": "Opțional, în ambele limbi sau în niciuna. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
+      "checklistHelp": "Opțional, în ambele limbi sau în niciuna, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare, în reminder și în intrarea din calendar.",
       "type": "Tip eveniment",
       "typeHelp": "La o alergare de grup se vine pur și simplu: fără înscriere, fără participanți, fără program. O cursă le are pe toate; o drumeție, o cafea, o testare de echipament și un alt eveniment pot avea înscriere; un eveniment extern e al altcuiva — înscrierea e pe pagina lor.",
       "surface": "Suprafață",
@@ -924,7 +924,7 @@
         "tooManyLinksGeneric": "Un partener poate avea cel mult {max} linkuri",
         "tooMany": "Parteneri: cel mult {max} pe un eveniment"
       },
-      "linksHelp": "Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul foto, rezultatele — un link către locul unde e fișierul: Google Drive, Dropbox, OneDrive, Strava, Garmin. Partajează fișierul cu „Oricine are linkul”, altfel alergătorii dau de o cerere de acces. Eticheta e opțională în fiecare limbă: fără ea, pagina arată tipul („Traseul (GPX)”) în limba cititorului, iar sub etichetă apare site-ul pe care se deschide linkul. Linkurile se copiază pe toate datele unei serii, ca traseul.",
+      "linksHelp": "Opțional, cel mult {max}. Traseul GPX, harta, regulamentul extins, un formular, albumul foto, rezultatele — un link către locul unde e fișierul: Google Drive, Dropbox, OneDrive, Strava, Garmin. Partajează fișierul cu „Oricine are linkul”, altfel alergătorii dau de o cerere de acces. Eticheta e opțională, în ambele limbi sau în niciuna: fără ea, pagina arată tipul („Traseul (GPX)”) în limba cititorului, iar sub etichetă apare site-ul pe care se deschide linkul. Linkurile se copiază pe toate datele unei serii, ca traseul.",
       "linkRows": {
         "kind": "Tip",
         "url": "Adresa (https://…)",
@@ -945,7 +945,7 @@
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Un eveniment Strava recurent are o singură adresă pentru toate datele, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "facebookEventUrl": "Link către evenimentul Facebook",
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Un eveniment Facebook cu mai multe date are o singură adresă, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
+      "bodyHelp": "Opțional, în ambele limbi sau în niciuna. Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
       "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
@@ -1033,11 +1033,11 @@
         "countNone": "Nu e nimeni înscris acum la această dată, așa că bifa nu trimite niciun email.",
         "countSeries": "Dacă modificarea ajunge și la alte date ale seriei, sunt anunțați și participanții acelor date, fiecare o singură dată, despre data lui.",
         "note": "Ce s-a schimbat (opțional)",
-        "noteHelp": "Text simplu, cel mult {max} de caractere. Apare în email sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
+        "noteHelp": "Opțional, în ambele limbi sau în niciuna · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris, sub „Mesajul organizatorilor”; fără el, emailul pleacă doar dacă s-a schimbat locul, data și ora sau programul.",
         "cancelTitle": "Anulezi evenimentul",
         "cancelIntro": "Înscrierile rămân așa cum sunt, ca evidență: nimeni nu e retras și nu i se schimbă starea. Nu se mai oferă locuri, nu se mai dau numere și nu mai pleacă emailuri automate pentru acest eveniment.",
         "cancelReason": "Motivul anulării",
-        "cancelReasonHelp": "Obligatoriu. Text simplu, cel mult {max} de caractere. Apare în emailul către participanți și în jurnalul de audit, cu numele tău.",
+        "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
         "cancelNotify": "Anunță participanții că evenimentul a fost anulat",
         "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
         "cancelCountNone": "Nu e nimeni înscris acum, așa că nu pleacă niciun email.",
@@ -1051,7 +1051,11 @@
           "cancelledQuiet": "Evenimentul a fost anulat. Participanții nu au fost anunțați, pentru că bifa era debifată.",
           "cancelledNobody": "Evenimentul a fost anulat. Nu primește înscrieri pe site, așa că nu a fost nimeni de anunțat prin email. Motivul este în jurnalul de audit."
         },
-        "countTest": "Înscrieri de test, care primesc și ele emailul și nu sunt numărate nicăieri: {test}."
+        "countTest": "Înscrieri de test, care primesc și ele emailul și nu sunt numărate nicăieri: {test}.",
+        "noteRoError": "Ce s-a schimbat (Română): scrie mesajul în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "noteEnError": "Ce s-a schimbat (English): scrie mesajul în ambele limbi sau în niciuna, cel mult {max} de caractere",
+        "cancelReasonRoError": "Motivul anulării (Română): obligatoriu în ambele limbi, cel mult {max} de caractere",
+        "cancelReasonEnError": "Motivul anulării (English): obligatoriu în ambele limbi, cel mult {max} de caractere"
       },
       "untitled": "(fără titlu)",
       "immediateActions": "Acțiuni imediate — nu trec prin „Salvează”",
@@ -1206,16 +1210,12 @@
           "empty": "gol",
           "nothing": "Nimic completat",
           "separator": " · ",
+          "oneLanguage": "de scris și în {language} (ambele limbi sau niciuna)",
+          "identical": "{language} identic cu {source}",
           "titleSummary": {
             "missingTitle": "lipsește titlul ({language})",
             "missingSummary": "lipsește rezumatul ({language})",
             "untitled": "fără titlu"
-          },
-          "description": {
-            "fallback": "pagina {language} arată rezumatul"
-          },
-          "rules": {
-            "none": "pagina {language} nu are regulament"
           },
           "when": {
             "none": "Data nu e aleasă încă",
@@ -1299,7 +1299,8 @@
               "few": "{count} linkuri",
               "other": "{count} de linkuri"
             },
-            "none": "Niciun link"
+            "none": "Niciun link",
+            "labelOneLanguage": "etichetă într-o singură limbă"
           },
           "coHosts": {
             "with": "Împreună cu {names}",
@@ -1314,9 +1315,16 @@
           },
           "address": {
             "locked": "blocată după publicare",
-            "none": "fără adresă"
+            "none": "fără adresă",
+            "seoOneLanguage": "SEO într-o singură limbă"
           }
         }
+      },
+      "identical": {
+        "warning": "Textul în engleză e identic cu cel în română — e tradus?",
+        "tab": "identic cu româna",
+        "listTitle": "De verificat: textul în engleză e identic cu cel în română (nu blochează publicarea)",
+        "partner": "Partenerul {p}"
       }
     },
     "preview": {
@@ -2198,7 +2206,9 @@
         "body": "Text",
         "seoTitle": "Titlu SEO",
         "seoDescription": "Descriere SEO"
-      }
+      },
+      "seoHelp": "Opțional, pentru motoarele de căutare — în ambele limbi sau în niciuna.",
+      "bothOrNeither": "scrie-l în ambele limbi sau în niciuna"
     },
     "pictures": {
       "title": "Imagini",
@@ -2279,7 +2289,9 @@
         "description": "Descriere"
       },
       "tabAlbums": "Albume",
-      "tabPictures": "Imagini"
+      "tabPictures": "Imagini",
+      "descriptionHelp": "Opțional — în ambele limbi sau în niciuna.",
+      "bothOrNeither": "scrie-o în ambele limbi sau în niciuna"
     },
     "thanks": {
       "title": "După cursă",
@@ -2664,14 +2676,14 @@
             "Un film de pe YouTube: în editor, butonul „YouTube” → lipești adresa filmului → „Adaugă filmul”. Apasă pe film ca să-i pui o legendă. Pe pagină apare închis, „Vezi filmul”; se încarcă doar când cititorul apasă.",
             "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; Administratorul o publică.",
             "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
-            "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea."
+            "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea. Un text opțional — descrierea, regulamentul, notele programului, ce să aduci, câmpurile SEO, la evenimente și la pagini — se scrie în ambele limbi sau în niciuna: salvarea refuză o singură limbă și îți arată căsuța care a rămas goală, cu tot ce ai scris păstrat. Dacă textul în engleză e identic cu cel în română, editorul te întreabă dacă e tradus — un avertisment, nu blochează nimic."
           ]
         },
         {
           "title": "Organizator — evenimente și numere",
           "who": "Rol: Organizator sau mai sus.",
           "steps": [
-            "Evenimentul îl creează Administratorul („Eveniment nou”, „Duplică”, „Repetă”). Tu îl deschizi din „Evenimente” și te ocupi de Setări: tipul, data, ora startului, durata, locul de întâlnire, adresa, linkul de hartă, distanța, traseul, dificultatea, costul.",
+            "Evenimentul îl creează Administratorul („Eveniment nou”, „Duplică”, „Repetă”). Tu îl deschizi din „Evenimente” și te ocupi de Setări: tipul, data, ora startului, durata, locul de întâlnire, adresa, linkul de hartă, distanța, traseul, dificultatea, costul. Când anulezi evenimentul sau anunți participanții despre o schimbare, scrii motivul sau mesajul în română și în engleză: fiecare participant îl primește în limba în care s-a înscris.",
             "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, fereastra de confirmare (cu câte zile înainte se cere și când expiră), banda de numere și declarația aprobată.",
             "Textele — titlul, rezumatul, descrierea, regulamentul, programul — le scrie Redactorul sau Administratorul. Tu le vezi și nu le poți salva; dacă un text e greșit, spune-i Administratorului.",
             "Publicare: tu apeși „Trimite spre verificare”. „Publică” este al Administratorului, ca și retragerea de pe site și arhivarea unui eveniment deja publicat. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",

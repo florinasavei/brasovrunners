@@ -52,6 +52,24 @@ describe("§331 the update notice", () => {
     expect(email.html).not.toContain("<strong>apă</strong>");
   });
 
+  it("reads the note in each half's own language when it was written in both (§NNN, bilingual everywhere)", () => {
+    const email = build("EVENT_UPDATE_NOTICE", { updateChanges: [], organizerNote: "Parcarea e închisă.", organizerNoteOther: "The car park is closed." });
+    const [romanian, english] = email.text.split("— — —");
+    expect(romanian).toContain("Mesajul organizatorilor:\nParcarea e închisă.");
+    expect(romanian).not.toContain("The car park is closed.");
+    expect(english).toContain("A message from the organizers:\nThe car park is closed.");
+    expect(english).not.toContain("Parcarea e închisă.");
+    // The HTML halves too, each once.
+    expect(email.html.match(/Parcarea e închisă\./g)).toHaveLength(1);
+    expect(email.html.match(/The car park is closed\./g)).toHaveLength(1);
+  });
+
+  it("an older row's one note is in both halves, as it always was", () => {
+    const email = build("EVENT_UPDATE_NOTICE", { updateChanges: [], organizerNote: "Parcarea e închisă." });
+    expect(email.text).toContain("Mesajul organizatorilor:\nParcarea e închisă.");
+    expect(email.text).toContain("A message from the organizers:\nParcarea e închisă.");
+  });
+
   it("the club's copy carries no button (§320)", () => {
     const email = build("EVENT_UPDATE_NOTICE", { updateChanges: ["place"], clubCopy: true }, DATA.eventUrl);
     expect(email.subject.startsWith("[Copie club] ")).toBe(true);
@@ -71,6 +89,14 @@ describe("§331 the cancellation", () => {
     expect(email.text).toContain("Scrie-ne: https://example.test/ro/contact");
     // No action of its own, whatever the caller handed over.
     expect(email.text).not.toContain("https://example.test/ignored");
+  });
+
+  it("gives each half the reason in its own language when the organizer wrote both (§NNN)", () => {
+    const email = build("EVENT_CANCELLED", { cancellationReason: "Avertizare meteo.", cancellationReasonOther: "A weather warning." });
+    const [romanian, english] = email.text.split("— — —");
+    expect(romanian).toContain("Motivul:\nAvertizare meteo.");
+    expect(english).toContain("The reason:\nA weather warning.");
+    expect(english).not.toContain("Avertizare meteo.");
   });
 });
 
