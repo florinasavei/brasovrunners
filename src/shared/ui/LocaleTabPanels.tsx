@@ -4,10 +4,56 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
-import { REVEAL_EVENT } from "./fold";
+import { createTwinFoldStore, REVEAL_EVENT, type TwinFoldStore, twinFoldKey } from "./fold";
+
+/** What a panel tells the folds inside it (§363): the strip's shared store, its language, whether it is on top. */
+export type TwinFoldPanel = { store: TwinFoldStore; locale: string; shown: boolean };
+
+const TwinFoldContext = createContext<TwinFoldPanel | null>(null);
+
+/** One panel's side of the strip's folds: every `useTwinFold` inside reads and writes `value.store`. */
+export function TwinFoldProvider({ value, children }: { value: TwinFoldPanel; children: ReactNode }) {
+  return <TwinFoldContext.Provider value={value}>{children}</TwinFoldContext.Provider>;
+}
+
+/**
+ * A fold's open state, shared with its twin in every other language of the strip (§363; the
+ * owner: "I would like to keep the expand/collapsed state while changing the language tab in the
+ * event editor"). Keyed by `twinFoldKey(name, locale)`: opening the Romanian description opens the
+ * English one, closing it in English closes it in Romanian, for as long as the page is open — and
+ * across a refused save too, since the strip is not re-mounted by one while the fold inside it is.
+ *
+ * `open` starts `false` on the server and on the first client render, which is exactly what a
+ * `<details>` without the attribute says, so nothing the server renders changes and a page with
+ * JavaScript off folds as before. `shown` says whether the fold's panel is the one on top: a fold
+ * that opened because its twin did may wait to mount something heavy until it can be seen.
+ *
+ * Outside a strip (a fold with no twins), the same answer from a store of its own.
+ */
+export function useTwinFold(name: string): { open: boolean; setOpen: (open: boolean) => void; shown: boolean } {
+  const panel = useContext(TwinFoldContext);
+  const [own] = useState(createTwinFoldStore);
+  const store = panel?.store ?? own;
+  const key = panel ? twinFoldKey(name, panel.locale) : name;
+  const read = () => store.get(key) ?? false;
+  const open = useSyncExternalStore(store.subscribe, read, read);
+  const setOpen = useCallback((next: boolean) => store.set(key, next), [store, key]);
+  return { open, setOpen, shown: panel?.shown ?? true };
+}
 
 export type LocalePanel = {
   locale: string;
@@ -53,7 +99,9 @@ export type IdenticalWatch = { names: readonly string[]; warning: string; mark: 
  * setting shared by both languages never hides behind a language tab.
  *
  * Everything below it is uncontrolled — plain `defaultValue` fields the browser owns — so this
- * component holds which language is on top and which tabs are marked unfinished.
+ * component holds which language is on top and which tabs are marked unfinished, **and which folds
+ * are open** (§363): a fold inside a panel and its twin in the other language are one fold, so the
+ * description opened in Română is open in English (`useTwinFold`).
  *
  * With JavaScript off, the first tab is the visible one and the rest are unreachable. That is a
  * degradation and not a data loss: every hidden field still carries its `defaultValue`, so a save
@@ -87,6 +135,16 @@ export default function LocaleTabPanels({
   const revealed = useRef(false);
   const root = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  /*
+    The folds' shared state (§363), one store per strip for the strip's life. Each panel's value is
+    kept stable across the re-renders typing causes (the marks), so a fold's editor re-renders on
+    a tab change or its own fold's change, never on a keystroke elsewhere in the strip.
+  */
+  const [folds] = useState(createTwinFoldStore);
+  const panelFolds = useMemo(
+    () => panels.map((panel, index): TwinFoldPanel => ({ store: folds, locale: panel.locale, shown: index === active })),
+    [folds, panels, active],
+  );
 
   /** Bring panel `index` forward — the DOM attribute at once, React's state after it. */
   const bringForward = useCallback((index: number, element: HTMLElement | null) => {
@@ -249,7 +307,7 @@ export default function LocaleTabPanels({
           // Which language a box belongs to, for `SubmitButton`'s "fill in first: English: Titlu".
           data-language={panel.label}
         >
-          {panel.content}
+          <TwinFoldProvider value={panelFolds[index]}>{panel.content}</TwinFoldProvider>
         </Box>
       ))}
     </Box>

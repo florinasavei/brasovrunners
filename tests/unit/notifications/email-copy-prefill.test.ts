@@ -39,11 +39,17 @@ import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modu
  * would have sent that title to every participant of every event. "Also all emails text must
  * include these placeholders!"
  */
-const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
+/**
+ * Every message the club's words editor is under. Not the organizer's message (§364): it is written
+ * per send, on the event's page — the page draws no editor for it, the save refuses an entry for it
+ * and the send ignores one — so its card is pinned below, on its own.
+ */
+type EditedType = Exclude<EmailMessageType, "ORGANIZER_MESSAGE">;
+const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type): type is EditedType => type !== "ORGANIZER_MESSAGE");
 const LOCALES = ["ro", "en"] as const;
 
 /** What each message's platform text is made of, field by field, in both languages. */
-const EXPECTED: Record<EmailMessageType, EmailCopyPlaceholder[]> = {
+const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   VERIFY_REGISTRATION_EMAIL: ["eventTitle"],
   COMPLETE_DECLARATION: ["eventTitle", "holdExpiresAtFormatted"],
   WAITLIST_JOINED: ["eventTitle"],
@@ -387,7 +393,8 @@ describe("§359 a saved text with sample values is found in either language", ()
 
   it("feeds the closed card's marker and the card of cards from both languages, not only the one on screen", () => {
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
-    expect(page).toContain("const sampleLanguages = mayWrite ? sampleLanguagesOf(written.copy, messageType) : [];");
+    // Every message with words to edit — not the organizer's, written per send (§364).
+    expect(page).toContain("const sampleLanguages = mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : [];");
     expect(page).toContain("const anySamples = cards.some((card) => card.sampleLanguages.length > 0);");
     expect(page).toMatch(/sampleLanguages\.length > 0\s*\?\s*\{ sampleValues: t\("emails\.copy\.sampleMarker", \{ languages: sampleLanguages/);
   });
@@ -553,6 +560,60 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
     const old = oldStartingText("EVENT_UPDATE_NOTICE", "ro");
     expect(old.paragraphs.some((paragraph) => paragraph.startsWith("Locul de întâlnire este acum"))).toBe(true);
     expect(replaceSampleValues(old, "EVENT_UPDATE_NOTICE", "ro").paragraphs).toEqual(emailCopyPrefill("EVENT_UPDATE_NOTICE", "ro").paragraphs);
+  });
+});
+
+/*
+  The organizer's message beside §359 (§364): written per send, so its card on `/admin/emails`
+  previews the one sample message — from the same constant as every other preview — and carries
+  neither the words editor nor the sample-value marker.
+*/
+describe("§364 the organizer's message on the page of every email", () => {
+  it("previews the sample message from the one sample constant, each half in its own language", () => {
+    for (const locale of LOCALES) {
+      const data = emailSampleData(locale);
+      const other = locale === "ro" ? "en" : "ro";
+      expect(data.organizerSubject).toBe(EMAIL_SAMPLE[locale].organizerSubject);
+      expect(data.organizerBodyOther).toBe(EMAIL_SAMPLE[other].organizerBody);
+    }
+    const preview = renderBilingual("ORGANIZER_MESSAGE", "ro", emailSampleData("ro"), emailSampleActionUrl("ro"));
+    // The English half reads the English title, as the send does (`render.ts`).
+    expect(preview.subject).toBe("Vreme rea la Crosul de toamnă: startul se mută la 10:00 / Bad weather at The autumn cross: the start moves to 10:00");
+    const [romanian, english] = preview.text.split("— — —");
+    expect(romanian).toContain("Salut, Ana Popescu!");
+    expect(english).toContain("Hi, Ana Popescu!");
+    expect(english).toContain("A message from the organizers of The autumn cross");
+    expect(english).not.toContain("Prognoza anunță");
+  });
+
+  it("gives the other language's title to the organizer's message alone: every other preview's second half is as its send", () => {
+    // What every other message sends (§354): the registrant's title in both halves, whatever the sample carries.
+    const verify = renderBilingual("VERIFY_REGISTRATION_EMAIL", "ro", emailSampleData("ro"), emailSampleActionUrl("ro"));
+    const withoutOther = renderBilingual(
+      "VERIFY_REGISTRATION_EMAIL",
+      "ro",
+      { ...emailSampleData("ro"), eventTitleOther: undefined, eventChecklistOther: undefined },
+      emailSampleActionUrl("ro"),
+    );
+    expect(verify).toEqual(withoutOther);
+    expect(verify.text.split("— — —")[1]).toContain("Crosul de toamnă");
+  });
+
+  it("is no sample value the save refuses: its sample holds placeholders and ordinary words", () => {
+    for (const locale of LOCALES) {
+      for (const text of [EMAIL_SAMPLE[locale].organizerSubject, EMAIL_SAMPLE[locale].organizerBody]) {
+        expect(unknownPlaceholders(text)).toEqual([]);
+        expect(emailSampleLiteralsIn(text, "ORGANIZER_MESSAGE")).toEqual([]);
+      }
+    }
+  });
+
+  it("draws no editor and no sample-value marker for it, and says where it is written", () => {
+    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/admin/emails/page.tsx"), "utf8");
+    expect(page).toContain('return messageType === "ORGANIZER_MESSAGE";');
+    expect(page).toContain("const own = perSend(messageType) ? null : copyFor(written.copy, messageType, emailLocale);");
+    expect(page).toContain("mayWrite && !perSend(messageType) ? sampleLanguagesOf(written.copy, messageType) : []");
+    expect(page).toMatch(/editor: perSend\(messageType\) \? \(\s*<Alert severity="info"[^>]*data-testid="email-per-send"/);
   });
 });
 
