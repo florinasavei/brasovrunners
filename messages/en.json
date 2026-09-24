@@ -1636,6 +1636,7 @@
       "editor": {
         "heading": "Section heading",
         "paragraph": "Paragraph",
+        "paragraphShort": "Text",
         "link": "Link",
         "linkUrl": "Link address",
         "linkApply": "Apply link",
