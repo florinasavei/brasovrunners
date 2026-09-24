@@ -735,6 +735,8 @@ export default async function EventFieldsForm({
                 moveLinkUp: t("editor.coHostRows.moveLinkUp"),
                 moveLinkDown: t("editor.coHostRows.moveLinkDown"),
                 link: t("editor.coHostRows.link"),
+                // The card's number is the island's to fill in, so the placeholder travels as itself.
+                ofPartner: t("editor.coHostRows.ofPartner", { p: "{p}" }),
               }}
             />
           </Stack>

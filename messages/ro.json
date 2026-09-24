@@ -914,6 +914,7 @@
         "moveLinkUp": "Mută mai sus linkul",
         "moveLinkDown": "Mută mai jos linkul",
         "link": "Linkul",
+        "ofPartner": "al partenerului {p}",
         "nameError": "Partenerul {p}: partenerul are nevoie de un nume",
         "kindError": "Partenerul {p}, linkul {l}: alege tipul din listă",
         "urlError": "Partenerul {p}, linkul {l}: adresa trebuie să înceapă cu https://",

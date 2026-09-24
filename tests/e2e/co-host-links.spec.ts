@@ -42,13 +42,14 @@ test("the editor adds a partner with two links, and the preview shows both under
   const coHostsSection = page.locator('[id="field-event.coHosts"]');
   await field("event.coHosts[0].name").fill(partnerName);
 
-  const link1 = coHostsSection.getByRole("group", { name: "Linkul 1" });
+  // Named with the partner (§NNN, batch integration): "Linkuri și fișiere" has its own "Linkul 1".
+  const link1 = coHostsSection.getByRole("group", { name: "Linkul 1 al partenerului 1", exact: true });
   await link1.getByRole("combobox").click();
   await page.getByRole("option", { name: "Site-ul partenerului" }).click();
   await field("event.coHosts[0].links[0].url").fill(SITE_URL);
 
   await coHostsSection.getByRole("button", { name: "Adaugă un link" }).click();
-  const link2 = coHostsSection.getByRole("group", { name: "Linkul 2" });
+  const link2 = coHostsSection.getByRole("group", { name: "Linkul 2 al partenerului 1", exact: true });
   await link2.getByRole("combobox").click();
   await page.getByRole("option", { name: "Facebook" }).click();
   await field("event.coHosts[0].links[1].url").fill(FACEBOOK_URL);

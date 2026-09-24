@@ -59,6 +59,24 @@ describe("§NNN one event form for five features, on both pages", () => {
     expect(ACTIONS.match(/refused\(error, form, \{ fieldNames: eventFormFieldNames \}\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 
+  /**
+   * The partners' cards and "Linkuri și fișiere" landed on one form, each numbering its rows
+   * "Linkul 1", "Linkul 2" and its buttons "Șterge linkul 1": two groups and two buttons with one
+   * accessible name each, which a screen reader cannot tell apart and the §332 spec tripped over.
+   * A partner's link now says whose it is.
+   */
+  it("names a partner's link rows and buttons with the partner, so no two rows share a name", () => {
+    const editor = read(`${UI_DIR}/CoHostRowsEditor.tsx`);
+    expect(editor).toContain('labels.ofPartner.replace("{p}", String(n))');
+    for (const name of ["labels.link", "labels.moveLinkUp", "labels.moveLinkDown", "labels.removeLink"]) {
+      expect(editor).toContain(`\${${name}} \${ln}`);
+    }
+    expect(EVENT_FORM).toContain('ofPartner: t("editor.coHostRows.ofPartner", { p: "{p}" })');
+    for (const file of ["messages/ro.json", "messages/en.json"]) {
+      expect(JSON.parse(read(file)).Admin.editor.coHostRows.ofPartner, file).toContain("{p}");
+    }
+  });
+
   it("reads each of the batch's fields exactly once", () => {
     for (const key of [
       "costType",

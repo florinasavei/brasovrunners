@@ -914,6 +914,7 @@
         "moveLinkUp": "Move up link",
         "moveLinkDown": "Move down link",
         "link": "Link",
+        "ofPartner": "of partner {p}",
         "nameError": "Partner {p}: a partner needs a name",
         "kindError": "Partner {p}, link {l}: choose the kind from the list",
         "urlError": "Partner {p}, link {l}: the address must start with https://",

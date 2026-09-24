@@ -71,7 +71,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await field("event.routeUrl").fill(ROUTE_LINK);
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.
-    const firstLink = page.getByRole("group", { name: "Linkul 1" });
+    // Exact: a partner's card on the same form has its own "Linkul 1 al partenerului 1" (§NNN).
+    const firstLink = page.getByRole("group", { name: "Linkul 1", exact: true });
     await firstLink.getByRole("combobox").click();
     await page.getByRole("option", { name: "Traseul (GPX)" }).click();
     await field("event.links[0].url").fill(GPX_LINK);
@@ -164,7 +165,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".
     await expect(page.locator('[name="event.links[0].url"]')).toHaveValue(GPX_LINK);
-    await page.getByRole("button", { name: "Șterge linkul 1" }).click();
+    await page.getByRole("button", { name: "Șterge linkul 1", exact: true }).click();
     await expect(page.locator('[name="event.links[0].url"]')).toHaveCount(0);
     // The event is published now, so the save carries the live-edit acknowledgement for the
     // whole form (BR-REQ-051-01 criterion 4) — and cannot be sent without it: the box is

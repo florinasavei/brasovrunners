@@ -122,6 +122,13 @@ function CoHostRowsEditorIsland({
     moveLinkUp: string;
     moveLinkDown: string;
     link: string;
+    /**
+     * "al partenerului {p}" — said after every link row's name and its buttons, with `{p}`
+     * replaced by the card's number (§NNN, batch integration). "Linkuri și fișiere" (§332) sits
+     * on the same form with its own "Linkul 1" and "Șterge linkul 1"; without the partner in the
+     * name, a screen reader heard two identical groups and two identical buttons.
+     */
+    ofPartner: string;
   };
   /** Each link kind's word, already translated — the same word the page shows when a label is empty. */
   kindLabels: Record<CoHostLinkKind, string>;
@@ -220,7 +227,8 @@ function CoHostRowsEditorIsland({
               <Stack spacing={1} id={recall.idOf(`event.coHosts[${index}].links`)} tabIndex={-1} sx={{ outline: "none" }}>
                 {links.map(({ key: linkKey, value }, linkIndex) => {
                   const box = (field: keyof CoHostLinkRowValue) => `event.coHosts[${index}].links[${linkIndex}].${field}`;
-                  const ln = linkIndex + 1;
+                  // "1 al partenerului 2": the link's number and whose it is, in every name below.
+                  const ln = `${linkIndex + 1} ${labels.ofPartner.replace("{p}", String(n))}`;
                   return (
                     <Stack
                       key={linkKey}
