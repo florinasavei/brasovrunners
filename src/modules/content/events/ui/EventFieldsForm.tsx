@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import { readBibDesign } from "@/modules/registrations/bib-design";
+import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import BibDesignPanel from "./BibDesignPanel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -9,15 +10,19 @@ import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
-import { textFieldConstraints } from "@/shared/forms/constraints";
+import { EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS, readEventLinks } from "@/modules/events/domain/links";
+import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { type EventFieldName, eventInputConstraints } from "../constraints";
+import { eventLinkRowSchema } from "../fields";
 import CoHostRowsEditor from "./CoHostRowsEditor";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
+import LinkRowsEditor from "./LinkRowsEditor";
 import OnlyForType from "./OnlyForType";
+import PlaceToBeAnnounced from "./PlaceToBeAnnounced";
 import ScheduleRowsEditor from "./ScheduleRowsEditor";
 import TypeNote from "./TypeNote";
 import WallTimeField from "./WallTimeField";
@@ -134,6 +139,14 @@ export default async function EventFieldsForm({
   const coHostRows = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null }).map((host) => ({
     name: host.name,
     url: host.url ?? "",
+  }));
+
+  /** The links as boxes (§332), read through the one function that decides what a stored row means. */
+  const linkRows = readEventLinks(event?.links ?? null).map((link) => ({
+    kind: link.kind,
+    url: link.url,
+    labelRo: link.labelRo ?? "",
+    labelEn: link.labelEn ?? "",
   }));
 
   /** One sentence per type, for the note under the select (§170). */
@@ -261,25 +274,37 @@ export default async function EventFieldsForm({
             redundant"): a name, a street, or both, as one would tell a friend. The column the
             second box wrote, `location_address`, stays for the rows that have one and is shown
             where it exists; nothing writes it any more.
-          */}
-          <RecallField
-            name="event.locationName"
-            label={t("editor.fields.locationName")}
-            helperText={t("editor.locationHelp")}
-            defaultValue={[event?.locationName, event?.locationAddress].filter(Boolean).join(", ")}
-            {...box("locationName")}
-          />
 
-          {/* Where to meet, as one pasted link. Coordinates were asked for here until
-              `DECISIONS.md` §61: two decimal numbers to produce a link the organizer could
-              paste in one move. */}
-          <RecallField
-            name="event.mapUrl"
-            label={t("editor.mapUrl")}
-            helperText={t("editor.mapUrlHelp")}
-            defaultValue={event?.mapUrl ?? ""}
-            {...box("mapUrl", { inputMode: "url" })}
-          />
+            Above it, whether the place is announced at all (§328; the owner: "I want to be able
+            to set the location as TBD, and to not announce it yet"). The switch is the island;
+            the box's constraints are still read here, off the schema, and handed to it as data
+            — the island only takes `required` away while the switch is on.
+          */}
+          <PlaceToBeAnnounced
+            defaultChecked={event?.locationToBeAnnounced ?? false}
+            labels={{
+              toggle: t("editor.placeToBeAnnounced"),
+              toggleHelp: t("editor.placeToBeAnnouncedHelp"),
+              locationName: t("editor.fields.locationName"),
+              locationHelp: t("editor.locationHelp"),
+              unpublished: t("editor.placeUnpublished"),
+            }}
+            locationName={{
+              defaultValue: [event?.locationName, event?.locationAddress].filter(Boolean).join(", "),
+              box: box("locationName"),
+            }}
+          >
+            {/* Where to meet, as one pasted link. Coordinates were asked for here until
+                `DECISIONS.md` §61: two decimal numbers to produce a link the organizer could
+                paste in one move. Kept, and not shown, while the place is to be announced. */}
+            <RecallField
+              name="event.mapUrl"
+              label={t("editor.mapUrl")}
+              helperText={t("editor.mapUrlHelp")}
+              defaultValue={event?.mapUrl ?? ""}
+              {...box("mapUrl", { inputMode: "url" })}
+            />
+          </PlaceToBeAnnounced>
 
           {/* The programme as rows (§117) — not on a group run (§111), like the registration
               block. The caption under the rows names the notes fold in the language panels, so
@@ -346,6 +371,19 @@ export default async function EventFieldsForm({
               helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
               defaultValue={event?.capacity ?? ""}
               {...box("capacity", { inputMode: "numeric" })}
+            />
+
+            {/* Who may enter (§329, amending §321: "actually this min age must be set at event
+                level!"): years reached by the event's day, fourteen unless the organizer says
+                otherwise, zero for none. In this panel, so a group run — which takes nobody's
+                registration (§111) — never shows it. The bounds are the schema's (§315). */}
+            <RecallField
+              name="event.minAge"
+              label={t("editor.minAge")}
+              helperText={t("editor.minAgeHelp")}
+              defaultValue={event?.minAge ?? MIN_PARTICIPANT_AGE}
+              {...box("minAge", { inputMode: "numeric" })}
+              sx={{ width: { sm: 220 } }}
             />
 
             {/*
@@ -585,6 +623,37 @@ export default async function EventFieldsForm({
               defaultValue={event?.elevationGainMeters ?? ""}
               {...box("elevationGainMeters", { inputMode: "numeric" })}
               sx={{ flex: 1 }}
+            />
+          </Stack>
+
+          {/* "Linkuri și fișiere" (§332), beside the route because that is what most of them
+              are — the GPX on Google Drive, the map on a platform — and then the rest: a PDF,
+              the album, the results. Links, never an upload (`AGENTS.md` §17). */}
+          <Stack spacing={1}>
+            <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
+              {t("editor.linksSection")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("editor.linksHelp", { max: MAX_EVENT_LINKS })}
+            </Typography>
+            <LinkRowsEditor
+              initial={linkRows}
+              kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+              constraints={{
+                url: htmlConstraints(eventLinkRowSchema.shape.url),
+                label: htmlConstraints(eventLinkRowSchema.shape.labelRo),
+              }}
+              labels={{
+                kind: t("editor.linkRows.kind"),
+                url: t("editor.linkRows.url"),
+                labelRo: t("editor.linkRows.labelRo"),
+                labelEn: t("editor.linkRows.labelEn"),
+                add: t("editor.linkRows.add"),
+                remove: t("editor.linkRows.remove"),
+                moveUp: t("editor.linkRows.moveUp"),
+                moveDown: t("editor.linkRows.moveDown"),
+                row: t("editor.linkRows.row"),
+              }}
             />
           </Stack>
 

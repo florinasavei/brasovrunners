@@ -213,6 +213,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {members.some((member) => member.event.featured) && (
                 <Chip size="small" color="primary" label={t("events.featured")} />
               )}
+              {/* The place is not announced yet (§328): the next date's state, the one the
+                  public listing shows. Staff see the typed place in the editor, marked there. */}
+              {next.event.locationToBeAnnounced && (
+                <Chip size="small" variant="outlined" color="warning" label={t("events.placeToBeAnnounced")} />
+              )}
             </Stack>
             {sentence && (
               <Typography variant="body2" color="text.secondary">
@@ -392,6 +397,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {saved === "eventErased" && (
           <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
         )}
+        {/* An event erased with everyone on it leaves the same copies outside the database as
+            one erased registration (§322): the same list, by hand. */}
+        {saved === "eventErased" && Number(erased) > 0 && (
+          <Alert severity="info" data-testid="erase-leftovers" sx={{ mt: 1 }}>
+            {t("registrations.eraseLeftovers")}
+          </Alert>
+        )}
         {saved &&
           !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>
@@ -558,6 +570,22 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                       label: t("events.registrationsLink", { count: entries }),
                       href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
                     },
+                    /*
+                      The emergency sheet (§322), for an event with its own queue and one date:
+                      the phones, the contacts and the health notes of everyone confirmed, on one
+                      printable page. A series' ⋮ belongs to a folded group of dates and could
+                      not say which one's sheet it meant, as with the hard delete below.
+                    */
+                    ...(canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && !isSeries
+                      ? [
+                          {
+                            kind: "link" as const,
+                            icon: "emergency" as const,
+                            label: t("events.emergencySheet"),
+                            href: getPathname({ locale, href: { pathname: "/admin/events/[id]/urgente", params: { id: event.id } } }),
+                          },
+                        ]
+                      : []),
                     {
                       kind: "submit",
                       icon: "duplicate",

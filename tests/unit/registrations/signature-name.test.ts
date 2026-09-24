@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { foldName } from "@/modules/registrations/domain/name-fold";
-import { expectedSignatureName, signatureNameMatches } from "@/modules/registrations/domain/signature-name";
+import {
+  expectedSignatureName,
+  expectedSignatures,
+  mismatchedSignatures,
+  signatureNameMatches,
+} from "@/modules/registrations/domain/signature-name";
 
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature is the declarant's name, typed exactly.
@@ -111,5 +116,61 @@ describe("BR-REQ-033-02 §314 §108 whose name the signature must be", () => {
     expect(expectedSignatureName(minor)).toBe("Ion Popescu");
     expect(signatureNameMatches("Ion Popescu", expectedSignatureName(minor))).toBe(true);
     expect(signatureNameMatches("Maria Popescu", expectedSignatureName(minor))).toBe(false);
+  });
+});
+
+/**
+ * §330 — a minor's declaration is signed by two, where the declaration in effect asks it: the
+ * minor, with the name they were registered under, and the parent or guardian, as the declarant.
+ * One pure pair of functions for the page and the service, so the red boxes and the refusal always
+ * name the same ones.
+ */
+describe("§330 who signs, and which box is wrong", () => {
+  const adult = { registeredName: "Florin Munca", guardianName: null };
+  const minor = { registeredName: "Maria Popescu", guardianName: "Ion Popescu" };
+  const gateOn = { minorSigns: true };
+  const gateOff = { minorSigns: false };
+
+  it("expects one signature from an adult and two for a minor — the child's own and the parent's", () => {
+    expect(expectedSignatures(adult, gateOn)).toEqual({ typedName: "Florin Munca", minorTypedName: null });
+    expect(expectedSignatures(minor, gateOn)).toEqual({ typedName: "Ion Popescu", minorTypedName: "Maria Popescu" });
+    // An empty guardian is no guardian: the same truthiness `declarantValues` uses.
+    expect(expectedSignatures({ registeredName: "Ana Pop", guardianName: "" }, gateOn)).toEqual({ typedName: "Ana Pop", minorTypedName: null });
+  });
+
+  /*
+    The production gate (§330): under a declaration that does not name the minor's own document —
+    every text the club approved before two signatures — a minor's declaration is the parent's
+    alone, as it was (§108, §314). An adult's is the same either way.
+  */
+  it("expects the parent's signature alone for a minor when the text does not ask the minor to sign", () => {
+    expect(expectedSignatures(minor, gateOff)).toEqual({ typedName: "Ion Popescu", minorTypedName: null });
+    expect(expectedSignatures(adult, gateOff)).toEqual(expectedSignatures(adult, gateOn));
+  });
+
+  it("never finds the minor's box wrong when it is not asked, whatever was posted in it", () => {
+    const expected = expectedSignatures(minor, gateOff);
+    expect(mismatchedSignatures({ typedName: "Ion Popescu" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "ion popescu", minorTypedName: "anybody" }, expected)).toEqual([]);
+    // The parent's box is checked exactly as before: the child's name in it is still refused.
+    expect(mismatchedSignatures({ typedName: "Maria Popescu" }, expected)).toEqual(["typedName"]);
+  });
+
+  it("names every box whose signature is not its name, the minor's first", () => {
+    const expected = expectedSignatures(minor, gateOn);
+    expect(mismatchedSignatures({ typedName: "ion popescu", minorTypedName: "Maria Popescu" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "Maria Popescu", minorTypedName: "Maria Popescu" }, expected)).toEqual(["typedName"]);
+    expect(mismatchedSignatures({ typedName: "Ion Popescu", minorTypedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName"]);
+    // The two names swapped — the mistake two people at one screen are likeliest to make.
+    expect(mismatchedSignatures({ typedName: "Maria Popescu", minorTypedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName", "typedName"]);
+    // A minor's box that was never filled is a signature missing, not a signature forgiven.
+    expect(mismatchedSignatures({ typedName: "Ion Popescu" }, expected)).toEqual(["minorTypedName"]);
+    expect(mismatchedSignatures({ typedName: "Ion Popescu", minorTypedName: "   " }, expected)).toEqual(["minorTypedName"]);
+  });
+
+  it("never finds an adult's absent second box wrong, whatever was posted in it", () => {
+    const expected = expectedSignatures(adult, gateOn);
+    expect(mismatchedSignatures({ typedName: "Florin Munca", minorTypedName: "anybody" }, expected)).toEqual([]);
+    expect(mismatchedSignatures({ typedName: "Florin Munca2" }, expected)).toEqual(["typedName"]);
   });
 });

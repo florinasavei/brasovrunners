@@ -1,7 +1,7 @@
-import { createHash } from "node:crypto";
 import type { Database } from "@/db/types";
 import type { SmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
+import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import type { TurnstileVerdict } from "@/modules/registrations/turnstile";
@@ -159,5 +159,5 @@ function elapsedSince(renderedAt: string | undefined, now: Date): number | null 
 
 /** The bucket's key: equality is all it needs, so the address itself never sits in the table. */
 function bucketKey(canonicalEmail: string): string {
-  return createHash("sha256").update(`contact-message:${canonicalEmail}`).digest("hex");
+  return emailBucketKey("contact-message", canonicalEmail);
 }

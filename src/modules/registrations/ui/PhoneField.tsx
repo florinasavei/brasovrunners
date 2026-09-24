@@ -87,7 +87,7 @@ function PhoneFieldIsland({
   name,
   label,
   countryLabel,
-  locale,
+  countryOrder,
   value,
   draft,
   required = false,
@@ -104,7 +104,12 @@ function PhoneFieldIsland({
   name: string;
   label: string;
   countryLabel: string;
-  locale: "ro" | "en";
+  /**
+   * The prefixes in the order to show them, from `phoneCountryOrder` on the server (§324): the
+   * browser's ICU names countries differently from Node's, so a sort made here disagreed with
+   * the server's markup and cost the form its hydration.
+   */
+  countryOrder: readonly string[];
   /** A stored E.164 number to prefill, or nothing. */
   value?: string | null;
   /** What was typed before a rejected submit (§142): the two boxes as posted, over `value`. */
@@ -132,7 +137,6 @@ function PhoneFieldIsland({
   /** What precedes the composed number once it is valid: "we will ring". */
   validLabel?: string;
 }) {
-  const names = new Intl.DisplayNames([locale], { type: "region" });
   const split = splitPhone(value ?? null);
   const initialCountry =
     draft?.country && (PHONE_COUNTRY_CODES as readonly string[]).includes(draft.country)
@@ -246,15 +250,12 @@ function PhoneFieldIsland({
     Still sorted by the country's name in the reader's language, Romania first. The names are
     no longer drawn, but the order they give is the one somebody scanning flags expects;
     sorting by the emoji would order by codepoint, which is ISO order and looks arbitrary to
-    anybody not reading the letters.
+    anybody not reading the letters. The order arrives from the server (`countryOrder`, §324):
+    sorted here, the browser's names disagreed with Node's and the form lost its hydration.
   */
-  const options = PHONE_COUNTRY_CODES.map((code) => ({
-    code,
-    name: names.of(code) ?? code,
-    label: `${flagEmoji(code)} +${DIALING_CODES[code]}`,
-  })).sort((a, b) =>
-    a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.name.localeCompare(b.name, locale),
-  );
+  const options = countryOrder
+    .filter((code) => code in DIALING_CODES)
+    .map((code) => ({ code, label: `${flagEmoji(code)} +${DIALING_CODES[code]}` }));
 
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>

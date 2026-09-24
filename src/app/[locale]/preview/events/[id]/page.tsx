@@ -13,8 +13,11 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
+import { withoutPlaces } from "@/modules/events/domain/schedule";
 import type { PublicEvent } from "@/modules/events/repository";
+import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventLinks from "@/modules/events/ui/EventLinks";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -83,6 +86,9 @@ export default async function PreviewEventPage({ params }: Props) {
    * `events` or `event_translations` cannot arrive on a public component by accident — the
    * public queries name their columns for the same reason (BR-REQ-070-01).
    */
+  // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
+  // so the preview shows the sentence the page will show — including the programme rows' places.
+  const placeLater = event.locationToBeAnnounced;
   const preview: PublicEvent = {
     id: event.id,
     type: event.type,
@@ -92,7 +98,7 @@ export default async function PreviewEventPage({ params }: Props) {
     endsAt: event.endsAt,
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
-    mapUrl: event.mapUrl,
+    mapUrl: placeLater ? null : event.mapUrl,
     routeUrl: event.routeUrl,
     videoUrl: event.videoUrl,
     stravaEventUrl: event.stravaEventUrl,
@@ -105,6 +111,7 @@ export default async function PreviewEventPage({ params }: Props) {
     registrationClosesAt: event.registrationClosesAt,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
+    minAge: event.minAge,
     updatedAt: event.updatedAt,
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,
@@ -112,8 +119,9 @@ export default async function PreviewEventPage({ params }: Props) {
     // One value for the whole event (`DECISIONS.md` §36), so the preview reads them from the
     // event row exactly as the public page does — the place's *name* in this language first,
     // when the club gave it one (migration `0058`), as `PUBLIC_COLUMNS` reads it.
-    locationName: translation.locationName?.trim() || event.locationName,
-    locationAddress: event.locationAddress,
+    locationName: placeLater ? null : translation.locationName?.trim() || event.locationName,
+    locationAddress: placeLater ? null : event.locationAddress,
+    locationToBeAnnounced: placeLater,
     difficulty: event.difficulty,
     costType: event.costType,
     slug: translation.slug,
@@ -124,10 +132,11 @@ export default async function PreviewEventPage({ params }: Props) {
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
-    scheduleItems: event.scheduleItems,
+    scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,
+    links: event.links,
     isSpecial: event.isSpecial,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
@@ -165,6 +174,14 @@ export default async function PreviewEventPage({ params }: Props) {
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
+
+      {/* The links (§332), before the programme as on the public page, in the public words. */}
+      <EventLinks
+        links={preview.links}
+        locale={locale}
+        heading={tEvent("links.heading")}
+        kindLabels={Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>}
+      />
 
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />
       {!isRichTextEmpty(readRichText(preview.rulesJson)) && (

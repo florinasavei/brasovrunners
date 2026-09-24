@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { composePhone, DIALING_CODES, formatPhone, PHONE_COUNTRY_CODES, splitPhone } from "@/modules/registrations/phone";
+import { composePhone, DIALING_CODES, formatPhone, PHONE_COUNTRY_CODES, phoneCountryOrder, splitPhone } from "@/modules/registrations/phone";
 import { COUNTRY_CODES } from "@/modules/registrations/countries";
+
+/**
+ * §324 — the prefix select's order is decided on the server and only drawn in the browser, so
+ * a browser whose ICU names countries differently cannot disagree with the server's markup.
+ */
+describe("the phone prefixes' order", () => {
+  it("puts Romania first and offers every prefix exactly once, in either language", () => {
+    for (const locale of ["ro", "en"]) {
+      const order = phoneCountryOrder(locale);
+      expect(order[0]).toBe("RO");
+      expect([...order].sort()).toEqual([...PHONE_COUNTRY_CODES].sort());
+    }
+  });
+});
 
 /** `DECISIONS.md` §84 — a telephone number is stored as one thing a phone can dial. */
 describe("telephone numbers", () => {
