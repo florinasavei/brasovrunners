@@ -6,6 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import { useColorScheme } from "@mui/material/styles";
 import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
+import { footerTargetSx } from "./footer-target";
 
 /**
  * Light or dark, from the footer's bottom-left corner (`DECISIONS.md` §93, moved there in
@@ -17,9 +18,9 @@ import { useSyncExternalStore } from "react";
  * quick-settings tile does. Until mounted the mode is unknown on the client, so the same-sized
  * button renders disabled rather than nothing, and the header does not shift.
  *
- * 32 pixels on a phone, 44 from `sm` up — the footer's own tap-target exception (§NNN, the
- * owner 2026-09-24: "all in 1 row … all visible, smaller"), never used anywhere else this
- * component renders.
+ * A square the footer bar's size (`footer-target.ts`, §NNN): 24 pixels below 360, 28 from 360,
+ * 44 from `sm` up. The footer is the only place this renders. The padding is 2 pixels at every
+ * width so the 20-pixel glyph fits the 24; from `sm` the 44-pixel minimum centres it as before.
  */
 export default function ThemeModeToggle() {
   const t = useTranslations("Site");
@@ -41,7 +42,7 @@ export default function ThemeModeToggle() {
       disabled={!mounted}
       onClick={() => setMode(dark ? "light" : "dark")}
       size="small"
-      sx={{ minHeight: { xs: 32, sm: 44 }, minWidth: { xs: 32, sm: 44 }, color: "text.secondary" }}
+      sx={{ ...footerTargetSx(["minHeight", "minWidth"]), p: "2px", color: "text.secondary" }}
     >
       {mounted && dark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
     </IconButton>

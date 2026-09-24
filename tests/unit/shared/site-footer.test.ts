@@ -6,12 +6,12 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-041-01 (§NNN) — the footer as the server sends it: one row on every width, the build
- * stamp inside the "Despre club" fold on a phone and pinned to the bar's own corner from `md`,
+ * stamp inside the "Despre club" fold below `md` and pinned to the bar's own corner from `md`,
  * RO and EN side by side, and the privacy notice and the language on the always-visible bar.
  *
- * The owner, 2026-09-24: "it should fit all in 1 row" — a phone's footer used to float two
- * lines (§365); this is the row it collapsed into, every item kept and shrunk (32px targets,
- * ~12px text) rather than any of them dropped. The e2e suite measures the bar in a browser
+ * The owner, 2026-09-24: one row on a phone, every item kept but not every word — the privacy
+ * notice a lock, the languages flags, every item a square of 24px below 360, 28px from 360 and
+ * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The e2e suite measures the bar in a browser
  * (`footer.spec.ts`, `build-badge.spec.ts`); pull requests run it on the desktop project only
  * (§209), and the phone is where the complaint was. This runs in `yarn check`, on every commit,
  * and pins the facts the phone depends on to the markup and the styles the server renders.
@@ -84,66 +84,72 @@ function rulesOf(css: string, className: string): string {
   return [...css.matchAll(new RegExp(`(@media[^{]*\\{)?[^{}]*\\.${escaped}(?![\\w-])[^{]*\\{[^}]*\\}\\}?`, "g"))].map((match) => match[0]).join("\n");
 }
 
+/** An element's class rules carry the bar's three sizes (`footer-target.ts`, §NNN). */
+function expectBarTarget(rules: string, properties: readonly string[], what: string) {
+  for (const property of properties) {
+    // 24px, 28px from 360 up to `sm`, 44px from `sm`.
+    expect(rules, `${what}: ${property} 24px on a narrow phone`).toMatch(new RegExp(`(^|[;{])${property}:24px;`));
+    expect(rules, `${what}: ${property} 28px from 360px`).toMatch(
+      new RegExp(`@media \\(min-width:360px\\) and \\(max-width:599\\.95px\\)\\{[^{]*\\{[^}]*${property}:28px;`),
+    );
+    expect(rules, `${what}: ${property} 44px from sm`).toMatch(new RegExp(`@media \\(min-width:600px\\)\\{[^{]*\\{[^}]*${property}:44px;`));
+  }
+  // MUI emits its own breakpoints' queries first, so an open-ended 360 rule would come after
+  // `sm`'s and win on a desktop: the 360 band is closed below `sm`, and never open-ended.
+  expect(rules, `${what}: no open-ended 360 rule`).not.toMatch(/@media \(min-width:360px\)\{/);
+}
+
 describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doors", () => {
   it("renders the build stamp twice: once in the fold's panel, once pinned to the bar's corner", async () => {
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';
     const stamps = html.split(label).length - 1;
-    // One instance for a phone, shown below `md`; one for `md` up, pinned to the bar's own
-    // corner — mutually exclusive by `display`, both present in the markup so CSS alone
-    // decides which one shows.
+    // One instance below `md`, one from `md` pinned to the bar's own corner — mutually
+    // exclusive by `display`, both present in the markup so CSS alone decides which one shows.
     expect(stamps, "two build stamps in the footer's markup").toBe(2);
 
-    // Neither copy is inside `<details>` any more (review finding 2): the fold holds only its
-    // `<summary>`, so opening it never changes the `<details>` element's own size, and the two
-    // build stamps — like the panel around the phone's copy — are its siblings, not its
-    // children. Native `<details>` still owns show and hide; CSS reads its `[open]` state back
-    // via `:has()` on their common ancestor (checked below).
+    // The panel is the fold's own content again (review finding 4): inside `<details>`, after
+    // its `<summary>`. The pinned copy is outside it.
+    const detailsStart = html.indexOf("<details");
+    const summaryEnd = html.indexOf("</summary>");
     const detailsEnd = html.indexOf("</details>");
     const panelStart = html.indexOf('data-testid="footer-about-panel"');
     const pinnedStart = html.indexOf('data-testid="footer-build-badge-pinned"');
-    expect(detailsEnd).toBeGreaterThanOrEqual(0);
-    expect(panelStart).toBeGreaterThan(detailsEnd);
+    expect(detailsStart).toBeGreaterThanOrEqual(0);
+    expect(panelStart).toBeGreaterThan(summaryEnd);
+    expect(panelStart).toBeLessThan(detailsEnd);
     expect(pinnedStart).toBeGreaterThan(detailsEnd);
 
     const first = html.indexOf(label);
     const second = html.indexOf(label, first + 1);
-    // The first copy is inside the panel; the second is inside the pinned corner box.
+    // The first copy is inside the panel, inside the fold; the second is the pinned corner's.
     expect(first).toBeGreaterThan(panelStart);
-    expect(first).toBeLessThan(pinnedStart);
+    expect(first).toBeLessThan(detailsEnd);
     expect(second).toBeGreaterThan(pinnedStart);
     // Still the build and still the staff entrance (§34): the version in the title, the way in
     // named for a screen reader.
     expect(html).toMatch(/title="(BR-V\d+\.\d+|dev)[^"]*"/);
   });
 
-  it("shows the panel only when the fold's own `<details>` is open, read back with `:has()` on their common ancestor", async () => {
-    // Review finding 2: the panel used to be nested inside `<details>`, and opening it grew
-    // that flex item to `calc(100% - 44px)`, which pushed every sibling after it (the marks,
-    // the privacy notice, the language) onto a second flex line — under the whole panel, not
-    // beside the switch and the summary. The panel is a sibling of the row now, and its own
-    // visibility is CSS alone: `display: none` by default, `display: flex` only while an
-    // ancestor `:has()`s the fold's own `<details>[open]`.
+  it("lays the open panel under the row without widening the fold: a zero-wide box, no `:has()`", async () => {
+    // Review finding 4: the panel was a sibling of the row, shown by a `:has()` rule on the
+    // footer, so the `<details>` no longer owned what it disclosed. It is inside again; its box
+    // is zero wide, so it adds nothing to the fold's width on the row, and its content runs to
+    // the bar's right edge under the marks.
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
 
-    const fold = emotionClassOf(markup, 'data-testid="footer-about-fold"');
-    const panel = emotionClassOf(markup, 'data-testid="footer-about-panel"');
-    const bar = rulesOf(css, emotionClassOf(markup, "<footer"));
-    // Attribute selectors, not classes: the rule names the testids directly rather than an
-    // Emotion hash, so it survives a class name changing under it.
-    expect(bar, "the bar's own rules read the fold's open state with :has()").toMatch(
-      /:has\(\[data-testid="footer-about-fold"\]\[open\]\) \[data-testid="footer-about-panel"\]\{[^}]*display:flex;?\}/,
-    );
+    const panel = rulesOf(css, emotionClassOf(markup, 'data-testid="footer-about-panel"'));
+    expect(panel, "the panel's own box is zero wide").toMatch(/width:0;/);
+    expect(panel).toMatch(/overflow:visible;/);
+    expect(css, "no rule reads the fold's state from outside it").not.toMatch(/:has\(/);
 
-    const panelRules = rulesOf(css, panel);
-    expect(panelRules, "the panel is hidden by default").toMatch(/display:none;/);
-
-    // The `<details>` element's own rules no longer grow it on `[open]` (review finding 7's
-    // arithmetic bug lived in that rule, which is gone with it).
-    const detailsRules = rulesOf(css, fold);
-    expect(detailsRules).not.toMatch(/\[open\]/);
+    // One row that never wraps, aligned to the top so an open fold grows downward only.
+    const row = rulesOf(css, emotionClassOf(markup, 'data-testid="footer-about-fold"'));
+    expect(row).not.toMatch(/\[open\]/);
+    // One DOM order at every width (review finding 7): no `order` anywhere in the footer.
+    expect(css).not.toMatch(/(^|[;{])order:/);
   });
 
   it("is not rendered by the page's layout, beside the footer", () => {
@@ -163,24 +169,43 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     expect(bar).toMatch(/position:sticky;/);
     expect(bar).toMatch(/bottom:0;/);
     expect(bar).not.toMatch(/bottom:-/);
-    // The bar's own rules do carry one `:has()`, since §NNN: it is what shows the fold's panel,
-    // a sibling of the row rather than its content (review finding 2, checked on its own above).
 
-    // Both on the bar, outside the fold: after `</details>`, not inside it.
+    // Both on the bar, outside the fold: after `</details>`, not inside it. The marks come
+    // before the notice, and the language last (review finding 7).
     const detailsEnd = markup.indexOf("</details>");
-    expect(markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"')).toBeGreaterThan(detailsEnd);
-    expect(markup.indexOf('aria-label="Limbă"')).toBeGreaterThan(detailsEnd);
+    const marks = markup.indexOf('aria-label="Facebook"');
+    const privacy = markup.indexOf('aria-label="Nota de confidențialitate (GDPR)"');
+    const language = markup.indexOf('aria-label="Limbă"');
+    expect(privacy).toBeGreaterThan(detailsEnd);
+    expect(language).toBeGreaterThan(privacy);
+    if (marks >= 0) expect(privacy).toBeGreaterThan(marks);
+  });
+
+  it("names the privacy notice on the phone's lock: the tooltip and the accessible name are the notice's", async () => {
+    const html = await renderFooter();
+    const markup = markupOnly(html);
+    const css = cssOnly(html);
+    const link = /<a[^>]*aria-label="Nota de confidențialitate \(GDPR\)"[^>]*>([\s\S]*?)<\/a>/.exec(markup);
+    expect(link, "the privacy link").not.toBeNull();
+    expect(link![0]).toMatch(/href="\/ro\/legal\/privacy"/);
+    expect(link![0]).toMatch(/title="Nota de confidențialitate \(GDPR\)"/);
+    // The lock, decorative, shown below `sm`; the word from `sm`.
+    expect(link![1]).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="footer-privacy-lock"|<svg[^>]*data-testid="footer-privacy-lock"[^>]*aria-hidden="true"/);
+    expect(link![1]).toContain("Confidențialitate");
+    const lock = rulesOf(css, emotionClassOf(markup, 'data-testid="footer-privacy-lock"'));
+    expect(lock).toMatch(/display:block;/);
+    expect(lock).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:none;/);
   });
 
   it("reserves room for what the browser scrolls into view", () => {
-    // BR-REQ-041-01 criterion 22: unchanged by the one-row footer, which is shorter than the
-    // two-line bar these values were sized for, so both reserves stay generous.
+    // BR-REQ-041-01 criterion 22: the one-row bar is at most 28px + its border on a phone, so the
+    // reserve is 40px there (was 96 for two 44px lines); 52px from 600px, unchanged.
     const theme = read("src/theme/theme.ts");
-    expect(theme).toMatch(/scrollPaddingBottom: 96,/);
+    expect(theme).toMatch(/scrollPaddingBottom: 40,/);
     expect(theme).toMatch(/"@media \(min-width:600px\)": \{ scrollPaddingTop: 76, scrollPaddingBottom: 52 \}/);
   });
 
-  it("puts RO and EN side by side, 32-pixel targets on a phone, 44 from `sm` up", async () => {
+  it("puts RO and EN side by side as flags on a phone, each a square of the bar's target", async () => {
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
@@ -189,19 +214,21 @@ describe("BR-REQ-041-01 §NNN the footer's one row and the build stamp's two doo
     expect(nav).not.toMatch(/column/);
     for (const attribute of ['aria-current="true"', 'aria-label="English"']) {
       const rules = rulesOf(css, emotionClassOf(markup, attribute));
-      // The footer-only exception (BR-REQ-041-01 criterion 6, §NNN): 32px on a phone, 44 from `sm`.
-      expect(rules, `${attribute} is a 32-pixel target on a phone`).toMatch(/min-height:32px;/);
-      expect(rules, `${attribute} is a 44-pixel target from sm`).toMatch(/min-height:44px;/);
+      expectBarTarget(rules, ["min-height", "min-width"], attribute);
       expect(rules).not.toMatch(/::before/);
     }
+    // The name and the tooltip are the language's own words, whatever shows.
+    expect(markup).toMatch(/aria-label="English"[^>]*title="English"|title="English"[^>]*aria-label="English"/);
+    expect(markup).toMatch(/aria-current="true"[^>]*title="Română"|title="Română"[^>]*aria-current="true"/);
   });
 
-  it("shrinks the scheme switch to a 32-pixel target on a phone, 44 from `sm` up", async () => {
+  it("sizes the scheme switch, the summary and the marks to the bar's target", async () => {
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
-    const toggle = rulesOf(css, emotionClassOf(markup, 'aria-label="Temă întunecată"'));
-    expect(toggle, "the switch is 32px on a phone").toMatch(/min-height:32px;/);
-    expect(toggle, "the switch is 44px from sm").toMatch(/min-height:44px;/);
+    expectBarTarget(rulesOf(css, emotionClassOf(markup, 'aria-label="Temă întunecată"')), ["min-height", "min-width"], "the switch");
+    expectBarTarget(rulesOf(css, emotionClassOf(markup, "<summary")), ["min-height", "line-height"], "the summary");
+    const mark = markup.indexOf('target="_blank"');
+    if (mark >= 0) expectBarTarget(rulesOf(css, emotionClassOf(markup, 'target="_blank"')), ["width", "height"], "a mark");
   });
 });

@@ -1,3 +1,4 @@
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -7,100 +8,67 @@ import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 import BuildBadge from "./BuildBadge";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
+import { footerTargetSx } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
- * The height of the footer's line, from `sm` up and inside the fold's panel at every width.
- * Thin, by the owner's instruction: the bar sits at the bottom of every page and should cost as
- * little of the screen as a tap target allows. It was 40px while the line held a disclosure and
- * the social marks; since the scheme switch moved here (§115) the line carries a control, and
- * 44px is what BR-REQ-041-01 asks of one.
+ * The height of the bar from `sm` up, and of every link inside the fold's panel at every width.
+ * 44px is what BR-REQ-041-01 asks of a control; the bar is one line of them.
  */
 const BAR_HEIGHT = 44;
 
 /**
- * The bar's height on a phone (§NNN, the owner 2026-09-24: "all in 1 row … all visible,
- * smaller"). A footer-only exception to BR-REQ-041-01 criterion 6's 44px: every item here is a
- * 32px target instead, so the whole line — the switch, the fold, three marks, the notice and
- * both languages — fits in 320px without dropping anything. The fold's own panel, once opened,
- * stays at the ordinary 44px throughout; only the closed bar shrinks.
- */
-const BAR_HEIGHT_XS = 32;
-
-/** The scheme switch's own width: the first item on the line, and what an open fold leaves room for. */
-const SWITCH_WIDTH = 44;
-/** The switch's width on a phone (§NNN): the same 32px exception as `BAR_HEIGHT_XS`. */
-const SWITCH_WIDTH_XS = 32;
-
-/** Each social mark's link: a full tap target (BR-REQ-041-01 criterion 6), the 20px glyph inside it. */
-const MARK_TARGET = 44;
-/**
- * A mark's target on a phone (§NNN): 28px, the glyph still 20px inside it — still above the
- * 24px floor WCAG 2.5.5 AA allows, and the one item on the row still shrunk after the switch,
- * the fold's summary, the privacy notice and the language had each already given up their own
- * padding (finding 1 of the review) and the row at 320px was still 6px short of "Despre club"
- * uncut. Nothing else on the row could give up more without losing its own text or its target
- * height; three marks at 4px each closed the gap with room to spare.
- */
-const MARK_TARGET_XS = 28;
-
-/**
- * The footer: one thin line on every width, with everything on it — never two lines any more.
+ * The footer: one thin row on every width, with everything on it.
  *
  * History: §323 put the privacy notice on the bar, outside the fold, read by its own name.
  * §324 gave a phone a second line for it and the language, since there was no room on the
- * first. §365 shortened that second line and moved the build stamp into the fold's panel, off
- * the bar entirely. This is the next step, and the owner chose which way it goes: "it should
- * fit all in 1 row" — asked what gives way, "All visible, smaller."
+ * first. §365 shortened that second line and moved the build stamp into the fold's panel.
  *
- * ## One row on a phone, every item smaller (§NNN, the owner, 2026-09-24)
+ * ## One row on a phone: every item, not every word (§NNN, the owner, 2026-09-24)
  *
- * A phone's bar is one row, always, in this order: the theme switch, the "Despre club" fold's
- * summary with its text on screen, the three social marks, the privacy notice by its name, then
- * RO and EN. Nothing drops — every item that was on the bar before is still on it — so what
- * gives is size: a **footer-only exception to BR-REQ-041-01 criterion 6**, 32px targets instead
- * of 44 (`BAR_HEIGHT_XS`, `SWITCH_WIDTH_XS`, `MARK_TARGET_XS`) and roughly 12px text, so the
- * whole line fits in 320px. The exception stops at the bar: the fold's panel, once opened, is
- * 44px throughout, like every other page, and `sm` up keeps the original 44px bar too — nothing
- * here changes above a phone. The language's flag icons are the one thing that actually drops on
- * a phone (`LocaleSwitcher`): the two-letter code alone still says which is which, and a flag
- * costs width a code does not.
+ * The owner asked for one row. Eight items with their words — the switch, "Despre club", three
+ * marks, "Confidențialitate", RO and EN — need about 370 pixels, and a phone has 288 to 328, so
+ * the bar keeps every item but not every word. On a phone, in this order, which is also the DOM
+ * order and the order from `sm` up (no `order` anywhere):
  *
- * The row's item order matches this reading order directly — `order` values only diverge
- * between `xs` and `sm` where the two need to differ (the marks sit before the privacy notice on
- * a phone, after it — DOM order, `order: 0` — from `sm` up, exactly as they did before this
- * change; review finding 3 caught them agreeing at every width instead, which put the marks
- * first on a desktop too).
+ * - the theme switch, in the bar's own corner (criterion 11);
+ * - the "Despre club" fold's summary, with its words — the one label on the row;
+ * - Facebook, Instagram, Strava;
+ * - the privacy notice as a lock, whose tooltip and accessible name are the notice's name, the
+ *   same page it always linked to;
+ * - RO and EN as flags only, the current one ringed and `aria-current` (`LocaleSwitcher`).
  *
- * ## The fold opens to a panel below the row, a sibling of it rather than its content
+ * Every item is a square target of the bar's size (`footer-target.ts`): 24 pixels below 360,
+ * which is WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed.
+ * It is a footer-bar-only exception to criterion 6: the fold's panel is 44 pixels throughout.
  *
- * `<details>` holds only the "Despre club" summary now — review finding 2. It used to hold the
- * panel too (the terms, "Înscrierile mele", "Scrie-ne", the contact address, and on a phone the
- * build stamp), and opening it grew that flex item to nearly the row's own width
- * (`flex-basis: calc(100% - the switch)`) so the panel had room; but growing one item that much
- * left too little of the row's own width for the items after it — the marks, the notice, the
- * language — so `flexWrap` moved them to a second line, and because the line's height is the
- * tallest item on it (the now-tall `<details>`), that second line sat under the whole panel
- * instead of beside the switch. The panel is a sibling of the row instead now, in normal flow
- * below it, so the row's own layout — and every other item's line — never changes when it opens.
- * Native `<details>` still owns showing and hiding it — there is no JavaScript here — read back
- * in CSS with `:has()` on their common ancestor (`&:has([data-testid="footer-about-fold"][open])
- * [data-testid="footer-about-panel"]`), since the panel is no longer a descendant `:has()` could
- * find from the `<details>` itself.
+ * ## The fold's panel is inside the fold, under the row
  *
- * ## The build stamp: in the fold on a phone, pinned to the bar's corner from `md`
+ * The `<details>` owns what it discloses: its summary is on the row, and its panel follows the
+ * summary inside it. Opened, the `<details>` grows downward — the row's items are aligned to its
+ * top, so each of them stays on the switch's line — and the panel runs from under the summary to
+ * the bar's right edge, over the empty space below the marks, the lock and the flags. It can,
+ * because the panel's own box is zero pixels wide: its content is wider than it, visibly, and a
+ * zero-width box adds nothing to the fold's width in the row's flex layout. Otherwise the fold
+ * would take the panel's width as its own and push the marks off the row, which is what the
+ * previous two attempts did (a fold grown to the row's width; then a sibling panel shown by a
+ * `:has()` rule, which the `<details>` no longer owned). No `:has()` remains, and no JavaScript.
+ *
+ * The content's width is the viewport's less 60 pixels (the widest switch, 44, and a 16-pixel
+ * margin), capped at 40rem; a desktop's classic scrollbar is under 16 pixels, so it never reaches
+ * past the page's edge.
+ *
+ * ## The build stamp: in the fold below `md`, pinned to the bar's corner from `md`
  *
  * §365 put it nowhere on screen until the fold opened, at every width — the owner's complaint
  * then was a phone showing it "by default". The owner, now, of the desktop site: "I liked when I
  * saw the app on the bottom right." Two renders of `BuildBadge`, mutually exclusive by
- * `display`, resolve both: one inside the panel (`xs`–`sm`, the phone's door to it, unchanged
- * from §365), one outside the `<details>` altogether, absolutely positioned at the bar's own
- * bottom-right corner and shown only from `md` — the pre-§365 desktop placement, back where the
- * owner wants it, without floating loose over page content the way it did before §365 (`position:
- * fixed` over the viewport): it is anchored to the bar itself, which the footer's own
- * `position: sticky` already makes a containing block for.
+ * `display`: one inside the panel (below `md`, unchanged from §365), one outside the fold,
+ * absolutely positioned at the bar's own bottom-right corner and shown only from `md`, anchored
+ * to the bar — which the footer's own `position: sticky` makes a containing block for — rather
+ * than floating over the page as it did before §365.
  *
  * ## Sticky at the bottom
  *
@@ -138,26 +106,21 @@ export default async function SiteFooter() {
         bgcolor: "background.paper",
         mt: "auto",
         position: "sticky",
-        // The whole bar at every scroll position, both lines on a phone: the privacy notice and
-        // the language are on the always-visible bar (BR-REQ-041-01 criterion 21, §323, §365).
+        // The whole bar at every scroll position, one row on a phone too: the privacy notice
+        // and the language are on the always-visible bar (BR-REQ-041-01 criterion 21, §323).
         bottom: 0,
         zIndex: 1000,
-        // The fold's panel is a sibling of the row, not nested inside `<details>` (review
-        // finding 2), so its own visibility is read back from the row's `<details>` element
-        // here, on their common ancestor — `:has()` only matches a descendant, and the panel
-        // is not one of the `<details>`'s any more.
-        '&:has([data-testid="footer-about-fold"][open]) [data-testid="footer-about-panel"]': { display: "flex" },
       }}
     >
-      {/* One row, wrapping only for the open fold's panel: every control has its own width, and
-          nothing is drawn over a sibling. */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
+      {/* One row that never wraps: every item has its own width, and nothing is drawn over a
+          sibling. Aligned to the top, so an open fold grows downward and leaves the rest here. */}
+      <Box sx={{ display: "flex", alignItems: "flex-start" }}>
         {/* The switch, in the bar's own corner (BR-REQ-041-01 criterion 11): the first item, exactly its width. */}
         <Box
           sx={{
-            flex: { xs: `0 0 ${SWITCH_WIDTH_XS}px`, sm: `0 0 ${SWITCH_WIDTH}px` },
-            width: { xs: SWITCH_WIDTH_XS, sm: SWITCH_WIDTH },
-            height: { xs: BAR_HEIGHT_XS, sm: BAR_HEIGHT },
+            ...footerTargetSx(["width", "height", "flexBasis"]),
+            flexGrow: 0,
+            flexShrink: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -170,41 +133,34 @@ export default async function SiteFooter() {
           component="details"
           data-testid="footer-about-fold"
           sx={{
-            // Whatever the fixed-width items leave: a zero basis, grown, so the label takes
-            // exactly the room between them and shrinks first when the line is tight.
+            // On a phone, whatever the fixed-width items leave: a zero basis, grown, so the label
+            // takes exactly the room between them. From `sm`, only as wide as the label. The open
+            // panel adds nothing to either (its box is zero wide, below).
             flex: { xs: "1 1 0%", sm: "0 1 auto" },
             minWidth: 0,
-            // No content but the summary lives inside `<details>` any more (review finding 2):
-            // the panel is a sibling of this whole row, shown by `:has()` below, so opening
-            // never changes this element's own size and never pushes a sibling flex item to a
-            // second line under it. There is nothing left here for `"&[open]"` to do.
           }}
         >
           <Box
             component="summary"
             sx={{
-              // The shared affordance (§164): marker, pointer, and an underline on hover and
-              // on focus. The height is the bar's here rather than the shared padding — this
-              // summary *is* the bar — and the rest is the same fold everywhere else is.
+              // The shared affordance (§164): marker, pointer, and an underline on hover and on
+              // focus. The height is the bar's here rather than the shared 44 — this summary *is*
+              // the bar (`footer-target.ts`).
               ...DISCLOSURE_SUMMARY_SX,
+              ...footerTargetSx(["minHeight", "lineHeight"]),
               py: 0,
-              px: { xs: 0, sm: 1 },
-              // The marker's own gap (§NNN): at 320px, five other fixed-width items leave only
-              // 47px for this label, and "Despre club" needs 82. `gap: 1` (8px) between the
-              // arrow and the text is shared chrome the phone cannot afford; `sm` up keeps it.
-              gap: { xs: 0.25, sm: 1 },
-              minHeight: { xs: BAR_HEIGHT_XS, sm: BAR_HEIGHT },
+              px: { xs: 0.5, sm: 1 },
               color: "text.secondary",
-              fontSize: { xs: "0.75rem", sm: "0.8125rem" },
-              lineHeight: { xs: `${BAR_HEIGHT_XS}px`, sm: `${BAR_HEIGHT}px` },
+              fontSize: "0.8125rem",
               // Only as wide as its label. A block summary spans the line, which put its
               // centre — where a pointer test clicks — under the social marks, and made empty
               // space on the bar toggle the panel.
               width: "fit-content",
               // Never wider than the fold it is in: when the line is short the label is cut
-              // with an ellipsis rather than pushing a mark off the bar. Its padding counts in
-              // that width (`border-box`): a content-box summary in a narrow fold ran eight
-              // pixels onto its neighbour (§323).
+              // with an ellipsis rather than pushing a mark off the bar (at 320px it is not
+              // short: the phone's other items leave ~150px for ~85px of "Despre club"). Its
+              // padding counts in that width (`border-box`): a content-box summary in a narrow
+              // fold ran eight pixels onto its neighbour (§323).
               maxWidth: "100%",
               boxSizing: "border-box",
               whiteSpace: "nowrap",
@@ -223,71 +179,68 @@ export default async function SiteFooter() {
               </Box>
             </Box>
           </Box>
+
+          {/* The panel, inside the fold it belongs to: its box is zero wide, so the fold's width
+              on the row is the summary's alone, and its content — wider than it, visibly — runs
+              under the row to the bar's right edge. */}
+          <Box data-testid="footer-about-panel" sx={{ width: 0, overflow: "visible" }}>
+            <Stack
+              spacing={1.5}
+              sx={{
+                width: "min(40rem, calc(100vw - 60px))",
+                pt: 0.5,
+                pb: 1,
+                // Indented to where the summary's words start, so it reads as the fold's body.
+                pl: { xs: 1.5, sm: 2 },
+              }}
+            >
+              {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
+              {/* A column gap rather than `spacing`: `spacing` is a left margin, which a link that
+                  wraps to the next line kept, so on a phone it started 16px in from the one above. */}
+              <Stack
+                direction="row"
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                  columnGap: 2,
+                  "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 },
+                }}
+              >
+                {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
+                <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
+                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
+                <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+                {/* "Scrie-ne" (BR-REQ-070-04): the form, beside the address below it. */}
+                <Link href="/contact">{footer("contactPage")}</Link>
+              </Stack>
+              {/* The links and the address, and nothing else. The club's description used to
+                  stand here too (the owner: "textul asta nu-și are rostul aici") — a paragraph
+                  about who the club is, under a fold called "About the club, contact and terms",
+                  which is opened to *reach* something rather than to read. The homepage is where
+                  the club introduces itself. */}
+              {contact && (
+                <Typography variant="body2" color="text.secondary">
+                  {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
+                </Typography>
+              )}
+              {/* The build stamp and the staff entrance (§34): below `md` this is the only place
+                  it shows, opened on purpose. From `md` a second copy is pinned to the bar's own
+                  corner (below), so this one steps aside there rather than repeat it. */}
+              <Box data-testid="footer-build-badge-panel" sx={{ display: { xs: "flex", md: "none" } }}>
+                <BuildBadge />
+              </Box>
+            </Stack>
+          </Box>
         </Box>
 
-        {/*
-          The privacy notice, on the line itself rather than in the fold (§323): a person should
-          find how their data is used from any page without opening anything — GDPR art. 12 asks
-          for the information to be easy to reach, and a closed `<details>` hides it from sight
-          and from the accessibility tree alike. Its own width, never shrunk.
-
-          It reads as the notice's name at every width, "Confidențialitate" (§324; review
-          finding: a phone said "GDPR", which names a regulation, not the page).
-
-          The link's name is the notice's own at every width (review finding: a screen reader
-          said "GDPR, link"), and it keeps the visible word inside it, so somebody who says
-          what they see to voice control still hits it (WCAG 2.5.3, label in name).
-
-          DOM order, matching `sm` and up (review finding 3): the notice before the marks, as it
-          was before this change — the `order` below only moves the marks ahead of it on a
-          phone, where the owner's own order puts them there; every other width is DOM order,
-          `order: 0`, doing nothing.
-        */}
-        <Box
-          sx={{
-            flex: "0 0 auto",
-            order: { xs: 2, sm: 0 },
-            height: { xs: BAR_HEIGHT_XS, sm: BAR_HEIGHT },
-            display: "flex",
-            alignItems: "center",
-            "& > a": {
-              display: "inline-flex",
-              alignItems: "center",
-              minHeight: { xs: BAR_HEIGHT_XS, sm: BAR_HEIGHT },
-              // No horizontal padding at `xs` (§NNN): the fixed-width items left the fold's
-              // label too little room at 320px (finding 1); the notice's own text still reads
-              // "Confidențialitate" at a 32px target, just without air around it.
-              px: { xs: 0, sm: 1 },
-              color: "text.secondary",
-              fontSize: { xs: "0.75rem", sm: "0.8125rem" },
-              whiteSpace: "nowrap",
-            },
-          }}
-        >
-          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")}>
-            {legal("privacyLinkLabel")}
-          </Link>
-        </Box>
-
-        {/*
-          The social marks, before the privacy notice on a phone — the owner's own order for
-          the one-row bar (`order: 1` at `xs`) — and after it from `sm` up, where DOM order (the
-          notice above, this Stack after it) applies and `order` does nothing (review finding 3:
-          the two used to disagree, which put the marks first at every width, not only on a
-          phone). Their own width, never shrunk.
-        */}
+        {/* The social marks, after the fold at every width: each a square of the bar's target,
+            the 20px glyph inside it. Their own width, never shrunk. */}
         {social.length > 0 && (
           <Stack
             direction="row"
             component="nav"
             aria-label={footer("about.socialLabel")}
-            sx={{
-              flex: "0 0 auto",
-              order: { xs: 1, sm: 0 },
-              ml: { sm: 1 },
-              height: { xs: BAR_HEIGHT_XS, sm: BAR_HEIGHT },
-              alignItems: "center",
-            }}
+            sx={{ flex: "0 0 auto", ml: { sm: 1 }, alignItems: "center" }}
           >
             {social.map((entry) => (
               // Off-site, so each opens in a new tab and carries its own `rel` — the same rule
@@ -301,11 +254,10 @@ export default async function SiteFooter() {
                 aria-label={entry.label}
                 title={entry.label}
                 sx={{
+                  ...footerTargetSx(["width", "height"]),
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: { xs: MARK_TARGET_XS, sm: MARK_TARGET },
-                  height: { xs: MARK_TARGET_XS, sm: MARK_TARGET },
                   flexShrink: 0,
                   borderRadius: 1,
                   "&:hover": { bgcolor: "action.hover" },
@@ -317,83 +269,54 @@ export default async function SiteFooter() {
           </Stack>
         )}
 
-        {/* The language, on a phone only (§262: `sm` up keeps the header's own copy); the row's
-            last item, RO and EN side by side. */}
+        {/*
+          The privacy notice, on the bar itself rather than in the fold (§323): a person should
+          find how their data is used from any page without opening anything — GDPR art. 12 asks
+          for the information to be easy to reach, and a closed `<details>` hides it from sight
+          and from the accessibility tree alike. Its own width, never shrunk.
+
+          Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" (review
+          finding: a screen reader once said "GDPR, link"). From `sm` it shows the word
+          "Confidențialitate", which that name contains (WCAG 2.5.3, label in name). On a phone
+          it is a lock (§NNN): the name, and a tooltip saying the same, are the notice's; the
+          word is not rendered there at all.
+        */}
         <Box
           sx={{
-            display: { xs: "flex", sm: "none" },
             flex: "0 0 auto",
-            order: 3,
-            height: BAR_HEIGHT_XS,
+            display: "flex",
             alignItems: "center",
+            "& > a": {
+              ...footerTargetSx(["minHeight", "minWidth"]),
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              px: { xs: 0, sm: 1 },
+              color: "text.secondary",
+              fontSize: "0.8125rem",
+              whiteSpace: "nowrap",
+            },
           }}
         >
+          <Link href="/legal/privacy" aria-label={legal("privacyLinkName")} title={legal("privacyLinkName")}>
+            {/* An element rendered here, as a child, never a component passed as a prop. */}
+            <LockOutlinedIcon
+              aria-hidden="true"
+              data-testid="footer-privacy-lock"
+              sx={{ display: { xs: "block", sm: "none" }, fontSize: 20 }}
+            />
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              {legal("privacyLinkLabel")}
+            </Box>
+          </Link>
+        </Box>
+
+        {/* The language, on a phone only (§262: `sm` up keeps the header's own copy); the row's
+            last item, two flags side by side. */}
+        <Box sx={{ display: { xs: "flex", sm: "none" }, flex: "0 0 auto", alignItems: "center" }}>
           <LocaleSwitcher />
         </Box>
       </Box>
-
-      {/* The fold's panel, a sibling of the row above rather than nested inside `<details>`
-          (review finding 2): the row's flex layout never changes when the fold opens, because
-          nothing about the row's own markup does. Native `<details>` still owns show and hide —
-          there is no JavaScript here — but since the toggled content is no longer *inside* the
-          element the browser toggles, that toggle is read back in CSS instead: closed by
-          default, and shown when the row's own `<details>` (found by `:has()`, matched against
-          `[data-testid="footer-about-fold"]` rather than the bare tag, since the pinned build
-          stamp below is also a possible `[open]` ancestor's descendant it must not affect) is
-          open. `:has()` is already used this way elsewhere on the platform (`theme.ts`,
-          `disclosure.ts`, `PhoneField.tsx`, `BibDesignPanel.tsx`).
-
-          Indented to roughly where the summary's own text starts (the switch's width, plus the
-          marker and the summary's own padding it no longer shares a box with) so the panel
-          still reads as the fold's body, not a fresh block flush with the page edge. */}
-      <Stack
-        data-testid="footer-about-panel"
-        spacing={1.5}
-        sx={{
-          display: "none",
-          pt: 0.5,
-          pb: 1,
-          pl: { xs: `${SWITCH_WIDTH_XS + 12}px`, sm: `${SWITCH_WIDTH + 28}px` },
-          pr: 2,
-          maxWidth: "40rem",
-        }}
-      >
-        {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
-        {/* A column gap rather than `spacing`: `spacing` is a left margin, which a link that
-            wraps to the next line kept, so on a phone it started 16px in from the one above. */}
-        <Stack
-          direction="row"
-          useFlexGap
-          sx={{
-            flexWrap: "wrap",
-            columnGap: 2,
-            "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 },
-          }}
-        >
-          {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
-          <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
-          {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
-          <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
-          {/* "Scrie-ne" (BR-REQ-070-04): the form, beside the address below it. */}
-          <Link href="/contact">{footer("contactPage")}</Link>
-        </Stack>
-        {/* The links and the address, and nothing else. The club's description used to
-            stand here too (the owner: "textul asta nu-și are rostul aici") — a paragraph
-            about who the club is, under a fold called "About the club, contact and terms",
-            which is opened to *reach* something rather than to read. The homepage is where
-            the club introduces itself. */}
-        {contact && (
-          <Typography variant="body2" color="text.secondary">
-            {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
-          </Typography>
-        )}
-        {/* The build stamp and the staff entrance (§34): on a phone this is still the only
-            place it shows, opened on purpose. From `md` a second copy is pinned to the bar's
-            own corner (below), so this one steps aside there rather than repeat it. */}
-        <Box data-testid="footer-build-badge-panel" sx={{ display: { xs: "flex", md: "none" } }}>
-          <BuildBadge />
-        </Box>
-      </Stack>
 
       {/* The build stamp's second copy, from `md` up: pinned to the bar's own bottom-right
           corner (the owner: "on the desktop version I liked when I saw the app on the bottom

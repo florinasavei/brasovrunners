@@ -143,11 +143,15 @@ test.describe("the build badge", () => {
     // run (desktop project only, §209) checked no staff entrance at all.
     test.skip(testInfo.project.name !== "desktop", "the pinned copy only shows from md");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    // One click does nothing here either: it is never a trap for a pointer passing over it.
+    await pinnedBadge(page).click();
+    await expect(page).toHaveURL(/\/ro\/evenimente$/);
     await pinnedBadge(page).dblclick();
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
 
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await pinnedBadge(page).focus();
+    await expect(pinnedBadge(page)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
@@ -226,9 +230,10 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
-    // it; it is in the fold now (§365), and on a phone the link is on the bar's second line,
-    // on screen at every scroll position. The privacy notice is on the bar since §323, so
-    // nothing has to be opened to reach it.
+    // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§NNN), and
+    // the link is on the bar's one row, on screen at every scroll position — a lock on a phone,
+    // named for the notice (§NNN). The privacy notice is on the bar since §323, so nothing has
+    // to be opened to reach it.
     await page.getByRole("contentinfo").getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
   });

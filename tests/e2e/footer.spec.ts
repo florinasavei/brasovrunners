@@ -1,33 +1,35 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
- * The footer's one line, on every width, phone included (BR-REQ-041-01 criteria 1, 6 and 11;
- * `DECISIONS.md` §115, §262, §299, §323, §324, §365, §NNN; `shared/ui/SiteFooter.tsx`).
+ * The footer's one row, on every width, phone included (BR-REQ-041-01 criteria 1, 6, 11, 21, 23
+ * and 29; `DECISIONS.md` §115, §262, §299, §323, §324, §365, §NNN; `shared/ui/SiteFooter.tsx`).
  *
  * Three reports on one day said the same thing about the marks landing on the summary's last
  * word and the build badge (§299) — every control here is still its own flex item, so overlap
  * is not a state the layout can reach, and `click({ trial: true })` runs Playwright's hit-target
  * check at each one without navigating anywhere.
  *
- * The owner, 2026-09-24, with a phone screenshot: "it should fit all in 1 row" — asked what
- * gives way, "All visible, smaller." §365's second line is gone: the switch, the fold's
- * summary, the three marks, the privacy notice and the language now share one line below `sm`
- * too, each a 32-pixel target instead of 44 (a footer-only exception to criterion 6) and ~12px
- * text, in that reading order. From `sm` up nothing here moved — 44px targets, one line, as
- * before §324 even existed.
+ * §NNN, the owner, 2026-09-24: one row on a phone, keeping every item but not every word. Eight
+ * items with their words need ~370 pixels and a phone has 288–328, so below `sm` the privacy
+ * notice is a lock and RO/EN are flags, and every item on the bar is a square of the bar's
+ * target: 24px below 360 (WCAG 2.2 SC 2.5.8, AA), 28px from 360, 44px from `sm` — a
+ * footer-bar-only exception to criterion 6. From `sm` up nothing moved.
  *
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
- * 360 the owner's screenshot, 393 the Pixel phone, 640 and 768 the band where the marks used to
- * land on the summary and the badge, and 1280 a desktop, where the build stamp is now pinned to
- * the bar's own corner (§NNN) rather than floating loose over the page as it did before §365.
+ * 360 the owner's screenshot and the second size's first width, 393 the Pixel phone, 640 and
+ * 768 the band where the marks used to land on the summary and the badge, and 1280 a desktop,
+ * where the build stamp is pinned to the bar's own corner (§NNN).
  */
 type Box = { x: number; y: number; width: number; height: number };
 
-const WIDTHS = [320, 360, 393, 640, 768, 1280] as const;
-/** MUI's `sm` breakpoint: the row shrinks below it, is full size at and above it. */
+const WIDTHS = [320, 359, 360, 393, 640, 768, 1280] as const;
+/** MUI's `sm` breakpoint: the bar's items are 44px at and above it. */
 const SM = 600;
 /** MUI's `md` breakpoint: where the build stamp's pinned copy takes over from the fold's. */
 const MD = 900;
+
+/** The bar's target at a width (`shared/ui/footer-target.ts`): 24, 28 from 360, 44 from `sm`. */
+const targetAt = (width: number) => (width >= SM ? 44 : width >= 360 ? 28 : 24);
 
 const intersects = (a: Box, b: Box) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
@@ -38,17 +40,28 @@ async function boxOf(locator: Locator, name: string): Promise<Box> {
   return found!;
 }
 
-function controls(page: Page) {
+/** The two pages the row is measured on, with what each locale calls the bar's items. */
+const PAGES = [
+  { path: "/ro/evenimente", privacyName: "Nota de confidențialitate (GDPR)", privacyWord: "Confidențialitate", language: "Limbă", summary: /despre club/i, other: "English" },
+  { path: "/en/events", privacyName: "Privacy notice", privacyWord: "Privacy", language: "Language", summary: /about the club/i, other: "Română" },
+] as const;
+
+function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
   const footer = page.getByRole("contentinfo");
+  const language = footer.getByRole("navigation", { name: where.language });
   return {
     footer,
+    fold: page.getByTestId("footer-about-fold"),
     summary: footer.locator("summary"),
-    toggle: footer.getByRole("button", { name: /temă/i }),
-    // On the bar since §323, reading "Confidențialitate" at every width since §324, and named
-    // for the notice, the visible word inside the name (WCAG 2.5.3).
-    privacy: footer.getByRole("link", { name: "Nota de confidențialitate (GDPR)", exact: true }),
+    toggle: footer.getByRole("button", { name: /temă|theme/i }),
+    // On the bar since §323, named for the notice at every width (WCAG 2.5.3); a lock on a phone
+    // and the word from `sm` (§NNN).
+    privacy: footer.getByRole("link", { name: where.privacyName, exact: true }),
+    lock: page.getByTestId("footer-privacy-lock"),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
-    language: footer.getByRole("navigation", { name: "Limbă" }),
+    language,
+    current: language.locator('[aria-current="true"]'),
+    other: language.getByRole("link", { name: where.other, exact: true }),
     // Two copies, mutually exclusive by width (§NNN): the fold's, below `md`, and the one
     // pinned to the bar's corner, from `md`.
     panelBadge: page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului|website version/i),
@@ -78,71 +91,94 @@ function expectDisjoint(boxes: Array<[string, Box]>, width: number) {
   }
 }
 
-test.describe("BR-REQ-041-01 the footer's one line, at every width", () => {
+/**
+ * The fold's panel content, inside the `<details>`. The panel's own box is zero wide on purpose
+ * (`SiteFooter.tsx`: it adds nothing to the fold's width on the row), so Playwright calls the box
+ * itself hidden; its one child is what a person sees.
+ */
+const panelContent = (fold: Locator) => fold.getByTestId("footer-about-panel").locator(":scope > *").first();
+
+/** Every item on the row, by name, measured: the switch first. */
+async function rowItems(page: Page, where: (typeof PAGES)[number], phone: boolean): Promise<Array<[string, Box]>> {
+  const { toggle, summary, privacy, marks, current, other } = controls(page, where);
+  const items: Array<[string, Box]> = [
+    ["the scheme switch", await boxOf(toggle, "the scheme switch")],
+    ["the summary", await boxOf(summary, "the summary")],
+  ];
+  for (let i = 0; i < (await marks.count()); i++) {
+    const mark = marks.nth(i);
+    const name = (await mark.getAttribute("aria-label")) ?? `mark ${i}`;
+    items.push([name, await boxOf(mark, name)]);
+  }
+  items.push(["the privacy notice", await boxOf(privacy, "the privacy notice")]);
+  if (phone) {
+    items.push(["the current language", await boxOf(current, "the current language")]);
+    items.push(["the other language", await boxOf(other, "the other language")]);
+  }
+  return items;
+}
+
+test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
   for (const width of WIDTHS) {
     test(`at ${width}px every item is on one row, nothing overlaps, and every target is its size`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, toggle, privacy, marks, language, panelBadge, pinnedBadge } = controls(page);
+      const { footer, summary, privacy, lock, marks, language, current, other, panelBadge, pinnedBadge } = controls(page);
       const count = await marks.count();
       test.skip(count === 0, "no social address is configured for this server");
       await restAtTheEnd(page);
 
       const phone = width < SM;
-      // The footer-only exception to BR-REQ-041-01 criterion 6 (§NNN): 32px below `sm`, 44 at
-      // and above it. The social marks are their own, smaller tier below `sm` (review finding
-      // 1): 28px, still above the 24px WCAG 2.5.5 AA floor — the one item that gave up more
-      // than the rest once the switch, the fold's label, the privacy notice and the language
-      // had each already given up their own padding and the row was still 6px short at 320px.
-      const minTarget = phone ? 32 : 44;
-      const minMarkTarget = phone ? 28 : 44;
-
-      const boxes: Array<[string, Box]> = [
-        ["the summary", await boxOf(summary, "the summary")],
-        ["the scheme switch", await boxOf(toggle, "the scheme switch")],
-        ["the privacy notice", await boxOf(privacy, "the privacy notice")],
-      ];
-      // Criterion 11: the switch is the first control on the line, in the bar's own corner.
-      expect(boxes[1]![1].x).toBeLessThan(4);
-      expect(boxes[1]![1].height).toBeGreaterThanOrEqual(minTarget);
-      // Criterion 6, and §323: the notice is reachable from every page without opening anything.
-      expect(boxes[2]![1].height).toBeGreaterThanOrEqual(minTarget);
-      await privacy.click({ trial: true });
-      // §324: it reads as the notice's name at every width, never "GDPR" alone, and never
-      // clipped or ellipsised (§NNN: "all visible" was the owner's own word for it).
-      await expect(privacy).toHaveText("Confidențialitate");
-
-      for (let i = 0; i < count; i++) {
-        const mark = marks.nth(i);
-        const name = (await mark.getAttribute("aria-label")) ?? `mark ${i}`;
-        const box = await boxOf(mark, name);
-        expect(box.width, `${name} is ${minMarkTarget} wide`).toBeGreaterThanOrEqual(minMarkTarget);
-        expect(box.height, `${name} is ${minMarkTarget} tall`).toBeGreaterThanOrEqual(minMarkTarget);
-        await mark.click({ trial: true });
-        boxes.push([name, box]);
-      }
-      if (phone) {
-        await expect(language).toBeVisible();
-        const box = await boxOf(language, "the language");
-        expect(box.height, "the language is on the row's target").toBeGreaterThanOrEqual(minTarget);
-        boxes.push(["the language", box]);
-      } else {
+      const target = targetAt(width);
+      if (!phone) {
         // From `sm` up the language stays in the header (§262); exactly one "Limbă" navigation
         // is announced at every width.
         await expect(language).toBeHidden();
       }
+      const items = await rowItems(page, PAGES[0], phone);
+      // Criterion 11: the switch is the first control on the row, in the bar's own corner.
+      expect(items[0]![1].x).toBeLessThan(4);
 
-      // One row, always: every control's centre sits on the same line as the switch's.
-      const bar = await boxOf(footer, "the footer");
-      const switchMid = boxes[1]![1].y + boxes[1]![1].height / 2;
-      for (const [name, box] of boxes) {
-        expect(
-          Math.abs(box.y + box.height / 2 - switchMid),
-          `${name} is on the bar's single row at ${width}px`,
-        ).toBeLessThan(8);
+      // Criterion 6 and its footer-bar exception (§NNN): every item at least the bar's target,
+      // in width and in height. The summary is a label: its height is the target, its width its words.
+      for (const [name, box] of items) {
+        expect(box.height, `${name} is ${target}px tall at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+        if (name !== "the summary") {
+          expect(box.width, `${name} is ${target}px wide at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+        }
       }
-      // Never a second line: the closed bar is one tap target tall, nothing more.
-      expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(minTarget + 8);
+      for (let i = 0; i < count; i++) await marks.nth(i).click({ trial: true });
+      await privacy.click({ trial: true });
+      if (phone) await other.click({ trial: true });
+
+      // §323: the notice is reachable from every page without opening anything. On a phone a
+      // lock whose name and tooltip are the notice's (§NNN); from `sm` the word, uncut.
+      await expect(privacy).toHaveAttribute("title", "Nota de confidențialitate (GDPR)");
+      if (phone) {
+        await expect(lock).toBeVisible();
+        await expect(privacy.getByText("Confidențialitate", { exact: true })).toBeHidden();
+        // Flags only: no letters on screen — each code is clipped to a pixel, still read by a
+        // screen reader — and the current one ringed.
+        for (const [code, item] of [["RO", current], ["EN", other]] as const) {
+          const letters = await boxOf(item.getByText(code, { exact: true }), `the ${code} code`);
+          expect(letters.width, `${code} is not on screen at ${width}px`).toBeLessThanOrEqual(1);
+        }
+        const ring = await current.locator("span").first().evaluate((el) => getComputedStyle(el).outlineStyle);
+        expect(ring, "the current language is ringed").toBe("solid");
+      } else {
+        await expect(lock).toBeHidden();
+        await expect(privacy.getByText("Confidențialitate", { exact: true })).toBeVisible();
+      }
+
+      // One row, always: every item's top is the switch's.
+      const switchTop = items[0]![1].y;
+      for (const [name, box] of items) {
+        expect(Math.abs(box.y - switchTop), `${name} is on the bar's single row at ${width}px`).toBeLessThan(1.5);
+      }
+      // Never a second line: the closed bar is one target tall, plus its border.
+      const bar = await boxOf(footer, "the footer");
+      expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
+      await expect(summary).toBeVisible();
 
       // The build stamp: whichever copy applies at this width is not on screen — the fold is
       // closed, and a desktop's pinned copy only shows from `md`.
@@ -152,101 +188,108 @@ test.describe("BR-REQ-041-01 the footer's one line, at every width", () => {
         await expect(pinnedBadge).toBeHidden();
       }
       await expect(panelBadge).toBeHidden();
-      expectDisjoint(boxes, width);
+      expectDisjoint(items, width);
 
       // Criterion 1: nothing on the bar widened the page, at 320px least of all.
-      const overflow = await page.evaluate(() => ({
-        documentWidth: document.documentElement.scrollWidth,
-        viewportWidth: document.documentElement.clientWidth,
-      }));
-      expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
-    });
-  }
-
-  for (const width of [320, 360, 768] as const) {
-    test(`keeps the row intact and the panel below it when the fold opens, at ${width}px (review finding 2)`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 720 });
-      await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, toggle, marks, privacy, language, panelBadge } = controls(page);
-      const count = await marks.count();
-      test.skip(count === 0, "no social address is configured for this server");
-
-      await summary.click();
-      // The panel's links, and the bar's own privacy notice, which `getByRole` also matches.
-      const panelLinks = footer.getByRole("link", { name: /confidențialitate|termeni|înscrierile|scrie-ne/i });
-      await expect(panelLinks.first()).toBeVisible();
-      // Open, the page is taller: measured at its new end, where no trial click moves it.
-      await restAtTheEnd(page);
-
-      const phone = width < SM;
-      // Review finding 2: opening used to grow the fold's own flex item to nearly the row's
-      // full width, which pushed the marks, the privacy notice and the language onto a second
-      // flex line — under the whole panel, not beside the switch and the summary. The panel is
-      // a sibling of the row now (`SiteFooter.tsx`), so every row item stays on the switch's
-      // own line regardless, and the panel is the thing that drops below, full width.
-      const switchBox = await boxOf(toggle, "the switch");
-      const switchMid = switchBox.y + switchBox.height / 2;
-      const rowBoxes: Array<[string, Box]> = [
-        ["the summary", await boxOf(summary, "the summary")],
-        ["the privacy notice", await boxOf(privacy, "the privacy notice")],
-      ];
-      for (let i = 0; i < count; i++) {
-        const mark = marks.nth(i);
-        await expect(mark).toBeVisible();
-        await mark.click({ trial: true });
-        rowBoxes.push([`mark ${i}`, await boxOf(mark, `mark ${i}`)]);
-      }
-      if (phone) {
-        await expect(language).toBeVisible();
-        rowBoxes.push(["the language", await boxOf(language, "the language")]);
-      }
-      for (const [name, box] of rowBoxes) {
-        expect(
-          Math.abs(box.y + box.height / 2 - switchMid),
-          `${name} stays on the switch's row once the fold is open at ${width}px`,
-        ).toBeLessThan(8);
-      }
-
-      // The panel sits below the whole row, never beside it or under only part of it — its own
-      // width is capped (`maxWidth: "40rem"`, unrelated to this fix), so it is never wider than
-      // the viewport rather than as wide as the row.
-      const rowBottom = Math.max(switchBox.y + switchBox.height, ...rowBoxes.map(([, box]) => box.y + box.height));
-      const panel = footer.getByTestId("footer-about-panel");
-      const panelBox = await boxOf(panel, "the panel");
-      expect(panelBox.y, `the panel is below the row at ${width}px`).toBeGreaterThanOrEqual(rowBottom - 1);
-      expect(panelBox.x, `the panel starts at the row's left edge at ${width}px`).toBeLessThan(rowBoxes[0]![1].x);
-      expect(panelBox.x + panelBox.width, `the panel never runs past the viewport at ${width}px`).toBeLessThanOrEqual(width);
-
-      // Below `md` the build stamp is the panel's own copy, its last line.
-      if (width < MD) {
-        await expect(panelBadge).toBeVisible();
-        const stampBox = await boxOf(panelBadge, "the build stamp");
-        expect(stampBox.y).toBeGreaterThanOrEqual(panelBox.y);
-      }
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
     });
   }
 });
 
 /**
- * §NNN — the owner, 2026-09-24, with a 360-pixel screenshot: "it should fit all in 1 row."
- * Asked what gives way, "All visible, smaller": every item stays, at 32px targets and ~12px
- * text on a phone. §365's second line — RO and EN beside the privacy notice, under the switch
- * and the fold — no longer exists: there is only the one row now, and this describes it and the
- * build stamp's two doors (the fold below `md`, pinned to the bar's corner from `md`).
+ * §NNN — the phone's one row in both languages, fold closed and open. The English row has other
+ * widths ("About the club" is longer than "Despre club"), and opening the fold is what broke the
+ * row twice before: the fold's panel is inside the `<details>` again (review finding 4), and
+ * every row item keeps the switch's top however tall the open fold grows.
  */
-test.describe("§NNN one row on a phone, the build stamp's two doors", () => {
+test.describe("§NNN one row on a phone, in both languages, fold closed and open", () => {
+  for (const where of PAGES) {
+    for (const width of [320, 360] as const) {
+      for (const state of ["closed", "open"] as const) {
+        test(`${where.path} at ${width}px, fold ${state}: every item on the switch's row, nothing cut`, async ({ page }) => {
+          await page.setViewportSize({ width, height: 720 });
+          await page.goto(where.path, { waitUntil: "networkidle" });
+          const { fold, summary, marks, current, other } = controls(page, where);
+          test.skip((await marks.count()) === 0, "no social address is configured for this server");
+          const target = targetAt(width);
+
+          if (state === "open") {
+            await summary.click();
+            await expect(fold).toHaveAttribute("open", "");
+            await expect(panelContent(fold)).toBeVisible();
+          }
+          await restAtTheEnd(page);
+
+          const items = await rowItems(page, where, true);
+          const switchTop = items[0]![1].y;
+          for (const [name, box] of items) {
+            expect(Math.abs(box.y - switchTop), `${name}'s top is the switch's at ${width}px, fold ${state}`).toBeLessThan(1.5);
+            expect(box.height, `${name} is ${target}px tall`).toBeGreaterThanOrEqual(target - 0.5);
+          }
+          expectDisjoint(items, width);
+
+          // Both languages, each the bar's target in width and height (review finding 2).
+          for (const [name, locator] of [["the current language", current], ["the other language", other]] as const) {
+            const box = await boxOf(locator, name);
+            expect(box.width, `${name} is ${target}px wide at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+            expect(box.height, `${name} is ${target}px tall at ${width}px`).toBeGreaterThanOrEqual(target - 0.5);
+          }
+
+          // The summary's words on screen and never ellipsised: `toContainText` passes on clipped
+          // text too, so the span's own scroll width is compared with what it is given.
+          await expect(summary).toContainText(where.summary);
+          const words = await summary.locator("span").first().evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+          expect(words.scroll, `the summary's label is not ellipsised at ${width}px, fold ${state}`).toBeLessThanOrEqual(words.client);
+
+          if (state === "open") {
+            // The panel is the fold's own content, below the whole row, never past the viewport.
+            const rowBottom = Math.max(...items.map(([, box]) => box.y + box.height));
+            const panel = await boxOf(panelContent(fold), "the panel");
+            expect(panel.y, `the panel is below the row at ${width}px`).toBeGreaterThanOrEqual(rowBottom - 1);
+            expect(panel.x + panel.width, `the panel stays inside ${width}px`).toBeLessThanOrEqual(width);
+            // Its links are reachable where they are drawn, over the space below the marks too.
+            const terms = fold.getByRole("link", { name: /termeni|racing tos/i });
+            await terms.click({ trial: true });
+          }
+
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+          expect(overflow, `nothing widens the page at ${width}px, fold ${state}`).toBeLessThanOrEqual(0);
+        });
+      }
+    }
+  }
+
+  test("at 768px, opening the fold keeps the row and puts the panel under it", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 720 });
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    const { fold, summary, marks } = controls(page);
+    test.skip((await marks.count()) === 0, "no social address is configured for this server");
+    await summary.click();
+    await expect(panelContent(fold)).toBeVisible();
+    await restAtTheEnd(page);
+    const items = await rowItems(page, PAGES[0], false);
+    for (const [name, box] of items) {
+      expect(Math.abs(box.y - items[0]![1].y), `${name} stays on the switch's row once the fold is open`).toBeLessThan(1.5);
+    }
+    const rowBottom = Math.max(...items.map(([, box]) => box.y + box.height));
+    const panel = await boxOf(panelContent(fold), "the panel");
+    expect(panel.y).toBeGreaterThanOrEqual(rowBottom - 1);
+    await expect(page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului/i)).toBeVisible();
+  });
+
   for (const width of [320, 360] as const) {
-    test(`at ${width}px the bar is one row at every scroll position, nothing clipped`, async ({ page }) => {
+    test(`at ${width}px the bar is one row at every scroll position`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, toggle, privacy, marks, language, panelBadge } = controls(page);
+      const { footer, summary, toggle, privacy, language, panelBadge } = controls(page);
+      const target = targetAt(width);
 
       for (const where of ["the top", "halfway down"] as const) {
         if (where === "halfway down") await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 2));
         const bar = await boxOf(footer, "the footer");
         expect(bar.y + bar.height, `the bar's bottom edge at ${where}, ${width}px`).toBeLessThanOrEqual(721);
-        // One row, not two: the bar is a single 32px target tall, plus its border.
-        expect(bar.height, `the bar's height at ${where}, ${width}px`).toBeLessThanOrEqual(40);
+        expect(bar.height, `the bar's height at ${where}, ${width}px`).toBeLessThanOrEqual(target + 2);
         for (const [name, locator] of [
           ["the switch", toggle],
           ["the summary", summary],
@@ -261,50 +304,11 @@ test.describe("§NNN one row on a phone, the build stamp's two doors", () => {
 
       // At the end of the page: the same one row, nothing under it.
       await restAtTheEnd(page);
-      const resting = await boxOf(footer, "the footer");
-      expect(resting.height, `the resting bar's height at ${width}px`).toBeLessThanOrEqual(40);
       const chrome = await page.evaluate(() => {
         const bar = document.querySelector("footer")!.getBoundingClientRect();
         return document.documentElement.scrollHeight - (bar.top + window.scrollY);
       });
-      expect(chrome, `from the bar's top to the document's end at ${width}px`).toBeLessThanOrEqual(40);
-      await expect(panelBadge).toBeHidden();
-
-      // Every item the row promises, actually on screen: nothing dropped, nothing hidden by an
-      // ancestor's overflow. The summary's own text ("Despre club") is part of this — it is
-      // never reduced to the marker alone.
-      await expect(toggle).toBeVisible();
-      await expect(summary).toBeVisible();
-      await expect(summary).toContainText(/despre club/i);
-      // `toContainText` passes on clipped text too (review finding 1: the label read "Des…" at
-      // 320px and still contained "despre club" as far as that matcher could tell). The text is
-      // never ellipsised: its own span's `scrollWidth` never exceeds what it is actually given.
-      const summaryTextWidths = await summary.locator("span").first().evaluate((el) => ({
-        scrollWidth: el.scrollWidth,
-        clientWidth: el.clientWidth,
-      }));
-      expect(
-        summaryTextWidths.scrollWidth,
-        `the summary's label is not ellipsised at ${width}px`,
-      ).toBeLessThanOrEqual(summaryTextWidths.clientWidth);
-      const count = await marks.count();
-      for (let i = 0; i < count; i++) await expect(marks.nth(i)).toBeVisible();
-      await expect(privacy).toBeVisible();
-      await expect(language).toBeVisible();
-
-      // RO and EN side by side, each a 32px target — not stacked, nothing missing.
-      const english = language.getByRole("link", { name: "English" });
-      const current = await boxOf(language.locator("[aria-current]"), "the current language");
-      const other = await boxOf(english, "the English link");
-      expect(Math.abs(current.y + current.height / 2 - (other.y + other.height / 2))).toBeLessThan(2);
-      expect(other.x).toBeGreaterThanOrEqual(current.x + current.width - 1);
-      expect(current.height).toBeGreaterThanOrEqual(32);
-      expect(other.height).toBeGreaterThanOrEqual(32);
-      await english.click({ trial: true });
-
-      // BR-REQ-041-01 criterion 1: nothing on the bar ever widens the page, at either width.
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow).toBeLessThanOrEqual(0);
+      expect(chrome, `from the bar's top to the document's end at ${width}px`).toBeLessThanOrEqual(target + 2);
     });
   }
 
@@ -336,14 +340,9 @@ test.describe("§NNN the desktop build stamp, pinned to the bar's own corner", (
     expect(stamp.x).toBeGreaterThan(bar.x + bar.width / 2);
 
     // It does not widen the page, and it does not sit on top of the row's own items.
-    const { summary, toggle, privacy, marks } = controls(page);
-    const rowBoxes: Array<[string, Box]> = [
-      ["the switch", await boxOf(toggle, "the switch")],
-      ["the summary", await boxOf(summary, "the summary")],
-      ["the privacy notice", await boxOf(privacy, "the privacy notice")],
-    ];
-    for (let i = 0; i < (await marks.count()); i++) rowBoxes.push([`mark ${i}`, await boxOf(marks.nth(i), `mark ${i}`)]);
-    for (const [name, box] of rowBoxes) expect(intersects(box, stamp), `${name} and the pinned build stamp overlap`).toBe(false);
+    for (const [name, box] of await rowItems(page, PAGES[0], false)) {
+      expect(intersects(box, stamp), `${name} and the pinned build stamp overlap`).toBe(false);
+    }
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
