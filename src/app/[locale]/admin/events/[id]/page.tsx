@@ -10,7 +10,6 @@ import { notFound, redirect } from "next/navigation";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
-import { numberForm } from "@/i18n/number-form";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -406,7 +405,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               cap): how many went in, and that the rest were refused as a real registration would be.
               A counted phrase — "1 înscriere", "19 înscrieri", "20 de înscrieri". */}
           {saved === "testRegistrationsStopped" && (
-            <Alert severity="info">{t(`testRegistrations.stoppedAtLimit.${numberForm(locale, stoppedCount)}`, { created: stoppedCount })}</Alert>
+            <Alert severity="info">{t(`testRegistrations.stoppedAtLimit.${countForm(stoppedCount, locale)}`, { created: stoppedCount })}</Alert>
           )}
           {/* What the save told the participants (§331), under whichever banner the save gave. */}
           {noticeOutcome && (

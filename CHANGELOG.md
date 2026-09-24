@@ -11,6 +11,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 ## BR-V1.73-2026-09-24
 
 - **The Recurență box's live sentence names the end's day of the week too.** Typing an end date on the create page now reads "— până la mie., 30 sept. 2026." / "— until Wed, 30 Sept 2026.", exactly as the box writes the rule once it is saved, instead of echoing the picker's 30.09.2026. The island still formats no date itself (§324): the server hands it the short weekday and month words from `dates.ts#calendarDayWords`, it joins them with `composeCalendarDay`, and a test holds the join to `formatCalendarDay` for every month in both languages. `src/i18n/dates.ts`, `RepeatRuleFields.tsx`, `RepeatFields.tsx`; §349, §350.
+- **One plural rule and one club zone in the code.** The public fill line's `numberForm` (§346) and the backoffice's `countForm` (§341) chose the same `one`/`few`/`other` key by two routes; `countForm` stays, carries the other's fixed points, and a test holds it to `Intl.PluralRules` for every number up to 1 000 in both languages. Five literal copies of `Europe/Bucharest` now read `CLUB_TIME_ZONE`. No behaviour changes.
 
 ## BR-V1.72-2026-09-24
 

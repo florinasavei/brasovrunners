@@ -1,5 +1,6 @@
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
@@ -11,7 +12,7 @@ import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from
 
 /** The club's own zone. Offered as the default rather than the browser's, which on a phone in
  * an airport is not where the race is. */
-export const DEFAULT_TIMEZONE = "Europe/Bucharest";
+export const DEFAULT_TIMEZONE = CLUB_TIME_ZONE;
 
 /**
  * The zones an organizer may pick (§153): every IANA zone this runtime knows, the club's first,

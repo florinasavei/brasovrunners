@@ -1,5 +1,5 @@
 import { countForm } from "@/i18n/count-form";
-import { formatDay, formatTime } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { fillIn } from "@/shared/forms/fill-in";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
@@ -207,7 +207,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
 
 /** Sub-card 4.1: `Europe/Bucharest — ora României`, or the zone alone elsewhere. */
 export function timezoneSummary(words: SummaryWords, zone: string): string {
-  return zone === "Europe/Bucharest" ? fillIn(words.timezone.home, { zone }) : zone;
+  return zone === CLUB_TIME_ZONE ? fillIn(words.timezone.home, { zone }) : zone;
 }
 
 type PlaceEvent = Pick<EditableEvent, "locationName" | "locationAddress" | "locationToBeAnnounced" | "mapUrl">;

@@ -27,6 +27,7 @@ import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { maintenanceDueFor } from "@/modules/jobs/schedule";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -102,7 +103,7 @@ export type EventForRegistration = {
 };
 
 /** `events.timezone`'s column default: what a partial `EventForRegistration` is read in. */
-const EVENT_TIMEZONE_DEFAULT = "Europe/Bucharest";
+const EVENT_TIMEZONE_DEFAULT = CLUB_TIME_ZONE;
 
 /**
  * The event as the allocator must see it once the row is locked: the caller's row, with every

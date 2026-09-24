@@ -1,4 +1,4 @@
-import { numberForm } from "@/i18n/number-form";
+import { countForm } from "@/i18n/count-form";
 import type { PublicFill } from "../domain/registration-cta";
 
 /**
@@ -6,7 +6,7 @@ import type { PublicFill } from "../domain/registration-cta";
  *
  * `say` is the page's translator under the `Event` namespace — `getTranslations("Event")` on
  * the server, `createTranslator` in a test — so the sentence is the catalogue's and only the
- * choice of wording is here. Each number picks its own wording (`numberForm`), because in
+ * choice of wording is here. Each number picks its own wording (`countForm`), because in
  * Romanian the two halves agree with their own numbers: "1 înscris din 50 de locuri", "20 de
  * înscriși din 21 de locuri", "12 înscriși din 12 locuri".
  */
@@ -18,8 +18,8 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  */
 export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
   return say("cta.fill", {
-    taken: say(`cta.fillTaken.${numberForm(locale, fill.taken)}`, { count: fill.taken }),
-    places: say(`cta.fillPlaces.${numberForm(locale, fill.capacity)}`, { count: fill.capacity }),
+    taken: say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken }),
+    places: say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity }),
   });
 }
 
@@ -29,7 +29,7 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
  * rest: "Mai este 1 loc", "Mai sunt 19 locuri", "Mai sunt 20 de locuri".
  */
 export function waitlistRoomPhrase(say: Say, locale: string, room: number): string {
-  return say(`cta.waitlistRoom.${numberForm(locale, room)}`, { count: room });
+  return say(`cta.waitlistRoom.${countForm(room, locale)}`, { count: room });
 }
 
 /**
@@ -41,7 +41,7 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  */
 export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: number; named: number }): string {
   return say("startList.summary", {
-    confirmed: say(`startList.confirmed.${numberForm(locale, counts.confirmed)}`, { count: counts.confirmed }),
+    confirmed: say(`startList.confirmed.${countForm(counts.confirmed, locale)}`, { count: counts.confirmed }),
     named: counts.named,
   });
 }

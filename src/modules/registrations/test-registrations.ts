@@ -5,6 +5,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageTestRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
@@ -106,7 +107,7 @@ const SYNTHETIC_BIRTH_DATE = "1990-01-01";
  * about.
  */
 function syntheticBirthDate(event: EventForRegistration): string {
-  const eventDay = dayIn(event.startsAt, event.timezone ?? "Europe/Bucharest");
+  const eventDay = dayIn(event.startsAt, event.timezone ?? CLUB_TIME_ZONE);
   const minAge = event.minAge ?? MIN_PARTICIPANT_AGE;
   const age = ageOn(SYNTHETIC_BIRTH_DATE, eventDay);
   return age !== null && age >= minAge ? SYNTHETIC_BIRTH_DATE : latestBirthDateFor(minAge, eventDay);

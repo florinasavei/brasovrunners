@@ -5,7 +5,7 @@ import { distanceInKm, type EventSurface, type EventType } from "./domain/event-
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { env } from "@/shared/config/env";
-import { formatDay, formatTime } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 
 /**
  * The environment on a calendar name and on every entry, QA only (§174; the owner: "the QA
@@ -323,7 +323,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const { t } = labels;
   const locale = labels.locale ?? "ro";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
-  const timeZone = event.timezone ?? "Europe/Bucharest";
+  const timeZone = event.timezone ?? CLUB_TIME_ZONE;
   const rows = event.programme ?? [];
   const place = calendarPlace(event, labels);
 
