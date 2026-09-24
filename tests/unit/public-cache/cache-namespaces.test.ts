@@ -93,8 +93,8 @@ describe("§NNN the data cache's three tenants", () => {
   });
 
   it("leave the Neon quota to fetch's own cache — no key and no tag the other two could share", async () => {
-    const fetchImpl = vi.fn(async (_url: string, _init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } }) =>
-      Response.json({ project: { compute_time_seconds: 3600, settings: { quota: { compute_time_seconds: 360000 } } } }),
+    const fetchImpl = vi.fn<(url: string, init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } }) => Promise<Response>>(
+      async () => Response.json({ project: { compute_time_seconds: 3600, settings: { quota: { compute_time_seconds: 360000 } } } }),
     );
 
     await checkNeonQuotaHealth({ NEON_API_KEY: "key", NEON_PROJECT_ID: "project" }, fetchImpl as unknown as typeof fetch);

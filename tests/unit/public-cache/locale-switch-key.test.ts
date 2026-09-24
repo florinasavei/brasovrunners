@@ -25,7 +25,7 @@ vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }));
 
-const resolveLocaleSwitch = vi.fn(async (_db: unknown, _from: string, _target: string) => "/en/events/the-cross");
+const resolveLocaleSwitch = vi.fn<(db: unknown, from: string, target: string) => Promise<string>>(async () => "/en/events/the-cross");
 vi.mock("@/modules/events/locale-switch", () => ({
   resolveLocaleSwitch: (db: unknown, from: string, target: string) => resolveLocaleSwitch(db, from, target),
 }));
