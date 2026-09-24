@@ -7,6 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
+import { countForm } from "@/i18n/count-form";
 import CardDoor from "./CardDoor";
 import type { Locale } from "@/i18n/routing";
 import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
@@ -49,7 +50,12 @@ export default async function SeriesCard({
   // the calendar" meant nothing to him.
   const recurrence = recurrenceOf(members, next.timezone);
   const rhythm =
-    recurrence.kind === "weekly" ? t("series.weeklyChip") : recurrence.kind === "fortnightly" ? t("series.fortnightlyChip") : t("series.count", { count: members.length });
+    recurrence.kind === "weekly"
+      ? t("series.weeklyChip")
+      : recurrence.kind === "fortnightly"
+        ? t("series.fortnightlyChip")
+        // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
+        : t(`series.count.${countForm(members.length, locale)}`, { count: members.length });
   const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).

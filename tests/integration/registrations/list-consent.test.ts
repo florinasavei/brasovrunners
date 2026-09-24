@@ -178,7 +178,7 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
 
     expect(await setListConsent(db, id, false, "LIST_LINK", NOW)).toEqual({ listed: false, changed: true });
     expect(await listPublicStartList(db, eventId)).toEqual([]);
-    // §186: counted as "Participant anonim", never named.
+    // §186: counted as "Participant (nume ascuns)", never named.
     expect(await countAnonymousStartListEntries(db, eventId)).toBe(1);
 
     const later = new Date(NOW.getTime() + 60_000);

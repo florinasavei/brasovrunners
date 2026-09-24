@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { textFieldConstraints } from "@/shared/forms/constraints";
+import DateField from "@/shared/forms/pickers/DateField";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { albumInputConstraints, albumTranslationConstraints } from "../constraints";
@@ -44,14 +45,11 @@ export default async function AlbumFieldsForm({
   return (
     <Stack spacing={3}>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        {/* A date box knows its own shape; the schema's pattern would only repeat it. */}
-        <RecallField
+        <DateField
           name="takenOn"
-          type="date"
           label={t("fields.takenOn")}
           helperText={t("takenOnHelp")}
           defaultValue={takenOn}
-          slotProps={{ inputLabel: { shrink: true } }}
           required={albumInputConstraints("takenOn").required}
           sx={{ maxWidth: 240 }}
         />

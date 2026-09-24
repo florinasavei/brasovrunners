@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
+import PickerProvider from "@/shared/forms/pickers/PickerProvider";
 import { signOutAction } from "./actions";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
@@ -65,7 +66,9 @@ export default async function AdminLayout({ children, params }: Props) {
         </Alert>
       }
     >
-      {children}
+      {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
+          `DECISIONS.md` §345) — never on a public route, which never imports this shell. */}
+      <PickerProvider>{children}</PickerProvider>
     </BackofficeShell>
   );
 }

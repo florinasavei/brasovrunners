@@ -3,7 +3,7 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
-import { listPublicStartList } from "@/modules/registrations/repository";
+import { countAnonymousStartListEntries, countPublicStartList, listPublicStartList } from "@/modules/registrations/repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { expectViolation, SQLSTATE } from "../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../helpers/db";
@@ -199,6 +199,54 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
     });
 
     expect(await listPublicStartList(db, event.id)).toEqual([]);
+  });
+});
+
+/**
+ * §346 — the runners who did not tick "I want to appear" are still counted, as a number with
+ * nothing else attached: the query behind that number selects `count()` alone, so there is no
+ * name, club, position or anything else it could return even by a future mistake.
+ */
+describe("§346 what the anonymous count may contain — nothing but itself", () => {
+  it("counts exactly the confirmed, real, opted-out rows — same event, same people, the other half of the list", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org" });
+    await createRegistration(event.id, { name: "Bogdan Ionescu", email: "bogdan@example.org" });
+    await createRegistration(event.id, { name: "Nu Vreau", email: "optout@example.org", listOptOut: true });
+    await createRegistration(event.id, { name: "Nici Eu", email: "optout2@example.org", listOptOut: true });
+    // Everything below is excluded for its own reason, exactly as it is from the named list.
+    await createRegistration(event.id, { name: "Test Runner", email: "queue-demo@test.invalid", kind: "TEST", listOptOut: true });
+    await createRegistration(event.id, { name: "Inca Nu", email: "pending@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, listOptOut: true });
+    await createRegistration(event.id, { name: "S-a Retras", email: "cancelled@example.org", status: "CANCELLED", listOptOut: true });
+
+    expect(await countPublicStartList(db, event.id)).toBe(2);
+    expect(await countAnonymousStartListEntries(db, event.id)).toBe(2);
+  });
+
+  it("returns a plain number — `countAnonymousStartListEntries`'s return type has no room for a name to leak through", async () => {
+    // Unlike `listPublicStartList`, this query cannot be widened into returning a person by a
+    // future accident: `repository.ts` types it `Promise<number>`, and this is what it hands a
+    // caller — nothing that could be spread onto a page and read as a field.
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ascuns Cineva", email: "hidden@example.org", listOptOut: true });
+
+    const count = await countAnonymousStartListEntries(db, event.id);
+    expect(typeof count).toBe("number");
+  });
+
+  it("a TEST registration is invisible on both halves of the list, even when it opted in", async () => {
+    // AGENTS.md §12.6: `kind` appears in no condition the allocator or a public count uses —
+    // and opting in changes nothing about that, because a synthetic row is not a person either.
+    const event = await createEvent();
+    await createRegistration(event.id, {
+      name: "Test Runner",
+      email: "queue-demo@test.invalid",
+      kind: "TEST",
+      listOptOut: false,
+    });
+
+    expect(await countPublicStartList(db, event.id)).toBe(0);
+    expect(await countAnonymousStartListEntries(db, event.id)).toBe(0);
   });
 });
 

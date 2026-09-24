@@ -24,7 +24,7 @@ export default async function LastGoodNotice({ read }: { read: Pick<Resilient<un
 
   return (
     <Alert severity="warning" sx={{ mb: 3 }}>
-      {t("stale", { when: format.dateTime(read.takenAt, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "long" }) })}
+      {t("stale", { when: format.dateTime(read.takenAt, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "long", hourCycle: "h23" }) })}
     </Alert>
   );
 }

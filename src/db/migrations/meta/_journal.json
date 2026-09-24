@@ -463,6 +463,13 @@
       "when": 1790212278911,
       "tag": "0065_event_links",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1790225694799,
+      "tag": "0066_cost_amount_and_donation",
+      "breakpoints": true
     }
   ]
 }

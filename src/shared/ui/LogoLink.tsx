@@ -18,12 +18,17 @@ import { Link } from "@/i18n/navigation";
  * enough for voice control to work: "Brasov Runners" is what a speaker says either way.
  *
  * The 44px minimum height is BR-REQ-041-01 criterion 6: a logo is a tap target on a phone.
+ *
+ * `href="/events"`, not `"/"` (§342): the root itself 308-redirects to the listing
+ * (`app/[locale]/page.tsx`), so a literal `/` here sent every tap through that redirect. A nav
+ * link should go straight to where it lands, the same rule the sitemap and the JSON-LD `url`
+ * follow — one hop fewer, and one less "page with redirect" for a crawler to report.
  */
 export default function LogoLink({ children, label }: { children: ReactNode; label: string }) {
   return (
     <Box
       component={Link}
-      href="/"
+      href="/events"
       aria-label={label}
       sx={{
         display: "inline-flex",

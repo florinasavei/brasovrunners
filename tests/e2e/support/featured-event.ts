@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Getting the seeded featured event into a state a registration journey can be walked against.
@@ -52,6 +52,62 @@ export async function signIn(page: Page, identity: string) {
  */
 export async function hydrated(page: Page) {
   await page.waitForLoadState("networkidle");
+}
+
+/**
+ * A backoffice date box, on MUI's picker since `DECISIONS.md` §345 — day, month, year in one
+ * segmented field rather than the single `<input type="date">` a page could once `.fill()`
+ * directly. What the field actually posts is a *hidden* input under the box's real name (never
+ * visible, so `.fill()` on it times out); this drives the picker itself, the way a person would:
+ * click the field's own group by the label passed to `DateField`/`WallTimeField`, then type the
+ * digits, which MUI's field advances between day, month and year on its own.
+ *
+ * Found by the field's `<label>` text rather than by a section's own name ("Ziua", "Luna"),
+ * because every date picker on the page shares those — MUI's own Romanian locale, not this
+ * repository's translation, names the sections. The label is not always unique on a page either:
+ * "Ora" is the event's own time of day and every programme row's time, and "Data" is every row's
+ * date. A caller that means a row's box passes the row (`programmeRow`) as `scope`, so the lookup
+ * cannot reach outside it; with the page as `scope`, the first box of that name is the one filled
+ * — the event's own, which sits above the programme.
+ */
+export async function fillDateField(scope: Page | Locator, label: string, value: string /* YYYY-MM-DD */) {
+  const [year, month, day] = value.split("-");
+  const group = pickerGroup(scope, label);
+  await group.getByRole("spinbutton").first().click();
+  await group.page().keyboard.type(`${day}${month}${year}`);
+}
+
+/** The time half of the same picker family, always on the 24-hour clock (§345). */
+export async function fillTimeField(scope: Page | Locator, label: string, value: string /* HH:mm */) {
+  const [hour, minute] = value.split(":");
+  const group = pickerGroup(scope, label);
+  await group.getByRole("spinbutton").first().click();
+  await group.page().keyboard.type(`${hour}${minute}`);
+}
+
+/**
+ * A picker box by its label: the element MUI gives `role="group"`, named by the `<label>`, whose
+ * `spinbutton` children are the sections — `["30", "09", "2027"]`, `["19", "00"]`. Its own
+ * text is *not* the value: the outlined box's notch repeats the label inside it (a `<legend>`,
+ * hidden from the accessibility tree but not from `textContent`), so a spec reads the sections.
+ */
+export function pickerGroup(scope: Page | Locator, label: string): Locator {
+  return scope.getByRole("group", { name: label, exact: true }).first();
+}
+
+/**
+ * Row `index` (from 0) of the programme in the event editor (`DECISIONS.md` §117): the box that
+ * holds the row's date and its two times. Found by the row's own posted name — the hidden input
+ * `DateField` writes `event.schedule[<index>].date` into — so no label the row shares with the
+ * rest of the form ("Data", "Ora") can pick a box outside it. The innermost `div` holding that
+ * input is the row's own box: every other `div` that holds it is one of its ancestors, and
+ * ancestors come first in document order.
+ */
+export function programmeRow(page: Page, index: number): Locator {
+  return page
+    .locator("div")
+    .filter({ has: page.locator(`input[name="event.schedule[${index}].date"]`) })
+    .last();
 }
 
 const modeSelect = (page: Page) => page.getByRole("combobox", { name: "Modul de înscriere" });

@@ -7,8 +7,10 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
+import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
+import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -16,9 +18,22 @@ type Props = { params: Promise<{ locale: string }> };
 /** Per request, from the public cache — the privacy notice's arrangement, for the same reasons (§333). */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  robots: { index: true, follow: true },
-};
+/**
+ * Its own title, and indexed only while a text is in force in this language — with a
+ * canonical and hreflang to the languages that have one (§342). See `public-page.ts`.
+ */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "Legal" });
+  return legalPageMetadata({
+    baseUrl: env.APP_BASE_URL,
+    key: "TERMS",
+    locale,
+    inForce: await readLegalDocumentsInForce("TERMS", new Date()),
+    fallbackTitle: t("termsTitle"),
+  });
+}
 
 /** The terms and conditions. See `legal/privacy/page.tsx` for why this never 404s. */
 export default async function TermsPage({ params }: Props) {
@@ -60,7 +75,14 @@ export default async function TermsPage({ params }: Props) {
           <LegalDocumentBody body={document.body} />
         </>
       ) : (
-        <Alert severity="info">{t("unavailable")}</Alert>
+        <>
+          {/* The document's name even when there is no text yet (§342): the two legal pages
+              were one page twice without it. */}
+          <Typography variant="h1" gutterBottom>
+            {t("termsTitle")}
+          </Typography>
+          <Alert severity="info">{t("unavailable")}</Alert>
+        </>
       )}
     </Container>
   );

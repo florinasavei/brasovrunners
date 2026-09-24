@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -25,6 +25,7 @@ import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeek
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
+import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -286,7 +287,11 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * §12.3 requires an approved declaration on an internal event, and it cannot be a CHECK because
  * "approved" lives in another table.
  */
-function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
+async function assertCoherentRegistrationBlock<T extends Record<string, unknown>>(
+  db: Database<T>,
+  fields: EventFieldsInput,
+  now: Date,
+): Promise<void> {
   // Every refusal names the boxes it is about (§47, §315), so the form can link to them.
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
@@ -304,14 +309,35 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
     );
   }
 
-  if (fields.participantListVisibility === "NAMES" && fields.registrationMode !== "INTERNAL") {
-    // For NONE there are no participants to list, and for EXTERNAL the people who entered are
-    // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      "a start list can only be published for an event that takes registrations here",
-      ["participantListVisibility"],
-    );
+  if (fields.participantListVisibility === "NAMES") {
+    if (fields.registrationMode !== "INTERNAL") {
+      // For NONE there are no participants to list, and for EXTERNAL the people who entered are
+      // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "a start list can only be published for an event that takes registrations here",
+        ["participantListVisibility"],
+      );
+    }
+
+    /**
+     * `AGENTS.md` §10.10, `DECISIONS.md` §32, §346: the disclosure MUST NOT be switched on
+     * before the approved privacy notice describes it. §32 recorded the rule and left it
+     * unenforced because no environment had an approved notice at all yet, so nothing could be
+     * blocked — that stopped being true on 2026-09-22, when production approved one. The check
+     * asks the same question `legal-documents/service.ts` asks for "in force" — approved,
+     * effective by now, never withdrawn — and by key alone, the same way `declarationNone`
+     * reads the environment rather than one locale: an event is publishable only with both
+     * languages complete (§28), so a notice missing from one language is not a state a public
+     * disclosure should be allowed to launch from either.
+     */
+    if (!(await findCurrentApprovedVersionId(db, "PRIVACY_NOTICE", now))) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "the participant list cannot be published before an approved, effective privacy notice describes the disclosure",
+        ["participantListVisibility"],
+      );
+    }
   }
 
   if (fields.registrationMode === "EXTERNAL") {
@@ -371,6 +397,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     locationToBeAnnounced: fields.locationToBeAnnounced,
     difficulty: fields.difficulty,
     costType: fields.costType,
+    // Absent means this caller is not editing the cost fields (§343), the discipline `links`
+    // and `bibDesign` follow — the editor always posts both, so a save from it writes whatever
+    // is in the boxes even while the chosen kind does not need one of them.
+    ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
+    ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
@@ -980,7 +1011,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
   const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
-  assertCoherentRegistrationBlock(fields);
+  await assertCoherentRegistrationBlock(db, fields, now);
   const times = resolveTimes(fields);
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
@@ -1085,6 +1116,8 @@ const SERIES_COLUMNS = [
   "locationToBeAnnounced",
   "difficulty",
   "costType",
+  "costAmount",
+  "costUrl",
   "distanceMeters",
   "elevationGainMeters",
   "registrationMode",
@@ -1375,7 +1408,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
     }
-    assertCoherentRegistrationBlock(parsedEventFields);
+    await assertCoherentRegistrationBlock(db, parsedEventFields, now);
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
@@ -1527,7 +1560,7 @@ export async function createEvent<T extends Record<string, unknown>>(
   }
 
   const parsed = normalizeForType(parseOrThrow(newEventSchema, input.fields));
-  assertCoherentRegistrationBlock(parsed);
+  await assertCoherentRegistrationBlock(db, parsed, now);
   const times = resolveTimes(parsed);
 
   const created = await db.transaction(async (tx) => {
@@ -1762,6 +1795,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     locationToBeAnnounced: source.locationToBeAnnounced,
     difficulty: source.difficulty,
     costType: source.costType,
+    costAmount: source.costAmount,
+    costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
@@ -2024,6 +2059,55 @@ export async function stopRepeat<T extends Record<string, unknown>>(
     .where(eq(events.id, input.eventId));
   // Without its rule the source is a one-off again, and a past one-off is history (§275).
   revalidatePublicContent("events");
+}
+
+/**
+ * Switch a running series' automatic publication on or off (`DECISIONS.md` §341): whether the
+ * dates the job makes from now on go live as they are made, or wait as drafts.
+ *
+ * The rule's `publish` flag was chosen once, with the tick under "Repetă evenimentul", and never
+ * again: a series started from a draft — or without the tick — made every future date a draft
+ * for good, and the only way out was to stop the series and start it again. The owner met the
+ * result as "Ciornă · 1 date" on the list and could not tell the site was missing a Monday.
+ *
+ * Only the flag changes; the cadence, the days and the end stay as they are, and the dates that
+ * already exist keep their state — publishing those is the list's bulk verb or each date's own
+ * editor, which pass the checks publication has. Switching it on asks what the first creation
+ * asked (`repeatEvent`): the role that publishes, and a published source — the copies of an
+ * unpublished event would be drafts anyway (`materializeSeries`), so a switch that could not
+ * take effect is refused rather than stored.
+ */
+export async function setRepeatPublish<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; publish: boolean; now?: Date },
+): Promise<void> {
+  if (!canCreateEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
+  }
+  const [source] = await db
+    .select({ id: events.id, repeatRule: events.repeatRule, editorialStatus: events.editorialStatus })
+    .from(events)
+    .where(eq(events.id, input.eventId))
+    .limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  const rule = readRepeatRule(source.repeatRule);
+  if (!rule) throw new DomainError("VALIDATION_ERROR", "this event does not repeat; a series is switched from its first event");
+  if (input.publish) {
+    if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+      throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
+    }
+    if (source.editorialStatus !== "PUBLISHED") {
+      throw new DomainError("VALIDATION_ERROR", "publish this event first: the dates of an unpublished event stay drafts");
+    }
+  }
+  // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing
+  // between the read above and this write would otherwise have this `{ ...rule, publish }` — the
+  // rule as it was before the stop — write the series back into existence. With the guard, that
+  // race makes this update match nothing, and the stopped series stays stopped.
+  await db
+    .update(events)
+    .set({ repeatRule: { ...rule, publish: input.publish }, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
+    .where(and(eq(events.id, source.id), isNotNull(events.repeatRule)));
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

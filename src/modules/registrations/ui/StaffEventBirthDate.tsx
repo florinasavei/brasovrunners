@@ -98,6 +98,11 @@ export function StaffEventSelect({
   );
 }
 
+/**
+ * Native — `type="date"` — like the public form's box, never the backoffice's MUI picker
+ * (`shared/forms/pickers`, `DECISIONS.md` §345): a birth date is decades back, and paging a
+ * calendar month by month to reach 1985 is slower than typing four digits for the year.
+ */
 export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
   const { selected, eventDays, eventMinAges, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;

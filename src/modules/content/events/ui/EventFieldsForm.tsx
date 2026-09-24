@@ -6,18 +6,20 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
-import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { CO_HOST_LINK_KINDS, type CoHostLinkKind, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { EVENT_LINK_KINDS, type EventLinkKind, MAX_EVENT_LINKS, readEventLinks } from "@/modules/events/domain/links";
 import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { type EventFieldName, eventInputConstraints } from "../constraints";
-import { eventLinkRowSchema } from "../fields";
+import { coHostLinkRowSchema, eventLinkRowSchema } from "../fields";
 import CoHostRowsEditor from "./CoHostRowsEditor";
+import CostFields from "./CostFields";
 import EditorPanel from "./EditorPanel";
 import GlyphSelect from "./GlyphSelect";
 import LinkRowsEditor from "./LinkRowsEditor";
@@ -132,13 +134,14 @@ export default async function EventFieldsForm({
   });
 
   /**
-   * The partners as boxes (§168), read through the one function that decides whether a row
-   * means its list or the two columns the list replaced — so an event saved before the list
-   * existed opens with the partner it has, and the first save writes it as a list.
+   * The partners as cards (§168, §344), read through the one function that decides which shape
+   * a row means — its list of links, its one legacy link, or the two columns before the list —
+   * so an event saved by any earlier release opens with the partner it has, and the first save
+   * writes it as the new shape.
    */
   const coHostRows = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null }).map((host) => ({
     name: host.name,
-    url: host.url ?? "",
+    links: host.links.map((link) => ({ kind: link.kind, url: link.url, labelRo: link.labelRo ?? "", labelEn: link.labelEn ?? "" })),
   }));
 
   /** The links as boxes (§332), read through the one function that decides what a stored row means. */
@@ -589,11 +592,34 @@ export default async function EventFieldsForm({
               defaultValue={event?.costType ?? ""}
               options={[
                 { value: "", label: t("editor.notStated") },
-                ...(["FREE", "PAID"] as const).map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
+                ...EVENT_COST_TYPES.map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
               ]}
               sx={{ flex: 1 }}
             />
           </Stack>
+
+          {/*
+            "Suma" and "Unde se plătește" for a paid event, "Link pentru donație" and "Suma
+            sugerată" for a donation (§343; the owner: "Cu taxă" showed no box for the money, and
+            usually nothing is paid — the exception is Wings for Life, where a donation is made
+            on another site). One pair of columns, relabelled by `CostFields` rather than posted
+            twice; shown only while the chosen kind needs one of them, values kept otherwise.
+          */}
+          <CostFields
+            initialCostType={event?.costType ?? ""}
+            costAmount={{ defaultValue: event?.costAmount ?? "", box: box("costAmount") }}
+            costUrl={{ defaultValue: event?.costUrl ?? "", box: box("costUrl", { inputMode: "url" }) }}
+            labels={{
+              paidAmount: t("editor.costAmount"),
+              paidAmountHelp: t("editor.costAmountHelp"),
+              paidUrl: t("editor.costPaidUrl"),
+              paidUrlHelp: t("editor.costPaidUrlHelp"),
+              donationUrl: t("editor.costDonationUrl"),
+              donationUrlHelp: t("editor.costDonationUrlHelp"),
+              donationAmount: t("editor.costDonationAmount"),
+              donationAmountHelp: t("editor.costDonationAmountHelp"),
+            }}
+          />
 
           {/*
             The course, and a separate question from the meeting point above: where a runner
@@ -675,9 +701,10 @@ export default async function EventFieldsForm({
             {...box("facebookEventUrl", { inputMode: "url" })}
           />
 
-          {/* The organizations the event is held with (§168): a name and a page each, any
-              number of them. An event saved before the list existed opens with the one partner
-              its two old columns hold, and the first save writes it as a list. */}
+          {/* The organizations the event is held with (§168), each a card of its own links
+              (§344): its site, its event, registering with it, its socials. An event saved
+              before the card existed opens with the partner its earlier shape holds, and the
+              first save writes it as a card. */}
           <Stack spacing={1}>
             <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
               {t("editor.coHostSection")}
@@ -687,11 +714,29 @@ export default async function EventFieldsForm({
             </Typography>
             <CoHostRowsEditor
               initial={coHostRows}
+              kindLabels={Object.fromEntries(CO_HOST_LINK_KINDS.map((kind) => [kind, tEvent(`coHostLinks.kinds.${kind}`)])) as Record<CoHostLinkKind, string>}
+              constraints={{
+                url: htmlConstraints(coHostLinkRowSchema.shape.url),
+                label: htmlConstraints(coHostLinkRowSchema.shape.labelRo),
+              }}
               labels={{
-                name: t("editor.coHostName"),
-                url: t("editor.coHostUrl"),
                 add: t("editor.coHostRows.add"),
                 remove: t("editor.coHostRows.remove"),
+                moveUp: t("editor.coHostRows.moveUp"),
+                moveDown: t("editor.coHostRows.moveDown"),
+                partnerNew: t("editor.coHostRows.partnerNew"),
+                name: t("editor.coHostRows.name"),
+                kind: t("editor.coHostRows.kind"),
+                url: t("editor.coHostRows.url"),
+                labelRo: t("editor.coHostRows.labelRo"),
+                labelEn: t("editor.coHostRows.labelEn"),
+                addLink: t("editor.coHostRows.addLink"),
+                removeLink: t("editor.coHostRows.removeLink"),
+                moveLinkUp: t("editor.coHostRows.moveLinkUp"),
+                moveLinkDown: t("editor.coHostRows.moveLinkDown"),
+                link: t("editor.coHostRows.link"),
+                // The card's number is the island's to fill in, so the placeholder travels as itself.
+                ofPartner: t("editor.coHostRows.ofPartner", { p: "{p}" }),
               }}
             />
           </Stack>

@@ -22,6 +22,7 @@ vi.mock("next-intl/server", async () => {
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages: ro, namespace: namespace as "Event" }),
     getFormatter: async () => createFormatter({ locale: "ro", timeZone: "Europe/Bucharest" }),
+    getLocale: async () => "ro",
   };
 });
 

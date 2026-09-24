@@ -47,6 +47,8 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
 }
 
 const URL = "https://example.test/ro/evenimente/tura-pe-tampa";
+/** The listing — the club's front page, which the organization block names as its `url` (§342). */
+const LISTING = "https://example.test/ro/evenimente";
 
 function parsed(data: Record<string, unknown>) {
   return JSON.parse(JSON.stringify(data));
@@ -101,12 +103,36 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
+  it("takes a partner's url from its SITE link even when a different kind was listed first (§344)", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          coHosts: [
+            {
+              name: "Brașov Marathon",
+              links: [
+                { kind: "FACEBOOK", url: "https://facebook.com/bm", labelRo: null, labelEn: null },
+                { kind: "SITE", url: "https://bm.example.test", labelRo: null, labelEn: null },
+              ],
+            },
+          ],
+        } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(block.organizer).toEqual([
+      { "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" },
+      { "@type": "Organization", name: "Brașov Marathon", url: "https://bm.example.test" },
+    ]);
+  });
+
   it("keeps one organizer object, not a list of one, when the club hosts alone", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
   });
 
-  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121)", () => {
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID or DONATION (§121, §343)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);
     expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
@@ -114,14 +140,47 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     const unstated = parsed(sportsEventJsonLd(baseEvent({ costType: null }), URL, "Brașov Runners"));
     expect(unstated.isAccessibleForFree).toBe(true);
     const paid = parsed(sportsEventJsonLd(baseEvent({ costType: "PAID" }), URL, "Brașov Runners"));
-    expect(paid.isAccessibleForFree).toBeUndefined();
+    expect(paid.isAccessibleForFree).toBe(false);
     expect(paid.offers).toBeUndefined();
+    const donation = parsed(sportsEventJsonLd(baseEvent({ costType: "DONATION" } as Partial<PublicEvent>), URL, "Brașov Runners"));
+    expect(donation.isAccessibleForFree).toBe(false);
+    expect(donation.offers).toBeUndefined();
+  });
+
+  it("offers the club's own cost link, never a price parsed out of the free text amount (§343)", () => {
+    const paidUrl = "https://revolut.me/brasovrunners";
+    const paid = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "PAID", costAmount: "50 lei", costUrl: paidUrl } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(paid.isAccessibleForFree).toBe(false);
+    expect(paid.offers).toEqual({ "@type": "Offer", url: paidUrl, availability: "https://schema.org/InStock" });
+    expect(paid.offers.price).toBeUndefined();
+
+    const donationUrl = "https://www.wingsforlifeworldrun.com/en/donate";
+    const donation = parsed(
+      sportsEventJsonLd(
+        baseEvent({ costType: "DONATION", costUrl: donationUrl } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(donation.offers).toEqual({ "@type": "Offer", url: donationUrl, availability: "https://schema.org/InStock" });
   });
 
   it("references the club @id as organizer", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer["@id"]).toBe(clubId());
-    expect(block.organizer["@id"]).toBe(parsed(sportsOrganizationJsonLd("Brașov Runners"))["@id"]);
+    expect(block.organizer["@id"]).toBe(parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING))["@id"]);
+  });
+
+  it("names the listing as the club's url, never the bare base that redirects (§342)", () => {
+    const block = parsed(sportsOrganizationJsonLd("Brașov Runners", LISTING));
+    expect(block.url).toBe(LISTING);
+    expect(block.url).not.toBe(clubId().replace(/\/#organization$/, ""));
   });
 
   it("includes a postal address on the location", () => {
@@ -180,7 +239,7 @@ describe("BR-REQ-052-02 criterion 6 no participant data", () => {
   it("contains no participant, email, registration or declaration field", () => {
     const serialised = JSON.stringify([
       sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"),
-      sportsOrganizationJsonLd("Brașov Runners"),
+      sportsOrganizationJsonLd("Brașov Runners", LISTING),
     ]).toLowerCase();
 
     for (const forbidden of ["participant", "@example.", "registration", "declaration", "attendee"]) {

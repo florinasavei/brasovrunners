@@ -35,6 +35,9 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
 import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
+import { draftExplanation, seriesDrafts } from "@/modules/events/domain/series-drafts";
+import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
+import { countForm } from "@/i18n/count-form";
 import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
 import { editionNote, renewalOf } from "@/modules/events/ui/series-sentence";
 import { HORIZON_DAYS } from "@/modules/events/domain/repeat";
@@ -191,6 +194,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const shortDate = (event: EditableEvent) =>
     format.dateTime(event.startsAt, { timeZone: event.timezone, day: "numeric", month: "short", year: "numeric" });
 
+  // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
+  const datesWords = (count: number) => tEvent(`series.count.${countForm(count, locale)}`, { count });
+  // A hand-edited query string is not a number; unguarded, `Number(raw)` is `NaN` and the banner
+  // reads "NaN date" (the editor page's own `datesWords` guards the same param the same way).
+  const countOf = (raw: string | undefined) => (Number.isFinite(Number(raw)) ? Number(raw) : 0);
+
   const columns: readonly AdminColumn<ListRow>[] = [
     {
       key: "title",
@@ -208,7 +217,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 {translations[0]?.title ?? event.id}
               </Link>
               {members.length > 1 && (
-                <GlyphChip glyph="series" variant="outlined" label={tEvent("series.count", { count: members.length })} />
+                <GlyphChip glyph="series" variant="outlined" label={datesWords(members.length)} />
               )}
               {members.some((member) => member.event.featured) && (
                 <Chip size="small" color="primary" label={t("events.featured")} />
@@ -299,24 +308,66 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         // One chip per state the series is in, with how many dates are in it ("Publicat · 8 date";
         // the owner: "not sure what these statuses are"); one event, one chip. The registration
         // mode is a chip of its own, with a title saying which setting it is.
+        const isSeries = members.length > 1;
         const byStatus = new Map<EditableEvent["editorialStatus"], number>();
         for (const member of members) byStatus.set(member.event.editorialStatus, (byStatus.get(member.event.editorialStatus) ?? 0) + 1);
+        /*
+          A series' drafts are a line of their own, not a chip (§341; the owner, of "Ciornă ·
+          1 date": "ce înseamnă această 1 ciornă?"). A draft date is a date the site does not
+          show, and the chip said neither that nor which date nor why: the line names the dates,
+          each a link to where it is published, and its "?" says why this series makes drafts —
+          the rule's switch is off, or its source is not published — when the rule can tell.
+        */
+        const { drafts, reason } = isSeries ? seriesDrafts(members.map((member) => member.event), now) : { drafts: [], reason: null };
+        const DRAFT_LINKS = 6;
         return (
-          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
-            {[...byStatus].map(([status, count]) => (
-              <Chip
-                key={status}
-                size="small"
-                color={status === "PUBLISHED" ? "success" : "default"}
-                label={members.length > 1 ? `${EDITORIAL_STATUS_LABEL[status]} · ${tEvent("series.count", { count })}` : EDITORIAL_STATUS_LABEL[status]}
-              />
-            ))}
-            {next.event.registrationMode !== "NONE" && (
-              <Chip
-                size="small"
-                variant="outlined"
-                title={t("events.registrationModeTitle")}
-                label={REGISTRATION_MODE_LABEL[next.event.registrationMode]}
+          <Stack spacing={0.75}>
+            <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5 }}>
+              {[...byStatus]
+                .filter(([status]) => !(isSeries && status === "DRAFT"))
+                .map(([status, count]) => (
+                  <Chip
+                    key={status}
+                    size="small"
+                    color={status === "PUBLISHED" ? "success" : "default"}
+                    label={isSeries ? `${EDITORIAL_STATUS_LABEL[status]} · ${datesWords(count)}` : EDITORIAL_STATUS_LABEL[status]}
+                  />
+                ))}
+              {next.event.registrationMode !== "NONE" && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  title={t("events.registrationModeTitle")}
+                  label={REGISTRATION_MODE_LABEL[next.event.registrationMode]}
+                />
+              )}
+            </Stack>
+            {drafts.length > 0 && (
+              <SeriesDraftLine
+                // The verb agrees with the count in Romanian: "nu apare" for one, "nu apar" for more.
+                text={
+                  drafts.length === 1
+                    ? t("events.seriesDraftsOne", { dates: datesWords(1) })
+                    : t("events.seriesDraftsMany", { dates: datesWords(drafts.length) })
+                }
+                dates={drafts.slice(0, DRAFT_LINKS).map((draft) => ({
+                  id: draft.id,
+                  label: format.dateTime(draft.startsAt, { timeZone: draft.timezone, weekday: "short", day: "numeric", month: "short" }),
+                  href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: draft.id } } }),
+                }))}
+                more={drafts.length > DRAFT_LINKS ? t("events.seriesDraftsMore", { count: drafts.length - DRAFT_LINKS }) : null}
+                explanation={draftExplanation(reason, {
+                  // The words of the real controls, read from the catalogue rather than retyped,
+                  // so the hint names exactly the button and the heading the reader will find:
+                  // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
+                  // under the source's "Evenimentul se repetă" (§341 hints).
+                  always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
+                  autoPublishOff: t("events.seriesDraftsWhyOff", {
+                    section: t("editor.repeatRuleTitle"),
+                    button: t("editor.repeatPublishTurnOn"),
+                  }),
+                  sourceNotPublished: t("events.seriesDraftsWhySource"),
+                })}
               />
             )}
           </Stack>
@@ -382,7 +433,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           </Alert>
         )}
         {saved === "eventsRepeated" && (
-          <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
+          <Alert severity="success">
+            {t(countOf(created) === 1 ? "events.eventsRepeatedOne" : "events.eventsRepeatedMany", {
+              dates: datesWords(countOf(created)),
+              until: format.dateTime(new Date(now.getTime() + HORIZON_DAYS * 86_400_000), { dateStyle: "long" }),
+            })}
+          </Alert>
         )}
         {saved === "eventsPublished" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>

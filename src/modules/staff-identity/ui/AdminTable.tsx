@@ -59,10 +59,11 @@ export type AdminColumn<Row> = {
   /** Already translated by the caller. */
   label: string;
   /**
-   * One sentence explaining what this column's values mean, shown behind a "?" beside the
-   * heading (§200). For a column whose values are shorthand — "3/6 · Loc rezervat" — the
-   * heading alone cannot say what the six are, and a legend above the table is a legend
-   * nobody reads twice.
+   * What this column's values mean, how to read them and what to do about them, shown behind a
+   * "?" beside the heading (§200) — and once above the phone layout, which has no heading. For
+   * a column whose values are shorthand — "3/6 · Loc rezervat" — the heading alone cannot say
+   * what the six are, and a legend above the table is a legend nobody reads twice. A list is
+   * written one `\n– item` per line; the tooltip keeps the lines (§257, §341).
    */
   hint?: string;
   sortable?: boolean;
@@ -165,6 +166,7 @@ export default function AdminTable<Row>({
   const pages = pageCount(total, query.perPage);
   const primary = columns.find((column) => column.primary) ?? columns[0];
   const secondary = columns.filter((column) => column !== primary);
+  const hinted = columns.filter((column) => column.hint);
 
   return (
     <Stack spacing={2}>
@@ -260,6 +262,28 @@ export default function AdminTable<Row>({
           </TableBody>
         </Table>
       </Box>
+
+      {/*
+        The column hints, once, above the phone layout (§341). The table's "?" lives in its
+        heading, and the phone layout has no heading — a block per row, each label repeated — so
+        on the screen race morning is read on, the explanation of "3/6" or "2*" was nowhere.
+        Once above the blocks rather than beside every row's label: a hundred identical "?"
+        would be a hundred client islands saying the same thing.
+      */}
+      {hinted.length > 0 && (
+        <Stack
+          direction="row"
+          sx={{ display: { xs: "flex", md: "none" }, flexWrap: "wrap", alignItems: "center", columnGap: 2 }}
+          data-testid="admin-table-hints"
+        >
+          {hinted.map((column) => (
+            <Typography key={column.key} component="span" variant="body2" color="text.secondary" sx={{ display: "inline-flex", alignItems: "center" }}>
+              {column.label}
+              <Hint text={column.hint as string} />
+            </Typography>
+          ))}
+        </Stack>
+      )}
 
       <Stack
         component="ul"

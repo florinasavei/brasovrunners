@@ -37,9 +37,16 @@ export function eventFormFieldName(path: string): string {
   const row = /^scheduleRows\.(\d+)\.(\w+)$/.exec(path);
   if (row) return `event.schedule[${row[1]}].${row[2]}`;
   if (path === "scheduleRows") return "event.schedule[0].date";
+  // The partners (§344): a card's own box by its index, or one of its links' by both indices —
+  // "Partenerul 2, linkul 3" is `coHosts.1.links.2.<box>`, checked first since it is the more
+  // specific shape.
+  const partnerLink = /^coHosts\.(\d+)\.links\.(\d+)\.(\w+)$/.exec(path);
+  if (partnerLink) return `event.coHosts[${partnerLink[1]}].links[${partnerLink[2]}].${partnerLink[3]}`;
+  const partnerLinkList = /^coHosts\.(\d+)\.links$/.exec(path);
+  if (partnerLinkList) return `event.coHosts[${partnerLinkList[1]}].links`;
   const partner = /^coHosts\.(\d+)\.(\w+)$/.exec(path);
   if (partner) return `event.coHosts[${partner[1]}].${partner[2]}`;
-  if (path === "coHosts") return "event.coHosts[0].name";
+  if (path === "coHosts") return "event.coHosts";
   // The links (§332): a row's box by the index the editor gave it, and the whole list — "more
   // than twelve" — as the list itself, which `LinkRowsEditor` carries the id of.
   const link = /^links\.(\d+)\.(\w+)$/.exec(path);

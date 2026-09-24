@@ -2,6 +2,7 @@
 
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -9,6 +10,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { shiftProgrammeDates } from "@/modules/events/domain/schedule";
+import DateField from "@/shared/forms/pickers/DateField";
+import TimeField from "@/shared/forms/pickers/TimeField";
 import { useRecall } from "@/shared/forms/recall";
 
 export type ScheduleRowValue = { date: string; time: string; endTime: string; ro: string; en: string; place: string };
@@ -53,7 +56,7 @@ function findStartDateInput(root: HTMLElement | null, name: string): HTMLInputEl
 /**
  * The programme's rows in the editor (`DECISIONS.md` §117): when, what in both languages,
  * where — one line each, in order. A client island for the two things a form cannot do by
- * itself, add a row and remove one; every box is an ordinary uncontrolled input named
+ * itself, add a row and remove one; every box posts under a name of its own,
  * `event.schedule[i].<box>`, which `admin/actions.ts#eventFieldsFrom` gathers by index. A row
  * left blank is the spare line and is dropped on save; a half-filled one is refused with its
  * number, so the organizer is told which line, not just that one is wrong.
@@ -92,10 +95,20 @@ function ScheduleRowsEditorIsland({
 
   useEffect(() => {
     const input = findStartDateInput(root.current, startDateName);
-    if (!input) return;
-    lastStart.current = input.value;
-    const onChange = () => {
-      const next = input.value;
+    if (input) lastStart.current = input.value;
+    // Listen on the form, not the element `findStartDateInput` returns right now (§345): on a
+    // full page load the picker replaces the scriptless box during hydration, after this effect
+    // has already run (`useIslandRunning`'s `useSyncExternalStore` forces that re-render from
+    // its own passive effect, which lands after this one), so a listener on the element it
+    // returned here would be attached to a node about to be unmounted and would never hear the
+    // picker's own change again. The form (document as the fallback for a rows editor rendered
+    // outside one) outlives the swap, so one delegated listener, filtered to the start-date box
+    // by name, survives both that swap and any later remount.
+    const scope: Document | HTMLFormElement = root.current?.closest("form") ?? document;
+    const onChange = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== startDateName) return;
+      const next = target.value;
       if (!next || next === lastStart.current) return;
       const previous = lastStart.current;
       lastStart.current = next;
@@ -109,8 +122,8 @@ function ScheduleRowsEditorIsland({
         return current.map((row, index) => ({ key: row.key, value: shifted[index] }));
       });
     };
-    input.addEventListener("change", onChange);
-    return () => input.removeEventListener("change", onChange);
+    scope.addEventListener("change", onChange);
+    return () => scope.removeEventListener("change", onChange);
   }, [startDateName]);
 
   const add = () => {
@@ -138,44 +151,31 @@ function ScheduleRowsEditorIsland({
             spacing={1}
             sx={{ alignItems: { md: "flex-start" }, p: 1.5, border: 1, borderColor: "divider", borderRadius: 1 }}
           >
-            <Stack direction="row" spacing={1}>
-              <TextField
+            {/* Wraps on a phone: the three boxes' own widths (150 + 140 + 140, each holding a
+                44-pixel button) add up to more than a phone's content width, and a `Stack`
+                does not wrap by itself. None of the three has a clear button — the row's own
+                remove button empties it in one press, and a clear button beside a calendar or
+                clock button, both held to 44 pixels (BR-REQ-041-01 criterion 6), collided with
+                the digits in a box this narrow. */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {/* Controlled, unlike the rest of the row: this is the one box the start-date
+                  effect above moves by hand, and a stale posted value under this row's *current*
+                  index (after an earlier row was removed) must never win over that move
+                  (`DateField`'s `value` prop skips its own refusal lookup for exactly this). */}
+              <DateField
                 name={name("date")}
-                id={recall.idOf(name("date"))}
-                error={recall.named(name("date"))}
-                type="date"
                 label={labels.date}
                 value={value.date}
-                onChange={(event) => setDate(key, event.target.value)}
+                onValueChange={(posted) => setDate(key, posted)}
                 size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
+                clearable={false}
                 sx={{ width: 150 }}
               />
-              {/* Picked, not typed, like the start time (`WallTimeField`): the browser's own
-                  clock, posting `HH:MM` whatever face it shows. */}
-              <TextField
-                name={name("time")}
-                id={recall.idOf(name("time"))}
-                error={recall.named(name("time"))}
-                type="time"
-                label={labels.time}
-                defaultValue={value.time}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ width: 120 }}
-              />
-              <TextField
-                name={name("endTime")}
-                id={recall.idOf(name("endTime"))}
-                error={recall.named(name("endTime"))}
-                type="time"
-                label={labels.endTime}
-                defaultValue={value.endTime}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ width: 120 }}
-              />
-            </Stack>
+              {/* Picked, not typed, like the start time (`WallTimeField`): MUI's own 24-hour
+                  clock, posting `HH:mm` in either language of the backoffice. */}
+              <TimeField name={name("time")} label={labels.time} defaultValue={value.time} size="small" clearable={false} sx={{ width: 140 }} />
+              <TimeField name={name("endTime")} label={labels.endTime} defaultValue={value.endTime} size="small" clearable={false} sx={{ width: 140 }} />
+            </Box>
             <TextField name={name("ro")} id={recall.idOf(name("ro"))} error={recall.named(name("ro"))} label={labels.ro} defaultValue={value.ro} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <TextField name={name("en")} id={recall.idOf(name("en"))} error={recall.named(name("en"))} label={labels.en} defaultValue={value.en} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />
             <TextField name={name("place")} id={recall.idOf(name("place"))} error={recall.named(name("place"))} label={labels.place} defaultValue={value.place} size="small" fullWidth slotProps={{ htmlInput: { maxLength: 200 } }} />

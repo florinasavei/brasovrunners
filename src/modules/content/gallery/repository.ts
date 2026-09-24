@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import {
   galleryAlbumTranslations,
@@ -32,6 +32,8 @@ export type PublicAlbumSummary = {
   title: string;
   description: string | null;
   takenOn: Date;
+  /** When the album row last changed — the sitemap's `lastModified` (§342). */
+  updatedAt: Date;
   photoCount: number;
   coverThumbUrl: string | null;
 };
@@ -54,6 +56,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
       title: galleryAlbumTranslations.title,
       description: galleryAlbumTranslations.description,
       takenOn: galleryAlbums.takenOn,
+      updatedAt: galleryAlbums.updatedAt,
       coverKeyPrefix: cover.keyPrefix,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,
     })
@@ -72,6 +75,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     title: row.title,
     description: row.description,
     takenOn: row.takenOn,
+    updatedAt: row.updatedAt,
     photoCount: Number(row.photoCount),
     coverThumbUrl: row.coverKeyPrefix ? urlsFor(row.coverKeyPrefix).thumbUrl : null,
   }));
@@ -95,6 +99,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
       title: galleryAlbumTranslations.title,
       description: galleryAlbumTranslations.description,
       takenOn: galleryAlbums.takenOn,
+      updatedAt: galleryAlbums.updatedAt,
       eventId: galleryAlbums.eventId,
       coverKeyPrefix: cover.keyPrefix,
     })
@@ -127,6 +132,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
     title: row.title,
     description: row.description,
     takenOn: row.takenOn,
+    updatedAt: row.updatedAt,
     photoCount: photos.length,
     coverThumbUrl: row.coverKeyPrefix ? urlsFor(row.coverKeyPrefix).thumbUrl : null,
     photos,
@@ -210,6 +216,37 @@ export async function findAlbumForEditor<T extends Record<string, unknown>>(
     .where(eq(galleryAlbumTranslations.albumId, id))
     .orderBy(asc(galleryAlbumTranslations.locale));
   return { album, translations, photos: await listPhotos(db, id) };
+}
+
+/**
+ * Every locale one published album lives in, with that locale's own slug — its `hreflang`
+ * alternates (§342). An album that is not published yields nothing.
+ */
+export async function findPublishedAlbumTranslations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  albumId: string,
+): Promise<Array<{ locale: Locale; slug: string }>> {
+  return db
+    .select({ locale: galleryAlbumTranslations.locale, slug: galleryAlbumTranslations.slug })
+    .from(galleryAlbumTranslations)
+    .innerJoin(galleryAlbums, eq(galleryAlbums.id, galleryAlbumTranslations.albumId))
+    .where(and(eq(galleryAlbumTranslations.albumId, albumId), eq(galleryAlbums.editorialStatus, "PUBLISHED")));
+}
+
+/**
+ * The same, for every album in `albumIds` at once — the sitemap's own twin of the single-album
+ * version above (§342), one query for the whole list rather than one per row.
+ */
+export async function findPublishedAlbumTranslationsForAlbums<T extends Record<string, unknown>>(
+  db: Database<T>,
+  albumIds: readonly string[],
+): Promise<Array<{ albumId: string; locale: Locale; slug: string }>> {
+  if (albumIds.length === 0) return [];
+  return db
+    .select({ albumId: galleryAlbumTranslations.albumId, locale: galleryAlbumTranslations.locale, slug: galleryAlbumTranslations.slug })
+    .from(galleryAlbumTranslations)
+    .innerJoin(galleryAlbums, eq(galleryAlbums.id, galleryAlbumTranslations.albumId))
+    .where(and(inArray(galleryAlbumTranslations.albumId, albumIds as string[]), eq(galleryAlbums.editorialStatus, "PUBLISHED")));
 }
 
 /** The other locale's slug of a published album, for the language switcher (BR-REQ-040-01). */

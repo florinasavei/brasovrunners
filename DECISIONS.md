@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.70-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.71-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.70-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.71-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -13869,3 +13869,184 @@ Six branches were built and reviewed on their own, and each has its own section:
 **Proven on the integrated tree, not only on the branches.** A production build ran the whole Playwright suite on both projects against a fresh database: with one worker, as CI runs it, 289 passed and none failed. A three-worker run met only the featured-event interleaving §212 describes, and those specs passed again when run serially.
 
 Baseline `BR-V1.70-2026-09-24`.
+
+## 341. A series' draft dates: named on the list, explained, and the switch that ends it
+
+The owner, of a series row reading "Publicat · 8 date · Ciornă · 1 date": "ce înseamnă această 1 ciornă?". A published source's series with "Publică edițiile create" left unticked makes every new date a draft the site never shows, and the bare chip named a count with no explanation and no way to act on it.
+
+**What the list now says.** A series' drafts get a line of their own (`SeriesDraftLine`), not a chip: "N date în ciornă — nu apar pe site:" followed by a link straight into each draft's own editor, and a "?" (`Hint`) carrying the general explanation always, and — where `seriesDrafts` can name it — why this particular series makes them.
+
+**Only the drafts still ahead.** `seriesDrafts` (`src/modules/events/domain/series-drafts.ts`) counts and links only the dates still to come, soonest first. A past draft — a standing-job date whose day came and went before anyone published it — is left out entirely: the site was never going to show it, there is nothing left to publish, and naming it would read as an ask nobody can act on.
+
+**The reason, and which half is checked first.** Two named reasons, `sourceNotPublished` and `autoPublishOff`; `null` when the list has no rule to blame (a hand-made set, or a rule that already publishes from a published source). The source's own editorial status is checked before the rule's `publish` flag, not after: `repeatEvent` always stores `publish: false` on the rule when its source is not published — the common case, a series started from the new-event form's own "creează ca ciornă" — whatever the tick under "Repetă evenimentul" said. Checking the flag first would blame the rule's own switch even when that switch is not the reason and, worse, is a switch the editor does not offer while the source is a draft (`(repeatRule.publish || live)` in the editor). `sourceNotPublished` now wins whenever the source itself is not published; `autoPublishOff` is reported only once the source is live and the flag is still off.
+
+**The switch the hint points to.** `setRepeatPublish` flips a running series' own `publish` flag without touching cadence, weekdays or end; asking to turn it on requires the role that publishes and a published source, the same guard `repeatEvent` applies at the first creation. The write is now guarded on `repeatRule` still being set (`isNotNull`), not merely on the event's id, so a `stopRepeat` landing between the read and the write can no longer have this write resurrect a just-stopped series with the rule as it stood a moment before.
+
+**Pluralisation.** `Event.series.count` moved from a single "{count} date" key to `{one, few, other}`, and every banner that used to carry a bare count now carries the already-pluralised `{dates}` phrase — `savedSeries`, `savedSeriesOffered` and `eventsRepeated` each split into `...One`/`...Many` keys (the way `seriesDraftsOne`/`seriesDraftsMany` already were), because "și pe încă 1 dată ale seriei" and "1 dată create acum" agree only with a plural: a singular date reads "a seriei", "creată".
+
+**Tooltip.** `TOOLTIP_TEXT_SX` (`shared/ui/tooltip-text.ts`) is the one style `Hint` and `InfoTip` both hand to MUI's tooltip slot, keeping a `\n` as a line break so a `\n– item` list reads as one item per line; `readingTimeMs` keeps a tapped tooltip open long enough to read rather than MUI's 1.5-second default. The reason the text carries no list markup is not that MUI's `Tooltip` refuses a `ReactNode` in `title` — it does not — but that the text crosses from a Server Component into the client island as a plain string and doubles as the button's accessible name, and both of those need a string, not markup.
+
+Verification: `tests/unit/events/series-drafts.test.ts`, `tests/unit/shared/tooltip-text.test.ts`, `tests/integration/cms/repeat-publish.test.ts`, `tests/unit/content/series-drafts-line.test.ts` (source-pinned wiring), e2e `series-drafts.spec.ts` (creates a published series with auto-publish off end to end, and now also opens the "?" tooltip itself — both sentences, `pre-line` kept — not merely its accessible name).
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 342. Decided — a canonical URL and hreflang alternates for every public page (2026-09-24)
+
+Google Search Console's first report on the club's `.com` named "4 pages with redirect" (http→https, `www`→apex, `/`→`/ro`, `/[locale]`→the listing — all expected) and "1 duplicate without user-selected canonical": the calendar's own bare address and `?month=<the current month>` render byte-identical content, and the "Lună" pill on the plain page links from one to the other — neither declared a canonical, so Google picked one for itself.
+
+**Decision.** `modules/seo/alternates.ts` is the one place a page's own URL and its language versions are built, from `APP_BASE_URL` and the database's own translations — never a hand-built string, which is what would produce an `hreflang` pointing at a slug that does not exist (BR-REQ-040-01 criterion 5). Every indexable public page (the listing, an event, the calendar, a standing page, an album, the two legal pages, contact) declares `alternates.canonical` on its own path with no query string, and `alternates.languages` for `ro`/`en`/`x-default` limited to the locales it actually exists in — an event, an album or a page with no translation in a locale is a 404 there (BR-REQ-040-02), so no alternate is advertised for it, and a legal text with no approved version in a locale gets `noindex` instead of a canonical (`legal-documents/public-page.ts#legalPageMetadata`, now unit-tested against a fixed `inForce` fixture rather than only exercised through the sitemap's own test). `sitemap.ts` reads from the same builders, so the page and its sitemap entry can never disagree about a page's address, and lists no redirecting URL, no unpublished locale and no unapproved legal text.
+
+`routing.ts` turns off next-intl's own automatic `Link: rel="alternate"` response header (`alternateLinks: false`): its `x-default` was the unprefixed path, which itself redirects, and on a slugged page it swapped the prefix onto this locale's slug rather than reading the other locale's own one — advertising a 404. The pages' own metadata replaces it entirely.
+
+Two smaller redirect sources, both reported as "page with redirect": `LogoLink` pointed at `/`, which 308s to the listing, so every logo tap paid for a hop it didn't need, and the `SportsOrganization` JSON-LD's `url` was the bare `APP_BASE_URL`, which redirects twice. The same fix now reaches the two remaining internal links that still pointed at the root — `not-found.tsx`'s "back" button now goes straight to `/events` through the same locale-aware `Link` `LogoLink` uses, and `error.tsx`'s plain anchor (kept plain deliberately: this boundary can catch a failure in the very i18n routing it would need to build a localized href) now targets `/events` instead of `/`, dropping the root's own second redirect without needing any of this page's own routing code to run.
+
+**The sitemap's listing and gallery entries are pushed for both locales unconditionally**, not only where the locale has content. Both `events/page.tsx` and `gallery/page.tsx` render an empty state rather than 404ing, and both already declare `alternates` for both locales unconditionally in their own `generateMetadata` — a count-gated sitemap entry only made the sitemap disagree with the page about which addresses exist. The calendar stays out of the sitemap on purpose, despite declaring its own self-canonical: it renders the same published events the listing already carries at priority 1, in a different layout rather than different content, so a second sitemap entry would be the near-duplicate a sitemap exists to avoid. A visitor reaches it from the listing's own view switch; nothing depends on a crawler being pointed at it directly.
+
+**An event's sitemap `lastModified` stays `publishedAt`, not `updatedAt`, and this is deliberate rather than an oversight** — `content/events/service.ts` documents why: the first publication stamps the date and later saves do not touch it, because re-stamping on every edit would tell a crawler the page is new every time a typo is fixed. Pages and albums use `updatedAt` because nothing about them plays that second role.
+
+**Translations for the sitemap's events, pages and albums are read in one bulk query per content type per locale**, not one query per row — `events/repository.ts#findPublishedTranslationsForEvents` and its page/album twins, grouped in memory. The previous one-query-per-row shape cost a weekly series' worth of extra round trips per crawl, on metered Neon compute.
+
+**Tests.** `tests/unit/seo/alternates.test.ts` for the builders; `tests/unit/legal-documents/public-page.test.ts` for the legal page's own head (noindex/no-alternates, self-canonical, and the failed-read fallback, as a fixed fixture rather than only through the sitemap's test); `tests/integration/seo/sitemap.test.ts` for the sitemap's own output; `tests/e2e/seo.spec.ts` for the actual `<link rel="canonical">` and `hreflang` tags on the listing, an event page and the calendar; `tests/unit/i18n/routing.test.ts` locks in `alternateLinks: false`.
+
+**Not done / deferred.** An e2e case rendering a legal page with no approved translation in one locale was considered and not added: the e2e database's only legal-document seed approves both locales together in one version, and building a partial-approval fixture safely (without mutating state other e2e specs depend on) needs seed infrastructure this change did not add. The unit test above covers the same branch of logic without a browser. No standing-page e2e case was added either — the pilot seed has none.
+
+Migration: none. Baseline: unchanged by this pass (application code under the "fast lane" relaxation, `AGENTS.md` §1.4/§20).
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 343. Decided — "Cu taxă" usually costs nothing; a donation is the third answer (2026-09-24)
+
+The owner, 2026-09-24, on the editor's Cost select showing no box for the money once "Cu taxă" is chosen: usually nothing is paid at all, and the one exception is Wings for Life, where a donation is made on another site.
+
+**Decision.** `DONATION` joins `FREE`/`PAID` in `event_cost_type` (migration `0066_cost_amount_and_donation.sql`, expand-only), alongside two nullable columns: `cost_amount` (free text, at most 60 characters — "50 lei", "sugerat 50 lei" — because a price is rarely just a number) and `cost_url` (https, checked the way `map_url` is). `PAID` requires an amount and accepts an optional payment link; `DONATION` requires the link and accepts an optional suggested amount. One pair of columns wears whichever pair of labels the chosen kind needs, relabelled by a client island (`CostFields`) that watches the Cost select the way `OnlyForType` does, rather than posting the pair twice. Values are kept while the box is hidden under `FREE` or "not stated", the same rule `PlaceToBeAnnounced` follows for the meeting point (§328).
+
+Both boxes are named in the refusal summary — `event.costAmount` as "Suma", `event.costUrl` as "Link pentru donație" — never the raw path, because `costRule`'s cross-field check only ever names `costAmount` on a `PAID` event and `costUrl` on a `DONATION` one, so each name has exactly one meaning. `required` follows the chosen kind on the box itself — the amount exactly while `PAID` is picked, the link exactly while `DONATION` is — so the browser refuses a blank one before the server does, and no hidden box ever carries `required` with nothing to focus.
+
+Every public surface that says what a runner pays says the same short phrase, independently built by three call sites for now (`EventFacts`, `ical.ts`, the registration form) rather than through one shared helper — a candidate for a later `cost.ts#costParts` pass. JSON-LD (`structured-data.ts`) reports `isAccessibleForFree: false` and an `offers.url` (no `price`, since none of the free text is a number) for `PAID` and `DONATION` alike, which is a change to what an existing `PAID` row already emits: before this release a `PAID` event carried neither field; a price crawler now correctly reads a paid or donation-funded event as not free, at the cost of a "missing price" warning the Rich Results tool treats as non-critical.
+
+**Rejected.**
+- Parsing a number out of `cost_amount` for schema.org's `price`. "50 lei" and "sugerat 50 lei" are not numbers, and guessing one would tell a search engine something the club never said.
+- Disabling the amount/link boxes while hidden, so a stale value could never reach the server. The editor's own Server Action (`admin/actions.ts#eventFieldsFrom`) reads every box through one `text()` helper that already turns an absent field into `""`, the same as a typed blank one — disabling would silently clear a stored `cost_amount`/`cost_url` on any save made under `FREE`, which is the opposite of the "values kept" rule this same feature relies on for switching between `PAID` and `DONATION`.
+
+**Tests.** Unit: `content/event-difficulty-and-cost.test.ts` (the Zod rules per kind, the https rule, values kept for an absent caller), `events/event-cost-facts.test.ts` (the rendered facts for each kind, both catalogues), `events/ical.test.ts` (the `.ics` description's cost line with an amount and a link, for `PAID` and `DONATION`), `events/structured-data.test.ts`, `content/event-links-summary.test.ts` (the refusal summary's labels for both boxes). Integration: `cms/event-cost.test.ts` (save/read/series-carry, a `FREE`/`PAID` row saved before this migration reading exactly as it did). E2e: `event-cost-donation.spec.ts` (written, not run this session — see Checks).
+
+Baseline `BR-V1.69-2026-09-24`.
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 344. Decided — a partner's page becomes a card of links (2026-09-24)
+
+The owner: "When adding a Partner, this can have multiple links, so it should be a card, it's like: partner link, partner event, etc."
+
+**Decision.** `events.co_hosts` (§168, a nullable jsonb column since migration `0048`, unchanged — no migration for this release either) now holds an ordered list of `{ name, links }`, where `links` is itself an ordered list of at most `MAX_CO_HOST_LINKS` (8) `{ kind, url, labelRo, labelEn }` rows: a partner's own site, its own page for this event, where to register with it, its Facebook, Instagram or Strava, or something else — the same seven-kind closed set and per-language-label shape "Linkuri și fișiere" already established for the event's own links (§332), read through `CO_HOST_LINK_KINDS` in `modules/events/domain/co-hosts.ts`. At most `MAX_CO_HOSTS` (8) partners per event, unchanged from §168.
+
+`readCoHosts` reads whichever shape a row was last saved in, leniently, the discipline §169 already set: this release's `{ name, links }`, the release before's `{ name, url }` (read as the one link it always meant, `SITE`), and the two columns from before the list existed (`co_host_name`, `co_host_url`) for a row nobody has saved since. An unreadable `url` on a legacy row — not a string, not https, or (fixed in review) not https once its surrounding whitespace is trimmed — is silently "no link" rather than dropping the partner, exactly as the two old columns always did.
+
+**Editor.** `CoHostRowsEditor.tsx` is one boxed card per partner, titled with its name ("Partener nou" while it has none), holding the name box and the partner's own link rows — each with its kind, address and a label per language, the same four boxes `LinkRowsEditor` carries. A card and its links each keep a key of their own across removals and moves, so moving a partner carries its own links with it. Posted as `event.coHosts[p].name` and `event.coHosts[p].links[l].<box>`, gathered by both indices in `admin/actions.ts#eventFieldsFrom`; a card with a link and no name, or a link with no https address, is refused naming both indices — "Partenerul 2, linkul 3: adresa trebuie să înceapă cu https://" (`form-names.ts#eventFormFieldName`, `field-labels.ts#eventFormFieldLabels`).
+
+**Rendering.** The compact card (`EventCard`, a series card) keeps exactly the one sentence §168/§169 gave it — "Împreună cu A, B și C", each name linking to `primaryCoHostLink`: the partner's `SITE` link if it named one, else its first link, else none — because a compact card has no room for a row of rows. The full event page lists each partner as its own row: its name, then every link it carries as a compact row of its own with the link kind's glyph (`co-host-glyphs.tsx`, the public set, never the backoffice's `action-icons.ts`, §318), the club's label or the kind's own word, and the link's host underneath, opening in a new tab, ≥44px. The `SportsEvent` JSON-LD names every partner as an `Organization` after the club with `primaryCoHostLink`'s `url`; the calendar entry ("Împreună cu A", then every other partner on its own line) does the same.
+
+**Rejected.** A CHECK constraint on the new shape, the way §332 added one for `events.links`: `co_hosts` has carried none since §168 and this release does not add one either — the column stays read leniently rather than guarded at the database, so a later shape change costs no migration.
+
+**Tests.** Unit: `events/co-hosts.test.ts` (reading every stored shape, the legacy `{name,url}` branch trimmed), `content/event-co-hosts-field.test.ts` (the form schema: a card's links, the https/kind/label rules, the spare card and spare link dropped, both ceilings refused by number), `events/event-facts-co-hosts.test.ts` (the compact sentence vs. the full page's per-partner rows), `events/structured-data.test.ts` (the organizer `url` from a new-shape card whose `SITE` link is not listed first), `events/ical.test.ts`, `content/event-links-summary.test.ts` (the "Partenerul {p}, linkul {l}" refusal label), `shared/form-outcome.test.ts` (`coHosts.<p>.links.<l>.<box>`, `coHosts.<p>.links` and bare `coHosts` all resolving to their `event.coHosts[…]` names). Integration: `cms/series-edit.test.ts` (a series save carrying the cards and their links onto every date). E2e: `co-host-links.spec.ts`.
+
+Baseline `BR-V1.70-2026-09-24` (owed by the batch that lands this; not bumped by this fix pass).
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 345. The MUI pickers survive a full page load — the programme still follows the start date
+
+**Reviewer's finding 1 (blocker), fixed.** `ScheduleRowsEditor`'s rows island moves the programme with the event's start date by listening for a `change` on the start-date box (`findStartDateInput`). It attached that listener to whichever DOM node the finder returned when its effect ran. On a full page load that node is `DateField`'s scriptless `TextField` — `useIslandRunning`'s `useSyncExternalStore` gives the server snapshot `false` during hydration — and React 19.2's `useSyncExternalStore` forces the re-render that swaps in the real picker from a passive effect that runs *after* every other passive effect of the same commit, `ScheduleRowsEditor`'s included. So the listener landed on a node already scheduled for removal, and the picker's own hidden input — the one that actually dispatches the bubbling `change` `usePickerAsNativeBox` fires — had no listener left to hear it. Client-side navigation from the events list never showed this, because the picker is already running by the time the island first mounts.
+
+Fixed by moving the listener from the element to `root.current.closest('form')` (document as the fallback for a rows editor rendered outside one), filtered to the start-date box by `event.target.name`. One delegated listener now survives both the hydration swap and any later remount, matching the pattern `usePickerAsNativeBox`'s own JSDoc already describes ("the form hears a change"). `lastStart.current`'s initial read is unchanged — it still runs synchronously in the same effect, before any swap, off whichever box is currently mounted.
+
+Added `tests/e2e/cms-publish.spec.ts` → "the programme follows the start date after a full page load": creates an event with one programme row, does a genuine `page.goto` back to its own editor (not the client navigation the create button already did), moves the start date one day with the picker, and asserts `event.schedule[0].date` moved with it. This is BR-REQ-050-02 criterion 23's own regression, previously uncaught because every existing programme test drove the editor through client-side navigation only.
+
+**Reviewer's finding 2 (should-fix), fixed.** No e2e or unit test asserted what a picker *shows* — `DD.MM.YYYY` day-first, `HH:mm` with no AM/PM — only what its hidden input posts, and every existing time assertion happened to use a morning hour, where a 12-hour and a 24-hour clock read identically. Added a second spec, on an afternoon hour (19:00) and a date whose day and month differ (30.09.2027), that reads the visible `role="group"` picker sections directly (`toHaveText`, plus an explicit `not.toContainText(/AM|PM/i)`), both right after typing and again after a save and a second full page load — covering BR-REQ-050-02 criterion 8's actual display requirement, not just its posted shape. `DatePickerInput`/`TimePickerInput` remain unit-untested (still exported "for the unit test" with none written); a unit test rendering them under `PickerProvider`, or removing that claim from the exports, is left for the batch that resolves this section's §345, since it is a larger, decision-adjacent change than a same-file bug fix.
+
+**Reviewer's nits 3, 4 and 6, fixed; nit 5 left as found.** `DateField`'s JSDoc now says plainly that the scriptless box's own DOM value is not carried into the picker at the hydration swap (accepted as the JS-off fallback's trade-off, per the finding — no behavior changed). `WallTimeField`'s JSDoc no longer claims clearing the date empties the time box on screen; it now says what actually happens — the pairing is enforced on save (`actions.ts`), not in the UI. `pickers-backoffice-only.test.ts`'s `isBackofficeRoute` no longer allows `/devs/`: it was copied from `action-icons.test.ts`, where allowing both routes is correct because an icon needs no provider, but `PickerProvider` is mounted only in the admin layout, so the copy let a picker dropped onto a `/devs` page pass this suite and then throw at runtime for want of the localization context. Nit 5 (the `DECISIONS.md §345` placeholder across 18 files) is left exactly as found: its own suggested fix is to fill it in "when the batch writes the DECISIONS entry," and this task's rules forbid a DECISIONS.md edit from this turn.
+
+This fix-up carries no rule change of its own — it repairs a hydration-timing regression and closes a coverage gap inside the same undocumented picker decision the parent commit (`b0f0ca85`, "finish the MUI date and time pickers, always 24-hour") opened. It should be folded into that same `§345` entry rather than given its own section number, once the batch writes it.
+
+**The specs that prove the pickers, checked themselves (re-review, 2026-09-24).** A programme row's boxes are found inside the row, never by where a label falls on the page. "Data" is every row's date, and "Ora" is every row's time as well as the event's own. The e2e helper `programmeRow(page, index)` is the innermost `div` around the row's own posted input, `event.schedule[<index>].date`. `fillDateField` and `fillTimeField` take that row, or the page for the event's own boxes, and no longer take an occurrence index.
+
+A spec about hydration has to be run against the code it guards with that code reverted, or it proves nothing. The first version of the §117 regression spec passed against a build without the fix. A save lands on `…?saved=created#admin-alert`, so `page.goto(page.url())` from there only jumps to a fragment of the same document: nothing reloads and nothing hydrates. The spec's "full page load" never happened. `loadAfresh` now goes to the bare editor path and asserts that a marker set on the old window is gone. The spec also moves the start date on the create page, which `page.goto` opens as a new document. Against a build of `ScheduleRowsEditor.tsx` as it was before the fix, it fails on both viewports at the create page, and at the editor step on its own, with the row left on its first date. With the fix it passes.
+
+What a picker shows is read from its sections, not from its text. The element MUI names with the label is the whole outlined input, and its notch repeats the label inside it, so its `textContent` is "19:00Ora". The display spec reads three things. The first is the `spinbutton` sections in order: `["30", "09", "2027"]`, and `["19", "00"]` with no third section, which a 12-hour clock would add. The second is MUI's own unnamed input, whose value spells the sections with their separators (`30.09.2027`). The third is the hidden input the form posts (`2027-09-30`). It checks all three before and after a real full load.
+
+`tests/unit/shared/pickers-running.test.ts` renders `DatePickerInput` and `TimePickerInput` on the server under `PickerProvider`, in both languages. Exactly one input posts under the field's name: hidden, in the service's shape, "" when empty. The sections and the picker's own value read `30.09.2026` and `19:00`. A controlled value moved after the first render needs a browser, so that stays with the e2e spec.
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 346. The public fill count, and a hidden participant is truly hidden
+
+**Decision.** The event page reads "N înscriși din X locuri" beside the register button — the event's places minus the same free-place count the button already shows (`publicFill`, arithmetic on two numbers `RegistrationCta` already holds, never a second query or a second formula). The public participant list gains a row per opted-out runner, reading "Participant (nume ascuns)" — counted in the heading's own total, named nowhere, with no position in the confirmed order, grouped after every named row.
+
+The owner: "I need to show the total number registered out of the available places, and the private ones I need to show somehow censored on the site."
+
+**A TEST registration is counted in "taken" exactly like a REAL one.** `readPublicAvailability` is the allocator's own formula, and AGENTS.md §12.6 requires that `kind` appear in no condition of it; `publicFill` is arithmetic on that same number, so it inherits the same property rather than re-deciding it. The alternative — a REAL-only `taken` — was considered and rejected: it would let "12 of 50" disagree with "38 places left" on the same page, which is exactly the disagreement `publicFill`'s own contract ("the very same numbers the button uses") exists to prevent. Because a TEST row cannot exist in production at all (`modules/registrations/test-registrations.ts`, DECISIONS.md §30), the figure a real visitor ever reads never actually includes one; the mix is only ever observed on QA or locally, which is where `tests/integration/registrations/test-kind.test.ts` proves the arithmetic against a real database.
+
+**The removed position number is a tidy-up, not a fixed privacy defect.** An anonymous row already sat after every named one before this change (`start-list-page.ts` groups them there), so the position column next to it never actually placed a hidden person inside the confirmed order — there was nothing for a friend who knows when somebody registered to read off. Printing a number there anyway was noise pointing at a slot nobody's row holds; removing it is a correctness tidy-up on an already-safe arrangement, and should be recorded here as that rather than as a disclosure bug that shipped and was caught.
+
+**The privacy-notice gap this also closes:** `content/events/service.ts` let an event's participant-list visibility be switched to NAMES with no approved privacy notice in force at all. §32 recorded that rule in 2026-09-05 and deliberately left it unenforced ("no environment has an approved notice at all, so nothing is blocked today") — that stopped being true on 2026-09-22 when production approved one. `assertCoherentRegistrationBlock` now asks the same "in force" question `legal-documents/service.ts` asks, and refuses the save otherwise.
+
+**Tests:** `publicFill`'s boundaries (nought, some, full, both clamps); `numberForm` against `Intl.PluralRules` for both locales; `fillPhrase`/`confirmedPhrase` against the real catalogues via `next-intl`'s `createTranslator`; the anonymous count against a mixed fixture (opted-in, opted-out, TEST, pending, cancelled); a full `StartList` render test proving an opted-out person's name, club, city and bib never reach the HTML; the privacy-notice guard both ways; an e2e assertion of the fill line on the page itself (regex widened in this pass to accept Romanian's "de" from twenty on); and, added in this review pass, an integration test proving a TEST hold counts in the public fill exactly like a REAL one, on a real database.
+
+**Left undone:** a full e2e walk of two confirmed registrations (one opted in, one not) reading the public list in a browser.
+
+Baseline `BR-V1.71-2026-09-24`.
+
+## 347. Decided — the 2026-09-24 third batch lands as one: hints that explain, canonical and hreflang, a donation, partners as cards, Romanian pickers, the public fill count — moved onto the public cache and run end to end together (2026-09-24)
+
+Six branches were built and reviewed separately, and each has its own section:
+- tooltips that explain, and the series draft line with its switch;
+- a canonical and hreflang on every public page;
+- a donation as a third answer to what a runner pays;
+- partners as cards of typed links;
+- MUI date and time pickers in Romanian;
+- "12 înscriși din 50 de locuri" beside the register button.
+
+This section records what changed when they landed together, on a `qa` that already held the second batch (§333–§340).
+
+**The merges kept both sides.**
+- `fields.ts` has the partner-card schema and the cost rule.
+- `ical.ts` and `EventFacts.tsx` import both the partner-link helpers and the cost host helper.
+- The event service calls `revalidatePublicContent`, `wakeJobs` and the privacy-notice guard, which refuses `NAMES` without an approved notice.
+- `list-consent.ts` keeps the cache expiry and uses the new "Participant (nume ascuns)" wording.
+- Migration `0066_cost_amount_and_donation` follows `0065`, and drizzle-kit finds no drift.
+
+**Moved onto the cache, not around it (§333).** Two branches were written before the public cache, and both read the database from a public page.
+
+1. *Canonical and hreflang.* The event, page and album metadata, the legal pages' "text in force" check and the sitemap each imported the pool. That would have woken the database for every crawler request, which is exactly what §333 exists to stop.
+   - Two new cached reads give a page's and an album's published translations. They are tagged `pages` and `gallery`, so a save expires them.
+   - The sitemap's three reads carry their rows' alternates already grouped: one query per kind for the whole list, trimmed before caching.
+   - The legal metadata and the sitemap read the text in force through `cachedCurrentApprovedDocument`. That is the page body's own read, keyed by the stretch between effective dates.
+   - `legal-documents/public-page.ts` and `seo/alternates.ts` join the files the no-pool test watches.
+2. *The public fill count.* `RegistrationCta` read the internal row and the allocator's formula straight from the pool.
+   - `cachedPublicAvailability` now answers `{ available, capacity }` from the one internal row the formula counted. It uses the same key, the same tags and the same offer-expiry clock window, so the fill line is one cache entry read twice. It is never a second formula (AGENTS.md §10.6).
+   - `StartList` keeps the cached counts and page. The hidden rows are drawn from the anonymous count alone, with no position, so the cache holds a number for them and never a row.
+
+**What the integration had to fix, because no single branch could see it:**
+- (a) *Partners on the featured hero.* The hero renders the full facts, so it listed every partner's column of links above the fold. Only the event page's stacked facts show the partner cards now. The hero keeps the one-line sentence the listing cards use, with one link per partner.
+- (b) *The draft series hint* sent the reader to "the series' settings", which do not exist. It also offered to publish one date "from the list, by ticking it", but a series' tick covers every date (§113). Both sentences now name the real controls: the source event's "Evenimentul se repetă" with "Publică datele noi automat", and the bar's "Publică cele bifate". The labels are filled in from the catalogue, so they cannot drift.
+- (c) *The English fill line* read "12 registered of 50 places", which is Romanian word order. It now reads "12 of 50 places taken", from the same two numbers and keys.
+- (d) *Google.* The contact page and the gallery listing now have render checks for their own canonical. A sitemap test covers the gallery listing with no album. The stale comment about listing the gallery "only where there is something on it" is gone.
+- (e) *One form for five features.* Cost, partners, links (§332), the place to be announced (§328, §339) and the pickers all touch `EventFieldsForm`, `fields.ts` and `eventFieldsFrom`. One integration test creates and saves an event with all of them at once and proves:
+  - each field is written once;
+  - a refusal in any one writes none of the others;
+  - the refusal names its own posted box (§315).
+
+  A source test pins the rest:
+  - each field is read once;
+  - no field is read unless a box posts it;
+  - every editor restores a refused submission;
+  - both the create page and the editor carry the shared form.
+- (f) *Two link editors on one form shared accessible names.* Both said "Linkul 1" and "Șterge linkul 1", which a screen reader cannot tell apart; the §332 e2e caught it. A partner's link row and its three buttons now name the partner too: "Linkul 1 al partenerului 1", "Remove link 1 of partner 1".
+- (g) *The hints branch's e2e had never run.* It read the line-break style on the element with `role="tooltip"`, which is MUI's popper. It now reads the inner tooltip box, where `TOOLTIP_TEXT_SX` actually sits.
+- (h) *Picker specs.* Three new specs filled the start date and the repeat end as plain inputs. They now drive the MUI pickers like every other spec.
+
+**Proven on the integrated tree, not only on the branches.**
+- `yarn test`: 3035 of 3035 pass.
+- The whole Playwright suite ran on both projects with one worker, against a production build and a fresh, isolated database: 309 passed, none failed. The 13 skipped are tests that run on one viewport by design.
+
+Baseline `BR-V1.71-2026-09-24`.

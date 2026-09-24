@@ -1,5 +1,5 @@
 import { env } from "@/shared/config/env";
-import { readCoHosts } from "./domain/co-hosts";
+import { primaryCoHostLink, readCoHosts } from "./domain/co-hosts";
 import { hasAgeRule } from "./domain/event-type";
 import { CLUB_LOCALITY } from "./domain/place";
 import type { PublicEvent } from "./repository";
@@ -29,8 +29,13 @@ export function clubId(): string {
  * Still missing for the criterion: `logo`, which needs an absolute URL to a raster the club has
  * approved for the purpose. The SVG in `public/brand/` is not one — search engines want a
  * bitmap of a stated size — and producing one is the club's call, not this file's.
+ *
+ * `url` is the listing in the reader's language — the club's front page — and never the bare
+ * `APP_BASE_URL`: the root redirects twice (to `/ro`, then to the listing), and a structured
+ * data `url` that redirects is one more address a crawler reports as "page with redirect"
+ * (§342). The `@id` above stays the base: it is an identifier, not an address anybody fetches.
  */
-export function sportsOrganizationJsonLd(name: string) {
+export function sportsOrganizationJsonLd(name: string, url: string) {
   const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL].filter(
     (url): url is string => Boolean(url),
   );
@@ -40,7 +45,7 @@ export function sportsOrganizationJsonLd(name: string) {
     "@type": "SportsOrganization",
     "@id": clubId(),
     name,
-    url: env.APP_BASE_URL,
+    url,
     sport: "Running",
     areaServed: { "@type": "City", name: "Brașov" },
     ...(sameAs.length > 0 ? { sameAs } : {}),
@@ -101,7 +106,8 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
  * The club, then the partners (§168): schema.org takes one organizer or several, and the
  * order is what says who holds the event. The club's entry is the same `@id` every event
  * points at, so a search engine reads one organization across the whole site; a partner is a
- * plain Organization with a name and, when the club pasted one, its page.
+ * plain Organization with a name and, when it named one, its `url` — its own site (§344), or
+ * its first link if it named no site.
  */
 function organizers(event: PublicEvent, organizationName: string) {
   const club = { "@type": "SportsOrganization", "@id": clubId(), name: organizationName };
@@ -109,7 +115,10 @@ function organizers(event: PublicEvent, organizationName: string) {
   if (coHosts.length === 0) return club;
   return [
     club,
-    ...coHosts.map((host) => ({ "@type": "Organization", name: host.name, ...(host.url ? { url: host.url } : {}) })),
+    ...coHosts.map((host) => {
+      const primary = primaryCoHostLink(host);
+      return { "@type": "Organization", name: host.name, ...(primary ? { url: primary.url } : {}) };
+    }),
   ];
 }
 
@@ -178,13 +187,21 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // because `organizer` is one value there and an array of one reads as a list of one.
     organizer: organizers(event, organizationName),
     /**
-     * Brașov Runners events are free (the owner, 2026-09-19: "state somewhere that Brașov
-     * Runners events are always free — this also helps us pass the Google verifications").
-     * Google's event result wants an offer with a price; a club event that has not been
-     * marked PAID is offered at zero, in lei, at its own page.
+     * Whether a runner needs their wallet (§343, reversing part of the owner's 2026-09-19 "state
+     * somewhere that Brașov Runners events are always free"): true for `FREE` and for an event
+     * that has not said, which is what most club events still are and what the owner's sentence
+     * was written for; false for `PAID` and `DONATION` alike — a donation is still something a
+     * runner may choose to pay, and schema.org has no third state for "optional". Only `PAID`
+     * and `DONATION` ever carry a real `offers.url`, and only when the club gave an https link:
+     * no price is parsed out of the free text `cost_amount`, which schema.org's `price` cannot
+     * represent honestly ("50 lei" is not a number, "sugerat 50 lei" is not a price at all).
      */
-    ...(event.costType !== "PAID"
+    ...(event.costType === "PAID" || event.costType === "DONATION"
       ? {
+          isAccessibleForFree: false,
+          ...(event.costUrl ? { offers: { "@type": "Offer", url: event.costUrl, availability: "https://schema.org/InStock" } } : {}),
+        }
+      : {
           isAccessibleForFree: true,
           offers: {
             "@type": "Offer",
@@ -194,8 +211,7 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
             availability: "https://schema.org/InStock",
             validFrom: toOffsetIsoString(event.publishedAt ?? event.startsAt, event.timezone),
           },
-        }
-      : {}),
+        }),
     location: eventPlace(event),
     sport: "Running",
     /*
