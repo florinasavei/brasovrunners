@@ -208,7 +208,9 @@ describe("the place's name in each language (§362)", () => {
 describe("a required box behind a tab or a fold", () => {
   it("is brought into view when the browser refuses the submit", () => {
     expect(TABS).toContain("onInvalid={reveal(index)}");
-    expect(TABS).toContain("if (element) element.hidden = false;");
+    // The panel shown and its siblings hidden on the DOM itself, inside the event (§NNN).
+    expect(TABS).toContain("showOnly(panelRefs.current, index);");
+    expect(TABS).toContain("if (panel) panel.hidden = other !== index;");
     // Any fold around it, and any strip's tab, from the form itself (§350).
     expect(FORM).toContain("onInvalidCapture={onInvalidCapture}");
     expect(FORM).toMatch(/openFoldsAround\(element\);\s*element\.dispatchEvent\(new CustomEvent\(REVEAL_EVENT/);

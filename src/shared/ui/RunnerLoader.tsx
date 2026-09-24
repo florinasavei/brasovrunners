@@ -46,3 +46,29 @@ export default function RunnerLoader({
     </Box>
   );
 }
+
+/**
+ * The figure a press is about to show, drawn with the page and never displayed (§NNN), so the
+ * press that shows it adds no style to the page.
+ *
+ * MUI writes a component's CSS the first time the component renders with those props: on the
+ * server for everything the page is drawn with, in the browser for anything that appears later.
+ * Here every rule sits in a cascade layer (`enableCssLayer`, `modularCssLayers`), and Chromium
+ * answers a layered rule added to a live page by rebuilding the layer map and its font cache —
+ * every element's style and every line's layout, the whole page again. The runner that replaces a
+ * save button's glyph was that rule: two of them, written inside the press, and on the event
+ * editor at a phone's speed the recalculation was most of the owner's "blocked UI updates for
+ * 352ms" (`tests/e2e/perf/inp.spec.ts` counts the rules a press inserts; it is 0 now).
+ *
+ * Rendered beside the button with the very props the pending figure takes — the size and the
+ * colour are what the class is made of — its CSS is in the server's HTML, and the figure the
+ * press shows reuses it. `display: none` inline, never a class: nothing is added for the hiding
+ * either, it takes no room and no gap in a flex column, and it is out of the accessibility tree.
+ */
+export function RunnerLoaderStyles({ size, color }: { size?: number; color?: string }) {
+  return (
+    <span style={{ display: "none" }} data-runner-styles="">
+      <RunnerLoader size={size} color={color} />
+    </span>
+  );
+}

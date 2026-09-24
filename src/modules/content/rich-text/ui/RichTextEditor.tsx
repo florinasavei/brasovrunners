@@ -42,7 +42,7 @@ import WebAssetIcon from "@mui/icons-material/WebAsset";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { Extension, mergeAttributes, Node, type Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
@@ -68,6 +68,7 @@ import {
   type TableHeaderFill,
   type TableValign,
 } from "../domain/schema";
+import { editorLook, sameEditorLook } from "./editor-look";
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
@@ -454,12 +455,13 @@ function RichTextEditorIsland({
       }),
     ],
     content: initialDoc.content?.length ? initialDoc : EMPTY_DOC,
-    // Selection changes must re-render too: the picture panel opens on a click, which changes
-    // the selection and nothing else (Tiptap 3 stops re-rendering on transactions by default).
-    shouldRerenderOnTransaction: true,
+    // Re-rendered by `useEditorState` below, on what the toolbar reads — not on every transaction.
+    shouldRerenderOnTransaction: false,
     onUpdate: ({ editor: current }) => {
-      setValue(JSON.stringify(current.getJSON()));
-      setMissingAlt(countMissingAlt(current.getJSON()));
+      // One document per keystroke, read once (§NNN): `getJSON` walks the whole text.
+      const doc = current.getJSON();
+      setValue(JSON.stringify(doc));
+      setMissingAlt(countMissingAlt(doc));
       setWords(countWords(current.getText()));
     },
     editorProps: {
@@ -487,6 +489,16 @@ function RichTextEditorIsland({
       },
     },
   });
+
+  /*
+    **What re-renders the island (§NNN): the document, the selection and the marks to come — the
+    three things the toolbar, the picture's panel and the table's bar are drawn from
+    (`editor-look.ts`).** `shouldRerenderOnTransaction` re-rendered it on every transaction, and
+    Tiptap dispatches one for a focus and one for a blur that change none of them: leaving the box
+    to press "Salvează" re-rendered the whole toolbar — four hundred components — inside the press,
+    a tenth of a second on a phone, for a screen that did not change.
+  */
+  useEditorState({ editor, selector: ({ editor: current }) => editorLook(current?.state), equalityFn: sameEditorLook });
 
   /**
    * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
@@ -517,7 +529,7 @@ function RichTextEditorIsland({
   /**
    * The selected picture, when one is: ProseMirror marks the node's own element, and that
    * element is what the panel anchors to. Read on every render — the selection is state the
-   * editor owns, and `shouldRerenderOnTransaction` is what keeps this current.
+   * editor owns, and `useEditorState` above re-renders on every change of it.
    */
   const selectedImage = editor?.isActive("image")
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
