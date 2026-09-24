@@ -10,13 +10,13 @@ import GlyphSelect from "../GlyphSelect";
 import { type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * Card 1.2, "Traseul" (§350, §NNN), inside "Ce fel de eveniment": what they run on, how hard, how
+ * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
  * long and how steep, and where the route can be seen — a separate question from the meeting point
  * (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open: the first box says once that the settings are not theirs (§NNN).
+ * open: the first box says once that the settings are not theirs (§358).
  */
 export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
   const t = await getTranslations("Admin");

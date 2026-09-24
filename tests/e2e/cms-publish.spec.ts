@@ -113,7 +113,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
     await expect(readOnly).toBeVisible();
     // Once, for the box: its three cards — the status, the course, the links — are then their
-    // headings and their lines, readable without opening anything (§NNN).
+    // headings and their lines, readable without opening anything (§358).
     await expect(readOnly).toHaveCount(1);
     for (const card of ["Starea evenimentului", "Traseul", "Linkuri și fișiere"]) {
       await expect(kind.getByRole("heading", { level: 3, name: new RegExp(`^${card}`) })).toBeVisible();

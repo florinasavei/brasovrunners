@@ -276,7 +276,7 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(promotionSummary(words, { featured: true, isSpecial: true })).toBe("Eveniment principal · Ediție specială");
   });
 
-  it("Ce fel de eveniment, with its three cards inside it (§NNN): the type, the status, the course in brief, every link counted", () => {
+  it("Ce fel de eveniment, with its three cards inside it (§358): the type, the status, the course in brief, every link counted", () => {
     const labels = { type: "Alergare de grup", status: "Programat", surface: null, difficulty: null };
     // The create page: nothing stored yet, so the type and "Programat" only — no empty words.
     expect(kindSummary(words, null, labels, "ro")).toBe("Alergare de grup · Programat");

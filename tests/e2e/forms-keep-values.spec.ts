@@ -173,13 +173,13 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 });
 
 /*
-  §NNN: the status, the course and the links are cards inside "Ce fel de eveniment", on the create
+  §358: the status, the course and the links are cards inside "Ce fel de eveniment", on the create
   page as on the editor. A link's label in one language only is a refusal only the server makes
   (§352, both or neither), and it names the empty box — inside "Linkuri și fișiere", inside the first
   box. Both are shut before the press, so the refusal is what has to open them, and every box keeps
   what was typed. On the way, the create page's status card: there, read-only, "Programat".
 */
-test.describe("§NNN a refusal inside a card of the first box opens the box and the card", () => {
+test.describe("§358 a refusal inside a card of the first box opens the box and the card", () => {
   // Built from parts: no hostname literal (`AGENTS.md` §8).
   const GPX_LINK = ["https:/", "drive.example.test", "file", "d", "e2e-half-label", "view"].join("/");
 

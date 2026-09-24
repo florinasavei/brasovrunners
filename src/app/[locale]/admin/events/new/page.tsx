@@ -52,7 +52,7 @@ export const dynamic = "force-dynamic";
  * (`EventEditorLayout`): the side column with Publicare and Recurență, first on a phone, and the
  * main column's boxes in the same three groups, under the same titles, with the same field names
  * and the same Română | English tabs — "Ce fel de eveniment" holding the same three cards, the
- * status, the course and the links (§NNN). The status card is the one that is read-only here: it
+ * status, the course and the links (§358). The status card is the one that is read-only here: it
  * says "Programat" and that the status can be changed once the event exists, and a hidden
  * `SCHEDULED` is what posts, so "Anulat" is never offered for an event that does not exist. What
  * the page leaves out cannot exist before the event does: allocation and printing, the series'
@@ -131,7 +131,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
       <ActionForm action={createEventAction} messages={messages} id="event-create-form" data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
         {/* An event that does not exist yet is scheduled (§350): the status card shows it, read-only,
-            and this is what posts (§NNN). */}
+            and this is what posts (§358). */}
         <input type="hidden" name="event.eventStatus" value="SCHEDULED" />
 
         <EventEditorLayout
@@ -183,7 +183,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           main={
             <Stack spacing={2}>
               <EditorGroup label={t("editor.groups.event")} />
-              {/* 1 — the type, and the editor's same three cards inside it (§NNN); the status one
+              {/* 1 — the type, and the editor's same three cards inside it (§358); the status one
                   read-only, "Programat". */}
               <KindBox {...box} locale={locale}>
                 <StatusBox {...box} />

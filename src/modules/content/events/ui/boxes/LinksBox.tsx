@@ -12,7 +12,7 @@ import LinkRowsEditor from "../LinkRowsEditor";
 import { type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * Card 1.3, "Linkuri și fișiere" (§332, §350, §NNN), inside "Ce fel de eveniment", directly after
+ * Card 1.3, "Linkuri și fișiere" (§332, §350, §358), inside "Ce fel de eveniment", directly after
  * the course because that is what most of them are — the GPX on Google Drive, the map on a
  * platform — then the rest: a PDF, the album, the results, and the Strava and Facebook events.
  * Links, never an upload (`AGENTS.md` §17). The rows keep their Romanian and English labels side by
@@ -20,7 +20,7 @@ import { type BoxProps, summaryWords } from "./box-kit";
  * nothing about how a language is written here.
  *
  * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open: the first box says once that the settings are not theirs (§NNN).
+ * open: the first box says once that the settings are not theirs (§358).
  */
 export default async function LinksBox({ event, mayEditSettings, locale }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");

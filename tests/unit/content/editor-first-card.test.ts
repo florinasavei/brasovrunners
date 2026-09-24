@@ -8,7 +8,7 @@ import type { RiskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import type { FoldNode } from "@/shared/ui/fold";
 
 /**
- * §NNN (the event editor's first box, building on §350) — the owner, 2026-09-24, with a screenshot
+ * §358 (the event editor's first box, building on §350) — the owner, 2026-09-24, with a screenshot
  * of the editor: "these 3 cards should be in the first one, both on edit and create mode".
  *
  * "Starea evenimentului", "Traseul" and "Linkuri și fișiere" are named level-3 cards inside "Ce fel
@@ -160,7 +160,7 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
   return { node: { tagName: "INPUT", parentElement: parent, dispatchEvent: () => true }, details };
 }
 
-describe("§NNN the first box holds the status, the course and the links", () => {
+describe("§358 the first box holds the status, the course and the links", () => {
   it("nests three named, closed level-3 cards inside «Ce fel de eveniment», after the type and its help", async () => {
     const html = await firstBox(EVENT);
     const folds = foldTags(html);
@@ -217,7 +217,7 @@ describe("§NNN the first box holds the status, the course and the links", () =>
   });
 });
 
-describe("§NNN with people registered, the closed first box says so (§350)", () => {
+describe("§358 with people registered, the closed first box says so (§350)", () => {
   it("wears the count on the box's own summary and on the status card, and on neither of the other cards", async () => {
     const html = await firstBox(EVENT, { risk: RISK });
     expect(kindSummaryOf(html)).toContain("23 înscriși");
@@ -241,7 +241,7 @@ describe("§NNN with people registered, the closed first box says so (§350)", (
   });
 });
 
-describe("§NNN a role that may only read the settings is told once", () => {
+describe("§358 a role that may only read the settings is told once", () => {
   it("says it once, in the box, and shows each card as its heading and its line, with nothing to open", async () => {
     const html = await firstBox(EVENT, { mayEditSettings: false, risk: RISK });
     expect(html.match(/Setările le schimbă un Organizator sau un Administrator\./g)).toHaveLength(1);
@@ -267,7 +267,7 @@ describe("§NNN a role that may only read the settings is told once", () => {
   });
 });
 
-describe("§NNN the create page's first box looks the same", () => {
+describe("§358 the create page's first box looks the same", () => {
   it("is open, holds the same three cards, and says «Programat» on its closed line", async () => {
     const html = await firstBox(null);
     const folds = foldTags(html);
@@ -305,7 +305,7 @@ describe("§NNN the create page's first box looks the same", () => {
   });
 });
 
-describe("§NNN a refusal inside a card opens the box and the card", () => {
+describe("§358 a refusal inside a card opens the box and the card", () => {
   it("opens «Ce fel de eveniment» and «Traseul» for a refused route link", async () => {
     const html = await firstBox(EVENT);
     const around = foldsAround(html, "field-event.routeUrl");

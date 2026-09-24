@@ -73,14 +73,14 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // returns instantly, which raced the save against the navigation that followed it.
     editorUrl = page.url();
     await hydrated(page);
-    // "Traseul" is a card inside "Ce fel de eveniment" (§NNN); the helper opens the box first.
+    // "Traseul" is a card inside "Ce fel de eveniment" (§358); the helper opens the box first.
     const course = await openEditorBox(page, "Traseul");
     const firstBox = editorBox(page, "Ce fel de eveniment");
     await expect(firstBox).toHaveAttribute("open", "");
 
     // A route link the browser refuses, with the card and the box around it shut again: pressing
     // Salvează must open both and put the cursor in the box, so a card inside a card is never a
-    // Save that silently does nothing (§350, §NNN).
+    // Save that silently does nothing (§350, §358).
     await field("event.routeUrl").fill("www.traseu-fara-https.example");
     await course.locator(":scope > summary").press("Enter");
     await expect(course).not.toHaveAttribute("open", "");
@@ -94,7 +94,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page).not.toHaveURL(/saved=event/);
 
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // "Linkuri și fișiere" is the card right after the course (§332, §350, §NNN).
+    // "Linkuri și fișiere" is the card right after the course (§332, §350, §358).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
     // pick what it is, paste the address, leave both labels empty so the page names the kind.

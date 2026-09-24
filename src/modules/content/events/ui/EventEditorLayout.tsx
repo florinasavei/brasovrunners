@@ -39,7 +39,7 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 
 /**
  * A group's plain overline — "Evenimentul", "Ziua evenimentului și participanții", "Parteneri și
- * prezentare" (the course and the links moved into the first box, §NNN) — not a box: it says what
+ * prezentare" (the course and the links moved into the first box, §358) — not a box: it says what
  * the boxes under it are about.
  */
 export function EditorGroup({ label }: { label: string }) {

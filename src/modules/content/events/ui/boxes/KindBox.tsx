@@ -15,7 +15,7 @@ import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
  * Box 1, "Ce fel de eveniment" (§350): the type, which switches other boxes' fields on and off —
  * a group run has no registration and no programme (§111), only a race has a gun time (§71).
  *
- * **And the three cards about the event itself, inside it** (§NNN; the owner, 2026-09-24, on the
+ * **And the three cards about the event itself, inside it** (§358; the owner, 2026-09-24, on the
  * editor: "these 3 cards should be in the first one, both on edit and create mode"): 1.1 "Starea
  * evenimentului", 1.2 "Traseul", 1.3 "Linkuri și fișiere", as named level-3 cards under the type
  * and its help — the way "Participare și înscrieri" holds 8.1–8.5. The page draws them and hands
@@ -46,7 +46,7 @@ export default async function KindBox({
   registered?: number;
   /** The reader's language, for the counted "2 linkuri" on the closed line. */
   locale: string;
-  /** Cards 1.1–1.3, drawn by the page (§NNN). */
+  /** Cards 1.1–1.3, drawn by the page (§358). */
   children?: ReactNode;
 }) {
   const t = await getTranslations("Admin");

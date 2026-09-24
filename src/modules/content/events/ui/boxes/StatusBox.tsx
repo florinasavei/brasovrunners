@@ -23,7 +23,7 @@ type StatusNotice = { labels: EventNoticeLabels; offerNotice: boolean; maxLength
 type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never } | { event: EditableEvent; notice: StatusNotice });
 
 /**
- * Card 1.1, "Starea evenimentului" (§350, §NNN) — the first card inside "Ce fel de eveniment", on
+ * Card 1.1, "Starea evenimentului" (§350, §358) — the first card inside "Ce fel de eveniment", on
  * both pages, so the two look the same.
  *
  * **On the create page it is read-only**: "Programat", and one line saying the status can be
@@ -38,7 +38,7 @@ type StatusBoxProps = Omit<BoxProps, "event"> & ({ event: null; notice?: never }
  *
  * For a role that may only read the settings, the card is its heading and its line — the status,
  * and the amber count when people are registered — and nothing to open: the first box says once
- * that the settings are not theirs (§NNN).
+ * that the settings are not theirs (§358).
  */
 export default async function StatusBox({ event, mayEditSettings, risk, notice }: StatusBoxProps) {
   const t = await getTranslations("Admin");

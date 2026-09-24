@@ -73,7 +73,7 @@ describe("the create page is the editor's page", () => {
     for (let index = 1; index < positions.length; index += 1) {
       expect(positions[index], `${order[index]} after ${order[index - 1]}`).toBeGreaterThan(positions[index - 1]);
     }
-    // The editor has the same order: the three cards inside the first box on both pages (§NNN).
+    // The editor has the same order: the three cards inside the first box on both pages (§358).
     for (const page of [CREATE, EDIT]) {
       expect(at(page, "<KindBox")).toBeLessThan(at(page, "<StatusBox"));
       expect(at(page, "<LinksBox")).toBeLessThan(at(page, "</KindBox>"));
@@ -83,7 +83,7 @@ describe("the create page is the editor's page", () => {
 
   it("shows the status read-only on create: a hidden SCHEDULED posts, and Anulat is never offered for an event that does not exist", () => {
     expect(CREATE).toContain('<input type="hidden" name="event.eventStatus" value="SCHEDULED" />');
-    // The card is there, so the two pages look the same (§NNN) — handed no event, it is read-only.
+    // The card is there, so the two pages look the same (§358) — handed no event, it is read-only.
     expect(CREATE).toContain("<StatusBox {...box} />");
     const status = read("src/modules/content/events/ui/boxes/StatusBox.tsx");
     // Keyed on the create page alone: a saved event always comes with its notice, by type, so it

@@ -94,7 +94,7 @@ export function EventCancelFields({ statusSelectName, initialStatus, wasCancelle
   if (status === "CANCELLED" && !wasCancelled) {
     return (
       <Alert severity="warning" icon={false} data-testid="cancel-fields" sx={{ "& .MuiAlert-message": { width: "100%" } }}>
-        {/* An h4: the status card is a level-3 card inside "Ce fel de eveniment" (§NNN). */}
+        {/* An h4: the status card is a level-3 card inside "Ce fel de eveniment" (§358). */}
         <Typography variant="subtitle1" component="h4" sx={{ fontWeight: 600 }}>
           {labels.cancelTitle}
         </Typography>

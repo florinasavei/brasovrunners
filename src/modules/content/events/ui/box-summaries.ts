@@ -429,7 +429,7 @@ export function courseSummary(
 type LinksEvent = Pick<EditableEvent, "stravaEventUrl" | "facebookEventUrl" | "links">;
 
 /**
- * Box 1, "Ce fel de eveniment", with its three cards inside it (§350, §NNN): `Alergare de grup ·
+ * Box 1, "Ce fel de eveniment", with its three cards inside it (§350, §358): `Alergare de grup ·
  * Programat · Asfalt · Ușor · 10 km · 2 linkuri`. The type, then a word or two from each card — the
  * status, the course's surface, difficulty and distance, and how many links the event carries
  * (Strava and Facebook counted with the rows) — so the closed box still reads as the top of the

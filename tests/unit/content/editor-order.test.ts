@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  * question and says its answer while shut. The order is pinned here because it is what drifts —
  * the next field added lands in whichever box is nearest unless something says where boxes go:
  *
- *   Evenimentul — what kind, with its three cards inside it (§NNN; the owner: "these 3 cards
+ *   Evenimentul — what kind, with its three cards inside it (§358; the owner: "these 3 cards
  *   should be in the first one, both on edit and create mode") — the status, the course, the
  *   links and files — then title and summary, description;
  *   Ziua evenimentului și participanții — date and time, place, programme, rules, registration;
@@ -64,7 +64,7 @@ describe("§350 the editor's boxes, in order", () => {
     }
   });
 
-  it("nests the status, the course and the links inside the first box, on both pages, each once (§NNN)", () => {
+  it("nests the status, the course and the links inside the first box, on both pages, each once (§358)", () => {
     const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
     for (const [page, source] of [
       ["edit", EDIT],
@@ -136,7 +136,7 @@ describe("§350 the editor's boxes, in order", () => {
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
     }
     // The first box holds the status card, so it wears the mark too — closed, it is the only place
-    // the count can be seen (§350, §NNN). Its opening tag only: the cards inside are read above.
+    // the count can be seen (§350, §358). Its opening tag only: the cards inside are read above.
     const kind = at(EDIT, "<KindBox");
     expect(EDIT.slice(kind, EDIT.indexOf(">", kind) + 1)).toContain("risk={risk}");
     // The course and the links sit in the same box and reach nobody; nor do the partners or the promotion.

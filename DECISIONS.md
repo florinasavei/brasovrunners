@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.76-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.77-2026-09-24 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.76-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.77-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -14501,3 +14501,41 @@ Some things stay written in because they are neither the club's nor an event's: 
 The signed and blank declaration PDFs, adult and minor, flow onto a second page rather than being cut off. Every line of text sits between the margins, and only the footer is under them. The layout test reads the page geometry from `declaration-pdf.ts`'s exports rather than copies. The right edge is checked only as far as every run starting inside it, because a line's end is not in the file's positions.
 
 Baseline `BR-V1.76-2026-09-24`.
+
+## 358. The event editor's first box holds the status, the course and the links
+
+**Context.** The owner, 2026-09-24, with a screenshot of the event editor: "these 3 cards should be in the first one, both on edit and create mode". "Starea evenimentului", "Traseul" and "Linkuri și fișiere" were separate boxes in two different groups (§350). All three describe the event itself, as its type does.
+
+**1. Three named cards inside "Ce fel de eveniment" (amends §350's box list).**
+- The cards are 1.1 "Starea evenimentului", 1.2 "Traseul" and 1.3 "Linkuri și fișiere". Each is a level-3 card (an h3 under the box's h2) placed under the type and "Ce înseamnă fiecare tip?", the same way "Participare și înscrieri" holds 8.1–8.5.
+- The cards start closed on both pages (§336). The box itself is open on the create page and closed on the editor.
+- The page draws the cards and passes them to `KindBox` as children. Each keeps its own props, fields, posted names and id (`#box-status`, `#box-course`, `#box-links`). No field is renamed.
+- The box's closed line gives a word or two from each card (`kindSummary`): `Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri`. Strava and Facebook count as links.
+- The one warning a card line carries is repeated on the box line: "etichetă într-o singură limbă" (§354). A label in one language only is what the next save refuses, and it must be visible without opening two folds.
+- The third group loses the course and the links. It is now called "Parteneri și prezentare" / "Partners and presentation".
+- The cancellation heading inside the status card is an h4.
+
+**2. The create page shows the same card, read-only.**
+- The status card on the create page shows "Programat", disabled, with one line: "Un eveniment nou pornește ca Programat; starea se poate schimba după ce evenimentul e creat."
+- The card posts nothing. The page's hidden `event.eventStatus = SCHEDULED` posts, as before (§331). "Anulat" and "Încheiat" are never offered for an event that does not exist yet.
+- `StatusBox`'s props are a discriminated type: no event and no notice on create, or an event and its notice on the editor. A saved event can never fall into the read-only branch.
+
+**3. With people registered, the closed box says so (keeps §350's promise).**
+- The status card is one of the five boxes whose change reaches registered people. It now sits inside a box that is closed on the editor.
+- "Ce fel de eveniment" is therefore amber and shows the count too ("23 înscriși"). The sentence about what a cancellation does stays in the status card.
+- The course and the links reach nobody and are not marked.
+
+**4. A role that may only read the settings is told once.**
+- "Setările le schimbă un Organizator sau un Administrator." appears once, in the box, in place of the type.
+- Each of the three cards is then its heading and its closed line, with nothing to open: a `Panel` that does not fold, whose body is now optional.
+- The amber count still shows on the box and on the status card.
+
+**5. A refusal opens both folds.** `openFoldsAround` already walks every fold upwards. A refused route link, link address or one-sided label, from the browser or the server, opens the box and then the card. The e2e helper `openEditorBox` opens every enclosing box before the card, and finds a card whose heading is hidden inside a closed box.
+
+**Not changed.** The status words ("Programat", "Anulat", "Încheiat") stay Romanian on the English backoffice. That is §35, backoffice enum labels written once; §354 covers the organizer's content. No migration and no new dependency.
+
+Tests:
+- unit: `content/editor-first-card.test.ts` (nesting, closed lines in both locales, the one-language warning, the risk mark, the read-only role, the create page's read-only status, refusals opening both folds), `content/editor-order.test.ts`, `content/create-page.test.ts`, `content/box-summaries.test.ts`;
+- e2e: `cms-publish.spec.ts`, `event-route.spec.ts`, `forms-keep-values.spec.ts`.
+
+Baseline `BR-V1.77-2026-09-24`.

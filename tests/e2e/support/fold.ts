@@ -11,7 +11,7 @@ const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * title — "Locul Parcul Titulescu · hartă" — and its "23 înscriși" chip.
  *
  * Found whether or not it can be seen: a card inside a closed box — "Traseul" inside "Ce fel de
- * eveniment" (§NNN) — has its heading out of the accessibility tree until the box opens, and the
+ * eveniment" (§358) — has its heading out of the accessibility tree until the box opens, and the
  * card is still the thing a spec means.
  */
 export function editorBox(scope: Page | Locator, title: string): Locator {
@@ -27,7 +27,7 @@ export function editorBox(scope: Page | Locator, title: string): Locator {
  * Open a box of the event editor by its title, the way a person does (`openFold`), and return it.
  *
  * Every box around it first, outermost first — a card inside a closed box cannot be pressed until
- * the box is open (§NNN: the status, the course and the links sit inside "Ce fel de eveniment").
+ * the box is open (§358: the status, the course and the links sit inside "Ce fel de eveniment").
  */
 export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {
   const box = editorBox(scope, title);

@@ -71,7 +71,7 @@ type Props = {
   "data-testid"?: string;
   /**
    * The body. A panel without one is its heading and its line alone — the event editor's cards
-   * for a role that may only read them (§NNN): the fact, with nothing to open. Only a panel that
+   * for a role that may only read them (§358): the fact, with nothing to open. Only a panel that
    * does not fold may leave it out; a fold that opens onto nothing is a control that lies.
    */
   children?: ReactNode;
