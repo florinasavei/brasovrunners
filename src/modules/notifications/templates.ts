@@ -1,7 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
-import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
+import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
@@ -1019,6 +1019,34 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
 }
 
 /**
+ * The part of one message the club may rewrite (§247), as the platform writes it: the subject and
+ * the body, and nothing the platform adds around a body — not the club copy's first line (§320),
+ * not "you were already registered" (§235), not the update's new place or the cancellation's
+ * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
+ * so a club text that repeated them would say them twice.
+ *
+ * The editor's starting text is built from this (§NNN, `email-copy-fields.ts`), with every field of
+ * the closed set standing for itself, so nothing of the page's sample reaches the box — and each
+ * sentence the platform adds only when a fact exists in a paragraph of its own, so a saved text
+ * drops it the same way. The send path never calls it: `buildTemplateContent` below reads the same
+ * entries itself, unchanged.
+ */
+export function platformWords(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  data: TemplateData,
+): { subject: string; paragraphs: string[] } {
+  const entry = T[locale][KEY_BY_MESSAGE_TYPE[messageType]] as {
+    subject: string | ((d: TemplateData) => string);
+    body: (d: TemplateData) => string[];
+  };
+  return {
+    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    paragraphs: entry.body(data),
+  };
+}
+
+/**
  * Every message type's content, for one locale, given the data the renderer looked up.
  * `actionUrl` is undefined for the message types that carry none — `REGISTRATION_STATE_NOTICE`
  * (§16.3: "carries no scoped token and creates none") and the two waiting-list notices, which
@@ -1117,11 +1145,14 @@ export function buildTemplateContent(
         A stored document that cannot be read — an older shape, a node an email may not carry —
         falls back to the plain paragraphs beside it rather than to nothing, which is the same
         direction `readEmailCopy` takes with an unreadable setting: a message still goes out.
+        Either way a paragraph whose only fields are facts this message lacks is not sent
+        (§NNN): the platform's "only when there is a number", said the one way a text the club
+        wrote can.
       */
       ...(writtenBody
         ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
         : written
-          ? written.paragraphs.map(fill)
+          ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),

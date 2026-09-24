@@ -71,8 +71,8 @@ export function unknownPlaceholders(text: string): string[] {
  *
  * A placeholder this message does not carry — `{bibNumber}` on a message sent before a number
  * exists — becomes nothing, and the spaces around it are closed up so the sentence still reads
- * as a sentence. It is visible in the preview under the editor, which is where somebody
- * notices they have asked for a fact this message never has.
+ * as a sentence. A paragraph whose only fields are facts the message lacks is not sent at all
+ * (`onlyMissingFacts`, below).
  *
  * **`edges: "keep"` is what a rich-text run asks for** (§270). A formatted paragraph is not one
  * string but a list of runs — `"Ai început înscrierea la "`, then `"{eventTitle}"` in bold, then
@@ -89,13 +89,58 @@ export function fillPlaceholders(
 ): string {
   const filled = text
     .replace(PLACEHOLDER, (whole, name: string) => {
-      if (!(EMAIL_COPY_PLACEHOLDERS as readonly string[]).includes(name)) return whole;
+      if (!isKnown(name)) return whole;
       const value = data[name];
-      return value === undefined || value === null || value === "" ? "" : String(value);
+      return isBlank(value) ? "" : String(value);
     })
     .replace(/[ \t]{2,}/g, " ")
     .replace(/ +([.,;:!?])/g, "$1");
   return edges === "trim" ? filled.trim() : filled;
+}
+
+/**
+ * The facts the platform writes a sentence around **only when the message has them** (§NNN): the
+ * number (`...(d.bibNumber ? [...] : [])`), the desk code, what to bring, the hold's deadline, the
+ * time of signing, the start and the place (`templates.ts`). The other fields — the runner's name,
+ * the event's title, the status, the colleague's role and inviter — are on every message that
+ * names them, and where one is somehow missing the platform says a stand-in word ("eveniment",
+ * "Un coleg") and keeps its sentence.
+ */
+export const EMAIL_COPY_CONDITIONAL_FACTS: ReadonlySet<string> = new Set<EmailCopyPlaceholder>([
+  "eventLocationName",
+  "eventStartsAtFormatted",
+  "bibNumber",
+  "checkinCode",
+  "holdExpiresAtFormatted",
+  "signedAtFormatted",
+  "eventChecklist",
+]);
+
+/**
+ * A paragraph of the club's words that this message leaves out (§NNN): it names at least one
+ * field, and every field it names is one of the conditional facts above that this message lacks.
+ *
+ * The platform's own text never writes such a sentence: "Numărul tău de concurs: …" is added only
+ * when there is a number, "Ce să aduci: …" only when the event says, "…sau spune codul …" never on
+ * the club's copy, which carries no code. A text the club wrote cannot say "only when", so the
+ * paragraph is the unit instead: one that would read "Numărul tău de concurs: ." is not sent. A
+ * paragraph with a fact left in it, with the runner's name or the event's title, or with no field
+ * at all, is sent as written — "{participantName}, locul tău a fost anulat." says what it must even
+ * in the one message with no name to put in it. The editor's starting text puts each conditional
+ * platform sentence in a paragraph of its own for exactly this (`email-copy-fields.ts`), and the
+ * helper line under the box says so to whoever writes one.
+ */
+export function onlyMissingFacts(text: string, data: Record<string, unknown>): boolean {
+  const names = placeholdersIn(text).filter(isKnown);
+  return names.length > 0 && names.every((name) => EMAIL_COPY_CONDITIONAL_FACTS.has(name) && isBlank(data[name]));
+}
+
+function isKnown(name: string): boolean {
+  return (EMAIL_COPY_PLACEHOLDERS as readonly string[]).includes(name);
+}
+
+function isBlank(value: unknown): boolean {
+  return value === undefined || value === null || value === "";
 }
 
 const copy = z

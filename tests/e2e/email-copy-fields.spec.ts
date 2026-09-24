@@ -1,0 +1,138 @@
+import { existsSync } from "node:fs";
+import { expect, test } from "@playwright/test";
+import pg from "pg";
+import { signIn } from "./support/featured-event";
+import { openFold } from "./support/fold";
+
+function databaseUrl(): string {
+  if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set: this spec needs the database the server uses");
+  return url;
+}
+
+async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise<T> {
+  const client = new pg.Client({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    return await work(client);
+  } finally {
+    await client.end();
+  }
+}
+
+const STALE_KEY = "REGISTRATION_CANCELLED:ro";
+
+/**
+ * BR-REQ-080-01, `DECISIONS.md` §NNN — the words of a message start from the platform's text with
+ * the fields in it, and a sample value is refused at the save.
+ *
+ * The owner, 2026-09-24, with a screenshot of "Confirmă adresa de email": the box read "Ai început
+ * înscrierea la Crosul de toamnă" — the page's sample event — where it should read "{eventTitle}".
+ *
+ * Desktop only: `platform_settings.emailCopy` is one row for the whole deployment, and nothing here
+ * is viewport-shaped. Nothing is saved — the one save pressed is refused — so the row is left as
+ * the run found it.
+ */
+test.describe("BR-REQ-080-01 the email words start from the fields", () => {
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
+  test("a Redactor is handed {eventTitle}, not the sample's title, and a sample value is refused", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto("/ro/admin/emails?lang=ro");
+    const main = page.locator("#main");
+
+    const card = main.locator("#email-VERIFY_REGISTRATION_EMAIL");
+    await openFold(card);
+    // The preview above keeps rendering the made-up event (§91)…
+    await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /Crosul de toamnă/);
+    // …and the words under it are the platform's, with the field.
+    const editor = main.getByTestId("email-copy-VERIFY_REGISTRATION_EMAIL");
+    const words = editor.locator(".ProseMirror");
+    await expect(words).toContainText("Ai început înscrierea la {eventTitle}. Pentru a continua, confirmă adresa ta de email.");
+    await expect(words).not.toContainText("Crosul de toamnă");
+    await expect(editor.getByTestId("email-copy-placeholders")).toContainText("Textul platformei pentru acest mesaj folosește: {eventTitle}.");
+
+    const subject = editor.getByLabel("Subiect");
+    await subject.fill("Confirmă adresa pentru Crosul de toamnă");
+    await editor.getByRole("button", { name: "Salvează textul" }).click();
+
+    const refusal = editor.getByTestId("form-refusal");
+    await expect(refusal).toContainText("Textul conține valoarea de exemplu „Crosul de toamnă” — folosește {eventTitle}.");
+    // Named by its box, and what was typed is still in it (§315).
+    await expect(refusal.getByRole("link", { name: "Subiect" })).toBeVisible();
+    await expect(subject).toHaveValue("Confirmă adresa pentru Crosul de toamnă");
+  });
+
+  test("a text saved with the sample's values is flagged, and one press puts the fields in their place", async ({ page }) => {
+    // What the old editor let a Redactor save: the sample's title as words. Written straight into
+    // the setting — the save refuses it now — and taken out again whatever the test does.
+    const stale = { subject: "Anulat: Crosul de toamnă", paragraphs: ["Înscrierea ta la Crosul de toamnă a fost anulată."] };
+    await withDatabase((client) =>
+      client.query(
+        `INSERT INTO platform_settings (key, value, updated_at) VALUES ('emailCopy', jsonb_build_object($1::text, $2::jsonb), now())
+         ON CONFLICT (key) DO UPDATE SET value = platform_settings.value || jsonb_build_object($1::text, $2::jsonb), updated_at = now()`,
+        [STALE_KEY, JSON.stringify(stale)],
+      ),
+    );
+    try {
+      await signIn(page, "Dev Copywriter");
+      await page.goto("/ro/admin/emails?lang=ro");
+      const main = page.locator("#main");
+
+      // The card of cards and the message's own card open by themselves, and the closed line says why.
+      const card = main.locator("#email-REGISTRATION_CANCELLED");
+      await expect(main.getByTestId("participant-emails")).toHaveAttribute("open", "");
+      await expect(card).toHaveAttribute("open", "");
+      await expect(card.getByTestId("participant-email-sample-values")).toHaveText("textul salvat (RO) are valori de exemplu");
+
+      const editor = main.getByTestId("email-copy-REGISTRATION_CANCELLED");
+      const warning = editor.getByTestId("email-copy-samples");
+      await expect(warning).toContainText("Textul salvat conține valori de exemplu, nu câmpuri");
+      await expect(warning).toContainText("„Crosul de toamnă” — în subiect și în text; în locul ei: {eventTitle}");
+
+      await editor.getByRole("button", { name: "Înlocuiește cu câmpurile" }).click();
+      await expect(main.getByText("Am pus câmpurile în locul valorilor de exemplu și am salvat textul.")).toBeVisible();
+      await expect(editor.getByTestId("email-copy-samples")).toHaveCount(0);
+      await expect(editor.getByLabel("Subiect")).toHaveValue("Anulat: {eventTitle}");
+      await expect(editor.locator(".ProseMirror")).toContainText("Înscrierea ta la {eventTitle} a fost anulată.");
+      // The preview fills the field with the sample again — which is what a participant's own event does.
+      await expect(card.locator("iframe")).toHaveAttribute("srcdoc", /Înscrierea ta la Crosul de toamnă a fost anulată\./);
+      await expect(card).toContainText("Subiect: Anulat: Crosul de toamnă /");
+    } finally {
+      await withDatabase((client) =>
+        client.query(`UPDATE platform_settings SET value = value - $1::text WHERE key = 'emailCopy'`, [STALE_KEY]),
+      );
+    }
+  });
+
+  test("an English text with the sample's values is flagged on the Romanian tab too, naming the language", async ({ page }) => {
+    // Every message goes out in both languages (§96): the English half of every Romanian message
+    // would carry the sample's title, so the Romanian tab says so rather than waiting for a switch.
+    const key = "WAITLIST_OFFER_EXPIRED:en";
+    const stale = { subject: "Expired: The autumn cross", paragraphs: ["The time to confirm your place at The autumn cross has run out."] };
+    await withDatabase((client) =>
+      client.query(
+        `INSERT INTO platform_settings (key, value, updated_at) VALUES ('emailCopy', jsonb_build_object($1::text, $2::jsonb), now())
+         ON CONFLICT (key) DO UPDATE SET value = platform_settings.value || jsonb_build_object($1::text, $2::jsonb), updated_at = now()`,
+        [key, JSON.stringify(stale)],
+      ),
+    );
+    try {
+      await signIn(page, "Dev Copywriter");
+      await page.goto("/ro/admin/emails?lang=ro");
+      const main = page.locator("#main");
+
+      const card = main.locator("#email-WAITLIST_OFFER_EXPIRED");
+      await expect(main.getByTestId("participant-emails")).toHaveAttribute("open", "");
+      await expect(card).toHaveAttribute("open", "");
+      await expect(card.getByTestId("participant-email-sample-values")).toHaveText("textul salvat (EN) are valori de exemplu");
+      // The warning and its button belong to the language being edited, which here is clean.
+      await expect(main.getByTestId("email-copy-WAITLIST_OFFER_EXPIRED").getByTestId("email-copy-samples")).toHaveCount(0);
+    } finally {
+      await withDatabase((client) => client.query(`UPDATE platform_settings SET value = value - $1::text WHERE key = 'emailCopy'`, [key]));
+    }
+  });
+});
