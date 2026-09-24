@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.78-2026-09-24 -->
+<!-- PROJECT_BASELINE: BR-V1.79-2026-09-24 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.78-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.79-2026-09-24`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1340,6 +1340,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 16. Given the editor, when a YouTube address is entered in its "YouTube" control, then only the eleven-character video id and a caption are stored as a `youtube` block — any other host or a malformed address is refused under the field — and when the body renders, the film is a closed disclosure with the `youtube-nocookie.com` embed lazy inside it, the caption as its summary and beneath it, so nothing is fetched from YouTube until the reader presses (`DECISIONS.md` §110).
 15. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
 16. Given the standing-page editor, when a page is saved with its search-engine title or description written in one language and empty in the other, then the save is refused on the empty box and the rest of the form comes back as typed. Both or neither is accepted (§354). Verification: unit content/bilingual-everywhere.test.ts.
+17. Given the rich-text editor (a standing page, an event's texts, an email's words), when its toolbar, the bar over a selection or the table's bar renders, then every button shows a filled Material glyph at 20 px in the button's own colour, except "H2" and "H3", which are words at the same height. Each button carries its full name as its accessible name and as a tooltip shown on hover and on a long press that never takes the pointer, keeps a 44-pixel target and its pressed state, and no button's face is an emoji, an arrow or a box-drawing character. The table's bar and the selection's bar draw above the sticky toolbar (§361). Verification: unit `content/editor-toolbar-icons.test.ts`; e2e `pages.spec.ts`, `rich-text-tables.spec.ts` (buttons found by the same names).
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
@@ -1527,6 +1528,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 20. Given an approved terms version that is not the version in force and that no registration was submitted under, and no declaration was signed under, while it was the text in force, when a Superadministrator deletes it with the typed confirmation and a reason, then it is deleted, its number is retired and the audit row keeps its hash. This holds whether it was withdrawn first or not, and whether it was superseded before it ever took effect.
 21. Given an approved terms version during whose time in force any registration was submitted (counting a registration whose first and latest submissions straddle that time) or had its declaration signed, of any kind and any source, when deletion is attempted, then it is refused with a conflict naming the count and the window, nothing is written, and withdrawal is still open to it.
 22. Given the backoffice list of versions, when it renders, then each row offers deletion exactly when the service would delete it, because both ask the same function. A terms version shows how many registrations agreed while it was in force instead of "not used yet". One the service would refuse shows the reason, with the count and the dates, instead of the link.
+23. Given the legal document editor, when its toolbar renders, then it is a toolbar named after its box. The heading and paragraph buttons read "H2" and "Text", and the link, the picture, undo and redo are filled Material glyphs of one size and colour. Each button is 44 pixels square and named by its `aria-label` and a tooltip (§361). Verification: unit `content/editor-toolbar-icons.test.ts`; e2e `legal-versions.spec.ts`.
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`, `legal/withdrawal.test.ts`
 
