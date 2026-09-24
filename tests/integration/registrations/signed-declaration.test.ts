@@ -1,12 +1,13 @@
+import { inflateSync } from "node:zlib";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
-import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { computeContentHash, type LegalDocumentBody, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
-import { renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
+import { DECLARATION_FOOTER, DECLARATION_MARGIN, DECLARATION_PAGE, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import {
   findSignedDeclaration,
@@ -21,7 +22,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
+import { BLANK, mergeLegalBody, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
 
 /**
  * `DECISIONS.md` §95 — the club's declaration: its blanks are fields, the identity document is
@@ -316,4 +317,128 @@ describe("the club's declaration (§95)", () => {
     expect(message.html).toMatch(/\/api\/registrations\/declaration\/[A-Za-z0-9_-]+/);
     expect(message.text).toContain("Declarația pe care ai semnat-o (PDF)");
   });
+
+  /**
+   * §357 — the platform's declaration grew by the risks the runner takes on (animals, terrain,
+   * the dark and a headlamp, their own pace, their belongings), and every merge field it names
+   * still reads filled on what is signed and printed: nothing on a signed copy is left a dotted
+   * blank, and the blank form for the desk leaves dotted exactly the person's own fields.
+   */
+  it("fills every merge field of the platform's declaration on the signed copy, adult and minor, and dots only the person's on the blank form", async () => {
+    await approve(db, CLUB_DECLARATION);
+    const event = await createEvent(db);
+    const adult = await pendingRegistration(event);
+    await signDeclaration(db, event, adult.id, { ...(await signingInput(db, NOW, "Ana Popescu")), idDocument: "BV 123456" }, NOW);
+    await submitRegistration(db, event, { ...submission, firstName: "Maria", birthDate: "2011-03-02", email: "maria@example.ro", guardianName: "Ion Popescu" }, NOW);
+    const [minor] = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter((row) => row.id !== adult.id);
+    await confirmEmail(db, event, minor.id, NOW);
+    await signDeclaration(db, event, minor.id, { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 654321", minorTypedName: "Maria Popescu", minorIdDocument: "MP 111222" }, NOW);
+
+    for (const registrationId of [adult.id, minor.id]) {
+      const entry = await signedDeclarationEntry(db, (await findSignedDeclaration(db, registrationId))!, event.id, LABELS, "participant");
+      const fields = entry!.body.sections.flatMap((s) => s.paragraphs).flatMap((p) => mergeTextSegments(p, entry!.values ?? {})).filter((segment) => segment.filled);
+      // Every field the text names: seven, some more than once.
+      expect(fields.length).toBeGreaterThanOrEqual(7);
+      expect(fields.filter((segment) => segment.text === BLANK)).toEqual([]);
+      const text = mergeLegalBody(entry!.body, entry!.values ?? {}).sections.flatMap((s) => s.paragraphs).join(" ");
+      expect(text).not.toContain("{{");
+      expect(text).toContain("lanternă frontală funcțională");
+    }
+
+    // The blank form: the event's three facts filled, the person's own fields dotted for the pen.
+    const document = await findCurrentApprovedDocument(db, "EVENT_DECLARATION", "ro", NOW);
+    const facts = await eventMergeValues(db, event.id, "ro");
+    const blank = (document!.body as LegalDocumentBody).sections.flatMap((s) => s.paragraphs).join("\n");
+    const merged = mergeText(blank, facts!.values);
+    expect(merged).toContain("la evenimentul Crosul aniversar, care va avea loc în data de duminică, 11 oct. 2026, în locația Parcul Tractorul");
+    expect(merged).toContain(`Subsemnatul/a ${BLANK}, posesor/posesoare al actului de identitate ${BLANK}`);
+    expect(merged).not.toContain("{{");
+  });
+
+  /**
+   * §357 — the longer text flows onto a second page rather than being cut: every line of text on
+   * every page lies between the top margin and the footer's rule, and the last page carries the
+   * end of the text and the signature block, not a footer alone. Signed (adult and minor) and the
+   * blank forms alike, since each is its own layout at the foot.
+   */
+  it("renders the longer declaration on two pages without a line cut off or drawn into the footer", async () => {
+    await approve(db, CLUB_DECLARATION);
+    const event = await createEvent(db);
+    const adult = await pendingRegistration(event);
+    await signDeclaration(db, event, adult.id, { ...(await signingInput(db, NOW, "Ana Popescu")), idDocument: "BV 123456" }, NOW);
+    await submitRegistration(db, event, { ...submission, firstName: "Maria", birthDate: "2011-03-02", email: "maria@example.ro", guardianName: "Ion Popescu" }, NOW);
+    const [minor] = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter((row) => row.id !== adult.id);
+    await confirmEmail(db, event, minor.id, NOW);
+    await signDeclaration(db, event, minor.id, { ...(await signingInput(db, NOW, "Ion Popescu")), idDocument: "BV 654321", minorTypedName: "Maria Popescu", minorIdDocument: "MP 111222" }, NOW);
+
+    const pdfs = {
+      signedAdult: await renderSignedDeclarationPdf(db, (await findSignedDeclaration(db, adult.id))!, event.id, LABELS, NOW, "participant"),
+      signedMinor: await renderSignedDeclarationPdf(db, (await findSignedDeclaration(db, minor.id))!, event.id, LABELS, NOW, "club"),
+      blank: await renderBlankDeclarationPdf(db, event.id, "ro", LABELS, NOW),
+      blankMinor: await renderBlankDeclarationPdf(db, event.id, "ro", LABELS, NOW, { forMinor: true }),
+      blankEnglish: await renderBlankDeclarationPdf(db, event.id, "en", LABELS, NOW),
+    };
+    for (const [name, pdf] of Object.entries(pdfs)) {
+      const pages = textLinesByPage(pdf!);
+      expect(pages.length, name).toBe(2);
+      expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(2);
+      for (const [index, lines] of pages.entries()) {
+        const page = `${name} page ${index + 1}`;
+        const body = lines.filter(([, y]) => y >= FOOTER_TOP);
+        const footer = lines.filter(([, y]) => y < FOOTER_TOP);
+        // The footer: the club and the date, and the page count — nothing else down there, both
+        // on one baseline under the footer's top and on the paper.
+        expect(footer.length, `${page} footer`).toBe(2);
+        expect(Math.abs(footer[0][1] - footer[1][1]), `${page} footer on one line`).toBeLessThan(0.01);
+        expect(footer[0][1], `${page} footer on the paper`).toBeGreaterThan(0);
+        // Text on the page, all of it between the margins.
+        expect(body.length, `${page} has text`).toBeGreaterThan(5);
+        for (const [x, y] of body) {
+          expect(y, `${page}: a line below the bottom margin`).toBeGreaterThanOrEqual(DECLARATION_MARGIN.bottom);
+          expect(y, `${page}: a line above the top margin`).toBeLessThanOrEqual(DECLARATION_PAGE.height - DECLARATION_MARGIN.top);
+          expect(x, `${page}: a line left of the margin`).toBeGreaterThanOrEqual(DECLARATION_MARGIN.left - 0.5);
+          expect(x, `${page}: a line starting past the right margin`).toBeLessThan(DECLARATION_PAGE.width - DECLARATION_MARGIN.right);
+        }
+      }
+    }
+  });
 });
+
+/**
+ * The page's geometry is `declaration-pdf.ts`'s own, imported, and the file's positions are in
+ * PDF's bottom-up points. The footer's line has its top `gap` under the bottom margin, so every
+ * run lower than that is the footer and every run above it is the text — without knowing the
+ * face's ascent, which only says how far under that top the baseline falls. A text run's
+ * position is its baseline, which lies above the bottom margin whenever the line fits above it.
+ *
+ * The right edge is held only as far as every run *starting* left of it: the end of a line is not
+ * in these positions (Roboto is drawn by glyph id, so a width would need the font's advances), and
+ * that no line runs past the right margin is pdfkit's wrapping at the text width, which this test
+ * does not measure.
+ */
+const FOOTER_TOP = DECLARATION_MARGIN.bottom - DECLARATION_FOOTER.gap;
+
+/**
+ * Where each line of text starts, page by page, read out of the file (§357).
+ *
+ * pdfkit deflates its content streams and draws Roboto by glyph id, so the words are not in the
+ * bytes — but the position of every line is: each run of text is set with `1 0 0 1 x y Tm` in
+ * the page's own bottom-up coordinates. One content stream per page, in page order.
+ */
+function textLinesByPage(pdf: Buffer): Array<Array<[number, number]>> {
+  const raw = pdf.toString("latin1");
+  const pages: Array<Array<[number, number]>> = [];
+  for (const match of raw.matchAll(/(?<![d])stream\r?\n/g)) {
+    const start = match.index + match[0].length;
+    const end = raw.indexOf("endstream", start);
+    let content: string;
+    try {
+      content = inflateSync(Buffer.from(raw.slice(start, end), "latin1")).toString("latin1");
+    } catch {
+      continue; // a font or the lockup, not a page
+    }
+    if (!content.includes(" Tm")) continue;
+    pages.push([...content.matchAll(/1 0 0 1 (-?[\d.]+) (-?[\d.]+) Tm/g)].map((m) => [Number(m[1]), Number(m[2])]));
+  }
+  return pages;
+}

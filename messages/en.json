@@ -96,7 +96,6 @@
     "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
-    "startAt": "starts at {time}",
     "when": "When",
     "where": "Where",
     "raceStartTime": "Race start",
@@ -144,6 +143,7 @@
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
+    "elevationShort": "{m} m climb",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -242,6 +242,7 @@
     "costPaidAmount": "Fee: {amount}",
     "costPaidWhere": "payment on {host}",
     "costDonation": "Donation: on {host}",
+    "costDonateOn": "Donate on {host}",
     "costDonationSuggested": "suggested {amount}",
     "series": {
       "weekly": "Every {days}",
@@ -2096,6 +2097,7 @@
         },
         "cost": "What a longer interval costs: a waiting-list offer, a reminder, an announcement or a race number may go out up to that many minutes late.",
         "safe": "What does not change: a held place still lapses on time — every reading of the places counts the deadline at that moment, whether or not the scheduled job has run. An interval longer than an hour also replaces the hourly safety check: your setting wins.",
+        "onTheHour": "The safety check happens on the hour (with 2 hours, on the even hours), together with the /api/health monitor, so an idle hour costs at most one wake of the database rather than one per job. With an interval chosen, the checks also keep to its marks on the clock (:00 and :30, the hour, the even hours); getting there may make some checks up to a quarter of an hour late each.",
         "job": {
           "maintenance": "Registration maintenance",
           "outbox": "Email outbox"

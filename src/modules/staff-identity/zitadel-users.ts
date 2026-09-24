@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
  * The invitation (`DECISIONS.md` §123): when a colleague is added on Echipa, their Zitadel
@@ -95,7 +96,7 @@ export async function inviteZitadelUser(
   const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ sendCode: { applicationName: "Brașov Runners" } }),
+    body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
   });
   if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
   return { kind: "invited" };
@@ -158,7 +159,7 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
   const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ sendCode: { applicationName: "Brașov Runners" } }),
+    body: JSON.stringify({ sendCode: { applicationName: CLUB_NAME } }),
   });
   if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
   return { kind: "invited" };

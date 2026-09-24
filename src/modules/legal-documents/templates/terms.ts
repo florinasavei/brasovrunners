@@ -2,6 +2,10 @@
  * The platform's text for this document (`DECISIONS.md` §95), written to describe exactly what
  * the application does; the only blanks are the club's own four facts, marked <LIKE THIS>.
  * Read by the seed (with a not-approved banner) and by `/admin/legal/new?template=`.
+ *
+ * No hardcoded value (§357): the courts are "the club's registered seat", never a town written
+ * in, and the thirty-minute hold says the participation window's deadline where an event has one
+ * (§104) — a sentence true of one event and false of the next is a value, not a rule.
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 
@@ -18,7 +22,7 @@ export const termsRo: LegalDocumentBody = {
       heading: "2. Înscrierea",
       paragraphs: [
         "Completezi formularul cu numele tău real, cel din actul de identitate, și te înscrii doar pe tine, o singură dată la un eveniment.",
-        "Confirmi adresa de e-mail din legătura primită, în 48 de ore, altfel înscrierea expiră. Dacă există un loc liber, este ținut 30 de minute, cât citești și semnezi declarația; doar semnătura confirmă înscrierea.",
+        "Confirmi adresa de e-mail din legătura primită, în 48 de ore, altfel înscrierea expiră. Dacă există un loc liber, este ținut 30 de minute, cât citești și semnezi declarația — iar la un eveniment care cere confirmarea participării cu câteva zile înainte de start, până la termenul de confirmare arătat pe pagina lui; doar semnătura confirmă înscrierea.",
         "Fără locuri, intri pe lista de așteptare, în ordinea confirmării; când se eliberează un loc, primul de pe listă are 24 de ore să semneze, apoi oferta trece la următorul.",
         "Semnezi scriindu-ți numele complet și bifând că accepți; platforma reține numele, seria și numărul actului de identitate, momentul și o amprentă a textului exact. Declarația semnată îți vine pe e-mail, ca PDF.",
         "Este o semnătură electronică simplă în sensul Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea și al Regulamentului (UE) nr. 910/2014 (eIDAS); nu i se pot refuza efectele juridice pentru că este electronică.",
@@ -42,7 +46,7 @@ export const termsRo: LegalDocumentBody = {
     {
       heading: "5. Răspundere",
       paragraphs: [
-        "Alergarea presupune riscuri firești — teren, vreme, animale, accidentări — pe care le accepți semnând declarația.",
+        "Alergarea presupune riscuri firești — teren, căderi, vreme, întuneric, animale, accidentări — pe care declarația le descrie și pe care le accepți semnând-o; echipamentul potrivit și deciziile tale pe traseu sunt responsabilitatea ta.",
         "Clubul răspunde pentru prejudiciile cauzate din vina sa, potrivit Codului civil (articolele 1349–1350), nu și pentru cele provocate de conduita sau sănătatea ta, de alți participanți ori terți, de trafic, de condițiile traseului sau de pierderea obiectelor personale. Nimic de aici nu înlătură răspunderea pe care legea interzice să o înlături (Codul civil, articolul 1355) și niciun drept de la care nu poți deroga.",
       ],
     },
@@ -75,7 +79,7 @@ export const termsRo: LegalDocumentBody = {
     {
       heading: "10. Legea, instanțele și contactul",
       paragraphs: [
-        "Acești termeni sunt guvernați de legea română; o prevedere nulă lasă restul în vigoare. Scrie-ne mai întâi despre orice neînțelegere; altfel decid instanțele competente. Ca persoană fizică, în afara unei activități profesionale, poți alege instanța de la domiciliul tău (Codul de procedură civilă, articolul 113 alineatul (1) punctul 8), iar clubul te cheamă în judecată doar acolo; altfel, competente sunt instanțele din Brașov.",
+        "Acești termeni sunt guvernați de legea română; o prevedere nulă lasă restul în vigoare. Scrie-ne mai întâi despre orice neînțelegere; altfel decid instanțele competente. Ca persoană fizică, în afara unei activități profesionale, poți alege instanța de la domiciliul tău (Codul de procedură civilă, articolul 113 alineatul (1) punctul 8), iar clubul te cheamă în judecată doar acolo; altfel, competente sunt instanțele de la sediul clubului.",
         "Drepturile tale de consumator rămân neatinse, inclusiv Autoritatea Națională pentru Protecția Consumatorilor (ANPC) și procedura ei de soluționare alternativă a litigiilor (OG nr. 38/2015).",
         "<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>; scrie-ne la <EMAIL DE CONTACT>.",
       ],
@@ -96,7 +100,7 @@ export const termsEn: LegalDocumentBody = {
       heading: "2. Registering",
       paragraphs: [
         "You fill in the form with your real name, as on your identity document, and register only yourself, once per event.",
-        "Confirm your email address from the link received within 48 hours, or the registration expires. If a place is free, it is held for 30 minutes while you read and sign the declaration; only the signature confirms the registration.",
+        "Confirm your email address from the link received within 48 hours, or the registration expires. If a place is free, it is held for 30 minutes while you read and sign the declaration — or, at an event that asks for the confirmation of participation a few days before the start, until the confirmation deadline shown on its page; only the signature confirms the registration.",
         "With no place left, you join the waiting list in order of confirmation; when a place frees up, the first on the list has 24 hours to sign before the offer passes to the next.",
         "You sign by typing your full name and ticking that you accept; the platform records the name, your identity document's series and number, the moment and a fingerprint of the exact text. The signed declaration reaches you by email as a PDF.",
         "This is a simple electronic signature under Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them and Regulation (EU) no. 910/2014 (eIDAS); it cannot be denied legal effect for being electronic.",
@@ -120,7 +124,7 @@ export const termsEn: LegalDocumentBody = {
     {
       heading: "5. Liability",
       paragraphs: [
-        "Running carries natural risks — terrain, weather, animals, injury — which you accept by signing the declaration.",
+        "Running carries natural risks — terrain, falls, weather, darkness, animals, injury — which the declaration describes and which you accept by signing it; the right equipment and your decisions on the course are your own responsibility.",
         "The club is liable for damage caused through its fault under the Civil Code (articles 1349–1350), not for damage from your conduct or health, other participants or third parties, traffic, the course's conditions or lost belongings. Nothing here excludes liability the law forbids excluding (Civil Code, article 1355) or any right you cannot waive.",
       ],
     },
@@ -153,7 +157,7 @@ export const termsEn: LegalDocumentBody = {
     {
       heading: "10. Law, courts and contact",
       paragraphs: [
-        "Romanian law governs these terms; an invalid provision leaves the rest in force. Write to us first about any dispute; otherwise the competent courts decide. As a private individual outside any professional activity you may choose the court of your domicile (Code of Civil Procedure, article 113(1) point 8), and the club sues you only there; otherwise the courts of Brașov have jurisdiction.",
+        "Romanian law governs these terms; an invalid provision leaves the rest in force. Write to us first about any dispute; otherwise the competent courts decide. As a private individual outside any professional activity you may choose the court of your domicile (Code of Civil Procedure, article 113(1) point 8), and the club sues you only there; otherwise the courts of the club's registered seat have jurisdiction.",
         "Your consumer rights remain untouched, including the National Authority for Consumer Protection (ANPC) and its alternative dispute resolution procedure (Ordinance no. 38/2015).",
         "<THE CLUB'S FULL LEGAL NAME>, <REGISTERED ADDRESS>, <REGISTRATION NUMBER>; write to us at <CONTACT EMAIL>.",
       ],

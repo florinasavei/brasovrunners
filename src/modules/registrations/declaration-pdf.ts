@@ -115,8 +115,13 @@ export function runText(raw: string): string {
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
 /** Opened once per document (`doc.openImage`): pdfkit embeds a Buffer again on every `image()` call, and two hundred copies of the lockup are the difference between two megabytes and ten. */
 let LOGO: Buffer;
-const PAGE = { width: 595.28, height: 841.89 } as const;
-const MARGIN = { top: 48, bottom: 64, left: 56, right: 56 } as const;
+/** The A4 page and its margins, in PDF points — exported so the layout test measures against these rather than copies. */
+export const DECLARATION_PAGE = { width: 595.28, height: 841.89 } as const;
+export const DECLARATION_MARGIN = { top: 48, bottom: 64, left: 56, right: 56 } as const;
+/** The footer's one line of text: its top `gap` points under the bottom margin, set at `size`. */
+export const DECLARATION_FOOTER = { gap: 22, size: 8 } as const;
+const PAGE = DECLARATION_PAGE;
+const MARGIN = DECLARATION_MARGIN;
 const TEXT_WIDTH = PAGE.width - MARGIN.left - MARGIN.right;
 const BLANK_LINE = "………………………………………………";
 
@@ -173,11 +178,11 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
     doc.switchToPage(i);
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
-    const y = PAGE.height - MARGIN.bottom + 22;
+    const y = PAGE.height - MARGIN.bottom + DECLARATION_FOOTER.gap;
     doc.moveTo(MARGIN.left, y - 8).lineTo(PAGE.width - MARGIN.right, y - 8).strokeColor(COLOR.line).lineWidth(0.5).stroke();
     doc
       .font("body")
-      .fontSize(8)
+      .fontSize(DECLARATION_FOOTER.size)
       .fillColor(COLOR.inkMuted)
       .text(`${input.labels.organization} · ${input.labels.generatedOn}`, MARGIN.left, y, { width: TEXT_WIDTH - 90, lineBreak: false })
       .text(input.labels.page(i + 1, range.count), MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
