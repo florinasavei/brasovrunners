@@ -12,8 +12,8 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
-import { isLegalDocumentKey, LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
-import { clubFactsFromEnv, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
+import { isLegalDocumentKey, LEGAL_TEMPLATES, templatePrefill } from "@/modules/legal-documents/templates/catalogue";
+import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 import { env } from "@/shared/config/env";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
@@ -79,11 +79,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
     : fromTemplate && template && isLegalDocumentKey(template)
-      ? {
-          key: template,
-          ro: { title: fromTemplate.ro.title, body: fillClubFacts(fromTemplate.ro.body, facts) },
-          en: { title: fromTemplate.en.title, body: fillClubFacts(fromTemplate.en.body, facts) },
-        }
+      ? // Every `{{field}}` stays a field and every unknown fact its placeholder (§NNN).
+        { key: template, ...templatePrefill(template, facts) }
       : undefined;
   // What is still a blank, named, so the Administrator types two things and not a search.
   const blanks = values && fromTemplate ? remainingPlaceholders(values.ro.body) : [];
