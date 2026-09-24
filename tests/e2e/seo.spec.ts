@@ -39,6 +39,25 @@ test.describe("BR-REQ-070-02 criterion 1 canonical and hreflang", () => {
     );
   });
 
+  test("the contact page is its own canonical, whatever a submission's outcome adds to the address", async ({ page, baseURL }) => {
+    // `?sent=` is what the form lands on after a message: the same page, never a second one.
+    await page.goto("/ro/contact?sent=1");
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/ro/contact`);
+    await expect(page.locator('head link[rel="alternate"][hreflang="en"]')).toHaveAttribute("href", `${baseURL}/en/contact`);
+    await expect(page.locator('head link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute("href", `${baseURL}/ro/contact`);
+    await page.goto("/en/contact");
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/en/contact`);
+  });
+
+  test("the gallery listing is its own canonical in both languages, albums or none", async ({ page, baseURL }) => {
+    await page.goto("/ro/galerie");
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/ro/galerie`);
+    await expect(page.locator('head link[rel="alternate"][hreflang="ro"]')).toHaveAttribute("href", `${baseURL}/ro/galerie`);
+    await expect(page.locator('head link[rel="alternate"][hreflang="en"]')).toHaveAttribute("href", `${baseURL}/en/gallery`);
+    await page.goto("/en/gallery");
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/en/gallery`);
+  });
+
   test("the calendar's canonical ignores the month named in the address — the reported duplicate", async ({ page, baseURL }) => {
     await page.goto("/ro/calendar?month=2027-01");
     await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", `${baseURL}/ro/calendar`);

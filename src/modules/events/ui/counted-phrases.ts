@@ -12,7 +12,10 @@ import type { PublicFill } from "../domain/registration-cta";
  */
 type Say = (key: string, values?: Record<string, string | number>) => string;
 
-/** "12 înscriși din 50 de locuri" / "12 registered of 50 places". */
+/**
+ * "12 înscriși din 50 de locuri" / "12 of 50 places taken" — each language's own word order
+ * from the same two numbers: the catalogue decides where the words go, this only picks the forms.
+ */
 export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
   return say("cta.fill", {
     taken: say(`cta.fillTaken.${numberForm(locale, fill.taken)}`, { count: fill.taken }),

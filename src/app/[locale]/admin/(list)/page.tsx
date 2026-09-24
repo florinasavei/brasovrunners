@@ -357,8 +357,15 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 }))}
                 more={drafts.length > DRAFT_LINKS ? t("events.seriesDraftsMore", { count: drafts.length - DRAFT_LINKS }) : null}
                 explanation={draftExplanation(reason, {
-                  always: t("events.seriesDraftsAlways"),
-                  autoPublishOff: t("events.seriesDraftsWhyOff"),
+                  // The words of the real controls, read from the catalogue rather than retyped,
+                  // so the hint names exactly the button and the heading the reader will find:
+                  // the bar's bulk verb (a series' tick ticks every date, §113), and the switch
+                  // under the source's "Evenimentul se repetă" (§NNN hints).
+                  always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),
+                  autoPublishOff: t("events.seriesDraftsWhyOff", {
+                    section: t("editor.repeatRuleTitle"),
+                    button: t("editor.repeatPublishTurnOn"),
+                  }),
                   sourceNotPublished: t("events.seriesDraftsWhySource"),
                 })}
               />

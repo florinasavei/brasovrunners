@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * `DECISIONS.md` §NNN — the owner, of a series row reading "Publicat · 8 date · Ciornă ·
@@ -42,8 +42,9 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // that this one is deliberately left to make drafts instead.
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    await field("event.startsAtDate").fill(ymd(first));
-    await field("event.startsAtTime").fill("09:00");
+    // MUI pickers since the pickers landed beside the series hints (§NNN): driven, not filled.
+    await fillDateField(page, "Începutul evenimentului", ymd(first));
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
@@ -62,7 +63,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // The tick first, the frequency after it (§169): "Publică edițiile create" stays unticked —
     // this is the case the whole feature is about.
     await main.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
-    await field("until").fill(ymd(new Date(first.getTime() + 14 * DAY)));
+    await fillDateField(page, "Până la (opțional)", ymd(new Date(first.getTime() + 14 * DAY)));
     await expect(field("publish")).not.toBeChecked();
     await main.getByRole("button", { name: "Creează edițiile" }).click();
     await page.getByRole("dialog", { name: "Creezi edițiile?" }).getByRole("button", { name: "Creează edițiile" }).click();
@@ -102,6 +103,12 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText("O dată în ciornă nu e pe site");
     await expect(tooltip).toContainText("publicarea automată e oprită");
+    // Where the switch really is, and what the list's tick really does (§NNN hints): the source
+    // event's "Evenimentul se repetă" and its button, and the bar's verb for a series' tick.
+    await expect(tooltip).toContainText("la „Evenimentul se repetă”, apasă „Publică datele noi automat”");
+    await expect(tooltip).toContainText("bifează seria în listă");
+    await expect(tooltip).toContainText("„Publică cele bifate”");
+    await expect(tooltip).not.toContainText("setările seriei");
     await expect(tooltip).toHaveCSS("white-space", "pre-line");
 
     // The link is real: it opens the draft's own editor, where it is a draft and nothing else.

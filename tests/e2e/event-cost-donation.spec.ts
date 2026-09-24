@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * `DECISIONS.md` §NNN — the owner, 2026-09-24, on "Cu taxă" showing no box for the money:
@@ -31,8 +31,9 @@ test.describe("the cost select's third answer, Donație (§NNN)", () => {
       await page.keyboard.type(text);
     };
 
-    await field("event.startsAtDate").fill("2027-05-08");
-    await field("event.startsAtTime").fill("09:00");
+    // MUI pickers since the pickers landed beside the cost boxes (§NNN): driven, not filled.
+    await fillDateField(page, "Începutul evenimentului", "2027-05-08");
+    await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Alergare cu donație ${suffix}`);
     await field("translations.ro.slug").fill(slug);

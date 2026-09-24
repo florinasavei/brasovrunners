@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
@@ -162,5 +163,36 @@ describe("BR-REQ-011-01 criterion 16 the listing card's mention", () => {
     );
     expect(html).toContain("Salvamont");
     expect(html).not.toContain("<a ");
+  });
+});
+
+describe("BR-REQ-011-01 criterion 16 the featured hero's mention (§NNN partners with many links)", () => {
+  /**
+   * The hero on the listing draws the full facts, but not stacked: it is a summary above the
+   * fold with a button to reach, like the cards, so its partners are the cards' one sentence —
+   * never the event page's column of every partner's links.
+   */
+  it("keeps the one-line sentence, one link per partner, no host captions and no link rows", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ coHosts: TWO_PARTNERS }), now: NOW }));
+    expect(html.match(/Împreună cu/g)).toHaveLength(1);
+    expect(html).toContain("Brașov Marathon");
+    expect(html).toContain("Salvamont");
+    // Not the card of links: neither the kind's word, the club's own label, nor the host under it.
+    expect(html).not.toContain("Site-ul partenerului");
+    expect(html).not.toContain("Pagina noastră");
+    expect(html).not.toContain("facebook.com");
+    // One anchor for the partner that has links — its site, its primary link — and none for the other.
+    const anchors = [...html.matchAll(/<a\b[^>]*>/g)].map((match) => match[0]);
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]).toContain('href="https://bm.example.test"');
+    // And the two names joined the way Romanian joins a list, in one sentence.
+    expect(html).toMatch(/Brașov Marathon<\/a> și Salvamont/);
+  });
+
+  it("is what FeaturedEventHero asks for: the full facts, never stacked", () => {
+    const hero = readFileSync("src/modules/events/ui/FeaturedEventHero.tsx", "utf8");
+    const call = /<EventFacts\b[^>]*\/>/.exec(hero)?.[0] ?? "";
+    expect(call).toContain("event={event}");
+    expect(call).not.toContain("stacked");
   });
 });

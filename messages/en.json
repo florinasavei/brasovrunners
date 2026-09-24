@@ -192,11 +192,11 @@
       "external": "Register on the organiser's site",
       "externalWithProvider": "Register on {provider}",
       "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
-      "fill": "{taken} of {places}",
+      "fill": "{taken} of {places} taken",
       "fillTaken": {
-        "one": "{count} registered",
-        "few": "{count} registered",
-        "other": "{count} registered"
+        "one": "{count}",
+        "few": "{count}",
+        "other": "{count}"
       },
       "fillPlaces": {
         "one": "{count} place",
@@ -632,8 +632,8 @@
       "seriesDraftsOne": "{dates} in draft — not on the site:",
       "seriesDraftsMany": "{dates} in draft — not on the site:",
       "seriesDraftsMore": "and {count} more",
-      "seriesDraftsAlways": "A draft date is not on the site: nobody sees it and nobody can register for it. Publish it from its own editor, or from the list, by ticking it and pressing “Publish the ticked ones”.",
-      "seriesDraftsWhyOff": "Why: this series has automatic publication turned off, so every new date starts as a draft. Turn on “Publish new dates automatically”, in the series' settings, so you no longer have to do it for each date.",
+      "seriesDraftsAlways": "A draft date is not on the site: nobody sees it and nobody can register for it. To publish one date, use its own editor — the dates on this row open it. To publish them all at once, tick the series in the list (its tick covers every date) and press “{button}”: every date of the series that is not published yet goes live.",
+      "seriesDraftsWhyOff": "Why: this series has automatic publication turned off, so every new date starts as a draft. So you no longer have to do it for each date, open the series' source event and, under “{section}”, press “{button}”.",
       "seriesDraftsWhySource": "Why: the series' source is not published right now, and the dates of an unpublished source stay drafts whatever the setting says. Publish the source event first.",
       "bulkSelectAll": "All",
       "bulkSelected": "Ticked: {count}",

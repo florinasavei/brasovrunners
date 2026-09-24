@@ -122,9 +122,19 @@ describe("BR-REQ-070-02 criterion 2 — the sitemap", () => {
 
     const entries = await sitemap();
     const ro = entries.find((e) => e.url === `${BASE}/ro/galerie/crosul-2026`);
-    // The gallery listing is only worth listing where there is something on it (as events are).
     expect(urlsOf(entries)).toContain(`${BASE}/ro/galerie`);
     expect(ro?.lastModified).toEqual(album.updatedAt);
+  });
+
+  it("lists the gallery listing in both languages even with no album, as the page itself always answers", async () => {
+    // `gallery/page.tsx` renders its empty state rather than a 404 and declares both languages
+    // as alternates, so the sitemap says the same whatever the album count (§NNN canonical and
+    // hreflang) — as it does for the events listing.
+    const entries = await sitemap();
+    expect(urlsOf(entries)).toContain(`${BASE}/ro/galerie`);
+    expect(urlsOf(entries)).toContain(`${BASE}/en/gallery`);
+    const ro = entries.find((e) => e.url === `${BASE}/ro/galerie`);
+    expect(ro?.alternates?.languages?.en).toBe(`${BASE}/en/gallery`);
   });
 
   it("lists a legal text only once the club approved a version, never a not-approved placeholder", async () => {

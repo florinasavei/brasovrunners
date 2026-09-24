@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { hydrated, signIn } from "./support/featured-event";
+import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-011-01 criterion 16 (`DECISIONS.md` §168, extended by §NNN) — a partner is a card of
@@ -23,8 +23,10 @@ test("the editor adds a partner with two links, and the preview shows both under
 
   const field = (name: string) => page.locator(`[name="${name}"]`);
 
-  await field("event.startsAtDate").fill("2027-06-01");
-  await field("event.startsAtTime").fill("09:00");
+  // The date and time are MUI pickers since the pickers landed beside the partners (§NNN): the
+  // posted inputs are hidden, so the picker is driven the way a person drives it.
+  await fillDateField(page, "Începutul evenimentului", "2027-06-01");
+  await fillTimeField(page, "Ora", "09:00");
   await field("event.locationName").fill("Parcul Tractorul");
   await field("translations.ro.title").fill(`Cros parteneri ${suffix}`);
   await field("translations.ro.slug").fill(`cros-parteneri-${suffix}`);

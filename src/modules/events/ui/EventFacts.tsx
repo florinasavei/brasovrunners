@@ -187,7 +187,8 @@ export default async function EventFacts({
    * comma and an "and". A partner may carry any number of links now (§NNN), and a sentence has
    * room for one, so each name is its own link to the partner's own site — its first link if it
    * named no site — except where the facts may carry no links at all (a card that is itself one
-   * link). The compact card keeps this sentence exactly (§169); the full page does not, below.
+   * link). The compact card and the listing's featured hero keep this sentence exactly (§169);
+   * only the event page's stacked facts do not, below.
    */
   const coHosts = readCoHosts(event);
   const coHostNames = coHosts.map((host) => host.name);
@@ -361,17 +362,23 @@ export default async function EventFacts({
     { label: t("when"), icon: CalendarMonthIcon, value: when },
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
-  // Held with other organizations (§121, §168), each its own card of links now (§NNN; the
-  // owner: "it should be a card, it's like: partner link, partner event, etc"): one piece per
-  // partner, so two or more partners read as their own rows — the bullets `stack()` already
-  // draws for any line with more than one piece — each carrying every link it has, not the one
-  // a joined sentence could fit. The compact card keeps the plain sentence (`coHostSentence`,
-  // above): it has no room for a row of rows, and a card that is itself a link may nest none.
+  // Held with other organizations (§121, §168). On the event page (`stacked`), each its own card
+  // of links now (§NNN partners with many links; the owner: "it should be a card, it's like:
+  // partner link, partner event, etc"): one piece per partner, so two or more partners read as
+  // their own rows — the bullets `stack()` already draws for any line with more than one piece —
+  // each carrying every link it has, not the one a joined sentence could fit.
+  //
+  // Everywhere else the plain sentence (`coHostSentence`, above), exactly as the listing card
+  // says it: the featured hero on the listing is a summary above the fold like the cards, and a
+  // column of every partner's links there would push the button the hero exists for below the
+  // screen — the same reason the hero's facts are not `stacked` in the first place.
   if (coHosts.length > 0) {
     lines.push({
       label: t("coHost"),
       icon: HandshakeIcon,
-      value: coHosts.map((host, index) => <Fragment key={index}>{links ? partnerFacts(host) : host.name}</Fragment>),
+      value: stacked
+        ? coHosts.map((host, index) => <Fragment key={index}>{links ? partnerFacts(host) : host.name}</Fragment>)
+        : [coHostSentence()],
     });
   }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });

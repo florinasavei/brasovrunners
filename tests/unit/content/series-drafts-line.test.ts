@@ -46,9 +46,36 @@ describe("§NNN the events list's series-drafts line", () => {
 
   it("gives the hint the general sentence always, and the named reason's sentence beside it", () => {
     expect(source).toContain("explanation={draftExplanation(reason, {");
-    expect(source).toContain('always: t("events.seriesDraftsAlways"),');
-    expect(source).toContain('autoPublishOff: t("events.seriesDraftsWhyOff"),');
+    expect(source).toContain('always: t("events.seriesDraftsAlways", { button: t("events.bulkPublishAction") }),');
+    expect(source).toContain('autoPublishOff: t("events.seriesDraftsWhyOff", {');
+    expect(source).toContain('section: t("editor.repeatRuleTitle"),');
+    expect(source).toContain('button: t("editor.repeatPublishTurnOn"),');
     expect(source).toContain('sourceNotPublished: t("events.seriesDraftsWhySource"),');
+  });
+
+  /**
+   * Integration review (§NNN hints): the first wording sent the reader to "the series' settings",
+   * which do not exist — the switch is under the source event's "Evenimentul se repetă" — and
+   * offered to publish one date "from the list, by ticking it", when the list's tick on a series
+   * ticks every date (§113). Each sentence now names what is actually on the screen, by the
+   * catalogue's own words for it.
+   */
+  it("names the real place of the switch and what the list's tick really does, in both languages", () => {
+    for (const file of ["messages/ro.json", "messages/en.json"]) {
+      const { Admin } = JSON.parse(read(file));
+      const whyOff: string = Admin.events.seriesDraftsWhyOff;
+      const always: string = Admin.events.seriesDraftsAlways;
+      expect(whyOff, file).toContain("{section}");
+      expect(whyOff, file).toContain("{button}");
+      expect(whyOff, file).not.toMatch(/setările seriei|series' settings/);
+      expect(always, file).toContain("{button}");
+      expect(always, file).not.toMatch(/bifând-o|by ticking it/);
+    }
+    // The words the placeholders are filled with are the controls' own labels.
+    const ro = JSON.parse(read("messages/ro.json")).Admin;
+    expect(ro.editor.repeatRuleTitle).toBe("Evenimentul se repetă");
+    expect(ro.editor.repeatPublishTurnOn).toBe("Publică datele noi automat");
+    expect(ro.events.bulkPublishAction).toBe("Publică cele bifate");
   });
 
   it("has every key it asks for, in both catalogues, and none of them empty", () => {
