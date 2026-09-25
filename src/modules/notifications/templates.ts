@@ -10,6 +10,7 @@ import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
@@ -743,6 +744,23 @@ const T = {
         "Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Se păstrează trei ani după eveniment, ca în nota de confidențialitate; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la șapte zile după eveniment.",
       ],
     },
+    groupRunDeclarationSigned: {
+      // The signer's copy of a group run's optional self-declaration (§NNN): the PDF attached, no token.
+      subject: (d: TemplateData) => `Declarația ta pe propria răspundere — ${d.eventTitle ?? "alergarea de grup"}`,
+      body: (d: TemplateData) => [
+        `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se șterge la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      // The club's archive copy (§NNN, §99): searchable by who and for what; the document masked (§320).
+      subject: (d: TemplateData) => `Declarație semnată (alergare de grup): ${d.participantName || "alergător"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
+        `Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
+      ],
+    },
     clubConfirmationNotice: {
       // Searchable in the club's mailbox by who and for what, like the archive copy above.
       subject: (d: TemplateData) => `Înscriere confirmată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
@@ -913,6 +931,9 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
+    /** The same for a group run's self-declaration (§NNN): signed on a page, no registration behind it. */
+    privacyFooterDeclaration: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -1017,6 +1038,21 @@ const T = {
       body: (d: TemplateData) => [
         `Attached is the declaration of own responsibility signed by ${d.participantName || "participant"} for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
         "The club's archive copy, without the identity document's series and number. Kept three years after the event, as the privacy notice says; the full document is in the event's declarations PDF in the backoffice until seven days after the event.",
+      ],
+    },
+    groupRunDeclarationSigned: {
+      subject: (d: TemplateData) => `Your self-declaration — ${d.eventTitle ?? "the group run"}`,
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
+        `Signing it was optional and registers you for nothing: come to the run as usual. On the club's platform the declaration is deleted ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      subject: (d: TemplateData) => `Signed declaration (group run): ${d.participantName || "runner"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
+        `The club's archive copy, without the identity document's series and number. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, until ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run, when the platform deletes it.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1184,6 +1220,7 @@ const T = {
     },
     privacyFooter: (club: string) => `This message comes from ${club} about your registration. How we use your data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
+    privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
   },
 } as const;
 
@@ -1209,6 +1246,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
   ORGANIZER_MESSAGE: "organizerMessage",
+  GROUP_RUN_DECLARATION_SIGNED: "groupRunDeclarationSigned",
+  GROUP_RUN_DECLARATION_ARCHIVE: "groupRunDeclarationArchive",
   REGISTER_ANOTHER_PERSON: "registerAnotherPerson",
 };
 
@@ -1428,7 +1467,7 @@ export function buildTemplateContent(
     links: (() => {
       const own = entry.links?.(linkData) ?? [];
       // The club's archive copy and the staff invitation are not a participant's message.
-      if (messageType === "DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
+      if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
@@ -1441,7 +1480,11 @@ export function buildTemplateContent(
     privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
       ? undefined
       : {
-          text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
+          text: (messageType === "REGISTRATION_OPENED"
+            ? copy.privacyFooterInterest
+            : messageType === "GROUP_RUN_DECLARATION_SIGNED"
+              ? copy.privacyFooterDeclaration
+              : copy.privacyFooter)(controllerName()),
           url: privacyUrl,
         },
   };
@@ -1490,6 +1533,8 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATI
  */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "DECLARATION_ARCHIVE",
+  // The group run's archive copy (§NNN), to the club's mailbox like the race's.
+  "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
 ]);

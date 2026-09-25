@@ -682,6 +682,12 @@ export const eventFieldsSchema = z
      * from before it existed, which means none is needed, like `isSpecial`.
      */
     headlampRequired: z.boolean().optional().default(false),
+    /**
+     * "Declarație opțională pe propria răspundere" (§NNN): the group run's self-declaration, a
+     * checkbox in "Traseul". Optional for a caller from before it existed, which means none offered;
+     * the service keeps it only on a group run on asphalt or trail (`groupRunDeclarationKeyFor`).
+     */
+    offersGroupRunDeclaration: z.boolean().optional().default(false),
     featured: z.boolean(),
     /**
      * A special edition (§168): any number of events may carry it, so there is nothing to

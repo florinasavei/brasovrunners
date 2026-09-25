@@ -29,6 +29,8 @@ import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
+import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
+import { deleteGroupRunDeclarationMessagesOfEvent } from "@/modules/group-run-declarations/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -418,6 +420,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     headlampRequired: fields.headlampRequired,
+    // Only a group run on asphalt or trail has a self-declaration to offer (§NNN): anything else
+    // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
+    // turn-up type's registration block.
+    offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
@@ -1412,6 +1418,9 @@ const SERIES_COLUMNS = [
   // A fact of the route like the two above (§382): "from this date" carries it from the first
   // dark Wednesday of October, and "from this date" again takes it off in spring.
   "headlampRequired",
+  // The self-declaration offered on the run's page (§NNN), like the headlamp: "from this date"
+  // carries it to every later Tâmpa run of the series.
+  "offersGroupRunDeclaration",
   "registrationMode",
   "capacity",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
@@ -2186,6 +2195,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The headlamp travels with the route (§382): a copy of an evening run, and every date a
     // series makes from it, is as dark at its start as the source.
     headlampRequired: source.headlampRequired,
+    // The self-declaration travels with the route too (§NNN): a copy of the trail run, and every
+    // date a series makes from it, offers the same declaration.
+    offersGroupRunDeclaration: source.offersGroupRunDeclaration,
     featured: false,
     // Nor the special mark (§168): it says something about one edition — the anniversary, the
     // Wednesday another club's race passes through — and the copy is a different one.
@@ -2623,9 +2635,12 @@ export async function deleteEvent<T extends Record<string, unknown>>(
     await removeTestRegistrations(db, input.actor, input.eventId);
   }
 
-  // `event_translations` cascades from the event; nothing else references an event with no
-  // registrations against it.
-  await db.delete(events).where(eq(events.id, input.eventId));
+  // `event_translations` cascades from the event, and so do a group run's self-declarations
+  // (§NNN) — whose outbox rows go first, in the same transaction, since nothing could render them.
+  await db.transaction(async (tx) => {
+    await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
+    await tx.delete(events).where(eq(events.id, input.eventId));
+  });
   revalidatePublicContent("events");
 }
 
@@ -2731,7 +2746,10 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
 
     // `event_translations` and `registration_interests` cascade; a gallery album's `event_id`
     // and a later edition's `repeat_of` are set to null. The registrations are gone above,
-    // which is the only reference that would have refused this.
+    // which is the only reference that would have refused this. A group run's self-declarations
+    // cascade too (§NNN); their outbox rows carry the signer's address and could never render
+    // without them, so they go first.
+    await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));
 
     return { registrationsErased };

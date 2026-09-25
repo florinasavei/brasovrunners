@@ -279,13 +279,20 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_OPENED",
 /** Messages about no event: "my registrations" is about a person (§77), the invitation about the team (§141). */
 const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION"]);
 /** Messages about no one registration: the two above, and "registration is open". */
-const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "REGISTRATION_OPENED"]);
+// A group run's self-declaration (§NNN) is about a signature, never a registration: no status to state.
+const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
+  "PROFILE_MANAGE_LINK",
+  "STAFF_INVITATION",
+  "REGISTRATION_OPENED",
+  "GROUP_RUN_DECLARATION_SIGNED",
+  "GROUP_RUN_DECLARATION_ARCHIVE",
+]);
 /** The fields only a few messages carry, and which. */
 const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>> = {
   bibNumber: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "CLUB_CONFIRMATION_NOTICE"],
   checkinCode: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"],
   holdExpiresAtFormatted: ["COMPLETE_DECLARATION"],
-  signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE"],
+  signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION"],
 };

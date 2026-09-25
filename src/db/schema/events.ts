@@ -312,6 +312,19 @@ export const events = pgTable(
      * which is what nobody had said otherwise.
      */
     headlampRequired: boolean("headlamp_required").notNull().default(false),
+    /**
+     * Offer the optional self-declaration on the event's page (§NNN; the owner, 2026-09-25: "I
+     * might need a 'declarație pe propria răspundere' for group runs as well, especially for the
+     * trail one"). Only a group run (§111) whose surface is asphalt or trail has a declaration to
+     * offer — `GROUP_RUN_DECLARATION_ASPHALT` or `_TRAIL`, by the surface — and only while the club
+     * has an approved version of that kind in force (`groupRunDeclarationKey`). It gates nothing:
+     * a group run takes no registration, and signing is never a condition of turning up.
+     *
+     * Not null with a default, so every row written before it reads as "not offered". The editor
+     * ticks it by default for a trail group run (the mountain rescue asks for it on the Tâmpa run)
+     * and leaves it off for asphalt.
+     */
+    offersGroupRunDeclaration: boolean("offers_group_run_declaration").notNull().default(false),
 
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).

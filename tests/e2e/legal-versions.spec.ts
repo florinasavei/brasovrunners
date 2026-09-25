@@ -39,7 +39,8 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.getByRole("combobox").first().click();
     await page
       .getByRole("option", {
-        name: wantsTerms ? /Termeni|Terms/ : /Declarația|Declaration/,
+        // The race's declaration, named as the owner named the three since §NNN.
+        name: wantsTerms ? /Termeni|Terms/ : /\(concurs\)|\(race\)/,
       })
       .click();
 
@@ -53,7 +54,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}\?saved=/);
     await expect(
       page.getByRole("heading", {
-        name: wantsTerms ? /Termeni de concurs · v\d+/ : /Declarația participantului · v\d+/,
+        name: wantsTerms ? /Termeni de concurs · v\d+/ : /Declarație pe propria răspundere \(concurs\) · v\d+/,
       }),
     ).toBeVisible();
     await expect(page.getByText("Ciornă", { exact: false }).first()).toBeVisible();
