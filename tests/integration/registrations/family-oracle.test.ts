@@ -71,6 +71,7 @@ beforeEach(async () => {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: new Date() });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: new Date() });
   // The club's limit at two, so "at the limit" is two registrations on the address.
   await db.insert(platformSettings).values({ key: ADDRESS_CAP_SETTING_KEY, value: { registrationsPerAddress: 2 }, updatedAt: new Date() });
 });
@@ -105,7 +106,10 @@ function form(firstName: string): FormData {
     emergencyContactPhone: "0722222222",
     emergencyContactPhoneCountry: "RO",
     fitnessDeclared: "on",
+    // The family form's tick for another adult (§421); the ordinary form ignores it.
+    fitnessAcknowledged: "on",
     rulesAcknowledged: "on",
+    termsAccepted: "on",
     privacyAcknowledged: "on",
     honeypot: "",
     renderedAt: new Date(Date.now() - 30_000).toISOString(),
@@ -203,5 +207,6 @@ async function beforeEachAgain() {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: new Date() });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: new Date() });
   await db.insert(platformSettings).values({ key: ADDRESS_CAP_SETTING_KEY, value: { registrationsPerAddress: 2 }, updatedAt: new Date() });
 }

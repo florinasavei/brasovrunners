@@ -44,6 +44,15 @@ beforeEach(async () => {
     translations,
     now: NOW,
   });
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now: NOW,
+  });
 });
 
 async function oneplaceEvent(): Promise<EventForRegistration> {
@@ -82,6 +91,7 @@ async function submit(event: EventForRegistration, email: string): Promise<strin
       locale: "ro",
       privacyAcknowledged: true,
       fitnessDeclared: true,
+      termsAccepted: true,
       rulesAcknowledged: true,
       resultsNameConsent: true,
       listOptOut: false,

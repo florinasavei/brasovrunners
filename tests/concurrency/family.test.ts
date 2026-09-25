@@ -57,6 +57,16 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
       translations,
       now: NOW,
     }).catch(() => undefined);
+    // The club's terms (§421): a public submission is refused while none is approved.
+    await insertLegalDocumentVersion(db, {
+      key: "TERMS",
+      version: 1,
+      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    }).catch(() => undefined);
     existedAtStart = !(await familyRegistrationOpen(db));
     const [kept] = await db.select().from(platformSettings).where(eq(platformSettings.key, ADDRESS_CAP_SETTING_KEY));
     previousCap = kept?.value;
@@ -114,6 +124,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: false,
     listOptOut: false,
@@ -155,7 +166,7 @@ describe("§389 BR-REQ-034-02 a family on one address, under real concurrency", 
     // Five people through five links at once, one slot left on the address.
     const results = await Promise.allSettled(
       ["Maria", "Ion", "Dan", "Eva", "Radu"].map((name) =>
-        submitRegistration(db, event, { ...submission(email, name), phone: undefined }, NOW, "REAL", {
+        submitRegistration(db, event, { ...submission(email, name), phone: undefined, fitnessAcknowledged: true }, NOW, "REAL", {
           source: "PUBLIC",
           createdByStaffUserId: null,
           anotherPerson: { participantId: ana.participantId },

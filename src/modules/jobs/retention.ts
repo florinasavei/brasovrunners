@@ -13,13 +13,15 @@ import type { Database } from "@/db/types";
 import { scrubRegistrationsFromAudit } from "@/modules/audit/repository";
 import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { RETENTION_PERIODS } from "./domain/retention-periods";
 
 /**
  * Deleting the rows nobody will ever read again, and the personal data nobody may keep.
  *
  * Every window this sweep enforces, in the order it runs them (§322):
  *
- *     identity document, health note   7 days after the event's start (cleared, the rows stay)
+ *     identity document, health note,  7 days after the event's start (cleared, the rows stay)
+ *     emergency contact                  (the contact since §421)
  *     a group run's self-declarations  7 days after the event's start (the rows go; §393)
  *     a minor's Strava and Instagram   never kept (cleared on every run; §323, §324)
  *     job runs                         30 days
@@ -103,15 +105,18 @@ export const RETENTION = {
    * about the event could still be made and the declaration is the evidence — and then go,
    * with the participant row when it was their last registration (`DECISIONS.md` §95). The
    * privacy notice says exactly this, and this is what makes it true.
+   *
+   * Moved to `domain/retention-periods.ts` so a pure module — `notifications/templates.ts`
+   * included — can read it without pulling in `drizzle` and every schema this file touches.
    */
-  registrationsYearsAfterEvent: 3,
+  registrationsYearsAfterEvent: RETENTION_PERIODS.registrationsYearsAfterEvent,
   /**
    * The identity document's series and number, and the health note, go seven days after the
    * event's start — the kits are handed out by then, and the privacy notice says so (§95).
    * The declaration keeps the name, the signature, the version and the hash; the participant
    * keeps the PDF that was emailed with the number in it.
    */
-  identityAndHealthDaysAfterEvent: 7,
+  identityAndHealthDaysAfterEvent: RETENTION_PERIODS.identityAndHealthDaysAfterEvent,
   /**
    * A group run's optional self-declaration (§393) goes whole seven days after the run's start —
    * the row, the name, the identity document and the address, and the messages that carry them.
@@ -140,6 +145,8 @@ export type PruneCounts = {
   participants: number;
   identityDocuments: number;
   healthNotes: number;
+  /** Registrations whose emergency contact was cleared, seven days after the event (§421). */
+  emergencyContacts: number;
   /** A minor's Strava and Instagram, kept from before the rule that stores none (§323, §324). */
   minorSocials: number;
   /** A group run's self-declarations, gone seven days after the run (§393). */
@@ -211,6 +218,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     participants: 0,
     identityDocuments: 0,
     healthNotes: 0,
+    emergencyContacts: 0,
     minorSocials: 0,
     groupRunDeclarations: 0,
     auditLogs: 0,
@@ -253,8 +261,25 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .set({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null, updatedAt: now })
       .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
       .returning({ id: registrations.id });
+    /*
+      The emergency contact (§421): a third person's name and number, asked for race day and for
+      nothing after it. Cleared with the documents and the note — a separate statement, so the
+      count says how many rows lost a contact rather than a note — and kept no longer than seven
+      days because nobody is rung about a race that is over.
+    */
+    const clearedContacts = await tx
+      .update(registrations)
+      .set({ emergencyContactName: null, emergencyContactPhone: null, updatedAt: now })
+      .where(
+        and(
+          or(isNotNull(registrations.emergencyContactName), isNotNull(registrations.emergencyContactPhone)),
+          inArray(registrations.id, recent),
+        ),
+      )
+      .returning({ id: registrations.id });
     counts.identityDocuments = clearedDocuments.length;
     counts.healthNotes = clearedHealth.length;
+    counts.emergencyContacts = clearedContacts.length;
   });
 
   /*
@@ -453,6 +478,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.participants +
     counts.identityDocuments +
     counts.healthNotes +
+    counts.emergencyContacts +
     counts.minorSocials +
     counts.groupRunDeclarations +
     counts.auditLogs

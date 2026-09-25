@@ -257,6 +257,34 @@ describe("§383 the forecast of automatic emails", () => {
     expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("j1");
   });
 
+  /**
+   * §420, BR-REQ-035-02 criterion 3 — after registration closes the job makes no offer (it would be
+   * born lapsed), so the forecast promises none; but the lapse is still released to the queue for
+   * the desk to give, so the hold is still spent and owed no last call.
+   */
+  it("promises no offer to the next in line after the close, and no last call for the hold the job still releases", async () => {
+    const k = await event("Crosul K", at(4 * DAY), {
+      capacity: 1,
+      registrationClosesAt: at(2 * DAY),
+      reminderHoursBefore: 24,
+      confirmationOpensDaysBefore: 0,
+    });
+    const k1 = await registration(k, "k1", "PENDING_DECLARATION", { holdExpiresAt: at(3 * DAY) });
+    const k2 = await registration(k, "k2", "WAITLISTED");
+
+    const rows = (await forecast()).filter((row) => row.eventId === k);
+    expect(rows.some((row) => row.send === "nextInLine")).toBe(false);
+    expect(rows.some((row) => row.send === "lastCall")).toBe(false);
+
+    // The job, at the lapse (also the last call's own instant): the hold released, nobody offered.
+    await runRegistrationMaintenance(db, at(3 * DAY));
+    const statuses = await db.select({ id: registrations.id, status: registrations.status }).from(registrations);
+    expect(statuses.find((row) => row.id === k1)?.status).toBe("EXPIRED");
+    expect(statuses.find((row) => row.id === k2)?.status).toBe("WAITLISTED");
+    expect(await queued("WAITLIST_SPOT_OFFER")).not.toContain("k2");
+    expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("k1");
+  });
+
   /** The labels (registered names) of the registrations the outbox rows of one type are for, whose key ends as given. */
   async function queued(type: EmailMessageType, keySuffix = "") {
     const rows = await db

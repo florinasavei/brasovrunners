@@ -1,5 +1,8 @@
 /**
- * CSV export for the backoffice (AGENTS.md §15.10, BR-REQ-060-01: Administrator only).
+ * CSV export for the backoffice (AGENTS.md §15.10, BR-REQ-060-01): whoever may read the
+ * registrations (`canReadRegistrations`, §289) — the Organizer, the Administrator and the
+ * Superadministrator. It carries identity documents while the database does, which is why the
+ * privacy notice says the file is deleted within seven days of the event (§418).
  *
  * The one rule that matters here: a cell that would open as a formula in the spreadsheet
  * software the club actually uses must not be allowed to. `=`, `+`, `-` and `@` are the four

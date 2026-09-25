@@ -42,6 +42,7 @@ async function approveTexts() {
   ];
   const effectiveAt = new Date("2026-01-01T00:00:00Z");
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt, isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt, isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt, isApproved: true, contentSha256: computeContentHash(DECLARATION), translations: DECLARATION, now: NOW });
 }
 
@@ -91,6 +92,7 @@ async function signedRegistration(event: EventForRegistration): Promise<string> 
       locale: "ro",
       privacyAcknowledged: true,
       fitnessDeclared: true,
+      termsAccepted: true,
       rulesAcknowledged: true,
       listOptOut: true,
       honeypot: "",

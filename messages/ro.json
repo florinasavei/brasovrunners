@@ -110,6 +110,8 @@
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "editInBackoffice": "Editează",
+    "opensInNewTab": "se deschide într-o filă nouă",
+    "photosNotice": "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau <contact>scrie-ne</contact> și scoatem fotografia, fără să ne spui de ce. Detalii în <privacy>nota de confidențialitate</privacy>.",
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",
@@ -391,7 +393,7 @@
           "typedName": "Semnătura: numele tău complet",
           "captcha": "Verificarea anti-bot"
         },
-        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copia clubului apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
+        "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul. Intră în declarație; în copiile trimise pe e-mail — a ta și a clubului — apare mascat, iar platforma o șterge la {days} după alergare. Nu păstrăm o copie a actului.",
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
         "adultsOnly": "Declarația este pentru adulți: o semnezi doar dacă ai împlinit 18 ani, și nu o semnezi în numele unui minor.",
@@ -1249,7 +1251,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -1921,7 +1923,8 @@
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”: intervalul clubului, cu mențiunea că un eveniment își poate alege altul; fără număr când clubul nu trimite reminder implicit, fiindcă un eveniment tot poate trimite unul",
-        "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate"
+        "participantListStates": "Doar în nota de confidențialitate: cele trei stadii pe care lista publică le arată lângă nume, între ghilimele. Cu el în nota în vigoare, lista publică arată stadiul fiecăruia, pe cei care nu au confirmat încă și lista de așteptare; fără el, doar numele confirmate",
+        "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2217,11 +2220,17 @@
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
           "todo": "Făcut pe 19 septembrie 2026: widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel — rândul devine verde la următoarea publicare. Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli; Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul.",
           "done": "Formularul de înscriere are verificarea anti-bot pornită.",
+          "misconfigured": "Ambele chei sunt puse, dar Cloudflare spune că secretul (Secret key) în sine e greșit — scris greșit, revocat sau al altui widget. Nimeni nu e refuzat la înscriere din cauza asta: o verificare care nu poate rula lasă înscrierea să treacă (`DECISIONS.md` §205), și tocmai de asta nimic altceva de pe platformă nu observase până acum. Corectează cheia mai jos; până atunci apărarea anti-bot a site-ului stă doar pe capcana ascunsă și verificarea timpului de completare.",
           "how": [
             "✓ Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
             "✓ Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
             "✓ În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → widgetul „brasovrunners-site” → copiază din nou Secret key (sau Rotate Secret Key dacă a putut fi expus).",
+            "Vercel → proiectul de producție (și QA, cu cheia lui proprie dacă are una) → Settings → Environment Variables: înlocuiește TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reîncarcă această pagină după deploy: rândul devine verde imediat ce Cloudflare acceptă din nou secretul. Nu e nevoie de o înscriere de test — rândul se verifică fără una."
           ]
         },
         "declarationArchiveMail": {
@@ -2651,7 +2660,7 @@
       "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
       "photos": "Fotografii ({count})",
       "upload": "Încarcă fotografii",
-      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se trimit așa cum sunt; doar una prea mare se micșorează în telefon înainte. Prima devine coperta.",
+      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se trimit așa cum sunt; doar una prea mare se micșorează în telefon înainte. Prima devine coperta. Nu încărca un portret sau o fotografie în care un copil apare în prim-plan fără acordul scris al persoanei, respectiv cererea scrisă a părintelui (păstrează e-mailul). Cine cere să fie scos: ștergi fotografia în cel mult o lună.",
       "uploading": "Se încarcă {done} din {total}…",
       "uploaded": "{total} fotografii încărcate.",
       "uploadFailed": "Nu s-au putut încărca: {names}",
@@ -2942,7 +2951,7 @@
         "confirmationsTo": "Anunță-ne când cineva confirmă",
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
         "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
-        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, separat și fără ca participantul să afle, o copie pentru club a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea, reminderul, numărul dat de mână —, cu „[Copie club]” în subiect. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
+        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, separat și fără ca participantul să afle, o copie pentru club a fiecărui email trimis unui participant real — declarația, confirmarea, reminderul, numărul dat de mână —, cu „[Copie club]” în subiect. Nu și a verificării adresei sau a linkului pentru altă persoană, care merg la o adresă încă neconfirmată; iar dintr-un mesaj către toți înscrișii (mesajul organizatorilor, detaliile actualizate), o singură copie pe trimitere, cu numărul destinatarilor și fără nume. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
         "participantsBccWarning": "Copia pentru club nu are linkurile personale ale participantului (confirmarea adresei, semnarea declarației, „nu mai pot veni”), codul QR sau atașamentele, așa că nimeni nu poate face un pas în locul lui din acea cutie poștală. Are totuși numele lui, evenimentul și numărul de concurs: doar o cutie poștală a clubului, ca decizie a clubului.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
@@ -3107,7 +3116,8 @@
           "reminderHours": "Reminderul pleacă înainte de start cu (ore)",
           "selfCheckinHours": "„Am ajuns” se poate apăsa înainte de start cu (ore)",
           "raceWeekDays": "Numărătoarea inversă de pe prima pagină începe cu (zile înainte)",
-          "seriesHorizonDays": "O serie își are datele create înainte cu (zile)"
+          "seriesHorizonDays": "O serie își are datele create înainte cu (zile)",
+          "publicListDays": "Lista publică de participanți rămâne pe site după eveniment (zile)"
         },
         "help": {
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră și numărul provizoriu se eliberează.",
@@ -3116,7 +3126,8 @@
           "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
           "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
-          "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești."
+          "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
+          "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablonul platformei spune acest număr."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablonul platformei, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -3387,6 +3398,7 @@
       "subjectHelp": "În ambele limbi, obligatoriu, cel mult {max} de caractere în fiecare. Poți folosi câmpurile {list}; se completează pentru fiecare participant.",
       "body": "Mesajul",
       "bodyHelp": "În ambele limbi, obligatoriu, text simplu, cel mult {max} de caractere în fiecare. Un rând gol începe un paragraf nou. Câmpuri care se completează pentru fiecare participant: {list} — numărul de concurs apare doar la cine îl are deja. Sub mesaj vin singure data și locul evenimentului, butonul către pagina lui și linkurile obișnuite.",
+      "bodyScope": "Scrie doar despre acest eveniment: vreme, loc, oră, siguranță, o schimbare sau o anulare. Fără reclame, oferte ale sponsorilor ori ale altor firme și fără alte evenimente: acestea ar fi comunicări comerciale sau alt scop decât cel pentru care participanții ne-au dat adresa (Legea nr. 506/2004, art. 12; art. 5 alin. (1) lit. b) GDPR) și cer acordul separat al fiecăruia.",
       "preview": "Cum arată emailul",
       "previewHelp": "Exact emailul care pleacă, pentru un participant de exemplu, {name}, cu numărul {bibNumber}. Se actualizează pe măsură ce scrii.",
       "previewRo": "Înscris în română",
@@ -3420,7 +3432,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Actul de identitate și adresa de email sunt în PDF. Platforma șterge declarațiile la {days} după alergare.",
+      "help": "Cine a semnat declarația opțională pe pagina alergării și când. Adresa de email este în PDF; nu se cere niciun act de identitate. Platforma șterge declarațiile la {days} după alergare.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when}",
       "pdf": "PDF",
@@ -3531,9 +3543,9 @@
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
     "ageRule": {
-      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumOnly": "Vârsta minimă: {age}.",
-      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia."
+      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3593,7 +3605,9 @@
       "guardianName": "Părinte / tutore",
       "fitnessDeclared": "Declarația că ești apt medical",
       "rulesAcknowledged": "condițiile concursului",
-      "emailConfirm": "adresa scrisă a doua oară"
+      "emailConfirm": "adresa scrisă a doua oară",
+      "termsAccepted": "Acceptarea termenilor și condițiilor",
+      "fitnessAcknowledged": "Confirmarea despre declarația de sănătate a persoanei"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -3693,7 +3707,9 @@
       "agreeButton": "Am citit și sunt de acord",
       "close": "Închide",
       "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
-      "plain": "Am citit și sunt de acord cu condițiile concursului:"
+      "plain": "Am citit și sunt de acord cu condițiile concursului:",
+      "plainPage": "Am citit și sunt de acord cu condițiile concursului, de pe",
+      "pageLink": "pagina evenimentului"
     },
     "opensInNewTab": "se deschide într-o filă nouă",
     "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele.",
@@ -3712,7 +3728,7 @@
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
     "another": {
       "title": "Înscrii o altă persoană cu aceeași adresă",
-      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
+      "intro": "Adresa {email} are deja o înscriere la acest eveniment. Completează datele celeilalte persoane: primește pe aceeași adresă propriul link de confirmare, își semnează singură declarația și primește propriul cod QR. Pe o adresă se pot înscrie cel mult {people} la un eveniment. Pentru un adult nu completezi informațiile medicale, lista publică sau Strava și Instagram: acestea țin de acordul persoanei însăși.",
       "emailFixed": "Adresa la care a venit linkul. Nu se poate schimba aici: pentru altă adresă, completează formularul obișnuit.",
       "phoneOptional": "Opțional pentru această persoană — de exemplu un copil fără telefon. Contactul de urgență de mai jos rămâne obligatoriu.",
       "alreadyOnAddress": "Persoana aceasta este deja înscrisă cu această adresă. Nu s-a creat nimic. Pentru altcineva, schimbă numele și trimite din nou — linkul rămâne valabil.",
@@ -3722,7 +3738,13 @@
         "one": "o persoană",
         "few": "{count} persoane",
         "other": "{count} de persoane"
-      }
+      },
+      "fitnessAcknowledged": "Știu că persoana pe care o înscriu declară ea însăși, când își semnează declarația, că starea de sănătate îi permite efortul."
+    },
+    "terms": {
+      "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
+      "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
+      "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
     }
   },
   "Registrations": {
@@ -3741,7 +3763,8 @@
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
-      "accept": "Am citit și accept declarația de mai sus",
+      "accept": "Am citit și accept declarația de mai sus, inclusiv, în mod expres, limitarea răspunderii organizatorului în limitele permise de lege.",
+      "signPersonally": "Declarația trebuie semnată personal de {participant}. Dacă această adresă de email nu este a sa, trimiteți-i linkul sau dați-i telefonul: nimeni nu semnează în locul altui adult.",
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",
       "privacyLink": "Nota de confidențialitate",

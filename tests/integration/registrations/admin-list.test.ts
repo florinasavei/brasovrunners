@@ -307,7 +307,7 @@ describe("the journey of a restarted row is this cycle's, not the first one's", 
       { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["d"] }] } },
       { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["d"] }] } },
     ];
-    for (const [key, translations] of [["PRIVACY_NOTICE", privacy], ["EVENT_DECLARATION", declaration]] as const) {
+    for (const [key, translations] of [["TERMS", privacy], ["PRIVACY_NOTICE", privacy], ["EVENT_DECLARATION", declaration]] as const) {
       await insertLegalDocumentVersion(db, {
         key,
         version: 1,
@@ -353,6 +353,7 @@ describe("the journey of a restarted row is this cycle's, not the first one's", 
       locale: "ro",
       privacyAcknowledged: true,
       fitnessDeclared: true,
+      termsAccepted: true,
       rulesAcknowledged: true,
       resultsNameConsent: true,
       listOptOut: false,

@@ -13,8 +13,15 @@ import { declarationEn, declarationRo } from "@/modules/legal-documents/template
  * remove liability for intent or gross fault, or for harm to the body or health except as the
  * law allows (art. 1355), and accepting a risk is not a waiver of damages — so the new bullets
  * promise nobody immunity, and every sentence that says the organiser does not answer for
- * something (the liability paragraph, the belongings bullet, the paragraph on minors) carries
- * "to the extent the law allows".
+ * something (the liability paragraph, the belongings bullet) carries "to the extent the law
+ * allows".
+ *
+ * §418 — the counsel review of 2026-09-25: the health bullet is "to the best of my knowledge" and
+ * names the cardiac risk; heat and cold, traffic duties, slow help on remote sections, no alcohol
+ * or drugs, first aid and being stopped are named; "a group run is not a guided tour" left the
+ * race's text; the paper form's waiver became informed acceptance that says it is no waiver; and
+ * the runner can no longer release the club toward a child they bring along — that paragraph says
+ * who supervises, and disclaims nothing.
  */
 const paragraphs = { ro: declarationRo.sections.flatMap((s) => s.paragraphs), en: declarationEn.sections.flatMap((s) => s.paragraphs) };
 const bullets = { ro: paragraphs.ro.filter((p) => p.startsWith("• ")), en: paragraphs.en.filter((p) => p.startsWith("• ")) };
@@ -34,7 +41,16 @@ const RISKS: ReadonlyArray<{ risk: string; ro: RegExp[]; en: RegExp[] }> = [
     ro: [/Echipamentul este responsabilitatea mea/, /pantofi de trail/, /telefon mobil încărcat/, /lanternă frontală funcțională/, /bateriile încărcate/, /elemente reflectorizante/, /refuza startul/],
     en: [/equipment is my own responsibility/, /trail shoes/, /charged mobile phone/, /working headlamp/, /charged batteries/, /reflective elements/, /refuse the start/],
   },
-  { risk: "own pace and decisions", ro: [/în ritmul meu/, /mă opresc dacă nu mă simt bine/, /traseul marcat/, /abandonez/, /nu este o tură ghidată/], en: [/at my own pace/, /stop if I feel unwell/, /marked course/, /drop out/, /not a guided tour/] },
+  { risk: "own pace and decisions", ro: [/în ritmul meu/, /mă opresc dacă nu mă simt bine/, /traseul marcat/, /abandonez/, /Deciziile pe care le iau pe traseu îmi aparțin/], en: [/at my own pace/, /stop if I feel unwell/, /marked course/, /drop out/, /decisions I make on the course are my own/] },
+  // §418, the counsel review.
+  { risk: "health, as far as the runner knows, and the heart", ro: [/După cunoștința mea/, /inclusiv cardiace/, /sfatul medicului/], en: [/To the best of my knowledge/, /including cardiac ones/, /a doctor's advice/] },
+  { risk: "heat and cold", ro: [/deshidratare/, /epuizare termică/, /hipotermie/], en: [/dehydration/, /heat exhaustion/, /hypothermia/] },
+  { risk: "traffic duties", ro: [/drumuri deschise circulației/, /indicațiile poliției/, /nu este închis traficului/], en: [/roads open to traffic/, /instructions of the police/, /not closed to traffic/] },
+  {
+    risk: "slow help, no alcohol or drugs, first aid and being stopped",
+    ro: [/ajutorul poate ajunge greu și târziu/, /alcoolului, a drogurilor/, /primul ajutor/, /oprit\/ă din eveniment/],
+    en: [/help can be slow and late to arrive/, /alcohol, drugs/, /first aid/, /being stopped from continuing/],
+  },
   { risk: "personal belongings", ro: [/Obiectele personale/, /pierderea sau deteriorarea/], en: [/personal belongings/, /loss or damage/] },
   { risk: "protected areas", ro: [/ariile naturale protejate/, /niciun deșeu/], en: [/protected natural areas/, /no waste/] },
 ];
@@ -76,7 +92,7 @@ describe("§357 the runner takes ownership — the declaration's risks", () => {
   it("keeps the text's bullet style: each ends with a semicolon, the last with a full stop", () => {
     for (const locale of ["ro", "en"] as const) {
       const list = bullets[locale];
-      expect(list.length, locale).toBe(12);
+      expect(list.length, locale).toBe(14);
       for (const bullet of list.slice(0, -1)) expect(bullet.endsWith(";"), `${locale}: ${bullet.slice(0, 40)}`).toBe(true);
       expect(list.at(-1)!.endsWith("."), locale).toBe(true);
     }
@@ -105,8 +121,9 @@ describe("§357 the runner takes ownership — the declaration's risks", () => {
   it("limits by the law every sentence that says the organiser does not answer for something", () => {
     for (const locale of ["ro", "en"] as const) {
       const disclaimers = paragraphs[locale].filter((p) => DISCLAIMER[locale].test(p));
-      // The liability paragraph, the belongings bullet, and the paragraph on minors the runner brings.
-      expect(disclaimers.length, locale).toBe(3);
+      // The liability paragraph and the belongings bullet (§418: the paragraph on minors the runner
+      // brings along disclaims nothing any more — it says who supervises them).
+      expect(disclaimers.length, locale).toBe(2);
       for (const paragraph of disclaimers) expect(paragraph, `${locale}: ${paragraph.slice(0, 40)}`).toContain(LAW_LIMIT[locale]);
     }
   });

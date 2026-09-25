@@ -34,6 +34,7 @@ const submission = {
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -110,6 +111,7 @@ describe("BR-REQ-053-01 the group runs' declarations gate nothing (§393)", () =
 
   it("are never what a registration signs: beside them, the acceptance still names the race's declaration", async () => {
     await approve("PRIVACY_NOTICE");
+    await approve("TERMS");
     await approve("EVENT_DECLARATION");
     await approve("GROUP_RUN_DECLARATION_TRAIL");
     const event = await race();

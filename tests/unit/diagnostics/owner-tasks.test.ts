@@ -36,6 +36,7 @@ const LAUNCHED: OwnerTaskInputs = {
   roDomainBound: true,
   storageConfigured: true,
   botCheckConfigured: true,
+  botCheckHealth: "ok",
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
   contactFormConfigured: true,
@@ -136,6 +137,17 @@ describe("owner tasks", () => {
     // The bot check is a switch the club flips (§97): open without the keys, never blocking.
     expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
     expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
+    // A secret that is set but wrong is broken, red — not the quiet "open" a missing key gets
+    // (§420, finding (10)'s health half): the difference between "not set up yet" and "set up
+    // and does not work" is the whole reason this state exists.
+    expect(
+      stateOf({ ...LAUNCHED, botCheckConfigured: true, botCheckHealth: "misconfigured" }, "botCheck"),
+    ).toBe("broken");
+    // A timeout or Cloudflare having a bad moment must never turn this row red on its own — the
+    // same "absence of evidence" reasoning `verifyTurnstile` uses for a real submission.
+    expect(
+      stateOf({ ...LAUNCHED, botCheckConfigured: true, botCheckHealth: "unreachable" }, "botCheck"),
+    ).toBe("done");
     // The contact form (§149): built; open until the Gmail app password and the recipients exist.
     expect(stateOf({ ...LAUNCHED, contactFormConfigured: false }, "contactForm")).toBe("open");
     expect(stateOf(LAUNCHED, "contactForm")).toBe("done");

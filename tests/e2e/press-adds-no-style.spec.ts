@@ -86,7 +86,7 @@ test("BR-REQ-041-01 the registration form's Trimite înscrierea adds no style", 
     emergencyContactPhone: "+40722222222",
   };
   for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
-  for (const name of ["privacyAcknowledged", "rulesAcknowledged", "fitnessDeclared"]) {
+  for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     const box = page.locator(`[name="${name}"]`);
     if ((await box.count()) && (await box.isEditable())) await box.check();
   }

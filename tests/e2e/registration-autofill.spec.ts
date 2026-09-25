@@ -40,6 +40,7 @@ async function fillRequired(page: Page, email: string, lastName = "Popescu") {
   await page.locator('[name="emailConfirm"]').fill(email);
   await page.locator('[name="privacyAcknowledged"]').check();
   await page.locator('[name="rulesAcknowledged"]').check();
+  await page.locator('[name="termsAccepted"]').check();
   await page.locator('[name="fitnessDeclared"]').check();
 }
 
@@ -107,6 +108,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     */
     await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
     await expect(page.locator('[name="rulesAcknowledged"]')).toBeChecked();
+    await expect(page.locator('[name="termsAccepted"]')).toBeChecked();
     await expect(page.locator('[name="fitnessDeclared"]')).toBeChecked();
     await autofillTheTrap(page, "https://cheap-seo.example");
     await again.click();

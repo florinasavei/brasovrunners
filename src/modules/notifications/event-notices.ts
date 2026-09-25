@@ -4,7 +4,7 @@ import { type RegistrationStatus, registrations } from "@/db/schema/registration
 import type { Database, Transaction } from "@/db/types";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import type { BilingualText } from "@/shared/forms/both-languages";
-import { enqueueEmail } from "./outbox";
+import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
 
 /**
  * The two messages about an event that go to everybody registered for it (`DECISIONS.md` §331):
@@ -120,6 +120,22 @@ async function queueToEveryone<T extends Record<string, unknown>>(
       now: input.now,
     });
     if (inserted && row.kind === "REAL") real += 1;
+  }
+  /*
+    The update notice's club copy is one per save, not one per registration (§419): the words and
+    how many were told, no names. `enqueueEmail` copies no row of it. The cancellation keeps its
+    copy per registration, as §320 decided — the counsel's review named the two bulk sends only.
+  */
+  if (input.messageType === "EVENT_UPDATE_NOTICE") {
+    await enqueueBulkClubCopies(tx, {
+      messageType: input.messageType,
+      eventId: input.eventId,
+      payload: input.payload,
+      sendKey: `${input.keyPrefix}:${input.saveKey}`,
+      realRecipients: real,
+      requestedByStaffUserId: input.actorStaffUserId,
+      now: input.now,
+    });
   }
   return real;
 }

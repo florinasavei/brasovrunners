@@ -45,6 +45,8 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
   form.set("privacyAcknowledged", "on");
   form.set("fitnessDeclared", "on");
   form.set("rulesAcknowledged", "on");
+  // The club's terms, accepted expressly (§421).
+  form.set("termsAccepted", "on");
   return form;
 }
 
@@ -109,6 +111,28 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
    * BR-REQ-072-01 is deferred (§322): the results consent is not on the form, a box posted anyway
    * is ignored, and every new registration records `false`.
    */
+  /** §421 — the terms tick is required on the public form, read from its own box, and optional for staff. */
+  it("refuses the public form without the terms tick, and a staff entry does not need it", () => {
+    const form = filledForm();
+    form.delete("termsAccepted");
+    const values = readRegistrationForm(form, "ro");
+    expect(values.termsAccepted).toBe(false);
+    const parsed = registrationSubmissionSchema.safeParse(values);
+    expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["termsAccepted"]);
+    expect(staffRegistrationSubmissionSchema.safeParse({ ...values, termsAccepted: undefined }).success).toBe(true);
+  });
+
+  /** §421, finding (7) — the version the tick names is posted, and read as absent when blank. */
+  it("reads the version the terms tick showed, absent when the page had none to show", () => {
+    const shown = readRegistrationForm(filledForm({ termsVersionShown: "3" }), "ro");
+    expect(shown.termsVersionShown).toBe("3");
+    expect(registrationSubmissionSchema.safeParse(shown).success).toBe(true);
+
+    const blank = readRegistrationForm(filledForm({ termsVersionShown: "" }), "ro");
+    expect(blank.termsVersionShown).toBeUndefined();
+    expect(registrationSubmissionSchema.safeParse(blank).success).toBe(true);
+  });
+
   it("never reads a results consent, whatever is posted", () => {
     const form = filledForm();
     form.set("resultsNameConsent", "on");

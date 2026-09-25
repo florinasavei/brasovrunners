@@ -163,6 +163,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // the `<dl>`, new rather than converted — a section that did not exist before this change.
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
   { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  // The photographs notice (§323, the photographs amendment's item 6), born on the scale.
+  { file: "src/modules/events/ui/EventPhotosNotice.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },

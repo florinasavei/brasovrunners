@@ -61,6 +61,15 @@ beforeEach(async () => {
     translations: privacy,
     now: NOW,
   });
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(privacy),
+    translations: privacy,
+    now: NOW,
+  });
 });
 
 async function createInternalEvent(capacity: number | null = null): Promise<EventForRegistration> {
@@ -101,6 +110,7 @@ const submission = (at: Date, email = "amalia.pop@example.ro", firstName = "Amal
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,

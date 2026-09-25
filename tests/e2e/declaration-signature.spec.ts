@@ -58,6 +58,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
+    await page.locator('[name="termsAccepted"]').check();
     await page.locator('[name="fitnessDeclared"]').check();
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();

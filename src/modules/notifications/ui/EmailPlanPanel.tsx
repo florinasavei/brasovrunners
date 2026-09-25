@@ -14,7 +14,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { registrationsLeftToday } from "@/modules/diagnostics/platform-plans";
 import { EMAIL_PLAN_IDS, EMAIL_PLANS, EMAIL_PLANS_CHECKED_ON } from "@/modules/notifications/domain/email-plan";
 import type { EmailPlanState } from "@/modules/notifications/email-plan";
-import { type EmailVolumeToday, PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/volume";
+import { COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION, type EmailVolumeToday } from "@/modules/notifications/volume";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 
 type Props = {
@@ -104,7 +104,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
         {volume.participantBccCount > 0 &&
           ` ${t("emails.plan.forecastBcc", {
             bcc: volume.participantBccCount,
-            extra: volume.participantBccCount * PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
+            extra: volume.participantBccCount * COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
           })}`}
       </Typography>
       {plan.updatedAt && (

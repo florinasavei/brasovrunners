@@ -46,6 +46,9 @@ export type RegistrationEntryDetails = {
   fitnessDeclaredAt?: Date | null;
   /** When they confirmed having read the race's conditions (§195); null at the desk. */
   rulesAcknowledgedAt?: Date | null;
+  /** The club's terms accepted on the form (§421): the version in force then, and when; null at the desk. */
+  termsVersion?: number | null;
+  termsAcceptedAt?: Date | null;
 };
 
 const collapse = (value: string | null | undefined): string => (value ?? "").replace(/\s+/g, " ").trim();

@@ -110,6 +110,8 @@
   "Event": {
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
+    "opensInNewTab": "opens in a new tab",
+    "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
@@ -391,7 +393,7 @@
           "typedName": "Signature: your full name",
           "captcha": "The anti-bot check"
         },
-        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the club's copy it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
+        "idDocumentHelp": "Your identity card — for instance “BV 123456” — or your passport. It goes into the declaration; in the copies sent by email — yours and the club's — it is masked, and the platform deletes it {days} after the run. We keep no copy of the document.",
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
         "adultsOnly": "The declaration is for adults: sign it only if you are 18 or older, and never on behalf of a minor.",
@@ -1249,7 +1251,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers the runner, with their consent. 0 means no minimum age.",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent or legal guardian registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -1921,7 +1923,8 @@
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
-        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names"
+        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names",
+        "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2217,11 +2220,17 @@
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
           "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
           "done": "The registration form has the anti-bot check on.",
+          "misconfigured": "Both keys are set, but Cloudflare says the secret key itself is wrong — mistyped, revoked, or belongs to another widget. Nobody is refused registration by this: a check that cannot run fails open (`DECISIONS.md` §205), which is exactly why nothing else on the platform noticed until this row existed. Fix the key below; until then the site's bot defence is silently down to the trap field and the fill-time check alone.",
           "how": [
             "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
             "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
             "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
             "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
+          ],
+          "howMisconfigured": [
+            "Cloudflare → Turnstile → the “brasovrunners-site” widget → copy the Secret key again (or Rotate Secret Key if it may have leaked).",
+            "Vercel → the production project (and QA, with its own key if it has one) → Settings → Environment Variables: replace TURNSTILE_SECRET_KEY. Redeploy.",
+            "Reload this page after the deployment: the row turns green once Cloudflare accepts the secret again. A test registration is not required — this row is checked without one."
           ]
         },
         "declarationArchiveMail": {
@@ -2651,7 +2660,7 @@
       "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
       "photos": "Photos ({count})",
       "upload": "Upload photos",
-      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are sent as they are; only one that is too large is shrunk on the device first. The first becomes the cover.",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are sent as they are; only one that is too large is shrunk on the device first. The first becomes the cover. Do not upload a portrait, or a photograph in which a child is the subject, without the person's written agreement or the parent's written request (keep the email). If someone asks to be taken down, delete the photo within a month.",
       "uploading": "Uploading {done} of {total}…",
       "uploaded": "{total} photos uploaded.",
       "uploadFailed": "Could not upload: {names}",
@@ -2942,7 +2951,7 @@
         "confirmationsTo": "Tell us when somebody confirms",
         "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
         "participantsBcc": "Hidden copy of the emails to participants (Bcc)",
-        "participantsBccHelp": "Addresses separated by commas. Each receives, separately and without the participant knowing, a club copy of every email sent to a real participant — the address check, the declaration, the confirmation, the reminder, a number given by hand — with “[Club copy]” in the subject. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
+        "participantsBccHelp": "Addresses separated by commas. Each receives, separately and without the participant knowing, a club copy of every email sent to a real participant — the declaration, the confirmation, the reminder, a number given by hand — with “[Club copy]” in the subject. Not of the address check or the link for another person, which go to an address nobody has confirmed yet; and of a message to everybody registered (the organizers' message, updated details), one copy per send, with how many received it and no names. The cost: every address spends one more message of the Mailgun allowance for every email to a participant. Never for test registrations.",
         "participantsBccWarning": "The club copy carries none of the participant's personal links (confirming the address, signing the declaration, “I can't make it any more”), no QR code and no attachment, so nobody can take a step in their place from that mailbox. It still carries their name, the event and the race number: a club mailbox only, as a decision of the club.",
         "save": "Save",
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
@@ -3107,7 +3116,8 @@
           "reminderHours": "The reminder goes before the start by (hours)",
           "selfCheckinHours": "“I have arrived” can be pressed before the start by (hours)",
           "raceWeekDays": "The homepage countdown starts (days before)",
-          "seriesHorizonDays": "A series keeps its dates created ahead by (days)"
+          "seriesHorizonDays": "A series keeps its dates created ahead by (days)",
+          "publicListDays": "The public participant list stays up after the event (days)"
         },
         "help": {
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses and its provisional number is released.",
@@ -3116,7 +3126,8 @@
           "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
-          "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it."
+          "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
+          "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the platform's template states this number."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the platform's template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -3387,6 +3398,7 @@
       "subjectHelp": "In both languages, required, at most {max} characters each. You can use the fields {list}; they are filled in for each participant.",
       "body": "Message",
       "bodyHelp": "In both languages, required, plain text, at most {max} characters each. A blank line starts a new paragraph. Fields filled in for each participant: {list} — the race number shows only for those who already have one. The event's date and place, the button to its page and the usual links come under the message by themselves.",
+      "bodyScope": "Write only about this event: weather, place, time, safety, a change or a cancellation. No advertising, offers from sponsors or other businesses, and no other events: those would be commercial communications, or a purpose other than the one participants gave us their address for (Law no. 506/2004, art. 12; art. 5(1)(b) GDPR), and need each person's separate consent.",
       "preview": "How the email looks",
       "previewHelp": "Exactly the email that goes out, for a sample participant, {name}, number {bibNumber}. It updates as you type.",
       "previewRo": "Registered in Romanian",
@@ -3420,7 +3432,7 @@
     "groupRunDeclarations": {
       "title": "Signed declarations (group run)",
       "count": "Signed: {count}",
-      "help": "Who signed the optional declaration on the run's page, and when. The identity document and the email address are in the PDF. The platform deletes the declarations {days} after the run.",
+      "help": "Who signed the optional declaration on the run's page, and when. The email address is in the PDF; no identity document is asked for. The platform deletes the declarations {days} after the run.",
       "none": "No declaration signed yet.",
       "signedAt": "signed {when}",
       "pdf": "PDF",
@@ -3531,9 +3543,9 @@
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
     "ageRule": {
-      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent registers the runner, with their consent.",
+      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumOnly": "Minimum age: {age}.",
-      "guardianOnly": "Under 18, a parent registers the runner, with their consent."
+      "guardianOnly": "Under 18, a parent or legal guardian registers the runner, with their consent."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3593,7 +3605,9 @@
       "guardianName": "Parent / guardian",
       "fitnessDeclared": "The statement that you are medically fit",
       "rulesAcknowledged": "the race conditions",
-      "emailConfirm": "the address typed a second time"
+      "emailConfirm": "the address typed a second time",
+      "termsAccepted": "Accepting the terms and conditions",
+      "fitnessAcknowledged": "The acknowledgement about the person's fitness statement"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -3693,7 +3707,9 @@
       "agreeButton": "I have read them and I agree",
       "close": "Close",
       "agreed": "You have read the race conditions and agree to them.",
-      "plain": "I have read and agree to the race conditions:"
+      "plain": "I have read and agree to the race conditions:",
+      "plainPage": "I have read and agree to the race conditions, on",
+      "pageLink": "the event's page"
     },
     "opensInNewTab": "opens in a new tab",
     "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits.",
@@ -3712,7 +3728,7 @@
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
       "title": "Registering another person with the same address",
-      "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event.",
+      "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event. For an adult you do not fill in the health information, the public list or Strava and Instagram: these need the person's own consent.",
       "emailFixed": "The address the link was sent to. It cannot be changed here: for another address, use the ordinary form.",
       "phoneOptional": "Optional for this person — a child without a phone, for instance. The emergency contact below is still required.",
       "alreadyOnAddress": "This person is already registered with this address. Nothing was created. For someone else, change the name and send again — the link still works.",
@@ -3722,7 +3738,13 @@
         "one": "one person",
         "few": "{count} people",
         "other": "{count} people"
-      }
+      },
+      "fitnessAcknowledged": "I know that the person I am registering declares themselves, when they sign their declaration, that their health allows the effort."
+    },
+    "terms": {
+      "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
+      "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon.",
+      "changed": "The terms and conditions changed while you were filling in the form. Read the version named below and tick the box again."
     }
   },
   "Registrations": {
@@ -3741,7 +3763,8 @@
     },
     "declare": {
       "title": "Event declaration",
-      "accept": "I have read and accept the declaration above",
+      "accept": "I have read and accept the declaration above, including, expressly, the limitation of the organiser's liability to the extent the law allows.",
+      "signPersonally": "{participant} must sign this declaration personally. If this email address is not theirs, forward them the link or hand them the phone: nobody signs for another adult.",
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
       "privacyLink": "Privacy notice",

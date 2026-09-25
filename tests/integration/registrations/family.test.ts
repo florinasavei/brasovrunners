@@ -69,6 +69,7 @@ async function approve() {
     { locale: "en", title: "Declaration", body: declarationEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
@@ -98,6 +99,7 @@ const submission = (firstName: string, at: Date = NOW, overrides: Record<string,
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -108,7 +110,9 @@ const submission = (firstName: string, at: Date = NOW, overrides: Record<string,
 
 /** The other person's own facts, as the family form posts them: no address, no telephone (a child). */
 const anotherPerson = (firstName: string, at: Date = NOW, overrides: Record<string, unknown> = {}): Record<string, unknown> => {
-  const posted: Record<string, unknown> = { ...submission(firstName, at, overrides) };
+  // Another adult's fitness is theirs to declare when they sign (§421): the address holder ticks the
+  // acknowledgement, and the first-person statement the ordinary form posts is dropped.
+  const posted: Record<string, unknown> = { fitnessAcknowledged: true, ...submission(firstName, at, overrides) };
   delete posted.email;
   delete posted.phone;
   return posted;
@@ -309,6 +313,78 @@ describe("§389 the link creates the other person's registration, and everybody 
       ["registration-link-submit", 3],
       ["registration-submit", 4],
     ]);
+  });
+});
+
+/**
+ * §421 — the family form carries no consent that only the other adult can give (GDPR art. 4(11),
+ * 7(1), 9(2)(a)): whatever is posted for an adult, the health note and its consent, the socials,
+ * the public-list tick and the first-person fitness statement are not stored, and the address
+ * holder's acknowledgement stands in for the statement. A minor's parent still consents for the child.
+ */
+describe("§421 the family form and another adult's own consents", () => {
+  const everything = { healthNotes: "astm", healthConsent: true, stravaUrl: "https://www.strava.com/athletes/12345", instagramHandle: "maria.pop", listOptOut: false, fitnessDeclared: true };
+
+  async function linkFor(event: EventInput) {
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    await submitRegistration(db, event, submission("Maria", at(5)), at(5));
+    return (await linkFromLatestOffer(at(6))).secret!;
+  }
+
+  it("stores none of them for an adult, whatever was posted, and records no fitness statement", async () => {
+    const event = await createEvent();
+    const secret = await linkFor(event);
+    expect(await consumeAndRegisterAnotherPerson(secret, event, anotherPerson("Maria", at(7), everything), {}, at(7))).toMatchObject({ ok: true });
+
+    const maria = (await rowsOf(event.id)).find((row) => row.registeredName === "Maria Pop")!;
+    expect(maria).toMatchObject({
+      healthNotes: null,
+      healthConsentAt: null,
+      healthConsentVersion: null,
+      stravaUrl: null,
+      instagramHandle: null,
+      listOptOut: true,
+      fitnessDeclaredAt: null,
+    });
+    // The terms and the event's rules are still accepted on the form (§421).
+    expect(maria.termsVersion).toBe(1);
+    expect(maria.rulesAcknowledgedAt).not.toBeNull();
+  });
+
+  it("asks the address holder's acknowledgement for an adult, in place of the statement", async () => {
+    const event = await createEvent();
+    const secret = await linkFor(event);
+    const posted = anotherPerson("Maria", at(7));
+    delete posted.fitnessAcknowledged;
+    expect(await refusal(consumeAndRegisterAnotherPerson(secret, event, posted, {}, at(7)))).toEqual({ code: "VALIDATION_ERROR", fields: ["fitnessAcknowledged"] });
+    // Refused, so the link still works.
+    expect(await consumeAndRegisterAnotherPerson(secret, event, anotherPerson("Maria", at(8)), {}, at(8))).toMatchObject({ ok: true });
+  });
+
+  it("keeps a minor's, which the parent gives, and still asks the parent's fitness statement", async () => {
+    const event = await createEvent();
+    const secret = await linkFor(event);
+    const child = { birthDate: "2011-05-10", guardianName: "Ana Pop" };
+    expect(await refusal(consumeAndRegisterAnotherPerson(secret, event, anotherPerson("Ioana", at(7), { ...child, fitnessDeclared: false }), {}, at(7)))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["fitnessDeclared"],
+    });
+    expect(await consumeAndRegisterAnotherPerson(secret, event, anotherPerson("Ioana", at(8), { ...everything, ...child }), {}, at(8))).toMatchObject({ ok: true });
+
+    const ioana = (await rowsOf(event.id)).find((row) => row.registeredName === "Ioana Pop")!;
+    expect(ioana.healthNotes).toBe("astm");
+    expect(ioana.listOptOut).toBe(false);
+    expect(ioana.fitnessDeclaredAt).not.toBeNull();
+    // A minor's socials are never kept (§323), on any form.
+    expect(ioana.stravaUrl).toBeNull();
+  });
+
+  it("leaves the ordinary form alone: an adult's own consents are theirs to give", async () => {
+    const event = await createEvent();
+    await submitRegistration(db, event, submission("Ana", NOW, everything), NOW);
+    const [ana] = await rowsOf(event.id);
+    expect(ana).toMatchObject({ healthNotes: "astm", listOptOut: false, instagramHandle: "maria.pop" });
+    expect(ana.fitnessDeclaredAt).not.toBeNull();
   });
 });
 

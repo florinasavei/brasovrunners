@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CLUB_MESSAGES_PER_COMPLETED_REGISTRATION,
+  COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
   MESSAGES_PER_COMPLETED_REGISTRATION,
   messagesPerCompletedRegistration,
   PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION,
@@ -28,16 +29,19 @@ describe("BR-REQ-033-02 criterion 13 what one completed registration costs on th
     expect(messagesPerCompletedRegistration({ archiveConfigured: true, participantBccCount: 0 })).toBe(7);
   });
 
-  it("adds one per hidden-copy address for every message the runner receives, and none for the club's", () => {
-    // One address: the runner's five messages each go to one more mailbox — ten, plus the
-    // club's own notice, which is not copied again.
-    expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: 1 })).toBe(11);
-    // Two addresses, and the archive on: 5 × 3 + 1 + 1.
-    expect(messagesPerCompletedRegistration({ archiveConfigured: true, participantBccCount: 2 })).toBe(17);
+  it("adds one per hidden-copy address for every copied message the runner receives, and none for the club's", () => {
+    // The address-confirmation link goes to an address nobody has confirmed and is never copied
+    // (§419): four of the runner's five are.
+    expect(COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION).toBe(4);
+    // One address: the runner's five, four copies, plus the club's own notice, which is not
+    // copied again.
+    expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: 1 })).toBe(10);
+    // Two addresses, and the archive on: 5 + 4 × 2 + 1 + 1.
+    expect(messagesPerCompletedRegistration({ archiveConfigured: true, participantBccCount: 2 })).toBe(15);
   });
 
   it("never lowers the floor on a count that makes no sense", () => {
     expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: -3 })).toBe(6);
-    expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: 1.9 })).toBe(11);
+    expect(messagesPerCompletedRegistration({ archiveConfigured: false, participantBccCount: 1.9 })).toBe(10);
   });
 });

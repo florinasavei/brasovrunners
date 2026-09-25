@@ -229,6 +229,13 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   // Last year's film (§69): the stored link an older event carries; a new film is a figure in the description (§266).
   { id: "video", card: "box-video", anchor: null, glyph: "video", automatic: false, drawn: ({ event }) => youtubeVideoId(event.videoUrl) !== null },
   // The public participant list (BR-REQ-039-01): only where the event publishes one.
+  //
+  // Left as the switch alone, not also `publicListStillOpen` (§421, finding (11) of the fix
+  // round on `feat/registration-consent-and-terms`): the editor's page map has no `now` or the
+  // club's deadlines to consult, and it says "drawn", not "drawn right now" — the list the club
+  // switched on stays marked drawn on the map after the club's period has closed it on the
+  // public page, the way every other still-true fact does. Wiring the deadlines through here
+  // would tell the editor something the public page already tells a visitor more plainly.
   { id: "startList", card: "box-start-list", anchor: null, glyph: "startList", automatic: false, drawn: ({ event }) => event.participantListVisibility === "NAMES" },
 ];
 
