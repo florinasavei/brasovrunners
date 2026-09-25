@@ -82,9 +82,9 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(page.getByRole("radio", { name: "Automat (după apus)", exact: true })).toBeChecked();
 
     await fillDateField(page, "Începutul evenimentului", NOVEMBER);
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul e la 16:\d\d — alege ora startului$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul la 16:\d\d — alege ora startului$/);
     await fillTimeField(page, "Ora", "19:00");
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, apusul e la 16:\d\d — eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 17 nov\. 2027, începe la 19:00, apusul la 16:\d\d — eveniment de noapte$/);
 
     await field("event.locationName").fill("Stația de telecabină Tâmpa");
     await field("event.locationNameEn").fill("Tâmpa cable car station");
@@ -131,7 +131,8 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Apusul la 16:\d\d — ia o frontală$/);
+    // The start named first, then the sunset (§NNN): the sunset is never read as the start.
+    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 19:00, apusul la 16:\d\d — ia o frontală$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
 
@@ -139,6 +140,8 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
     await expect(englishPill).toHaveCount(1);
     await expect(englishPill.locator(TORCH)).toHaveCount(1);
+    await englishPill.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 19:00, sunset at 16:\d\d — bring a headlamp$/);
     await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
   });
 
@@ -152,7 +155,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
       "aria-label",
-      new RegExp(`^19:00 ${title}\\. Alergare de noapte — apusul la 16:\\d\\d$`),
+      new RegExp(`^19:00 ${title}\\. Alergare de noapte: începe la 19:00, apusul la 16:\\d\\d$`),
     );
   });
 
@@ -163,7 +166,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await openEditorBox(page, "Data și ora");
     await fillDateField(page, "Începutul evenimentului", JUNE);
     await openEditorBox(page, "Traseul");
-    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 16 iun\. 2027, apusul e la 21:\d\d — nu e eveniment de noapte$/);
+    await expect(autoLine(page)).toHaveText(/^Automat: pe mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/);
     await saveWithChoice(page, "Automat (după apus)", true);
 
     await page.goto(`/ro/evenimente/${slug}`);
@@ -210,6 +213,10 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await pill.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(/^Apusul la 16:\d\d, sfârșitul la 17:30 — ia o frontală$/);
+    await expect(page.getByRole("tooltip")).toHaveText(/^Începe la 16:00, apusul la 16:\d\d, se termină la 17:30 — ia o frontală$/);
+    await page.goto(`/en/events/${englishSlug}`);
+    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
+    await englishPill.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(/^Starts at 16:00, sunset at 16:\d\d, ends at 17:30 — bring a headlamp$/);
   });
 });

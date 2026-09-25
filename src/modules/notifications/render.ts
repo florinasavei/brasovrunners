@@ -370,6 +370,12 @@ async function renderRow(
     if (night.night) {
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+      // The start named before the sunset, and the end when it is the reason (§NNN).
+      if (night.start) data.nightEventStart = night.start;
+      if (night.end && night.endSource && night.endSource !== "start") {
+        data.nightEventEnd = night.end;
+        data.nightEventEndSource = night.endSource;
+      }
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half

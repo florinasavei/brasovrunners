@@ -321,6 +321,9 @@ export function renderBilingual(
 }
 
 /** What every template needs beyond the locale — never a rendered body, never a token. */
+/** The reminder's night line's facts (§394, §NNN): empty strings for what is not named. */
+type NightReminderLine = { sunset: string; start: string; end: string; endSource: "event" | "programme" | null; isGroupRun: boolean };
+
 export type TemplateData = {
   participantName: string;
   /**
@@ -382,6 +385,19 @@ export type TemplateData = {
    * then — the owner calls a run a run.
    */
   nightEventIsGroupRun?: boolean;
+  /**
+   * Set alongside `nightEventSunset` (§NNN): the date's start on the event's clock, "19:00" — named
+   * before the sunset, so the sunset is never read as the start. Absent or empty: the line says the
+   * sunset alone.
+   */
+  nightEventStart?: string;
+  /**
+   * Set alongside `nightEventSunset` only when the end is why the date is dark (§394, §NNN): that
+   * end on the event's clock, and whether «Durata» (`event`) or the day's last programme row
+   * (`programme`) gave it.
+   */
+  nightEventEnd?: string;
+  nightEventEndSource?: "event" | "programme";
   /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
@@ -936,9 +952,13 @@ const T = {
      * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
      * noapte» on every other type.
      */
-    nightEvent: (sunset: string, isGroupRun: boolean) => {
-      const label = isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
-      return sunset ? `${label}: apusul e la ${sunset}. Ia o frontală.` : `${label}: ia o frontală.`;
+    nightEvent: (night: NightReminderLine) => {
+      const label = night.isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
+      if (!night.sunset) return `${label}: ia o frontală.`;
+      // Every time named, the start first (§NNN): «începe la 19:00, apusul e la 19:00» is not «apusul începe».
+      const start = night.start ? `începe la ${night.start}, ` : "";
+      const end = night.end ? (night.endSource === "programme" ? `, ultimul punct din program la ${night.end}` : `, se termină la ${night.end}`) : "";
+      return `${label}: ${start}apusul e la ${night.sunset}${end}. Ia o frontală.`;
     },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
@@ -1235,9 +1255,12 @@ const T = {
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
-    nightEvent: (sunset: string, isGroupRun: boolean) => {
-      const label = isGroupRun ? "Night run" : "Night event";
-      return sunset ? `${label}: sunset is at ${sunset}. Bring a headlamp.` : `${label}: bring a headlamp.`;
+    nightEvent: (night: NightReminderLine) => {
+      const label = night.isGroupRun ? "Night run" : "Night event";
+      if (!night.sunset) return `${label}: bring a headlamp.`;
+      const start = night.start ? `starts at ${night.start}, ` : "";
+      const end = night.end ? (night.endSource === "programme" ? `, the programme's last row at ${night.end}` : `, ends at ${night.end}`) : "";
+      return `${label}: ${start}sunset at ${night.sunset}${end}. Bring a headlamp.`;
     },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
@@ -1480,7 +1503,15 @@ export function buildTemplateContent(
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
       */
       ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
-        ? [copy.nightEvent(data.nightEventSunset, data.nightEventIsGroupRun === true)]
+        ? [
+            copy.nightEvent({
+              sunset: data.nightEventSunset,
+              start: data.nightEventStart ?? "",
+              end: data.nightEventEnd ?? "",
+              endSource: data.nightEventEndSource ?? null,
+              isGroupRun: data.nightEventIsGroupRun === true,
+            }),
+          ]
         : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),

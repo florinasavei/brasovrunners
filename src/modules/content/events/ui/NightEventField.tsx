@@ -18,9 +18,9 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 export type NightEventWords = {
   label: string;
   choices: Readonly<Record<NightChoice, string>>;
-  /** "Automat: pe {day}, apusul e la {time} — {verdict}" */
+  /** "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}" — the start named before the sunset (§NNN). */
   autoLine: string;
-  /** "Automat: pe {day}, apusul e la {time} — alege ora startului" */
+  /** "Automat: pe {day}, apusul la {sunset} — alege ora startului" */
   autoLineNoTime: string;
   /** "Automat: alege data startului și se calculează aici." */
   autoLineNoDate: string;
@@ -82,12 +82,13 @@ export function nightAutoLine(
   const day = composeCalendarDay(start.date, words.day);
   const sun = day ? sunTimes(start.date, place) : null;
   if (!day || !sun) return { line: words.autoLineNoDate, endLine: null };
-  const time = sun.sunset ? wallClockTime(sun.sunset, start.timeZone) : "—";
-  if (!WALL_TIME.test(start.time)) return { line: fillIn(words.autoLineNoTime, { day, time }), endLine: null };
+  const sunset = sun.sunset ? wallClockTime(sun.sunset, start.timeZone) : "—";
+  if (!WALL_TIME.test(start.time)) return { line: fillIn(words.autoLineNoTime, { day, sunset }), endLine: null };
   const startsAt = fromWallTimeInput(`${start.date}T${start.time}`, start.timeZone);
   const spanEnd = startsAt ? formSpanEnd(startsAt, start, durationMinutes, programme) : null;
   const { night, nightAtStart } = nightSpan(startsAt, spanEnd?.end ?? null, place, start.timeZone);
-  const line = fillIn(words.autoLine, { day, time, verdict: night ? words.verdictNight : words.verdictDay });
+  // The start is named before the sunset, so the sunset is never read as the start (§NNN).
+  const line = fillIn(words.autoLine, { day, start: start.time, sunset, verdict: night ? words.verdictNight : words.verdictDay });
   if (!night || nightAtStart || !spanEnd) return { line, endLine: null };
   const end = wallClockTime(spanEnd.end, start.timeZone);
   return { line, endLine: fillIn(spanEnd.source === "programme" ? words.endLineProgramme : words.endLine, { end }) };

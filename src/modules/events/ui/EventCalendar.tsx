@@ -20,7 +20,7 @@ import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarEventChip from "./CalendarEventChip";
 import type { EditionNote } from "./EditionMark";
 import { readCoHosts } from "../domain/co-hosts";
-import { clubNightEvent } from "../night-event";
+import { clubNightEvent, nightLine as nightWords } from "../night-event";
 import { partnerPhrase } from "./counted-phrases";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
@@ -109,8 +109,8 @@ export default async function EventCalendar({
     const facts = clubNightEvent(event);
     if (!facts.night) return null;
     // A group run is «Alergare de noapte», as on its card and in its reminder (§394).
-    const run = event.type === "GROUP_RUN";
-    return facts.sunset ? tEvent(run ? "night.calendarRun" : "night.calendar", { time: facts.sunset }) : tEvent(run ? "night.runPill" : "night.pill");
+    // The start, the sunset and — when it is the reason — the end, all named (§NNN).
+    return nightWords(facts, tEvent, event.type === "GROUP_RUN", "calendar");
   };
 
   // The chip is a client island (the tooltip); everything crosses as strings and names (§112).
@@ -126,7 +126,7 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
-        // "Eveniment de noapte — apusul la 16:36" (§394, where §382 put the headlamp) in the tooltip
+        // "Eveniment de noapte: începe la 19:00, apusul la 16:36" (§394, §NNN, where §382 put the headlamp) in the tooltip
         // and the entry's name, after the place's note: this date's own answer, from its own sunset.
         night={nightLine(event)}
         // Held with a partner (§367, amended §375, §379): the handshake beside the entry, the generic
