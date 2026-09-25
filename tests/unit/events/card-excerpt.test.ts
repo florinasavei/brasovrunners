@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { CARD_EXCERPT_SX, PAGE_EXCERPT_SX } from "@/modules/events/ui/EventExcerpt";
+import { CARD_EXCERPT_SX, CARD_EXCERPT_WORDS_SX, PAGE_EXCERPT_SX } from "@/modules/events/ui/EventExcerpt";
 
 /**
  * BR-REQ-041-01 criterion 1 and `DECISIONS.md` §73 — a picture written into a short
@@ -76,7 +76,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
       The one measurement is the height ceiling §275 added, and it is the safe direction: a
       number that makes a picture *shorter* cannot make a phone scroll sideways.
     */
-    const values = JSON.stringify(CARD_EXCERPT_SX);
+    const values = JSON.stringify([CARD_EXCERPT_SX, CARD_EXCERPT_WORDS_SX]);
     expect(values).not.toMatch(/vw"/);
     expect(values).not.toMatch(/"(width|minWidth|maxWidth|minHeight)":\s*\d/);
   });
@@ -92,12 +92,20 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
       The owner, 2026-09-24, of the listing: "There is too much whitespace on these cards". A
       summary as long as its author made it set one card's height against its neighbour's; the
       card now clamps it — the -webkit-box form every engine implements, counted across the
-      summary's paragraphs — and the event page carries the rest.
+      summary's paragraphs — and the event page carries the rest. Since §NNN the clamp is the
+      words' own box, and the pictures stand outside it (`card-excerpt-pictures.test.ts`).
     */
-    expect(CARD_EXCERPT_SX.display).toBe("-webkit-box");
-    expect(CARD_EXCERPT_SX.WebkitBoxOrient).toBe("vertical");
-    expect(CARD_EXCERPT_SX.WebkitLineClamp).toBe(3);
-    expect(CARD_EXCERPT_SX.overflow).toBe("hidden");
+    expect(CARD_EXCERPT_WORDS_SX.display).toBe("-webkit-box");
+    expect(CARD_EXCERPT_WORDS_SX.WebkitBoxOrient).toBe("vertical");
+    expect(CARD_EXCERPT_WORDS_SX.WebkitLineClamp).toBe(3);
+    expect(CARD_EXCERPT_WORDS_SX.overflow).toBe("hidden");
+    expect(CARD_EXCERPT_WORDS_SX.overflowWrap).toBe("anywhere");
+  });
+
+  it("wraps a long unbroken word on the outer box too, not only the words' clamp (§NNN)", () => {
+    // The words' box carries its own `overflowWrap` for the clamp; a figure's caption sits
+    // outside that box, so the net is the outer box's own rule — a long address typed into a
+    // caption still wraps inside a 320-pixel card instead of overflowing it.
     expect(CARD_EXCERPT_SX.overflowWrap).toBe("anywhere");
   });
 
