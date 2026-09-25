@@ -18,6 +18,7 @@ import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import Wordmark from "@/shared/ui/Wordmark";
 import { PAGE_WIDTH } from "@/theme/brand";
+import { DENSITY } from "@/theme/density";
 import { headingRule } from "@/theme/surfaces";
 
 type Props = {
@@ -93,7 +94,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   );
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/* The kit-face wordmark heads this page as it heads the listing — the owner, 2026-09-22:
           "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea
           de calendar" (`DECISIONS.md` §292). A

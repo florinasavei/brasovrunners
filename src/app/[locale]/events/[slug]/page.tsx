@@ -48,6 +48,7 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import JsonLd from "@/shared/ui/JsonLd";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
+import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string }> };
 
@@ -158,7 +159,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <JsonLd
         data={sportsEventJsonLd(
           event,
@@ -172,7 +173,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       <LastGoodNotice read={read} />
 
-      <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center", justifyContent: "space-between" }}>
+      <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
         <Typography variant="body2">
           <Link href="/events">{t("backToEvents")}</Link>
         </Typography>
@@ -185,13 +186,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* Stated in words, not only by colour — BR-REQ-070-03 criterion 3. */}
       {event.eventStatus === "CANCELLED" && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("cancelledNotice")}
         </Alert>
       )}
       {/* The race is over (§82): said in words, and registration hides itself below. */}
       {event.eventStatus === "COMPLETED" && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("completedNotice")}
         </Alert>
       )}
@@ -231,7 +232,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           with the preview so the two cannot show it in different places. */}
       <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: { xs: DENSITY.sectionGap, sm: 3 } }} />
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
       <EventFacts event={event} now={now} stacked />
@@ -253,7 +254,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
       {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
           <RegistrationSteps
             folded
             window={
@@ -270,7 +271,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
         <ShareLinks
           url={eventUrl(locale, slug)}
           title={event.title}
@@ -301,7 +302,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
       {!isRichTextEmpty(readRichText(event.rulesJson)) && (
-        <Box component="section" id="rules" sx={{ mt: 4 }}>
+        <Box component="section" id="rules" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
             {t("rules")}
           </Typography>
