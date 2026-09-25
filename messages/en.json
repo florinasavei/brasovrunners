@@ -1777,7 +1777,11 @@
         "todo": "To do",
         "botCheck": "Anti-bot",
         "costs": "Costs",
-        "system": "System"
+        "system": "System",
+        "app": "The app"
+      },
+      "app": {
+        "lead": "The work queue of the team building the platform, read straight from `docs/QUEUE.md` in the repository — written and kept current in English, as below."
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",

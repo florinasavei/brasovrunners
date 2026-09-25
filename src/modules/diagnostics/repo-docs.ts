@@ -34,6 +34,7 @@ export const REPO_DOCS = [
   { name: "BUSINESS", file: "BUSINESS.md", read: () => readFile(path.join(root(), "BUSINESS.md"), "utf8") },
   { name: "CHANGELOG", file: "CHANGELOG.md", read: () => readFile(path.join(root(), "CHANGELOG.md"), "utf8") },
   { name: "WEEKEND", file: "WEEKEND.md", read: () => readFile(path.join(root(), "WEEKEND.md"), "utf8") },
+  { name: "QUEUE", file: "docs/QUEUE.md", read: () => readFile(path.join(root(), "docs/QUEUE.md"), "utf8") },
 ] as const;
 
 export type RepoDocName = (typeof REPO_DOCS)[number]["name"];

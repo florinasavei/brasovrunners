@@ -1777,7 +1777,11 @@
         "todo": "De făcut",
         "botCheck": "Anti-robot",
         "costs": "Costuri",
-        "system": "Sistem"
+        "system": "Sistem",
+        "app": "Aplicația"
+      },
+      "app": {
+        "lead": "Coada de lucru a echipei care construiește platforma, citită direct din `docs/QUEUE.md` din depozitul de cod — scrisă și ținută la zi în engleză, ca mai jos."
       },
       "neonPlan": {
         "title": "Planul Neon (baza de date)",

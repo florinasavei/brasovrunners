@@ -11,7 +11,12 @@ import { signIn } from "./support/featured-event";
  * sentence on `/devs` as the role that reads that page and cannot set the plan (Tehnic), because
  * the sentence is the whole point of the setting. The arithmetic is unit-tested; this is the part
  * a unit test cannot see — that the select posts, that the other screen reads the row, and that a
- * reader who may not open the costs panel is told where the plan is set rather than linked to a 404.
+ * reader who may not open the costs panel is told where the plan is set rather than shown it.
+ *
+ * Since `DECISIONS.md` §NNN, Tehnic may open `/admin/tasks` for its own "Aplicația" tab — a
+ * typed `?panel=costs` address now lands back on that tab rather than a missing route, the same
+ * "an address nobody offered reads as nothing asked" the owner/kind filters already use
+ * (`modules/diagnostics/domain/task-panels.ts`).
  */
 test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
   // One `platform_settings` row, two projects against one database: desktop only, as the
@@ -64,8 +69,9 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await expect(block.getByText(/Spațiu ocupat: [\d,.]+ MB — [\d,.]+ \$\/GB-lună/)).toBeVisible();
     await expect(block.getByText(/din 512 MB/)).toHaveCount(0);
     await expect(block.getByText(/din 100 ore-CU/)).toHaveCount(0);
-    const tehnicTasks = await page.goto("/ro/admin/tasks?panel=costs");
-    expect(tehnicTasks?.status()).toBe(404);
+    await page.goto("/ro/admin/tasks?panel=costs");
+    await expect(page).toHaveURL(/panel=app/);
+    await expect(page.locator("#main").getByRole("heading", { name: "The work queue" })).toBeVisible();
 
     // And back to Free, as the Administrator, so the next test on this database starts from the
     // default; the Administrator's `/devs` carries the link into the panel that sets it.
