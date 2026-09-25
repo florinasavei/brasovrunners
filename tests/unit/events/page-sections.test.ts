@@ -59,7 +59,7 @@ function pageSequence(): PageSectionId[] {
     ['key: "route"', "course"],
     ['key: "cost"', "cost"],
     ['key: "age"', "registration"],
-    ['key: "coHost"', "coHosts"],
+    ['data-testid="partners-fold"', "coHosts"],
   ];
   const at = (source: string, needle: string) => {
     const index = source.indexOf(needle);
