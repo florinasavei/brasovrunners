@@ -7,9 +7,10 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-080-01 (§NNN) — the reminder carries the forecast for the start under its facts line,
- * each half of the bilingual message in its own words, read at send time through the same
- * request the event page makes; no line when Open-Meteo fails, and none on any other message.
+ * BR-REQ-080-01 (§NNN) — the reminder carries the forecast for the start as a «Vremea» row of its
+ * facts block (§392), right under «Când», each half of the bilingual message in its own words, read
+ * at send time through the same request the event page makes; no row when Open-Meteo fails, and
+ * none on any other message.
  *
  * The tests run with `WEATHER_SOURCE=off`, so `weatherForEvent` is stood in for by the real one
  * reading through a stub `fetch` — the code path is the server's, the answer is the test's.
@@ -121,23 +122,30 @@ describe("BR-REQ-080-01 the reminder's forecast line (§NNN)", () => {
     sentAt: null,
   });
 
-  it("says the forecast for the start under the facts, in each half's own language", async () => {
+  it("says the forecast for the start as a row of the facts block, in each half's own language", async () => {
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r1"), db, NOW);
-    expect(message.text).toContain("Vremea la start: Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h (prognoză Open-Meteo)");
-    expect(message.text).toContain("Weather at the start: Rain, 6 °C, 80% chance of rain, wind 17 km/h (forecast by Open-Meteo)");
-    // In the HTML under the bold facts line, not bold itself.
-    expect(message.html).toMatch(/<\/strong><br>Vremea la start: Ploaie/);
-    // Right under the facts line in the plain text, before its links and the body.
     const lines = message.text.split("\n");
-    const at = lines.findIndex((line) => line.startsWith("Vremea la start:"));
-    expect(lines[at - 1]).toContain("Parcul Tractorul");
+    // Romanian half: right under «Când», the credit the licence asks for under it, then «Unde».
+    const ro = lines.indexOf("Vremea: Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h");
+    expect(ro).toBeGreaterThan(0);
+    expect(lines[ro - 1]).toMatch(/^Când: /);
+    expect(lines[ro + 1]).toBe("  Prognoză: Open-Meteo");
+    expect(lines[ro + 2]).toMatch(/^Unde: /);
+    // English half, in its own words.
+    const en = lines.indexOf("Weather: Rain, 6 °C, 80% chance of rain, wind 17 km/h");
+    expect(en).toBeGreaterThan(ro);
+    expect(lines[en - 1]).toMatch(/^When: /);
+    expect(lines[en + 1]).toBe("  Forecast: Open-Meteo");
+    // In the HTML, inside the facts block, the label bold as every row's.
+    const block = message.html.match(/<div data-email-part="event-facts"[^]*?<\/div>/)?.[0] ?? "";
+    expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h<br>Prognoză: Open-Meteo");
   });
 
-  it("goes out without the line when Open-Meteo fails", async () => {
+  it("goes out without the row when Open-Meteo fails", async () => {
     answer.mode = "fail";
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r2"), db, NOW);
     expect(message.text).not.toContain("Vremea");
-    expect(message.text).not.toContain("Weather at the start");
+    expect(message.text).not.toMatch(/^Weather: /m);
     expect(message.text).not.toContain("Open-Meteo");
     // The rest of the reminder is untouched.
     expect(message.text).toContain("Alergare se apropie");
@@ -145,7 +153,8 @@ describe("BR-REQ-080-01 the reminder's forecast line (§NNN)", () => {
 
   it("is on the reminder only — never the confirmation, sent weeks before a forecast means anything", async () => {
     const message = await renderOutboxMessage(row("REGISTRATION_CONFIRMED", "c1"), db, NOW);
-    expect(message.text).not.toContain("Vremea la start");
-    expect(message.text).not.toContain("Weather at the start");
+    expect(message.text).not.toContain("Vremea");
+    expect(message.text).not.toMatch(/^Weather: /m);
+    expect(message.text).not.toContain("Open-Meteo");
   });
 });

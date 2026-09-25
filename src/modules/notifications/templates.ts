@@ -3,12 +3,14 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
+import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
 import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { GROUP_RUN_DECLARATION_RETENTION_DAYS } from "@/modules/group-run-declarations/domain";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
@@ -44,22 +46,20 @@ export type TemplateContent = {
    * point — and the links that go with it (the map, the Strava event). On the confirmation
    * and the reminder; text-first, so the plain-text body reads the same.
    */
-  facts?: {
-    line: string;
-    links: { label: string; url: string }[];
-    /**
-     * The forecast for the start, on the reminder only (§NNN): «Vremea la start: Parțial noros,
-     * 14 °C, …», under the bold line and before the links — plain, not bold: it is a forecast,
-     * not a fact of the event.
-     */
-    weather?: string;
-  };
+  facts?: { line: string; links: { label: string; url: string }[] };
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
   /** Further links after the action — the signed declaration as a PDF (§95). */
   links?: { label: string; url: string }[];
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
   image?: { url: string; alt: string; caption: string };
+  /**
+   * The event's facts as one block (§392, `domain/event-facts.ts`): when, where, the programme, the
+   * route, the cost and the page's sections — under the words and the QR, above the button. On the
+   * confirmation, the reminder and the declaration request; the platform's, like the QR, so the
+   * club's words never carry it.
+   */
+  eventFacts?: EventFactsBlock;
   closing: string;
   /** "Reply to this email with questions" — on every message when the club has a reply address. */
   footer?: string;
@@ -97,18 +97,14 @@ export function renderContent(
     content.greeting,
     "",
     ...(content.facts
-      ? [
-          content.facts.line,
-          ...(content.facts.weather ? [content.facts.weather] : []),
-          ...content.facts.links.map((link) => `${link.label}: ${link.url}`),
-          "",
-        ]
+      ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
       : []),
     // The plain-text half drops the bold and underline markers rather than printing them (§189,
     // §309); a block the club wrote carries its own lines, already stripped of formatting.
     ...content.paragraphs.flatMap((part) =>
       typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1")] : part.text,
     ),
+    ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
@@ -144,7 +140,7 @@ export function renderContent(
     ...(content.facts
       ? [
           paragraph(
-            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.weather ? `<br>${escapeHtml(content.facts.weather)}` : ""}${content.facts.links
+            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
               .map((link) => `<br><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a>`)
               .join("")}`,
           ),
@@ -153,6 +149,9 @@ export function renderContent(
     ...content.paragraphs.map((part) =>
       typeof part === "string" ? paragraph(emphasise(escapeHtml(part))) : part.html,
     ),
+    // The event's facts under the club's text and above the QR — what the eye finds on a phone
+    // on race morning (§81, restored by the fix round; §392).
+    ...(content.eventFacts ? [content.eventFacts.html] : []),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
@@ -289,6 +288,9 @@ export function renderBilingual(
     ...(data.signedAtFormattedOther ? { signedAtFormatted: data.signedAtFormattedOther } : {}),
     ...(data.eventLocationNameOther ? { eventLocationName: data.eventLocationNameOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+    // The facts block in the second half's language, from its own page (§392): its place's name,
+    // its programme labels, its page's sections — drawn once per half (§373).
+    ...(data.eventFactsOther ? { eventFacts: data.eventFactsOther } : {}),
     // The status in the other language's own words (§373, email follow-up), never the registrant's.
     ...(data.currentStatusOther ? { currentStatus: data.currentStatusOther } : {}),
     /*
@@ -370,6 +372,19 @@ export type TemplateData = {
   /** "What to bring", the translation's one line (§81). */
   eventChecklist?: string;
   /**
+   * Set only on the reminder of a date that is a night event (§394): the sunset of that day,
+   * "16:36", on the event's clock — the same in both halves, a 24-hour time is no language's.
+   * The line says it and says to bring a light. An empty string is a night event whose sunset
+   * could not be computed (a polar night); the line then says the light alone.
+   */
+  nightEventSunset?: string;
+  /**
+   * Set alongside `nightEventSunset` (§394): whether this event is a group run, since the night
+   * line calls it a run («Alergare de noapte») rather than an event («Eveniment de noapte») only
+   * then — the owner calls a run a run.
+   */
+  nightEventIsGroupRun?: boolean;
+  /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
    * words. Absent when the other language was not read — both halves read `eventChecklist`.
@@ -396,12 +411,19 @@ export type TemplateData = {
   /**
    * The forecast for the start (§NNN), on the reminder only: the hour's numbers and its kind, which
    * each half of the bilingual message words in its own language (`weatherWords`). Absent beyond
-   * seven days and whenever Open-Meteo did not answer — the line is then simply not there.
+   * seven days and whenever Open-Meteo did not answer — the facts block's «Vremea» row is then simply not there.
    */
   eventWeather?: WeatherReading;
-  /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
+  /** The programme's rows as lines, in the message's language and in the other's (§117); on the update notice (§331). */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
+  /**
+   * What the facts block says about the event (§392, `domain/event-facts.ts`), in this half's
+   * language, and in the other's for the bilingual message's second half. Read by the confirmation,
+   * the reminder and the declaration request only; absent when the message is about no event.
+   */
+  eventFacts?: EmailEventFacts;
+  eventFactsOther?: EmailEventFacts;
   /**
    * When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`,
    * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
@@ -572,21 +594,6 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
 }
 
 /**
- * The reminder's forecast line under its facts (§NNN), in this half's language — the same pieces
- * the event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
- * before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
- */
-function withWeather(
-  facts: TemplateContent["facts"],
-  messageType: EmailMessageType,
-  weather: WeatherReading | undefined,
-  locale: EmailLocale,
-): TemplateContent["facts"] {
-  if (!facts || !weather || messageType !== "EVENT_REMINDER") return facts;
-  return { ...facts, weather: weatherWords(weather, locale).line };
-}
-
-/**
  * The links every participant message ends with (§239; the owner, of a confirmation: "I need
  * more links in that email").
  *
@@ -698,7 +705,7 @@ const T = {
       body: (d: TemplateData) => [
         // "Se apropie", never a number of days: a runner confirmed late gets this a day after confirming, nearer the start (§126, §357).
         `${d.eventTitle ?? "Evenimentul"} se apropie. Iată ce ai nevoie.`,
-        ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
+        // The programme is the facts block's own row now (§392), under the QR.
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
@@ -756,6 +763,23 @@ const T = {
         `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
         // The PDF attached masks the identity document (§320); the sentence says where the whole one is, and until when.
         "Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Se păstrează trei ani după eveniment, ca în nota de confidențialitate; documentul întreg este în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice, până la șapte zile după eveniment.",
+      ],
+    },
+    groupRunDeclarationSigned: {
+      // The signer's copy of a group run's optional self-declaration (§393): the PDF attached, no token.
+      subject: (d: TemplateData) => `Declarația ta pe propria răspundere — ${d.eventTitle ?? "alergarea de grup"}`,
+      body: (d: TemplateData) => [
+        `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Pe platforma clubului, declarația se șterge la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      // The club's archive copy (§393, §99): searchable by who and for what; the document masked (§320).
+      subject: (d: TemplateData) => `Declarație semnată (alergare de grup): ${d.participantName || "alergător"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `Atașată este declarația pe propria răspundere semnată de ${d.participantName || "un alergător"} pentru alergarea de grup ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, pe ${d.signedAtFormatted}` : ""}.`,
+        `Copia pentru arhiva clubului, fără seria și numărul actului de identitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, până la ${durationPhrase("ro", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} după alergare, când platforma o șterge.`,
       ],
     },
     clubConfirmationNotice: {
@@ -915,6 +939,15 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
+    /**
+     * The reminder of a night event (§394), after the body whoever wrote it — «Alergare de
+     * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
+     * noapte» on every other type.
+     */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
+      return sunset ? `${label}: apusul e la ${sunset}. Ia o frontală.` : `${label}: ia o frontală.`;
+    },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     footer: "Răspunde la acest email pentru întrebări.",
@@ -928,6 +961,9 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
+    /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
+    privacyFooterDeclaration: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -979,7 +1015,6 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
-        ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
@@ -1033,6 +1068,21 @@ const T = {
       body: (d: TemplateData) => [
         `Attached is the declaration of own responsibility signed by ${d.participantName || "participant"} for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
         "The club's archive copy, without the identity document's series and number. Kept three years after the event, as the privacy notice says; the full document is in the event's declarations PDF in the backoffice until seven days after the event.",
+      ],
+    },
+    groupRunDeclarationSigned: {
+      subject: (d: TemplateData) => `Your self-declaration — ${d.eventTitle ?? "the group run"}`,
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
+        `Signing it was optional and registers you for nothing: come to the run as usual. On the club's platform the declaration is deleted ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run.`,
+      ],
+    },
+    groupRunDeclarationArchive: {
+      subject: (d: TemplateData) => `Signed declaration (group run): ${d.participantName || "runner"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
+        `The club's archive copy, without the identity document's series and number. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, until ${durationPhrase("en", GROUP_RUN_DECLARATION_RETENTION_DAYS, "days")} after the run, when the platform deletes it.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1192,6 +1242,11 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
+    /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Night run" : "Night event";
+      return sunset ? `${label}: sunset is at ${sunset}. Bring a headlamp.` : `${label}: bring a headlamp.`;
+    },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
@@ -1200,6 +1255,7 @@ const T = {
     },
     privacyFooter: (club: string) => `This message comes from ${club} about your registration. How we use your data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
+    privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
   },
 } as const;
 
@@ -1225,6 +1281,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
   ORGANIZER_MESSAGE: "organizerMessage",
+  GROUP_RUN_DECLARATION_SIGNED: "groupRunDeclarationSigned",
+  GROUP_RUN_DECLARATION_ARCHIVE: "groupRunDeclarationArchive",
   REGISTER_ANOTHER_PERSON: "registerAnotherPerson",
 };
 
@@ -1365,12 +1423,32 @@ export function buildTemplateContent(
       ? entry.subject(data)
       : entry.subject;
 
+  /*
+    The event's facts as one block (§392), in this half's language, on the three messages a runner
+    keeps to know where and when: the confirmation, the reminder, the declaration request (which is
+    also the participation confirmation, §104). It says the date, the place and the map, so the one
+    bold line of §81 gives way to it there, and it carries the event's own page and its sections
+    (`#schedule`, `#rules`, `#route`, `#links`), so the list under the button does not name them a
+    second time. A club copy keeps it: every fact in it is on the public page (§320 takes only what
+    is the participant's own).
+  */
+  /*
+    The reminder's forecast (§NNN) is a row of that block, in this half's words — the pieces the
+    event page's «Vremea» row says. Only on the reminder, the message a runner opens the day
+    before: a confirmation sent weeks ahead would carry a forecast long out of date by race day.
+  */
+  const weatherRow = messageType === "EVENT_REMINDER" && data.eventWeather ? weatherWords(data.eventWeather, locale) : undefined;
+  const factsBlock = data.eventFacts && EVENT_FACTS_MESSAGES.has(messageType) ? eventFactsBlock(data.eventFacts, locale, weatherRow) : undefined;
+  const linkData: TemplateData = factsBlock
+    ? { ...data, eventUrl: undefined, eventScheduleUrl: undefined, eventRulesUrl: undefined, eventLinksUrl: undefined }
+    : data;
+
   return {
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
-    facts: withWeather(entry.facts?.(data), messageType, data.eventWeather, locale),
+    facts: factsBlock ? undefined : entry.facts?.(data),
     /*
       The re-send says it is one (§235).
 
@@ -1409,6 +1487,15 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
+      /*
+        A night event (§394, the question §382 left open): the reminder of a date that starts after
+        dusk says the sunset and to bring a light. After the body, like the provisional number below
+        — a fact about this date, not a matter of how the club writes — so a reminder the club
+        reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
+      */
+      ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
+        ? [copy.nightEvent(data.nightEventSunset, data.nightEventIsGroupRun === true)]
+        : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).
@@ -1426,14 +1513,15 @@ export function buildTemplateContent(
     ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
+    eventFacts: factsBlock,
     links: (() => {
-      const own = entry.links?.(data) ?? [];
+      const own = entry.links?.(linkData) ?? [];
       // The club's archive copy and the staff invitation are not a participant's message.
-      if (messageType === "DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
+      if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
         return own.length > 0 ? own : undefined;
       }
       const seen = new Set(own.map((link) => link.url));
-      return [...own, ...standardLinks(data, copy.moreLinks).filter((link) => !seen.has(link.url))];
+      return [...own, ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url))];
     })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
@@ -1442,7 +1530,11 @@ export function buildTemplateContent(
     privacy: NOT_A_PARTICIPANT_MESSAGE.has(messageType) || clubCopy
       ? undefined
       : {
-          text: (messageType === "REGISTRATION_OPENED" ? copy.privacyFooterInterest : copy.privacyFooter)(controllerName()),
+          text: (messageType === "REGISTRATION_OPENED"
+            ? copy.privacyFooterInterest
+            : messageType === "GROUP_RUN_DECLARATION_SIGNED"
+              ? copy.privacyFooterDeclaration
+              : copy.privacyFooter)(controllerName()),
           url: privacyUrl,
         },
   };
@@ -1478,12 +1570,21 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
 }
 
 /**
+ * The messages that carry the event's facts block (§392): the confirmation, the reminder, and the
+ * declaration request — which, for a race with a participation window, is the participation
+ * confirmation itself (§104), sent at once and again when the window opens.
+ */
+const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "COMPLETE_DECLARATION"]);
+
+/**
  * The messages that are not to a participant about their own data (§323), and so carry no
  * privacy line: the club's archive copy and its confirmation notice go to the club's mailboxes,
  * and the staff invitation says what it keeps about the team in its own body.
  */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "DECLARATION_ARCHIVE",
+  // The group run's archive copy (§393), to the club's mailbox like the race's.
+  "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
 ]);

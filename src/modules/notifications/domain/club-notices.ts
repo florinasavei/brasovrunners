@@ -197,6 +197,8 @@ export function participantMessageBcc(setting: ClubNotices | null): readonly str
  */
 const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>([
   "DECLARATION_ARCHIVE",
+  // The group run's archive copy (§393): the club's own, like the race's.
+  "GROUP_RUN_DECLARATION_ARCHIVE",
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
   "REGISTRATION_OPENED",
@@ -258,7 +260,7 @@ export function clubCopyPayload(payload: Record<string, unknown>): Record<string
  */
 export function declarationPdfAudience(messageType: EmailMessageType, clubCopy: boolean): "participant" | "club" | null {
   if (clubCopy) return null;
-  if (messageType === "DECLARATION_ARCHIVE") return "club";
-  if (messageType === "REGISTRATION_CONFIRMED" || messageType === "DECLARATION_SIGNED") return "participant";
+  if (messageType === "DECLARATION_ARCHIVE" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") return "club";
+  if (messageType === "REGISTRATION_CONFIRMED" || messageType === "DECLARATION_SIGNED" || messageType === "GROUP_RUN_DECLARATION_SIGNED") return "participant";
   return null;
 }

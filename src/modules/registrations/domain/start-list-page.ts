@@ -23,18 +23,35 @@ export type StartListPage = {
   namedLimit: number;
   /** How many "left off the list" lines this page shows, after the named ones. */
   anonymousOnPage: number;
+  /**
+   * What to ask the database for from the rows after the confirmed ones — the pending and the
+   * waiting list, shown only behind the privacy notice's gate (§396). Zero wherever the caller
+   * passed none.
+   */
+  othersOffset: number;
+  othersLimit: number;
   /** The number to print beside the first row of this page. */
   firstPosition: number;
+  /** Every confirmed runner, named or not — the count the heading and the summary line read. */
+  confirmed: number;
+  /** Every row of the list, the pending and waiting ones included. */
   total: number;
 };
 
+/**
+ * `others` (§396) is the pending and waiting rows, which follow every confirmed one — named and
+ * anonymous — so a confirmed runner never changes page when somebody joins the waiting list, as a
+ * named one never does when somebody opts out (§250).
+ */
 export function startListPage(
   named: number,
   anonymous: number,
   requestedPage: unknown,
   perPage: number = START_LIST_PAGE_SIZE,
+  others: number = 0,
 ): StartListPage {
-  const total = named + anonymous;
+  const confirmed = named + anonymous;
+  const total = confirmed + others;
   const pages = Math.max(1, Math.ceil(total / perPage));
   // Anything that is not a page number is page one: a query string is typed by anybody.
   const asked = typeof requestedPage === "number" ? requestedPage : Number.parseInt(String(requestedPage ?? ""), 10);
@@ -46,6 +63,9 @@ export function startListPage(
   // Whatever room the named rows left, filled from the anonymous ones this page has reached.
   const anonymousBefore = Math.max(0, from - named);
   const anonymousOnPage = Math.max(0, Math.min(perPage - namedLimit, anonymous - anonymousBefore));
+  // And whatever room is left after both, from the rows after the confirmed ones.
+  const othersOffset = Math.max(0, from - confirmed);
+  const othersLimit = Math.max(0, Math.min(perPage - namedLimit - anonymousOnPage, others - othersOffset));
 
-  return { page, pages, namedOffset, namedLimit, anonymousOnPage, firstPosition: from + 1, total };
+  return { page, pages, namedOffset, namedLimit, anonymousOnPage, othersOffset, othersLimit, firstPosition: from + 1, confirmed, total };
 }

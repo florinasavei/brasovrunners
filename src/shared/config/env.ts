@@ -1,3 +1,4 @@
+import { DEFAULT_CLUB_COORDINATES, parseCoordinates } from "@/modules/events/domain/sun";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { CLUB_NAME } from "@/theme/brand";
 import { z } from "zod";
@@ -153,6 +154,28 @@ export const envSchema = z
     CLUB_FACEBOOK_URL: z.url().optional(),
     CLUB_INSTAGRAM_URL: z.url().optional(),
     CLUB_STRAVA_URL: z.url().optional(),
+
+    /**
+     * Where the club runs, "latitude,longitude" in decimal degrees (§394): the place whose sunset
+     * decides whether a start is a night event — the pill, the calendar line and the reminder's
+     * line, unless the organizer said "Da" or "Nu". A fact of the club like `CLUB_NAME` (§369),
+     * but configuration rather than a constant because another club running this platform
+     * runs somewhere else. Never a secret; unset is Brașov's centre (`DEFAULT_CLUB_COORDINATES`).
+     * A value that is not two numbers in range fails at startup with the value named, like the
+     * allowlist: a typo here would otherwise move every sunset without anybody noticing.
+     */
+    CLUB_COORDINATES: z
+      .string()
+      .optional()
+      .transform((value, ctx) => {
+        if (value === undefined || value.trim() === "") return DEFAULT_CLUB_COORDINATES;
+        const parsed = parseCoordinates(value);
+        if (!parsed) {
+          ctx.addIssue({ code: "custom", message: `CLUB_COORDINATES must be "latitude,longitude" in decimal degrees, e.g. "45.6427,25.5887"; got "${value}".` });
+          return z.NEVER;
+        }
+        return parsed;
+      }),
 
     /**
      * Where uploaded photos live (AGENTS.md §17; `DECISIONS.md` §66).

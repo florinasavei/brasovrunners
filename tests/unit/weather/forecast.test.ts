@@ -16,7 +16,6 @@ import {
   freshReading,
   isForecastStale,
   MAX_FORECAST_AGE_MS,
-  OPEN_METEO_BASE,
   openMeteoUrl,
   readClubForecast,
   STUB_READING,
@@ -27,7 +26,8 @@ import {
 } from "@/modules/weather/source";
 import { WEATHER_GLYPH } from "@/modules/weather/ui/glyphs";
 import { weatherWords } from "@/modules/weather/words";
-import { envSchema } from "@/shared/config/env";
+import { OPEN_METEO_API, OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
+import { env, envSchema } from "@/shared/config/env";
 
 /**
  * §NNN — the weather at an event's start, from Open-Meteo: the WMO code map, the hour a start
@@ -167,7 +167,7 @@ describe("§NNN the request, and every failure read as no forecast", () => {
     const fetchImpl = json(answer());
     await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
     const url = new URL(String((fetchImpl as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0]));
-    expect(`${url.origin}${url.pathname}`).toBe(`${OPEN_METEO_BASE}/v1/forecast`);
+    expect(`${url.origin}${url.pathname}`).toBe(`${OPEN_METEO_API}/v1/forecast`);
     expect(url.searchParams.get("hourly")).toBe("temperature_2m,precipitation_probability,weather_code,wind_speed_10m");
     expect(url.searchParams.get("timeformat")).toBe("unixtime");
     expect(url.searchParams.get("wind_speed_unit")).toBe("kmh");
@@ -250,6 +250,46 @@ describe("§NNN a cached answer too old to trust", () => {
     // The same forecast, fresh, does hold that hour — staleness is the only difference.
     expect(freshReading(forecast(), START, NOW.getTime())).not.toBeNull();
   });
+
+  it("asks again at once when the cache hands back an old entry after a quiet spell, and shows that answer", async () => {
+    const old = { ...forecast(), fetchedAt: NOW.getTime() - 3 * HOUR, weatherCode: forecast().weatherCode.map(() => 0) };
+    const cached = vi.fn(async () => old);
+    const fetchImpl = json(answer());
+    const reading = await weatherForEvent({ startsAt: START }, NOW, { cached, fetch: fetchImpl, source: "open-meteo" });
+    // The fresh answer's rain, not the old entry's clear sky.
+    expect(reading).toMatchObject({ kind: "rain", temperatureC: 13.6 });
+    expect(cached).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows nothing when the old entry's fresh request fails — an outage, not a quiet spell", async () => {
+    const cached = vi.fn(async () => ({ ...forecast(), fetchedAt: NOW.getTime() - 3 * HOUR }));
+    const failing = json({ error: true, reason: "busy" }, 503);
+    expect(await weatherForEvent({ startsAt: START }, NOW, { cached, fetch: failing, source: "open-meteo" })).toBeNull();
+    expect(await readClubForecast({ cached, fetch: failing, source: "open-meteo", now: NOW.getTime() })).toEqual({ ok: false, reason: "HTTP 503" });
+    expect(failing).toHaveBeenCalledTimes(2);
+  });
+
+  it("asks nothing when the cached entry is inside the bound", async () => {
+    const cached = vi.fn(async () => forecast());
+    const fetchImpl = json(answer());
+    expect(await weatherForEvent({ startsAt: START }, NOW, { cached, fetch: fetchImpl, source: "open-meteo" })).not.toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe("§NNN the place is the club's own", () => {
+  it("asks for `CLUB_COORDINATES`, the place the night-event decision reads (§394)", () => {
+    const url = new URL(openMeteoUrl());
+    expect(Number(url.searchParams.get("latitude"))).toBe(env.CLUB_COORDINATES.latitude);
+    expect(Number(url.searchParams.get("longitude"))).toBe(env.CLUB_COORDINATES.longitude);
+    const elsewhere = new URL(openMeteoUrl({ latitude: 45.5, longitude: 25.4 }));
+    expect(elsewhere.searchParams.get("latitude")).toBe("45.5");
+  });
+
+  it("derives the API from the one Open-Meteo host the credit links to", () => {
+    expect(new URL(OPEN_METEO_API).host).toBe(`api.${new URL(OPEN_METEO_SITE).host}`);
+  });
 });
 
 describe("§NNN where the forecast comes from, by environment", () => {
@@ -274,7 +314,6 @@ describe("§NNN the forecast in words, in both languages", () => {
     expect(words.label).toBe("Vremea");
     expect(words.summary).toBe("Parțial noros");
     expect(words.details).toEqual(["14 °C", "20% șanse de ploaie", "vânt 11 km/h"]);
-    expect(words.line).toBe("Vremea la start: Parțial noros, 14 °C, 20% șanse de ploaie, vânt 11 km/h (prognoză Open-Meteo)");
     expect(words.credit).toBe("Prognoză: Open-Meteo");
   });
 
@@ -283,7 +322,6 @@ describe("§NNN the forecast in words, in both languages", () => {
     expect(words.label).toBe("Weather");
     expect(words.summary).toBe("Partly cloudy");
     expect(words.details).toEqual(["14 °C", "20% chance of rain", "wind 11 km/h"]);
-    expect(words.line).toBe("Weather at the start: Partly cloudy, 14 °C, 20% chance of rain, wind 11 km/h (forecast by Open-Meteo)");
     expect(words.credit).toBe("Forecast: Open-Meteo");
   });
 

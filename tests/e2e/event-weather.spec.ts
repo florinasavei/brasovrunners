@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 /**
- * BR-REQ-020-01 (§NNN) — «Vremea» / «Weather» on the event page, within seven days of the start.
+ * BR-REQ-011-01 (§NNN) — «Vremea» / «Weather» on the event page, within seven days of the start.
  * A new criterion of that requirement, as the partner marker and the headlamp pill each got theirs
  * (criteria 18–19, 23); `docs:land` adds it alongside `DECISIONS.md` §NNN.
  *
@@ -29,7 +29,7 @@ const SOON =
 const row = (page: Page, label: string) =>
   page.locator('[data-testid="event-facts"] dt').filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
 
-test.describe("BR-REQ-020-01 the weather at the start (§NNN)", () => {
+test.describe("BR-REQ-011-01 the weather at the start (§NNN)", () => {
   test("the Romanian page says the forecast for a start within seven days, and credits Open-Meteo", async ({ page }) => {
     await page.goto(SOON.ro);
     const weather = row(page, "Vremea");

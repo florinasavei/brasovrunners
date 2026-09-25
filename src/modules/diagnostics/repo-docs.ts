@@ -34,6 +34,7 @@ export const REPO_DOCS = [
   { name: "BUSINESS", file: "BUSINESS.md", read: () => readFile(path.join(root(), "BUSINESS.md"), "utf8") },
   { name: "CHANGELOG", file: "CHANGELOG.md", read: () => readFile(path.join(root(), "CHANGELOG.md"), "utf8") },
   { name: "WEEKEND", file: "WEEKEND.md", read: () => readFile(path.join(root(), "WEEKEND.md"), "utf8") },
+  { name: "QUEUE", file: "docs/QUEUE.md", read: () => readFile(path.join(root(), "docs/QUEUE.md"), "utf8") },
 ] as const;
 
 export type RepoDocName = (typeof REPO_DOCS)[number]["name"];
@@ -42,13 +43,22 @@ export function isRepoDocName(value: string): value is RepoDocName {
   return REPO_DOCS.some((doc) => doc.name === value);
 }
 
+/**
+ * The one rendering step `renderRepoDoc` uses — GFM on, including task lists (`- [ ]` /
+ * `- [x]` into disabled checkbox inputs). Exported so a unit test can prove the rule against a
+ * fixture instead of the live content of a tracked document.
+ */
+export async function renderRepoDocMarkdown(source: string): Promise<string> {
+  return marked.parse(source, { gfm: true, breaks: false, async: false });
+}
+
 /** The document as HTML, or null when the file is not there (a deployment traced without it). */
 export async function renderRepoDoc(name: RepoDocName): Promise<{ html: string; bytes: number } | null> {
   const doc = REPO_DOCS.find((entry) => entry.name === name);
   if (!doc) return null;
   try {
     const source = await doc.read();
-    const html = await marked.parse(source, { gfm: true, breaks: false });
+    const html = await renderRepoDocMarkdown(source);
     return { html, bytes: Buffer.byteLength(source) };
   } catch {
     return null;

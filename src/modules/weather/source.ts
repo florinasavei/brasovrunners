@@ -1,5 +1,7 @@
 import { unstable_cache } from "next/cache";
+import type { Coordinates } from "@/modules/events/domain/sun";
 import { env } from "@/shared/config/env";
+import { OPEN_METEO_API } from "./domain/credit";
 import {
   type HourlyForecast,
   parseOpenMeteo,
@@ -34,11 +36,12 @@ import {
  * swallows rather than surfacing. Left alone, that means an Open-Meteo outage does not empty the
  * cache; it freezes it, and every visitor for as long as the outage lasts reads whatever hour the
  * last good answer happened to hold for their event's start. So `fetchedAt` is checked against
- * `MAX_FORECAST_AGE_MS` wherever a forecast is read (`freshReading`, `readWeatherStatus`): an
- * answer older than that is treated exactly like a failure, never shown.
+ * `MAX_FORECAST_AGE_MS` wherever a forecast is read: an answer older than that is never shown.
+ * It is asked again at once instead (`readClubForecast`), within the same three seconds, so a
+ * quiet spell costs the next visitor nothing; only when that request fails is there no forecast.
  *
  * **Failure is silence.** Three seconds and no answer, an HTTP error, a body that is not a
- * forecast, or a cached answer past `MAX_FORECAST_AGE_MS`: `null`, and the page and the reminder
+ * forecast, or a cached answer past `MAX_FORECAST_AGE_MS` that cannot be refreshed: `null`, and the page and the reminder
  * say nothing about the weather — never "vremea nu este disponibilă", which tells a runner
  * nothing they can act on. A failure is not cached (the load throws inside `unstable_cache`), and
  * for five minutes after one this instance does not ask again, so an outage costs one visitor
@@ -49,16 +52,13 @@ import {
  * panel names it and its last answer instead (`readWeatherStatus`).
  */
 
-/** Open-Meteo's forecast API — a third party's fixed host, listed in `scripts/docs-check.mjs` (AGENTS.md §8). */
-export const OPEN_METEO_BASE = "https://api.open-meteo.com";
-
-/**
- * Where the forecast is asked for: the club's place, Brașov's centre (Piața Sfatului). The same
- * coordinates as the sunset's default (`DEFAULT_CLUB_COORDINATES`, the night-event decision); a
- * forecast is a grid cell of a few kilometres, so Tractorul, Tâmpa and the Olimpia stadium read
- * the same one.
- */
-export const WEATHER_PLACE = { latitude: 45.6427, longitude: 25.5887 } as const;
+/*
+  Where the forecast is asked for: the club's place, `CLUB_COORDINATES` (§394) — the same
+  coordinates the sunset reads for a night event, Brașov's centre when unset — never a copy of
+  them here. A forecast is a grid cell of a few kilometres, so Tractorul, Tâmpa and the Olimpia
+  stadium read the same one. Open-Meteo's address is `OPEN_METEO_API` (`domain/credit.ts`), the one
+  module that holds its host.
+*/
 
 /** The data cache's tag for the forecast — what an expiry would name. */
 export const WEATHER_CACHE_TAG = "weather:forecast";
@@ -73,12 +73,11 @@ export const WEATHER_TIMEOUT_MS = 3_000;
 const QUIET_AFTER_FAILURE_MS = 5 * 60 * 1000;
 
 /**
- * How old a cached answer may be before it is treated as no forecast at all: twice the cache's
- * own step. A routine revalidation never reaches this — the entry is at most `WEATHER_CACHE_SECONDS`
- * old before Next asks again — so only an outage across more than one revalidation trips it. This
- * is the one bound `freshReading` and `readWeatherStatus` both read, so "nothing is shown when the
- * forecast is unavailable" holds through a stale-while-revalidate cache, not only between two
- * routine hours.
+ * How old a cached answer may be before it is not trusted: twice the cache's own step. A busy
+ * hour never reaches it; a quiet spell or an outage does. Past it `readClubForecast` asks
+ * Open-Meteo again at once and shows that answer, or nothing when it fails; `freshReading` and
+ * `readWeatherStatus` read the same bound, so "nothing is shown when the forecast is unavailable"
+ * holds through a stale-while-revalidate cache.
  */
 export const MAX_FORECAST_AGE_MS = 2 * WEATHER_CACHE_SECONDS * 1000;
 
@@ -88,7 +87,7 @@ export function isForecastStale(forecast: HourlyForecast, now: number): boolean 
 }
 
 /** The request, built in one place so the test reads the same address the server asks. */
-export function openMeteoUrl(place: { latitude: number; longitude: number } = WEATHER_PLACE): string {
+export function openMeteoUrl(place: Coordinates = env.CLUB_COORDINATES): string {
   const query = new URLSearchParams({
     latitude: String(place.latitude),
     longitude: String(place.longitude),
@@ -98,7 +97,7 @@ export function openMeteoUrl(place: { latitude: number; longitude: number } = WE
     timezone: "GMT",
     forecast_days: String(WEATHER_FORECAST_DAYS),
   });
-  return `${OPEN_METEO_BASE}/v1/forecast?${query.toString()}`;
+  return `${OPEN_METEO_API}/v1/forecast?${query.toString()}`;
 }
 
 /** Why a forecast could not be read — one word for the system panel. */
@@ -119,10 +118,11 @@ export async function fetchOpenMeteo(
   fetchImpl: typeof fetch = fetch,
   now: () => number = Date.now,
   timeoutMs: number = WEATHER_TIMEOUT_MS,
+  place: Coordinates = env.CLUB_COORDINATES,
 ): Promise<HourlyForecast> {
   let response: Response;
   try {
-    response = await fetchImpl(openMeteoUrl(), {
+    response = await fetchImpl(openMeteoUrl(place), {
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(timeoutMs),
       // Inside `unstable_cache` Next treats this as uncached anyway; said here for the uncached path.
@@ -173,14 +173,17 @@ function dataCacheAvailable(): boolean {
 /**
  * The key's version: a deployment that changes `HourlyForecast`'s shape bumps it, so it never
  * reads an entry another deployment wrote in the old one. Shared across deployments otherwise —
- * the forecast is the same whoever asks.
+ * the forecast is the same whoever asks. The place is the cached function's argument, which
+ * `unstable_cache` folds into the key, so a changed `CLUB_COORDINATES` never reads the old place's
+ * entry.
  */
-const CACHE_KEY = ["weather", "open-meteo", "v1", String(WEATHER_PLACE.latitude), String(WEATHER_PLACE.longitude)];
+const CACHE_KEY = ["weather", "open-meteo", "v1"];
 
-const cachedOpenMeteo = unstable_cache(() => fetchOpenMeteo(), CACHE_KEY, {
-  tags: [WEATHER_CACHE_TAG],
-  revalidate: WEATHER_CACHE_SECONDS,
-});
+const cachedOpenMeteo = unstable_cache(
+  (latitude: number, longitude: number) => fetchOpenMeteo(fetch, Date.now, WEATHER_TIMEOUT_MS, { latitude, longitude }),
+  CACHE_KEY,
+  { tags: [WEATHER_CACHE_TAG], revalidate: WEATHER_CACHE_SECONDS },
+);
 
 let quietUntil = 0;
 let lastFailure: { at: number; reason: WeatherFailure } | null = null;
@@ -190,27 +193,43 @@ export type ForecastRead = { ok: true; forecast: HourlyForecast } | { ok: false;
 /**
  * The club's forecast, from the cache when there is one — never throws.
  *
- * `deps` is the tests' seam: a `fetch` to answer through, and the source to read under, both
- * defaulting to the server's own.
+ * **A cached answer past `MAX_FORECAST_AGE_MS` is asked again at once.** The first request after a
+ * quiet spell — a night, a weekend with no visitor — is handed the old entry by
+ * stale-while-revalidate, while the revalidation it starts runs behind it. Hiding the row there
+ * would hide the forecast from exactly the visitor who came back, although Open-Meteo would answer
+ * straight away; so that request asks Open-Meteo itself, within the same three seconds, and shows
+ * that answer. Only when that request fails too is there no forecast: then it is an outage, and the
+ * old answer is never shown as current.
+ *
+ * `deps` is the tests' seam: a `fetch` to answer through, the source to read under, and `cached`,
+ * standing in for the data cache's entry — each defaulting to the server's own.
  */
 export async function readClubForecast(
-  deps: { fetch?: typeof fetch; source?: typeof env.WEATHER_SOURCE; now?: number; timeoutMs?: number } = {},
+  deps: {
+    fetch?: typeof fetch;
+    source?: typeof env.WEATHER_SOURCE;
+    now?: number;
+    timeoutMs?: number;
+    cached?: () => Promise<HourlyForecast>;
+  } = {},
 ): Promise<ForecastRead> {
   const source = deps.source ?? env.WEATHER_SOURCE;
   const now = deps.now ?? Date.now();
   if (source === "off") return { ok: false, reason: "off" };
   if (source === "stub") return { ok: true, forecast: stubForecast(now) };
-  if (!deps.fetch && now < quietUntil) return { ok: false, reason: "resting" };
+  const seam = Boolean(deps.fetch || deps.cached);
+  if (!seam && now < quietUntil) return { ok: false, reason: "resting" };
+  const place = env.CLUB_COORDINATES;
+  const ask = () =>
+    deps.fetch ? fetchOpenMeteo(deps.fetch, () => now, deps.timeoutMs, place) : fetchOpenMeteo(fetch, Date.now, WEATHER_TIMEOUT_MS, place);
+  const cached = deps.cached ?? (!deps.fetch && dataCacheAvailable() ? () => cachedOpenMeteo(place.latitude, place.longitude) : null);
   try {
-    const forecast = deps.fetch
-      ? await fetchOpenMeteo(deps.fetch, () => now, deps.timeoutMs)
-      : dataCacheAvailable()
-        ? await cachedOpenMeteo()
-        : await fetchOpenMeteo();
+    let forecast = cached ? await cached() : await ask();
+    if (isForecastStale(forecast, now)) forecast = await ask();
     return { ok: true, forecast };
   } catch (error) {
     const reason: WeatherFailure = error instanceof WeatherUnavailable ? error.reason : "unreadable";
-    if (!deps.fetch) {
+    if (!seam) {
       quietUntil = now + QUIET_AFTER_FAILURE_MS;
       lastFailure = { at: now, reason };
       console.warn(`[weather] ${reason}; no forecast shown until it answers`);
@@ -234,8 +253,9 @@ export function freshReading(forecast: HourlyForecast, at: Date, now: number): W
  * The forecast for an event's start, or null — the one call the page and the reminder make.
  *
  * Null without a request when the start is behind us or more than seven days away
- * (`withinWeatherWindow`), when the event is not going ahead, on any failure, and when the
- * cached answer is older than `MAX_FORECAST_AGE_MS` (an outage the cache is still serving through).
+ * (`withinWeatherWindow`), when the event is not going ahead, and on any failure — a cached answer
+ * older than `MAX_FORECAST_AGE_MS` whose fresh request fails included (an outage the cache would
+ * otherwise serve through).
  */
 export async function weatherForEvent(
   event: { startsAt: Date; raceStartsAt?: Date | null; eventStatus?: string | null },
@@ -252,9 +272,10 @@ export async function weatherForEvent(
 /**
  * What the system panel says about the service (§NNN): the source, and its last answer — when it
  * was read and how many hours it holds — or why there is none. Reads the same cached entry the
- * pages read, so opening the panel costs no request inside the hour. A cached answer older than
- * `MAX_FORECAST_AGE_MS` reads as `reason: "stale"`, amber like every other `ok: false` — never
- * green on an entry an outage has been serving for hours or days.
+ * pages read, so opening the panel costs no request inside the hour. An answer past
+ * `MAX_FORECAST_AGE_MS` is asked again as the pages ask it; one that still reads older than that
+ * reads as `reason: "stale"`, amber like every other `ok: false` — never green on an entry an
+ * outage has been serving for hours or days.
  */
 export type WeatherStatus =
   | { source: "off" | "stub" }

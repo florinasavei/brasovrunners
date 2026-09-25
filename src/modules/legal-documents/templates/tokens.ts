@@ -1,6 +1,7 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { DEADLINE_MERGE_FIELDS, deadlineMergeValues } from "../domain/merge-fields";
+import { listStatesClause } from "@/modules/registrations/list-state-words";
+import { DEADLINE_MERGE_FIELDS, deadlineMergeValues, LIST_STATES_MERGE_FIELD } from "../domain/merge-fields";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -84,6 +85,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: field,
     example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
   })),
+  // The privacy notice's marker for the public list's states (§396): filled with the three words
+  // the list prints, and the switch that lets the list print them (`describesListStates`).
+  {
+    token: `{{${LIST_STATES_MERGE_FIELD}}}`,
+    messageKey: LIST_STATES_MERGE_FIELD,
+    example: inBoth((locale) => listStatesClause(locale)),
+  },
 ];
 
 /** Which tokens a body already uses — what the legend marks as "in this text". */

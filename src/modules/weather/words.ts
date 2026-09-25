@@ -4,7 +4,7 @@ import ro from "../../../messages/ro.json";
 import type { WeatherReading } from "./domain/forecast";
 
 /**
- * A forecast in words, in one language (§NNN) — the page's row and the reminder's line say the
+ * A forecast in words, in one language (§NNN) — the page's row and the reminder's row say the
  * same pieces in the same order, from the `Weather` catalogue in both languages.
  *
  * `createTranslator`, not a request's `getTranslations`, because the reminder is rendered by the
@@ -23,8 +23,6 @@ export type WeatherWords = {
   summary: string;
   /** The pieces after it: the temperature, the chance of rain, the wind — each only when the hour has it. */
   details: string[];
-  /** The whole line the reminder carries: «Vremea la start: Parțial noros, 14 °C, 20% șanse de ploaie, vânt 11 km/h (prognoză Open-Meteo)». */
-  line: string;
   /** The credit the data's licence asks for, «Prognoză: Open-Meteo». */
   credit: string;
 };
@@ -46,7 +44,6 @@ export function weatherWords(reading: WeatherReading, locale: "ro" | "en"): Weat
     label: t("label"),
     summary,
     details,
-    line: t("reminderLine", { summary: [summary, ...details].join(", "), source: t("source") }),
     credit: t("credit", { source: t("source") }),
   };
 }

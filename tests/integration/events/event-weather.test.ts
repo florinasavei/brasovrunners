@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-020-01 (§NNN) — «Vremea» on the event page: the page reads the forecast
+ * BR-REQ-011-01 (§NNN) — «Vremea» on the event page: the page reads the forecast
  * (`weatherForEvent`, Open-Meteo answered here by a stub `fetch`) and the facts draw it as a row,
  * glyph, word, temperature, chance of rain and wind, with the credit under it. Absent beyond
  * seven days and absent when the service fails — never a sentence about a missing forecast.
@@ -25,8 +25,8 @@ vi.mock("next-intl/server", async () => {
 });
 
 const { default: EventFacts } = await import("@/modules/events/ui/EventFacts");
-const { weatherForEvent, OPEN_METEO_BASE } = await import("@/modules/weather/source");
-const { OPEN_METEO_SITE } = await import("@/modules/weather/domain/credit");
+const { weatherForEvent } = await import("@/modules/weather/source");
+const { OPEN_METEO_API, OPEN_METEO_SITE } = await import("@/modules/weather/domain/credit");
 
 afterEach(() => {
   currentLocale = "ro";
@@ -83,7 +83,7 @@ function openMeteo(): typeof fetch {
   const first = Math.floor(NOW.getTime() / HOUR) * HOUR;
   const time = Array.from({ length: 8 * 24 }, (_, index) => (first + index * HOUR) / 1000);
   return vi.fn(async (url: string) => {
-    expect(url.startsWith(`${OPEN_METEO_BASE}/v1/forecast?`)).toBe(true);
+    expect(url.startsWith(`${OPEN_METEO_API}/v1/forecast?`)).toBe(true);
     return new Response(
       JSON.stringify({
         hourly: {
@@ -118,7 +118,7 @@ function rows(html: string) {
   }));
 }
 
-describe("BR-REQ-020-01 the event page's «Vremea» row (§NNN)", () => {
+describe("BR-REQ-011-01 the event page's «Vremea» row (§NNN)", () => {
   it("draws the forecast for the start, after the short facts and before the partners", async () => {
     const html = await page();
     expect(rows(html).map((row) => row.label)).toEqual(["Când", "Unde", "Traseu", "Cost", "Vremea", "Împreună cu"]);

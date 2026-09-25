@@ -20,7 +20,7 @@ import {
   normalizeCoHostUrl,
 } from "@/modules/events/domain/co-hosts";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
-import { EVENT_COST_TYPES, type EventCostType, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
+import { EVENT_COST_TYPES, type EventCostType, MAX_DISCOUNT_NOTE, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
   isEventLinkKind,
@@ -145,6 +145,14 @@ export const translationFieldsSchema = z
     // Optional in the input like `excerpt`: the form posts them, an older caller may not.
     seoTitle: optionalText(200).optional(),
     seoDescription: optionalText(320).optional(),
+    /**
+     * The club's discount on an external event's own fee (`DECISIONS.md` §394): shown, and
+     * postable, only on an `EXTERNAL`-registration, `PAID` event — the box is hidden otherwise
+     * (`RegistrationBox`), and the service clears the column when the mode or cost type stops
+     * needing it, whatever this caller posted. Optional in the input like `checklist`; both
+     * languages or neither (§352, `assertOptionalTextsInBothLanguages`).
+     */
+    discountNote: optionalText(MAX_DISCOUNT_NOTE).optional(),
   })
   .strict();
 
@@ -299,7 +307,7 @@ function placeRule(
  * and left the required one blank is refused.
  */
 function costRule(
-  fields: { costType: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
+  fields: { costType?: EventCostType | null; costAmount?: string | null; costUrl?: string | null },
   ctx: z.RefinementCtx,
 ): void {
   if (fields.costType === "PAID" && fields.costAmount !== undefined && !fields.costAmount) {
@@ -603,7 +611,13 @@ export const eventFieldsSchema = z
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
-    costType: optionalEnum(EVENT_COST_TYPES),
+    // §398 — optional, like `costAmount`/`costUrl` below: absent means this caller is not
+    // editing the cost fields at all, not "clear it". The service defaults an *absent* value to
+    // `FREE` only on create (`eventColumnsFrom`, the owner: "by default toate evenimentele sunt
+    // gratuite"); a save that omits it leaves the stored value untouched, the same discipline
+    // `links` and `bibDesign` follow. A caller that posts `""` (the closed box's own default,
+    // or a dropdown reset to "not stated") still writes `null`, on create and on edit alike.
+    costType: optionalEnum(EVENT_COST_TYPES).optional(),
     /**
      * What a paid event costs, or what a donation suggests (§343): free text, at most 60
      * characters, required by `costRule` below when `costType` is `PAID`. Optional in the input
@@ -678,10 +692,17 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
-     * "Necesită frontală" (§382): bring a headlamp — a checkbox in "Traseul". Optional for a caller
-     * from before it existed, which means none is needed, like `isSpecial`.
+     * "Eveniment de noapte" (§394, replacing §382's checkbox): the organizer's override — true
+     * "Da", false "Nu", null "Automat" (after sunset, `events/domain/night.ts`). Optional for a
+     * caller from before it existed, which means automatic.
      */
-    headlampRequired: z.boolean().optional().default(false),
+    nightOverride: z.boolean().nullable().optional().default(null),
+    /**
+     * "Declarație opțională pe propria răspundere" (§393): the group run's self-declaration, a
+     * checkbox in "Traseul". Optional for a caller from before it existed, which means none offered;
+     * the service keeps it only on a group run on asphalt or trail (`groupRunDeclarationKeyFor`).
+     */
+    offersGroupRunDeclaration: z.boolean().optional().default(false),
     featured: z.boolean(),
     /**
      * A special edition (§168): any number of events may carry it, so there is nothing to
