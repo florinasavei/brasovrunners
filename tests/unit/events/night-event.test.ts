@@ -7,10 +7,10 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { calendarDayWords } from "@/i18n/dates";
 import { courseSummary, nightSummary, type SummaryWords } from "@/modules/content/events/ui/box-summaries";
-import { nightChoiceOf, nightEvent, nightOverrideFromChoice } from "@/modules/events/domain/night";
+import { nightChoiceOf, nightEvent, nightOverrideFromChoice, nightShape } from "@/modules/events/domain/night";
 import { DEFAULT_CLUB_COORDINATES, isNightEvent, localDay, parseCoordinates, sunTimes, wallClockTime } from "@/modules/events/domain/sun";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
-import { nightLine, nightTooltip } from "@/modules/events/night-event";
+import { clubNightEvent, nightLine, nightTooltip } from "@/modules/events/night-event";
 import { calendarDescription, type CalendarEvent, type CalendarLabels } from "@/modules/events/ical";
 import type { PublicEvent } from "@/modules/events/repository";
 import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
@@ -515,6 +515,7 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
 
   const lineWords = (catalogue: typeof ro | typeof en, locale: string) => ({
     autoLine: catalogue.Admin.editor.night.autoLine,
+    autoLineDawn: catalogue.Admin.editor.night.autoLineDawn,
     autoLineNoTime: catalogue.Admin.editor.night.autoLineNoTime,
     autoLineNoDate: catalogue.Admin.editor.night.autoLineNoDate,
     verdictNight: catalogue.Admin.editor.night.verdictNight,
@@ -530,6 +531,20 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
     expect(nightAutoLine(lineWords(en, "en"), november, BRASOV).line).toBe("Automatic: on Wed, 18 Nov 2026, starts at 19:00, sunset at 16:44 — a night event");
     expect(nightAutoLine(lineWords(ro, "ro"), { date: "2027-06-16", time: "19:00", timeZone: ZONE }, BRASOV).line).toMatch(
       /^Automat: pe mie\., 16 iun\. 2027, începe la 19:00, apusul la 21:\d\d — nu e eveniment de noapte$/,
+    );
+  });
+
+  it("a 05:30 January start names that day's sunrise, never the evening's sunset, in both languages (§NNN)", () => {
+    const january = { date: "2027-01-13", time: "05:30", timeZone: ZONE };
+    expect(nightAutoLine(lineWords(ro, "ro"), january, BRASOV).line).toBe(
+      "Automat: pe mie., 13 ian. 2027, începe la 05:30, înainte de răsăritul de la 07:55 — eveniment de noapte",
+    );
+    expect(nightAutoLine(lineWords(en, "en"), january, BRASOV).line).toBe(
+      "Automatic: on Wed, 13 Jan 2027, starts at 05:30, before sunrise at 07:55 — a night event",
+    );
+    // After sunrise the same morning is a day date, and the ordinary line names the sunset.
+    expect(nightAutoLine(lineWords(ro, "ro"), { ...january, time: "09:00" }, BRASOV).line).toBe(
+      "Automat: pe mie., 13 ian. 2027, începe la 09:00, apusul la 16:57 — nu e eveniment de noapte",
     );
   });
 
@@ -684,6 +699,7 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
         "yes",
         "no",
         "autoLine",
+        "autoLineDawn",
         "autoLineNoTime",
         "autoLineNoDate",
         "verdictNight",
@@ -795,7 +811,16 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     // (before civil dawn) with no end ever named, and before that day's sunrise too, so the
     // `After` shape ("after the sunset") would read backwards for this early-morning run.
     dawn: nightEvent({ nightOverride: null, timezone: ZONE }, at("2026-09-30T06:30"), BRASOV),
+    // The review's own case (§NNN): a 05:30 group run on Wednesday 13 January 2027 at the club's
+    // place (`CLUB_COORDINATES`, through `clubNightEvent`) — sunrise 07:55, sunset 16:57. Never
+    // «după apusul de la 16:57»: the evening is eleven hours away.
+    january: clubNightEvent({ nightOverride: null, timezone: ZONE, startsAt: at("2027-01-13T05:30") }),
   };
+
+  it("a 05:30 January start at the club's place is the dawn shape, the sunrise named (§NNN)", () => {
+    expect(shapes.january).toEqual({ night: true, source: "automatic", start: "05:30", sunset: "16:57", sunrise: "07:55", endSource: null, end: null });
+    expect(nightShape(shapes.january)).toEqual({ suffix: "Dawn", values: { start: "05:30", sunrise: "07:55" } });
+  });
 
   it("an automatic night event whose start is before civil dawn carries the day's sunrise too, with no end named (§NNN)", () => {
     expect(shapes.dawn).toEqual({
@@ -818,6 +843,8 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     ["en", "end", "Starts at 19:00, sunset at 19:00, ends at 20:40 — bring a headlamp"],
     ["en", "programme", "Starts at 19:00, sunset at 19:00, the programme's last row at 20:15 — bring a headlamp"],
     ["en", "dawn", "Starts at 06:30, before sunrise at 07:14 — bring a headlamp"],
+    ["ro", "january", "Începe la 05:30, înainte de răsăritul de la 07:55 — ia o frontală"],
+    ["en", "january", "Starts at 05:30, before sunrise at 07:55 — bring a headlamp"],
   ] as const)("the pill's tooltip, %s, %s", (locale, shape, words) => {
     expect(nightTooltip(shapes[shape], tr(locale === "ro" ? ro : en, locale))).toBe(words);
   });
@@ -831,6 +858,8 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
     ["en", "programme", "calendar", true, "Night run: starts at 19:00, sunset at 19:00, the programme's last row at 20:15"],
     ["ro", "dawn", "ics", true, "Alergare de noapte: începe la 06:30, înainte de răsăritul de la 07:14 — ia o frontală"],
     ["en", "dawn", "calendar", false, "Night event: starts at 06:30, before sunrise at 07:14"],
+    ["ro", "january", "calendar", true, "Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55"],
+    ["en", "january", "ics", true, "Night run: starts at 05:30, before sunrise at 07:55 — bring a headlamp"],
   ] as const)("the calendar and .ics lines, %s, %s, %s", (locale, shape, kind, run, words) => {
     expect(nightLine(shapes[shape], tr(locale === "ro" ? ro : en, locale), run, kind)).toBe(words);
   });
@@ -856,6 +885,18 @@ describe("§NNN the night sentences name the start, the sunset and the end", () 
       ["en", { nightEventEnd: "20:40", nightEventEndSource: "event", nightEventIsGroupRun: true }, "Night run: starts at 19:00, sunset at 19:00, ends at 20:40. Bring a headlamp."],
       ["en", { nightEventEnd: "20:15", nightEventEndSource: "programme" }, "Night event: starts at 19:00, sunset at 19:00, the programme's last row at 20:15. Bring a headlamp."],
       ["en", { nightEventAfter: true }, "Night event: starts at 19:00, after the 19:00 sunset. Bring a headlamp."],
+      // The dawn shape (§NNN): a 05:30 January group run names that day's sunrise, never the
+      // evening's sunset.
+      [
+        "ro",
+        { nightEventStart: "05:30", nightEventSunset: "16:57", nightEventSunrise: "07:55", nightEventIsGroupRun: true },
+        "Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55. Ia o frontală.",
+      ],
+      [
+        "en",
+        { nightEventStart: "05:30", nightEventSunset: "16:57", nightEventSunrise: "07:55", nightEventIsGroupRun: true },
+        "Night run: starts at 05:30, before sunrise at 07:55. Bring a headlamp.",
+      ],
     ] as const)("%s %j", (locale, extra, words) => {
       expect(line(locale, { ...base, ...extra })).toBe(words);
     });

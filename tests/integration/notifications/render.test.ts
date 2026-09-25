@@ -250,6 +250,16 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(night.text).toContain("Alergare de noapte: începe la 19:00, după apusul de la 16:44. Ia o frontală.");
     expect(night.text).toContain("Night run: starts at 19:00, after the 16:44 sunset. Bring a headlamp.");
 
+    // A 05:30 group run on Wednesday 13 January 2027 (§NNN): night before that day's sunrise, and
+    // the line names the sunrise (07:55) — never «după apusul de la 16:57», an evening eleven hours on.
+    await db.update(events).set({ startsAt: new Date("2027-01-13T03:30:00.000Z") }).where(eq(events.id, event.id));
+    const dawn = await render();
+    expect(dawn.text).toContain("Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55. Ia o frontală.");
+    expect(dawn.text).toContain("Night run: starts at 05:30, before sunrise at 07:55. Bring a headlamp.");
+    expect(dawn.text).not.toContain("după apusul");
+    expect(dawn.text).not.toContain("after the 16:57 sunset");
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
+
     // §394 (review round 3): a daylight start whose own end («Durata», no programme rows) is after
     // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.
     await db

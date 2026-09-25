@@ -134,6 +134,32 @@ export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | n
   return { night, source: "automatic", start, sunset, sunrise, endSource: named, end: named && end ? wallClockTime(end, event.timezone) : null };
 }
 
+/**
+ * Which of the five shapes a night event's sentence takes (§NNN): the start and the sunset
+ * always, and the end only when it is why the date is dark — «Durata»'s end (`End`) or the day's
+ * last programme row (`EndProgramme`). The start is named first so the sunset is never read as it
+ * — the owner, 2026-09-25, "evenimentul începe atunci, nu apusul începe atunci!". When the sun
+ * alone made the call and no end was ever named (`nightEvent`'s `named`), the plain shape would
+ * read as if the sunset were the reason without saying so: `After` says the start came after that
+ * sunset instead — unless the start is actually before that day's sunrise (`isNightEvent` calls a
+ * start before civil dawn a night event too), in which case naming the sunset as "after" would be
+ * backwards for an early-morning run; `Dawn` names the sunrise instead. One rule for every
+ * sentence: the pill's tooltip, the calendar entry, the `.ics` and the reminder all ask it.
+ */
+export function nightShape(
+  facts: NightEventFacts,
+): { suffix: "" | "End" | "EndProgramme" | "After" | "Dawn"; values: Record<string, string> } | null {
+  if (!facts.sunset || !facts.start) return null;
+  const values = { start: facts.start, sunset: facts.sunset };
+  if (!facts.end) {
+    if (facts.source === "automatic" && facts.sunrise && facts.start < facts.sunrise) {
+      return { suffix: "Dawn", values: { start: facts.start, sunrise: facts.sunrise } };
+    }
+    return { suffix: facts.source === "automatic" ? "After" : "", values };
+  }
+  return { suffix: facts.endSource === "programme" ? "EndProgramme" : "End", values: { ...values, end: facts.end } };
+}
+
 /** The editor's three choices, as the radio posts them and the column stores them. */
 export const NIGHT_CHOICES = ["auto", "yes", "no"] as const;
 export type NightChoice = (typeof NIGHT_CHOICES)[number];

@@ -1007,6 +1007,7 @@
         "yes": "Yes",
         "no": "No",
         "autoLine": "Automatic: on {day}, starts at {start}, sunset at {sunset} — {verdict}",
+        "autoLineDawn": "Automatic: on {day}, starts at {start}, before sunrise at {sunrise} — {verdict}",
         "autoLineNoTime": "Automatic: on {day}, sunset at {sunset} — pick the start time",
         "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
         "verdictNight": "a night event",

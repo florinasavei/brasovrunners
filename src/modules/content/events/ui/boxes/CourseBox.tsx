@@ -157,6 +157,7 @@ export default async function CourseBox({
               label: t("editor.night.label"),
               choices: { auto: t("editor.night.auto"), yes: t("editor.night.yes"), no: t("editor.night.no") },
               autoLine: t.raw("editor.night.autoLine") as string,
+              autoLineDawn: t.raw("editor.night.autoLineDawn") as string,
               autoLineNoTime: t.raw("editor.night.autoLineNoTime") as string,
               autoLineNoDate: t("editor.night.autoLineNoDate"),
               verdictNight: t("editor.night.verdictNight"),

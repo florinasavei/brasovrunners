@@ -1007,6 +1007,7 @@
         "yes": "Da",
         "no": "Nu",
         "autoLine": "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}",
+        "autoLineDawn": "Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
         "autoLineNoTime": "Automat: pe {day}, apusul la {sunset} — alege ora startului",
         "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",

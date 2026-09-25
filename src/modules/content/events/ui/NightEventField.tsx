@@ -20,6 +20,11 @@ export type NightEventWords = {
   choices: Readonly<Record<NightChoice, string>>;
   /** "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}" — the start named before the sunset (§NNN). */
   autoLine: string;
+  /**
+   * "Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}" (§NNN):
+   * an early-morning night start names that day's sunrise, never the evening's sunset.
+   */
+  autoLineDawn: string;
   /** "Automat: pe {day}, apusul la {sunset} — alege ora startului" */
   autoLineNoTime: string;
   /** "Automat: alege data startului și se calculează aici." */
@@ -73,7 +78,7 @@ function formSpanEnd(
  * the page will not show.
  */
 export function nightAutoLine(
-  words: Pick<NightEventWords, "autoLine" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "endLine" | "endLineProgramme" | "day">,
+  words: Pick<NightEventWords, "autoLine" | "autoLineDawn" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "endLine" | "endLineProgramme" | "day">,
   start: { date: string; time: string; timeZone: string },
   place: Coordinates,
   durationMinutes?: number | null,
@@ -87,8 +92,14 @@ export function nightAutoLine(
   const startsAt = fromWallTimeInput(`${start.date}T${start.time}`, start.timeZone);
   const spanEnd = startsAt ? formSpanEnd(startsAt, start, durationMinutes, programme) : null;
   const { night, nightAtStart } = nightSpan(startsAt, spanEnd?.end ?? null, place, start.timeZone);
-  // The start is named before the sunset, so the sunset is never read as the start (§NNN).
-  const line = fillIn(words.autoLine, { day, start: start.time, sunset, verdict: night ? words.verdictNight : words.verdictDay });
+  // The start is named before the sunset, so the sunset is never read as the start (§NNN) — and a
+  // night start before that day's sunrise names the sunrise instead, as the pill does (`nightShape`).
+  const sunrise = sun.sunrise ? wallClockTime(sun.sunrise, start.timeZone) : null;
+  const verdict = night ? words.verdictNight : words.verdictDay;
+  const line =
+    night && sunrise && start.time < sunrise
+      ? fillIn(words.autoLineDawn, { day, start: start.time, sunrise, verdict })
+      : fillIn(words.autoLine, { day, start: start.time, sunset, verdict });
   if (!night || nightAtStart || !spanEnd) return { line, endLine: null };
   const end = wallClockTime(spanEnd.end, start.timeZone);
   return { line, endLine: fillIn(spanEnd.source === "programme" ? words.endLineProgramme : words.endLine, { end }) };
