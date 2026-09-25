@@ -135,7 +135,7 @@ describe("§104 the participation window's defaults", () => {
 });
 
 /**
- * BR-REQ-033-01 criterion 9 (`DECISIONS.md` §NNN, amending §104; the owner, 2026-09-25:
+ * BR-REQ-033-01 criterion 6 (`DECISIONS.md` §NNN, amending §104; the owner, 2026-09-25:
  * "fereastra de confirmare trebuie să fie 0 la final, să nu expire") — a deadline of zero is the
  * start, and every sentence says "la start" beside the date through one helper.
  */

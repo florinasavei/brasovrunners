@@ -268,8 +268,9 @@ describe("the participation window (§104)", () => {
     const first = await verified(event, "first@example.ro");
     const second = await verified(event, "second@example.ro");
 
-    // The first run after the start: nobody is offered a place in a race that has begun, and no
-    // hold outlives it — the desk's paper is the race morning's, before the start.
+    // The first run after the start: at the start the unsigned hold expires and the waiting
+    // list closes (§160); the desk can still confirm on paper afterwards through the
+    // allocator (§67) — that is the earlier "race morning" test above, before the start.
     await runRegistrationMaintenance(db, new Date(START.getTime() + 60_000));
     const [lapsed] = await db.select().from(registrations).where(eq(registrations.id, first.id));
     expect(lapsed.status).toBe("EXPIRED");

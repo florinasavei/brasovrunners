@@ -1172,7 +1172,7 @@
       "bodyHelp": "Opțional, în ambele limbi sau în niciuna. Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră (0 = la start)",
-      "confirmationWindowHelp": "Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul: online, din emailul de înscriere, sau pe hârtie la masa de înscrieri. Cu prima cifră de zile înainte de start îi trimitem emailul care îi cere confirmarea. Până la termen locul e al lui; cu 0 la termen, locul nu expiră înainte de start. Cine se înscrie după ce fereastra s-a deschis, sau când prima cifră e 0 (ca la antrenamentele săptămânale), are {hold} să semneze.",
+      "confirmationWindowHelp": "Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul: online, din emailul de înscriere, sau pe hârtie la masa de înscrieri. Cu prima cifră de zile înainte de start îi trimitem emailul care îi cere confirmarea. Până la termen locul e al lui; după termen, locul trece la următorul doar dacă așteaptă cineva. Cu 0 la termen, locul nu expiră înainte de start. Cine se înscrie după ce fereastra s-a deschis, sau când prima cifră e 0 (ca la antrenamentele săptămânale), are {hold} să semneze.",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
@@ -3496,7 +3496,7 @@
         "title": "Semnezi declarația",
         "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {hold}; dacă se formează listă de așteptare, după acest termen trece la următorul.",
         "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până {due}; după, trece la următorul.",
-        "bodyLaterAtStart": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna oricând până atunci, din emailul de înscriere: locul nu expiră înainte de start."
+        "bodyLaterAtStart": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: poți semna declarația pe proprie răspundere de acum, din emailul de înscriere, oricând până la start — online, sau pe hârtie la masa de înscrieri în ziua cursei. Cu {opens} înainte de start îți amintim printr-un email. Locul nu expiră înainte de start."
       },
       "confirmed": {
         "title": "Ești înscris",

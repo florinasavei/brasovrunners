@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { editorBox, languageTab, openEditorBox } from "./support/fold";
+import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-050-02 (`DECISIONS.md` §NNN, amending §104) — the confirmation window's deadline may be
@@ -46,17 +47,28 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     await due.fill("0");
     const help = card.getByText(/^Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul/);
     await expect(help).toBeVisible();
-    await expect(help).toContainText("cu 0 la termen, locul nu expiră înainte de start");
+    await expect(help).toContainText("după termen, locul trece la următorul doar dacă așteaptă cineva");
+    await expect(help).toContainText("Cu 0 la termen, locul nu expiră înainte de start");
     await expect(help).toContainText("are 30 de minute să semneze");
+
+    const excerpt = async (locale: "ro" | "en", text: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
 
     await field("translations.ro.title").fill(`Crosul la start ${suffix}`);
     await field("translations.ro.slug").fill(`crosul-la-start-${suffix}`);
+    await excerpt("ro", "Cursă gratuită, cu fereastra de confirmare la start.");
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Cross until the start ${suffix}`);
+    await excerpt("en", "A free race, with the confirmation window at the start.");
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`cross-until-the-start-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/, { timeout: 30_000 });
+    const editorUrl = page.url();
     await hydrated(page);
 
     // The editor: the closed line and the dates line both say «la start», never «cu 0 zile».
@@ -67,8 +79,41 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     await expect(dates).toContainText(/cerută din .+, termen la start — locul nu expiră înainte de start\.$/);
     await expect(dates).not.toContainText("0 zile");
 
+    // Published, the folded steps on the public page must answer «când pot confirma» without
+    // reading like the reminder email is the deadline: «până la start», never «până atunci».
+    await page.getByRole("button", { name: "Trimite spre verificare" }).click();
+    await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
+
+    const roSlug = `crosul-la-start-${suffix}`;
+    const enSlug = `cross-until-the-start-${suffix}`;
+    await page.goto(`/ro/evenimente/${roSlug}`);
+    await page.locator("summary").filter({ hasText: "Cum funcționează înscrierea" }).click();
+    const roSteps = page.getByText(/poți semna declarația pe proprie răspundere de acum/);
+    await expect(roSteps).toBeVisible();
+    await expect(roSteps).toContainText("oricând până la start");
+    await expect(roSteps).not.toContainText("până atunci");
+
+    await page.goto(`/en/events/${enSlug}`);
+    await page.locator("summary").filter({ hasText: "How registration works" }).click();
+    const enSteps = page.getByText(/you can sign the declaration of own responsibility from now/);
+    await expect(enSteps).toBeVisible();
+    await expect(enSteps).toContainText("any time until the start");
+    await expect(enSteps).not.toContainText("until then");
+
+    // Back to the editor for the last case: 0 and 0 is the weekly run's rule, no window.
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await openEditorBox(page, "Fereastra de confirmare");
+    const reopened = editorBox(page, "Fereastra de confirmare");
+
     // 0 and 0 is the weekly run's rule: no window, and the card says so rather than two dates.
-    await saved.getByRole("spinbutton", { name: /cu câte zile înainte se cere/ }).fill("0");
+    await reopened.getByRole("spinbutton", { name: /cu câte zile înainte se cere/ }).fill("0");
+    // Live now (published above): saving a change to published content asks for the
+    // acknowledgement checkbox first.
+    await page.getByRole("checkbox", { name: "Am înțeles că modific conținut publicat." }).check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
     await hydrated(page);
