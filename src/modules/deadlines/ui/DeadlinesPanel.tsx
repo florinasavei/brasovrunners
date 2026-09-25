@@ -2,7 +2,10 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { updateDeadlinesAction } from "@/app/[locale]/admin/emails/actions";
+import { updateAddressCapAction, updateDeadlinesAction } from "@/app/[locale]/admin/emails/actions";
+import { countForm } from "@/i18n/count-form";
+import type { AddressCapState } from "@/modules/registrations/address-cap";
+import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -26,6 +29,12 @@ type Props = {
   mayEdit: boolean;
   /** Why the fold opens by itself: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
+  /**
+   * "Maxim de înscrieri pe o adresă (pe eveniment)" (§NNN): a club setting of its own, in this fold
+   * because it is a limit a participant meets through the same messages — its own form and its own
+   * save, so a refused number never costs the deadlines typed beside it.
+   */
+  addressCap?: AddressCapState;
 };
 
 /**
@@ -36,7 +45,7 @@ type Props = {
  * browser refuses "0 hours" before the server does (§315); the closed line says the four a
  * participant meets most.
  */
-export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen }: Props) {
+export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen, addressCap }: Props) {
   const t = await getTranslations("Admin");
   const confirmText = await confirmWords();
   const { deadlines, updatedAt } = state;
@@ -118,6 +127,46 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen 
             </Box>
           </Stack>
         </ActionForm>
+      )}
+
+      {addressCap && (
+        <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }} data-testid="address-cap">
+          <Typography variant="subtitle2" component="h3" sx={{ mb: 0.5 }}>
+            {t("emails.addressCap.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("emails.addressCap.intro")}
+          </Typography>
+          {!mayEdit ? (
+            <Typography variant="body2" data-testid="address-cap-value">
+              {t("emails.addressCap.value", { people: t(`emails.addressCap.people.${countForm(addressCap.cap.registrationsPerAddress, locale)}`, { count: addressCap.cap.registrationsPerAddress }) })}
+            </Typography>
+          ) : (
+            <ActionForm
+              action={updateAddressCapAction}
+              messages={await refusalMessages({ registrationsPerAddress: t("emails.addressCap.field") })}
+              scope="address-cap"
+              data-testid="address-cap-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
+                <RecallField
+                  name="registrationsPerAddress"
+                  type="number"
+                  label={t("emails.addressCap.field")}
+                  defaultValue={addressCap.cap.registrationsPerAddress}
+                  size="small"
+                  required
+                  helperText={`${t("emails.addressCap.help")} ${t("emails.deadlines.bounds", { min: ADDRESS_CAP_RULE.min, max: ADDRESS_CAP_RULE.max, default: ADDRESS_CAP_RULE.default })}`}
+                  slotProps={{ htmlInput: { min: ADDRESS_CAP_RULE.min, max: ADDRESS_CAP_RULE.max, step: 1, inputMode: "numeric" } }}
+                />
+                <Box>
+                  <GlyphSubmitButton label={t("emails.addressCap.save")} pendingLabel={t("emails.deadlines.saving")} icon="save" />
+                </Box>
+              </Stack>
+            </ActionForm>
+          )}
+        </Box>
       )}
     </Panel>
   );

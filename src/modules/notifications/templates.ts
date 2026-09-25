@@ -10,6 +10,8 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { getPathname } from "@/i18n/navigation";
+import { countForm } from "@/i18n/count-form";
+import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { env } from "@/shared/config/env";
 
 /**
@@ -486,6 +488,14 @@ export type TemplateData = {
    * On the organizer's message, which mints nothing, so its reader can still find their registration.
    */
   myRegistrationsUrl?: string;
+  /**
+   * The link for another person on one address (§NNN, `REGISTER_ANOTHER_PERSON`): the club's limit
+   * of registrations per address as it stood when the form was sent, and whether the address had
+   * reached it — then the message says so and carries no link. Both from the row's payload: the
+   * email says what the submission decided.
+   */
+  addressCap?: number;
+  addressAtCap?: boolean;
 };
 
 /**
@@ -810,6 +820,33 @@ const T = {
       action: "Vezi pagina evenimentului",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
+    /**
+     * The form sent again with a registered address and another runner's name (§NNN): nothing was
+     * created, and this is the address's answer. Two shapes: the question and the link to the form
+     * for the other person; or, when the address already carries the club's limit at the event, the
+     * sentence that says so and no link. Addressed to the inbox, not to one runner — a parent reads
+     * it as often as the runner does — so the greeting names nobody.
+     */
+    registerAnotherPerson: {
+      subject: (d: TemplateData) =>
+        d.addressAtCap
+          ? `Adresa ta are deja numărul maxim de înscrieri la ${d.eventTitle ?? "eveniment"}`
+          : `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"} — înscrii pe altcineva?`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) =>
+        d.addressAtCap
+          ? [
+              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă și un alt nume. Nu am înscris pe nimeni: pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", d.addressCap)} la un eveniment, iar adresa ta le are deja.`,
+              "Pentru încă o persoană, folosește adresa ei de email. Dacă cineva de pe adresa ta nu mai vine, îi anulezi înscrierea din linkul primit la confirmare sau din „Înscrierile mele”, și locul de pe adresă se eliberează.",
+              "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
+            ]
+          : [
+              `Ești deja înscris(ă) la ${d.eventTitle ?? "eveniment"}. Vrei să înscrii pe altcineva cu aceeași adresă?`,
+              "Formularul a fost trimis din nou cu această adresă și un alt nume, așa că nu am înscris încă pe nimeni. Dacă e cineva din familie, apasă butonul de mai jos: adresa rămâne aceeași, completezi datele persoanei, iar ea își confirmă și își semnează singură înscrierea, cu propriul link și propriul cod QR.",
+              `Linkul este valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)} și se poate folosi o singură dată. Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.`,
+            ],
+      action: "Înscrie altă persoană",
+    },
     /** What the update and the cancellation add around the club's words (§331): the facts named as new, the labels of the organizer's text. */
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `Locul de întâlnire este acum: ${d.eventLocationName}.` : "Locul de întâlnire s-a schimbat — îl găsești pe pagina evenimentului."),
@@ -841,6 +878,8 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
+    /** After the body of the link for another person (§NNN): the club's limit, whoever wrote the words. */
+    addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -1075,6 +1114,26 @@ const T = {
       action: "See the event's page",
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
+    registerAnotherPerson: {
+      subject: (d: TemplateData) =>
+        d.addressAtCap
+          ? `Your address already has the most registrations allowed for ${d.eventTitle ?? "the event"}`
+          : `You are already registered for ${d.eventTitle ?? "the event"} — registering someone else?`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) =>
+        d.addressAtCap
+          ? [
+              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address and another name. We registered nobody: one email address may register at most ${peoplePhrase("en", d.addressCap)} for an event, and yours already has.`,
+              "For one more person, use their own email address. If someone on your address is no longer coming, cancel their registration from the link in their confirmation or from “My registrations”, and the place on the address is freed.",
+              "If you did not send the form, you can ignore this message: nothing has changed.",
+            ]
+          : [
+              `You are already registered for ${d.eventTitle ?? "the event"}. Do you want to register someone else with the same address?`,
+              "The form was sent again with this address and another name, so we have not registered anyone yet. If it is someone in your family, press the button below: the address stays the same, you fill in that person's details, and they confirm and sign their own registration, with their own link and their own QR code.",
+              `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)} and can be used once. If you did not send the form, you can ignore this message: nothing has changed.`,
+            ],
+      action: "Register another person",
+    },
     noticeWords: {
       place: (d: TemplateData) => (d.eventLocationName ? `The meeting point is now: ${d.eventLocationName}.` : "The meeting point has changed — it is on the event's page."),
       time: (d: TemplateData) =>
@@ -1096,6 +1155,7 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
+    addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -1128,7 +1188,21 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
   ORGANIZER_MESSAGE: "organizerMessage",
+  REGISTER_ANOTHER_PERSON: "registerAnotherPerson",
 };
+
+/**
+ * "4 persoane", "o persoană" / "4 people", "one person" (§NNN): how many runners one address may
+ * register, as the words the two sentences about the limit say it — the number is the club's
+ * setting, carried on the row, never a literal here. `countForm`'s Romanian forms (§341); the
+ * limit's bounds (1–10) never reach the "de" form, and it is spelled for any number all the same.
+ */
+function peoplePhrase(locale: EmailLocale, count: number | undefined): string {
+  const n = count ?? ADDRESS_CAP_RULE.default;
+  const form = countForm(n, locale);
+  if (locale === "ro") return form === "one" ? "o persoană" : form === "few" ? `${n} persoane` : `${n} de persoane`;
+  return form === "one" ? "one person" : `${n} people`;
+}
 
 /**
  * The sentences the update and the cancellation add after the body (§331) — machinery, like the
@@ -1237,7 +1311,14 @@ export function buildTemplateContent(
   */
   // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
-  const written = messageType === "ORGANIZER_MESSAGE" ? null : copyFor(overrides, messageType, locale);
+  /*
+    The link for another person, at the address's limit (§NNN), is the platform's sentence alone:
+    it is a statement about the address's state — like "you were already registered" (§235) — and
+    the club's words for this message are the question and the link, which this send carries
+    neither of. A club text would otherwise offer a button the message does not have.
+  */
+  const atAddressCap = messageType === "REGISTER_ANOTHER_PERSON" && data.addressAtCap === true;
+  const written = messageType === "ORGANIZER_MESSAGE" || atAddressCap ? null : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
@@ -1299,6 +1380,11 @@ export function buildTemplateContent(
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
         ? [copy.bibProvisional(data.bibNumber)]
+        : []),
+      // The club's limit under the link for another person (§NNN), whoever wrote the words above:
+      // the number is the setting's, from the row, and a club text needs no field to state it.
+      ...(messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && data.addressCap !== undefined
+        ? [copy.addressCapLine(data.addressCap)]
         : []),
     ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
