@@ -1,6 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
-import { FEATURED, ensureRegistrationIsOpen, fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
+import {
+  FEATURED,
+  ensureRegistrationIsOpen,
+  fillDateField,
+  fillTimeField,
+  hydrated,
+  signIn,
+  withFeaturedEventLock,
+} from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
@@ -26,6 +34,9 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
   // The second test below mutates the shared singleton `FEATURED` event for its own duration
   // (see its own docstring); serial keeps it from ever overlapping the first test in this file,
   // which reads nothing of `FEATURED`, so the two cannot race each other in the same worker.
+  // `mode: "serial"` only orders the two tests within *one* project's own run of this file —
+  // `mobile` and `desktop` each run it in a separate process, so the second test also takes
+  // `withFeaturedEventLock`, the advisory lock the two projects share.
   test.describe.configure({ mode: "serial" });
 
   test("shows the note only for EXTERNAL + PAID, both languages or neither, and the page reads it in each language", async ({ page }) => {
@@ -170,64 +181,75 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§NNN)", () 
     // Two full editor saves plus the `finally` block's own recovery (`ensureRegistrationIsOpen`
     // retries up to three times) — well past the 30-second default a lighter spec fits in.
     test.setTimeout(90_000);
-    await signIn(page, "Dev Administrator");
-    try {
-      await page.goto("/ro/admin");
-      await page.getByRole("link", { name: FEATURED.title }).first().click();
-      await expect(page).toHaveURL(/\/admin\/events\//);
-      await hydrated(page);
-
-      await openEditorBox(page, "Participare și înscrieri");
-      await page.getByRole("combobox", { name: "Cost" }).click();
-      await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
-      await page.locator('[name="event.costAmount"]').fill("75 lei");
-      await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
-      await page.getByRole("option", { name: "Înscrieri la organizator" }).click();
-      await page.locator('[name="event.externalProvider"]').fill("Alt Club Brașov");
-      await page.locator('[name="event.externalRegistrationUrl"]').fill(["https:/", "alt-club.example.test", "inscriere"].join("/"));
-      await page.locator('[name="translations.ro.discountNote"]').fill("40 lei pentru membri BR");
-      await languageTab(page, "discount-note", "en").click();
-      await page.locator('[name="translations.en.discountNote"]').fill("40 lei for BR members");
-
-      const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
-      if (await acknowledge.count()) await acknowledge.check();
-      await page.getByRole("button", { name: "Salvează", exact: true }).click();
-      await page.waitForURL(/[?&]saved=/);
-
-      // Unlike the event page's own cost row, the hero has no row of its own for the cost: it
-      // folds into "Traseu" (route) as one of the line's pieces (`EventFacts`'s `!stacked`
-      // branch, above the event's page code) — a "Cost" `dt` the way the stacked page has one
-      // would never be found here.
-      await page.goto("/ro/evenimente");
-      const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
-      await expect(hero).toBeVisible();
-      const route = hero.locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
-      await expect(route).toContainText("Cu taxă, la organizator: 75 lei");
-      await expect(route).toContainText("40 lei pentru membri BR");
-
-      await page.goto("/en/events");
-      const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
-      const routeEn = heroEn.locator("dt", { hasText: /^Route$/ }).locator("xpath=following-sibling::dd[1]");
-      await expect(routeEn).toContainText("Paid, to the organizer: 75 lei");
-      await expect(routeEn).toContainText("40 lei for BR members");
-    } finally {
-      // Back to the baseline every other spec finds `FEATURED` in — free, on-site registration —
-      // whether the assertions above passed or not. Cost alone, first, while the mode is still
-      // `EXTERNAL` (so this save needs no declaration — `assertCoherentRegistrationBlock` only
-      // asks for one under `INTERNAL`); `ensureRegistrationIsOpen` then moves the mode itself,
-      // which is the one helper that knows how to choose the approved declaration.
-      await page.goto("/ro/admin");
-      await page.getByRole("link", { name: FEATURED.title }).first().click();
-      await expect(page).toHaveURL(/\/admin\/events\//);
-      await hydrated(page);
-      await openEditorBox(page, "Participare și înscrieri");
-      await page.getByRole("combobox", { name: "Cost" }).click();
-      await page.getByRole("option", { name: "Gratuit", exact: true }).click();
-      const ack = page.locator('[name="acknowledgeLiveEdit"]');
-      if (await ack.count()) await ack.check();
-      await page.getByRole("button", { name: "Salvează", exact: true }).click();
-      await page.waitForURL(/[?&]saved=/);
-      await ensureRegistrationIsOpen(page);
-    }
+    // The whole case, lock included: `mobile` and `desktop` are separate processes, and
+    // `mode: "serial"` above only orders tests inside one of them (§NNN).
+    await withFeaturedEventLock(() => runFeaturedHeroCase(page));
   });
 });
+
+/**
+ * Split out so `withFeaturedEventLock` can wrap the whole case above, from the first mutation of
+ * `FEATURED` to the `finally` block's own recovery — otherwise the two projects could still
+ * interleave around the edges of the lock.
+ */
+async function runFeaturedHeroCase(page: Page): Promise<void> {
+  await signIn(page, "Dev Administrator");
+  try {
+    await page.goto("/ro/admin");
+    await page.getByRole("link", { name: FEATURED.title }).first().click();
+    await expect(page).toHaveURL(/\/admin\/events\//);
+    await hydrated(page);
+
+    await openEditorBox(page, "Participare și înscrieri");
+    await page.getByRole("combobox", { name: "Cost" }).click();
+    await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
+    await page.locator('[name="event.costAmount"]').fill("75 lei");
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri la organizator" }).click();
+    await page.locator('[name="event.externalProvider"]').fill("Alt Club Brașov");
+    await page.locator('[name="event.externalRegistrationUrl"]').fill(["https:/", "alt-club.example.test", "inscriere"].join("/"));
+    await page.locator('[name="translations.ro.discountNote"]').fill("40 lei pentru membri BR");
+    await languageTab(page, "discount-note", "en").click();
+    await page.locator('[name="translations.en.discountNote"]').fill("40 lei for BR members");
+
+    const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
+    if (await acknowledge.count()) await acknowledge.check();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/[?&]saved=/);
+
+    // Unlike the event page's own cost row, the hero has no row of its own for the cost: it
+    // folds into "Traseu" (route) as one of the line's pieces (`EventFacts`'s `!stacked`
+    // branch, above the event's page code) — a "Cost" `dt` the way the stacked page has one
+    // would never be found here.
+    await page.goto("/ro/evenimente");
+    const hero = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    await expect(hero).toBeVisible();
+    const route = hero.locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
+    await expect(route).toContainText("Cu taxă, la organizator: 75 lei");
+    await expect(route).toContainText("40 lei pentru membri BR");
+
+    await page.goto("/en/events");
+    const heroEn = page.locator('section[aria-labelledby="featured-event-title"]').first();
+    const routeEn = heroEn.locator("dt", { hasText: /^Route$/ }).locator("xpath=following-sibling::dd[1]");
+    await expect(routeEn).toContainText("Paid, to the organizer: 75 lei");
+    await expect(routeEn).toContainText("40 lei for BR members");
+  } finally {
+    // Back to the baseline every other spec finds `FEATURED` in — free, on-site registration —
+    // whether the assertions above passed or not. Cost alone, first, while the mode is still
+    // `EXTERNAL` (so this save needs no declaration — `assertCoherentRegistrationBlock` only
+    // asks for one under `INTERNAL`); `ensureRegistrationIsOpen` then moves the mode itself,
+    // which is the one helper that knows how to choose the approved declaration.
+    await page.goto("/ro/admin");
+    await page.getByRole("link", { name: FEATURED.title }).first().click();
+    await expect(page).toHaveURL(/\/admin\/events\//);
+    await hydrated(page);
+    await openEditorBox(page, "Participare și înscrieri");
+    await page.getByRole("combobox", { name: "Cost" }).click();
+    await page.getByRole("option", { name: "Gratuit", exact: true }).click();
+    const ack = page.locator('[name="acknowledgeLiveEdit"]');
+    if (await ack.count()) await ack.check();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/[?&]saved=/);
+    await ensureRegistrationIsOpen(page);
+  }
+}

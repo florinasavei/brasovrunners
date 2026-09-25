@@ -230,6 +230,31 @@ describe("the discount note, on a series and a duplicate (§NNN)", () => {
     expect(after.find((r) => r.locale === "en")?.discountNote).toBeNull();
   });
 
+  it("a settings-only series save with scope 'all' clears the note on every date in scope, not only the saved one", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await repeatEvent(db, { actor: admin, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-10-21", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id));
+    expect(dates.length).toBe(2); // plus the source: a three-date series
+
+    // An Organizer without text rights posts `event.*` alone, scope `all`: no
+    // `translations.*` box, so nothing but `clearDiscountNoteIfNotAllowed` on the saved date
+    // could clear the note; `translationsAfter` has to see that write for `applyToSeries` to
+    // carry it to the other two dates too (`DECISIONS.md` §NNN).
+    const row = await reloadEvent(source.id);
+    const form = settingsOnlyForm(source.id, row.version, { registrationMode: "NONE", externalProvider: "", externalRegistrationUrl: "" });
+    form.set("scope", "all");
+    await postSave(form);
+
+    const sourceRows = await translationsOf(source.id);
+    expect(sourceRows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+    expect(sourceRows.find((r) => r.locale === "en")?.discountNote).toBeNull();
+    for (const date of dates) {
+      const rows = await translationsOf(date.id);
+      expect(rows.find((r) => r.locale === "ro")?.discountNote).toBeNull();
+      expect(rows.find((r) => r.locale === "en")?.discountNote).toBeNull();
+    }
+  });
+
   it("a settings-only save that still allows the note leaves it exactly as posted before, whatever a stale form still carries", async () => {
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     const row = await reloadEvent(source.id);

@@ -644,9 +644,10 @@ async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   eventId: string,
   fields: { registrationMode: EditableEvent["registrationMode"]; costType: EditableEvent["costType"] },
-): Promise<void> {
-  if (costPaidToExternalOrganizer(fields)) return;
+): Promise<boolean> {
+  if (costPaidToExternalOrganizer(fields)) return false;
   await tx.update(eventTranslations).set({ discountNote: null }).where(eq(eventTranslations.eventId, eventId));
+  return true;
 }
 
 /** The rows as `writePlaceNames` left them, without reading them again. */
@@ -1804,6 +1805,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // editor's box did that on the screen already and the organizer saw what it holds.
     const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
     const names: PlaceNames = input.placeNamesAsTyped ? posted : namesAfterSave(current, existingTranslations, posted);
+    // Set true when `clearDiscountNoteIfNotAllowed` below actually nulled the note in the
+    // database — read by `translationsAfter` further down, since the in-memory rows loaded
+    // before this transaction do not see that write on their own.
+    let discountNoteCleared = false;
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -1838,7 +1843,12 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       // never runs `applyTranslationSave`, so nothing else in this path clears a note the new
       // mode no longer allows. A no-op when the mode still allows one, or when a submitted
       // translation is about to write its own value through `translationColumnsFrom` below.
-      await clearDiscountNoteIfNotAllowed(tx, input.eventId, parsedEventFields);
+      // The boolean is read below, past the transaction's write, because `existingTranslations`
+      // was loaded before this update ran and still carries the stale note in memory — without
+      // it, `translationsAfter` would compare that stale value against itself, see no change,
+      // and a series save (scope `following`/`all`) would leave every other date's note in
+      // place (`DECISIONS.md` §NNN).
+      discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, parsedEventFields);
     }
 
     for (const submitted of input.translations) {
@@ -1883,9 +1893,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       the place's names), and the others as loaded with the names written above — an Organizer's
       save writes no words, yet moves the place in both languages.
     */
-    const translationsAfter = withPlaceNames(existingTranslations, names).map(
-      (row) => savedTranslations.find((saved) => saved.id === row.id) ?? row,
-    );
+    const translationsAfter = withPlaceNames(existingTranslations, names).map((row) => {
+      const saved = savedTranslations.find((s) => s.id === row.id) ?? row;
+      return discountNoteCleared ? { ...saved, discountNote: null } : saved;
+    });
 
     // The other dates of the series, when asked (§130) — after this one, so what travels is
     // exactly what was written, and inside the transaction, so a refused date undoes it all.
