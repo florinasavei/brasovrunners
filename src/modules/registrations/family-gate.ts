@@ -14,8 +14,8 @@ import type { Database } from "@/db/types";
  * `findRegistrationByEventAndParticipant`). Until that release, a second row would be refused by
  * the database — so the flow must not offer a link it cannot honour.
  *
- * **Which release:** the batch after the one that carries `0072` reaches production — once no
- * deployed code reads "one row per address" any more. Its contract migration is one statement,
+ * **Which release:** `BR-V1.94` — the batch after the one that carries `0072` reaches production —
+ * once no deployed code reads "one row per address" any more. Its contract migration is one statement,
  * `ALTER TABLE registrations DROP CONSTRAINT registrations_event_participant_unique;`, and the day
  * it runs is the day the family flow opens on that environment, with no deploy of its own.
  *
