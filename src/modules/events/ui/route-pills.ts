@@ -18,13 +18,24 @@ import type { GlyphName } from "./glyphs";
 export type Pill = { glyph: GlyphName; label: string; tooltip?: string; srSuffix?: string };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
- * route, the cost, and the start, its zone and the night override (§NNN: whether this date is a
- * night event is its sunset's question) — the same columns on the public event row and the
- * backoffice's own (`EditableEvent`), so one function serves both without either module
- * importing the other's. */
+ * route, the cost, and the start, its end, its programme, its zone and the night override (§NNN:
+ * whether this date is a night event is its start-to-end span's question, against the sunset) —
+ * the same columns on the public event row and the backoffice's own (`EditableEvent`), so one
+ * function serves both without either module importing the other's. */
 export type RouteFactsSource = Pick<
   typeof events.$inferSelect,
-  "type" | "surface" | "difficulty" | "distanceMeters" | "elevationGainMeters" | "nightOverride" | "startsAt" | "timezone" | "costType" | "registrationMode"
+  | "type"
+  | "surface"
+  | "difficulty"
+  | "distanceMeters"
+  | "elevationGainMeters"
+  | "nightOverride"
+  | "startsAt"
+  | "endsAt"
+  | "scheduleItems"
+  | "timezone"
+  | "costType"
+  | "registrationMode"
 >;
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
@@ -95,16 +106,22 @@ export function routePillParts(
  * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
  * for a series, which draws its next date, says the next date's answer.
  */
-export function nightPill(event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "timezone">, t: Translate): Pill | null {
+export function nightPill(
+  event: Pick<RouteFactsSource, "type" | "nightOverride" | "startsAt" | "endsAt" | "scheduleItems" | "timezone">,
+  t: Translate,
+): Pill | null {
   const facts = clubNightEvent(event);
   if (!facts.night) return null;
   // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
   // «Eveniment de noapte» on every other type (§NNN).
   const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
+  // The end is only named when the start alone would not have been dark (§NNN): a run that
+  // starts in daylight and finishes after dusk.
+  const tooltipKey = facts.endSource ? "night.tooltipEnd" : "night.tooltip";
   return {
     glyph: "headlamp",
     label,
-    ...(facts.sunset ? { tooltip: t("night.tooltip", { time: facts.sunset }) } : {}),
+    ...(facts.sunset ? { tooltip: t(tooltipKey, { time: facts.sunset }) } : {}),
   };
 }
 

@@ -238,24 +238,25 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
     // The fixture starts at noon on 1 October, automatic: broad daylight, no line.
     const day = await render();
-    expect(day.text).not.toContain("Eveniment de noapte");
-    expect(day.text).not.toContain("Night event");
+    expect(day.text).not.toContain("Alergare de noapte");
+    expect(day.text).not.toContain("Night run");
 
-    // A Wednesday 19:00 in November, automatic: after dusk — the sunset of that day in both halves.
+    // A Wednesday 19:00 in November, automatic: after dusk — the sunset of that day in both
+    // halves. The fixture's type is GROUP_RUN (§NNN), so the run's own words: «Alergare de noapte».
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
     const night = await render();
-    expect(night.text).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
-    expect(night.text).toContain("Night event: sunset is at 16:44. Bring a headlamp.");
+    expect(night.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(night.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
 
     // «Nu» wins over the sun, and «Da» over the daylight.
     await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
-    expect((await render()).text).not.toContain("Eveniment de noapte");
+    expect((await render()).text).not.toContain("Alergare de noapte");
     await db.update(events).set({ nightOverride: true, startsAt: new Date("2026-10-01T09:00:00.000Z") }).where(eq(events.id, event.id));
-    expect((await render()).text).toMatch(/Eveniment de noapte: apusul e la \d\d:\d\d\. Ia o frontală\./);
+    expect((await render()).text).toMatch(/Alergare de noapte: apusul e la \d\d:\d\d\. Ia o frontală\./);
 
     // Never on another message about the same night event.
     const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
-    expect(confirmed.text).not.toContain("Eveniment de noapte");
+    expect(confirmed.text).not.toContain("Alergare de noapte");
   });
 
   it("points the reminder at the page's links with one line, only when the event has links (§332)", async () => {

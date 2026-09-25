@@ -42,6 +42,8 @@ const FULL_ROUTE = {
   elevationGainMeters: 300,
   // A Wednesday 19:00 in November: after dusk in Brașov, so the automatic answer is a night event (§NNN).
   startsAt: new Date("2026-11-18T17:00:00Z"),
+  endsAt: null,
+  scheduleItems: null,
   timezone: "Europe/Bucharest",
   nightOverride: null,
   costType: "FREE" as const,
@@ -88,6 +90,8 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
         distanceMeters: null,
         elevationGainMeters: null,
         startsAt: FULL_ROUTE.startsAt,
+        endsAt: null,
+        scheduleItems: null,
         timezone: "Europe/Bucharest",
         nightOverride: false,
         costType: null,

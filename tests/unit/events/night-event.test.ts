@@ -179,13 +179,23 @@ describe("§NNN the club's place — CLUB_COORDINATES", () => {
 
 describe("§NNN nightEvent — the override before the sun", () => {
   it("«Automat» (null) is the sun's answer, with the day's sunset", () => {
-    expect(nightEvent({ nightOverride: null, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({ night: true, source: "automatic", sunset: "16:44" });
+    expect(nightEvent({ nightOverride: null, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({
+      night: true,
+      source: "automatic",
+      sunset: "16:44",
+      endSource: null,
+    });
     expect(nightEvent({ nightOverride: null, timezone: ZONE }, JUNE_19, BRASOV)).toMatchObject({ night: false, source: "automatic" });
   });
 
   it("«Da» is a night event in June and «Nu» is none in November, the sunset still said", () => {
     expect(nightEvent({ nightOverride: true, timezone: ZONE }, JUNE_19, BRASOV)).toMatchObject({ night: true, source: "override" });
-    expect(nightEvent({ nightOverride: false, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({ night: false, source: "override", sunset: "16:44" });
+    expect(nightEvent({ nightOverride: false, timezone: ZONE }, NOVEMBER_19, BRASOV)).toEqual({
+      night: false,
+      source: "override",
+      sunset: "16:44",
+      endSource: null,
+    });
   });
 
   it("the editor's three choices and the column, both ways", () => {
@@ -277,66 +287,72 @@ describe("§NNN orderRoutePills — the night event where §382 put the headlamp
 });
 
 describe("§NNN the event page's facts", () => {
-  it("puts «Eveniment de noapte» last in the route's pills, with the headlamp and the sunset in its tooltip", async () => {
+  // `event()` defaults to `type: "GROUP_RUN"` (§NNN), so its pill is «Alergare de noapte».
+  it("puts «Alergare de noapte» last in the route's pills, with the headlamp and the sunset in its tooltip", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
-    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Eveniment de noapte"]);
+    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Apusul la 16:44 — ia o frontală"]);
     expect(route!.dd).toContain('data-testid="FlashlightOnIcon"');
     expect(pillLabels(rows(html).find((row) => row.label === "Cost")!.dd)).toEqual(["Gratuit"]);
   });
 
-  it("says «Night event» and «Sunset at 16:44 — bring a headlamp» in English", async () => {
+  it("says «Night run» and «Sunset at 16:44 — bring a headlamp» in English", async () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
-    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night event"]);
+    expect(pillLabels(route.dd)).toEqual(["Trail", "Moderate", "8 km", "250 m climb", "Night run"]);
     expect(tooltips(route.dd)).toEqual(["Sunset at 16:44 — bring a headlamp"]);
+  });
+
+  it("says «Eveniment de noapte» on every other type", async () => {
+    const html = renderToStaticMarkup(await EventFacts({ event: event({ type: "RACE" }), now: NOW, stacked: true }));
+    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toContain("Eveniment de noapte");
   });
 
   it("makes a route row on its own when it is the only fact of the route — it is not the overline again", async () => {
     const html = renderToStaticMarkup(
       await EventFacts({ event: event({ distanceMeters: null, elevationGainMeters: null, difficulty: null }), now: NOW, stacked: true }),
     );
-    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Eveniment de noapte"]);
+    expect(pillLabels(rows(html).find((row) => row.label === "Traseu")!.dd)).toEqual(["Trail", "Alergare de noapte"]);
   });
 
   it("shows nothing on the June date, and shows it on the June date the organizer said «Da» for", async () => {
     const june = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, stacked: true }));
-    expect(june).not.toContain("Eveniment de noapte");
+    expect(june).not.toContain("Alergare de noapte");
     expect(june).not.toContain("FlashlightOnIcon");
     const yes = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19, nightOverride: true }), now: NOW, stacked: true }));
-    expect(pillLabels(yes)).toContain("Eveniment de noapte");
+    expect(pillLabels(yes)).toContain("Alergare de noapte");
     expect(tooltips(yes)[0]).toMatch(/^Apusul la 21:\d\d — ia o frontală$/);
     const no = renderToStaticMarkup(await EventFacts({ event: event({ nightOverride: false }), now: NOW, stacked: true }));
-    expect(no).not.toContain("Eveniment de noapte");
+    expect(no).not.toContain("Alergare de noapte");
   });
 });
 
 describe("§NNN the listing card and the hero", () => {
-  it("the card's pills: the route, the night event, then the cost", async () => {
+  it("the card's pills: the route, the night run, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
-    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Eveniment de noapte", "Gratuit"]);
+    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Alergare de noapte", "Gratuit"]);
     expect(html).toContain('data-testid="FlashlightOnIcon"');
   });
 
   it("the card in English, and nothing on a day date", async () => {
     currentLocale = "en";
-    expect(pillLabels(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" })))).toContain("Night event");
+    expect(pillLabels(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" })))).toContain("Night run");
     const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW, variant: "compact" }));
-    expect(day).not.toContain("Night event");
+    expect(day).not.toContain("Night run");
     expect(day).not.toContain("FlashlightOnIcon");
   });
 
   it("the hero's route line says it after the climb and before the cost, with its glyph", async () => {
     const html = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW })));
     const route = text(rows(html).find((row) => row.label === "Traseu")!.dd);
-    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Eveniment de noapte"));
-    expect(route.indexOf("Eveniment de noapte")).toBeLessThan(route.indexOf("Gratuit"));
+    expect(route.indexOf("250 m diferență de nivel")).toBeLessThan(route.indexOf("Alergare de noapte"));
+    expect(route.indexOf("Alergare de noapte")).toBeLessThan(route.indexOf("Gratuit"));
     expect(html).toContain('data-testid="FlashlightOnIcon"');
     const day = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: JUNE_19 }), now: NOW }));
-    expect(day).not.toContain("Eveniment de noapte");
+    expect(day).not.toContain("Alergare de noapte");
   });
 });
 
@@ -454,21 +470,29 @@ describe("§NNN the reminder's line", () => {
     const confirmed = buildTemplateContent("REGISTRATION_CONFIRMED", "ro", { ...base, nightEventSunset: "16:44" }, undefined).paragraphs.join("\n");
     expect(confirmed).not.toContain("Eveniment de noapte");
   });
+
+  it("«Alergare de noapte» on a group run — the owner calls a run a run (§NNN)", () => {
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
+    expect(paragraphs("en", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: true })).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+    // Every other type keeps "Eveniment de noapte" / "Night event" (already proven above).
+    expect(paragraphs("ro", { ...base, nightEventSunset: "16:44", nightEventIsGroupRun: false })).toContain("Eveniment de noapte: apusul e la 16:44. Ia o frontală.");
+  });
 });
 
 describe("§NNN the editor: the closed card's word and the automatic line", () => {
   const roWords = ro.Admin.editor.boxes.summary as SummaryWords;
   const enWords = en.Admin.editor.boxes.summary as SummaryWords;
 
-  it("«de noapte (automat)», «de noapte», «de zi» — and nothing for an automatic day", () => {
+  it("«de noapte (automat)», «de noapte», «de zi» — and «de zi (automat)» for an automatic day (§NNN)", () => {
     expect(nightSummary(roWords, null, true)).toBe("de noapte (automat)");
     expect(nightSummary(roWords, true, false)).toBe("de noapte");
     expect(nightSummary(roWords, false, true)).toBe("de zi");
-    expect(nightSummary(roWords, null, false)).toBeNull();
-    expect([nightSummary(enWords, null, true), nightSummary(enWords, true, false), nightSummary(enWords, false, true)]).toEqual([
+    expect(nightSummary(roWords, null, false)).toBe("de zi (automat)");
+    expect([nightSummary(enWords, null, true), nightSummary(enWords, true, false), nightSummary(enWords, false, true), nightSummary(enWords, null, false)]).toEqual([
       "night (automatic)",
       "night",
       "day",
+      "day (automatic)",
     ]);
   });
 
@@ -476,7 +500,8 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
     const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: null, nightOverride: null };
     expect(courseSummary(roWords, course, { surface: "Trail", difficulty: "Mediu", night: true })).toBe("Trail · Mediu · 8 km · +250 m · de noapte (automat)");
     expect(courseSummary(roWords, { ...course, nightOverride: false }, { surface: null, difficulty: null, night: true })).toBe("8 km · +250 m · de zi");
-    expect(courseSummary(roWords, course, { surface: null, difficulty: null, night: false })).toBe("8 km · +250 m");
+    // §NNN nit: the closed card names an automatic daytime date too, not just an automatic night one.
+    expect(courseSummary(roWords, course, { surface: null, difficulty: null, night: false })).toBe("8 km · +250 m · de zi (automat)");
   });
 
   const lineWords = (catalogue: typeof ro | typeof en, locale: string) => ({
@@ -490,27 +515,98 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
 
   it("the automatic line for the date and time in the form, in both languages — the same sun as the pill", () => {
     const november = { date: "2026-11-18", time: "19:00", timeZone: ZONE };
-    expect(nightAutoLine(lineWords(ro, "ro"), november, BRASOV)).toBe("Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — eveniment de noapte");
-    expect(nightAutoLine(lineWords(en, "en"), november, BRASOV)).toBe("Automatic: on Wed, 18 Nov 2026, sunset is at 16:44 — a night event");
-    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2027-06-16", time: "19:00", timeZone: ZONE }, BRASOV)).toMatch(
+    expect(nightAutoLine(lineWords(ro, "ro"), november, BRASOV).line).toBe("Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — eveniment de noapte");
+    expect(nightAutoLine(lineWords(en, "en"), november, BRASOV).line).toBe("Automatic: on Wed, 18 Nov 2026, sunset is at 16:44 — a night event");
+    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2027-06-16", time: "19:00", timeZone: ZONE }, BRASOV).line).toMatch(
       /^Automat: pe mie\., 16 iun\. 2027, apusul e la 21:\d\d — nu e eveniment de noapte$/,
     );
   });
 
   it("asks for the time when there is only a date, and for the date when there is none", () => {
-    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2026-11-18", time: "", timeZone: ZONE }, BRASOV)).toBe(
+    expect(nightAutoLine(lineWords(ro, "ro"), { date: "2026-11-18", time: "", timeZone: ZONE }, BRASOV).line).toBe(
       "Automat: pe mie., 18 nov. 2026, apusul e la 16:44 — alege ora startului",
     );
-    expect(nightAutoLine(lineWords(en, "en"), { date: "", time: "19:00", timeZone: ZONE }, BRASOV)).toBe(en.Admin.editor.night.autoLineNoDate);
+    expect(nightAutoLine(lineWords(en, "en"), { date: "", time: "19:00", timeZone: ZONE }, BRASOV).line).toBe(en.Admin.editor.night.autoLineNoDate);
+  });
+
+  // §NNN — the owner, 2026-09-25: the start AND the end decide; a run that starts in daylight
+  // and finishes after dusk is a night run. Three cases: dark at the start, dark only at the end
+  // (the end alone decides), and light throughout.
+  describe("the span, not the start alone, decides (§NNN)", () => {
+    // 21:00 in Brașov in June is well after civil dusk: dark at the start already.
+    it("dark at the start: night whatever the duration says", () => {
+      const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "23:00", timeZone: ZONE }, BRASOV, 30);
+      expect(verdict.line).toContain("eveniment de noapte");
+      expect(verdict.hasEnd).toBe(false);
+    });
+
+    // 19:00 in June is daylight, but civil dusk is well before 22:00: two hours later is dark.
+    it("light at the start, dark by the end: the duration alone makes it a night run", () => {
+      const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "19:00", timeZone: ZONE }, BRASOV, 180);
+      expect(verdict.line).toContain("eveniment de noapte");
+      expect(verdict.hasEnd).toBe(true);
+    });
+
+    it("light throughout: not a night run, and the end is never named", () => {
+      const verdict = nightAutoLine(lineWords(ro, "ro"), { date: "2026-06-17", time: "10:00", timeZone: ZONE }, BRASOV, 60);
+      expect(verdict.line).toContain("nu e eveniment de noapte");
+      expect(verdict.hasEnd).toBe(false);
+    });
+  });
+
+  it("nightEvent: the same three cases, from the domain function with a schema end", () => {
+    // Dark at the start already (23:00 in June): the end plays no part.
+    const darkStart = nightEvent({ nightOverride: null, timezone: ZONE, endsAt: new Date("2026-06-17T20:30:00Z") }, new Date("2026-06-17T20:00:00Z"), BRASOV);
+    expect(darkStart.night).toBe(true);
+    expect(darkStart.endSource).toBeNull();
+
+    // Light at 19:00, but the schema's own end (22:00) is after dusk.
+    const darkEnd = nightEvent({ nightOverride: null, timezone: ZONE, endsAt: new Date("2026-06-17T19:00:00Z") }, new Date("2026-06-17T16:00:00Z"), BRASOV);
+    expect(darkEnd.night).toBe(true);
+    expect(darkEnd.endSource).toBe("event");
+
+    // Light throughout, no end stated beyond the start.
+    const lightThroughout = nightEvent({ nightOverride: null, timezone: ZONE }, new Date("2026-06-17T07:00:00Z"), BRASOV);
+    expect(lightThroughout.night).toBe(false);
+    expect(lightThroughout.endSource).toBeNull();
+  });
+
+  it("nightEvent: without a schema end, falls back to the latest timed programme row of the occurrence's own date", () => {
+    const facts = nightEvent(
+      {
+        nightOverride: null,
+        timezone: ZONE,
+        scheduleItems: [
+          { startsAt: "2026-06-17T16:00:00.000Z", endsAt: "2026-06-17T19:00:00.000Z", label: { ro: "Start", en: "Start" }, place: null },
+        ],
+      },
+      new Date("2026-06-17T16:00:00Z"),
+      BRASOV,
+    );
+    expect(facts.night).toBe(true);
+    expect(facts.endSource).toBe("programme");
   });
 
   it("carries every word in both catalogues", () => {
     for (const catalogue of [ro, en]) {
       const night = catalogue.Admin.editor.night;
-      for (const key of ["label", "auto", "yes", "no", "autoLine", "autoLineNoTime", "autoLineNoDate", "verdictNight", "verdictDay", "series", "help"] as const) {
+      for (const key of [
+        "label",
+        "auto",
+        "yes",
+        "no",
+        "autoLine",
+        "autoLineNoTime",
+        "autoLineNoDate",
+        "verdictNight",
+        "verdictDay",
+        "endLine",
+        "series",
+        "help",
+      ] as const) {
         expect(night[key].length, key).toBeGreaterThan(0);
       }
-      for (const key of ["pill", "tooltip", "calendar", "ics"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
+      for (const key of ["pill", "runPill", "tooltip", "tooltipEnd", "calendar", "ics"] as const) expect(catalogue.Event.night[key].length, key).toBeGreaterThan(0);
     }
     expect(ro.Admin.editor.night.auto).toBe("Automat (după apus)");
     expect(ro.Event.night.pill).toBe("Eveniment de noapte");
@@ -523,9 +619,10 @@ describe("§NNN the editor: the closed card's word and the automatic line", () =
 });
 
 describe("§NNN the migration", () => {
-  it("is 0075_night_override in the journal (the backfill is proven in tests/integration/db)", () => {
+  it("is 0076_night_override in the journal, landing on top of the external discount note's 0075 (the backfill is proven in tests/integration/db)", () => {
     const journal = JSON.parse(readFileSync("src/db/migrations/meta/_journal.json", "utf8")) as { entries: Array<{ idx: number; tag: string }> };
-    expect(journal.entries.find((entry) => entry.tag === "0075_night_override")?.idx).toBe(75);
+    expect(journal.entries.find((entry) => entry.tag === "0076_night_override")?.idx).toBe(76);
+    expect(journal.entries.find((entry) => entry.tag === "0075_discount_note")?.idx).toBe(75);
     // §382's own migration stays as it shipped: history is not rewritten.
     expect(readFileSync("src/db/migrations/0070_headlamp_required.sql", "utf8").trim()).toBe(
       'ALTER TABLE "events" ADD COLUMN "headlamp_required" boolean DEFAULT false NOT NULL;',

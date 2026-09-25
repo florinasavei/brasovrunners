@@ -278,19 +278,20 @@ describe("BR-REQ-050-02 the «Traseul» card says it on its closed line and warn
   const long = doc("Oprire cu apă la km 4, apoi urcarea pe serpentine până la creastă.");
 
   it("«cu descriere» / «with a description» when written in both languages", () => {
+    // §NNN: `labels.night` is not `true` here (automatic, unstated), so «de zi (automat)» names it.
     expect(courseSummary(summaryWords("ro"), course, labels, [language("ro", DESCRIPTION_RO), language("en", DESCRIPTION_EN)])).toBe(
-      "Trail · Mediu · 8 km · +250 m · traseu · cu descriere",
+      "Trail · Mediu · 8 km · +250 m · de zi (automat) · traseu · cu descriere",
     );
     expect(courseSummary(summaryWords("en"), course, { surface: "Trail", difficulty: "Moderate" }, [language("ro", DESCRIPTION_RO), language("en", DESCRIPTION_EN)])).toBe(
-      "Trail · Moderate · 8 km · +250 m · route · with a description",
+      "Trail · Moderate · 8 km · +250 m · day (automatic) · route · with a description",
     );
   });
 
   it("names a description in one language only — the text the next save refuses — and says nothing when there is none", () => {
     expect(courseSummary(summaryWords("ro"), course, labels, [language("ro", DESCRIPTION_RO), language("en", null)])).toContain("descriere într-o singură limbă");
-    expect(courseSummary(summaryWords("ro"), course, labels, [language("ro", null), language("en", null)])).toBe("Trail · Mediu · 8 km · +250 m · traseu");
+    expect(courseSummary(summaryWords("ro"), course, labels, [language("ro", null), language("en", null)])).toBe("Trail · Mediu · 8 km · +250 m · de zi (automat) · traseu");
     // A caller from before the description passes no languages, and reads as before.
-    expect(courseSummary(summaryWords("ro"), course, labels)).toBe("Trail · Mediu · 8 km · +250 m · traseu");
+    expect(courseSummary(summaryWords("ro"), course, labels)).toBe("Trail · Mediu · 8 km · +250 m · de zi (automat) · traseu");
   });
 
   it("marks the English tab «identic» when it copies the Romanian, and lists it in Publicare (§354)", () => {

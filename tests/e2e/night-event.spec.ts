@@ -126,7 +126,8 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
 
   test("the event page carries the pill in both languages, with the torch and the sunset", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
-    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Eveniment de noapte" });
+    // «Alergare de noapte», not «Eveniment de noapte»: a group run is a run (§NNN).
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
@@ -135,18 +136,18 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     expect(overflow).toBeLessThanOrEqual(0);
 
     await page.goto(`/en/events/${englishSlug}`);
-    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night event" });
+    const englishPill = routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" });
     await expect(englishPill).toHaveCount(1);
     await expect(englishPill.locator(TORCH)).toHaveCount(1);
-    await expect(page.locator("#main")).not.toContainText("Eveniment de noapte");
+    await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
   });
 
   test("the listing card and the calendar entry carry it", async ({ page }) => {
     const roCard = await card(page, "/ro/evenimente", title);
-    await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Eveniment de noapte" })).toHaveCount(1);
+    await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" })).toHaveCount(1);
     await expect(roCard.locator(TORCH)).toHaveCount(1);
     const enCard = await card(page, "/en/events", englishTitle);
-    await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Night event" })).toHaveCount(1);
+    await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
 
     await page.goto(`/ro/calendar?month=${MONTH}`);
     await expect(page.locator(`#main [role=table] a[aria-label*="${title}"]`)).toHaveAttribute(
@@ -167,11 +168,11 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
 
     await page.goto(`/ro/evenimente/${slug}`);
     await expect(page.locator("#main h1")).toContainText(title);
-    await expect(page.locator("#main")).not.toContainText("Eveniment de noapte");
+    await expect(page.locator("#main")).not.toContainText("Alergare de noapte");
     await expect(page.locator(`#main ${TORCH}`)).toHaveCount(0);
     await page.goto(`/en/events/${englishSlug}`);
     await expect(page.locator("#main h1")).toContainText(englishTitle);
-    await expect(page.locator("#main")).not.toContainText("Night event");
+    await expect(page.locator("#main")).not.toContainText("Night run");
   });
 
   test("«Da» in June shows it anyway, and the closed card says «de noapte»", async ({ page }) => {
@@ -183,9 +184,31 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(page.locator("#box-course > summary")).not.toContainText("de noapte (automat)");
 
     await page.goto(`/ro/evenimente/${slug}`);
-    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Eveniment de noapte" });
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
     await expect(pill).toHaveCount(1);
     await page.goto(`/en/events/${englishSlug}`);
-    await expect(routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night event" })).toHaveCount(1);
+    await expect(routeRow(page, "Route").locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
+  });
+
+  test("a start in daylight that finishes after dusk is a night run too (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await openEditorBox(page, "Data și ora");
+    // Back to November, light at 16:00 (civil dusk that day is 17:17), but 90 minutes of duration
+    // crosses it — a start in daylight that finishes after dusk (§NNN).
+    await fillDateField(page, "Începutul evenimentului", NOVEMBER);
+    await fillTimeField(page, "Ora", "16:00");
+    await page.locator('[name="event.durationMinutes"]').fill("90");
+    await openEditorBox(page, "Traseul");
+    await expect(autoLine(page)).toHaveText(/— eveniment de noapte$/);
+    await expect(page.getByTestId("night-end-line")).toBeVisible();
+    await saveWithChoice(page, "Automat (după apus)", true);
+
+    await page.goto(`/ro/evenimente/${slug}`);
+    const pill = routeRow(page, "Traseu").locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" });
+    await expect(pill).toHaveCount(1);
+    await pill.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(/se termină după apus/);
   });
 });

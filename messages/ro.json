@@ -144,6 +144,7 @@
       "pill": "Eveniment de noapte",
       "runPill": "Alergare de noapte",
       "tooltip": "Apusul la {time} — ia o frontală",
+      "tooltipEnd": "Apusul la {time} — se termină după apus, ia o frontală",
       "calendar": "Eveniment de noapte — apusul la {time}",
       "ics": "Eveniment de noapte — apusul la {time}, ia o frontală"
     },
@@ -981,8 +982,9 @@
         "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",
         "verdictDay": "nu e eveniment de noapte",
+        "endLine": "Startul e înainte de amurg, dar alergarea se termină după — tot eveniment de noapte.",
         "series": "Într-o serie, fiecare dată urmează apusul zilei ei: datele de iarnă sunt de noapte, cele de vară nu.",
-        "help": "Automat: e de noapte când startul e după amurg (soarele la 6° sub orizont) sau înainte de zori. Se arată pe card, pe pagina evenimentului, în calendar și în emailul de reamintire."
+        "help": "Automat: e de noapte când startul sau sfârșitul e după amurg (soarele la 6° sub orizont) sau înainte de zori. Se arată pe card, pe pagina evenimentului, în calendar și în emailul de reamintire."
       },
       "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
@@ -1502,6 +1504,7 @@
             "night": "de noapte",
             "nightAuto": "de noapte (automat)",
             "day": "de zi",
+            "dayAuto": "de zi (automat)",
             "described": "cu descriere",
             "describedOneLanguage": "descriere într-o singură limbă"
           },

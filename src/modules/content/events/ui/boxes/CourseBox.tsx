@@ -151,6 +151,7 @@ export default async function CourseBox({
               autoLineNoDate: t("editor.night.autoLineNoDate"),
               verdictNight: t("editor.night.verdictNight"),
               verdictDay: t("editor.night.verdictDay"),
+              endLine: t("editor.night.endLine"),
               series: t("editor.night.series"),
               day: calendarDayWords(locale),
             }}

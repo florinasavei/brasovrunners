@@ -70,7 +70,17 @@ export type SummaryWords = {
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
-  course: { route: string; km: string; elevation: string; night: string; nightAuto: string; day: string; described: string; describedOneLanguage: string };
+  course: {
+    route: string;
+    km: string;
+    elevation: string;
+    night: string;
+    nightAuto: string;
+    day: string;
+    dayAuto: string;
+    described: string;
+    describedOneLanguage: string;
+  };
   links: { strava: string; facebook: string; files: CountWords; none: string; labelOneLanguage: string };
   coHosts: { with: string; described: string; describedOneLanguage: string; none: string };
   promotion: { featured: string; special: string; none: string };
@@ -419,13 +429,14 @@ type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" 
 
 /**
  * The night event's word on the closed "Traseul" card (§NNN): `de noapte` for the organizer's "Da",
- * `de zi` for "Nu", `de noapte (automat)` when automatic and the event's own date starts after
- * dusk — and nothing when automatic and it does not, like any fact nobody stated.
+ * `de zi` for "Nu", `de noapte (automat)` when automatic and the event's own date is one, and
+ * `de zi (automat)` when automatic and it is not — a stated answer, unlike the true "nothing"
+ * this card gives a fact nobody typed, since "Automat" is always a choice, never a blank.
  */
 export function nightSummary(words: SummaryWords, nightOverride: boolean | null | undefined, computedNight: boolean): string | null {
   if (nightOverride === true) return words.course.night;
   if (nightOverride === false) return words.course.day;
-  return computedNight ? words.course.nightAuto : null;
+  return computedNight ? words.course.nightAuto : words.course.dayAuto;
 }
 
 /** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */

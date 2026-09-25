@@ -144,6 +144,7 @@
       "pill": "Night event",
       "runPill": "Night run",
       "tooltip": "Sunset at {time} — bring a headlamp",
+      "tooltipEnd": "Sunset at {time} — finishes after dark, bring a headlamp",
       "calendar": "Night event — sunset at {time}",
       "ics": "Night event — sunset at {time}, bring a headlamp"
     },
@@ -981,8 +982,9 @@
         "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
         "verdictNight": "a night event",
         "verdictDay": "not a night event",
+        "endLine": "The start is before dusk, but the run finishes after it — still a night event.",
         "series": "In a series, each date follows its own day's sunset: the winter dates are night events, the summer ones are not.",
-        "help": "Automatic: it is a night event when the start is after dusk (the sun 6° below the horizon) or before dawn. Shown on the event's card, page and calendar, and in the reminder email."
+        "help": "Automatic: it is a night event when the start or the end is after dusk (the sun 6° below the horizon) or before dawn. Shown on the event's card, page and calendar, and in the reminder email."
       },
       "registrationSection": "Registration",
       "registrationMode": "Registration mode",
@@ -1502,6 +1504,7 @@
             "night": "night",
             "nightAuto": "night (automatic)",
             "day": "day",
+            "dayAuto": "day (automatic)",
             "described": "with a description",
             "describedOneLanguage": "description in one language only"
           },

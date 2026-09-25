@@ -26,6 +26,8 @@ export type NightEventWords = {
   autoLineNoDate: string;
   verdictNight: string;
   verdictDay: string;
+  /** "Alergarea se termină după apus." — shown only when the start alone was not dark (§NNN). */
+  endLine: string;
   /** "Într-o serie, fiecare dată urmează apusul zilei ei …" */
   series: string;
   /** The day's words, written on the server (§324): the island formats no date itself. */
@@ -34,22 +36,29 @@ export type NightEventWords = {
 
 /**
  * The automatic answer's line, from the boxes as they stand: the event's day in words, its sunset
- * and the verdict (§NNN). Pure — the island reads the form and hands the strings here — and the
- * same `sun.ts` the server's pill asks, so the line cannot promise what the page will not show.
+ * and the verdict (§NNN) — decided by the **whole span**, not the start alone: a run that starts
+ * in daylight and finishes after dusk (the "Cât durează" box's minutes, added to the start) is a
+ * night run, and `endLine` (returned separately, `hasEnd`) says so. Pure — the island reads the
+ * form and hands the strings here — and the same `sun.ts` the server's pill asks, so the line
+ * cannot promise what the page will not show.
  */
 export function nightAutoLine(
   words: Pick<NightEventWords, "autoLine" | "autoLineNoTime" | "autoLineNoDate" | "verdictNight" | "verdictDay" | "day">,
   start: { date: string; time: string; timeZone: string },
   place: Coordinates,
-): string {
+  durationMinutes?: number | null,
+): { line: string; hasEnd: boolean } {
   const day = composeCalendarDay(start.date, words.day);
   const sun = day ? sunTimes(start.date, place) : null;
-  if (!day || !sun) return words.autoLineNoDate;
+  if (!day || !sun) return { line: words.autoLineNoDate, hasEnd: false };
   const time = sun.sunset ? wallClockTime(sun.sunset, start.timeZone) : "—";
-  if (!/^\d{2}:\d{2}$/.test(start.time)) return fillIn(words.autoLineNoTime, { day, time });
+  if (!/^\d{2}:\d{2}$/.test(start.time)) return { line: fillIn(words.autoLineNoTime, { day, time }), hasEnd: false };
   const startsAt = fromWallTimeInput(`${start.date}T${start.time}`, start.timeZone);
-  const verdict = isNightEvent(startsAt, place, start.timeZone) ? words.verdictNight : words.verdictDay;
-  return fillIn(words.autoLine, { day, time, verdict });
+  const nightAtStart = isNightEvent(startsAt, place, start.timeZone);
+  const endsAt = startsAt && durationMinutes && durationMinutes > 0 ? new Date(startsAt.getTime() + durationMinutes * 60_000) : null;
+  const nightAtEnd = endsAt ? isNightEvent(endsAt, place, start.timeZone) : false;
+  const verdict = nightAtStart || nightAtEnd ? words.verdictNight : words.verdictDay;
+  return { line: fillIn(words.autoLine, { day, time, verdict }), hasEnd: !nightAtStart && nightAtEnd };
 }
 
 /**
@@ -86,7 +95,7 @@ export default function NightEventField({
 }) {
   const recall = useRecall();
   const root = useRef<HTMLDivElement>(null);
-  const [live, setLive] = useState({ date: start.date, time: start.time, timeZone: zone, series: inSeries });
+  const [live, setLive] = useState({ date: start.date, time: start.time, timeZone: zone, series: inSeries, durationMinutes: null as number | null });
 
   useEffect(() => {
     const form = root.current?.closest("form");
@@ -94,15 +103,25 @@ export default function NightEventField({
     const read = () => {
       const data = new FormData(form);
       const text = (field: string) => String(data.get(field) ?? "");
+      const duration = Number(text("event.durationMinutes"));
       const next = {
         date: text("event.startsAtDate") || (form.querySelector('[name="event.startsAtDate"]') ? "" : start.date),
         time: text("event.startsAtTime") || (form.querySelector('[name="event.startsAtTime"]') ? "" : start.time),
         timeZone: text("event.timezone") || zone,
         series: inSeries || (seriesToggleName ? data.get(seriesToggleName) === "on" : false),
+        // "Cât durează" (§71), added to the start (§NNN): a run that finishes after dusk is a
+        // night run even from a daylight start. No box, or not a number, means no end to name.
+        durationMinutes: Number.isFinite(duration) && duration > 0 ? duration : null,
       };
       // The same answer keeps the same object, so a keystroke elsewhere in the form renders nothing here.
       setLive((current) =>
-        current.date === next.date && current.time === next.time && current.timeZone === next.timeZone && current.series === next.series ? current : next,
+        current.date === next.date &&
+        current.time === next.time &&
+        current.timeZone === next.timeZone &&
+        current.series === next.series &&
+        current.durationMinutes === next.durationMinutes
+          ? current
+          : next,
       );
     };
     // After the frame the keystroke leads to, once for a burst (§371), like the Recurență sentence.
@@ -119,6 +138,7 @@ export default function NightEventField({
 
   const posted = recall.value(name);
   const initial = recall.has && posted && (NIGHT_CHOICES as readonly string[]).includes(posted) ? (posted as NightChoice) : defaultChoice;
+  const auto = nightAutoLine(words, live, place, live.durationMinutes);
 
   return (
     <Stack ref={root} spacing={0.5} data-testid="night-event-field">
@@ -131,8 +151,13 @@ export default function NightEventField({
         ))}
       </RadioGroup>
       <Typography variant="body2" color="text.secondary" data-testid="night-auto-line" role="status">
-        {nightAutoLine(words, live, place)}
+        {auto.line}
       </Typography>
+      {auto.hasEnd && (
+        <Typography variant="body2" color="text.secondary" data-testid="night-end-line">
+          {words.endLine}
+        </Typography>
+      )}
       {live.series && (
         <Typography variant="body2" color="text.secondary" data-testid="night-series-line">
           {words.series}
