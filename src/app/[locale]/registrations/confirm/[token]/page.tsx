@@ -11,6 +11,7 @@ import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -44,7 +45,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   // waiting list at all, said without mentioning one.
   if (full) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("confirm.title")}
         </Typography>
@@ -59,7 +60,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   // nothing sent, and the page says why rather than "confirmed, now sign".
   if (eventOff) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("confirm.title")}
         </Typography>
@@ -70,7 +71,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {/* Every page in this journey opens with an h1, this one included. A page whose only
             content is an alert leaves a screen-reader heading list with a gap where the
             outcome should be, and "what happened" is the one thing somebody arriving here
@@ -108,7 +109,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   const journeyStep = spent ? spent.step : ("confirm" as const);
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("confirm.title")}
       </Typography>

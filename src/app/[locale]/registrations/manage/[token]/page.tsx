@@ -23,6 +23,7 @@ import {
   setListConsentFromManageAction,
   withdrawFromManageAction,
 } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -54,7 +55,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {/* An outcome page still opens with a heading: a document whose only content is an
             alert gives a screen reader nothing to navigate to. */}
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -87,7 +88,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const confirmed = live !== null && live.registration.status === "CONFIRMED" ? live : null;
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("manage.title")}
       </Typography>

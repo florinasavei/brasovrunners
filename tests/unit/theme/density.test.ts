@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 import { DENSITY } from "@/theme/density";
 
@@ -7,168 +7,213 @@ import { DENSITY } from "@/theme/density";
  * `DECISIONS.md` §NNN — one phone density scale, used everywhere the public pages set a
  * spacing value below `sm`, rather than a number chosen fresh in each component.
  *
- * A grep-style walk, in the spirit of `tests/unit/theme/surfaces.test.ts`'s own function scan:
- * it reads every `.tsx`/`.ts` source file under the public listing, event-page, calendar and
- * standing-page directories, finds every spacing prop (`py`, `px`, `pt`, `pb`, `pl`, `pr`,
- * `mt`, `mb`, `ml`, `mr`, `my`, `mx`, `gap`, `rowGap`, `columnGap`) written as `{ xs: <value>,
- * … }`, and refuses one whose `xs` side is a bare number rather than a `DENSITY.<name>`
- * identifier — unless the line is on the short, named allowlist below, each entry with the
- * reason it stays a literal. Matching the identifier rather than the number is deliberate
- * (§NNN, review round 2): a match on "does this number equal some `DENSITY` value" lets a
- * revert to the pre-change literal (`xs: 2`, `xs: 1.5`, `xs: 2.5`, …) stay green, because those
- * are exactly the old values the scale replaced. A bare `xs: 0` still passes — zero is not a
- * mobile-only excess in either form.
+ * Three checks, each a walk over the source in the spirit of `tests/unit/theme/surfaces.test.ts`:
+ *
+ * 1. **No stray literal.** Every spacing prop (`p`, `m` and their sides, the three gaps,
+ *    `spacing`) written as `{ xs: <number>, … }` is refused unless its line is on the short,
+ *    named allowlist below, each entry with the reason it stays a literal. The xs side must be
+ *    the identifier `DENSITY.<name>`; matching the identifier rather than "a number equal to
+ *    some step" is what makes a revert to the old literal (`xs: 2`, `xs: 1.5`, …) fail.
+ * 2. **Every conversion on the record.** Every `{ xs: DENSITY.<name>, sm: <n> }` in the source
+ *    is a row of `CONVERTED_SITES` — file, prop, step, the `sm` value the site had before this
+ *    change (asserted: sm and up never move) and the xs value it had (the step must be smaller).
+ *    A new conversion without a row, or a row whose site is gone, fails.
+ * 3. The scale itself: eight positive steps, each smaller than what it replaced.
  */
-
-const TARGET_DIRS = [
-  "src/modules/events/ui",
-  "src/app/[locale]/events",
-  "src/app/[locale]/calendar",
-  "src/app/[locale]/pages",
-];
 
 const ROOT = join(__dirname, "..", "..", "..");
 
+/** The public pages and the event components they are built from; the backoffice is not public. */
+const TARGET_DIRS = ["src/app/[locale]", "src/modules/events/ui"];
+const EXCLUDED_DIRS = ["src/app/[locale]/admin", "src/app/[locale]/devs"];
+
+const posix = (path: string) => relative(ROOT, path).split(sep).join("/");
+
 function walk(dir: string): string[] {
-  const entries = readdirSync(dir);
-  return entries.flatMap((entry) => {
+  return readdirSync(dir).flatMap((entry) => {
     const full = join(dir, entry);
-    const stats = statSync(full);
-    if (stats.isDirectory()) return walk(full);
-    if (/\.(tsx|ts)$/.test(entry) && !entry.endsWith(".test.ts") && !entry.endsWith(".test.tsx")) return [full];
+    if (EXCLUDED_DIRS.includes(posix(full))) return [];
+    if (statSync(full).isDirectory()) return walk(full);
+    if (/\.(tsx|ts)$/.test(entry) && !/\.test\.tsx?$/.test(entry)) return [full];
     return [];
   });
 }
 
-const SPACING_PROPS = "py|px|pt|pb|pl|pr|mt|mb|ml|mr|my|mx|gap|rowGap|columnGap";
-// A bare number on the `xs` side of a breakpoint object — `xs: DENSITY.gapSm` never matches this,
-// only `xs: 1` or `xs: 1.5` would.
-const XS_NUMBER_LITERAL = new RegExp(`\\b(${SPACING_PROPS}):\\s*\\{\\s*xs:\\s*(-?[\\d.]+)`, "g");
+const FILES = TARGET_DIRS.flatMap((dir) => walk(join(ROOT, dir))).map((full) => ({ file: posix(full), text: readFileSync(full, "utf8") }));
+
+const SPACING_PROPS = "p|m|py|px|pt|pb|pl|pr|mt|mb|ml|mr|my|mx|gap|rowGap|columnGap|spacing";
+// `prop: { xs: 1` in an `sx`, or `spacing={{ xs: 1` / `spacing={cond ? a : { xs: 1` as a prop.
+const PROP_THEN_XS = `\\b(${SPACING_PROPS})(?::\\s*|=\\{[^{}]*?)\\{\\s*xs:\\s*`;
+const XS_NUMBER_LITERAL = new RegExp(`${PROP_THEN_XS}(-?[\\d.]+)`, "g");
+const XS_DENSITY = new RegExp(`${PROP_THEN_XS}DENSITY\\.(\\w+),\\s*sm:\\s*(-?[\\d.]+)\\s*\\}`, "g");
 
 /**
- * Pre-existing `xs` literals this pass leaves alone, each for a reason recorded where the code
- * itself lives — not "too much whitespace", the thing this scale fixes:
- *
- * - `CalendarEventChip.tsx` `mr: { xs: 0, sm: 0.5 }` — the xs value is 0, nothing to tighten.
- * - `CalendarSection.tsx` and `share-pill.ts` `px: { xs: 1.5, sm: 1.25 }` — a chip's own tap
- *   padding, already *larger* on a phone than a desktop; not a mobile-only excess.
- * - `EventFacts.tsx`'s `rowGap`, `pl` and `mb` on the event page's own `<dl>` — alignment (the
- *   label column collapsing on a phone, §356), not the padding-and-gaps whitespace the owner
- *   pointed at.
- * - `events/[slug]/register/page.tsx`'s `Container` `py` — the registration form, a distinct
- *   surface the owner did not point at ("the listing and an event page"); left for a pass of
- *   its own rather than folded into this one without being asked.
+ * The `xs` literals that stay, each for a reason — none of them the "too much whitespace" the
+ * scale answers. Matched by file and by the text of the line, so an allowed line in one file
+ * never excuses a literal in another.
  */
-const ALLOWED_RAW_LINES = [
-  'mr: { xs: 0, sm: 0.5 } }>',
-  'px: { xs: 1.5, sm: 1.25 },',
-  'rowGap: { xs: 0.5, sm: 1.5 },',
-  'pl: { xs: 3.5, sm: 0 }, mb: { xs: 1, sm: 0 } }}>',
-  'sx={{ py: { xs: 2, sm: 3 } }}>',
+const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
+  {
+    file: "src/modules/events/ui/CalendarEventChip.tsx",
+    line: "mr: { xs: 0, sm: 0.5 }",
+    reason: "zero on a phone already",
+  },
+  {
+    file: "src/modules/events/ui/CalendarSection.tsx",
+    line: "px: { xs: 1.5, sm: 1.25 },",
+    reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
+  },
+  {
+    file: "src/modules/events/ui/share-pill.ts",
+    line: "px: { xs: 1.5, sm: 1.25 },",
+    reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
+  },
+  {
+    file: "src/modules/events/ui/EventCalendar.tsx",
+    line: "p: { xs: 0.25, sm: 0.5 },",
+    reason: "a month-grid day cell's two pixels — already the tight end",
+  },
+  {
+    file: "src/modules/events/ui/EventFacts.tsx",
+    line: "rowGap: { xs: 0.5, sm: 1.5 },",
+    reason: "four pixels between a question and its answer on the stacked facts — already the tight end (§NNN)",
+  },
+  {
+    file: "src/modules/events/ui/EventFacts.tsx",
+    line: "pl: { xs: 3.5, sm: 0 }",
+    reason: "the answer's indent to the label's first letter (20px glyph + 8px gap, §356) — alignment, not whitespace",
+  },
+  {
+    file: "src/app/[locale]/gallery/[slug]/page.tsx",
+    line: "gap: { xs: 1, sm: 1.5 },",
+    reason: "eight pixels between two photos, already at the listing grid's own phone step",
+  },
+  {
+    file: "src/app/[locale]/error.tsx",
+    line: "py: { xs: 4, sm: 8 } }}>",
+    reason: "one sentence centred on an otherwise empty page; the room is the layout",
+  },
+  {
+    file: "src/app/[locale]/not-found.tsx",
+    line: "py: { xs: 4, sm: 8 } }}>",
+    reason: "one sentence centred on an otherwise empty page; the room is the layout",
+  },
 ];
 
+type DensityStep = keyof typeof DENSITY;
+
+/**
+ * Every site on the scale: the step it uses on a phone, the `sm` value (unchanged by this work —
+ * the value the site had before), the `xs` value it had before (flat sites: the same number),
+ * and how many times the file carries it.
+ */
+const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm: number; xsBefore: number; count?: number }> = [
+  // Page containers — every public page, 16px → 12px on a phone.
+  { file: "src/app/[locale]/events/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/events/[slug]/register/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/calendar/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/pages/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/contact/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/gallery/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/legal/terms/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/registrations/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 4 },
+  { file: "src/app/[locale]/registrations/declare/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
+  { file: "src/app/[locale]/registrations/list/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/registrations/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/registrations/mine/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/registrations/mine/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/registrations/resend/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/sign-in/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The listing.
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2.5, xsBefore: 2.5 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5, count: 3 },
+  { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/FeaturedEventHero.tsx", prop: "p", step: "heroPad", sm: 4, xsBefore: 2.5 },
+  { file: "src/modules/events/ui/FeaturedEventHero.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1, xsBefore: 1 },
+  // The calendar.
+  { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mb", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventCalendar.tsx", prop: "spacing", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/EventCalendar.tsx", prop: "gap", step: "gapSm", sm: 2, xsBefore: 2 },
+  // The event page.
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "my", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "mb", step: "gapXs", sm: 0, xsBefore: 1 },
+  { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
+  { file: "src/modules/events/ui/EventLinks.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+  { file: "src/modules/events/ui/EventVideo.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3 },
+  { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "sectionGap", sm: 3, xsBefore: 3, count: 6 },
+  { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGapLg", sm: 4, xsBefore: 4 },
+];
+
+const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;
+
 describe("DECISIONS.md §NNN the public pages share one phone density scale", () => {
-  it("defines the scale as MUI spacing units, one step per name", () => {
-    expect(DENSITY.pagePadY).toBeLessThan(2);
-    expect(DENSITY.cardPadTop).toBeLessThan(2);
-    expect(DENSITY.cardGridGap).toBeLessThan(1.5);
-    expect(DENSITY.heroPad).toBeLessThan(2.5);
-    expect(DENSITY.gapSm).toBeLessThan(2);
-    expect(DENSITY.sectionGap).toBeLessThan(3);
-    expect(DENSITY.sectionGapLg).toBeLessThan(4);
-    // Every value is positive: this is a smaller gap, never a negative margin trick.
+  it("defines eight positive steps, each tighter than every value it replaced", () => {
+    expect(Object.keys(DENSITY)).toHaveLength(8);
     for (const [name, value] of Object.entries(DENSITY) as Array<[string, number]>) {
       expect(value, `${name} must be a positive number`).toBeGreaterThan(0);
     }
+    for (const site of CONVERTED_SITES) {
+      expect(DENSITY[site.step], `${siteKey(site)} must be tighter than its old xs ${site.xsBefore}`).toBeLessThan(site.xsBefore);
+    }
   });
 
-  it("leaves no bare-number xs spacing value outside the allowlist or zero", () => {
+  it("leaves no bare-number xs spacing value outside the named allowlist", () => {
     const offenders: string[] = [];
-    for (const dir of TARGET_DIRS) {
-      const files = walk(join(ROOT, dir));
-      for (const file of files) {
-        const text = readFileSync(file, "utf8");
-        for (const match of text.matchAll(XS_NUMBER_LITERAL)) {
-          const [whole, , rawValue] = match;
-          const value = Number(rawValue);
-          if (value === 0) continue;
-          if (ALLOWED_RAW_LINES.some((allowed) => text.includes(allowed) && whole.includes(rawValue))) {
-            // Confirm the specific match's surrounding line is one of the allowed ones, not
-            // merely that the file also happens to contain an allowed line elsewhere.
-            const lineStart = text.lastIndexOf("\n", match.index) + 1;
-            const lineEnd = text.indexOf("\n", match.index);
-            const line = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
-            if (ALLOWED_RAW_LINES.some((allowed) => line.includes(allowed))) continue;
-          }
-          offenders.push(`${file.slice(ROOT.length)}: ${whole}`);
-        }
+    for (const { file, text } of FILES) {
+      for (const match of text.matchAll(XS_NUMBER_LITERAL)) {
+        const lineStart = text.lastIndexOf("\n", match.index) + 1;
+        const lineEnd = text.indexOf("\n", match.index);
+        const line = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
+        if (ALLOWED.some((allowed) => allowed.file === file && line.includes(allowed.line))) continue;
+        offenders.push(`${file}: ${line.trim()}`);
       }
     }
-    expect(
-      offenders,
-      "a phone-only spacing xs value written as a bare number rather than DENSITY.<name>, outside the allowlist or zero — a revert to the old literal must fail this test",
-    ).toEqual([]);
+    expect(offenders, "a phone-only spacing value written as a number rather than DENSITY.<name>, outside the allowlist — a revert to the old literal must fail here").toEqual([]);
   });
 
-  /**
-   * Every site this pass (and its follow-up, review round 2) put on the scale, checked both
-   * ways: the `xs` side names a `DENSITY` step, and the `sm` side is the exact number the site
-   * had before — sm and up were never meant to move. One row per site rather than a handful of
-   * `toContain`s, so a new conversion is one line to add here, not a silent gap in the net (the
-   * round-1 version of this test asserted only four Containers and one card's `pt`).
-   */
-  const CONVERTED_SITES: Array<{ file: string; expect: string }> = [
-    // Page containers.
-    { file: "src/app/[locale]/events/page.tsx", expect: "py: { xs: DENSITY.pagePadY, sm: 3 }" },
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "py: { xs: DENSITY.pagePadY, sm: 3 }" },
-    { file: "src/app/[locale]/calendar/page.tsx", expect: "py: { xs: DENSITY.pagePadY, sm: 3 }" },
-    { file: "src/app/[locale]/pages/[slug]/page.tsx", expect: "py: { xs: DENSITY.pagePadY, sm: 3 }" },
-    // The listing.
-    { file: "src/app/[locale]/events/page.tsx", expect: "mb: { xs: DENSITY.gapSm, sm: 2.5 }" },
-    { file: "src/app/[locale]/events/page.tsx", expect: "mt: { xs: DENSITY.sectionGap, sm: 3 }" },
-    { file: "src/app/[locale]/events/page.tsx", expect: "mt: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    { file: "src/app/[locale]/events/page.tsx", expect: "mb: { xs: DENSITY.sectionGap, sm: 3 }" },
-    { file: "src/modules/events/ui/card-layout.ts", expect: "pt: { xs: DENSITY.cardPadTop, sm: 2 }" },
-    { file: "src/modules/events/ui/FeaturedEventHero.tsx", expect: "p: { xs: DENSITY.heroPad, sm: 4 }" },
-    // The calendar page's own intro.
-    { file: "src/app/[locale]/calendar/page.tsx", expect: "mb: { xs: DENSITY.gapSm, sm: 2 }" },
-    // The event page.
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "mb: { xs: DENSITY.gapSm, sm: 2 }" },
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "mb: { xs: DENSITY.sectionGap, sm: 3 }" },
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "my: { xs: DENSITY.sectionGap, sm: 3 } }} />" },
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "mt: { xs: DENSITY.gapSm, sm: 2 }" },
-    { file: "src/app/[locale]/events/[slug]/page.tsx", expect: "mt: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    { file: "src/modules/events/ui/EventLinks.tsx", expect: "mt: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    { file: "src/modules/events/ui/EventProgramme.tsx", expect: "mt: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    // Round 2: the door under the facts, the start list, the video, the club's own calendar box.
-    { file: "src/modules/events/ui/RegistrationCta.tsx", expect: "mt: { xs: DENSITY.sectionGap, sm: 3 } }}" },
-    { file: "src/modules/events/ui/StartList.tsx", expect: "mt: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    { file: "src/modules/events/ui/EventVideo.tsx", expect: "mt: { xs: DENSITY.sectionGap, sm: 3 }" },
-    { file: "src/modules/events/ui/CalendarSection.tsx", expect: "mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 }" },
-    // Round 2: the facts row gap and the calendar's agenda.
-    { file: "src/modules/events/ui/EventFacts.tsx", expect: "rowGap: { xs: DENSITY.gapSm, sm: 1 }" },
-    { file: "src/modules/events/ui/EventCalendar.tsx", expect: "spacing={dense ? 1 : { xs: DENSITY.gapSm, sm: 1.5 }}" },
-    { file: "src/modules/events/ui/EventCalendar.tsx", expect: "gap: { xs: DENSITY.gapSm, sm: 2 }" },
-  ];
-
-  it("keeps sm+ unchanged at every site the scale was adopted", () => {
-    const cache = new Map<string, string>();
-    const readCached = (relative: string) => {
-      const cached = cache.get(relative);
-      if (cached !== undefined) return cached;
-      const text = readFileSync(join(ROOT, relative), "utf8");
-      cache.set(relative, text);
-      return text;
-    };
-    for (const site of CONVERTED_SITES) {
-      expect(readCached(site.file), `${site.file} — ${site.expect}`).toContain(site.expect);
+  it("names every allowlisted line where it still stands", () => {
+    for (const allowed of ALLOWED) {
+      const source = FILES.find((f) => f.file === allowed.file);
+      expect(source?.text, `${allowed.file} (${allowed.reason})`).toContain(allowed.line);
     }
+  });
+
+  it("records every DENSITY site with its unchanged sm value, and nothing else", () => {
+    const found = new Map<string, number>();
+    let usages = 0;
+    for (const { file, text } of FILES) {
+      usages += text.match(/xs:\s*DENSITY\./g)?.length ?? 0;
+      for (const match of text.matchAll(XS_DENSITY)) {
+        const key = siteKey({ file, prop: match[1], step: match[2], sm: Number(match[3]) });
+        found.set(key, (found.get(key) ?? 0) + 1);
+      }
+    }
+    const expected = new Map<string, number>();
+    for (const site of CONVERTED_SITES) expected.set(siteKey(site), (expected.get(siteKey(site)) ?? 0) + (site.count ?? 1));
+    // Every `xs: DENSITY.x` carries its `sm` beside it in the one shape the table can check.
+    expect([...found.values()].reduce((a, b) => a + b, 0), "an xs: DENSITY.<name> without `, sm: <n> }` beside it").toBe(usages);
+    expect(Object.fromEntries([...found].sort())).toEqual(Object.fromEntries([...expected].sort()));
   });
 
   it("leaves the listing card's horizontal padding unconditional", () => {
     // The card's horizontal padding — the width budget `EventFacts.tsx` was measured against
     // (§366, §375) — stays the plain, unconditional 16px it always was.
-    const cardLayout = readFileSync(join(ROOT, "src/modules/events/ui/card-layout.ts"), "utf8");
-    expect(cardLayout).toContain("px: 2,");
+    const cardLayout = FILES.find((f) => f.file === "src/modules/events/ui/card-layout.ts");
+    expect(cardLayout?.text).toContain("px: 2,");
   });
 });

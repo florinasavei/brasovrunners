@@ -27,6 +27,7 @@ import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-la
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
 import { PAGE_WIDTH } from "@/theme/brand";
+import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -147,7 +148,7 @@ export default async function PreviewEventPage({ params }: Props) {
   };
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Alert severity="warning" sx={{ mb: 3 }}>
         {t("preview.notice", { status: EDITORIAL_STATUS_LABEL[event.editorialStatus] })}
       </Alert>

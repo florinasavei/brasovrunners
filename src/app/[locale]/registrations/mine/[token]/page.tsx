@@ -24,6 +24,7 @@ import {
   setListConsentFromMyRegistrationsAction,
   withdrawFromMyRegistrationsAction,
 } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -61,7 +62,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("mine.cancelledTitle")}
         </Typography>
@@ -77,7 +78,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, new Date());
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("mine.listTitle")}
       </Typography>

@@ -35,6 +35,7 @@ import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modul
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -150,7 +151,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   if (full) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("declare.title")}
         </Typography>
@@ -163,7 +164,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("declare.doneTitle")}
         </Typography>
@@ -369,7 +370,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     box === "minorIdDocument" ? t("declare.minorIdDocument") : minorName !== null ? t("declare.guardianIdDocument") : t("declare.idDocument");
 
   return (
-    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("declare.title")}
       </Typography>
