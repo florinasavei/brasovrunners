@@ -341,7 +341,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}
-      <EventVideo videoUrl={event.videoUrl} />
+      <EventVideo videoUrl={event.videoUrl} posterUrl={event.videoPosterUrl} eventTitle={event.title} />
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       <StartList event={event} page={lista} />

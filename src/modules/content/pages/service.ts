@@ -4,6 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import type { Database } from "@/db/types";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import { attachYoutubePosters } from "@/modules/media/video-poster";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   allowedTransitions,
@@ -95,6 +96,11 @@ export async function createPage<T extends Record<string, unknown>>(
 
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
+  // A film in the body gets the club's own copy of its thumbnail (`DECISIONS.md` §NNN), before
+  // the transaction opens (a network fetch, never a DB write).
+  for (const locale of routing.locales) {
+    fields.translations[locale].body = await attachYoutubePosters(db, fields.translations[locale].body);
+  }
 
   return db.transaction(async (tx) => {
     await assertSlugsAreFree(tx, fields, null);
@@ -149,6 +155,9 @@ export async function savePage<T extends Record<string, unknown>>(
 
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
+  for (const locale of routing.locales) {
+    fields.translations[locale].body = await attachYoutubePosters(db, fields.translations[locale].body);
+  }
 
   const saved = await db.transaction(async (tx) => {
     await assertSlugsAreFree(tx, fields, input.pageId);

@@ -427,6 +427,26 @@ const imageNode = z.object({
  * which is why the golden-string test for a film names them.
  */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+/**
+ * The same discipline `imageSrc` holds a picture's `src` to (§72): a poster must be *this site's
+ * own* stored copy, never an address a staff request could point anywhere it likes. Without this,
+ * a crafted save could set `poster` to a third-party host — a pre-click request that breaks
+ * §69/§110 the moment the block renders, exactly the request the facade exists to avoid — or
+ * break out of a CSS `url(…)` the way an unescaped interpolation would (found by re-review,
+ * `DECISIONS.md` §NNN). `yt-<elevenCharId>` is the poster's own key prefix
+ * (`modules/media/video-poster.ts#posterKeyPrefix`); a club-chosen poster (`posterSource:
+ * "club"`) is an ordinary picture upload and so carries the UUID key prefix instead.
+ */
+const posterSrc = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine(
+    (value) =>
+      /\/(?:yt-[A-Za-z0-9_-]{11}|[0-9a-f-]{36})\/web\.webp$/.test(value) &&
+      (value.startsWith("https://") || value.startsWith("/api/media/")),
+    "a poster must be one this site stored",
+  );
 const youtubeNode = z.object({
   type: z.literal("youtube"),
   attrs: z.object({
@@ -442,6 +462,25 @@ const youtubeNode = z.object({
       .nullable()
       .optional()
       .transform((value) => value ?? "block"),
+    /**
+     * The club's own copy of the film's thumbnail (`DECISIONS.md` §NNN): the address a save
+     * fetched it to, exactly as an image node stores `src` (§72) — a URL, never an asset id, so
+     * the existing "is a picture referenced" text search (`modules/media/references.ts`) finds
+     * it with no code of its own. Absent or null reads as "no poster stored yet", which the
+     * renderer shows as the text facade `§69` always has.
+     */
+    poster: posterSrc.nullable().optional().transform((value) => value ?? null),
+    /**
+     * Who chose this poster (§NNN, "să pot pune thumbnail" — the owner's own request, found not
+     * built by re-review): `"club"` once an organizer has picked one through the panel, `null`
+     * or `"youtube"` for the automatic fetch. `attachYoutubePosters` leaves a `"club"` poster
+     * alone even if it were ever asked to refresh an existing one.
+     */
+    posterSource: z
+      .union([z.literal("club"), z.literal("youtube")])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
   }).strict(),
 });
 

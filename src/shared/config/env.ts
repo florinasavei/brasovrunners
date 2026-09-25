@@ -123,6 +123,20 @@ export const envSchema = z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
+    /**
+     * `playwright.config.ts`'s `webServer` alone, never a developer's own shell (found by
+     * re-review, `DECISIONS.md` §NNN): a page or event save fetches a YouTube film's poster
+     * from `i.ytimg.com` once, server-side (`modules/media/video-poster.ts`) — a real third
+     * party a CI runner may have no route to, which otherwise leaves the end-to-end suite
+     * either hanging on the fetch's own timeout or asserting a poster that never arrived. This
+     * flag swaps the *default* `fetchImpl` for a fixture image built in-process (`sharp`, no
+     * network at all) rather than asking every save path to thread a stub through from the
+     * route — the same shape as `E2E_DISABLE_NEON` above.
+     */
+    E2E_STUB_YOUTUBE_POSTER: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
     // project id is under the Vercel project's Settings → General; the team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
@@ -446,6 +460,9 @@ export const envSchema = z
     return {
       ...value,
       E2E_DISABLE_NEON: neonSwitchedOff,
+      // Same guard as `E2E_DISABLE_NEON`, for the same reason: a stray copy of this flag must
+      // never make production hand back a fixture image instead of the real poster.
+      E2E_STUB_YOUTUBE_POSTER: e2eStubYoutubePoster(value),
       STAFF_AUTH_MODE:
         value.STAFF_AUTH_MODE ??
         (value.APP_ENV === "local" || value.APP_ENV === "test"
@@ -531,6 +548,22 @@ function e2eNeonSwitchOff(value: { E2E_DISABLE_NEON: boolean; APP_ENV: string })
   if (value.APP_ENV === "production") {
     console.warn(
       "[env] E2E_DISABLE_NEON is set on production and is ignored: production always reads its Neon quota (the 80% warning on /api/health). Remove the variable from this environment.",
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Whether `E2E_STUB_YOUTUBE_POSTER` takes effect — everywhere but production, exactly like
+ * `e2eNeonSwitchOff` above and for the same reason: a stray copy of the variable must never
+ * make a real deployment hand back a fixture image instead of the real one.
+ */
+function e2eStubYoutubePoster(value: { E2E_STUB_YOUTUBE_POSTER: boolean; APP_ENV: string }): boolean {
+  if (!value.E2E_STUB_YOUTUBE_POSTER) return false;
+  if (value.APP_ENV === "production") {
+    console.warn(
+      "[env] E2E_STUB_YOUTUBE_POSTER is set on production and is ignored: production always fetches the real poster. Remove the variable from this environment.",
     );
     return false;
   }

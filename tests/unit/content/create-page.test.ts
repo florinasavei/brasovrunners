@@ -148,7 +148,9 @@ describe("no film box", () => {
   it("keeps the column, the validation and the public embed for the links older events carry", () => {
     expect(read("src/modules/content/events/fields.ts")).toContain("videoUrl:");
     expect(read("src/db/schema/events.ts")).toContain('videoUrl: text("video_url")');
-    expect(read("src/app/[locale]/events/[slug]/page.tsx")).toContain("<EventVideo videoUrl={event.videoUrl} />");
+    expect(read("src/app/[locale]/events/[slug]/page.tsx")).toContain(
+      "<EventVideo videoUrl={event.videoUrl} posterUrl={event.videoPosterUrl} eventTitle={event.title} />",
+    );
     // A save that says nothing about the film writes nothing over it.
     expect(SERVICE).toContain("fields.videoUrl === undefined ? {} : { videoUrl: fields.videoUrl }");
   });
