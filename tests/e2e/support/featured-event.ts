@@ -84,12 +84,28 @@ export async function fillDateField(scope: Page | Locator, label: string, value:
  * untouched). `.fill()` on a native time box takes `HH:mm` directly and posts exactly that,
  * always on the 24-hour clock (`type="time"`'s own value has no AM/PM to disagree about).
  *
- * Found by its accessible label, `.first()` for the same reason `fillDateField` reads the first
- * `spinbutton` group: "Ora" is not unique on a page carrying the event's own start time and a
- * programme row's, so a caller scopes to the row (`programmeRow`) when it means one.
+ * By role and accessible name, **not** `getByLabel`: a required box's `<label>` carries a second,
+ * `aria-hidden` child for the asterisk (MUI's own `Mui­FormLabel-asterisk`), and `getByLabel`'s
+ * exact match reads the label element's raw text — asterisk included — so `{ exact: true }`
+ * never matches a required "Ora" at all (found the hard way: every event's own start time is
+ * required, so this alone hung every create-page fill for 30 seconds). `getByRole`'s accessible
+ * name is computed properly and drops the hidden node, so it reads "Ora" exactly as a person
+ * does; confirmed against this page's own `ariaSnapshot()` before writing it this way.
+ *
+ * `.filter({ visible: true })` before `.first()`: "Ora" also labels the race's own gun time,
+ * which `OnlyForType` keeps in the DOM but `display: none` on any event that is not a race
+ * (`WhenBox`), and a role/name match resolves to a hidden box exactly as readily as a shown one
+ * — without the filter, `.first()` in DOM order can hand back that hidden, read-only box and
+ * `.fill()` then times out waiting for it to become visible. "Ora" is not unique on a page
+ * carrying the event's own start time and a programme row's either, so a caller scopes to the
+ * row (`programmeRow`) when it means one.
  */
 export async function fillTimeField(scope: Page | Locator, label: string, value: string /* HH:mm */) {
-  await scope.getByLabel(label, { exact: true }).first().fill(value);
+  await scope
+    .getByRole("textbox", { name: label, exact: true })
+    .filter({ visible: true })
+    .first()
+    .fill(value);
 }
 
 /**

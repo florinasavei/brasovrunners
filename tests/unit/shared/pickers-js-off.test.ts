@@ -106,4 +106,17 @@ describe("TimeField, the platform's own native input", () => {
     expect(html).toContain('value="18:30"');
     expect(html).not.toContain('value="09:00"');
   });
+
+  it("carries a clear button by default for an optional box, and none for a required one", () => {
+    const optional = renderField(createElement(TimeField, { name: "event.schedule[0].endTime", label: "Ora de final", defaultValue: "10:00" }));
+    expect(optional).toContain(`aria-label="${messages.Admin.pickers.clearTime}"`);
+
+    const required = renderField(createElement(TimeField, { name: "event.startsAtTime", label: "Ora", defaultValue: "09:00", required: true }));
+    expect(required).not.toContain(`aria-label="${messages.Admin.pickers.clearTime}"`);
+  });
+
+  it("drops a caller's own clear button when clearable is turned off (WallTimeField's time half)", () => {
+    const html = renderField(createElement(TimeField, { name: "event.startsAtTime", label: "Ora", defaultValue: "09:00", clearable: false }));
+    expect(html).not.toContain(`aria-label="${messages.Admin.pickers.clearTime}"`);
+  });
 });
