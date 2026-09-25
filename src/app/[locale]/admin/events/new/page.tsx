@@ -204,7 +204,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
                   read-only, "Programat". */}
               <KindBox {...box} locale={locale}>
                 <StatusBox {...box} />
-                <CourseBox {...box} />
+                <CourseBox {...box} languages={languages} />
                 <LinksBox {...box} locale={locale} />
               </KindBox>
               <TitleSummaryBox languages={languages} creating />

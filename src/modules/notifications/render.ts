@@ -8,7 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
-import { readEventLinks } from "@/modules/events/domain/links";
+import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import {
   type EventNotificationRow,
@@ -323,9 +323,14 @@ async function renderRow(
     data.myRegistrationsUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
   }
   // "Linkuri și fișiere" (§332): one line pointing at `#links`, only when the page has one — the
-  // anchor exists only then (`EventLinks`). The addresses themselves stay on the page: the
-  // email names where they are, never a raw Drive link in a message that is forwarded.
-  if (data.eventUrl && eventDetails && readEventLinks(eventDetails.links).length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
+  // anchor exists only then (`EventLinks`), and a route section (§387) can take every link of the
+  // route's own kinds out of it, so the page's own split (`partitionEventLinks`) decides, not a
+  // raw count of the event's links. The addresses themselves stay on the page: the email names
+  // where they are, never a raw Drive link in a message that is forwarded.
+  if (data.eventUrl && eventDetails) {
+    const routeSection = hasRouteDescription(eventDetails.routeDescriptionJson);
+    if (partitionEventLinks(eventDetails.links, routeSection).other.length > 0) data.eventLinksUrl = `${data.eventUrl}#links`;
+  }
   // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words —
   // and in the update notice when the programme is what changed (§331).
   if ((row.messageType === "EVENT_REMINDER" || updateChanges.includes("programme")) && eventDetails) {

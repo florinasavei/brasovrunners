@@ -299,6 +299,8 @@ function translationInputFrom(form: FormData, locale: Locale) {
     body: value("body"),
     rules: value("rules"),
     schedule: value("schedule"),
+    // The route / training description (§387), posted from the "Traseul" card's own tabs.
+    routeDescription: value("routeDescription"),
     // No place name here: it is asked once per language in the Locul box and read with the
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),

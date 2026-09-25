@@ -6,7 +6,7 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -48,7 +48,9 @@ import { seriesHorizonEnd } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
-import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
+import PartnerChip from "@/modules/events/ui/PartnerChip";
+import RoutePills from "@/modules/events/ui/RoutePills";
+import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { BOXED_DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
@@ -140,6 +142,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // The cancel button and the email sentences every question shares (§384).
   const words = await confirmWords();
   const tEvent = await getTranslations("Event");
+  // The route pills (`RoutePills`, below) need the formatter too, for the distance and climb.
+  const format = await getFormatter();
 
   const db = getDb();
   const now = new Date();
@@ -249,12 +253,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       primary: true,
       render: ({ members, next, sentence, notes }) => {
         const { event, translations } = next;
-        const TypeGlyph = TYPE_GLYPH[event.type];
         return (
           <Stack spacing={0.5}>
             <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-              {/* The type's glyph before the title (§112): what the eye finds in a long list. */}
-              <TypeGlyph aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+              {/* The public type chip, not a bare glyph (§388 — the owner, 2026-09-25, on
+                  `/admin` on his phone: "I want the same small icons for the event types,
+                  trail, distance, etc. on the back-office cards as well, people will get used
+                  to them"): the same word and glyph the listing's own chip wears (§112). */}
+              <GlyphChip glyph={`type:${event.type}`} label={tEvent(`type.${event.type}`)} />
               <Link href={{ pathname: "/admin/events/[id]", params: { id: event.id } }}>
                 {translations[0]?.title ?? event.id}
               </Link>
@@ -269,7 +275,15 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {next.event.locationToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.placeToBeAnnounced")} />
               )}
+              {/* Held with a partner (§379): the same 🤝 marker the listing card wears, never
+                  the list of partners themselves — that is the event page's own cards. */}
+              <PartnerChip event={event} />
             </Stack>
+            {/* The route's pills, exactly as the listing's compact card draws them —
+                `buildRoutePills` and `RoutePills` (§388), so neither surface can read the route
+                in a different order or a different set from the other. A series shares one
+                route, so this reads the next occurrence's row once for the whole line. */}
+            <RoutePills pills={buildRoutePills(event, tEvent, format)} />
             {sentence && (
               <Typography variant="body2" color="text.secondary">
                 {sentence}

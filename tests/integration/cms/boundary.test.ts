@@ -96,6 +96,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "excerptBody",
       // Not the place's name: it is stored on this row (migration `0059`) but asked once per
       // language in the Locul box and written by the event's own save, the Organizer's (§362).
+      // The route / training description, per language, in the "Traseul" card (§387).
+      "routeDescription",
       // The rules, per language (`DECISIONS.md` §96).
       "rules",
       // The programme, per language (`DECISIONS.md` §96).
