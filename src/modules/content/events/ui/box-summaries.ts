@@ -345,26 +345,23 @@ export function registrationSummary(
   event: RegistrationEvent | null,
   options: {
     takesRegistrations: boolean;
-    costLabel: string | null;
     declarationVersion: number | null;
     defaultMinAge: number;
     locale: string;
     creating: boolean;
   },
 ): string {
-  const cost = options.costLabel;
-  if (!options.takesRegistrations) return join(words, [words.registration.groupRun, cost]);
+  if (!options.takesRegistrations) return join(words, [words.registration.groupRun]);
   const mode = event?.registrationMode ?? "NONE";
   if (mode === "EXTERNAL") {
     const provider = (event?.externalProvider ?? "").trim();
-    return join(words, [provider ? fillIn(words.registration.external, { provider }) : words.registration.externalUnnamed, cost]);
+    return join(words, [provider ? fillIn(words.registration.external, { provider }) : words.registration.externalUnnamed]);
   }
-  if (mode !== "INTERNAL") return join(words, [options.creating ? words.registration.noneInvite : words.registration.none, cost]);
+  if (mode !== "INTERNAL") return join(words, [options.creating ? words.registration.noneInvite : words.registration.none]);
   return join(words, [
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
     fillIn(words.registration.minAge, { age: event?.minAge ?? options.defaultMinAge }),
-    cost,
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
     event?.participantListVisibility === "NAMES" ? words.registration.listShown : words.registration.listHidden,
   ]);

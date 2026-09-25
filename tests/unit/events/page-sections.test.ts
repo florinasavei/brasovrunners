@@ -235,6 +235,23 @@ describe("§NNN whether the page draws each section", () => {
     expect(drawn(groupRun).registration).toBe(false);
   });
 
+  /*
+    Mirrors EventFacts' own condition (~EventFacts.tsx:918): a race with no registration open
+    still draws the row, with "no registration needed" rather than a button, so `registrationMode`
+    never decides whether the section is drawn — only a group run's type does.
+  */
+  it("draws the registration row on registrationMode: takesRegistrations(type) alone decides it", () => {
+    const raceNone = bare();
+    raceNone.event = { ...raceNone.event, type: "RACE", registrationMode: "NONE" };
+    expect(drawn(raceNone).registration).toBe(true);
+    const raceInternal = bare();
+    raceInternal.event = { ...raceInternal.event, type: "RACE", registrationMode: "INTERNAL" };
+    expect(drawn(raceInternal).registration).toBe(true);
+    const groupRunNone = bare();
+    groupRunNone.event = { ...groupRunNone.event, type: "GROUP_RUN", registrationMode: "NONE" };
+    expect(drawn(groupRunNone).registration).toBe(false);
+  });
+
   it("draws no film for a link YouTube cannot play, and no list while it is hidden", () => {
     const data = bare();
     data.event = { ...data.event, videoUrl: "https://vimeo.example.test/1", participantListVisibility: "HIDDEN" };

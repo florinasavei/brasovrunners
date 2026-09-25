@@ -195,15 +195,15 @@ describe("§350 each box's summary, empty and filled", () => {
       externalProvider: null,
       costType: "FREE",
     };
-    const options = { takesRegistrations: true, costLabel: "Gratuit", declarationVersion: 3, defaultMinAge: 14, locale: "ro", creating: false };
-    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · de la 14 ani · Gratuit · declarația v3 · lista ascunsă");
+    const options = { takesRegistrations: true, declarationVersion: 3, defaultMinAge: 14, locale: "ro", creating: false };
+    expect(registrationSummary(words, internal as never, options)).toBe("Pe site · 150 de locuri · de la 14 ani · declarația v3 · lista ascunsă");
     expect(registrationSummary(words, { ...internal, capacity: 1 } as never, options)).toContain("1 loc");
-    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · de la 14 ani · Gratuit · lipsește declarația");
-    expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, { ...options, costLabel: "Cu taxă" })).toBe(
-      "La organizator: Asociația X · Cu taxă",
+    expect(registrationSummary(words, { ...internal, capacity: 12 } as never, { ...options, declarationVersion: null })).toContain("12 locuri · de la 14 ani · lipsește declarația");
+    expect(registrationSummary(words, { ...internal, registrationMode: "EXTERNAL", externalProvider: "Asociația X" } as never, options)).toBe(
+      "La organizator: Asociația X",
     );
-    expect(registrationSummary(words, null, { ...options, costLabel: null, creating: true })).toBe(words.registration.noneInvite);
-    expect(registrationSummary(words, internal as never, { ...options, takesRegistrations: false })).toBe("Alergare de grup — fără înscrieri · Gratuit");
+    expect(registrationSummary(words, null, { ...options, creating: true })).toBe(words.registration.noneInvite);
+    expect(registrationSummary(words, internal as never, { ...options, takesRegistrations: false })).toBe("Alergare de grup — fără înscrieri");
   });
 
   it("the registration box's cards", () => {

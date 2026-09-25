@@ -10,7 +10,7 @@ import { initialCostTypeOf } from "../box-summaries";
 import CostFields from "../CostFields";
 import GlyphSelect from "../GlyphSelect";
 import { DiscountNoteFields } from "../TranslationFields";
-import { type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
+import { type BoxProps, type LanguageEntry } from "./box-kit";
 
 /** The box's own constraints, read off `fields.ts`, as `TextField` takes them (§315). */
 function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
@@ -89,15 +89,10 @@ export default async function CostBox({
 
   if (!mayEditSettings) {
     // Heading and line, nothing to open — unless the discount note is theirs to write (§394).
+    // The registration card already says "no settings rights" once (`RegistrationBox`); this
+    // card opens onto the discount strip alone, never the same sentence a second time.
     if (!discountNoteApplies) return <Panel {...card} />;
-    return (
-      <Panel collapsible {...card}>
-        <Stack spacing={2}>
-          <SettingsReadOnly />
-          {discountNotePanels}
-        </Stack>
-      </Panel>
-    );
+    return <Panel collapsible {...card}>{discountNotePanels}</Panel>;
   }
 
   return (

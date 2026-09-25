@@ -141,7 +141,6 @@ export default async function RegistrationBox({
   const summary = registrationSummary(words, event, {
     takesRegistrations: takesRegistrations(initialType),
     // The cost is its own card since §NNN (`CostBox`), and its closed line says it.
-    costLabel: null,
     declarationVersion: declaration?.version ?? null,
     defaultMinAge: MIN_PARTICIPANT_AGE,
     locale,

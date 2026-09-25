@@ -186,7 +186,10 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "cost", card: "box-cost", anchor: null, glyph: "cost", automatic: false, drawn: ({ event }) => event.costType !== null },
   /*
     Who may enter and the button (`RegistrationCta`), under the cost row. A group run takes no
-    registration (§111); an event nobody registers for draws neither.
+    registration (§111) and draws neither; a race with no registration open still draws the row —
+    EventFacts shows "no registration needed" rather than a button (~EventFacts.tsx:918), so this
+    predicate mirrors EventFacts' own — `registrationMode` decides what the row says, never
+    whether it is drawn.
   */
   {
     id: "registration",
@@ -194,7 +197,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     anchor: null,
     glyph: "registration",
     automatic: false,
-    drawn: ({ event }) => takesRegistrations(event.type) && event.registrationMode !== "NONE",
+    drawn: ({ event }) => takesRegistrations(event.type),
   },
   // "Împreună cu": each partner's card, the last of the facts (§344).
   { id: "coHosts", card: "box-cohosts", anchor: null, glyph: "partner", automatic: false, drawn: ({ event }) => readCoHosts(event).length > 0 },
