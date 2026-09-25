@@ -53,6 +53,7 @@ export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "
 /** Every task the list can carry. A new id is a TypeScript error until `TASK_KIND` names its kind. */
 export type TaskId =
   | "approveLegalText"
+  | "listStatesNotice"
   | "liveEmail"
   | "scheduler"
   | "retentionSweep"
@@ -74,6 +75,7 @@ export type TaskId =
  */
 export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
+  listStatesNotice: "text",
   liveEmail: "account",
   scheduler: "check",
   retentionSweep: "check",
@@ -129,6 +131,11 @@ export type OwnerTaskInputs = {
   legalTextIsSample: boolean;
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
+  /**
+   * Does the notice in force, in every language, describe the public list's states (§NNN,
+   * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
+   */
+  listStatesDescribed: boolean;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -241,6 +248,19 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
         ? "blocking"
         : "done",
   });
+
+  /*
+    The public list's states (§NNN), only once a notice is in force — without one, the row above
+    is the thing to do. Open, never blocking: nothing is refused while the notice is the older
+    one; the list simply shows confirmed names alone, as it always did. It closes by itself the
+    day a notice naming `{{participantListStates}}` takes effect, with no setting to tick.
+  */
+  if (input.hasApprovedPrivacyNotice) {
+    push("listStatesNotice", {
+      owner: "club",
+      state: input.listStatesDescribed ? "done" : "open",
+    });
+  }
 
   // Nothing reaches a real person while the site captures mail, and the sandbox that replaces
   // capture reaches five addresses. The detail names the mode, so "not live" is not a mystery.

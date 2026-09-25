@@ -24,6 +24,7 @@ import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
@@ -374,6 +375,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
               // The club's deadlines, should the declaration name one (§377) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
+              // The list-states marker, should the declaration name it (§NNN) — as the PDF fills it.
+              ...listStatesMergeValues(locale),
             }}
           />
 

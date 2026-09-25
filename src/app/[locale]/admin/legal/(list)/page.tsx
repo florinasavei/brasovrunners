@@ -10,7 +10,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesListStates } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
@@ -147,6 +147,13 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       ),
     )
   ).filter((key) => key !== null);
+  /*
+    §NNN: the public list shows each runner's stage, and the pending and waiting groups, only
+    while the notice in force names `{{participantListStates}}`. Said here, where the text that
+    would switch it on is approved, only while a notice is in force and does not — with none at
+    all, the "one step" box above is the thing to do, and registration is closed anyway.
+  */
+  const listStatesMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListStates(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn
     (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
@@ -379,6 +386,12 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           ))}
         </Box>
       </Stack>
+
+      {listStatesMissing && (
+        <Alert severity="info" data-testid="legal-list-states-missing">
+          {t("legal.listStatesMissing")}
+        </Alert>
+      )}
 
       {/*
         The rule this section lives by, folded shut by default (§336) — it explains, it does not

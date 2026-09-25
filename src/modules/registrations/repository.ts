@@ -17,6 +17,7 @@ import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
 import { registrationNameKey } from "./domain/name-key";
+import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses, holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
@@ -462,6 +463,77 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
       ),
     );
   return row?.count ?? 0;
+}
+
+/**
+ * The rows the public list gains once the privacy notice in force describes the states
+ * (`DECISIONS.md` §NNN, amending §32 and §143): the registered who have not confirmed yet, then
+ * the waiting list.
+ *
+ * Only ever called behind that gate — `StartList` asks `cachedListStatesDisclosed` first — and
+ * built so that the gate is the only thing it depends on:
+ *
+ *   - the two groups' states and nothing else (`public-list-states.ts`): `PENDING_DECLARATION`
+ *     and `WAITLIST_OFFERED` as "pending", `WAITLISTED` as the waiting list. An unconfirmed
+ *     address, a cancellation, an expiry are in no condition here, so no caller can publish one.
+ *   - `REAL` only, in the SQL (§30, AGENTS.md §12.6), as the confirmed list.
+ *   - ticked «Vreau să apar» only (§143): nobody unconfirmed is ever counted anonymously either —
+ *     a count of who is still deciding is the disclosure §32 refused, and it stays refused for
+ *     anybody who did not ask to be on the list.
+ *   - the select list is the display name, the club and the **group** — never the lifecycle's
+ *     own state, never a date, a position or an identifier. `tests/privacy/public-surface.test.ts`
+ *     holds it there, as it holds `listPublicStartList`.
+ *
+ * Ordered by group, then as the queue orders each: the pending by when their address was
+ * confirmed (the one rule the allocator hands places out by), the waiting list by
+ * `waitlisted_at` — `lockOldestWaitlisted`'s own order — and `id` for a tie. The page prints no
+ * position for either; the order is what a reader can see for themselves.
+ */
+export async function listPublicStartListOthers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  page?: { offset: number; limit: number },
+): Promise<Array<{ displayName: string; clubName: string | null; group: "PENDING" | "WAITLISTED" }>> {
+  const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);
+  const query = db
+    .select({
+      displayName: registrations.displayName,
+      clubName: registrations.clubName,
+      group: sql<"PENDING" | "WAITLISTED">`case when ${waiting} then 'WAITLISTED' else 'PENDING' end`,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]), eq(registrations.kind, "REAL"), eq(registrations.listOptOut, false)))
+    .orderBy(
+      sql`case when ${waiting} then 1 else 0 end`,
+      sql`case when ${waiting} then ${registrations.waitlistedAt} else coalesce(${registrations.emailConfirmedAt}, ${registrations.submittedAt}) end`,
+      asc(registrations.id),
+    );
+  return page ? query.limit(page.limit).offset(page.offset) : query;
+}
+
+/**
+ * How many rows `listPublicStartListOthers` holds, in each group — the same conditions, so the
+ * page count and the page cannot disagree (§250). Only the ticked ones: see above.
+ */
+export async function countPublicStartListOthers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ pending: number; waitlisted: number }> {
+  const [row] = await db
+    .select({
+      pending: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, [...PENDING_LIST_STATUSES])}) as int)`,
+      waitlisted: sql<number>`cast(count(*) filter (where ${inArray(registrations.status, [...WAITLISTED_LIST_STATUSES])}) as int)`,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.listOptOut, false),
+      ),
+    );
+  return { pending: Number(row?.pending ?? 0), waitlisted: Number(row?.waitlisted ?? 0) };
 }
 
 export type OccupiedCountsRow = {

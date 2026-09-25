@@ -195,7 +195,25 @@
       "columnClub": "Club",
       "previous": "← Previous page",
       "next": "Next page →",
-      "pageOf": "Page {page} of {pages}"
+      "pageOf": "Page {page} of {pages}",
+      "states": {
+        "confirmed": "Confirmed",
+        "pending": "Registered, awaiting confirmation",
+        "waitlisted": "On the waiting list"
+      },
+      "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
+      "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "othersLead": "Also listed by name:",
+      "pendingCount": {
+        "one": "{count} registered, awaiting confirmation",
+        "few": "{count} registered, awaiting confirmation",
+        "other": "{count} registered, awaiting confirmation"
+      },
+      "waitlistedCount": {
+        "one": "{count} on the waiting list",
+        "few": "{count} on the waiting list",
+        "other": "{count} on the waiting list"
+      }
     },
     "cta": {
       "register": "Register for this event",
@@ -654,7 +672,8 @@
       "bulkEraseConfirmHelp": "Exactly the number of ticked registrations — anything else erases nothing.",
       "bulkEraseAction": "Erase for good",
       "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased.",
-      "filtersNone": "no filter · every registration"
+      "filtersNone": "no filter · every registration",
+      "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1008,7 +1027,7 @@
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
-      "participantListHelp": "Publishes the name and club of the confirmed participants who ticked “I want to appear on the participant list”; every other confirmed participant appears as “Participant (name hidden)”, with nothing about them, and the list says how many are confirmed in all. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on, and the save is refused while no privacy notice is approved and in force.",
+      "participantListHelp": "Publishes the name and club of the confirmed participants who ticked “I want to appear on the participant list”; every other confirmed participant appears as “Participant (name hidden)”, with nothing about them, and the list says how many are confirmed in all. No email addresses. Once the privacy notice in force describes the stages, the list shows each registration's stage beside the name and also holds those who ticked and have not confirmed yet, then the waiting list; a cancelled or expired registration never appears. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on, and the save is refused while no privacy notice is approved and in force.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -1792,7 +1811,8 @@
         "confirmationHours": "How long the address confirmation link is valid, from “Deadlines”",
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
-        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one"
+        "reminderClause": "The reminder as a clause with its comma, from “Deadlines”: the club's lead, noting that an event may choose its own; with no number when the club sends none by default, since an event may still send one",
+        "participantListStates": "Privacy notice only: the three stages the public list shows beside a name, in quotation marks. With it in the notice in force, the public list shows each person's stage, those who have not confirmed yet and the waiting list; without it, only confirmed names"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -1839,7 +1859,8 @@
         "imageInvalid": "The address must start with https://",
         "undo": "Undo",
         "redo": "Redo"
-      }
+      },
+      "listStatesMissing": "The privacy notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. For the list to show each person's stage as well — “Registered, awaiting confirmation”, “On the waiting list” — approve a new version of the notice starting from the platform's text, which describes them."
     },
     "tasks": {
       "title": "What is still to do",
@@ -2141,6 +2162,16 @@
             "On the Costs tab, open “The database's limits”: it reads Neon's own figures for the compute's size and the period's quota, and writes both back to Neon with the key /devs already uses (SETUP.md §33).",
             "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits. If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
+          ]
+        },
+        "listStatesNotice": {
+          "title": "Privacy notice: the stages on the public list",
+          "todo": "The notice in force does not yet describe the stages on the public participant list, so the list shows only the names of confirmed participants. Those registered who have not confirmed yet and those on the waiting list do not appear, and nothing is written beside a name, until the club approves a notice that describes them.",
+          "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
+          "how": [
+            "/admin/legal → “New version” → Privacy notice → “start from the platform's text”. The section on the public list describes the stages.",
+            "Read the text, save the draft, then “Approve”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
+            "Approve the terms and the declaration from the platform's texts as well, if not already, so all three say the same."
           ]
         }
       },
@@ -3542,6 +3573,7 @@
     "phoneValid": "Looks right. We will store it as",
     "botCheckWait": "One second while we check you are not a robot — we send the form ourselves as soon as it answers; no need to press again.",
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
+    "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
     "another": {
       "title": "Registering another person with the same address",
       "intro": "The address {email} already has a registration for this event. Fill in the other person's details: they get their own confirmation link on the same address, sign their own declaration and get their own QR code. One address may register at most {people} for an event.",

@@ -11,6 +11,7 @@ import { routing } from "@/i18n/routing";
 import { legalPageMetadata, readLegalDocumentsInForce } from "@/modules/legal-documents/public-page";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -84,8 +85,13 @@ export default async function PrivacyNoticePage({ params }: Props) {
               date: formatDay(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
             })}
           </Typography>
-          {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
-          <LegalDocumentBody body={document.body} values={deadlineMergeValues(locale, await cachedDeadlines())} emphasizeFilled={false} />
+          {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text
+              itself, and the public list's three state words (§NNN), from the catalogue the list reads. */}
+          <LegalDocumentBody
+            body={document.body}
+            values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale) }}
+            emphasizeFilled={false}
+          />
         </>
       ) : (
         <>

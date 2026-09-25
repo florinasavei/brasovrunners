@@ -47,6 +47,20 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
+ * "3 înscriși în așteptarea confirmării", "5 pe lista de așteptare" (§NNN): the rows the list
+ * gains behind the privacy notice's gate, each group in its own words, and only the groups that
+ * have anybody — "0 pe lista de așteptare" is a sentence about nobody. Counted from the same
+ * query the rows are drawn from, so only those who ticked «Vreau să apar»: the phrase counts the
+ * rows under it, never the people who asked not to be on it.
+ */
+export function othersPhrases(say: Say, locale: string, counts: { pending: number; waitlisted: number }): string[] {
+  const phrases: string[] = [];
+  if (counts.pending > 0) phrases.push(say(`startList.pendingCount.${countForm(counts.pending, locale)}`, { count: counts.pending }));
+  if (counts.waitlisted > 0) phrases.push(say(`startList.waitlistedCount.${countForm(counts.waitlisted, locale)}`, { count: counts.waitlisted }));
+  return phrases;
+}
+
+/**
  * The partner marker's words (§367, amended §375 — the owner, 2026-09-24: "For the partnership,
  * I just need 1 icon, I do not need to show the full partners list, there might be multiple
  * partners"), and again (§379 — "the chip is too long, just say 'colaborare' in the Romanian

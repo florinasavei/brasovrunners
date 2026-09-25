@@ -16,7 +16,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
-import { cachedPublicAvailability } from "@/modules/public-cache/reads";
+import { cachedListStatesDisclosed, cachedPublicAvailability } from "@/modules/public-cache/reads";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -270,6 +270,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   )
     .toISOString()
     .slice(0, 10);
+  /*
+    §NNN: when this event publishes a list and the notice in force describes its states, the
+    «Vreau să apar» box says what the list will show beside the name. The cached read the event
+    page's list makes; optional, so a failure leaves the box as it always read.
+  */
+  let listStatesOn = false;
+  if (event.participantListVisibility === "NAMES") {
+    try {
+      listStatesOn = await cachedListStatesDisclosed(now);
+    } catch (failure) {
+      unstable_rethrow(failure);
+    }
+  }
   const t = await getTranslations("Registration");
   // "4 persoane" / "4 people": the club's limit per address, in words that agree with it (§389, §341).
   const people = capCount !== null ? t(`another.people.${countForm(capCount, locale)}`, { count: capCount }) : "";
@@ -1236,6 +1249,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
                   {`${t("listOptIn")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
+              )}
+              {/* What the list shows beside the name, once the notice in force says so (§NNN) —
+                  the same three words the list prints, from its own catalogue keys. */}
+              {event.participantListVisibility === "NAMES" && listStatesOn && (
+                <Typography variant="body2" color="text.secondary" data-testid="list-opt-in-states" sx={{ mt: -0.5 }}>
+                  {t("listOptInStates", {
+                    pending: tEvent("startList.states.pending"),
+                    waitlisted: tEvent("startList.states.waitlisted"),
+                    confirmed: tEvent("startList.states.confirmed"),
+                  })}
+                </Typography>
               )}
 
               {/*

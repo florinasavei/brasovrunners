@@ -25,6 +25,12 @@
  * — instead of promising "un memento cu 0 ore înainte". The retention periods
  * (three years, seven days, thirty days…) are not merge fields: they are the club's legal
  * commitment, written in the text it approves, and no setting may move them.
+ *
+ * `{{participantListStates}}` in section 4 is two things at once (§NNN): the three words the
+ * public list prints beside a name, filled from the catalogue when the notice is shown, and the
+ * switch — the list shows the states, the pending and the waiting list only while the notice in
+ * force names it (`describesListStates`), the way §330's declaration switches the minor's
+ * signature on.
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 
@@ -61,7 +67,8 @@ export const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "4. Lista publică, rezultatele, fotografiile",
       paragraphs: [
-        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul participanților confirmați care au bifat „vreau să apar pe lista de participanți” la înscriere, până după eveniment — consimțământ, art. 6(1)(a) GDPR, pe care îl retragi oricând din „Înscrierile mele” sau din legătura din emailul de confirmare; fără bifă nu apari.",
+        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul celor care au bifat „vreau să apar pe lista de participanți” la înscriere, până după eveniment — consimțământ, art. 6(1)(a) GDPR, pe care îl retragi oricând din „Înscrierile mele” sau din legătura din emailul de confirmare; fără bifă nu apari.",
+        "Lângă fiecare nume apare stadiul înscrierii: {{participantListStates}}. Pe listă sunt cei confirmați, cei cu adresa confirmată și declarația încă nesemnată și cei de pe lista de așteptare, în ordine, fără loc numerotat. O înscriere cu adresa neconfirmată, anulată, expirată sau ștearsă nu apare; confirmații fără bifă sunt doar numărați.",
         "Rezultate cu nume nu publicăm încă; când o vom face, te vom întreba separat, pentru fiecare eveniment.",
         "Fotografiile și filmările de la evenimente, publicate în galerie și pe canalele clubului: interes legitim (art. 6(1)(f) GDPR) — a arăta evenimentele clubului; spațiu public, fără nume, fără EXIF. Un portret îl publicăm doar cu acordul tău (Codul civil, art. 73–75). Spune-ne care și o scoatem în cel mult o lună, fără motiv.",
       ],
@@ -159,7 +166,8 @@ export const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "4. Public list, results, photographs",
       paragraphs: [
-        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of confirmed participants who ticked “I want to appear on the participant list” when registering, until after the event — consent, art. 6(1)(a) GDPR, withdrawn at any time from “My registrations”, or from the link in your confirmation email; no tick, no listing.",
+        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of those who ticked “I want to appear on the participant list” when registering, until after the event — consent, art. 6(1)(a) GDPR, withdrawn at any time from “My registrations”, or from the link in your confirmation email; no tick, no listing.",
+        "Beside each name the list shows where the registration stands — {{participantListStates}}. It holds the confirmed participants, those who confirmed their address and have not yet signed the declaration, and those on the waiting list, in its order, without a numbered place. A registration with an unconfirmed address, or cancelled, expired or erased, does not appear; confirmed participants without the tick are only counted.",
         "We do not publish results with names yet; when we do, we will ask you separately, for each event.",
         "Photographs and video from events, published in the gallery and on the club's channels: legitimate interest (art. 6(1)(f) GDPR) — showing the club's events; public place, no names, no EXIF. A portrait is published only with your agreement (Romanian Civil Code, art. 73–75). Tell us which and we take it down within a month, no reason needed.",
       ],
