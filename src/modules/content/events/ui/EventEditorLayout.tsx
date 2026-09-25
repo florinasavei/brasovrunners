@@ -39,7 +39,9 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 
 /**
  * A group's plain overline — "Pagina evenimentului, de sus în jos" over the cards in the page's
- * order, "Nu apar pe pagină" over the rest (§NNN; it was three groups by subject, §350, §358) —
+ * order, "Nu sunt secțiuni ale paginii" over the rest (§NNN; it was three groups by subject,
+ * §350, §358) — two of the three under it (the special-edition chip, a cancelled or finished
+ * notice) still draw on the page, just never as a numbered section of it —
  * not a box: it says what the boxes under it are about.
  */
 export function EditorGroup({ label }: { label: string }) {

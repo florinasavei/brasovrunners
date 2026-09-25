@@ -408,7 +408,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "Created and published in a single press.");
-    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
     await expect(publication.getByText("Nu lipsește nimic: evenimentul poate fi publicat.")).toBeVisible();
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
@@ -711,7 +711,8 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
     await expect(recurrence.getByTestId("repeat-rule-sentence")).toContainText("În fiecare luni și miercuri, la 18:30 — la nesfârșit.");
     await expect(page.getByTestId("create-draft-line")).toContainText("și datele seriei din următoarele 8 săptămâni");
 
-    await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("complet");
+    await expect(editorBox(page, "Locul").getByTestId("required-place")).toHaveText("complet");
     await page.getByRole("button", { name: "Creează și publică" }).click();
     await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);

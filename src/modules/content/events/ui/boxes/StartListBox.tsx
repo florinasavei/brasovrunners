@@ -43,7 +43,7 @@ export default async function StartListBox({ event, mayEditSettings, heading }: 
             </OnlyForMode>
           </OnlyForType>
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>
-            <BoxNote>{t("editor.boxes.startList.onlyHere")}</BoxNote>
+            <BoxNote testId="start-list-not-registering">{t("editor.boxes.startList.onlyRegisteringTypes")}</BoxNote>
           </OnlyForType>
         </>
       ) : (

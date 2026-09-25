@@ -1305,7 +1305,7 @@
       "repeatRuleLiveHorizon": "Se creează acum datele din următoarele {horizon}.",
       "groups": {
         "page": "Pagina evenimentului, de sus în jos",
-        "offPage": "Nu apar pe pagină"
+        "offPage": "Nu sunt secțiuni ale paginii"
       },
       "publication": {
         "missingTitle": "Ce lipsește pentru publicare",
@@ -1386,7 +1386,8 @@
         },
         "startList": {
           "title": "Lista publică a participanților",
-          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” la Participare și înscrieri."
+          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” la Participare și înscrieri.",
+          "onlyRegisteringTypes": "O alergare de grup nu are înscrieri, deci nici listă publică: schimbă tipul la „Ce fel de eveniment”."
         },
         "status": {
           "title": "Starea evenimentului",

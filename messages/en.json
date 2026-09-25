@@ -1305,7 +1305,7 @@
       "repeatRuleLiveHorizon": "The dates of the next {horizon} are created now.",
       "groups": {
         "page": "The event page, top to bottom",
-        "offPage": "Not on the page"
+        "offPage": "Not sections of the page"
       },
       "publication": {
         "missingTitle": "Missing before publishing",
@@ -1386,7 +1386,8 @@
         },
         "startList": {
           "title": "Public participant list",
-          "onlyHere": "A public list exists only for registration on the site: choose “On the site” under Taking part and registration."
+          "onlyHere": "A public list exists only for registration on the site: choose “On the site” under Taking part and registration.",
+          "onlyRegisteringTypes": "A group run has no registration, so no public list either: change the type under “What kind of event”."
         },
         "status": {
           "title": "Event status",

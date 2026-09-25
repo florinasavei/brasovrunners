@@ -182,6 +182,7 @@ describe("§NNN the cards' headings and the map", () => {
   const saved = (): PageSectionData => ({
     event: { ...BLANK_PAGE_SECTION_DATA.event, locationName: "Parcul Tractorul" },
     texts: [{ title: "Crosul Tâmpei", bodyJson: null, rulesJson: null, scheduleJson: null, routeDescriptionJson: null, locationName: null }],
+    night: false,
   });
 
   it("heads each card «N · Nume — apare pe pagină / gol, nu apare pe pagină», in both catalogues", async () => {

@@ -11,13 +11,14 @@ import { youtubeVideoId } from "./video";
  * event editor lays its cards out by (§NNN; the owner, 2026-09-25: "am nevoie de mai multe căsuțe
  * la editor ca să văd exact ce flow am în pagină").
  *
- * **The page is the source of truth.** `app/[locale]/events/[slug]/page.tsx` draws the overline,
+ * **The page's own order, as a list.** `app/[locale]/events/[slug]/page.tsx` draws the overline,
  * the title, the description, the facts (when, where, the route, the cost and who may enter, the
  * partners), the registration button, the share links, then `#route`, `#links`, `#schedule`,
  * `#rules`, the film and the start list. A section's place here is where the page first draws
- * something its card holds; `tests/unit/events/page-sections.test.ts` reads the page and fails when
- * the two orders part. The editor writes its cards out in this order on both pages (no table of
- * elements, `AGENTS.md` §1.3), and the same test holds them to it.
+ * something its card holds. The page does not import this list — it is drawn by hand, no table of
+ * elements (`AGENTS.md` §1.3) — so `tests/unit/events/page-sections.test.ts` reads the page as
+ * source and fails the moment the two orders part; that test is what holds them equal. The editor
+ * writes its cards out in this order on both pages, and the same test holds it to it too.
  *
  * **Numbers** are the page's: a card is "4 · Data și ora" because it is the fourth thing the page
  * draws that the club writes. An automatic section — the share links, drawn from the page's own
@@ -109,7 +110,13 @@ export type PageSectionText = {
   locationName?: string | null;
 };
 
-export type PageSectionData = { event: PageSectionEvent; texts: readonly PageSectionText[] };
+/**
+ * Whether this occurrence is a night event (§394): the caller's own `clubNightEvent(event).night`,
+ * the same answer the headlamp pill (`route-pills.ts`) and the card's closed line (`CourseBox`)
+ * draw — computed outside this file, since it needs the occurrence's own start against the sun,
+ * not merely the stored columns `PageSectionEvent` carries.
+ */
+export type PageSectionData = { event: PageSectionEvent; texts: readonly PageSectionText[]; night: boolean };
 
 export type PageSection = {
   id: PageSectionId;
@@ -154,7 +161,9 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   /*
     "Traseu": the pills, the route link, and further down the route section (`#route`, §387) — the
     course card holds all three, so it sits where the first of them is drawn, in the facts. The
-    surface alone is drawn too, in the overline beside the type.
+    surface alone is drawn too, in the overline beside the type. The night pill is one of the
+    route's pills (`routePillParts`, §394), so a night event with nothing else filled in still
+    draws the row.
   */
   {
     id: "course",
@@ -162,12 +171,13 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     anchor: "route",
     glyph: "course",
     automatic: false,
-    drawn: ({ event, texts }) =>
+    drawn: ({ event, texts, night }) =>
       event.surface !== null ||
       event.difficulty !== null ||
       event.distanceMeters !== null ||
       event.elevationGainMeters !== null ||
       written(event.routeUrl) ||
+      night ||
       texts.some((text) => hasRouteDescription(text.routeDescriptionJson)),
   },
   /*
@@ -265,4 +275,5 @@ export const BLANK_PAGE_SECTION_DATA: PageSectionData = {
     participantListVisibility: "HIDDEN",
   },
   texts: [],
+  night: false,
 };

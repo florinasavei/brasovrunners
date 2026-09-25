@@ -170,6 +170,7 @@ describe("§NNN the editor lays its cards out in the page's order, on both pages
 const bare = (): PageSectionData => ({
   event: { ...BLANK_PAGE_SECTION_DATA.event, costType: null },
   texts: [{ title: "Crosul Tâmpei", bodyJson: null, rulesJson: null, scheduleJson: null, routeDescriptionJson: null, locationName: null }],
+  night: false,
 });
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 const drawn = (data: PageSectionData) =>
@@ -197,6 +198,12 @@ describe("§NNN whether the page draws each section", () => {
     data.texts = [{ ...data.texts[0], bodyJson: doc("Despre"), rulesJson: doc("Reguli") }];
     const states = drawn(data);
     for (const id of PAGE_SECTION_IDS) expect(states[id], id).toBe(true);
+  });
+
+  it("draws the course from the night pill alone: a bare event that is only a night event still shows the row", () => {
+    const data = bare();
+    data.night = true;
+    expect(drawn(data)).toMatchObject({ course: true });
   });
 
   it("draws the place while it is to be announced, and the course from a route description alone", () => {

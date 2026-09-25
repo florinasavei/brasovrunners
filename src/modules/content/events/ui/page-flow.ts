@@ -8,9 +8,10 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  * căsuțe la editor ca să văd exact ce flow am în pagină"): every card that writes a section of the
  * public page is headed by the section's number and whether the page shows it — "4 · Data și ora —
  * apare pe pagină", "12 · Film — gol, nu apare pe pagină" — and the map under Publicare and
- * Recurență lists the same sections as chips. Both read `pageSectionStates`, the list the page
- * itself is drawn in (`events/domain/page-sections.ts`), so a number on a card, a chip and the
- * page's order are one thing.
+ * Recurență lists the same sections as chips. Both read `pageSectionStates`, the page's order, as
+ * a list (`events/domain/page-sections.ts`) — the page is drawn by hand and
+ * `tests/unit/events/page-sections.test.ts` holds the two equal — so a number on a card, a chip
+ * and the page's order are one thing.
  *
  * The card's own words stay its name: "Data și ora", not the page's "Când" — the name a refusal, a
  * gap in Publicare and every e2e spec already use (`editorBox` finds a card by it, after the
