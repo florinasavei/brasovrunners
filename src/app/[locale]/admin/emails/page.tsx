@@ -120,7 +120,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const maySeeQueue = canReadRegistrations(staff.role);
   const mayEditEmail = canManageRegistrations(staff.role);
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
-  // when-lines that state them, the previews that print them and the forecast (§NNN), as they now stand.
+  // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
   const [plan, volume, recipients, queue, notices, written, deadlines, forecast] = await Promise.all([
     readEmailPlan(db),
@@ -139,7 +139,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     readEmailCopy(db),
     deadlinesRead,
     /*
-      What the platform will send on its own in the coming days (§NNN), in the club's deadlines as
+      What the platform will send on its own in the coming days (§383), in the club's deadlines as
       read above — one read, both uses. Counts and event titles only, never a recipient, so every
       reader of this page sees it.
     */
@@ -277,7 +277,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       <DeadlinesPanel locale={locale} state={deadlines} mayEdit={mayEditEmail} openWhen={{ saved: saved === "deadlines" }} />
 
       {/*
-        What goes out on its own next (§NNN), directly above the cards each row links to. The
+        What goes out on its own next (§383), directly above the cards each row links to. The
         club-copy line names the club's addresses, so it is for the readers the club's lists are for.
       */}
       <UpcomingEmailsPanel

@@ -160,7 +160,7 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
   for (const event of candidates) {
     // Ahead, or open but not published — taken off the site for a while, so it cannot be
     // registered on either: the addresses wait for the window, the page to come back, or the
-    // start to pass. One formula with the forecast on `/admin/emails` (`interestAction`, §NNN).
+    // start to pass. One formula with the forecast on `/admin/emails` (`interestAction`, §383).
     const action = interestAction(event, now);
     if (action === "wait") continue;
     const announce = action === "announce";

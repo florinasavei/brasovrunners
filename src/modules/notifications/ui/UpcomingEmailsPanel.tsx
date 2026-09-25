@@ -29,7 +29,7 @@ type Props = {
 const TAP = { display: "inline-flex", alignItems: "center", minHeight: 44 } as const;
 
 /**
- * "Următoarele emailuri automate" (§NNN): every message the platform will send a participant on
+ * "Următoarele emailuri automate" (§383): every message the platform will send a participant on
  * its own in the coming days, sorted by the moment it becomes due — the event (a link to its
  * editor), the moment with its weekday in the event's own zone (§349), the message (a link to its
  * preview card further down this page) and how many runners the job would pick if it ran now.

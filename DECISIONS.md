@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.90-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.89-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.90-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15574,3 +15574,71 @@ The owner, 2026-09-25: an extra checkmark in the event editor and a headlamp ico
 - JSON-LD and every email are unchanged. Whether the reminder's checklist should say it is a question for the owner.
 
 Baseline `BR-V1.89-2026-09-25`.
+
+## 383. /admin/emails reads ahead: every automatic email of the next fourteen days, from the job's own formula
+
+**Context.** The owner, 2026-09-24: "I need to know each time a participant will be emailed!" The outbox panel (§243) shows what was queued and sent. The previews (§91) show what each message says and when-lines in words. The dialogs of the staff sends (feat/toasts-and-confirms) name the staff-triggered ones. Nothing showed the sends the platform makes **on its own** before they happen.
+
+**Decision.** A closed fold (§336) on `/admin/emails`, "Următoarele emailuri automate" / "Upcoming automatic emails", directly above "Emailurile trimise participanților", the cards its rows link to. Its closed line reads "N trimiteri în următoarele 14 zile" (countForm, §341). The rows are sorted by the moment each send becomes due. Sends due at the same instant appear in the order a job run queues them. Each row carries:
+- the moment, with its weekday in the reader's language and the event's own zone (§349);
+- the event title as a link to its editor;
+- the message type as a link to its preview card (`#email-TYPE`);
+- a short line saying which send it is;
+- the recipients the job would pick if it ran now.
+
+A send already due but not yet queued reads "la următoarea rulare a jobului". An empty forecast says so in words. Under the list, one "Copie club" line says whether the club receives a copy of each of these messages (§320, the participants' list of "Copiile clubului") and to which addresses, with a link to that panel. There is no new setting. The line is shown to the roles that already read the club's lists (§291).
+
+**One formula, not two.** A page that computes "when" by its own arithmetic will one day promise a reminder the job never sends. So each automatic send's timing became a pure function in `notifications/domain/automatic-sends.ts`, and three callers use it:
+- **The job:** `event-mail.ts` for the reminder, the last call to sign and the participation confirmation; `interest.ts` for "registration is open".
+- **Its wake-up plan:** `next-work.ts` (§334).
+- **The forecast:** `notifications/forecast.ts`.
+
+The functions are:
+- `eventReminderDueAt` / `isEventReminderDue`: the event's lead or the club's (§377), none at 0, and a day after a late confirmation (§126);
+- `declarationLastCallDueAt` / `isDeclarationLastCallDue` (§160);
+- `participationConfirmationDueAt` / `isParticipationConfirmationDue`, over the allocator's own `confirmationWindow` (§104);
+- `interestAction` / `registrationOpenedDueAt` (§146);
+- `bibsSettleAt` = `registrationClosingInstant`, the instant `registrationHasClosed` turns true (§214);
+- `nextInLineOffers`.
+
+The job asks "is it due now?". The forecast asks "when?" of the same function, over the same candidate selectors (`selectReminderCandidates`, `selectDeclarationCandidates`, `bibs.ts#awaitingSettledNumber`). The idempotency keys are shared too (`AUTOMATIC_SEND_KEYS`), so a registration whose message is already in the outbox is left out exactly as `enqueueEmail` would leave it. The job's SQL now selects a superset by state: for the reminder, events starting within the longest possible lead (168 h) of the span. The pure function decides the instant. This keeps the per-row test in one place in JavaScript, not in two languages.
+
+**What is listed:**
+- the reminder before the start;
+- the participation confirmation when the window opens;
+- the last call to sign at the reminder's lead;
+- the offer to the next in line when a waiting-list offer or a declaration hold lapses while somebody waits. People are taken in the allocator's own order: `waitlisted_at`, then id;
+- "here is your race number" when registration closes, to the real registrations a close numbers;
+- "registration is open" to the addresses left on the event's page.
+
+**What is not listed:**
+- **Anything a person sends:** the organizer's message, the update notice, the cancellation, and the thank-you, which §82 keeps an Administrator's act ("never automatic").
+- **The answers to a runner's own click:** the link, the confirmation, "you are on the list". They go the moment the click happens and cannot be foreseen.
+- **The chain after a lapse:** whether the person offered a place then signs is not something a forecast knows.
+
+**Test registrations** are sent to exactly like real ones (§12.6), so the job's picks include them. The club's count does not (§30), so each row counts them apart: "1 destinatar acum și 2 înscrieri de test".
+
+**The horizon** is fourteen days (`FORECAST_HORIZON_DAYS`). That is two weekly runs ahead and a race's participation window (7 days) with room to spare, and short enough that the list is read, not scrolled.
+
+**The page's own request only.** The forecast reads the database on the page's request, from the one deadlines read the page already makes. There is no job, no cache and no wake-up (§334).
+
+*Rejected:*
+- A second, SQL-only copy of each timing for the page. That is the drift this decision exists to prevent.
+- Listing the thank-you "after each event". It is manual (§82), and a forecast row would promise a message nobody may send.
+- Counting test registrations with the real ones.
+- A configurable horizon. Nobody asked for one, and it would be one more number.
+
+**Consequences.**
+- New code: `notifications/domain/automatic-sends.ts`, `notifications/forecast.ts`, `notifications/ui/UpcomingEmailsPanel.tsx`.
+- Changed: `event-mail.ts` (exported selectors; the job filters through the pure functions), `interest.ts`, `next-work.ts`, `bibs.ts#awaitingSettledNumber`, `registration-window.ts#registrationClosingInstant`, `maintenance.ts` (shared key), `admin/emails/page.tsx`.
+- Messages: `Admin.emails.forecast.*` in both catalogues.
+- Tests:
+  - `tests/unit/notifications/automatic-sends.test.ts` (boundaries);
+  - `tests/integration/notifications/forecast.test.ts`: the brief's fixture (an event 3 days out with the club's 48 h reminder, one 10 days out with the reminder off, a window opening tomorrow, a hold lapsing in 20 h with somebody waiting, an event that ended an hour ago, and one whose registration opens in 2 days). It checks the rows, and for each row that the job's own code, run at that instant on the same data, queues exactly those registrations and none a minute before. It also checks the outbox exclusion, the horizon, the club's reminder at 0 and the test-registration split;
+  - `tests/unit/notifications/upcoming-emails-panel.test.ts` (both languages, the empty state, the Copie club line);
+  - `tests/e2e/upcoming-emails.spec.ts` (desktop).
+- No migration.
+
+§383 (this round) — The forecast's "last call vs. released to the queue" tie-break (§160) is now order-aware rather than blanket-suppressing: a declaration hold's lapse to the next in line only pre-empts that registration's last call to sign when the lapse is due at or before the last call's own instant, matching the maintenance job's own run order (`expireStaleHolds` before `queueEventReminders` in one pass); a last call due earlier than the lapse is still promised and still sent. Separately, `wantedLapsedHoldReleases` (registrations/domain/capacity.ts) and `nextInLineOffers` (notifications/domain/automatic-sends.ts) are recorded as two distinct formulas for the same §160 question — the job's, which reads a live "free" count, and the forecast's, which cannot, because at a forecast instant nothing has actually lapsed yet for a query to count — that are proven to agree whenever free is 0, the only condition either is ever evaluated under. And the "Următoarele emailuri automate" panel's cross-language event-title fallback (§354, "no unmarked fallback") now marks a borrowed title with its language code rather than presenting it as the reader's own locale's words.
+
+Baseline `BR-V1.90-2026-09-25`.

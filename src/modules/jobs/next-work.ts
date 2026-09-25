@@ -156,7 +156,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       eventInstants.push(ahead((toDate(event.registrationClosesAt) ?? startsAt).getTime()));
     }
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
-    // The reminder's lead is the last call's too (`domain/automatic-sends.ts`, one formula with the job, §NNN).
+    // The reminder's lead is the last call's too (`domain/automatic-sends.ts`, one formula with the job, §383).
     const reminderAt = declarationLastCallDueAt({ startsAt, reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings);
     if (mailed && reminderAt && (event.confirmed || event.pendingDeclaration)) {
       eventInstants.push(ahead(reminderAt.getTime()));

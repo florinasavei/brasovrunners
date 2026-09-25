@@ -21,7 +21,7 @@ import {
 import { selectDeclarationCandidates, selectReminderCandidates } from "./event-mail";
 
 /**
- * "Următoarele emailuri automate" on `/admin/emails` (§NNN; the owner, 2026-09-24: "I need to know
+ * "Următoarele emailuri automate" on `/admin/emails` (§383; the owner, 2026-09-24: "I need to know
  * each time a participant will be emailed!").
  *
  * The outbox panel shows what *was* queued and sent; this is the forward view: every message the

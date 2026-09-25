@@ -25,7 +25,7 @@ import { enqueueEmail } from "./outbox";
  * presses twice, produces one email.
  *
  * **When** each automatic one is due is not decided here but in `domain/automatic-sends.ts`
- * (§NNN): the job asks those functions "is it due now?", and the forecast on `/admin/emails`
+ * (§383): the job asks those functions "is it due now?", and the forecast on `/admin/emails`
  * (`forecast.ts`) asks the same functions "when?", over the same candidates selected below.
  */
 

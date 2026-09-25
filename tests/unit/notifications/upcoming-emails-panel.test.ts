@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — "Următoarele emailuri automate" on `/admin/emails`, as the server sends it: a closed fold
+ * §383 — "Următoarele emailuri automate" on `/admin/emails`, as the server sends it: a closed fold
  * whose closed line counts the sends, one row per send in the order given — the event as a link to
  * its editor, the moment with its weekday in the reader's language and the event's zone, the
  * message as a link to its preview card, the recipients counted in words — an empty state in
@@ -61,7 +61,7 @@ async function render(locale: "ro" | "en", rows: Rows, clubCopies: string[] | nu
   return html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the upcoming automatic emails card", () => {
+describe("§383 the upcoming automatic emails card", () => {
   it("is a closed fold that counts the sends on its closed line", async () => {
     const html = await render("ro", ROWS);
     expect(html).toMatch(/^<details[^>]*id="upcoming-emails"/);

@@ -18,11 +18,11 @@ const DAY = 24 * HOUR;
 const at = (ms: number) => new Date(NOW.getTime() + ms);
 
 /**
- * §NNN — when the platform emails a participant on its own, as the pure functions the maintenance
+ * §383 — when the platform emails a participant on its own, as the pure functions the maintenance
  * job and the forecast on `/admin/emails` both ask. The boundaries are the ones the job's SQL
  * used to draw (§81, §104, §126, §146, §160, §377).
  */
-describe("§NNN when an automatic email is due", () => {
+describe("§383 when an automatic email is due", () => {
   const start = at(3 * DAY);
 
   it("reminds a reminder lead before the start — the event's own, the club's, or none", () => {

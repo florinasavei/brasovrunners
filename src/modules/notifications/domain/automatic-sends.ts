@@ -7,7 +7,7 @@ import {
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 
 /**
- * When the platform emails a participant on its own (§NNN; the owner, 2026-09-24: "I need to know
+ * When the platform emails a participant on its own (§383; the owner, 2026-09-24: "I need to know
  * each time a participant will be emailed!").
  *
  * The maintenance job decides, at each run, which registrations a message is due for. These are

@@ -254,7 +254,7 @@ export type SettledBib = {
 /**
  * Who a close numbers — and so who is sent "here is your race number" — at one event: a real
  * registration still holding a place with no final number. The settle and the forecast on
- * `/admin/emails` (§NNN) read the same condition.
+ * `/admin/emails` (§383) read the same condition.
  */
 export function awaitingSettledNumber() {
   return and(

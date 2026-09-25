@@ -71,7 +71,7 @@ export function registrationHasClosed(
 /**
  * The instant `registrationHasClosed` turns true: the close, or the start when there is none —
  * which is also when the race numbers settle and "here is your race number" goes (§214), as the
- * forecast on `/admin/emails` says it (§NNN).
+ * forecast on `/admin/emails` says it (§383).
  */
 export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt" | "startsAt">): Date {
   return event.registrationClosesAt ?? event.startsAt;

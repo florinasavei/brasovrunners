@@ -6,7 +6,7 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN — "Următoarele emailuri automate" on `/admin/emails`: the reminders the job will send are
+ * §383 — "Următoarele emailuri automate" on `/admin/emails`: the reminders the job will send are
  * listed ahead of time, each with its event (a link to the editor) and its message (a link to the
  * preview card further down).
  *
@@ -35,7 +35,7 @@ async function withClient<T>(work: (client: pg.Client) => Promise<T>): Promise<T
 
 const DAY = 24 * 60 * 60_000;
 
-test.describe("§NNN the upcoming automatic emails on /admin/emails", () => {
+test.describe("§383 the upcoming automatic emails on /admin/emails", () => {
   const suffix = randomUUID().slice(0, 8);
   const title = `Proba emailuri automate ${suffix}`;
   let eventId = "";

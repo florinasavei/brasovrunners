@@ -21,7 +21,7 @@ const DAY = 24 * HOUR;
 const at = (ms: number) => new Date(NOW.getTime() + ms);
 
 /**
- * §NNN — "Următoarele emailuri automate" on `/admin/emails`: every message the platform sends a
+ * §383 — "Următoarele emailuri automate" on `/admin/emails`: every message the platform sends a
  * participant on its own in the next fourteen days, and the moment it becomes due.
  *
  * What is protected is the one formula. The fixture is the brief's: an event three days out with
@@ -31,7 +31,7 @@ const at = (ms: number) => new Date(NOW.getTime() + ms);
  * must list exactly the sends below; and for every row, the job's own code, run at that moment on
  * the same data, must pick exactly those registrations — and nobody a minute earlier.
  */
-describe("§NNN the forecast of automatic emails", () => {
+describe("§383 the forecast of automatic emails", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let seq = 0;
