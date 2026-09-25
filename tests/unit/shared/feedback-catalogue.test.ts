@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { STAFF_CLIENT_MESSAGES } from "@/i18n/client-messages";
+import { DERIVED_TOAST_KEYS } from "@/shared/feedback/notice";
 
 /**
  * `DECISIONS.md` §NNN — every "it worked" a backoffice action redirects with is a sentence.
@@ -38,6 +39,8 @@ function savedCodes(): string[] {
     }
     for (const match of text.matchAll(/\bkey: "([A-Za-z]+)"/g)) codes.add(match[1]);
   }
+  // The sentences the notice chooses from the outcome rather than an action writing them (the event save that told its participants).
+  for (const key of DERIVED_TOAST_KEYS) codes.add(key);
   // The transition codes travel as the status itself (`saved: text(form, "to")`).
   for (const status of ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]) codes.add(status);
   // What a ternary's variable name looks like to the regex above, and is not a code.

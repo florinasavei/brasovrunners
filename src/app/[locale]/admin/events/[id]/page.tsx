@@ -40,7 +40,7 @@ import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { TranslationHiddenFields } from "@/modules/content/events/ui/TranslationFields";
 import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
-import { countEventNoticeRecipients } from "@/modules/notifications/event-notices";
+import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { declarationAsksMinorToSign, listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable, MAX_TEST_REGISTRATIONS_PER_BATCH } from "@/modules/registrations/test-registrations";
@@ -69,7 +69,7 @@ import { eventFormFieldLabels, identicalTextLabels } from "@/modules/content/eve
 import { identicalTexts, storedTextReader } from "@/modules/content/events/ui/publish-check";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { confirmWords } from "@/shared/feedback/confirm-words";
-import type { ConfirmSpec } from "@/shared/feedback/notice";
+import type { ConfirmSpec, EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -354,9 +354,34 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const heading = orderedTranslations[0]?.title || t("editor.untitled");
   const thanksDue = canManageRegistrations(staffUser.role) && internal && event.eventStatus !== "CANCELLED" && event.startsAt.getTime() <= now.getTime();
   // The thank-you's recipients, counted with the send's own condition (§NNN): the dialog says
-  // "an email will be sent to N participants" from this number and no other.
-  const thanksRecipients = thanksDue && !event.thanksSentAt ? await countEventThanksRecipients(db, event.id) : 0;
+  // "an email will be sent to N participants" from the real number, names the test rows apart
+  // (§12.6), and says nothing about email when nobody was checked in.
+  const thanksRecipients = thanksDue && !event.thanksSentAt ? await countEventThanksRecipients(db, event.id) : { real: 0, test: 0 };
   const words = await confirmWords();
+  const thanksConfirm: ConfirmSpec = {
+    title: t("thanks.confirmTitle"),
+    body: thanksRecipients.test > 0 ? `${t("thanks.confirmBody")} ${t("participantMessages.testLine", { test: String(thanksRecipients.test) })}` : t("thanks.confirmBody"),
+    ...(thanksRecipients.real > 0 ? { email: words.email(thanksRecipients.real) } : {}),
+    confirmLabel: t("thanks.send"),
+    cancelLabel: words.cancel,
+  };
+  /*
+    A series save tells every date it reaches (§331): the email line is summed in the browser over
+    the dates ticked at the press, from each later date's own count — a date already run is told
+    nothing and is left out; the date being edited is the base.
+  */
+  const laterDateIds =
+    inSeries && maySaveSettings && internal ? seriesDates.filter((member) => member.id !== event.id && member.startsAt.getTime() > now.getTime()).map((member) => member.id) : [];
+  const noticeEmailCount: EmailCount | undefined =
+    laterDateIds.length > 0
+      ? {
+          field: "dates",
+          base: noticeRecipients.real,
+          counts: await countRealNoticeRecipientsByEvent(db, laterDateIds),
+          forms: t.raw("confirm.email") as EmailCount["forms"],
+          locale,
+        }
+      : undefined;
   /*
     What each verb asks before it runs (§NNN). The publication steps that face outward — publish,
     take a live event off the site, archive — ask; "send for review" changes nothing anybody sees
@@ -384,6 +409,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             title: t("confirm.cancelEventTitle", { title: heading }),
             body: t("confirm.cancelEventBody"),
             email: noticeEmail,
+            emailCount: noticeEmailCount,
             confirmLabel: t("editor.save"),
             cancelLabel: words.cancel,
             destructive: true,
@@ -403,6 +429,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       title: t("confirm.saveNoticeTitle"),
       body: t("confirm.saveNoticeBody"),
       email: noticeEmail,
+      emailCount: noticeEmailCount,
       confirmLabel: t("editor.save"),
       cancelLabel: words.cancel,
     },
@@ -873,7 +900,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             <ActionForm
                               action={sendEventThanksAction}
                               messages={await refusalMessages({ url: t("thanks.url") })}
-                              confirm={{ title: t("thanks.confirmTitle"), body: t("thanks.confirmBody"), email: words.email(thanksRecipients), confirmLabel: t("thanks.send"), cancelLabel: words.cancel }}
+                              confirm={thanksConfirm}
                               scope="thanks"
                               data-testid="thanks-form"
                             >

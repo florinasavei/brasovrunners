@@ -30,6 +30,8 @@ import { blankTranslation } from "@/modules/content/events/ui/TranslationFields"
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent, canTransition } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -115,6 +117,15 @@ export default async function NewEventPage({ params, searchParams }: Props) {
     languages: Object.fromEntries(routing.locales.map((contentLocale) => [contentLocale, tSite(`languageName.${contentLocale}`)])),
   };
   const box = { event: null, mayEditSettings: true } as const;
+  /*
+    "Creează și publică" puts an event on the site in one press (§NNN): it asks first, as the
+    editor's "Publică" does. The plain create makes a draft nobody sees and asks nothing — the
+    question is chosen by the button that was pressed (`then=publish`).
+  */
+  const words = await confirmWords();
+  const publishConfirm = mayPublish
+    ? [{ when: [{ field: THEN_FIELD, equals: THEN_PUBLISH }], title: t("confirm.createPublishTitle"), body: t("confirm.publishBody"), confirmLabel: t("editor.createAndPublish"), cancelLabel: words.cancel }]
+    : undefined;
 
   return (
     <Stack spacing={3}>
@@ -128,7 +139,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
 
       {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
 
-      <ActionForm action={createEventAction} messages={messages} id="event-create-form" data-testid="event-create-form">
+      <ActionForm action={createEventAction} messages={messages} confirm={publishConfirm} id="event-create-form" data-testid="event-create-form">
         <input type="hidden" name="uiLocale" value={locale} />
         {/* An event that does not exist yet is scheduled (§350): the status card shows it, read-only,
             and this is what posts (§358). */}

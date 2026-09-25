@@ -64,6 +64,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await field("translations.en.slug").fill(englishSlug);
     await summary("en", "A monthly cross, for the drafts series.");
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     await hydrated(page);
     const sourceUrl = page.url().split("?")[0];

@@ -394,6 +394,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     await expect(publication.getByText("Nu lipsește nimic: evenimentul poate fi publicat.")).toBeVisible();
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     const editorUrl = page.url();
     await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
@@ -694,6 +695,7 @@ test.describe("BR-REQ-050-02 the weekly group run, created in one page (§350)",
 
     await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     await hydrated(page);
     const editorUrl = new URL(page.url()).pathname;

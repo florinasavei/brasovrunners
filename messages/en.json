@@ -715,6 +715,7 @@
       "cancelRegistrationPrintedBody": "Number {number} is already printed; after cancelling it stays retired — never given to anybody else — and must be pulled out of the pile.",
       "repeatTitle": "Create the dates?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
+      "repeatPublishOnBody": "From now on, every new date the series creates goes on the site by itself, in both languages. The dates already created stay as they are.",
       "bibsTitle": "Assign the race numbers?",
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay.",
       "bulkEraseTitle": "Erase the ticked registrations for good?",
@@ -732,6 +733,7 @@
       "emailEach": "Every cancelled registration receives an email.",
       "publishTitle": "Publish “{title}”?",
       "publishBody": "It appears on the site in both languages. An event with registration on the site opens it within its window.",
+      "createPublishTitle": "Create and publish the event?",
       "unpublishTitle": "Take “{title}” off the site?",
       "unpublishBody": "It disappears from the site in both languages until you publish it again. What already exists — registrations, photos — stays.",
       "archiveContentTitle": "Archive “{title}”?",
@@ -747,8 +749,6 @@
       "cancelEventQuietBody": "It shows as cancelled on the site, registration no longer opens and existing registrations stay on record. The participants are not told.",
       "givePlaceTitle": "Give them a place?",
       "givePlaceBody": "{name} gets a free place ahead of the waiting list, and the confirmation with the race number.",
-      "checkInTitle": "Check in?",
-      "checkInBody": "{name} is marked present at the desk. It can be undone from the same row.",
       "setBibTitle": "Save the number?",
       "setBibBody": "The number stays this person's and is never given to anybody else.",
       "resendTitle": "Send the email again?",
@@ -781,6 +781,10 @@
       "emailPlanBody": "The quotas, “how much we can still send” and the cost table follow the new plan from now on.",
       "contactRecipientsTitle": "Change who receives the contact messages?",
       "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them.",
+      "clubNoticesTitle": "Change who receives the club's copies?",
+      "clubNoticesBody": "Signed declarations, confirmations and the copies of messages to participants — with their personal data — go from now on to the addresses saved, and only to them.",
+      "emailCopyResetTitle": "Go back to the platform's text?",
+      "emailCopyResetBody": "The club's own text for this email, in this language, is lost; emails sent from now on use the platform's text.",
       "botCheckOnTitle": "Turn the anti-bot check on?",
       "botCheckOnBody": "The public forms show Cloudflare's “I am not a robot” box; a failed check stops the send.",
       "botCheckOffTitle": "Turn the anti-bot check off?",
@@ -792,7 +796,9 @@
       "jobCadenceTitle": "Save the interval?",
       "jobCadenceBody": "The email queue and the maintenance run at most once per chosen interval; an email may wait that long.",
       "neonLimitsTitle": "Save the Neon limits?",
-      "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then."
+      "neonLimitsBody": "A project that reaches its monthly quota is suspended until the next period — the site does not answer until then.",
+      "neonPlanTitle": "Change the Neon plan?",
+      "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -2353,6 +2359,7 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Delete",
       "deleteConfirm": "Delete the picture for good?",
+      "deleteBody": "“{name}” is deleted for good, from the library and from storage. This cannot be undone.",
       "tableCaption": "Uploaded pictures, newest first",
       "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
       "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes."
@@ -3806,6 +3813,27 @@
         "few": "Saved on {count} dates of the series.",
         "other": "Saved on {count} dates of the series."
       },
+      "eventNotified": {
+        "one": "Saved; “Details updated” queued for {count} participant.",
+        "few": "Saved; “Details updated” queued for {count} participants.",
+        "other": "Saved; “Details updated” queued for {count} participants."
+      },
+      "eventSeriesNotified": {
+        "one": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participant.",
+        "few": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants.",
+        "other": "Saved on the dates chosen ({dates}); “Details updated” queued for {count} participants."
+      },
+      "eventCancelled": {
+        "one": "Cancelled; “Event cancelled” queued for {count} participant.",
+        "few": "Cancelled; “Event cancelled” queued for {count} participants.",
+        "other": "Cancelled; “Event cancelled” queued for {count} participants."
+      },
+      "eventSeriesCancelled": {
+        "one": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participant.",
+        "few": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants.",
+        "other": "Cancelled on the dates chosen ({dates}); “Event cancelled” queued for {count} participants."
+      },
+      "eventCancelledQuiet": "Cancelled; no email was sent.",
       "created": "The event was created, as a draft.",
       "createdPublished": "Created and published: on the site in both languages.",
       "duplicated": "The copy was created, as a draft.",

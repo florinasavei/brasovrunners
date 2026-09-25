@@ -336,6 +336,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     // it was found. The same mailbox twice, in two spellings, is one mailbox.
     await box.fill("arhiva@example.org, Arhiva@example.org");
     await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+    await confirmDialog(page, "Schimbi cine primește copiile clubului?");
 
     await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
@@ -348,6 +349,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     // And back to none: the sentence in force says so, and the forecast is what it was.
     await box.fill("");
     await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+    await confirmDialog(page, "Schimbi cine primește copiile clubului?");
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: —.")).toBeVisible();
     await expect(forecast).toContainText(`costă circa ${before} mesaje`);
     await expect(forecast).not.toContainText("copiile ascunse");

@@ -210,10 +210,22 @@ function thanksRecipientsOf(eventId: string) {
   return and(eq(registrations.eventId, eventId), isNotNull(registrations.checkedInAt));
 }
 
-/** How many the thank-you would reach right now — the dialog's number, from the send's own condition. */
-export async function countEventThanksRecipients<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
-  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(registrations).where(thanksRecipientsOf(eventId));
-  return row?.count ?? 0;
+/**
+ * How many the thank-you would reach right now — the dialog's number, from the send's own
+ * condition. Real and test apart: a test registration is written to like a real one and counted
+ * in nothing the club is given (`AGENTS.md` §12.6), so the dialog states `real` and names the
+ * test rows on a line of their own, as the notice and message dialogs do.
+ */
+export async function countEventThanksRecipients<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ real: number; test: number }> {
+  const rows = await db
+    .select({ kind: registrations.kind, count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(thanksRecipientsOf(eventId))
+    .groupBy(registrations.kind);
+  return {
+    real: rows.find((row) => row.kind === "REAL")?.count ?? 0,
+    test: rows.find((row) => row.kind === "TEST")?.count ?? 0,
+  };
 }
 
 /**

@@ -8,14 +8,18 @@ import { describe, expect, it } from "vitest";
  *
  * The rule: an action of class (a) — publish, take off the site, archive, cancel an event, tell
  * the participants, resend, cancel / erase / rename a registration, give a place, set a number,
- * check in, approve or withdraw a legal version, add or remove a colleague, delete an album or a
- * picture, drain the outbox, change a plan, a limit, an interval, the contact recipients — is
+ * approve or withdraw a legal version, add or remove a colleague, delete an album or a picture,
+ * drain the outbox, change a plan, a limit, an interval, the contact recipients, the club's
+ * copies, an email's wording back to the platform's — is
  * posted through a form that asks: an `ActionForm` with `confirm`, or, where one form carries
  * several verbs, a `ConfirmSubmitButton` (which draws the same `ConfirmDialog`). A plain `<form>`
- * counts only when a `ConfirmSubmitButton` is among its children. The two verbs guarded by a
- * typed phrase, name or title (`hardDeleteEventAction`, `eraseRegistrationFromListAction`,
- * `deleteApprovedLegalVersionAction`, the bulk erase's typed count) ask through the typing and
- * are not listed here.
+ * counts only when a `ConfirmSubmitButton` is among its children. A form whose question has
+ * `when` conditions asks only for the press that matches them — the event save when it tells
+ * the participants or cancels, the create only for "Creează și publică" — and counts as asking.
+ *
+ * Every other Server Action of the backoffice is in `NOT_CONFIRMED`, each with its reason, and
+ * the last test insists every exported action is in one list or the other: a new verb has to be
+ * classified before it ships, rather than asking nothing by default.
  *
  * Source-level, like `server-element-props.test.ts`: every `.tsx` under `src/` is parsed, every
  * JSX attribute `action={…}` / `formAction={…}` whose expression names one of the actions — by
@@ -24,6 +28,14 @@ import { describe, expect, it } from "vitest";
  * here rather than on the owner's phone. The server never relies on any of it (BR-REQ-060-01).
  */
 const ROOT = path.resolve(__dirname, "../../..");
+
+function actionFiles(directory: string): string[] {
+  return readdirSync(directory).flatMap((entry) => {
+    const full = path.join(directory, entry);
+    if (statSync(full).isDirectory()) return actionFiles(full);
+    return entry === "actions.ts" ? [full] : [];
+  });
+}
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -40,7 +52,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   bulkPublishEventsAction: ["publish", "publish.action"],
   bulkArchiveEventsAction: ["archive"],
   bulkDeleteEventsAction: ["remove"],
-  setRepeatPublishAction: ["autoPublish.action"],
+  // The list's "Publică automat de acum" and the editor's switch, which asks only when turned on.
+  setRepeatPublishAction: ["autoPublish.action", "actions.setRepeatPublish"],
   stopRepeatAction: ["actions.stopRepeat"],
   repeatEventAction: [],
   duplicateEventAction: [],
@@ -50,11 +63,14 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   assignBibNumbersAction: ["assignAction"],
   sendEventThanksAction: [],
   sendParticipantMessageAction: [],
+  // Asks only when the press faces outward: the notice ticked, the status set to cancelled.
+  saveEventAndTranslationsAction: [],
+  // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.
+  createEventAction: [],
   // Registrations.
   confirmRegistrationNowAction: [],
   promoteRegistrationAction: [],
   setBibNumberAction: [],
-  checkInAction: [],
   createRegistrationAction: [],
   correctRegisteredNameAction: [],
   cancelRegistrationAction: [],
@@ -88,9 +104,40 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Settings that face outward.
   updateEmailPlanAction: [],
   updateContactRecipientsAction: [],
+  // Who receives the signed declarations and the confirmations, with personal data in them.
+  updateClubNoticesAction: [],
+  // Asks for "Revino la textul platformei" (`reset=1`) only; saving the wording is an editorial save.
+  updateEmailCopyAction: [],
+  updateNeonPlanAction: [],
   updateBotCheckAction: [],
   updateJobCadenceAction: [],
   updateNeonLimitsAction: [],
+};
+
+/**
+ * The backoffice's Server Actions that ask nothing, each with why. A toast still says each one
+ * worked; the server asserts every rule as before (BR-REQ-060-01).
+ */
+export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
+  checkInAction: "emails nobody and is undone from the same row; a dialog per runner would double the desk's taps on race morning",
+  createAlbumAction: "an editorial save: a draft album nobody sees until its own publish, which asks",
+  saveAlbumAction: "an editorial save, like a page's; publishing and deleting ask",
+  setCoverAction: "picks the album's cover, undone by picking another",
+  createPageAction: "an editorial save: a draft page nobody sees until its own publish, which asks",
+  savePageAction: "an editorial save, like the event's without a notice; publishing and deleting ask",
+  movePageAction: "reorders the pages, undone by moving back",
+  createLegalVersionAction: "a draft, never in force until approved, which asks",
+  updateLegalVersionAction: "a draft, never in force until approved, which asks",
+  markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
+  setBibPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
+  addTestRegistrationsAction: "test rows, counted nowhere and absent from production, removed by a verb that asks",
+  hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
+  eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
+  deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
+  previewParticipantMessageAction: "a preview; sends nothing",
+  lookUpPersonAction: "reads; changes nothing",
+  signInAsDevIdentityAction: "the development sign-in: a session, not data",
+  signOutAction: "a session, not data",
 };
 
 type Site = { file: string; line: number; expression: string; verdict: "asks" | "bare"; why: string };
@@ -182,6 +229,19 @@ describe("§NNN every irreversible or outward-facing staff action asks first", (
   it("asks at every site: an ActionForm with confirm, or a ConfirmSubmitButton where one form carries several verbs", () => {
     const bare = [...SITES].flatMap(([name, sites]) => sites.filter((site) => site.verdict === "bare").map((site) => `${name} at ${site.file}:${site.line} (${site.expression}) — ${site.why}`));
     expect(bare, "posted without a question").toEqual([]);
+  });
+
+  it("classifies every Server Action of the backoffice: it asks, or it is listed with why it does not", () => {
+    const exported = actionFiles(path.join(ROOT, "src/app/[locale]/admin")).flatMap((file) =>
+      [...readFileSync(file, "utf8").matchAll(/export async function (\w+Action)\b/g)].map((match) => match[1]),
+    );
+    expect(exported.length).toBeGreaterThan(60);
+    const unclassified = exported.filter((name) => !(name in CONFIRMED_ACTIONS) && !(name in NOT_CONFIRMED));
+    expect(unclassified, "a new action: add it to CONFIRMED_ACTIONS, or to NOT_CONFIRMED with its reason").toEqual([]);
+    const both = Object.keys(NOT_CONFIRMED).filter((name) => name in CONFIRMED_ACTIONS);
+    expect(both).toEqual([]);
+    const stale = Object.keys(NOT_CONFIRMED).filter((name) => !exported.includes(name));
+    expect(stale, "listed in NOT_CONFIRMED but no longer exported").toEqual([]);
   });
 
   it("never asks twice: a ConfirmSubmitButton sits in no ActionForm that has its own confirm", () => {

@@ -502,7 +502,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               )}
               <ActionForm
                 action={checkInAction}
-                confirm={{ when: [{ field: "direction", equals: "in" }], title: tr("confirm.checkInTitle"), body: tr("confirm.checkInBody", { name: registration.registeredName }), confirmLabel: tr("desk.checkIn"), cancelLabel: words.cancel }}
                 data-testid="checkin-form"
               >
                 {deskHidden}

@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { updateEmailCopyAction } from "@/app/[locale]/admin/emails/actions";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
@@ -65,6 +66,7 @@ type Props = {
 export default async function EmailCopyEditor({ locale, emailLocale, messageType, written, shipped, samples }: Props) {
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Admin.richText");
+  const words = await confirmWords();
   const current = written ?? shipped;
   const field = (name: EmailCopyPlaceholder) => `{${name}}`;
 
@@ -92,6 +94,13 @@ export default async function EmailCopyEditor({ locale, emailLocale, messageType
     {/* A refused wording — a placeholder misspelt, a sample value left in — comes back as typed (§315). */}
     <ActionForm
       action={updateEmailCopyAction}
+      /*
+        "Revino la textul platformei" loses the club's own words for this message: it asks, in red,
+        chosen by the button pressed (`reset=1`, §NNN). Saving the wording is an editorial save,
+        like a page's or an event's, and says it worked with a toast — no question in front of the
+        page's first press (§371, `press-adds-no-style.spec.ts`).
+      */
+      confirm={[{ when: [{ field: "reset", equals: "1" }], title: t("confirm.emailCopyResetTitle"), body: t("confirm.emailCopyResetBody"), confirmLabel: t("emails.copy.reset"), cancelLabel: words.cancel, destructive: true }]}
       messages={await refusalMessages({ subject: t("emails.copy.subject"), body: t("emails.copy.paragraphs") })}
       // One form per message and language on the same page, each with a "subject" (`fieldId`).
       scope={`${messageType}-${emailLocale}`}

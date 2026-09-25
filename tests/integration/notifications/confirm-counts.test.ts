@@ -167,7 +167,10 @@ describe("§NNN the dialog's count is the send's recipients", () => {
     const counted = await countEventThanksRecipients(db, event.id);
     const [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
     const sent = await sendEventThanks(db, admin, { eventId: event.id }, NOW);
-    expect(sent.recipients).toBe(counted);
-    expect(counted).toBe(2);
+    // The dialog states the real one; the test row is written to too, and named apart (§12.6).
+    expect(counted).toEqual({ real: 1, test: 1 });
+    expect(sent.recipients).toBe(counted.real + counted.test);
+    const rows = await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "EVENT_THANKS"), isNotNull(emailOutbox.participantId)));
+    expect(rows).toHaveLength(counted.real + counted.test);
   });
 });

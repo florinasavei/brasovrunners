@@ -114,6 +114,7 @@ async function publishSeries(page: Page, created: Created, first?: Date): Promis
   await field("translations.en.slug").fill(`trial-run-${suffix}`);
   await summary("en", "A trial run, for the series card.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
   const record = { title, dates: 1 };
   created.push(record);
@@ -194,6 +195,7 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
   await field("translations.en.slug").fill(`${words.slugEn}-${suffix}`);
   await summary("en", "A trial event, for the card's date row.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
   created.push({ title, dates: 1 });
   await hydrated(page);

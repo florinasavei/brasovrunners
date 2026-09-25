@@ -22,7 +22,9 @@ import { type ToastApi, ToastContext } from "./toast-context";
  *
  * `role="status"`: a polite live region, so a screen reader hears "Modificările au fost salvate."
  * after the press without being interrupted, and nothing steals the focus — the page's own state
- * (the banner, the boxes) is where the focus belongs.
+ * (the banner, the boxes) is where the focus belongs. The region is mounted once, empty, with the
+ * provider, and the toast is drawn inside it: a region inserted already holding its sentence is
+ * one many screen readers never announce, while a change inside a region they already know is.
  *
  * **Where it sits.** At the bottom, above the footer's sticky bar — two 44-pixel lines on a phone
  * (`SiteFooter`) — and above the event editor's sticky save row, which stands on that bar: the
@@ -84,6 +86,8 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
   return (
     <ToastContext.Provider value={api}>
       {children}
+      {/* The live region, always here and empty between toasts; the toast is drawn inside it. */}
+      <div role="status" aria-live="polite" data-testid="toast-live">
       {current && (
         <Snackbar
           key={current.id}
@@ -103,7 +107,8 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
           data-testid="toast"
         >
           <Alert
-            role="status"
+            // Not a live region of its own: the one around it announces the sentence, once.
+            role="presentation"
             severity={current.kind}
             variant="filled"
             // The close button drawn here rather than through `onClose`: MUI's own is 28 px, and a
@@ -119,6 +124,7 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
           </Alert>
         </Snackbar>
       )}
+      </div>
     </ToastContext.Provider>
   );
 }

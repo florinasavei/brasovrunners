@@ -132,8 +132,26 @@ export default async function RecurrenceSeriesPanel(props: Props) {
               {publishState}
             </Typography>
             {mayChange && (
-              // A switch, undone by the same switch: a toast and no question (§NNN).
-              <ActionForm action={actions.setRepeatPublish} data-testid="repeat-publish-form">
+              /*
+                Turning it on puts every date the series creates from now on on the site by itself:
+                it asks, as the list's "Publică automat de acum" does (§NNN). Turning it off, or
+                saving it as it was, asks nothing.
+              */
+              <ActionForm
+                action={actions.setRepeatPublish}
+                confirm={
+                  publish
+                    ? undefined
+                    : {
+                        when: [{ field: "publish", equals: "on" }],
+                        title: t("events.seriesDraftsAutoPublishTitle"),
+                        body: t("confirm.repeatPublishOnBody"),
+                        confirmLabel: t("events.seriesDraftsAutoPublishConfirm"),
+                        cancelLabel: words.cancel,
+                      }
+                }
+                data-testid="repeat-publish-form"
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={eventId} />
                 <Stack spacing={1} sx={{ alignItems: "flex-start" }}>

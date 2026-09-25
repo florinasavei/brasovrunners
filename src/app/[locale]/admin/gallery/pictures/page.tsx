@@ -227,7 +227,7 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
                 row.references.length === 0 ? (
                   <ActionForm
                     action={deletePictureAction}
-                    confirm={{ title: t("pictures.deleteConfirm"), body: row.originalFilename, confirmLabel: t("pictures.delete"), cancelLabel: words.cancel, destructive: true }}
+                    confirm={{ title: t("pictures.deleteConfirm"), body: t("pictures.deleteBody", { name: row.originalFilename }), confirmLabel: t("pictures.delete"), cancelLabel: words.cancel, destructive: true }}
                   >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="assetId" value={row.id} />

@@ -94,8 +94,11 @@ describe("§NNN ToastProvider", () => {
           createElement(ToastProvider, { flash } as unknown as ComponentProps<typeof ToastProvider>, createElement("p", null, "conținut")),
         ),
       );
-    expect(render(null)).toBe("<p>conținut</p>");
+    // The live region is there from the first paint, and empty (a region inserted already holding
+    // its sentence is one a screen reader may never announce).
+    const EMPTY_REGION = '<div role="status" aria-live="polite" data-testid="toast-live"></div>';
+    expect(render(null)).toBe(`<p>conținut</p>${EMPTY_REGION}`);
     // The flash is shown from an effect, after the page painted: nothing in the server's markup.
-    expect(render({ kind: "success", key: "event" })).toBe("<p>conținut</p>");
+    expect(render({ kind: "success", key: "event" })).toBe(`<p>conținut</p>${EMPTY_REGION}`);
   });
 });

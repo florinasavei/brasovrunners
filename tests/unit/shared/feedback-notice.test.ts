@@ -53,15 +53,15 @@ describe("§NNN the toast queue", () => {
 });
 
 describe("§NNN the notice a redirect's outcome becomes", () => {
-  it("names the sentence by the `saved` code and carries the other parameters as values", () => {
-    // `offered` rides along as a value; it counts nothing the sentence pluralises, so no `count`.
-    expect(noticeOf({ saved: "event", offered: "2" })).toEqual({ kind: "success", key: "event", values: { offered: "2" } });
+  it("names the sentence by the `saved` code and carries nothing but the count", () => {
+    // `offered` counts nothing the sentence says; it stays in the URL for the banner.
+    expect(noticeOf({ saved: "event", offered: "2" })).toEqual({ kind: "success", key: "event" });
     expect(noticeOf({ saved: "bibSet" })).toEqual({ kind: "success", key: "bibSet" });
   });
 
   it("takes the first counting parameter as `count`, so a counted sentence needs no ICU plural", () => {
-    expect(noticeOf({ saved: "eventsArchived", archived: "3", failed: "1" })?.values).toEqual({ archived: "3", failed: "1", count: "3" });
-    expect(noticeOf({ saved: "outboxSent", sent: 7 })?.values).toEqual({ sent: "7", count: "7" });
+    expect(noticeOf({ saved: "eventsArchived", archived: "3", failed: "1" })?.values).toEqual({ count: "3" });
+    expect(noticeOf({ saved: "outboxSent", sent: 7 })?.values).toEqual({ count: "7" });
     // An explicit count wins.
     expect(noticeOf({ saved: "x", count: "9", sent: "7" })?.values?.count).toBe("9");
   });
@@ -71,6 +71,51 @@ describe("§NNN the notice a redirect's outcome becomes", () => {
     expect(noticeOf({})).toBeNull();
     expect(noticeOf({ saved: "not a key!" })).toBeNull();
     expect(noticeOf({ saved: "event", "bad name": "x" })?.values).toBeUndefined();
+  });
+
+  it("toasts no success for a staff verb Zitadel refused, could not find, or was never asked (§171, §288)", () => {
+    for (const saved of ["passwordReset", "accountDeactivated", "accountReactivated"]) {
+      for (const account of ["failed", "missing", "unconfigured"]) {
+        expect(noticeOf({ saved, account, reason: "Errors.User.NotFound" }), `${saved}/${account}`).toBeNull();
+      }
+      expect(noticeOf({ saved, account: "done" })).toEqual({ kind: "success", key: saved });
+    }
+    for (const saved of ["invited", "reinvited"]) {
+      for (const invite of ["failed", "unconfigured"]) expect(noticeOf({ saved, invite }), `${saved}/${invite}`).toBeNull();
+      expect(noticeOf({ saved, invite: "invited" })).toEqual({ kind: "success", key: saved });
+    }
+    expect(noticeOf({ saved: "invited", invite: "exists" })?.kind).toBe("success");
+  });
+
+  it("never carries a name or a provider's words into the cookie — only numbers travel", () => {
+    // The desk's search box is a participant's name, and it rides on the redirect's query.
+    const desk = noticeOf({ eventId: "7f0c2d1e-0000-4000-8000-000000000000", q: "Ana Popescu", saved: "checkedIn" });
+    expect(desk).toEqual({ kind: "success", key: "checkedIn" });
+    expect(JSON.stringify(desk)).not.toContain("Ana");
+    // A counting parameter that is not a number is no count.
+    expect(noticeOf({ saved: "eventsArchived", archived: "Ana" })?.values).toBeUndefined();
+  });
+
+  it("an event save counts what it says: the dates for a series, the emails when it told anyone (§331)", () => {
+    expect(noticeOf({ saved: "eventSeries", applied: "4" })).toEqual({ kind: "success", key: "eventSeries", values: { count: "4" } });
+    expect(noticeOf({ saved: "eventSeries", applied: "4", notice: "update", queued: "37" })).toEqual({
+      kind: "success",
+      key: "eventSeriesNotified",
+      values: { count: "37", dates: "4" },
+    });
+    expect(noticeOf({ saved: "event", notice: "update", queued: "12" })).toEqual({ kind: "success", key: "eventNotified", values: { count: "12" } });
+    expect(noticeOf({ saved: "event", notice: "cancelled", queued: "9" })).toEqual({ kind: "success", key: "eventCancelled", values: { count: "9" } });
+    expect(noticeOf({ saved: "eventSeries", applied: "3", notice: "cancelled", queued: "20" })?.key).toBe("eventSeriesCancelled");
+    expect(noticeOf({ saved: "event", notice: "cancelledQuiet", queued: "0" })?.key).toBe("eventCancelledQuiet");
+    expect(noticeOf({ saved: "event", notice: "cancelledNobody" })?.key).toBe("eventCancelledQuiet");
+    expect(noticeOf({ saved: "event", notice: "none" })?.key).toBe("event");
+  });
+
+  it("a count of nothing, or a sentence that says nothing was done, is info rather than a green tick", () => {
+    expect(noticeOf({ saved: "eventsPublished", published: "0", failed: "3" })?.kind).toBe("info");
+    expect(noticeOf({ saved: "eventsPublished", published: "2", failed: "1" })?.kind).toBe("success");
+    expect(noticeOf({ saved: "interestNotFound" })?.kind).toBe("info");
+    expect(noticeOf({ saved: "neonLimitsSame" })?.kind).toBe("info");
   });
 });
 
@@ -116,6 +161,12 @@ describe("§NNN which question a form's values pick", () => {
   it("asks nothing when no spec matches — the save that changes nothing outward", () => {
     expect(pickConfirm(specs, values({ "event.eventStatus": "SCHEDULED" }))).toBeNull();
     expect(pickConfirm(undefined, values({}))).toBeNull();
+  });
+
+  it("only the publish submitter of the create form asks (§NNN)", () => {
+    const publish = { when: [{ field: "then", equals: "publish" }], title: "publish", body: "", confirmLabel: "", cancelLabel: "" };
+    expect(pickConfirm([publish], values({ then: "publish" }))?.title).toBe("publish");
+    expect(pickConfirm([publish], values({}))).toBeNull();
   });
 
   it("a spec without conditions always matches, and `notEquals` reads an absent value as different", () => {

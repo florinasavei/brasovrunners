@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { type ConfirmSpec, pickConfirm } from "@/shared/feedback/notice";
+import { type ConfirmSpec, pickConfirm, resolveEmailCount } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
@@ -153,7 +153,9 @@ export default function ActionForm({
     });
     if (!spec) return;
     event.preventDefault();
-    setAsking({ spec, submitter });
+    // A series save's email line, summed over the dates ticked at this press (§NNN).
+    const resolved = resolveEmailCount(spec, (field) => data.getAll(field).filter((value): value is string => typeof value === "string"));
+    setAsking({ spec: resolved, submitter });
   };
 
   const answerYes = () => {

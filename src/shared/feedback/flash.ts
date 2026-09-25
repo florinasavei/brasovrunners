@@ -18,8 +18,9 @@ import { decodeFlash, encodeFlash, FLASH_COOKIE, FLASH_MAX_AGE_SECONDS, type For
  * line in the action and nothing in the URL.
  *
  * Not `httpOnly` — the island clears it — and `sameSite: lax`, `secure` where the site is; it
- * holds a key and a few counts, never a name or an address (the values are the redirect's own
- * query parameters, which carry none either, §14.5).
+ * holds a key and a few counts, never a name or an address: `noticeOf` keeps only the numbers a
+ * sentence counts, so neither the desk's search box (a participant's name) nor a provider's error
+ * text, both of which may ride on the redirect's query, reaches a cookie every request carries.
  */
 export async function flash(notice: FormNotice): Promise<void> {
   let jar: Awaited<ReturnType<typeof cookies>>;

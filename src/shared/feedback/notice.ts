@@ -19,6 +19,8 @@
  * both the server (`flash.ts`) and the islands import it.
  */
 
+import { type CountForm, countForm } from "@/i18n/count-form";
+
 export type NoticeKind = "success" | "info";
 
 export type FormNotice = {
@@ -62,23 +64,85 @@ const COUNT_PARAMETERS = [
 const KEY = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 
 /**
- * The notice a redirect's outcome carries, or none: `saved` names the sentence, every other
- * string rides along as a value, and the first counting parameter present is also `count`.
- * An outcome with an `error` and no `saved` is a refusal, which is never a toast.
+ * The sentences whose number is not the first counting parameter present, and the other numbers
+ * a sentence names. A series save that also told its participants carries `applied` (the dates)
+ * and `queued` (the emails): "Salvat pe {count} date ale seriei" counts `applied`, and the
+ * notified sentence counts `queued` and names the dates as `{dates}`.
+ */
+const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Record<string, string>> }>> = {
+  eventSeries: { count: "applied" },
+  eventNotified: { count: "queued" },
+  eventCancelled: { count: "queued" },
+  eventSeriesNotified: { count: "queued", values: { dates: "applied" } },
+  eventSeriesCancelled: { count: "queued", values: { dates: "applied" } },
+};
+
+/**
+ * The event editor's save names what it did beyond saving (§331): an update notice or a
+ * cancellation queued is a sentence of its own, with the number of emails — the brief's "the
+ * toast states how many were queued". The URL keeps `saved=event` for the page's banner; only
+ * the toast's key is chosen here.
+ */
+function sentenceKeyOf(saved: string, notice: string | number | undefined): string {
+  if (saved !== "event" && saved !== "eventSeries") return saved;
+  const series = saved === "eventSeries";
+  if (notice === "update") return series ? "eventSeriesNotified" : "eventNotified";
+  if (notice === "cancelled") return series ? "eventSeriesCancelled" : "eventCancelled";
+  if (notice === "cancelledQuiet" || notice === "cancelledNobody") return "eventCancelledQuiet";
+  return saved;
+}
+
+/** The toast keys chosen here rather than written by an action — each needs its sentence too (`feedback-catalogue.test.ts`). */
+export const DERIVED_TOAST_KEYS: readonly string[] = [...Object.keys(SENTENCES).filter((key) => key !== "eventSeries"), "eventCancelledQuiet"];
+
+/**
+ * The provider's answers that mean the verb happened (§171, §288). A staff verb that reaches
+ * Zitadel redirects with `saved` whatever Zitadel said — the page's banner tells `failed`,
+ * `missing` and `unconfigured` apart — so a green "the link was sent" is owed only to these.
+ */
+const PROVIDER_DONE: ReadonlySet<string> = new Set(["invited", "exists", "done"]);
+const PROVIDER_FIELDS = ["invite", "account"] as const;
+
+/** Sentences that say nothing happened, however the action got there: an `info`, never a green tick. */
+const NOTHING_HAPPENED: ReadonlySet<string> = new Set(["interestNotFound", "participantMessageDuplicate", "neonLimitsSame"]);
+
+/**
+ * The notice a redirect's outcome carries, or none: `saved` names the sentence and the first
+ * counting parameter present is its `count`. An outcome with an `error` and no `saved` is a
+ * refusal, which is never a toast.
+ *
+ * **Only numbers travel.** The outcome is the redirect's query, and a query may hold what a
+ * cookie must not — the desk's search box (a participant's name), Zitadel's error text — so the
+ * notice keeps `count` and the numbers `SENTENCES` names, and nothing else (`flash.ts`).
+ *
+ * A provider verb that did not happen is no notice at all: the banner says why. A count of zero,
+ * or a sentence that says nothing was done, is `info`.
  */
 export function noticeOf(outcome: Readonly<Record<string, string | number | undefined>>): FormNotice | null {
-  const key = outcome.saved;
-  if (typeof key !== "string" || !KEY.test(key)) return null;
+  const saved = outcome.saved;
+  if (typeof saved !== "string" || !KEY.test(saved)) return null;
+  for (const field of PROVIDER_FIELDS) {
+    const answer = outcome[field];
+    if (answer !== undefined && !PROVIDER_DONE.has(String(answer))) return null;
+  }
+  const key = sentenceKeyOf(saved, outcome.notice);
+  const numberOf = (name: string): string | undefined => {
+    const value = outcome[name];
+    if (value === undefined) return undefined;
+    const text = String(value);
+    return /^\d{1,9}$/.test(text) ? text : undefined;
+  };
+  const sentence = SENTENCES[key];
   const values: Record<string, string> = {};
-  for (const [name, value] of Object.entries(outcome)) {
-    if (name === "saved" || value === undefined || !KEY.test(name)) continue;
-    values[name] = String(value);
+  const counted = sentence?.count ?? COUNT_PARAMETERS.find((name) => numberOf(name) !== undefined);
+  const count = counted ? numberOf(counted) : undefined;
+  if (count !== undefined) values.count = count;
+  for (const [placeholder, name] of Object.entries(sentence?.values ?? {})) {
+    const value = numberOf(name);
+    if (value !== undefined) values[placeholder] = value;
   }
-  if (values.count === undefined) {
-    const counted = COUNT_PARAMETERS.find((name) => values[name] !== undefined);
-    if (counted) values.count = values[counted];
-  }
-  return { kind: "success", key, ...(Object.keys(values).length > 0 ? { values } : {}) };
+  const kind: NoticeKind = count === "0" || NOTHING_HAPPENED.has(key) ? "info" : "success";
+  return { kind, key, ...(Object.keys(values).length > 0 ? { values } : {}) };
 }
 
 /** The cookie's value: JSON, URL-encoded so a cookie header never sees a quote or a semicolon. */
@@ -169,6 +233,12 @@ export type ConfirmSpec = {
    */
   email?: string;
   /**
+   * The same sentence, counted from the form as posted, for a press whose reach the reader chose
+   * in the browser: a series save reaches the ticked dates, and each date's registrants are
+   * emailed (`announceSave`). Replaces `email` once the dialog opens (`resolveEmailCount`).
+   */
+  emailCount?: EmailCount;
+  /**
    * Ask only when the form, as submitted, matches every condition: `notice.notify` ticked (a
    * tick posts `on`), the status select on `CANCELLED`. A form whose conditions all fail is
    * submitted without a question — the save that changes nothing outward asks nothing.
@@ -177,6 +247,36 @@ export type ConfirmSpec = {
 };
 
 export type FormCondition = { field: string; equals?: string; notEquals?: string };
+
+/**
+ * "An email will be sent to N participants" for the dates a series save reaches (§331, §NNN):
+ * the numbers read on the server with the send's own query, one per date, summed in the browser
+ * over the dates ticked at the press — the ticks exist only there.
+ */
+export type EmailCount = {
+  /** The field whose posted values name what else the press reaches: the ticked `dates`. */
+  field: string;
+  /** Who is written to whatever is ticked: the date being edited, always told when asked. */
+  base: number;
+  /**
+   * Who each other value adds. A value absent here adds nobody — a date already run is told
+   * nothing (`announceSave`), and the date being edited is `base`, never counted twice.
+   */
+  counts: Readonly<Record<string, number>>;
+  /** `Admin.confirm.email`'s three forms, raw, each with `{count}`. */
+  forms: Readonly<Record<CountForm, string>>;
+  locale: string;
+};
+
+/** The dialog with its email line counted from the posted values, or without one when nobody is written to. */
+export function resolveEmailCount(spec: ConfirmSpec, valuesOf: (field: string) => readonly string[]): ConfirmSpec {
+  const counted = spec.emailCount;
+  if (!counted) return spec;
+  let total = counted.base;
+  for (const value of new Set(valuesOf(counted.field))) total += counted.counts[value] ?? 0;
+  const rest: ConfirmSpec = { ...spec, emailCount: undefined, email: undefined };
+  return total > 0 ? { ...rest, email: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) } : rest;
+}
 
 /**
  * The first dialog whose conditions the posted form meets, or none. A spec without `when`

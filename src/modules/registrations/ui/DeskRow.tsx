@@ -379,10 +379,13 @@ export default async function DeskRow({
                   </Stack>
                 </ActionForm>
               )}
-              {/* Marking present asks; undoing it is a press away from being redone and asks nothing (§NNN). */}
+              {/*
+                Check-in asks nothing, either way (§NNN): it emails nobody and is undone from this
+                same row, and a dialog per runner would double the taps at the desk on race morning.
+                The toast says it happened.
+              */}
               <ActionForm
                 action={checkInAction}
-                confirm={{ when: [{ field: "direction", equals: "in" }], title: t("confirm.checkInTitle"), body: t("confirm.checkInBody", { name: row.registeredName }), confirmLabel: t("desk.checkIn"), cancelLabel: words.cancel }}
                 data-testid="desk-checkin-form"
               >
                 {hidden}

@@ -56,10 +56,15 @@ function detailPath(locale: Locale, registrationId: string): string {
   });
 }
 
-async function backTo(path: string, outcome: Record<string, string | undefined>): Promise<never> {
+async function backTo(
+  path: string,
+  outcome: Record<string, string | undefined>,
+  /** The page's own query, carried in the URL and never into the flash (a desk search is a name). */
+  params: Record<string, string | undefined> = {},
+): Promise<never> {
   await flashOutcome(outcome);
   const query = new URLSearchParams(
-    Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
+    Object.entries({ ...params, ...outcome }).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
   // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
   // where a one-line alert about a save that failed is easy to walk straight past. Every
@@ -102,7 +107,7 @@ function returnTo(
 /** `backTo`, for a desk verb: the page's own query first, then the outcome. */
 async function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): Promise<never> {
   const target = returnTo(form, locale, registrationId);
-  return backTo(target.path, { ...target.params, ...outcome });
+  return backTo(target.path, outcome, target.params);
 }
 
 /**
@@ -283,7 +288,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
   // the desk, when the form was opened from there, otherwise the list.
   const fromDesk = text(form, "back") === "desk";
   if (fromDesk) {
-    return backTo(getPathname({ locale, href: "/admin/checkin" }), { ...outcome, eventId });
+    return backTo(getPathname({ locale, href: "/admin/checkin" }), outcome, { eventId });
   }
   return backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }

@@ -1280,7 +1280,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`checkin-${row.id}`}
                       action={checkInAction}
                       hidden
-                      confirm={{ when: [{ field: "direction", equals: "in" }], title: t("confirm.checkInTitle"), body: t("confirm.checkInBody", { name: row.registeredName }), confirmLabel: t("desk.checkIn"), cancelLabel: words.cancel }}
+                      // Check-in asks nothing: it emails nobody and is undone from the same menu (§NNN).
                     >
                       {hidden}
                       <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
@@ -1390,6 +1390,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 {/* Two verbs in one form (§287): each button asks its own question (§NNN). */}
                 <ConfirmSubmitButton
                   label={t("registrations.bulkCancelAction")}
+                  // "Se anulează…" while the batch is on its way (§371).
+                  pendingLabel={t("registrations.bulkCancelPending")}
                   icon="cancel"
                   title={t("confirm.bulkCancelTitle")}
                   body={t("confirm.bulkCancelBody")}

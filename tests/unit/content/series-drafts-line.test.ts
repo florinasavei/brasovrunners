@@ -252,8 +252,11 @@ describe("§341 the editor's repeat-publish switch", () => {
 
   it("posts the tick as the rule's new flag, ticked as the rule is now", () => {
     expect(panel).toContain('<CheckboxField name="publish" defaultChecked={publish}>');
-    // An `ActionForm` since §NNN, so the save toasts — and with no question: a switch is its own undo.
-    expect(panel).toContain('<ActionForm action={actions.setRepeatPublish} data-testid="repeat-publish-form">');
+    // An `ActionForm` since §NNN, so the save toasts; turning it on asks, as the list's
+    // "Publică automat de acum" does — turning it off, or saving it as it was, asks nothing.
+    expect(panel).toContain("action={actions.setRepeatPublish}");
+    expect(panel).toContain('when: [{ field: "publish", equals: "on" }],');
+    expect(panel).toMatch(/confirm=\{\s*publish\s*\? undefined/);
     expect(editor).toContain("actions={{ setRepeatPublish: setRepeatPublishAction, stopRepeat: stopRepeatAction }}");
     // The box posts no `returnTo`, so its press still lands on the editor (§351).
     expect(panel).not.toContain('name="returnTo"');

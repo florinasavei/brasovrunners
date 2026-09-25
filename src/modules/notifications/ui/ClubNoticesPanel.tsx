@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -43,6 +44,7 @@ type Props = {
  */
 export default async function ClubNoticesPanel({ locale, notices, declarations, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   /*
     How many mailboxes receive anything from these lists, for the closed fold's summary (§336):
     the declaration copy as it resolves (the setting, or `DECLARATIONS_ARCHIVE_TO`), the
@@ -96,6 +98,8 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
       {/* A refused list comes back as typed (§315). */}
       <ActionForm
         action={updateClubNoticesAction}
+        // Who receives the signed declarations and the confirmations, with their personal data (§NNN).
+        confirm={{ title: t("confirm.clubNoticesTitle"), body: t("confirm.clubNoticesBody"), confirmLabel: t("emails.clubNotices.save"), cancelLabel: words.cancel }}
         messages={await refusalMessages({
           declarationsTo: t("emails.clubNotices.declarationsTo"),
           declarationsCc: t("emails.clubNotices.declarationsCc"),

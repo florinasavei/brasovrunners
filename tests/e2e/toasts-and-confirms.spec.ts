@@ -57,7 +57,10 @@ test.describe("§NNN toasts and confirmations", () => {
     // The create landed with its flash: a polite status, a close button a thumb can hit, and
     // gone by itself within the six seconds the brief allows.
     await expect(toast()).toContainText("Evenimentul a fost creat, ca ciornă.");
-    await expect(toast().locator('[role="status"]')).toBeVisible();
+    await expect(toast().locator(".MuiAlert-root")).toBeVisible();
+    // Announced by the polite region that was there, empty, before the toast came into it.
+    await expect(page.getByTestId("toast-live")).toHaveAttribute("role", "status");
+    await expect(page.getByTestId("toast-live").getByTestId("toast")).toHaveCount(1);
     // After the Snackbar's grow-in (about a quarter of a second): a box measured mid-transition is scaled.
     await page.waitForTimeout(600);
     expect((await toast().getByRole("button").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -76,7 +79,7 @@ test.describe("§NNN toasts and confirmations", () => {
     await expect(toast()).toContainText("Evenimentul a fost salvat.", { timeout: 30_000 });
     await hydrated(page);
     await page.waitForTimeout(600);
-    const toastBox = await toast().locator('[role="status"]').boundingBox();
+    const toastBox = await toast().locator(".MuiAlert-root").boundingBox();
     const saveBox = await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).boundingBox();
     expect(toastBox).not.toBeNull();
     expect(saveBox).not.toBeNull();

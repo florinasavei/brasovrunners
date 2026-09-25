@@ -2,6 +2,7 @@
 
 import Button from "@mui/material/Button";
 import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
 import type { ConfirmSpec } from "@/shared/feedback/notice";
 import { ACTION_ICONS, type ActionIconName } from "./action-icons";
@@ -36,7 +37,16 @@ type Props = {
    */
   form?: string;
   disabled?: boolean;
+  /**
+   * What the button says while the form it confirmed is on its way (§371: "Se anulează…" on the
+   * bulk cancel). Only when this button sent it: the submission carries the button's own
+   * name and value, so a second verb of the same form never borrows the label.
+   */
+  pendingLabel?: string;
 };
+
+/** The field a confirmed press posts to name itself, so the pending label is this button's alone. */
+const SUBMITTER_FIELD = "confirmedVerb";
 
 /**
  * A submit button that asks first — for a form with **several verbs** (§NNN).
@@ -67,11 +77,15 @@ export default function ConfirmSubmitButton({
   icon,
   form,
   disabled,
+  pendingLabel,
 }: Props) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
   const Icon = icon ? ACTION_ICONS[icon] : null;
   const spec: ConfirmSpec = { title, body, confirmLabel, cancelLabel, email, destructive: color === "error" };
+  // The parent form's status: meaningful only for a button inside its form (not one tied by `form=`).
+  const status = useFormStatus();
+  const pending = pendingLabel !== undefined && status.pending && status.data?.get(SUBMITTER_FIELD) === label;
 
   return (
     <>
@@ -89,14 +103,18 @@ export default function ConfirmSubmitButton({
         color={color}
         size={size}
         disabled={disabled}
+        name={pendingLabel !== undefined ? SUBMITTER_FIELD : undefined}
+        value={pendingLabel !== undefined ? label : undefined}
+        aria-busy={pending || undefined}
         sx={{ minHeight: 44 }}
         startIcon={Icon ? <Icon fontSize="small" /> : undefined}
         onClick={(event) => {
           event.preventDefault();
+          if (pending) return;
           setOpen(true);
         }}
       >
-        {label}
+        {pending ? pendingLabel : label}
       </Button>
 
       {open && (
@@ -112,7 +130,8 @@ export default function ConfirmSubmitButton({
             // With a second action, the *button* is the submitter React reads it from — so the
             // form is asked to submit through this control rather than by itself (§287).
             const target = anchor.current?.form;
-            if (formAction && anchor.current) target?.requestSubmit(anchor.current);
+            // So is a button with a pending label: its name and value are how the status knows it.
+            if ((formAction || pendingLabel !== undefined) && anchor.current) target?.requestSubmit(anchor.current);
             else target?.requestSubmit();
           }}
         />

@@ -715,6 +715,7 @@
       "cancelRegistrationPrintedBody": "Numărul {number} e deja tipărit; după anulare rămâne retras — nu se dă altcuiva — și trebuie scos din teanc.",
       "repeatTitle": "Creezi datele?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
+      "repeatPublishOnBody": "De acum, fiecare dată nouă pe care o creează seria apare singură pe site, în ambele limbi. Datele create deja rămân cum sunt.",
       "bibsTitle": "Aloci numerele de concurs?",
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
       "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
@@ -732,6 +733,7 @@
       "emailEach": "Fiecare înscriere anulată primește un email.",
       "publishTitle": "Publici „{title}”?",
       "publishBody": "Apare pe site în ambele limbi. Un eveniment cu înscrieri pe site își deschide înscrierile în fereastra lui.",
+      "createPublishTitle": "Creezi și publici evenimentul?",
       "unpublishTitle": "Scoți „{title}” de pe site?",
       "unpublishBody": "Dispare de pe site în ambele limbi până îl publici din nou. Ce există deja — înscrieri, fotografii — rămâne.",
       "archiveContentTitle": "Arhivezi „{title}”?",
@@ -747,8 +749,6 @@
       "cancelEventQuietBody": "Apare ca anulat pe site, înscrierile nu se mai deschid și cele existente rămân înregistrate. Participanții nu sunt anunțați.",
       "givePlaceTitle": "Îi dai un loc?",
       "givePlaceBody": "{name} primește un loc liber înaintea listei de așteptare și confirmarea, cu numărul de concurs.",
-      "checkInTitle": "Marchezi prezent?",
-      "checkInBody": "{name} este marcat prezent la masă. Se poate anula de pe același rând.",
       "setBibTitle": "Salvezi numărul?",
       "setBibBody": "Numărul rămâne al acestei persoane și nu se mai dă altcuiva.",
       "resendTitle": "Retrimiți emailul?",
@@ -781,6 +781,10 @@
       "emailPlanBody": "Cotele, „cât mai putem trimite” și tabelul de costuri se calculează de acum după noul plan.",
       "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
       "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
+      "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
+      "clubNoticesBody": "Declarațiile semnate, confirmările și copiile mesajelor către participanți — cu datele lor personale — ajung de acum la adresele salvate, și numai la ele.",
+      "emailCopyResetTitle": "Revii la textul platformei?",
+      "emailCopyResetBody": "Textul scris de club pentru acest email, în această limbă, se pierde; emailurile trimise de acum folosesc textul platformei.",
       "botCheckOnTitle": "Pornești verificarea anti-bot?",
       "botCheckOnBody": "Formularele publice arată caseta Cloudflare „Nu sunt robot”; o verificare picată oprește trimiterea.",
       "botCheckOffTitle": "Oprești verificarea anti-bot?",
@@ -792,7 +796,9 @@
       "jobCadenceTitle": "Salvezi intervalul?",
       "jobCadenceBody": "Emailurile din coadă și întreținerea rulează cel mult o dată la intervalul ales; un email poate aștepta atât.",
       "neonLimitsTitle": "Salvezi limitele Neon?",
-      "neonLimitsBody": "Un proiect care își atinge cota lunară este suspendat până la perioada următoare — site-ul nu răspunde până atunci."
+      "neonLimitsBody": "Un proiect care își atinge cota lunară este suspendat până la perioada următoare — site-ul nu răspunde până atunci.",
+      "neonPlanTitle": "Schimbi planul Neon?",
+      "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -2353,6 +2359,7 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Șterge",
       "deleteConfirm": "Ștergi imaginea definitiv?",
+      "deleteBody": "„{name}” se șterge definitiv, din bibliotecă și din spațiul de stocare. Nu se poate anula.",
       "tableCaption": "Imaginile încărcate, cele mai noi primele",
       "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
       "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți."
@@ -3806,6 +3813,27 @@
         "few": "Salvat pe {count} date ale seriei.",
         "other": "Salvat pe {count} de date ale seriei."
       },
+      "eventNotified": {
+        "one": "Salvat; „Detalii actualizate” pus la coadă pentru {count} participant.",
+        "few": "Salvat; „Detalii actualizate” pus la coadă pentru {count} participanți.",
+        "other": "Salvat; „Detalii actualizate” pus la coadă pentru {count} de participanți."
+      },
+      "eventSeriesNotified": {
+        "one": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} participant.",
+        "few": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} participanți.",
+        "other": "Salvat pe datele alese ({dates}); „Detalii actualizate” pus la coadă pentru {count} de participanți."
+      },
+      "eventCancelled": {
+        "one": "Anulat; „Eveniment anulat” pus la coadă pentru {count} participant.",
+        "few": "Anulat; „Eveniment anulat” pus la coadă pentru {count} participanți.",
+        "other": "Anulat; „Eveniment anulat” pus la coadă pentru {count} de participanți."
+      },
+      "eventSeriesCancelled": {
+        "one": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} participant.",
+        "few": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} participanți.",
+        "other": "Anulat pe datele alese ({dates}); „Eveniment anulat” pus la coadă pentru {count} de participanți."
+      },
+      "eventCancelledQuiet": "Anulat; nu s-a trimis niciun email.",
       "created": "Evenimentul a fost creat, ca ciornă.",
       "createdPublished": "Creat și publicat: pe site în ambele limbi.",
       "duplicated": "Copia a fost creată, ca ciornă.",

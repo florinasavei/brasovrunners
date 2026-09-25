@@ -25,7 +25,9 @@ describe("§NNN ActionForm asks first", () => {
   it("gates the submit event and stops the action with preventDefault when a question matches", () => {
     expect(source).toMatch(/<form ref=\{form\} action=\{formAction\}[^>]*onSubmit=\{onSubmit\}>/);
     expect(source).toMatch(/const spec = pickConfirm\(confirm, \(field\) => \{/);
-    expect(source).toMatch(/if \(!spec\) return;\s*event\.preventDefault\(\);\s*setAsking\(\{ spec, submitter \}\);/);
+    expect(source).toMatch(/if \(!spec\) return;\s*event\.preventDefault\(\);/);
+    // A series save's email line is summed over the dates ticked at this press, then asked (§NNN).
+    expect(source).toMatch(/const resolved = resolveEmailCount\(spec, [^\n]*\);\s*setAsking\(\{ spec: resolved, submitter \}\);/);
   });
 
   it("reads the form with its submitter, so a two-verb form asks the right question", () => {

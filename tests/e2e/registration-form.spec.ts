@@ -774,6 +774,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     await field("translations.en.slug").fill(`age-banded-cross-${suffix}`);
     await summary("en", "A race from sixteen.");
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     const editorUrl = page.url().split("?")[0];
 

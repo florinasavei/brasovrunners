@@ -76,6 +76,7 @@ test.describe("the cost select's third answer, Donație (§343)", () => {
     await page.getByRole("option", { name: "Donație (pe alt site)" }).click();
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     const editorUrl = page.url();
 
