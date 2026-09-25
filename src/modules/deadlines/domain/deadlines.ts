@@ -34,6 +34,7 @@ export const DEADLINE_KEYS = [
   "selfCheckinHours",
   "raceWeekDays",
   "seriesHorizonDays",
+  "publicListDays",
 ] as const;
 
 export type DeadlineKey = (typeof DEADLINE_KEYS)[number];
@@ -66,7 +67,13 @@ export type DeadlineRule = {
  * - **"I am here"** 1 to 72 hours before the start;
  * - **race week** 0 (the race day only) to 21 days;
  * - the **series horizon** 14 to 182 days: two weeks is the least a listing should show ahead,
- *   half a year the most rows anybody should have created and not looked at (§122).
+ *   half a year the most rows anybody should have created and not looked at (§122);
+ * - the **public list** 1 to 365 days after the event, 30 by default (§NNN): how long a participant
+ *   list the club switched on stays public before it closes by itself. A day at least, so a list is
+ *   still there the evening after; a year at most, the ceiling the brief set, so a club that keeps a
+ *   season's lists up can say so in its notice — the default is a month, because the names are a
+ *   disclosure whose purpose (who is coming, who came) is spent soon after the event, and the
+ *   registration itself is kept three years for other reasons.
  */
 export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   confirmationHours: { unit: "hours", min: 12, max: 168, default: 48 },
@@ -76,6 +83,7 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   selfCheckinHours: { unit: "hours", min: 1, max: 72, default: 24 },
   raceWeekDays: { unit: "days", min: 0, max: 21, default: 7 },
   seriesHorizonDays: { unit: "days", min: 14, max: 182, default: 56 },
+  publicListDays: { unit: "days", min: 1, max: 365, default: 30 },
 };
 
 export type Deadlines = Record<DeadlineKey, number>;
@@ -113,6 +121,7 @@ export const deadlinesSettingSchema = z
     selfCheckinHours: bounded("selfCheckinHours"),
     raceWeekDays: bounded("raceWeekDays"),
     seriesHorizonDays: bounded("seriesHorizonDays"),
+    publicListDays: bounded("publicListDays"),
   })
   .strict();
 
@@ -204,4 +213,27 @@ export function withinRaceWeek(
 /** Up to when a standing series keeps its dates created (§122), before the rule's own end. */
 export function seriesHorizonEnd(now: Date, deadlines: Pick<Deadlines, "seriesHorizonDays">): Date {
   return new Date(now.getTime() + deadlines.seriesHorizonDays * DAY);
+}
+
+/**
+ * When a public participant list closes by itself (§NNN): the club's number of days after the
+ * event ends — its end when it has one, its start otherwise. Checked at request time by the page
+ * that draws the list, never only by a cached query: the public cache (§333) expires on writes,
+ * and the passing of a date is not one.
+ */
+export function publicListClosesAt(
+  event: { startsAt: Date; endsAt?: Date | null },
+  deadlines: Pick<Deadlines, "publicListDays">,
+): Date {
+  const end = event.endsAt ?? event.startsAt;
+  return new Date(end.getTime() + deadlines.publicListDays * DAY);
+}
+
+/** Whether an event's public list is still inside the club's period (§NNN). */
+export function publicListStillOpen(
+  event: { startsAt: Date; endsAt?: Date | null },
+  now: Date,
+  deadlines: Pick<Deadlines, "publicListDays">,
+): boolean {
+  return now.getTime() <= publicListClosesAt(event, deadlines).getTime();
 }

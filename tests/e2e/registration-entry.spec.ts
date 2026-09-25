@@ -111,6 +111,8 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // The race conditions (§195): the seeded events carry none of their own, so this is the
     // plain-checkbox branch rather than the panel.
     await page.locator('[name="rulesAcknowledged"]').check();
+    // The club's terms, accepted expressly (§NNN).
+    await page.locator('[name="termsAccepted"]').check();
     // Required since §171, beside the privacy acknowledgment.
     await page.locator('[name="fitnessDeclared"]').check();
 

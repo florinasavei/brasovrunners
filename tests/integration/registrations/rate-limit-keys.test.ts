@@ -55,6 +55,15 @@ describe("AGENTS.md §19.4 throttle keys for an email identity", () => {
       translations: pair,
       now: NOW,
     });
+    await insertLegalDocumentVersion(db, {
+      key: "TERMS",
+      version: 1,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(pair),
+      translations: pair,
+      now: NOW,
+    });
     const [event] = await db
       .insert(events)
       .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL", capacity: 10 })
@@ -87,6 +96,7 @@ describe("AGENTS.md §19.4 throttle keys for an email identity", () => {
         locale: "ro",
         privacyAcknowledged: true,
         fitnessDeclared: true,
+        termsAccepted: true,
         rulesAcknowledged: true,
         listOptOut: true,
         honeypot: "",

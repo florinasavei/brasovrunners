@@ -2,7 +2,10 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import { publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
 import {
+  cachedDeadlines,
+  cachedFirstStatesNoticeVersion,
   cachedListStatesDisclosed,
   cachedStartListCounts,
   cachedStartListOthersCounts,
@@ -79,6 +82,13 @@ export default async function StartList({
   page?: string;
 }) {
   if (event.participantListVisibility !== "NAMES") return null;
+  /*
+    The list closes by itself (§NNN): the club's number of days after the event ("Termene"), asked
+    now, at the request — the cached rows below expire on writes, and a date passing is not one. The
+    same component draws every `?lista=` page, so a page link past the date shows nothing either.
+  */
+  const now = new Date();
+  if (!publicListStillOpen(event, now, await cachedDeadlines())) return null;
 
   const t = await getTranslations("Event");
   const locale = await getLocale();
@@ -90,12 +100,19 @@ export default async function StartList({
   const { named, anonymous } = await cachedStartListCounts(event.id);
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing
   // below reads a pending or waiting row at all — not even their count.
-  const statesOn = await cachedListStatesDisclosed(new Date());
-  const others = statesOn ? await cachedStartListOthersCounts(event.id) : { pending: 0, waitlisted: 0 };
+  const statesOn = await cachedListStatesDisclosed(now);
+  /*
+    …and only for the ticks given under a notice that described them (§NNN): a registration that
+    recorded an older notice agreed to a list of confirmed names, and appears once confirmed, as
+    before. With the gate on there is always such a notice; null only if the two reads disagree for
+    a moment, and then nobody beyond the confirmed is read.
+  */
+  const firstStatesNotice = statesOn ? await cachedFirstStatesNoticeVersion() : null;
+  const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit) : [],
-    statesOn && view.othersLimit > 0 ? cachedStartListOthersPage(event.id, view.othersOffset, view.othersLimit) : [],
+    firstStatesNotice !== null && view.othersLimit > 0 ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit) : [],
   ]);
   const extra = statesOn ? othersPhrases(t, locale, others) : [];
   /** The word beside a name — only behind the gate; without it a row carries no state. */
@@ -106,6 +123,10 @@ export default async function StartList({
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
 
   return (
+    // Google honours `data-nosnippet` only on span, div and section elements (not on the
+    // `details` root below), so the wrapper — not the disclosure — carries it: names stay out of
+    // search snippets (§NNN); the page itself stays indexed.
+    <Box component="section" data-nosnippet="" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
     <Box
       component="details"
       aria-labelledby="start-list-title"
@@ -114,7 +135,6 @@ export default async function StartList({
       // the one thing a paginated disclosure must not do.
       open={view.page > 1 || undefined}
       sx={{
-        mt: { xs: DENSITY.sectionGapLg, sm: 4 },
         border: 1,
         borderColor: "divider",
         borderRadius: 2,
@@ -271,6 +291,7 @@ export default async function StartList({
           </Typography>
         </>
       )}
+    </Box>
     </Box>
   );
 }

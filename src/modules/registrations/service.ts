@@ -46,12 +46,14 @@ import { registrationNameKey, sameRunner } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
 import { familyRegistrationOpen } from "./family-gate";
 import {
+  anotherPersonFitnessRule,
   anotherPersonSubmissionSchema,
   declarationSigningSchema,
   isMinorOn,
   minimumAgeRule,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
+  withoutAnotherAdultsConsents,
 } from "./fields";
 import {
   composeLegalName,
@@ -449,6 +451,24 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
   if (event.eventStatus !== "SCHEDULED") return 0;
 
+  /*
+    The offer's deadline, once for every candidate (§NNN): the club's offer window (§377) at the
+    moment the offer is made, capped by the close and the start (BR-REQ-035-02 criterion 3). Once
+    the close or the start has passed, that cap is already behind `now`: an offer made then would be
+    born lapsed — occupying nothing (`countOccupied` counts an offer only while its deadline is
+    ahead), expired by the next pass and handed on, so the job would work down the whole waiting
+    list one dead offer per run, emailing each person "a place is yours". No offer is made after
+    the close: the list stays WAITLISTED, and closes with the start (`closeWaitlistForStartedEvent`).
+    The desk's own promotion (`promoteFromWaitlistByStaff`) is not this path and still works.
+  */
+  const holdExpiresAt = computeWaitlistOfferExpiry({
+    now,
+    registrationClosesAt: event.registrationClosesAt,
+    eventStartsAt: event.startsAt,
+    deadlines: settings,
+  });
+  if (holdExpiresAt.getTime() <= now.getTime()) return 0;
+
   // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
   // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
   // offered a place: the count is what bounds the loop, and it is zero on every other visit.
@@ -462,14 +482,6 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
   if (candidates.length === 0) return 0;
   for (const candidate of candidates) {
-    const holdExpiresAt = computeWaitlistOfferExpiry({
-      now,
-      registrationClosesAt: event.registrationClosesAt,
-      eventStartsAt: event.startsAt,
-      // The club's offer window (§377) at the moment the offer is made; an offer already out keeps its own.
-      deadlines: settings,
-    });
-
     const offered = await repo.transitionRegistration(db, {
       id: candidate.id,
       to: "WAITLIST_OFFERED",
@@ -478,6 +490,12 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       now,
     });
     if (!offered) continue;
+    /*
+      An offer holds a place, so it carries a number (§214, §NNN) — the one door into a place that
+      drew none, which left a runner confirmed from the waiting list with no number until the
+      settle. Under the caller's event lock, like every draw; the offer's own expiry releases it.
+    */
+    await ensureProvisionalBibNumber(db, { eventId: event.id, registrationId: offered.id, now });
 
     await enqueueEmail(db, {
       participantId: offered.participantId,
@@ -734,7 +752,15 @@ export function refusesSubmission(input: {
 
 // --- §15.1 Registration submission ------------------------------------------------------------
 
-export type SubmitRegistrationResult = { ok: true };
+export type SubmitRegistrationResult = {
+  ok: true;
+  /**
+   * The registration a **staff** entry created or restarted (§NNN), so the desk confirms that row
+   * and no other — never re-read by address, which on a family's address (§389) can find another
+   * runner's row. Absent on every public answer, which stays the same for everybody (§39).
+   */
+  registrationId?: string;
+};
 
 /**
  * How this submission arrived: the public form, or an organizer entering it for somebody
@@ -932,14 +958,22 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     is written or the throttle is spent: a refused birth date leaves no trace but the refusal.
   */
   const eventDay = dayIn(event.startsAt, event.timezone ?? EVENT_TIMEZONE_DEFAULT);
-  const schema = (
+  const baseSchema = (
     origin.source === "STAFF"
       ? staffRegistrationSubmissionSchema
       : origin.anotherPerson
         ? anotherPersonSubmissionSchema
         : registrationSubmissionSchema
   ).superRefine(minimumAgeRule(eventDay, event.minAge ?? MIN_PARTICIPANT_AGE));
-  const parsed = schema.safeParse(rawInput);
+  // Adult-or-minor decided from this same `now`, the instant `withoutAnotherAdultsConsents` below
+  // decides it from as well (finding (9) of the fix round on `feat/registration-consent-and-terms`).
+  const schema = origin.anotherPerson ? baseSchema.superRefine(anotherPersonFitnessRule(now)) : baseSchema;
+  /*
+    Another adult on the address (§389, §NNN): the consents only that adult can give — the health
+    note, the socials, the public list, the first-person fitness statement — are dropped whatever
+    was posted, before anything reads them. A minor's parent still consents for the child.
+  */
+  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(rawInput, now) : rawInput);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -1014,6 +1048,28 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       "VALIDATION_ERROR",
       "no approved privacy notice exists yet; registration cannot be accepted",
     );
+  }
+  /*
+    The club's terms, accepted expressly on the form (§NNN): the version in force now is the one the
+    tick names and the one recorded. Only where the tick is asked — the public form and the family
+    link; a staff entry or a desk walk-in makes it on paper and records none. With no approved terms
+    there is nothing to accept, and the registration is refused like one with no privacy notice.
+  */
+  const terms = origin.source === "PUBLIC" ? await findCurrentApprovedDocument(db, "TERMS", input.locale, now) : undefined;
+  if (origin.source === "PUBLIC" && !terms) {
+    throw new DomainError("VALIDATION_ERROR", "no approved terms exist yet; registration cannot be accepted");
+  }
+  /*
+    The version shown and the version about to be recorded can differ (§NNN, finding (7)): a new
+    TERMS version may be approved between this page's render and this submit. `termsVersionShown`
+    is the version the tick actually named — posted only when the page had one to show — so a
+    mismatch is refused rather than silently recorded under a tick that never named the newer
+    text. The form re-renders and names the current version, which the next tick then agrees
+    with. Absent (an older client, or no approved terms at render) is not a mismatch: nothing to
+    compare against.
+  */
+  if (terms && input.termsVersionShown !== undefined && input.termsVersionShown !== terms.version) {
+    throw new DomainError("VALIDATION_ERROR", "the terms changed since the form was shown", ["termsAccepted"]);
   }
 
   const identity = canonicalizeEmail(input.email);
@@ -1122,10 +1178,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // the paper declaration at the desk carries it, and nobody declares it on another's behalf.
     fitnessDeclaredAt: input.fitnessDeclared ? now : null,
     rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
+    // The terms version the tick named and the moment (§NNN); rewritten with everything else on a
+    // restart, like `privacy_notice_version`. Null on a staff entry: the paper carries it.
+    termsVersion: terms && input.termsAccepted ? terms.version : null,
+    termsAcceptedAt: terms && input.termsAccepted ? now : null,
   };
 
   /** The deadlines this submission created, for the maintenance job (§334); none on a resend. */
   let createdDeadlines = undefined as (Date | null)[] | undefined;
+  /** The registration this submission created or restarted, for a staff caller (§NNN); none on a resend. */
+  let written = undefined as string | undefined;
   /*
     The club's deadlines (§377), read before the transaction and from the instance's memo when it
     is fresh, so a registration costs no extra round trip: the email link's lapse is written on
@@ -1184,6 +1246,18 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
     if (decision.kind === "refuseAtCap") {
       throw new DomainError("VALIDATION_ERROR", "this address already carries the club's limit of registrations at this event", [ADDRESS_AT_CAP]);
+    }
+    /*
+      A staff entry that finds the address registered, here under the lock (§NNN): the refusal
+      `createRegistrationByStaff` gives before calling in, given again where it cannot be raced. The
+      pre-check reads outside the lock, so a public submission on the same address can land between
+      the two; the re-send below would then create nothing and return as a success, and the desk's
+      fast track would confirm *that* runner — somebody who is not there and signed nothing — on the
+      paper of the one who is (BR-REQ-037-07). Refused out loud instead, and rolled back whole: no
+      re-send, no audit row, nothing confirmed. A staff entry succeeds only by creating or restarting.
+    */
+    if (origin.source === "STAFF" && (decision.kind === "resend" || decision.kind === "offerAnother")) {
+      throw new DomainError("VALIDATION_ERROR", "this address already has a registration for this event", ["email"]);
     }
 
     if (decision.kind === "offerAnother") {
@@ -1320,9 +1394,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         either both happened or neither did.
       */
       await recordAuditEvent(tx, {
-        // The person themselves, so no actor. A staff entry refuses a duplicate out loud before
-        // calling in (`createRegistrationByStaff`) and reaches this line only by racing another
-        // entry past that check — and then the row names who typed it, which is the truth.
+        // The person themselves, so no actor. A staff entry never reaches this line since §NNN: it
+        // is refused out loud above, under the lock, as `createRegistrationByStaff` refuses it
+        // before calling in. The staff id stays as the truthful answer should that ever change.
         actorStaffUserId: origin.source === "STAFF" ? (origin.createdByStaffUserId ?? null) : null,
         participantId: participant.id,
         action: "registration.resubmitted",
@@ -1378,6 +1452,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         });
         if (restarted && !atTheDesk) await enqueueVerificationEmail(tx, participant, restarted, now);
         createdDeadlines = [linkExpiresAt];
+        written = restarted?.id;
         return;
       }
 
@@ -1395,6 +1470,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // A hold, a place on the waiting list, or an offer made on the way to somebody else when
       // the allocator released a lapsed hold (§160) — the same deadlines `confirmEmail` wakes for.
       createdDeadlines = [allocated.holdExpiresAt, joinedQueue(allocated) ? offerDeadline(event, now, settings) : null];
+      written = allocated.id;
       return;
     }
 
@@ -1449,12 +1525,14 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
     createdDeadlines = [linkExpiresAt];
+    written = created.id;
   });
 
   // A resend creates nothing; anything else may, and the job is told when it matters (§334).
   if (createdDeadlines !== undefined) wakeMaintenance(event, now, settings, ...createdDeadlines);
 
-  return { ok: true };
+  // To a staff caller only (§NNN): the public answer stays byte for byte the same for everybody (§39).
+  return origin.source === "STAFF" && written !== undefined ? { ok: true, registrationId: written } : { ok: true };
 }
 
 // --- §15.2 Email confirmation ------------------------------------------------------------------
@@ -1490,6 +1568,25 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       cancellation that lands between the click and this line is the one that counts.
     */
     if (lockedEvent.eventStatus !== "SCHEDULED") return { registration: current, allocated: false };
+
+    /*
+      The link has lapsed (§377, §NNN; BR-REQ-031-03 criterion 2): evaluated here against `now`,
+      never trusting that the job has run since (§10.6). A click after the lapse and before the next
+      sweep used to confirm and allocate a registration its own link had already given up on. It is
+      lapsed here exactly as the sweep would lapse it — the provisional number released with it — and
+      returned so, which the confirmation page reads as "lapsed, register again", never "confirmed".
+    */
+    const lapsesAt = current.emailLinkExpiresAt ?? new Date(current.submittedAt.getTime() + settings.confirmationHours * 60 * 60_000);
+    if (lapsesAt.getTime() <= now.getTime()) {
+      const lapsed = await repo.transitionRegistration(tx, {
+        id: current.id,
+        to: "EXPIRED",
+        fromStatuses: ["PENDING_EMAIL_CONFIRMATION"],
+        changes: { expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED" },
+        now,
+      });
+      return { registration: lapsed ?? current, allocated: false };
+    }
 
     await markEmailVerified(tx, current.participantId, now);
     const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now, settings);
@@ -1985,7 +2082,14 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       now,
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    const confirmed = await acceptDeclarationOnPaper(tx, locked, offered, actor, now);
+    /*
+      The place carries a number (§214, §NNN), as in `fillAvailableSpots`: drawn under this lock, and
+      read back so the confirmation below sees it — before the close it is kept as the provisional
+      one, after the close it is adopted as the final one (§220) rather than skipped for a fresh one.
+    */
+    await ensureProvisionalBibNumber(tx, { eventId: event.id, registrationId: offered.id, now });
+    const numbered = (await repo.findRegistrationById(tx, offered.id)) ?? offered;
+    const confirmed = await acceptDeclarationOnPaper(tx, locked, numbered, actor, now);
     // As in `signDeclaration`: the expiry above may have released another person's lapsed
     // hold to the queue, and this transaction is the one holding the lock that can offer it.
     const offersMade = await fillAvailableSpots(tx, locked, now, settings);

@@ -12,6 +12,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventPhotosNotice from "@/modules/events/ui/EventPhotosNotice";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
@@ -245,6 +246,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
           the address under the place. */}
       <EventFacts event={event} now={now} stacked weather={weather} />
+
+      {/* Photographs are a legitimate-interest processing, so every event page — not only the
+          gallery — says how to object (§323; the photographs amendment's item 6). */}
+      <EventPhotosNotice />
 
       {/* A group run's optional self-declaration (§393), under the route's pills at `#declaratie`:
           only where the organizer offered it and the club has approved the text of its surface. */}

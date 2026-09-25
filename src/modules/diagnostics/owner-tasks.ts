@@ -195,6 +195,13 @@ export type OwnerTaskInputs = {
   storageConfigured: boolean;
   /** Are both Turnstile keys set (`DECISIONS.md` §97)? Off, the honeypot and the timing check stand alone. */
   botCheckConfigured: boolean;
+  /**
+   * Does the configured secret actually work (§NNN, finding (10)'s health half,
+   * `probeTurnstileSecret`)? `unreachable` and `not_configured` read the same as `ok` here —
+   * this input only ever turns the row `broken` when Cloudflare itself says the secret is
+   * wrong, never on a timeout or on no keys at all, which `botCheckConfigured` already covers.
+   */
+  botCheckHealth: "ok" | "misconfigured" | "unreachable" | "not_configured";
   /** Is `DECLARATIONS_ARCHIVE_TO` set (§99)? Off, the club downloads the bundle per event. */
   declarationArchiveConfigured: boolean;
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
@@ -346,11 +353,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.storageConfigured ? "done" : "open",
   });
 
-  // Not blocking either: the form already refuses the dumb bots. Open until the two keys exist,
-  // because a race that opens entries to a hundred people is when the other kind shows up (§97).
+  // Not blocking either: the form already refuses the dumb bots, and a wrong secret fails open
+  // (§205) — nobody is ever refused a registration by this row being red. Open until the two
+  // keys exist (§97); broken, red, when they exist and Cloudflare says the secret itself is
+  // wrong (§NNN, finding (10)) — a case the platform used to only log.
   push("botCheck", {
     owner: "club",
-    state: input.botCheckConfigured ? "done" : "open",
+    state: input.botCheckHealth === "misconfigured" ? "broken" : input.botCheckConfigured ? "done" : "open",
+    text: input.botCheckHealth === "misconfigured" ? "misconfigured" : undefined,
+    steps: input.botCheckHealth === "misconfigured" ? "howMisconfigured" : undefined,
   });
 
   // Built (§99); open until the club names the mailbox, never blocking: the per-event bundle

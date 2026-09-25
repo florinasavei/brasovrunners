@@ -50,6 +50,11 @@ export type ComposerLabels = {
   subjectHelp: string;
   body: string;
   bodyHelp: string;
+  /**
+   * What the message may be about (§NNN; Legea 506/2004 art. 12, GDPR art. 5(1)(b)): this event
+   * only, never advertising, a sponsor's offer or another event. Under the body box, no tick.
+   */
+  bodyScope: string;
   identical: string;
   preview: string;
   previewHelp: string;
@@ -253,6 +258,11 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
           <Typography id={`participant-message-${part}-help`} variant="caption" color="text.secondary">
             {help}
           </Typography>
+          {part === "body" && (
+            <Typography variant="caption" color="text.secondary" data-testid="participant-message-scope">
+              {labels.bodyScope}
+            </Typography>
+          )}
           {part === "body" && identical && (
             <Alert severity="warning" data-testid="participant-message-identical">
               {labels.identical}

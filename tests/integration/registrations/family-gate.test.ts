@@ -43,6 +43,7 @@ beforeEach(async () => {
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
 });
 
 async function createEvent() {
@@ -69,6 +70,7 @@ const submission = (firstName: string, at: Date = NOW) => ({
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -127,7 +129,7 @@ describe("§389 if the legacy constraint were ever restored: one registration pe
     expect(await readAnotherPersonLink(secret, event.id, NOW)).toEqual({ ok: false });
     let fields: string[] = [];
     try {
-      await consumeAndRegisterAnotherPerson(secret, event, { ...submission("Maria"), email: undefined }, {}, NOW);
+      await consumeAndRegisterAnotherPerson(secret, event, { ...submission("Maria"), fitnessAcknowledged: true, email: undefined }, {}, NOW);
     } catch (error) {
       if (!isDomainError(error)) throw error;
       fields = [...error.fields];

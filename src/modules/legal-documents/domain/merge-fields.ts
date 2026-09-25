@@ -1,5 +1,5 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
-import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { daysPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
@@ -17,8 +17,12 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * the default is none, a clause with no number that still covers an event sending its own
  * (`reminderClause` below): "confirmări, legături, lista de așteptare{{reminderClause}} și cel
  * mult o mulțumire…". A field given "" is still left out cleanly (`OMITTABLE_MERGE_FIELDS`).
+ *
+ * **`{{publicListPeriod}}`** (§NNN) is how long a public participant list stays up after the
+ * event before it closes by itself — "30 de zile", the unit included like `{{holdMinutes}}` — so
+ * the notice names the club's period and never a number of its own.
  */
-export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderClause"] as const;
+export const DEADLINE_MERGE_FIELDS = ["confirmationHours", "holdMinutes", "offerHours", "reminderClause", "publicListPeriod"] as const;
 
 /**
  * The fields whose empty value is an answer rather than a gap: given as "", they leave nothing
@@ -49,19 +53,20 @@ export function reminderClause(locale: string, reminderHours: number): string {
 }
 
 /**
- * The four deadline fields' values in one language: the same words the emails and the pages use
+ * The deadline fields' values in one language: the same words the emails and the pages use
  * (`duration-words.ts`) — "48 de ore", "30 de minute", "24 de ore", ", un memento cu 2 zile
- * înainte (sau cât alege evenimentul)".
+ * înainte (sau cât alege evenimentul)", "30 de zile".
  */
 export function deadlineMergeValues(
   locale: string,
-  deadlines: Pick<Deadlines, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours">,
+  deadlines: Pick<Deadlines, "confirmationHours" | "holdMinutes" | "offerHours" | "reminderHours" | "publicListDays">,
 ): Record<(typeof DEADLINE_MERGE_FIELDS)[number], string> {
   return {
     confirmationHours: hoursPhrase(locale, deadlines.confirmationHours),
     holdMinutes: minutesPhrase(locale, deadlines.holdMinutes),
     offerHours: hoursPhrase(locale, deadlines.offerHours),
     reminderClause: reminderClause(locale, deadlines.reminderHours),
+    publicListPeriod: daysPhrase(locale, deadlines.publicListDays),
   };
 }
 

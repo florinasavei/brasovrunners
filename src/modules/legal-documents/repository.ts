@@ -147,6 +147,47 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 }
 
 /**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the public list's
+ * states in **every** language (`describesListStates`), or null when none does (§NNN, narrowing
+ * §396).
+ *
+ * The line between two kinds of consent. A runner who ticked «Vreau să apar» under a notice that
+ * described the list as confirmed names only agreed to that, and nothing wider; a runner whose
+ * registration recorded this version or a later one (`registrations.privacy_notice_version`) was
+ * told about the states. So the pending and waiting groups list only the second kind — the
+ * confirmed list is what every notice described, and is unchanged. Approved ahead of its date
+ * counts too: nobody can have registered under a later number before it took effect.
+ *
+ * **Assumes the marker, once approved, is never dropped from a later version** (§NNN, finding
+ * (10) of the fix round on `feat/registration-consent-and-terms`). The gate this feeds
+ * (`registrations/repository.ts`) is `privacy_notice_version >= this lowest version`, which is
+ * only correct if every version from here on also describes the states. A club that approved v5
+ * with the marker, v6 without it and v7 with it again would have v6's registrants gated in —
+ * shown as pending or waiting though the notice they read never named the states. Nothing in
+ * `/admin/legal` stops that today; it is a documented assumption, not an enforced one. If it ever
+ * needs to be exact, return the *set* of approved versions that describe it and filter the gate
+ * with `inArray(privacyNoticeVersion, set)` instead of a single lower bound.
+ */
+export async function findFirstStatesNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  const rows = await db
+    .select({ version: legalDocuments.version, locale: legalDocumentTranslations.locale, body: legalDocumentTranslations.bodyJson })
+    .from(legalDocuments)
+    .innerJoin(legalDocumentTranslations, eq(legalDocumentTranslations.legalDocumentId, legalDocuments.id))
+    .where(and(eq(legalDocuments.key, "PRIVACY_NOTICE"), eq(legalDocuments.isApproved, true), isNull(legalDocuments.withdrawnAt)))
+    .orderBy(legalDocuments.version);
+  const byVersion = new Map<number, Map<string, unknown>>();
+  for (const row of rows) {
+    const bodies = byVersion.get(row.version) ?? new Map<string, unknown>();
+    bodies.set(row.locale, row.body);
+    byVersion.set(row.version, bodies);
+  }
+  for (const [version, bodies] of [...byVersion.entries()].sort(([a], [b]) => a - b)) {
+    if (routing.locales.every((locale) => bodies.has(locale) && describesListStates(bodies.get(locale)))) return version;
+  }
+  return null;
+}
+
+/**
  * Every instant at which `findCurrentApprovedDocument(key, …)` can change its answer without a
  * write: the effective dates of the approved, not withdrawn versions of `key` (`DECISIONS.md`
  * §333). The same three conditions as that query, so the two cannot disagree about which dates
@@ -394,7 +435,8 @@ export type LegalDocumentVersionRow = {
   eventCount: number;
   /**
    * Registrations that recorded this version's *number* as the privacy notice they
-   * acknowledged — the reliance the database cannot see.
+   * acknowledged — or, for a terms version, as the terms they accepted (`terms_version`, §NNN) —
+   * the reliance the database cannot see.
    *
    * `registrations.privacy_notice_version` is a plain `integer` with no foreign key, as are
    * `results_consent_version` and `health_consent_version`. So a privacy notice hundreds of
@@ -428,16 +470,24 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
-      // Matched on the version *number*, and only for the notice key, because that is the only
-      // shape this reference has: there is no id to join on.
+      // Matched on the version *number*, per key, because that is the only shape this reference
+      // has: there is no id to join on. The terms since §NNN: a registration records the terms
+      // version its tick named (`terms_version`), so a terms version somebody accepted is relied
+      // on exactly as a notice somebody acknowledged — refused withdrawal and deletion alike. Rows
+      // from before the column record none; the in-force window (§316) still answers for them.
       privacyAcknowledgementCount: sql<number>`(
         select count(*)::int from ${registrations}
-        where ${legalDocuments.key} = 'PRIVACY_NOTICE'
+        where (
+          ${legalDocuments.key} = 'PRIVACY_NOTICE'
           and (
             ${registrations.privacyNoticeVersion} = ${legalDocuments.version}
             or ${registrations.resultsConsentVersion} = ${legalDocuments.version}
             or ${registrations.healthConsentVersion} = ${legalDocuments.version}
           )
+        ) or (
+          ${legalDocuments.key} = 'TERMS'
+          and ${registrations.termsVersion} = ${legalDocuments.version}
+        )
       )`,
     })
     .from(legalDocuments)

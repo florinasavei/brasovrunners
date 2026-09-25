@@ -49,7 +49,21 @@ test.describe("§389 a family on one address", () => {
     if (email) await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
-    await page.locator('[name="fitnessDeclared"]').check();
+    // The club's terms, accepted expressly (§NNN).
+    await page.locator('[name="termsAccepted"]').check();
+    if (email) {
+      await page.locator('[name="fitnessDeclared"]').check();
+    } else {
+      /*
+        The family form for another adult (§NNN): no health note, no socials, no list tick and no
+        first-person fitness statement — those are the person's own to give — and the address
+        holder's acknowledgement in the statement's place.
+      */
+      await expect(page.locator('[name="stravaUrl"]')).toHaveCount(0);
+      await expect(page.locator('[name="healthNotes"]')).toBeHidden();
+      await expect(page.locator('[name="fitnessDeclared"]')).toBeHidden();
+      await page.locator('[name="fitnessAcknowledged"]').check();
+    }
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page).toHaveURL(/submitted=1/, { timeout: 30_000 });
@@ -125,6 +139,11 @@ test.describe("§389 a family on one address", () => {
     await expect(page.locator('[name="phone"]')).not.toHaveAttribute("required", /.*/);
     // The page never scrolls sideways at 320 pixels, in its family shape too.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // A minor's parent consents for the child (§NNN): the statement and the health note come back
+    // with a birth date under eighteen, and the acknowledgement for an adult goes.
+    await page.locator('[name="birthDate"]').fill("2013-04-02");
+    await expect(page.locator('[name="fitnessDeclared"]')).toBeVisible();
+    await expect(page.locator('[name="fitnessAcknowledged"]')).toBeHidden();
 
     await fillPerson(page, { firstName: "Maria", lastName, birthDate: "1990-07-11" });
     await expect(page.getByRole("heading", { name: "Aproape gata, Maria!" })).toBeVisible();

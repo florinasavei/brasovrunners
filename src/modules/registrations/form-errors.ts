@@ -37,7 +37,11 @@ export const REGISTRATION_FORM_FIELDS = [
   // Both are `z.literal(true)`, so an unticked one is a rejection the summary must be able to
   // name and link to — unlike the optional boxes, which cannot fail (§171).
   "fitnessDeclared",
+  // The family form's stand-in for the statement above, for another adult (§NNN).
+  "fitnessAcknowledged",
   "rulesAcknowledged",
+  // The club's terms (§NNN), `z.literal(true)` like the two above.
+  "termsAccepted",
   "emailConfirm",
   "privacyAcknowledged",
 ] as const;
@@ -73,3 +77,31 @@ export const ERROR_SUMMARY_ID = "registration-errors";
  * `signDeclarationAction` and the page that renders the target, for the same reason as above.
  */
 export const DECLARATION_ERROR_SUMMARY_ID = "declaration-errors";
+
+/**
+ * The terms tick after a refused submit (§NNN).
+ *
+ * The draft cookie brings every tick back as it was posted (§142, §315) — right for a refusal
+ * about something else, wrong for this one: when the refusal names `termsAccepted`, either the box
+ * was not ticked, or it was ticked under a version that is no longer the one in force (the
+ * service's `termsVersionShown` check). Ticked again by the page, the second case would record an
+ * acceptance of a text the reader's tick never named. So a refusal naming the tick always brings
+ * it back **unticked**, and `changed` says whether it was the version that moved — the draft's
+ * posted tick, or its posted version differing from the one in force now — so the page can say
+ * so above the box. A draft dropped for its size leaves `changed` false: the box is still unticked
+ * and the summary still names it.
+ */
+export function acceptanceAfterRefusal(input: {
+  invalid: ReadonlySet<string>;
+  draft: Readonly<Record<string, string>> | null;
+  versionInForce: number | null;
+}): { ticked: boolean; changed: boolean } {
+  const { invalid, draft, versionInForce } = input;
+  if (!invalid.has("termsAccepted")) return { ticked: draft?.termsAccepted === "on", changed: false };
+  // An empty (or unreadable) posted version is no version at all — `Number("")` is 0, which would
+  // read as a version that moved although the form never carried one.
+  const posted = draft?.termsVersionShown?.trim() ?? "";
+  const postedVersion = posted !== "" && Number.isFinite(Number(posted)) ? Number(posted) : null;
+  const versionMoved = postedVersion !== null && versionInForce !== null && postedVersion !== versionInForce;
+  return { ticked: false, changed: draft?.termsAccepted === "on" || versionMoved };
+}

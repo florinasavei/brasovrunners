@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import {
+  acceptanceAfterRefusal,
   parseInvalidFields,
   REGISTRATION_FORM_FIELDS,
 } from "@/modules/registrations/form-errors";
@@ -77,7 +78,9 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
     // `listOptOut`, `resultsNameConsent` and `clubMemberDeclared` are deliberately absent: a
     // checkbox is either ticked or not, so it cannot fail validation and a summary entry for
     // one could never appear. `privacyAcknowledged` is the exception and is in the list,
-    // because `z.literal(true)` rejects an unticked one.
+    // because `z.literal(true)` rejects an unticked one. `termsVersionShown` (§NNN, finding (7))
+    // is a hidden field with no focusable box of its own — a stale version is refused by naming
+    // `termsAccepted`, the tick it names, never itself.
     const posted = Object.keys(readRegistrationForm(new FormData(), "ro"));
     const notShown = posted.filter(
       (name) => !(REGISTRATION_FORM_FIELDS as readonly string[]).includes(name),
@@ -89,6 +92,49 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
       "locale",
       "renderedAt",
       "resultsNameConsent",
+      "termsVersionShown",
     ]);
+  });
+});
+
+/**
+ * §NNN — the terms tick after a refused submit. The draft brings every tick back as posted; the
+ * one about the terms comes back unticked whenever the refusal names it, so a version approved
+ * between the render and the submit is never accepted by a tick that named the older one.
+ */
+describe("§NNN the terms tick after a refusal", () => {
+  const draft = (values: Record<string, string>) => values;
+
+  it("comes back as posted when the refusal was about another field", () => {
+    expect(acceptanceAfterRefusal({ invalid: new Set(["phone"]), draft: draft({ termsAccepted: "on", termsVersionShown: "3" }), versionInForce: 3 })).toEqual({ ticked: true, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(["phone"]), draft: draft({}), versionInForce: 3 })).toEqual({ ticked: false, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(), draft: null, versionInForce: 3 })).toEqual({ ticked: false, changed: false });
+  });
+
+  it("comes back unticked, and says the terms changed, when a ticked box was refused for a newer version", () => {
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsAccepted: "on", termsVersionShown: "3" }), versionInForce: 4 })).toEqual({ ticked: false, changed: true });
+  });
+
+  it("says the terms changed from the posted version alone, and stays unticked, whatever the draft kept", () => {
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "3" }), versionInForce: 4 })).toEqual({ ticked: false, changed: true });
+  });
+
+  it("stays unticked without the line when the box was simply not ticked", () => {
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "4" }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+    // A draft dropped for its size: nothing to compare, the box still unticked.
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: null, versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+  });
+
+  it("reads an empty posted version as none, not as version 0 that moved", () => {
+    // `Number("")` is 0: without the guard an unticked box under a form that carried no version
+    // would say the terms changed although nothing moved.
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "" }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "  " }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "x" }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+  });
+
+  it("has the line in both languages", () => {
+    expect(ro.Registration.terms.changed).toBeTruthy();
+    expect(en.Registration.terms.changed).toBeTruthy();
   });
 });

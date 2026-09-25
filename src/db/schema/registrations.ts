@@ -220,6 +220,12 @@ export const registrations = pgTable(
     city: text("city"),
 
     phone: text("phone"),
+    /**
+     * A third person's name and number, for race day (BR-BUS-031). Cleared seven days after the
+     * event's start with the identity document and the health note (§NNN,
+     * `jobs/retention.ts` step `identity-and-health`): the purpose ends on race day, and the row
+     * is kept three years for other reasons.
+     */
     emergencyContactName: text("emergency_contact_name"),
     emergencyContactPhone: text("emergency_contact_phone"),
 
@@ -274,15 +280,18 @@ export const registrations = pgTable(
      * "I declare I am medically fit to take part" (§171; the owner: "nu e clar cu informațiile
      * medicale, trebuie să bifeze doar «declar că sunt apt»").
      *
-     * **Not health data.** It is a statement the participant makes about themselves, the same
-     * kind of thing the declaration they sign later says, and it carries no diagnosis, no
-     * condition and nothing an Article 9 category covers — which is exactly why it can be
-     * required where `health_notes` cannot. The free text and its own consent stay where they
-     * were, optional and folded: somebody who wants the medical team to know something still
-     * has somewhere to write it.
+     * **Treated as data concerning health** (§NNN, amending §171): only the fact of the tick and
+     * its moment are kept, no condition and no diagnosis, but read prudently a statement about
+     * one's fitness concerns one's health. It is required because it rests on no consent — it is
+     * kept under art. 9(2)(f) GDPR, as evidence for the establishment, exercise or defence of
+     * legal claims — which is why it can be insisted on where `health_notes` cannot. The free
+     * text and its own consent stay where they were, optional and folded.
      *
-     * Null for every registration taken before this existed, and for a row a staff member
-     * entered at the desk on a paper declaration — there the paper carries the statement.
+     * Null for every registration taken before this existed, for a row a staff member entered at
+     * the desk on a paper declaration — there the paper carries the statement — and for an adult
+     * registered by somebody else on the same address (§389, §NNN): a first-person statement
+     * cannot be made on another adult's behalf, so that adult makes it in the declaration they
+     * sign themselves.
      */
     fitnessDeclaredAt: timestamp("fitness_declared_at", { withTimezone: true }),
 
@@ -299,6 +308,20 @@ export const registrations = pgTable(
      * paper declaration carries the same sentence, signed (§67).
      */
     rulesAcknowledgedAt: timestamp("rules_acknowledged_at", { withTimezone: true }),
+
+    /**
+     * The club's terms, accepted expressly on the form (§NNN): the version in force when the form
+     * was sent, and the moment — beside `privacy_notice_version`, and rewritten with it when a
+     * cancelled or expired registration is sent again. Like that column, a plain number with no
+     * foreign key; `/admin/legal` counts it (`listVersionsForBackoffice`).
+     *
+     * The tick names the unusual clauses (cancellation or change, stopping or exclusion, the
+     * limits of liability, the law and the court), because a standard clause of that kind binds
+     * only once it is accepted expressly (Codul civil art. 1203). Null for every registration
+     * taken before this existed, and for a staff or desk entry: there the paper carries it.
+     */
+    termsVersion: integer("terms_version"),
+    termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
 
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     privacyAcknowledgedAt: timestamp("privacy_acknowledged_at", { withTimezone: true }).notNull(),

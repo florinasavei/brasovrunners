@@ -561,6 +561,20 @@
       "when": 1790360613048,
       "tag": "0079_event_coordinates",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1790366496093,
+      "tag": "0080_registration_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1790369923669,
+      "tag": "0081_terms_acceptance",
+      "breakpoints": true
     }
   ]
 }

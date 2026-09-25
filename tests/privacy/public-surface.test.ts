@@ -1,5 +1,9 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
+import { legalDocuments } from "@/db/schema/legal-documents";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { findFirstStatesNoticeVersion, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
@@ -71,6 +75,7 @@ async function createRegistration(
     confirmedAt?: Date;
     emailConfirmedAt?: Date;
     waitlistedAt?: Date;
+    privacyNoticeVersion?: number;
   },
 ) {
   const [participant] = await db
@@ -93,7 +98,7 @@ async function createRegistration(
     locale: "ro",
     registeredName: input.name,
     displayName: input.displayName ?? resolveDisplayName({ legalName: input.name }),
-    privacyNoticeVersion: 1,
+    privacyNoticeVersion: input.privacyNoticeVersion ?? 1,
     privacyAcknowledgedAt: NOW,
     resultsNameConsent: false,
     resultsConsentVersion: 1,
@@ -288,29 +293,85 @@ describe("§396 what the pending and waiting rows may contain", () => {
     const other = await createEvent();
     await createRegistration(other.id, { name: "Alt Eveniment", email: "elsewhere@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1) });
 
-    const rows = await listPublicStartListOthers(db, event.id);
+    const rows = await listPublicStartListOthers(db, event.id, 1);
     expect(rows).toEqual([
       { displayName: "Dan Oferit", clubName: null, group: "PENDING" },
       { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
       { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
       { displayName: "Elena Doi", clubName: null, group: "WAITLISTED" },
     ]);
-    expect(await countPublicStartListOthers(db, event.id)).toEqual({ pending: 2, waitlisted: 2 });
+    expect(await countPublicStartListOthers(db, event.id, 1)).toEqual({ pending: 2, waitlisted: 2 });
 
     // A page is a slice of the same order.
-    expect((await listPublicStartListOthers(db, event.id, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
+    expect((await listPublicStartListOthers(db, event.id, 1, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
   });
 
   it("returns the name, the club and the group — no state, no date, no identifier, no address", async () => {
     const event = await createEvent();
     await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLIST_OFFERED", confirmedAt: undefined, emailConfirmedAt: NOW });
 
-    const [row] = await listPublicStartListOthers(db, event.id);
+    const [row] = await listPublicStartListOthers(db, event.id, 1);
     expect(Object.keys(row)).toEqual(["displayName", "clubName", "group"]);
     // The group, never the lifecycle's own word: an offer is the club's business.
     expect(row.group).toBe("PENDING");
     expect(JSON.stringify(row)).not.toContain("WAITLIST_OFFERED");
     expect(JSON.stringify(row)).not.toContain("@");
+  });
+});
+
+/**
+ * §NNN (narrowing §396) — a tick given under a notice that described a list of confirmed names
+ * only covers that list. The pending and waiting groups hold only registrations that recorded the
+ * first notice describing the states, or a later one; an older tick appears once confirmed, as it
+ * always did.
+ */
+describe("§NNN the pending and waiting rows follow the notice each runner was given", () => {
+  const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
+  const statesBody = { sections: [{ paragraphs: ["Lista arată {{participantListStates}}."] }] };
+  const plainBody = { sections: [{ paragraphs: ["Lista arată numele confirmate."] }] };
+
+  async function approveNotice(version: number, bodies: { ro: unknown; en?: unknown }, withdrawn = false) {
+    const translations: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Notă", body: bodies.ro as LegalDocumentTranslationInput["body"] },
+      ...(bodies.en ? [{ locale: "en" as const, title: "Notice", body: bodies.en as LegalDocumentTranslationInput["body"] }] : []),
+    ];
+    const id = await insertLegalDocumentVersion(db, {
+      key: "PRIVACY_NOTICE",
+      version,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+    if (withdrawn) await db.update(legalDocuments).set({ withdrawnAt: NOW }).where(eq(legalDocuments.id, id));
+  }
+
+  it("a ticked pending or waiting row below the first marker notice is neither listed nor counted; at or above it, it is", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Vechi Asteapta", email: "old-pending@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(1), privacyNoticeVersion: 1 });
+    await createRegistration(event.id, { name: "Vechi Lista", email: "old-waiting@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(2), privacyNoticeVersion: 1 });
+    await createRegistration(event.id, { name: "Nou Asteapta", email: "new-pending@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(3), privacyNoticeVersion: 2 });
+    await createRegistration(event.id, { name: "Mai Nou Lista", email: "newer-waiting@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(4), privacyNoticeVersion: 3 });
+    // A confirmed runner under the old notice is on the confirmed list, as that notice said.
+    await createRegistration(event.id, { name: "Vechi Confirmat", email: "old-confirmed@example.org", privacyNoticeVersion: 1 });
+
+    expect((await listPublicStartListOthers(db, event.id, 2)).map((row) => row.displayName)).toEqual(["Nou Asteapta", "Mai Nou Lista"]);
+    expect(await countPublicStartListOthers(db, event.id, 2)).toEqual({ pending: 1, waitlisted: 1 });
+    expect((await listPublicStartList(db, event.id)).map((row) => row.displayName)).toEqual(["Vechi Confirmat"]);
+  });
+
+  it("finds the first approved, not withdrawn notice whose every language names the marker", async () => {
+    expect(await findFirstStatesNoticeVersion(db)).toBeNull();
+    await approveNotice(1, { ro: plainBody, en: plainBody });
+    // Romanian only: the list is one list, so one language is not enough.
+    await approveNotice(2, { ro: statesBody, en: plainBody });
+    // Withdrawn: offered nowhere, so nobody registered under it.
+    await approveNotice(3, { ro: statesBody, en: statesBody }, true);
+    expect(await findFirstStatesNoticeVersion(db)).toBeNull();
+    await approveNotice(4, { ro: statesBody, en: statesBody });
+    await approveNotice(5, { ro: statesBody, en: statesBody });
+    expect(await findFirstStatesNoticeVersion(db)).toBe(4);
   });
 });
 

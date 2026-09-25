@@ -32,7 +32,7 @@ import {
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { describesListStates } from "@/modules/legal-documents/domain/merge-fields";
-import { findCurrentApprovedDocument, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
   countAnonymousStartListEntries,
@@ -264,19 +264,30 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
 /**
  * How many of the ticked pending and waiting rows the list gains behind the notice's gate
  * (§396) — `countPublicStartListOthers`, expired by the same "places" tag every change of state
- * and every change of the tick expires.
+ * and every change of the tick expires. Only registrations made under the first notice that
+ * described the states, or a later one (§NNN): the version is in the key, so the approval of a
+ * notice can never serve a count computed against another line.
  */
-export async function cachedStartListOthersCounts(eventId: string): Promise<{ pending: number; waitlisted: number }> {
-  return publicRead(["places.start-list-others-counts", eventId], ["places", "events"], () =>
-    countPublicStartListOthers(getDb(), eventId),
+export async function cachedStartListOthersCounts(eventId: string, firstStatesNoticeVersion: number): Promise<{ pending: number; waitlisted: number }> {
+  return publicRead(["places.start-list-others-counts", eventId, firstStatesNoticeVersion], ["places", "events"], () =>
+    countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion),
   );
 }
 
 /** One page of `listPublicStartListOthers` — a name, a club and a group, nothing else. */
-export async function cachedStartListOthersPage(eventId: string, offset: number, limit: number) {
-  return publicRead(["places.start-list-others", eventId, offset, limit], ["places", "events"], () =>
-    listPublicStartListOthers(getDb(), eventId, { offset, limit }),
+export async function cachedStartListOthersPage(eventId: string, firstStatesNoticeVersion: number, offset: number, limit: number) {
+  return publicRead(["places.start-list-others", eventId, firstStatesNoticeVersion, offset, limit], ["places", "events"], () =>
+    listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, { offset, limit }),
   );
+}
+
+/**
+ * The first approved privacy notice that described the list's states (`findFirstStatesNoticeVersion`,
+ * §NNN), or null — the line below which a tick was given under a notice promising confirmed names
+ * only. Expired with every legal text (an approval, a withdrawal, a deletion).
+ */
+export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-states-notice"], ["legal"], () => findFirstStatesNoticeVersion(getDb()));
 }
 
 /**

@@ -117,10 +117,20 @@ export const emailActionTokens = pgTable(
      * Two indexes because the scope differs by purpose: registration-scoped tokens are unique
      * per (registration, purpose), profile tokens per (participant, purpose). Both cover only
      * rows that are still active, so used and superseded rows accumulate freely for audit.
+     *
+     * One purpose is outside the first index, on purpose (§NNN): `REGISTER_ANOTHER_PERSON`. Every
+     * such link of a family is scoped to the address's first registration at the event (§389), so
+     * a parent who fills the form once per child gets several emails about one registration — and
+     * each says its link is good for the club's email-link window. Superseding them left only the
+     * newest working. Each link registers at most one person and is single use, and the address's
+     * limit is counted under the event's lock whenever one is used, so several live at once
+     * cannot add a registration the limit refuses; `issueActionToken` leaves them all alive.
      */
     uniqueIndex("email_action_tokens_one_active_per_registration_purpose")
       .on(t.registrationId, t.purpose)
-      .where(sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NOT NULL`),
+      .where(
+        sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NOT NULL AND "purpose" <> 'REGISTER_ANOTHER_PERSON'`,
+      ),
     uniqueIndex("email_action_tokens_one_active_per_participant_purpose")
       .on(t.participantId, t.purpose)
       .where(sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NULL`),

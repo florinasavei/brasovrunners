@@ -82,6 +82,7 @@ async function approve(db: TestDatabase) {
     { locale: "en", title: "Declaration", body: declarationEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
@@ -121,6 +122,7 @@ const submission = {
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -189,6 +191,11 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
       expect(message.payloadJson, message.messageType).not.toHaveProperty("clubCopy");
 
       const copies = rows.filter((row) => row.messageType === message.messageType && row.participantId === null);
+      // The address confirmation goes to an address nobody has confirmed yet: no copy of it (§NNN).
+      if (message.messageType === "VERIFY_REGISTRATION_EMAIL") {
+        expect(copies, message.messageType).toEqual([]);
+        continue;
+      }
       expect(copies.map((copy) => copy.recipientEmail).sort(), message.messageType).toEqual([HIDDEN, PRESIDENT].sort());
       for (const copy of copies) {
         expect(copy.payloadJson).toEqual({ ...(message.payloadJson as object), clubCopy: true });
@@ -200,12 +207,12 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     // The club's own messages are not copied again: one archive copy, one notice, no more.
     expect(rows.filter((row) => row.messageType === "DECLARATION_ARCHIVE")).toHaveLength(1);
     expect(rows.filter((row) => row.messageType === "CLUB_CONFIRMATION_NOTICE")).toHaveLength(1);
-    // Three participant messages, two copies each, the archive copy and the notice.
-    expect(rows).toHaveLength(3 + 3 * 2 + 1 + 1);
+    // Three participant messages, two copies of each but the address confirmation, the archive copy and the notice.
+    expect(rows).toHaveLength(3 + 2 * 2 + 1 + 1);
 
     // The backoffice's timeline labels the copies, so they do not read as sends to the runner.
     const history = await listOutboxHistory(db, registration.id);
-    expect(history.filter((entry) => entry.clubCopy)).toHaveLength(6);
+    expect(history.filter((entry) => entry.clubCopy)).toHaveLength(4);
     expect(history.filter((entry) => !entry.clubCopy)).toHaveLength(5);
 
     // A club mailbox that bounces its copy says nothing about the participant's address (§76).
@@ -254,7 +261,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     // Now everything the club receives.
     const clubBound = rows.filter((row) => row.participantId === null || !isParticipantMessage(row.messageType));
     expect(clubBound.map((row) => row.messageType).sort()).toEqual(
-      ["CLUB_CONFIRMATION_NOTICE", "DECLARATION_ARCHIVE", ...["COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED", "VERIFY_REGISTRATION_EMAIL"].flatMap((type) => [type, type])].sort(),
+      ["CLUB_CONFIRMATION_NOTICE", "DECLARATION_ARCHIVE", ...["COMPLETE_DECLARATION", "REGISTRATION_CONFIRMED"].flatMap((type) => [type, type])].sort(),
     );
     const tokensBefore = (await db.select().from(emailActionTokens)).length;
     const secretsBefore = watched.secrets.length;
@@ -279,7 +286,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
         const input = watched.pdfInputs[pdfsBefore];
         expect(drawnFrom(input)).not.toContain("123456");
         expect(drawnFrom(input)).toContain("BV ••••56");
-        expect(message.text).toContain("fără seria și numărul actului de identitate");
+        expect(message.text).toContain("cu seria și numărul actului de identitate mascate");
       } else {
         // A club copy, and the notice, attach nothing at all.
         expect(message.attachments ?? [], label).toHaveLength(0);

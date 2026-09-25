@@ -8,6 +8,9 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
 import { renderOutboxMessage } from "@/modules/notifications/render";
+import { archivePeriod, identityDays } from "@/modules/notifications/templates";
+import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { RETENTION } from "@/modules/jobs/retention";
 import { messagesPerCompletedRegistration, MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/volume";
 import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { addTestRegistrations } from "@/modules/registrations/test-registrations";
@@ -38,6 +41,7 @@ async function approve(db: TestDatabase) {
     { locale: "en", title: "Declaration", body: declarationEn },
   ];
   await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
+  await insertLegalDocumentVersion(db, { key: "TERMS", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(privacy), translations: privacy, now: NOW });
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
@@ -77,6 +81,7 @@ const submission = {
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  termsAccepted: true,
   rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
@@ -128,9 +133,15 @@ describe("the club's archive copy (§99)", () => {
     expect(message.text).not.toContain("Salut, Ana Popescu");
     expect(message.text).toContain("Salut,");
     // The attached copy masks the identity document (§320), and the message says where the whole one is.
-    expect(message.text).toContain("fără seria și numărul actului de identitate");
-    expect(message.text).toContain("până la șapte zile după eveniment");
-    expect(message.text).toContain("without the identity document's series and number");
+    // How it is masked, how long to keep it and until when the whole one is in the backoffice —
+    // every period from the sweep's own constants (§NNN), never a literal.
+    expect(message.text).toContain("cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere)");
+    expect(message.text).toContain(`Păstreaz-o în căsuța clubului ${archivePeriod("ro")} de la eveniment`);
+    expect(message.text).toContain(`până la ${identityDays("ro")} după eveniment`);
+    expect(message.text).toContain("with the identity document's series and number masked");
+    expect(message.text).toContain(`Keep it in the club's mailbox for ${archivePeriod("en")} from the event`);
+    expect(archivePeriod("ro")).toBe(durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years"));
+    expect(identityDays("en")).toBe(durationPhrase("en", RETENTION.identityAndHealthDaysAfterEvent, "days"));
   });
 
   it("sends no archive copy for a test registration", async () => {

@@ -20,7 +20,8 @@ import type { Deadlines } from "./deadlines";
  * phrase sits inside a sentence: "the link is valid for one day", "linkul e valabil o zi".
  */
 
-export type DurationUnit = "minutes" | "hours" | "days" | "weeks";
+// `years` for a retention period said in an email (§NNN): the club's archive copy says how long to keep it.
+export type DurationUnit = "minutes" | "hours" | "days" | "weeks" | "years";
 type Locale = "ro" | "en";
 
 const WORDS: Record<Locale, Record<DurationUnit, Record<CountForm, string>>> = {
@@ -29,12 +30,14 @@ const WORDS: Record<Locale, Record<DurationUnit, Record<CountForm, string>>> = {
     hours: { one: "o oră", few: "{n} ore", other: "{n} de ore" },
     days: { one: "o zi", few: "{n} zile", other: "{n} de zile" },
     weeks: { one: "o săptămână", few: "{n} săptămâni", other: "{n} de săptămâni" },
+    years: { one: "un an", few: "{n} ani", other: "{n} de ani" },
   },
   en: {
     minutes: { one: "one minute", few: "{n} minutes", other: "{n} minutes" },
     hours: { one: "one hour", few: "{n} hours", other: "{n} hours" },
     days: { one: "one day", few: "{n} days", other: "{n} days" },
     weeks: { one: "one week", few: "{n} weeks", other: "{n} weeks" },
+    years: { one: "one year", few: "{n} years", other: "{n} years" },
   },
 };
 

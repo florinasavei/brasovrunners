@@ -454,7 +454,7 @@ async function fillRegistration(page: Page, omit?: string) {
     await field(page, name).fill(value);
   }
   await field(page, "emailConfirm").fill(values.email);
-  for (const name of ["privacyAcknowledged", "rulesAcknowledged", "fitnessDeclared"]) {
+  for (const name of ["privacyAcknowledged", "rulesAcknowledged", "termsAccepted", "fitnessDeclared"]) {
     const box = field(page, name);
     if ((await box.count()) && (await box.isEditable())) await box.check();
   }

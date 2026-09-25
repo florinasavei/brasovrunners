@@ -37,7 +37,12 @@ import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
-import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import {
+  readRegistrationTokenContext,
+  readSpentRegistrationLink,
+  type SpentRegistrationLink,
+} from "@/modules/registrations/token-actions";
+import { describeMovedOnDeclarationLink, stepForSpentLink } from "@/modules/registrations/domain/link-status";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
@@ -182,7 +187,6 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const documentRefused = context.ok && invalid === "document";
   const pressFailed = context.ok && Boolean(invalid) && !nameRefused && !documentRefused;
-  const journeyStep = spent ? spent.step : ("declare" as const);
 
   const db = getDb();
   const declaration = context.ok
@@ -207,6 +211,24 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const eventDetails = registration
     ? await findEventNotificationDetails(db, registration.eventId, locale)
     : undefined;
+
+  /*
+    A live link on a registration that has moved on (§NNN): the hold lapsed and the place went on,
+    the runner cancelled, staff cancelled, or it was confirmed on paper at the desk. Only a hold or
+    an offer can be signed, so the form is not shown — its press would only end on the error page —
+    and the page says where the registration stands instead, in the words a spent link gets. The
+    event is named only in this locale's own words, as `readSpentRegistrationLink` names it.
+  */
+  const movedOn =
+    context.ok && registration
+      ? describeMovedOnDeclarationLink(context.token.purpose === "WAITLIST_OFFER" ? "WAITLIST_OFFER" : "COMPLETE_DECLARATION", registration.status)
+      : null;
+  const ownLocale = eventDetails?.locale === locale ? eventDetails : undefined;
+  const movedOnNotice: SpentRegistrationLink | null = movedOn
+    ? { ...movedOn, step: stepForSpentLink(movedOn.message), eventTitle: ownLocale?.title ?? null, eventSlug: ownLocale?.slug ?? null }
+    : null;
+  const notice = spent ?? movedOnNotice;
+  const journeyStep = notice ? notice.step : ("declare" as const);
 
   /**
    * An absolute local time, and deliberately no countdown.
@@ -336,8 +358,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {blocked || !declaration ? (
-        <ActionLinkNotice locale={locale} status={spent} />
+      {blocked || !declaration || movedOnNotice ? (
+        <ActionLinkNotice locale={locale} status={notice} />
       ) : (
         <>
           {/*
@@ -391,7 +413,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 : undefined,
               // The city while the place is to be announced (§328), as in the PDF — never the typed place.
               eventLocation: eventDetails?.locationToBeAnnounced ? CLUB_LOCALITY : eventDetails?.locationName,
-              // The club's deadlines, should the declaration name one (§377) — as the PDF fills them.
+              // The club's deadlines and the public list's period (§377, §NNN) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
               ...listStatesMergeValues(locale),
@@ -467,6 +489,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
+              {/* The box names the liability paragraph, so its limits are accepted expressly (§NNN, Civil Code art. 1203). */}
               <CheckboxField name="accepted" required defaultChecked={draft?.accepted === "on"}>
                 {t("declare.accept")}
               </CheckboxField>
@@ -495,6 +518,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               */}
               {minorName === null ? (
                 <>
+                  {/*
+                    An adult signs for themselves (§NNN, Civil Code art. 1309): since a family
+                    registers on one address (§389), whoever holds the inbox holds this link, so the
+                    page says whose signature it wants. Not for a minor — the parent signs there,
+                    and the box below already says so.
+                  */}
+                  {signsForMinor === null && expectedName !== null && (
+                    <Typography>{t("declare.signPersonally", { participant: expectedName })}</Typography>
+                  )}
                   {needsDocuments && (
                     <IdDocumentFields
                       name="idDocument"

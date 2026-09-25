@@ -15,6 +15,7 @@ import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent, queueEven
 import { resolveEmailCount } from "@/shared/feedback/notice";
 import { formatDay } from "@/i18n/dates";
 import { renderOutboxMessage } from "@/modules/notifications/render";
+import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -283,6 +284,41 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(audit.actorStaffUserId).toBe(editor.id);
     expect(audit.entityId).toBe(event.id);
     expect(audit.metadataJson).toMatchObject({ changes: ["place"], recipients: 4, note: null });
+  });
+
+  it("§NNN the notice offers a way out through «Înscrierile mele», and the club gets one copy of the send, naming nobody", async () => {
+    const event = await seedEvent();
+    const rows = await seedRegistrations(event.id, EVERYONE);
+    await updateClubNotices(db, editor, { participants: { bcc: ["arhiva@club.test"] } }, NOW);
+
+    await save(event.id, { fields: { locationName: "Poiana Brașov, la telecabină" }, notice: { notify: true } });
+
+    // The runner's own message: withdraw from "my registrations" by address — no token minted.
+    const [ana] = (await queued("EVENT_UPDATE_NOTICE")).filter((row) => row.registrationId === rows.find((r) => r.registeredName === "ana")!.id);
+    const message = await renderOutboxMessage(ana, db, NOW);
+    expect(message.text).toContain("Dacă noua dată sau noul loc nu ți se potrivește, renunță la înscriere din „Înscrierile mele”");
+    expect(message.text).toContain("If the new date or place does not suit you, withdraw from “My registrations”");
+    expect(message.text).toMatch(/Înscrierile mele \(îți trimitem linkul pe email\): \S+/);
+    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
+
+    // One club copy for the save — four real registrations told, the test row not counted.
+    const copies = await db
+      .select()
+      .from(emailOutbox)
+      .where(and(eq(emailOutbox.messageType, "EVENT_UPDATE_NOTICE"), sql`${emailOutbox.participantId} IS NULL`));
+    expect(copies).toHaveLength(1);
+    expect(copies[0].registrationId).toBeNull();
+    expect(copies[0].recipientEmail).toBe("arhiva@club.test");
+    expect(copies[0].payloadJson).toMatchObject({ changes: ["place"], clubCopy: true, eventId: event.id, recipients: 4 });
+    const copy = await renderOutboxMessage(copies[0], db, NOW);
+    expect(copy.subject.startsWith("[Copie club] Detalii actualizate pentru Cursa de toamnă")).toBe(true);
+    expect(copy.text).toContain("Copie pentru club a mesajului trimis la 4 participanți");
+    expect(copy.text).toContain("Locul de întâlnire este acum: Poiana Brașov, la telecabină.");
+    expect(copy.text.startsWith("Salut,\n")).toBe(true);
+    for (const row of rows) expect(copy.text).not.toContain(`Salut, ${row.registeredName}`);
+    // Neither a manage link nor a token in the club's copy.
+    expect(copy.html).not.toMatch(/\/(inregistrari|registrations)\/(gestionare|manage)\//);
+    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
   });
 
   it("unticked, the same change emails nobody", async () => {
