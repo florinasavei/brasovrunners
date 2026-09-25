@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.95-2026-09-25
+
+- **The partner marker is Material's `Handshake` icon again**, not the grayscale-filtered 🤝 emoji, on the listing card, the calendar and the event page's overline — §391.
 ## BR-V1.94-2026-09-25
 
 - **The family flow is open** — the contract migration `0073` drops `registrations_event_participant_unique`, the last thing holding the family registration flow shut; it switches on by itself wherever the migration runs, with no setting and no deploy of its own. §390.
