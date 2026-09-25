@@ -8,8 +8,8 @@ import Panel from "@/shared/ui/Panel";
  * §NNN — the owner, on the event editor's «Ce înseamnă fiecare tip?»: "ar trebui să fie un card
  * mai mic". `Panel`'s `help` variant is a small clickable line instead of a boxed card: no
  * border, no elevation, no heading tag — a caret and a sentence, closed by default (§336). The
- * same variant, with `icon="info"`, is the field legend on `/admin/emails` (§373's follow-up),
- * "a bit different from the other accordions and with an «i» button".
+ * same variant, with `legendIcon="info"`, is the field legend on `/admin/emails` (§373's
+ * follow-up), "a bit different from the other accordions and with an «i» button".
  */
 const markup = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
@@ -40,7 +40,7 @@ describe("§NNN Panel's help variant", () => {
     expect(html).not.toMatch(/data-testid="InfoOutlinedIcon"/);
   });
 
-  it('leads with an "i" (InfoOutlined) when icon="info"', () => {
+  it('leads with an "i" (InfoOutlined) when legendIcon="info"', () => {
     const html = render(createElement(Panel, { variant: "help", collapsible: true, legendIcon: "info", title: "t" }, "x"));
     expect(html).toMatch(/data-testid="InfoOutlinedIcon"/);
     // The "i" comes before the caret, which comes before the words.

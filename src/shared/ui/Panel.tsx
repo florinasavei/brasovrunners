@@ -41,6 +41,8 @@ const NESTED_FOLD_SX = {
 const HELP_SUMMARY_SX = {
   display: "inline-flex",
   alignItems: "center",
+  flexWrap: "wrap",
+  rowGap: 0,
   gap: 0.75,
   minHeight: 44,
   cursor: "pointer",
@@ -91,6 +93,9 @@ type Props = {
    * nobody needs a heading to find: "Ce înseamnă fiecare tip?" under the event editor's type
    * select, and the field legend on `/admin/emails`, which also takes `legendIcon="info"`.
    * `level` and `tone` are ignored on this variant; there is no card to nest or to warn about.
+   * `badge` is ignored too — there is no heading line to carry a chip. The line always folds
+   * (`collapsible` and `static` are read only by the `card` variant): a `help` line's whole
+   * point is a caret, so there is no reading to give it that leaves the caret behind.
    */
   variant?: "card" | "help";
   /**
@@ -181,12 +186,8 @@ export default function Panel({
           <ExpandMoreIcon aria-hidden fontSize="small" sx={HELP_CARET_SX} />
           <Typography component="span" variant="body2" color="text.secondary">
             {title}
+            {aside ? <Box component="span" sx={{ ml: 0.5 }}>{aside}</Box> : null}
           </Typography>
-          {aside ? (
-            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-              {aside}
-            </Typography>
-          ) : null}
         </Box>
         {intro && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, pl: 3.25 }}>

@@ -29,6 +29,9 @@ test.describe("a new event starts free (§NNN)", () => {
     await help.locator(":scope > summary").click();
     await expect(help).toHaveAttribute("open", "");
     await expect(page.getByText(/La o alergare de grup se vine pur și simplu/)).toBeVisible();
+    // It closes again on a second click — a real toggle, not a one-way reveal.
+    await help.locator(":scope > summary").click();
+    await expect(help).not.toHaveAttribute("open");
   });
 
   test("a save that never opens the cost box still stores FREE, read as Gratuit on /ro and /en", async ({ page }) => {

@@ -151,7 +151,7 @@ describe("§373 the fields of an email's words, as a legend", () => {
     // No card frame — no h4 heading — and the "i" leads the line, ahead of the caret and the words.
     expect(html).not.toMatch(/<summary[^>]*><h4/);
     expect(html).toMatch(
-      /<summary[^>]*><svg[^>]*InfoOutlined[^>]*>[\s\S]*?<\/svg>[\s\S]*?<span[^>]*>Câmpurile pe care le poți folosi<\/span><span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/summary>/,
+      /<summary[^>]*><svg[^>]*InfoOutlined[^>]*>[\s\S]*?<\/svg>[\s\S]*?<span[^>]*>Câmpurile pe care le poți folosi<span[^>]*>16 câmpuri · 4 câmpuri folosite aici<\/span><\/span><\/summary>/,
     );
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.intro);
     expect(text(html)).toContain(ro.Admin.emails.copy.legend.missing);

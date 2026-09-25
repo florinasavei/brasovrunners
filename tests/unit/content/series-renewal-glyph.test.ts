@@ -12,6 +12,10 @@ import { describe, expect, it } from "vitest";
  */
 const REGISTRY = readFileSync(path.join(process.cwd(), "src", "shared", "ui", "action-icons.ts"), "utf8");
 const PAGE = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "admin", "(list)", "page.tsx"), "utf8");
+const PANEL = readFileSync(
+  path.join(process.cwd(), "src", "modules", "content", "events", "ui", "RecurrenceSeriesPanel.tsx"),
+  "utf8",
+);
 
 describe("§NNN the series' robot glyph", () => {
   it("registers SmartToy as `renew`, one file, never the barrel", () => {
@@ -32,5 +36,15 @@ describe("§NNN the series' robot glyph", () => {
 
   it("never draws it as an emoji", () => {
     expect(PAGE).not.toMatch(/🤖/);
+  });
+
+  it("also leads the editor's own two mentions of the switch — the renewal line and the publish-state line", () => {
+    expect(PANEL).toContain('import { ACTION_ICONS } from "@/shared/ui/action-icons";');
+    expect(PANEL).toContain("const RenewIcon = ACTION_ICONS.renew;");
+    // The renewal sentence's twin (`editor.repeatRenewal`) and the publish-state line
+    // (`publishState`, on/waiting/off) each get their own leading, aria-hidden icon.
+    expect(PANEL).toMatch(/<RenewIcon aria-hidden[^>]*\/>[\s\S]{0,200}editor\.repeatRenewal/);
+    expect(PANEL).toMatch(/<RenewIcon aria-hidden[^>]*\/>[\s\S]{0,200}\{publishState\}/);
+    expect(PANEL).not.toMatch(/🤖/);
   });
 });
