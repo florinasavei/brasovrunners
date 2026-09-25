@@ -167,7 +167,9 @@ function eventPlace(event: PublicEvent) {
  * - `PAID`: not free. An `offers.url` only when the club gave an https payment link, and never a
  *   `price`: `cost_amount` is free text ("50 lei", "sugerat 50 lei") that schema.org's number
  *   cannot represent honestly, and a guessed one would tell a search engine something the club
- *   never said.
+ *   never said. On an `EXTERNAL`-registration event the place is taken at the organizer's own
+ *   link, not the club's payment link (which may not even exist), so `offers.url` is
+ *   `externalRegistrationUrl` there instead of `cost_url` (`DECISIONS.md` §NNN).
  * - `DONATION`: **free**. schema.org's `isAccessibleForFree` is whether the event can be
  *   attended without payment, and a donation is money given without compensation — the place
  *   is not bought with it. §343 records it as the runner's choice ("sugerat 50 lei" is a
@@ -180,9 +182,12 @@ function eventPlace(event: PublicEvent) {
  */
 function costJsonLd(event: PublicEvent, url: string) {
   if (event.costType === "PAID") {
+    // An `EXTERNAL` registration is entered at the organizer's own link — the place the fee is
+    // actually paid at — never the club's `cost_url`, which is not where a place is taken.
+    const offerUrl = event.registrationMode === "EXTERNAL" ? event.externalRegistrationUrl : event.costUrl;
     return {
       isAccessibleForFree: false,
-      ...(event.costUrl ? { offers: { "@type": "Offer", url: event.costUrl, availability: "https://schema.org/InStock" } } : {}),
+      ...(offerUrl ? { offers: { "@type": "Offer", url: offerUrl, availability: "https://schema.org/InStock" } } : {}),
     };
   }
   const freeEntry = {

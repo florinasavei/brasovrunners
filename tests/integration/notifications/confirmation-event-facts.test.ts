@@ -71,7 +71,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
         difficulty: "HARD",
         distanceMeters: 21_100,
         elevationGainMeters: 900,
-        headlampRequired: true,
+        nightOverride: true,
         costType: "PAID",
         costAmount: "50 lei",
         costUrl: PAY,
@@ -164,7 +164,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
     expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
     // The page's pills, in the page's order, the page's words; the route link lives under #route with a description.
-    expect(ro).toContain(`Traseu: Trail · Avansat · 21,1 km · 900 m D+ · Frontală\n  Evenimentul pe Strava: ${STRAVA}`);
+    expect(ro).toContain(`Traseu: Trail · Avansat · 21,1 km · 900 m D+ · Eveniment de noapte\n  Evenimentul pe Strava: ${STRAVA}`);
     expect(ro).toContain(`Cost: 50 lei\n  plata pe pay.example: ${PAY}`);
     expect(ro).toMatch(
       new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),
@@ -193,7 +193,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
     expect(en).toContain(`Where: Tractorul Park\n  Strada Carpaților 60\n  Open the map: ${MAP}`);
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
-    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Headlamp");
+    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Night event");
     expect(en).toContain(`Cost: 50 lei\n  payment on pay.example: ${PAY}`);
     expect(en).toMatch(
       new RegExp(`Links:\\n  The event's page: \\S+${enPage}\\n  Programme: \\S+${enPage}#schedule\\n  Rules: \\S+${enPage}#rules\\n  The route: \\S+${enPage}#route\\n  Links and files: \\S+${enPage}#links`),
@@ -207,7 +207,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
     expect(en).toContain("Where: Tractorul Park");
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
-    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Headlamp");
+    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Night event");
     expect(en).toContain("Cost: 50 lei");
     expect(en).toMatch(/Links:\n {2}The event's page: \S+\/en\/events\/the-cross-\S+\n {2}Programme: \S+\/en\/events\/the-cross-\S+#schedule/);
     expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
@@ -272,7 +272,7 @@ describe("§NNN the event's facts in the confirmed email, the reminder and the d
     expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
     expect(ro).not.toContain("Programul:");
     expect(ro).toContain("Unde: Parcul Tractorul");
-    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Headlamp");
+    expect(en).toContain("Route: Trail · Hard · 21.1 km · 900 m climb · Night event");
     // The reminder's own lines stay: the number, the code and "can't come".
     expect(ro).toMatch(/Numărul tău de concurs: \d+\./);
     expect(ro).toContain("Nu poți veni?");

@@ -6,6 +6,7 @@ import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import { costPaidToExternalOrganizer } from "@/modules/events/domain/cost";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
@@ -419,7 +420,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
-    headlampRequired: fields.headlampRequired,
+    nightOverride: fields.nightOverride,
     // Only a group run on asphalt or trail has a self-declaration to offer (§NNN): anything else
     // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
     // turn-up type's registration block.
@@ -637,6 +638,24 @@ async function writePlaceNames<T extends Record<string, unknown>>(tx: Transactio
   }
 }
 
+/**
+ * Clears `discountNote` on both languages' rows when the event's saved fields no longer allow
+ * one (`DECISIONS.md` §NNN) — inside the event save's transaction, like `writePlaceNames` above,
+ * because the settings save an Organizer without text rights makes never touches a translation
+ * row through `applyTranslationSave`. Without this, switching the mode away from `EXTERNAL` +
+ * `PAID` on the settings panel alone would leave a stale note nobody with text rights posted
+ * again and nobody can read on the page any more.
+ */
+async function clearDiscountNoteIfNotAllowed<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  eventId: string,
+  fields: { registrationMode: EditableEvent["registrationMode"]; costType: EditableEvent["costType"] },
+): Promise<boolean> {
+  if (costPaidToExternalOrganizer(fields)) return false;
+  await tx.update(eventTranslations).set({ discountNote: null }).where(eq(eventTranslations.eventId, eventId));
+  return true;
+}
+
 /** The rows as `writePlaceNames` left them, without reading them again. */
 function withPlaceNames(rows: readonly EditableTranslation[], names: PlaceNames): EditableTranslation[] {
   return rows.map((row) => {
@@ -715,6 +734,12 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     acknowledgeLiveEdit?: boolean;
     /** The type the event has after this save — the form's, when the settings are saved too. */
     eventType: EditableEvent["type"];
+    /**
+     * Whether `discountNote` may be written after this save (`DECISIONS.md` §NNN) — the mode and
+     * cost type the event has after it, the same discipline `eventType` follows above.
+     */
+    registrationMode: EditableEvent["registrationMode"];
+    costType: EditableEvent["costType"];
     now: Date;
   },
 ): Promise<EditableTranslation> {
@@ -750,7 +775,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     input.current.id,
     input.expectedVersion,
     {
-      ...translationColumnsFrom(fields, input.eventType),
+      ...translationColumnsFrom(fields, input.eventType, costPaidToExternalOrganizer(input)),
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -773,7 +798,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
  * the caller did not post at all is `undefined` here, which a save leaves as it is and an
  * insert leaves at the column's default.
  */
-function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"]) {
+function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"], discountAllowed: boolean) {
   const { body, rules, schedule, routeDescription, excerptBody, ...columns } = fields;
   const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return {
@@ -787,6 +812,9 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
     // The route / training description (§387): on every type — a group run has a route too.
     routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): kept only while
+    // `EXTERNAL` + `PAID` still needs it, whatever a stale or hidden box still posted for it.
+    ...(discountAllowed ? {} : { discountNote: null }),
   };
 }
 
@@ -799,6 +827,7 @@ type OptionalTextColumns = {
   checklist?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  discountNote?: string | null;
 };
 
 /**
@@ -816,6 +845,9 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     checklist: isWrittenText(row.checklist),
     seoTitle: isWrittenText(row.seoTitle),
     seoDescription: isWrittenText(row.seoDescription),
+    // Nulled by `translationColumnsFrom` outside `EXTERNAL` + `PAID`, so this can never fire
+    // there — the same "a hidden box never blocks the save" rule the others follow.
+    discountNote: isWrittenText(row.discountNote),
   };
 }
 
@@ -865,6 +897,8 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     fields: input.fields,
     acknowledgeLiveEdit: input.acknowledgeLiveEdit,
     eventType: record.event.type,
+    registrationMode: record.event.registrationMode,
+    costType: record.event.costType,
     now,
   });
   // The public pages read events from a cache (§333); every write below says so the same way.
@@ -1330,6 +1364,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     const translationsBefore = await listTranslationsForEvent(tx, input.eventId);
     const names = namesAfterSave(current, translationsBefore, placeNamesFrom(fields));
     await writePlaceNames(tx, input.eventId, names);
+    await clearDiscountNoteIfNotAllowed(tx, input.eventId, fields);
     if (announcing) {
       // No words are saved here; only the place's names moved, and the notice compares those.
       await announceSave(tx, {
@@ -1415,11 +1450,11 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // A fact of the route like the two above (§382): "from this date" carries it from the first
-  // dark Wednesday of October, and "from this date" again takes it off in spring.
-  "headlampRequired",
-  // The self-declaration offered on the run's page (§NNN), like the headlamp: "from this date"
-  // carries it to every later Tâmpa run of the series.
+  // The night override, a fact of the route like the two above (§382, §NNN). "Automat" carried to
+  // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
+  "nightOverride",
+  // The self-declaration offered on the run's page (§NNN), like the night override: "from this
+  // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
   "registrationMode",
   "capacity",
@@ -1464,6 +1499,9 @@ const SERIES_TRANSLATION_COLUMNS = [
   // with the place (`placesShown`), whoever saved — the Organizer posts no words at all.
   "seoTitle",
   "seoDescription",
+  // The discount belongs to the race, like `costType` above (`DECISIONS.md` §NNN): a series
+  // edit's discount note carries the way its cost does.
+  "discountNote",
 ] as const;
 
 /** Equal as stored: dates by their instant, JSON by its text, null by null. */
@@ -1505,6 +1543,15 @@ async function applyToSeries<T extends Record<string, unknown>>(
     now: Date;
     /** The club's deadlines, read before the transaction, for the offers a raised capacity makes (§377). */
     deadlines: Deadlines;
+    /**
+     * `clearDiscountNoteIfNotAllowed`'s result on the saved date (`DECISIONS.md` §NNN): the
+     * mode or cost moved off `EXTERNAL` + `PAID`, so no date in scope may keep a note — reached
+     * here regardless of what `translationChanges` below found, because a saved date whose own
+     * note was already `null` shows no *change* to carry, yet a sibling's stale note still has
+     * to go. One `UPDATE` for every member in scope, silent like the rest of this clearing (the
+     * box is not on screen, so nothing is refused and nobody is told).
+     */
+    discountNoteCleared?: boolean;
   },
 ): Promise<{ applied: number; offered: number; dates: SavedDate[] }> {
   const { before, after, now } = input;
@@ -1559,7 +1606,8 @@ async function applyToSeries<T extends Record<string, unknown>>(
     timeChanges.length === 0 &&
     !scheduleChanged &&
     translationChanges.length === 0 &&
-    placeMoved.length === 0
+    placeMoved.length === 0 &&
+    !input.discountNoteCleared
   ) {
     return { applied: 0, offered: 0, dates };
   }
@@ -1580,6 +1628,21 @@ async function applyToSeries<T extends Record<string, unknown>>(
         chosen ? inArray(events.id, chosen) : undefined,
       ),
     );
+
+  /*
+    Every member in scope loses the note, in one `UPDATE`, whether or not the diff above found a
+    change to carry (`DECISIONS.md` §NNN) — the saved date's own note may already have been
+    `null` (nothing to diff) while a sibling's was not. Ahead of the per-member loop below, so a
+    date whose only change is this one still reads correctly if that loop later touches it too.
+  */
+  if (input.discountNoteCleared && members.length > 0) {
+    await tx.update(eventTranslations).set({ discountNote: null }).where(
+      inArray(
+        eventTranslations.eventId,
+        members.map((member) => member.id),
+      ),
+    );
+  }
 
   const zone = after.timezone;
   let applied = 0;
@@ -1776,6 +1839,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     // editor's box did that on the screen already and the organizer saw what it holds.
     const posted: PlaceNames = parsedEventFields ? placeNamesFrom(parsedEventFields) : {};
     const names: PlaceNames = input.placeNamesAsTyped ? posted : namesAfterSave(current, existingTranslations, posted);
+    // Set true when `clearDiscountNoteIfNotAllowed` below actually nulled the note in the
+    // database — read by `translationsAfter` further down, since the in-memory rows loaded
+    // before this transaction do not see that write on their own.
+    let discountNoteCleared = false;
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -1806,6 +1873,16 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       );
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
+      // Before the translations loop: a settings-only save (an Organizer without text rights)
+      // never runs `applyTranslationSave`, so nothing else in this path clears a note the new
+      // mode no longer allows. A no-op when the mode still allows one, or when a submitted
+      // translation is about to write its own value through `translationColumnsFrom` below.
+      // The boolean is read below, past the transaction's write, because `existingTranslations`
+      // was loaded before this update ran and still carries the stale note in memory — without
+      // it, `translationsAfter` would compare that stale value against itself, see no change,
+      // and a series save (scope `following`/`all`) would leave every other date's note in
+      // place (`DECISIONS.md` §NNN).
+      discountNoteCleared = await clearDiscountNoteIfNotAllowed(tx, input.eventId, parsedEventFields);
     }
 
     for (const submitted of input.translations) {
@@ -1822,6 +1899,8 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
             fields: submitted.fields,
             acknowledgeLiveEdit: input.acknowledgeLiveEdit,
             eventType: parsedEventFields?.type ?? current.type,
+            registrationMode: parsedEventFields?.registrationMode ?? current.registrationMode,
+            costType: parsedEventFields?.costType ?? current.costType,
             now,
           }),
         ),
@@ -1848,9 +1927,10 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       the place's names), and the others as loaded with the names written above — an Organizer's
       save writes no words, yet moves the place in both languages.
     */
-    const translationsAfter = withPlaceNames(existingTranslations, names).map(
-      (row) => savedTranslations.find((saved) => saved.id === row.id) ?? row,
-    );
+    const translationsAfter = withPlaceNames(existingTranslations, names).map((row) => {
+      const saved = savedTranslations.find((s) => s.id === row.id) ?? row;
+      return discountNoteCleared ? { ...saved, discountNote: null } : saved;
+    });
 
     // The other dates of the series, when asked (§130) — after this one, so what travels is
     // exactly what was written, and inside the transaction, so a refused date undoes it all.
@@ -1869,6 +1949,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         collect: announcing,
         now,
         deadlines,
+        discountNoteCleared,
       });
       appliedTo = series.applied;
       offered += series.offered;
@@ -1946,8 +2027,8 @@ export async function createEvent<T extends Record<string, unknown>>(
   // Each language's columns, once: checked for both-or-neither (§352) before anything is written,
   // then inserted exactly as checked.
   const translationColumns = {
-    ro: translationColumnsFrom(parsed.translations.ro, parsed.type),
-    en: translationColumnsFrom(parsed.translations.en, parsed.type),
+    ro: translationColumnsFrom(parsed.translations.ro, parsed.type, costPaidToExternalOrganizer(parsed)),
+    en: translationColumnsFrom(parsed.translations.en, parsed.type, costPaidToExternalOrganizer(parsed)),
   };
   assertOptionalTextsInBothLanguages(translationColumns);
   // Each language's name for the place, from the Locul box (§362); a caller that posts no English
@@ -2192,9 +2273,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // The headlamp travels with the route (§382): a copy of an evening run, and every date a
-    // series makes from it, is as dark at its start as the source.
-    headlampRequired: source.headlampRequired,
+    // The night override travels with the route (§382, §NNN): a copy, and every date a series
+    // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
+    // night event by its own sunset.
+    nightOverride: source.nightOverride,
     // The self-declaration travels with the route too (§NNN): a copy of the trail run, and every
     // date a series makes from it, offers the same declaration.
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
@@ -2253,6 +2335,9 @@ function copiedTranslationValues(
     locationName: translation.locationName,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
+    // The discount travels with the mode and cost type it belongs to (`copiedEventValues`, both
+    // carried unchanged): a series held at a discount is held at it every date.
+    discountNote: translation.discountNote,
     authorStaffUserId: actor.id,
     createdAt: now,
     updatedAt: now,

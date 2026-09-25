@@ -20,6 +20,7 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
+import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
 import { env } from "@/shared/config/env";
@@ -360,6 +361,15 @@ async function renderRow(
         ? `${env.APP_BASE_URL}${getPathname({ locale: otherLocale(locale), href: { pathname: "/events/[slug]", params: { slug: otherDetails.slug } } })}`
         : null;
       data.eventFactsOther = emailEventFacts(otherDetails, otherUrl);
+    }
+  }
+  // A night event (§NNN, the question §382 left open): the reminder says the sunset and to bring a
+  // light — only when this date, the one being reminded of, is one; the same function as the pill.
+  if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+    const night = clubNightEvent(eventDetails);
+    if (night.night) {
+      data.nightEventSunset = night.sunset ?? "";
+      data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half
@@ -757,7 +767,10 @@ function emailEventFacts(row: EventNotificationRow, pageUrl: string | null): Ema
     difficulty: row.difficulty,
     distanceMeters: row.distanceMeters,
     elevationGainMeters: row.elevationGainMeters,
-    headlampRequired: row.headlampRequired,
+    type: row.type,
+    endsAt: row.endsAt,
+    nightOverride: row.nightOverride,
+    registrationMode: row.registrationMode,
     routeUrl: row.routeUrl,
     stravaEventUrl: row.stravaEventUrl,
     facebookEventUrl: row.facebookEventUrl,

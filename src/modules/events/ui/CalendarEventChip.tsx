@@ -9,26 +9,26 @@ import PartnerMark from "./PartnerMark";
 
 /**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
- * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Frontală necesară" when
- * the organizer marked the date (§382) — after the place, since both say how the evening will be —
- * then the generic "Colaborare" marker when it is held with one. The grid's tooltip shows them as
- * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
- * between them.
+ * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Eveniment de noapte —
+ * apusul la 16:36" when that date starts after dusk (§NNN, where §382 put the headlamp) — after the
+ * place, since both say how the evening will be — then the generic "Colaborare" marker when it is
+ * held with one. The grid's tooltip shows them as lines; the link's accessible name reads them as
+ * sentences, each ended so a screen reader pauses between them.
  */
 function calendarEntryLines({
   time,
   title,
   note,
-  headlamp = null,
+  night = null,
   partner,
 }: {
   time: string;
   title: string;
   note: EditionNote | null;
-  headlamp?: string | null;
+  night?: string | null;
   partner: string | null;
 }): string[] {
-  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(headlamp ? [headlamp] : []), ...(partner ? [partner] : [])];
+  return [`${time} ${title}`, ...(note ? [note.text] : []), ...(night ? [night] : []), ...(partner ? [partner] : [])];
 }
 
 function calendarEntryName(lines: readonly string[]): string {
@@ -68,7 +68,7 @@ export default function CalendarEventChip({
   filled,
   cancelled,
   note,
-  headlamp = null,
+  night = null,
   partner,
   dense,
 }: {
@@ -81,14 +81,14 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "Frontală necesară" / "Headlamp required" (§382), made on the server — or null for a date that needs no light. */
-  headlamp?: string | null;
+  /** "Eveniment de noapte — apusul la 16:36" / "Night event — sunset at 16:36" (§NNN), made on the server — or null for a date that is not one. */
+  night?: string | null;
   /** The generic "Colaborare" marker (§367, §379), made on the server — or null for an event with no partner. */
   partner: string | null;
   /** Inside a grid cell (small type, one line) rather than an agenda row. */
   dense: boolean;
 }) {
-  const lines = calendarEntryLines({ time, title, note, headlamp, partner });
+  const lines = calendarEntryLines({ time, title, note, night, partner });
   const name = calendarEntryName(lines);
   const markSize = dense ? 16 : 18;
   const chip = (

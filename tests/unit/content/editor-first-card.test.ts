@@ -190,7 +190,7 @@ describe("§358 the first box holds the status, the course and the links", () =>
     expect(html).toContain("Alergare de grup · Programat · Asfalt · Ușor · 10 km · 2 linkuri");
     // The cards' own lines: the status, the whole course, which kinds of links.
     expect(html).toMatch(/<h3[^>]*>Starea evenimentului<span[^>]*>Programat<\/span>/);
-    expect(html).toContain("Asfalt · Ușor · 10 km · +120 m · traseu");
+    expect(html).toContain("Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu");
     expect(html).toContain("Strava · 1 link (Traseul (GPX))");
   });
 
@@ -249,7 +249,7 @@ describe("§358 a role that may only read the settings is told once", () => {
     expect(foldTags(html).map(idOf)).toEqual(["box-kind"]);
     const cards = [
       ["box-status", "Starea evenimentului", "Programat"],
-      ["box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · traseu"],
+      ["box-course", "Traseul", "Asfalt · Ușor · 10 km · +120 m · de zi (automat) · traseu"],
       ["box-links", "Linkuri și fișiere", "Strava · 1 link (Traseul (GPX))"],
     ] as const;
     for (const [id, name, line] of cards) {

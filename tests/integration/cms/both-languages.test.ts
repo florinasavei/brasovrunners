@@ -265,3 +265,47 @@ describe("BR-REQ-050-01 the event's optional texts: both languages or neither (�
     expect(rows.find((row) => row.locale === "ro")?.locationName).toBe("Piața Sfatului");
   });
 });
+
+describe("the club's discount on an EXTERNAL-registration PAID event's own fee, both languages or neither (§NNN)", () => {
+  const EXTERNAL_PAID = {
+    registrationMode: "EXTERNAL",
+    externalProvider: "Alt club",
+    externalRegistrationUrl: "https://alt-club.ro/inscriere",
+    costType: "PAID",
+    costAmount: "75 lei",
+  };
+
+  it("saves and reads back a note in both languages", async () => {
+    const event = await createEvent(db, { actor: admin, fields: { ...POSTED, ...EXTERNAL_PAID, translations: TRANSLATIONS }, now: NOW });
+    await save(event.id, EXTERNAL_PAID, { ro: { discountNote: "40 lei pentru membri" }, en: { discountNote: "40 lei for members" } });
+    const rows = await translationsOf(event.id);
+    expect(rows.find((row) => row.locale === "ro")?.discountNote).toBe("40 lei pentru membri");
+    expect(rows.find((row) => row.locale === "en")?.discountNote).toBe("40 lei for members");
+  });
+
+  it("refuses a note written in one language only, naming the other language's box", async () => {
+    const event = await createEvent(db, { actor: admin, fields: { ...POSTED, ...EXTERNAL_PAID, translations: TRANSLATIONS }, now: NOW });
+    const refusal = await refusalOf(save(event.id, EXTERNAL_PAID, { ro: { discountNote: "40 lei pentru membri" }, en: {} }));
+    expect(refusal.code).toBe("VALIDATION_ERROR");
+    expect(refusal.fields).toEqual(["translations.en.discountNote"]);
+    expect((await translationsOf(event.id)).every((row) => row.discountNote === null)).toBe(true);
+  });
+
+  it("clears the note, silently, once the event is no longer EXTERNAL + PAID — never refused, the box is not on screen", async () => {
+    const event = await createEvent(db, { actor: admin, fields: { ...POSTED, ...EXTERNAL_PAID, translations: TRANSLATIONS }, now: NOW });
+    await save(event.id, EXTERNAL_PAID, { ro: { discountNote: "40 lei pentru membri" }, en: { discountNote: "40 lei for members" } });
+    // The organizer switches the cost to FREE: the discount no longer means anything, and the
+    // save that carries stale boxes for it is not refused over them.
+    await save(event.id, { ...EXTERNAL_PAID, costType: "FREE", costAmount: "" }, { ro: { discountNote: "40 lei pentru membri" }, en: { discountNote: "40 lei for members" } });
+    expect((await translationsOf(event.id)).every((row) => row.discountNote === null)).toBe(true);
+  });
+
+  it("never carries a note on an INTERNAL or a FREE event created with one posted", async () => {
+    const internal = await createEvent(db, {
+      actor: admin,
+      fields: { ...POSTED, translations: { ro: { ...TRANSLATIONS.ro, discountNote: "40 lei" }, en: { ...TRANSLATIONS.en, discountNote: "40 lei" } } },
+      now: NOW,
+    });
+    expect((await translationsOf(internal.id)).every((row) => row.discountNote === null)).toBe(true);
+  });
+});

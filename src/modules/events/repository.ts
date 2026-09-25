@@ -94,8 +94,9 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
-  // Bring a headlamp (§382): a pill on the card and the page, a line in the calendar entry.
-  headlampRequired: events.headlampRequired,
+  // The night override (§NNN): with the start and the zone above, whether this date is a night
+  // event — the pill on the card and the page, a line in the calendar entry and the `.ics`.
+  nightOverride: events.nightOverride,
   // The group run's optional self-declaration (§NNN): the button under the route's pills.
   offersGroupRunDeclaration: events.offersGroupRunDeclaration,
   registrationMode: events.registrationMode,
@@ -140,6 +141,10 @@ const PUBLIC_COLUMNS = {
   routeDescriptionJson: eventTranslations.routeDescriptionJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
+  // The club's discount on an external event's own fee (`DECISIONS.md` §NNN): read on every
+  // event, null everywhere but an `EXTERNAL`-registration, `PAID` one — the service clears it
+  // elsewhere, so a null here means "no discount stated" rather than "read the box".
+  discountNote: eventTranslations.discountNote,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
   // their places while the place is to be announced (§328).
   scheduleItems: publicScheduleItems,
@@ -508,15 +513,23 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       difficulty: events.difficulty,
       distanceMeters: events.distanceMeters,
       elevationGainMeters: events.elevationGainMeters,
-      headlampRequired: events.headlampRequired,
       routeUrl: events.routeUrl,
       costType: events.costType,
       costAmount: events.costAmount,
       costUrl: events.costUrl,
       startsAt: events.startsAt,
+      // The event's own end (§NNN): the night line's span reads it before the programme's rows,
+      // as the pill does — a run whose «Durata» carries it past dusk is a night run here too.
+      endsAt: events.endsAt,
       // A race's gun time, for the update notice that says the time changed (§331).
       raceStartsAt: events.raceStartsAt,
       timezone: events.timezone,
+      // The night override (§NNN): with the start and the zone, whether the reminder says to bring a light.
+      nightOverride: events.nightOverride,
+      // Whether the reminder's night line calls it a run rather than an event (§NNN).
+      type: events.type,
+      // The route pills' source (`RouteFactsSource`) carries it, as the page's row does.
+      registrationMode: events.registrationMode,
       // The deadlines the words state (§377): this event's own reminder lead ("este peste 2
       // zile"), and when its participation window opens ("când îți reamintim cu o săptămână").
       reminderHoursBefore: events.reminderHoursBefore,

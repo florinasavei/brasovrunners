@@ -23,6 +23,7 @@ import {
 import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
+import { nightOverrideFromChoice } from "@/modules/events/domain/night";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import {
@@ -235,8 +236,9 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
-    // "Necesită frontală" (§382): a checkbox in "Traseul", so an absent value is "none needed".
-    headlampRequired: form.get("event.headlampRequired") === "on",
+    // "Eveniment de noapte" (§NNN): the three choices in "Traseul" — "yes", "no", or "auto" (and
+    // an absent value) for the sunset's own answer.
+    nightOverride: nightOverrideFromChoice(value("nightOverride")),
     // The group run's optional self-declaration (§NNN): a checkbox in "Traseul"; unticked, or
     // disabled because the club has no approved text of that kind, posts nothing: not offered.
     offersGroupRunDeclaration: form.get("event.offersGroupRunDeclaration") === "on",
@@ -305,6 +307,13 @@ function translationInputFrom(form: FormData, locale: Locale) {
     // event's fields (`eventFieldsFrom`, §362).
     seoTitle: value("seoTitle"),
     seoDescription: value("seoDescription"),
+    // The club's discount on an external event's own fee (`DECISIONS.md` §NNN), posted from the
+    // cost card's own strip (`RegistrationBox`), which now renders for a words-only reader too
+    // (no settings rights) as well as inside the settings editor's `CostFields`. Read only when
+    // the box was actually posted, the way `reminderHoursBefore` above is — an absent box (a
+    // future caller, a stale form) must leave the column alone rather than blank it; cleared
+    // server-side outside EXTERNAL + PAID (`service.ts#applyTranslationSave`).
+    discountNote: form.has(`translations.${locale}.discountNote`) ? value("discountNote") : undefined,
   };
 }
 

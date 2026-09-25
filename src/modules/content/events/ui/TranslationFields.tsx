@@ -61,6 +61,7 @@ export type TranslationDraft = Pick<
   | "locationName"
   | "seoTitle"
   | "seoDescription"
+  | "discountNote"
 > &
   Partial<Pick<EditableTranslation, "id" | "version">>;
 
@@ -80,6 +81,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     locationName: null,
     seoTitle: null,
     seoDescription: null,
+    discountNote: null,
   };
 }
 
@@ -358,5 +360,28 @@ export async function AddressFields({ translation, mayEdit, slugLocked }: PieceP
         {...box("seoDescription")}
       />
     </Stack>
+  );
+}
+
+/**
+ * The club's discount on an external event's own fee (`DECISIONS.md` §NNN): one short line per
+ * language, inside the cost card, shown only on an `EXTERNAL`-registration, `PAID` event
+ * (`CostFields`). Never required — the organizer sets the price; the club only ever knows the
+ * discount, if there is one.
+ */
+export async function DiscountNoteFields({ translation, mayEdit }: PieceProps) {
+  const t = await getTranslations("Admin");
+  const name = named(translation);
+  if (!mayEdit) {
+    return <ReadOnlyLine label={t("editor.discountNote")} value={translation.discountNote || t("editor.boxes.summary.empty")} />;
+  }
+  return (
+    <RecallField
+      name={name("discountNote")}
+      label={t("editor.discountNote")}
+      helperText={t("editor.discountNoteHelp")}
+      defaultValue={translation.discountNote ?? ""}
+      {...box("discountNote")}
+    />
   );
 }

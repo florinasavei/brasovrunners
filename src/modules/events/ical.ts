@@ -4,6 +4,7 @@ import { costUrlHost, type EventCostType } from "./domain/cost";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
+import { clubNightEvent } from "./night-event";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { CLUB_NAME } from "@/theme/brand";
@@ -92,8 +93,13 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
-  /** Bring a headlamp (§382): a line of its own under the facts line, "Frontală necesară" in the calendar's language. */
-  headlampRequired?: boolean;
+  /**
+   * The organizer's night override (§NNN): true "Da", false "Nu", null or absent "Automat" — the
+   * start and the end against civil dusk and dawn at the club's place (the end is `endsAt`, else
+   * the programme's last row of the day). A night event gets a line of its own under the facts
+   * line, "Eveniment de noapte — apusul la 16:36, ia o frontală" in the calendar's language.
+   */
+  nightOverride?: boolean | null;
   surface?: EventSurface | null;
   difficulty?: "EASY" | "MODERATE" | "HARD" | null;
   costType?: EventCostType | null;
@@ -101,6 +107,10 @@ export type CalendarEvent = {
   costAmount?: string | null;
   /** Where a paid event is settled, or where a donation is made (§343); https, or nothing. */
   costUrl?: string | null;
+  /** Whether registration is with another organizer (§NNN) — a `PAID` cost then reads "la organizator". */
+  registrationMode?: "NONE" | "INTERNAL" | "EXTERNAL" | null;
+  /** The club's discount on an `EXTERNAL`-registration `PAID` event's own fee (§NNN), in the calendar's language. */
+  discountNote?: string | null;
   /** The links group (§159): each line only when the organizer gave the link. */
   routeUrl?: string | null;
   videoUrl?: string | null;
@@ -359,6 +369,13 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     runner recognises, which is what the page's own facts line allows too.
   */
   const costFacts = ((): string[] => {
+    if (event.costType === "PAID" && event.registrationMode === "EXTERNAL") {
+      // The place is entered and paid at the organizer's own form (§NNN), never the club's: its
+      // own line, "Cost: 75 lei, la organizator", with the club's discount after it when there
+      // is one — the same fact the page's cost row and pill state.
+      const main = event.costAmount ? t("costPaidExternalLine", { amount: event.costAmount }) : t("costPaidExternal");
+      return event.discountNote ? [main, event.discountNote] : [main];
+    }
     if (event.costType === "PAID") {
       const main = event.costAmount ? t("costPaidAmount", { amount: event.costAmount }) : t("costValues.PAID");
       const host = event.costUrl ? costUrlHost(event.costUrl) : null;
@@ -371,6 +388,24 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     }
     return event.costType ? [t(`costValues.${event.costType}`)] : [];
   })();
+
+  // A night event (§NNN): this date's own answer, from the one function every surface asks.
+  // The span decides (§NNN): the event's own end, else the programme's last row of the day —
+  // the same inputs the pill and the reminder read, so the file cannot stay silent where they speak.
+  const night = clubNightEvent({
+    nightOverride: event.nightOverride ?? null,
+    timezone: timeZone,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    programme: event.programme,
+  });
+  // A group run is «Alergare de noapte», as on its card and in its reminder (§NNN).
+  const run = event.type === "GROUP_RUN";
+  const nightLine = night.night
+    ? night.sunset
+      ? t(run ? "night.icsRun" : "night.ics", { time: night.sunset })
+      : t(run ? "night.runPill" : "night.pill")
+    : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
@@ -427,9 +462,9 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     place.lines,
     excerpt ? [{ text: excerpt }] : [],
     body ? [{ text: body }] : [],
-    // The headlamp (§382) on its own line under the facts: a thing to pack, read on the morning of
-    // a dark evening's run, not one more word lost among the route's.
-    [times, facts, event.headlampRequired ? t("headlampRequired") : ""].filter((text) => text.length > 0).map((text) => ({ text })),
+    // A night event (§NNN, where §382 put the headlamp) on its own line under the facts: a thing to
+    // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
+    [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],
     links,
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],

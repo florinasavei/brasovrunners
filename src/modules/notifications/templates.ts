@@ -370,6 +370,19 @@ export type TemplateData = {
   /** "What to bring", the translation's one line (§81). */
   eventChecklist?: string;
   /**
+   * Set only on the reminder of a date that is a night event (§NNN): the sunset of that day,
+   * "16:36", on the event's clock — the same in both halves, a 24-hour time is no language's.
+   * The line says it and says to bring a light. An empty string is a night event whose sunset
+   * could not be computed (a polar night); the line then says the light alone.
+   */
+  nightEventSunset?: string;
+  /**
+   * Set alongside `nightEventSunset` (§NNN): whether this event is a group run, since the night
+   * line calls it a run («Alergare de noapte») rather than an event («Eveniment de noapte») only
+   * then — the owner calls a run a run.
+   */
+  nightEventIsGroupRun?: boolean;
+  /**
    * The same line in the other language, for the second half (§373, email follow-up); `null` when
    * that language has none, and the second half then says nothing rather than the first half's
    * words. Absent when the other language was not read — both halves read `eventChecklist`.
@@ -918,6 +931,15 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
+    /**
+     * The reminder of a night event (§NNN), after the body whoever wrote it — «Alergare de
+     * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
+     * noapte» on every other type.
+     */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Alergare de noapte" : "Eveniment de noapte";
+      return sunset ? `${label}: apusul e la ${sunset}. Ia o frontală.` : `${label}: ia o frontală.`;
+    },
     /** After the body of the link for another person (§389): the club's limit, whoever wrote the words. */
     addressCapLine: (cap: number) => `Pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", cap)} la un eveniment.`,
     footer: "Răspunde la acest email pentru întrebări.",
@@ -1212,6 +1234,11 @@ const T = {
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
+    /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
+    nightEvent: (sunset: string, isGroupRun: boolean) => {
+      const label = isGroupRun ? "Night run" : "Night event";
+      return sunset ? `${label}: sunset is at ${sunset}. Bring a headlamp.` : `${label}: bring a headlamp.`;
+    },
     addressCapLine: (cap: number) => `One email address may register at most ${peoplePhrase("en", cap)} for an event.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
@@ -1446,6 +1473,15 @@ export function buildTemplateContent(
         : written
           ? written.paragraphs.filter((paragraph) => !onlyMissingFacts(paragraph, data as unknown as Record<string, unknown>)).map(fill)
           : entry.body(data)),
+      /*
+        A night event (§NNN, the question §382 left open): the reminder of a date that starts after
+        dusk says the sunset and to bring a light. After the body, like the provisional number below
+        — a fact about this date, not a matter of how the club writes — so a reminder the club
+        reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
+      */
+      ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
+        ? [copy.nightEvent(data.nightEventSunset, data.nightEventIsGroupRun === true)]
+        : []),
       // What changed and the organizer's own words, after the body and whoever wrote it (§331).
       ...noticeParts(messageType, locale, data),
       // The organizer's message itself, after its one framing sentence (§364).

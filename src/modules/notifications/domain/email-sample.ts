@@ -62,7 +62,10 @@ export const EMAIL_SAMPLE_EVENT = {
   difficulty: "MODERATE",
   distanceMeters: 12_000,
   elevationGainMeters: 450,
-  headlampRequired: false,
+  type: "RACE",
+  endsAt: null,
+  nightOverride: null,
+  registrationMode: "INTERNAL",
   costType: "PAID",
   costAmount: "30 lei",
 } as const;
