@@ -267,8 +267,10 @@
       "fullDescription": "Descrierea completă a evenimentului"
     },
     "route": "Traseu",
+    "routeSection": "Traseul",
     "age": "Vârstă",
     "openRoute": "Vezi traseul",
+    "routeJump": "Despre traseu",
     "video": {
       "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
@@ -804,7 +806,8 @@
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului",
-        "scheduleNotes": "Note sub program"
+        "scheduleNotes": "Note sub program",
+        "routeDescription": "Descriere traseu / antrenament"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "tabIncomplete": "incomplet",
@@ -815,6 +818,7 @@
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
+      "routeDescriptionEmpty": "(nimic încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
       "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
@@ -879,6 +883,7 @@
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
+      "routeDescriptionHelp": "Opțional, în ambele limbi sau în niciuna. Punctele de oprire, pantele, ce să aștepți — și o hartă, dacă ai una (butonul de imagine). Apare pe pagina evenimentului la secțiunea „Traseul”, împreună cu linkul către traseu și cu linkurile GPX și de hartă din „Linkuri și fișiere”.",
       "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele {horizon} se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
       "repeatUntil": "Până la (opțional)",
       "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
@@ -1357,7 +1362,9 @@
             "route": "traseu",
             "km": "{km} km",
             "elevation": "+{m} m",
-            "headlamp": "frontală"
+            "headlamp": "frontală",
+            "described": "cu descriere",
+            "describedOneLanguage": "descriere într-o singură limbă"
           },
           "links": {
             "strava": "Strava",

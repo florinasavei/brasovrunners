@@ -68,11 +68,12 @@ export function publishGapLabel(gap: PublishGap, labels: PublishGapLabels): stri
 /**
  * The boxes whose long text is checked for "identical in both languages", in the order of the
  * editor's boxes: the summary (box 2), the description (3), the programme's notes and what to
- * bring (6), the rules (7), and each partner's description (12). A title, a place's name or a
- * link's label is short and may honestly read the same — none of them is here.
+ * bring (6), the rules (7), each partner's description (12), and the route description in the
+ * "Traseul" card (§NNN). A title, a place's name or a link's label is short and may honestly read
+ * the same — none of them is here.
  */
-export type IdenticalBox = "titleSummary" | "description" | "programme" | "rules" | "coHosts";
-export type IdenticalField = "excerpt" | "body" | "schedule" | "checklist" | "rules" | "coHostDescription";
+export type IdenticalBox = "titleSummary" | "description" | "programme" | "rules" | "coHosts" | "course";
+export type IdenticalField = "excerpt" | "body" | "schedule" | "checklist" | "rules" | "coHostDescription" | "routeDescription";
 /**
  * One text whose second language says exactly what the first does. `locale` is the language that
  * carries the copy (English, beside the Romanian it copies), `name` its box — where the warning's
@@ -87,6 +88,7 @@ const TRANSLATION_TEXTS: ReadonlyArray<readonly [IdenticalBox, IdenticalField, s
   ["programme", "schedule", "schedule"],
   ["programme", "checklist", "checklist"],
   ["rules", "rules", "rules"],
+  ["course", "routeDescription", "routeDescription"],
 ];
 
 /** "Ro", "En": a partner card's boxes are named by the language's code with a capital. */
@@ -132,6 +134,8 @@ export type StoredTexts = {
   bodyJson: unknown;
   rulesJson: unknown;
   scheduleJson: unknown;
+  /** The route / training description (§NNN); absent for a caller from before it. */
+  routeDescriptionJson?: unknown;
   checklist: string | null;
 };
 
@@ -151,6 +155,8 @@ export function storedTextValue(translation: StoredTexts, posted: string): strin
       return json(translation.rulesJson);
     case "schedule":
       return json(translation.scheduleJson);
+    case "routeDescription":
+      return json(translation.routeDescriptionJson);
     case "checklist":
       return translation.checklist ?? "";
     default:

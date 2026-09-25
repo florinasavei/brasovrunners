@@ -498,6 +498,13 @@
       "when": 1790301065261,
       "tag": "0070_headlamp_required",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1790309412842,
+      "tag": "0071_route_description",
+      "breakpoints": true
     }
   ]
 }

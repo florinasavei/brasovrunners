@@ -134,6 +134,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  // The route / training description (§NNN), under `#route` with the route's links.
+  routeDescriptionJson: eventTranslations.routeDescriptionJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without

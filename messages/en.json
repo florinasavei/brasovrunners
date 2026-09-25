@@ -267,8 +267,10 @@
       "fullDescription": "Full event description"
     },
     "route": "Route",
+    "routeSection": "The route",
     "age": "Age",
     "openRoute": "View the route",
+    "routeJump": "About the route",
     "video": {
       "open": "Watch the event film",
       "title": "Event film (YouTube)",
@@ -804,7 +806,8 @@
         "body": "Content — shown on the event page, under the title",
         "rules": "Event rules",
         "schedule": "Event programme",
-        "scheduleNotes": "Notes under the programme"
+        "scheduleNotes": "Notes under the programme",
+        "routeDescription": "Route / training description"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "tabIncomplete": "incomplete",
@@ -815,6 +818,7 @@
       "create": "Create the event",
       "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
+      "routeDescriptionEmpty": "(nothing yet — press to write it)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
       "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
@@ -879,6 +883,7 @@
       "notStated": "Not stated",
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
+      "routeDescriptionHelp": "Optional, in both languages or neither. Pit stops, climbs, what to expect — and a map if you have one (the picture button). Shown on the event page under “The route”, with the route link and the GPX and map links from “Links and files”.",
       "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next {horizon} are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
       "repeatUntil": "Until (optional)",
       "repeatUntilHelp": "Leave empty for a series without an end.",
@@ -1357,7 +1362,9 @@
             "route": "route",
             "km": "{km} km",
             "elevation": "+{m} m",
-            "headlamp": "headlamp"
+            "headlamp": "headlamp",
+            "described": "with a description",
+            "describedOneLanguage": "description in one language only"
           },
           "links": {
             "strava": "Strava",

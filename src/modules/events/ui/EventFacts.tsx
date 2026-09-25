@@ -18,6 +18,7 @@ import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage,
 import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
+import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
@@ -814,7 +815,23 @@ export default async function EventFacts({
     `routePills` without the surface is built above, shared with the card.
   */
   const routeLinks: ReactNode[] = [];
-  if (links && event.routeUrl) routeLinks.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+  /*
+    With a route description in this language (§NNN), the route link moves into the page's own
+    "Traseul" section (`EventRoute`, under `#route`) with the GPX and the map, and this row points
+    there instead — one in-page link, 44 pixels like the rest. The Strava event and the Facebook
+    event stay: they are where people say "going", not the route.
+  */
+  const routeSection = hasRouteDescription(event.routeDescriptionJson);
+  if (links && routeSection) {
+    routeLinks.push(
+      <Link href="#route" data-testid="route-jump" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, boxSizing: "border-box", minHeight: 44 }}>
+        <RouteIcon aria-hidden="true" sx={{ fontSize: 18 }} />
+        {t("routeJump")}
+      </Link>,
+    );
+  } else if (links && event.routeUrl) {
+    routeLinks.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+  }
   if (links && event.stravaEventUrl) routeLinks.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
   // The Facebook event (§144): where the club's people say "going".
   if (links && event.facebookEventUrl) routeLinks.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));

@@ -7,9 +7,11 @@ import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
-import { courseSummary } from "../box-summaries";
+import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
-import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
+import { RouteDescriptionFields } from "../TranslationFields";
+import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
+import { LanguageTabs } from "./TextBoxes";
 
 /**
  * Card 1.2, "Traseul" (§350, §358), inside "Ce fel de eveniment": what they run on, how hard, how
@@ -17,10 +19,15 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * seen — a separate question from the meeting point (§49). All optional, so folded on both pages. "Nespecificat" is a real answer on the two selects:
  * the page omits the row rather than guessing (migration `0018`).
  *
- * For a role that may only read the settings, the card is its heading and its line and nothing to
- * open: the first box says once that the settings are not theirs (§358).
+ * Under the settings, in its own Română | English tabs, the route / training description (§NNN):
+ * the pit stops, the climbs, what to expect, and a map as a picture in the text — the words' role's,
+ * like every other text, both languages or neither (§352), shown under `#route` on the event page.
+ *
+ * For a role that may only read the settings, the card is its heading and its line (§358) — unless
+ * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
+ * alone, since those words are theirs. The first box has already said the settings are not.
  */
-export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
+export default async function CourseBox({ event, mayEditSettings, languages }: BoxProps & { languages: readonly LanguageEntry[] }) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const { words } = await summaryWords();
@@ -28,12 +35,36 @@ export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
     level: 3,
     id: "box-course",
     title: t("editor.boxes.course.title"),
-    aside: courseSummary(words, event, {
-      surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
-      difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
-    }),
+    aside: courseSummary(
+      words,
+      event,
+      {
+        surface: event?.surface ? tEvent(`surface.${event.surface}`) : null,
+        difficulty: event?.difficulty ? t(`editor.difficultyValues.${event.difficulty}`) : null,
+      },
+      languages.map((entry) => entry.translation),
+    ),
   } as const;
-  if (!mayEditSettings) return <Panel {...card} />;
+  // "Descriere traseu / antrenament" (§NNN), per language: posted as `translations.<locale>.routeDescription`.
+  const routeDescription =
+    languages.length > 0 ? (
+      <LanguageTabs
+        idPrefix="course"
+        languages={languages}
+        watch={{ names: ["routeDescription"], rule: "parity" }}
+        blank={BLANK.route}
+        identical={["routeDescription"]}
+        render={(entry) => <RouteDescriptionFields translation={entry.translation} mayEdit={entry.mayEdit} />}
+      />
+    ) : null;
+  if (!mayEditSettings) {
+    if (!languages.some((entry) => entry.mayEdit)) return <Panel {...card} />;
+    return (
+      <Panel collapsible {...card}>
+        {routeDescription}
+      </Panel>
+    );
+  }
   return (
     <Panel collapsible {...card}>
       <Stack spacing={2}>
@@ -91,6 +122,7 @@ export default async function CourseBox({ event, mayEditSettings }: BoxProps) {
           defaultValue={event?.routeUrl ?? ""}
           {...textFieldConstraints(eventInputConstraints("routeUrl"), { inputMode: "url" })}
         />
+        {routeDescription}
       </Stack>
     </Panel>
   );

@@ -745,6 +745,13 @@ export const eventTranslations = pgTable(
      */
     scheduleJson: jsonb("schedule_json"),
     /**
+     * The route / training description, per language (§NNN): the pit stops, the climbs, what to
+     * expect — and a map, which is a picture in the text (§72–§73), not a field of its own.
+     * Same editor and contract as the description; written in the "Traseul" card; shown under
+     * `#route` on the event page with the route's own links. Null when the organizer wrote none.
+     */
+    routeDescriptionJson: jsonb("route_description"),
+    /**
      * "What to bring", one line, per language (`DECISIONS.md` §81): it goes on the
      * confirmation and the reminder — the two emails a participant keeps. Editorial, so it
      * lives on the translation; plain text, at most 300 characters, because an email is read

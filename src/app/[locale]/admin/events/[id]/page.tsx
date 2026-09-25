@@ -626,7 +626,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       1.1 the status, 1.2 the course, 1.3 the links and files. */}
                   <KindBox {...box} risk={risk} registered={realCount} locale={locale}>
                     <StatusBox {...box} risk={risk} notice={notice} />
-                    <CourseBox {...box} />
+                    <CourseBox {...box} languages={languages} />
                     <LinksBox {...box} locale={locale} />
                   </KindBox>
                   <TitleSummaryBox languages={languages} creating={false} />
