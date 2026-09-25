@@ -2,13 +2,21 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { cachedStartListCounts, cachedStartListPage } from "@/modules/public-cache/reads";
+import {
+  cachedListStatesDisclosed,
+  cachedStartListCounts,
+  cachedStartListOthersCounts,
+  cachedStartListOthersPage,
+  cachedStartListPage,
+} from "@/modules/public-cache/reads";
+import type { PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
-import { confirmedPhrase } from "./counted-phrases";
+import { confirmedPhrase, othersPhrases } from "./counted-phrases";
+import ListStateLabel from "./ListStateLabel";
 
 /**
  * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
@@ -49,6 +57,18 @@ import { confirmedPhrase } from "./counted-phrases";
  * The line above the table counts both — "42 de participanți confirmați — 39 cu numele afișat" —
  * from the same two counts the rows are drawn from, so it matches the confirmed count the club
  * sees in the backoffice, test registrations excluded (`AGENTS.md` §12.6).
+ *
+ * ## The states, behind the privacy notice (§NNN)
+ *
+ * Once the privacy notice in force describes it (`cachedListStatesDisclosed` — the notice names
+ * `{{participantListStates}}`), every row says where its registration stands — "Confirmat",
+ * "Înscris, în așteptarea confirmării", "Pe lista de așteptare" (`ListStateLabel`) — and the list
+ * gains, after every confirmed row, the ticked ones who have not confirmed yet and then the
+ * waiting list in queue order, with no position: the owner's "ca oamenii să știe că sunt pe
+ * lista de așteptare". Nobody who did not tick appears in those two groups, not even as a count,
+ * and a cancelled or expired registration appears nowhere. Without that notice the list is
+ * exactly what it was: confirmed names, no words, no other rows — the same component, one
+ * boolean.
  */
 export default async function StartList({
   event,
@@ -68,9 +88,30 @@ export default async function StartList({
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
   const { named, anonymous } = await cachedStartListCounts(event.id);
-  const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE);
-  const participants =
-    view.namedLimit > 0 ? await cachedStartListPage(event.id, view.namedOffset, view.namedLimit) : [];
+  // The gate (§NNN): the notice in force, in every language, describes the states. Off, nothing
+  // below reads a pending or waiting row at all — not even their count.
+  const statesOn = await cachedListStatesDisclosed(new Date());
+  const others = statesOn ? await cachedStartListOthersCounts(event.id) : { pending: 0, waitlisted: 0 };
+  const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
+  const [participants, otherRows] = await Promise.all([
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit) : [],
+    statesOn && view.othersLimit > 0 ? cachedStartListOthersPage(event.id, view.othersOffset, view.othersLimit) : [],
+  ]);
+  const extra = statesOn ? othersPhrases(t, locale, others) : [];
+  /** The word beside a name — only behind the gate; without it a row carries no state. */
+  const stateOf = (group: PublicListGroup) =>
+    statesOn ? (
+      <ListStateLabel
+        group={group}
+        label={
+          group === "CONFIRMED"
+            ? t("startList.states.confirmed")
+            : group === "PENDING"
+              ? t("startList.states.pending")
+              : t("startList.states.waitlisted")
+        }
+      />
+    ) : null;
 
   /** A relative query, so the link stays on this event whatever its address is (§8). */
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
@@ -94,7 +135,7 @@ export default async function StartList({
       }}
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-        {t("startList.titleCount", { count: view.total })}
+        {t("startList.titleCount", { count: view.confirmed })}
       </Typography>
 
       {view.total === 0 ? (
@@ -104,9 +145,16 @@ export default async function StartList({
       ) : (
         <>
           {/* How many are confirmed, and how many of them are named (§346). */}
-          <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 1 }}>
-            {confirmedPhrase(t, locale, { confirmed: view.total, named })}
+          <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: extra.length > 0 ? 0.5 : 1 }}>
+            {confirmedPhrase(t, locale, { confirmed: view.confirmed, named })}
           </Typography>
+          {/* Behind the notice's gate (§NNN): how many of the rows after the confirmed ones are
+              in each group — only those who ticked, since only they are rows. */}
+          {extra.length > 0 && (
+            <Typography variant="body2" data-testid="start-list-others-summary" sx={{ pb: 1 }}>
+              {t("startList.othersLead")} {extra.join(" · ")}
+            </Typography>
+          )}
 
           {/*
             A real table, with a caption a screen reader announces and column headers that say
@@ -125,7 +173,7 @@ export default async function StartList({
               }}
             >
               <Box component="caption" sx={{ captionSide: "top", textAlign: "left", py: 1, fontSize: "0.875rem", color: "text.secondary" }}>
-                {t("startList.caption")}
+                {statesOn ? t("startList.captionStates") : t("startList.caption")}
               </Box>
               <Box component="thead">
                 <Box component="tr">
@@ -146,7 +194,10 @@ export default async function StartList({
                   // so the position in the confirmed order is what identifies the row.
                   <Box component="tr" key={`${view.namedOffset + index}-${participant.displayName}`} data-testid="start-list-named">
                     <Box component="td">{view.firstPosition + index}</Box>
-                    <Box component="td">{participant.displayName}</Box>
+                    <Box component="td">
+                      {participant.displayName}
+                      {stateOf("CONFIRMED")}
+                    </Box>
                     <Box component="td" sx={{ color: "text.secondary" }}>
                       {participant.clubName ?? ""}
                     </Box>
@@ -167,8 +218,32 @@ export default async function StartList({
                     <Box component="td" />
                     <Box component="td" sx={{ color: "text.secondary", fontStyle: "italic" }}>
                       {t("startList.anonymous")}
+                      {stateOf("CONFIRMED")}
                     </Box>
                     <Box component="td" />
+                  </Box>
+                ))}
+                {/*
+                  Behind the notice's gate (§NNN): the ticked ones who have not confirmed yet, then
+                  the waiting list in queue order. No position — a number would read as a place in
+                  the confirmed order, or on the waiting list, and the second is the question the
+                  owner left open (default: not shown).
+                */}
+                {otherRows.map((row, index) => (
+                  <Box
+                    component="tr"
+                    key={`other-${view.othersOffset + index}-${row.displayName}`}
+                    data-testid="start-list-other"
+                    data-group={row.group}
+                  >
+                    <Box component="td" />
+                    <Box component="td">
+                      {row.displayName}
+                      {stateOf(row.group)}
+                    </Box>
+                    <Box component="td" sx={{ color: "text.secondary" }}>
+                      {row.clubName ?? ""}
+                    </Box>
                   </Box>
                 ))}
               </Box>
@@ -199,7 +274,7 @@ export default async function StartList({
               name here should be able to see, without leaving, that it was their choice and how
               to change it. */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
-            {t("startList.note")}
+            {statesOn ? t("startList.noteStates") : t("startList.note")}
           </Typography>
         </>
       )}

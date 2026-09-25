@@ -9,9 +9,9 @@ import {
 } from "@/db/schema/legal-documents";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
-import type { Locale } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { asksForMinorSignature } from "./domain/merge-fields";
+import { asksForMinorSignature, describesListStates } from "./domain/merge-fields";
 
 /**
  * Reading and writing `legal_documents`/`legal_document_translations` (AGENTS.md §12.5).
@@ -113,6 +113,20 @@ export async function declarationAsksMinorToSignByLocale<T extends Record<string
 ): Promise<Record<Locale, boolean>> {
   const [ro, en] = await Promise.all([declarationAsksMinorToSign(db, "ro", now), declarationAsksMinorToSign(db, "en", now)]);
   return { ro, en };
+}
+
+/**
+ * Whether the privacy notice in force describes the public list's states (§NNN,
+ * `describesListStates`) — in **every** language, because the list is one list: a runner who
+ * registered in English was told what the English notice says, and a state shown beside their
+ * name must be one that notice describes. False while no notice is approved, as it must be.
+ *
+ * For the backoffice (`/admin/legal`, `/admin/tasks`); a public page asks the same question
+ * through the public cache (`public-cache/reads.ts#cachedListStatesDisclosed`).
+ */
+export async function noticeDescribesListStates<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListStates(notice.body));
 }
 
 /**

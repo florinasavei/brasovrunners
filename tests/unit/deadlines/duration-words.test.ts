@@ -3,6 +3,8 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { deadlineMergeValues, isMergeField, mergeText, mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+// The notice also names the public list's states since §NNN, filled from the catalogue as the page fills it.
+import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 
 /**
  * §377 — a deadline as words that agree with its number, in both languages: the one copy the
@@ -113,7 +115,7 @@ describe("§377 the deadlines as legal merge fields", () => {
   it("the platform's privacy notice, merged with a default of no reminder, names a reminder only where the event sends one, in either language", () => {
     const off = { ...DEFAULT_DEADLINES, reminderHours: 0 };
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, off))).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, off), ...listStatesMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder before the start where the event sends one" : "un memento înainte de start, dacă evenimentul trimite unul");
       expect(all).not.toMatch(/\b0 (de )?ore\b|\b0 hours\b/);
       expect(all).not.toContain("…………");
@@ -122,7 +124,7 @@ describe("§377 the deadlines as legal merge fields", () => {
 
   it("the platform's privacy notice, merged with the club's default lead, names it hedged for the event's own choice, in either language", () => {
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
-      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, deadlineMergeValues(locale, DEFAULT_DEADLINES))).join(" ");
+      const all = body.sections.flatMap((section) => section.paragraphs).map((paragraph) => mergeText(paragraph, { ...deadlineMergeValues(locale, DEFAULT_DEADLINES), ...listStatesMergeValues(locale) })).join(" ");
       expect(all).toContain(locale === "en" ? "a reminder 2 days before (or as the event chooses)" : "un memento cu 2 zile înainte (sau cât alege evenimentul)");
       expect(all).not.toContain("…………");
     }

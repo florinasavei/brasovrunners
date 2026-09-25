@@ -23,6 +23,7 @@ import {
  */
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
+  listStatesDescribed: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -64,6 +65,19 @@ describe("owner tasks", () => {
     expect(
       stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false }, "approveLegalText"),
     ).toBe("blocking");
+  });
+
+  /** §NNN — the public list's states wait on the club's notice, and the row says so without blocking anybody. */
+  it("keeps the list-states row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, listStatesDescribed: false }, "listStatesNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "listStatesNotice")).toBe("done");
+    // With no notice at all the approval row is the thing to do; this one is not shown.
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
   });
 
   it("does not count captured or allowlisted email as reaching participants, and names the mode", () => {
@@ -177,6 +191,7 @@ describe("owner tasks", () => {
     const clubOwned = ownerTasks(LAUNCHED).filter((task) => task.owner === "club");
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
+      "listStatesNotice",
       "liveEmail",
       "inviteStaff",
       "inviteKey",

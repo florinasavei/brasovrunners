@@ -3,7 +3,13 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
-import { countAnonymousStartListEntries, countPublicStartList, listPublicStartList } from "@/modules/registrations/repository";
+import {
+  countAnonymousStartListEntries,
+  countPublicStartList,
+  countPublicStartListOthers,
+  listPublicStartList,
+  listPublicStartListOthers,
+} from "@/modules/registrations/repository";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import { expectViolation, SQLSTATE } from "../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../helpers/db";
@@ -63,6 +69,8 @@ async function createRegistration(
     displayName?: string;
     listOptOut?: boolean;
     confirmedAt?: Date;
+    emailConfirmedAt?: Date;
+    waitlistedAt?: Date;
   },
 ) {
   const [participant] = await db
@@ -91,6 +99,8 @@ async function createRegistration(
     resultsConsentVersion: 1,
     listOptOut: input.listOptOut ?? false,
     confirmedAt: input.confirmedAt ?? NOW,
+    emailConfirmedAt: input.emailConfirmedAt ?? null,
+    waitlistedAt: input.waitlistedAt ?? null,
   });
 }
 
@@ -247,6 +257,60 @@ describe("§346 what the anonymous count may contain — nothing but itself", ()
 
     expect(await countPublicStartList(db, event.id)).toBe(0);
     expect(await countAnonymousStartListEntries(db, event.id)).toBe(0);
+  });
+});
+
+/**
+ * §NNN (amending §32 and §143) — the rows the list gains once the privacy notice in force
+ * describes the states: the ticked ones who have not confirmed yet, then the waiting list. A
+ * deliberate widening, and a narrow one: a name, a club and a *group* — never the lifecycle's own
+ * state, a date or an identifier — and never an unproved address, a withdrawal or a test row.
+ */
+describe("§NNN what the pending and waiting rows may contain", () => {
+  const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
+
+  it("lists the ticked pending, then the ticked waiting list in queue order — and nobody else", async () => {
+    const event = await createEvent();
+    // The pending group, by when the address was confirmed.
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(3) });
+    await createRegistration(event.id, { name: "Dan Oferit", email: "dan@example.org", status: "WAITLIST_OFFERED", confirmedAt: undefined, emailConfirmedAt: at(1) });
+    // The waiting list, by `waitlisted_at` — inserted out of order on purpose.
+    await createRegistration(event.id, { name: "Elena Doi", email: "elena@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(8) });
+    await createRegistration(event.id, { name: "Florin Unu", email: "florin@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5) });
+
+    // Everything below is absent, each for its own reason.
+    await createRegistration(event.id, { name: "Ana Confirmata", email: "ana@example.org" }); // the confirmed list's, not this one's
+    await createRegistration(event.id, { name: "Nu Vrea", email: "optout@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(2), listOptOut: true });
+    await createRegistration(event.id, { name: "Adresa Nedovedita", email: "unverified@example.org", status: "PENDING_EMAIL_CONFIRMATION", confirmedAt: undefined });
+    await createRegistration(event.id, { name: "S-a Retras", email: "cancelled@example.org", status: "CANCELLED", confirmedAt: undefined });
+    await createRegistration(event.id, { name: "A Expirat", email: "expired@example.org", status: "EXPIRED", confirmedAt: undefined });
+    await createRegistration(event.id, { name: "Test Runner", email: "queue-demo@test.invalid", kind: "TEST", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(0) });
+    const other = await createEvent();
+    await createRegistration(other.id, { name: "Alt Eveniment", email: "elsewhere@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1) });
+
+    const rows = await listPublicStartListOthers(db, event.id);
+    expect(rows).toEqual([
+      { displayName: "Dan Oferit", clubName: null, group: "PENDING" },
+      { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
+      { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
+      { displayName: "Elena Doi", clubName: null, group: "WAITLISTED" },
+    ]);
+    expect(await countPublicStartListOthers(db, event.id)).toEqual({ pending: 2, waitlisted: 2 });
+
+    // A page is a slice of the same order.
+    expect((await listPublicStartListOthers(db, event.id, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
+  });
+
+  it("returns the name, the club and the group — no state, no date, no identifier, no address", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLIST_OFFERED", confirmedAt: undefined, emailConfirmedAt: NOW });
+
+    const [row] = await listPublicStartListOthers(db, event.id);
+    expect(Object.keys(row)).toEqual(["displayName", "clubName", "group"]);
+    // The group, never the lifecycle's own word: an offer is the club's business.
+    expect(row.group).toBe("PENDING");
+    expect(JSON.stringify(row)).not.toContain("WAITLIST_OFFERED");
+    expect(JSON.stringify(row)).not.toContain("@");
   });
 });
 

@@ -66,6 +66,25 @@ export function deadlineMergeValues(
 }
 
 /**
+ * The privacy notice's marker for the public list's states (§NNN, amending §32 and §143), and
+ * the words it is filled with.
+ *
+ * Since §NNN the public participant list may say, beside each name, where the registration
+ * stands — "Confirmat", "Înscris, în așteptarea confirmării", "Pe lista de așteptare" — and it
+ * lists the pending and the waiting too, not only the confirmed. That is a wider disclosure than
+ * the one the club's approved notice describes, so it is the notice that switches it on, the way
+ * §330's declaration switches the minor's signature on: the platform's template names
+ * `{{participantListStates}}` in the sentence that describes the list, and the list shows the
+ * states only while the notice in force names it (`describesListStates`). A notice approved
+ * before it does not, and the list under it is exactly what it was — confirmed names, no words.
+ *
+ * The field is filled, when the notice is shown, with the three words themselves, quoted
+ * (`registrations/list-state-words.ts#listStatesClause`), from the same catalogue the
+ * list reads — so the approved sentence and the page cannot name different words.
+ */
+export const LIST_STATES_MERGE_FIELD = "participantListStates";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -100,6 +119,7 @@ export const MERGE_FIELDS = [
   "eventLocation",
   "signedAt",
   ...DEADLINE_MERGE_FIELDS,
+  LIST_STATES_MERGE_FIELD,
 ] as const;
 
 /**
@@ -220,6 +240,17 @@ export function asksForIdDocument(body: unknown): boolean {
  */
 export function asksForMinorSignature(body: unknown): boolean {
   return mergeFieldsIn(body).has("participantIdDocument");
+}
+
+/**
+ * Whether a privacy notice describes the public list's states (§NNN): it does when it names
+ * `{{participantListStates}}`, anywhere the merge would fill it. The gate for showing them, and
+ * the pending and waiting groups, on every public list at once — one mechanism, the same shape
+ * as `asksForMinorSignature` (§330): the club's approval of a text is the switch, with no setting
+ * and no deploy. Pure; the caller asks it of the notice in force.
+ */
+export function describesListStates(body: unknown): boolean {
+  return mergeFieldsIn(body).has(LIST_STATES_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {
