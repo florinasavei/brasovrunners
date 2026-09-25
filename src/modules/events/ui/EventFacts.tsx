@@ -18,12 +18,13 @@ import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage,
 import { costUrlHost } from "../domain/cost";
 import { distanceInKm, hasAgeRule, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { openRegistrationClosing, registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
+import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
-import GlyphChip from "./GlyphChip";
 import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
-import { orderRoutePills, type Pill } from "./route-pills";
+import { buildRoutePills, orderRoutePills, routePillParts, type Pill } from "./route-pills";
+import RoutePills from "./RoutePills";
 import { DENSITY } from "@/theme/density";
 
 /**
@@ -103,15 +104,6 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
  * they never wrap, and their breakpoint was measured with the six-pixel gap.
  */
 const RACE_ROW_GAP = 0.5;
-
-/**
- * A pill on the event page (§356) — the listing card's outlined chip (`EventKindChips`), so the
- * page and the cards read alike. Its label wraps rather than ending in an ellipsis: MUI cuts a
- * chip's label to one line, and a club's own amount ("50 lei la înscriere, 70 lei în ziua
- * cursei", sixty characters at most) is a fact that must be read whole on a 320-pixel phone.
- * A plain object in module scope, because it crosses to the client component (`GlyphChip`).
- */
-const PILL_SX = { height: "auto", minHeight: 24, maxWidth: "100%", "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", py: 0.25 } } as const;
 
 /**
  * The facts of an event, grouped by the question they answer.
@@ -468,15 +460,6 @@ export default async function EventFacts({
     </Box>
   );
 
-  // A row of pills (§356): the card's outlined chip, its glyph by name, no bullets between them.
-  const pillRow = (items: Pill[]) => (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-      {items.map((item) => (
-        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} variant="outlined" sx={PILL_SX} />
-      ))}
-    </Box>
-  );
-
   /*
     The route's numbers as pills — surface, difficulty, distance, elevation, in that order (§366,
     amended §375 — the owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this
@@ -490,18 +473,11 @@ export default async function EventFacts({
     surface (the overline already says it, BR-REQ-010-01) makes no "Traseu" row of its own; the
     card (§366) always includes it, since the card's chips no longer repeat the surface.
   */
-  const distancePill: Pill | null =
-    distance !== null ? { glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) } : null;
-  const elevationPill: Pill | null = event.elevationGainMeters
-    ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
-    : null;
-  const difficultyPill: Pill | null = event.difficulty
-    ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
-    : null;
-  const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
-  // Bring a headlamp (§382): a lit torch and the word, after the route's numbers and before the
-  // cost — only on an event the organizer marked; an unmarked one says nothing about light.
-  const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
+  // `routePillParts` (`route-pills.ts`) is the one function that builds the five pills from the
+  // event's own columns — `buildRoutePills` (the compact card, below, and the backoffice's own
+  // list) and this stacked row both call it, so neither builds its own copy that could drift.
+  const routePillPieces = routePillParts(event, t, format);
+  const { difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill, surface: surfacePill } = routePillPieces;
   let routePills = orderRoutePills({ difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill });
 
   if (compact) {
@@ -532,14 +508,10 @@ export default async function EventFacts({
       pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
       free (AGENTS.md §1.2).
     */
-    const cardPills: Pill[] = orderRoutePills({
-      surface: surfacePill,
-      difficulty: difficultyPill,
-      distance: distancePill,
-      elevation: elevationPill,
-      headlamp: headlampPill,
-    });
-    if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+    // `buildRoutePills` (`route-pills.ts`) is the one function that orders and builds them — the
+    // event page's compact card and the backoffice's own list both call it (§388), so neither
+    // reads the route in a different order or a different set from the other.
+    const cardPills = buildRoutePills(event, t, format);
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -607,7 +579,7 @@ export default async function EventFacts({
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
           <Box data-fact="pills" sx={{ mt: GROUP_GAP - LINE_GAP }}>
-            {pillRow(cardPills)}
+            <RoutePills pills={cardPills} />
           </Box>
         )}
         {registration && cardLine("registration", HowToRegIcon, registration, true)}
@@ -814,7 +786,23 @@ export default async function EventFacts({
     `routePills` without the surface is built above, shared with the card.
   */
   const routeLinks: ReactNode[] = [];
-  if (links && event.routeUrl) routeLinks.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+  /*
+    With a route description in this language (§387), the route link moves into the page's own
+    "Traseul" section (`EventRoute`, under `#route`) with the GPX and the map, and this row points
+    there instead — one in-page link, 44 pixels like the rest. The Strava event and the Facebook
+    event stay: they are where people say "going", not the route.
+  */
+  const routeSection = hasRouteDescription(event.routeDescriptionJson);
+  if (links && routeSection) {
+    routeLinks.push(
+      <Link href="#route" data-testid="route-jump" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, boxSizing: "border-box", minHeight: 44 }}>
+        <RouteIcon aria-hidden="true" sx={{ fontSize: 18 }} />
+        {t("routeJump")}
+      </Link>,
+    );
+  } else if (links && event.routeUrl) {
+    routeLinks.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+  }
   if (links && event.stravaEventUrl) routeLinks.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
   // The Facebook event (§144): where the club's people say "going".
   if (links && event.facebookEventUrl) routeLinks.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
@@ -834,7 +822,7 @@ export default async function EventFacts({
       icon: RouteIcon,
       value: (
         <>
-          {routePills.length > 0 && pillRow(routePills)}
+          {routePills.length > 0 && <RoutePills pills={routePills} />}
           {routeLinks.length > 0 && (
             <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 2, mt: routePills.length > 0 ? 0.5 : 0 }}>
               {routeLinks.map((link, index) => (
@@ -880,7 +868,7 @@ export default async function EventFacts({
       icon: PaymentsIcon,
       value: (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5 }}>
-          {pillRow([costPill])}
+          <RoutePills pills={[costPill]} />
           {costExtras.length > 0 && flow(costExtras)}
         </Box>
       ),

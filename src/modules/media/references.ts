@@ -14,7 +14,8 @@ import { bodyImageSrc, getStorage, objectKey } from "./storage";
  * (AGENTS.md §17 "reference check before delete"; `DECISIONS.md` §73).
  *
  * A `media_assets` row is referenced by a gallery item, an album cover, or a body — a page's
- * `body_json`, an event translation's `body_json` or its `excerpt_json` — where the image node
+ * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
+ * `route_description` (§387: the map is a picture in that text) — where the image node
  * carries the variant's address and that address contains the asset's opaque `key_prefix`. Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
@@ -32,12 +33,23 @@ export const ORPHAN_ASSET_DAYS = 7;
 /** The sweep advances `last_referenced_at` at most this often, so it is not rewriting every referenced row every run. */
 const TOUCH_INTERVAL_HOURS = 1;
 
+/**
+ * Whether one event translation carries the asset in any of its rich texts. Every text the editor
+ * lets a picture into is here — the summary, the description, the rules, the programme's notes and
+ * the route description (§387) — because a text left out is a picture the sweep deletes from a
+ * page that shows it. The rules and the programme's notes were missing until §387.
+ */
+const inEventTranslation = sql`(${eventTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
+    OR ${eventTranslations.excerptJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
+    OR ${eventTranslations.rulesJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
+    OR ${eventTranslations.scheduleJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
+    OR ${eventTranslations.routeDescriptionJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%')`;
+
 const referencedSomewhere = sql`(
   EXISTS (SELECT 1 FROM ${galleryItems} WHERE ${galleryItems.mediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${pageTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%')
-  OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${eventTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'
-    OR ${eventTranslations.excerptJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%')
+  OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -181,10 +193,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inEvents = await db
     .select({ assetId: mediaAssets.id, id: eventTranslations.eventId, title: eventTranslations.title, locale: eventTranslations.locale })
     .from(mediaAssets)
-    .innerJoin(
-      eventTranslations,
-      sql`${eventTranslations.bodyJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%' OR ${eventTranslations.excerptJson}::text LIKE '%' || ${mediaAssets.keyPrefix} || '%'`,
-    );
+    .innerJoin(eventTranslations, inEventTranslation);
 
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {

@@ -56,6 +56,7 @@ export type TranslationDraft = Pick<
   | "bodyJson"
   | "rulesJson"
   | "scheduleJson"
+  | "routeDescriptionJson"
   | "checklist"
   | "locationName"
   | "seoTitle"
@@ -74,6 +75,7 @@ export function blankTranslation(locale: Locale): TranslationDraft {
     bodyJson: null,
     rulesJson: null,
     scheduleJson: null,
+    routeDescriptionJson: null,
     checklist: null,
     locationName: null,
     seoTitle: null,
@@ -277,6 +279,41 @@ export async function RulesFields({ translation, mayEdit }: PieceProps) {
       />
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
         {t("editor.rulesHelp")}
+      </Typography>
+    </Stack>
+  );
+}
+
+/**
+ * Card 1.2, "Traseul", its tabs (§387): the route / training description — the pit stops, the
+ * climbs, what to expect, and a map as a picture in the text (§72–§73) — in the same editor as the
+ * description, folded so it mounts only when opened (§96). Shown under `#route` on the event page,
+ * with the route's own links.
+ */
+export async function RouteDescriptionFields({ translation, mayEdit }: PieceProps) {
+  const t = await getTranslations("Admin");
+  const name = named(translation);
+  if (!mayEdit) {
+    return (
+      <Stack spacing={1}>
+        <ReadOnlyLine label={t("editor.fields.routeDescription")} value={await documentState(translation.routeDescriptionJson)} />
+        <TextsReadOnly />
+      </Stack>
+    );
+  }
+  return (
+    <Stack spacing={1}>
+      <LazyRichTextEditor
+        name={name("routeDescription")}
+        label={t("editor.fields.routeDescription")}
+        summary={t("editor.fields.routeDescription")}
+        emptyHint={t("editor.routeDescriptionEmpty")}
+        initialBody={translation.routeDescriptionJson}
+        accessibleSuffix={translation.locale.toUpperCase()}
+        labels={await editorLabels()}
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+        {t("editor.routeDescriptionHelp")}
       </Typography>
     </Stack>
   );

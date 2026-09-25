@@ -134,6 +134,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  // The route / training description (§387), under `#route` with the route's links.
+  routeDescriptionJson: eventTranslations.routeDescriptionJson,
   // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
   checklist: eventTranslations.checklist,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`. Without
@@ -480,6 +482,10 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       // Whether the page has "Linkuri și fișiere" to point at (§332), read by what the rows
       // mean — `readEventLinks` — rather than by the column being non-null.
       links: events.links,
+      // The route / training description (§387), so an email can tell whether this language's
+      // route section exists — a route-kind link moves into it and out of "Linkuri și fișiere",
+      // exactly as the page draws it (`partitionEventLinks`).
+      routeDescriptionJson: eventTranslations.routeDescriptionJson,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own. The place's name in the runner's language when the club gave it one
       // (migration `0059`), else the event's — the same rule as `PUBLIC_COLUMNS`, and like it,
