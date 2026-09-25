@@ -53,15 +53,14 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 ## Later
 
-Nothing here is started, so every line is unticked — the box flips only once a batch actually
-picks it up and this section moves the line to "Building".
+Every line here is unticked until a batch picks it up; a picked-up line moves out of this
+section entirely, to "Building".
 
 - [ ] The newsletter and mailing alerts (the owner's weekend item).
 - [ ] Neon: re-measure after the first quiet night (the operations log, `SETUP.md` §40).
 - [ ] `yarn test:e2e:dev` (the `next dev` walk of every page, minutes) is on demand; say if it should also run nightly on qa.
 - [ ] The public site's own toasts: the contact form's sent state, self-unregistration, the participation confirmation (after `feat/toasts-and-confirms`).
 - [ ] The reminder email's checklist could say «Frontală necesară» for a marked event, through a template placeholder (the `.ics` attached to the confirmation and reminder emails already carries the line) — say if you want it.
-- [ ] The public site's own toasts (the contact form's sent state, self-unregistration, the participation confirmation) — say if you want them.
 - [ ] `yarn ship` waits until no check is pending before judging; `docs:land` refuses a blank fix report (the tooling chores found tonight). `docs:land` also never takes a round's `changelogLine` for the CHANGELOG bullet, never accepts a blank `decisionsTitle`, and never lands a fixer's "carry forward" or "no edit made" text (the three defects V1.91's landing had).
 
 ## Released

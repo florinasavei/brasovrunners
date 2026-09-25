@@ -1,24 +1,22 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { marked } from "marked";
 import RepoDocHtml from "@/modules/diagnostics/ui/RepoDocHtml";
+import { renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 
 /**
  * GitHub task lists (`- [ ]` / `- [x]`), rendered by `marked` — the one renderer `/devs/docs`
  * and `/admin/tasks`'s «Aplicația» / «The app» panel share (`repo-docs.ts`,
  * `RepoDocHtml.tsx`, `DECISIONS.md` §88, §NNN). `docs/QUEUE.md`'s "Building"/"Ready" tables
- * carry no task lists today, but the "Later" section is a plain bullet list that would become
- * one the moment somebody ticks an item off in the file — this is what keeps it readable
- * either way, without touching the renderer again.
+ * carry no task lists today, but § Later is a real GFM task list on purpose (`docs/DISPATCHER.md`
+ * §NNN) — this is what proves the repository's own renderer, `renderRepoDoc`, turns it into a
+ * real disabled checkbox rather than testing `marked` on its own.
  */
 describe("§NNN task lists in a rendered repository document", () => {
-  it("marked already renders a task-list item as a disabled checkbox with the item's text", async () => {
-    const html = await marked.parse("- [ ] not done\n- [x] done\n", { gfm: true, breaks: false });
-    expect(html).toContain('<input disabled="" type="checkbox">');
-    expect(html).toContain('<input checked="" disabled="" type="checkbox">');
-    expect(html).toContain("not done");
-    expect(html).toContain("done");
+  it("renderRepoDoc turns docs/QUEUE.md's § Later checkboxes into disabled checkbox inputs", async () => {
+    const doc = await renderRepoDoc("QUEUE");
+    expect(doc).not.toBeNull();
+    expect(doc?.html).toContain('<input disabled="" type="checkbox">');
   });
 
   it("RepoDocHtml renders that markup as-is, styled by the one shared rule", () => {

@@ -215,16 +215,14 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
    * or money data below, so it answers on its own — the only path a Tehnic-only session ever
    * reaches, and the lightest one for an Administrator who just wants to read the queue.
    *
-   * The lead line is bilingual on purpose: the document itself stays in the one language it is
-   * written in (English, the dispatcher's own working language), so the sentence above it says
-   * so in both — the owner's "multi-lingual, always" applied to the one line that is ours to
-   * translate.
+   * The lead line is one sentence in the reader's own language — the "multi-lingual, always"
+   * rule (§352) is about text the club types, not this screen's own words, and every other
+   * lead line in the backoffice is one language. The document itself stays in the one language
+   * it is written in (English, the dispatcher's own working language); the line above it says
+   * so, in the reader's language, and never prints the other one beside it.
    */
   if (panel === "app") {
     const doc = isRepoDocName("QUEUE") ? await renderRepoDoc("QUEUE") : null;
-    if (!doc) notFound();
-    const tRo = await getTranslations({ locale: "ro", namespace: "Admin.tasks" });
-    const tEn = await getTranslations({ locale: "en", namespace: "Admin.tasks" });
     return (
       <Stack spacing={3} sx={{ py: { xs: 2, sm: 3 } }}>
         <Box>
@@ -233,15 +231,18 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
           </Typography>
         </Box>
         <SubNav label={t("title")} items={subNavItems} />
-        <Box>
+        {doc ? (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              {t.rich("app.lead", { code: (chunks) => <code>{chunks}</code> })}
+            </Typography>
+            <RepoDocHtml html={doc.html} />
+          </>
+        ) : (
           <Typography variant="body2" color="text.secondary">
-            {tRo("app.lead")}
+            {t("app.missing")}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {tEn("app.lead")}
-          </Typography>
-        </Box>
-        <RepoDocHtml html={doc.html} />
+        )}
       </Stack>
     );
   }

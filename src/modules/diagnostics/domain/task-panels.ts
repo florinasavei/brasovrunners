@@ -29,8 +29,10 @@ export function canOpenTasks(role: StaffRole): boolean {
 }
 
 /**
- * The panel a request lands on, or `null` when the role may not see the one it asked for (the
- * caller answers a 404, the same way every other guard on this page does).
+ * The panel a request lands on, or `null` when the role may not see the one it asked for. This
+ * page cannot answer a real 404 for that case — it is below `loading.tsx`'s Suspense boundary,
+ * which has already flushed a 200 by the time it runs — so its caller redirects to the role's
+ * own default panel instead (`admin/tasks/page.tsx`'s own comment explains why).
  *
  * An unrecognised query value reads as "nothing asked", exactly as the owner/kind filters do —
  * and then each role gets its own default: `todo` for the club's ops roles, `app` for a Tehnic

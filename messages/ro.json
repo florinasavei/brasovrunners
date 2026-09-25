@@ -1783,7 +1783,8 @@
         "app": "Aplicația"
       },
       "app": {
-        "lead": "Coada de lucru a echipei care construiește platforma, citită direct din `docs/QUEUE.md` din depozitul de cod — scrisă și ținută la zi în engleză, ca mai jos."
+        "lead": "Coada de lucru a echipei care construiește platforma, citită direct din <code>docs/QUEUE.md</code> din depozitul de cod — scrisă și ținută la zi în engleză, ca mai jos.",
+        "missing": "Documentul nu este în această versiune a aplicației."
       },
       "neonPlan": {
         "title": "Planul Neon (baza de date)",
@@ -3671,7 +3672,8 @@
       "status": "Stare",
       "general": "General",
       "email": "Emailuri",
-      "botCheck": "Anti-robot"
+      "botCheck": "Anti-robot",
+      "app": "Aplicația"
     },
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",

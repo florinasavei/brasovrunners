@@ -1783,7 +1783,8 @@
         "app": "The app"
       },
       "app": {
-        "lead": "The work queue of the team building the platform, read straight from `docs/QUEUE.md` in the repository — written and kept current in English, as below."
+        "lead": "The work queue of the team building the platform, read straight from <code>docs/QUEUE.md</code> in the repository — written and kept current in English, as below.",
+        "missing": "The document is not in this deployment."
       },
       "neonPlan": {
         "title": "The Neon plan (the database)",
@@ -3671,7 +3672,8 @@
       "status": "Status",
       "general": "General",
       "email": "Email",
-      "botCheck": "Anti-bot"
+      "botCheck": "Anti-bot",
+      "app": "The app"
     },
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",

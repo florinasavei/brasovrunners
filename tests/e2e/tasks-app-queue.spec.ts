@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-090-05 — `/admin/tasks`'s «Aplicația» / «The app» tab: `docs/QUEUE.md`, the
+ * BR-REQ-060-01 — `/admin/tasks`'s «Aplicația» / «The app» tab: `docs/QUEUE.md`, the
  * dispatcher's own work queue, rendered read-only (`DECISIONS.md` §368, §NNN).
  *
  * The owner, 2026-09-25: "în «De făcut» vreau un tab unde să randez efectiv MD file din repo cu
@@ -36,9 +36,10 @@ test.describe("§NNN the app tab on /admin/tasks", () => {
     await expect(checkbox).toBeVisible();
     await expect(checkbox).toBeDisabled();
 
-    // The bilingual lead line above the document: both languages, regardless of the UI locale.
+    // The lead line above the document: one sentence, in the page's own language — never the
+    // other one beside it (§NNN).
     await expect(main.getByText(/citită direct din/)).toBeVisible();
-    await expect(main.getByText(/read straight from/)).toBeVisible();
+    await expect(main.getByText(/read straight from/)).toHaveCount(0);
   });
 
   test("a Voluntar gets no tab to see, because the whole route is closed to them", async ({ page }) => {
@@ -48,6 +49,17 @@ test.describe("§NNN the app tab on /admin/tasks", () => {
 
     const appResponse = await page.goto("/ro/admin/tasks?panel=app");
     expect(appResponse?.status()).toBe(404);
+  });
+
+  test("a Tehnic reaches the tab from the backoffice's own nav, not only a typed address", async ({ page }) => {
+    await signIn(page, "Dev Technical");
+    // A page a Tehnic may already open (§NNN, `canWorkTheDesk`), not a typed `/admin/tasks`
+    // address: the backoffice tab bar itself has to offer the way in.
+    await page.goto("/ro/admin/checkin");
+    await expect(page.getByRole("tab", { name: "De făcut" })).toBeVisible();
+    await page.getByRole("tab", { name: "De făcut" }).click();
+    await expect(page).toHaveURL(/\/admin\/tasks$/);
+    await expect(page.locator("#main").getByRole("heading", { name: "The work queue" })).toBeVisible();
   });
 
   test("a Tehnic opens straight to the app tab and cannot reach the club's ops panels", async ({ page }) => {
