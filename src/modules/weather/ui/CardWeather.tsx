@@ -28,6 +28,8 @@ export default function CardWeather({ reading, locale }: { reading: WeatherReadi
         display: "inline-flex",
         alignItems: "center",
         gap: 0.5,
+        // The border inside the 24 pixels, as a small Chip's is: 26 beside the chips otherwise (found by the e2e).
+        boxSizing: "border-box",
         height: 24,
         px: 1,
         border: 1,

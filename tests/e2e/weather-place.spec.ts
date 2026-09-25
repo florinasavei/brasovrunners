@@ -179,7 +179,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
     // As tall as the card's other chips (24 px), inside its card.
     const box = await pill.boundingBox();
     expect(Math.round(box?.height ?? 0)).toBe(24);
-    const card = main.locator("ul > li").filter({ has: pill }).first();
+    const card = pill.locator("xpath=ancestor::li[1]");
     const cardBox = await card.boundingBox();
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((cardBox?.x ?? 0) + (cardBox?.width ?? 0) + 0.5);
 
