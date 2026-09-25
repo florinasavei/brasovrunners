@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, lte, ne } from "drizzle-orm";
+import { sql, and, eq, gt, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
