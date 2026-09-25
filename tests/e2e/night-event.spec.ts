@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
+import { cardOnListing, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §394, replacing §382's checkbox) — "Eveniment de
@@ -37,14 +37,6 @@ let editorUrl = "";
 
 /** The event page's "Traseu" / "Route" row, the `<dd>` after its label. */
 const routeRow = (page: Page, label: string) => page.locator("dt").filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
-
-/** The listing card with this title, every fold opened once the list has streamed in (§166). */
-async function card(page: Page, path: string, heading: string) {
-  await page.goto(path);
-  await expect(page.locator("#main ul > li h2").first()).toBeAttached();
-  await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
-  return page.locator("li").filter({ has: page.getByRole("heading", { name: heading }) });
-}
 
 /** The "Traseul" card's automatic line. */
 const autoLine = (page: Page) => page.getByTestId("night-auto-line");
@@ -143,10 +135,12 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
   });
 
   test("the listing card and the calendar entry carry it", async ({ page }) => {
-    const roCard = await card(page, "/ro/evenimente", title);
+    await page.goto("/ro/evenimente");
+    const roCard = await cardOnListing(page, title);
     await expect(roCard.locator(".MuiChip-root").filter({ hasText: "Alergare de noapte" })).toHaveCount(1);
     await expect(roCard.locator(TORCH)).toHaveCount(1);
-    const enCard = await card(page, "/en/events", englishTitle);
+    await page.goto("/en/events");
+    const enCard = await cardOnListing(page, englishTitle);
     await expect(enCard.locator(".MuiChip-root").filter({ hasText: "Night run" })).toHaveCount(1);
 
     await page.goto(`/ro/calendar?month=${MONTH}`);
