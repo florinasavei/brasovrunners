@@ -249,6 +249,16 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(wordRules).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*display:inline;/);
   });
 
+  it("names the privacy link with a name that contains its visible word, in both languages (WCAG 2.5.3)", () => {
+    // BR-REQ-041-01 criterion 21: the render above is Romanian only, so the English catalogue is
+    // checked here — "Privacy notice" alone did not contain "GDPR" (review finding, §NNN).
+    for (const locale of ["ro", "en"] as const) {
+      const legal = (JSON.parse(read(`messages/${locale}.json`)) as { Legal: Record<string, string> }).Legal;
+      expect(legal.privacyLinkShort, locale).toBe("GDPR");
+      expect(legal.privacyLinkName, locale).toContain(legal.privacyLinkShort);
+    }
+  });
+
   it("spaces a phone's bar items 6px apart — the row, the marks and the flags — and leaves `sm` as it was", async () => {
     // §NNN: the largest whole gap at which the bar is still one row with every item at 320px in
     // both languages (`footer-target.ts`, measured in `SiteFooter.tsx`).

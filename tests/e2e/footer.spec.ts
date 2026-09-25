@@ -48,7 +48,7 @@ async function boxOf(locator: Locator, name: string): Promise<Box> {
 /** The two pages the row is measured on, with what each locale calls the bar's items. */
 const PAGES = [
   { path: "/ro/evenimente", privacyName: "Nota de confidențialitate (GDPR)", language: "Limbă", summary: /despre club/i, other: "English" },
-  { path: "/en/events", privacyName: "Privacy notice", language: "Language", summary: /about the club/i, other: "Română" },
+  { path: "/en/events", privacyName: "Privacy notice (GDPR)", language: "Language", summary: /about the club/i, other: "Română" },
 ] as const;
 
 function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {

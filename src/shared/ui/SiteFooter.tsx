@@ -275,12 +275,11 @@ export default async function SiteFooter() {
           owner: "it should be after the about accordion"), ahead of the social marks. Its own
           width, never shrunk.
 
-          Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" (review
-          finding: a screen reader once said "GDPR, link"). From `sm` it shows the word "GDPR"
-          (§NNN, the owner: "Use GDPR for desktop as well"), which the Romanian name contains
-          (WCAG 2.5.3, label in name). The English name, "Privacy notice", does not: it is kept
-          as it was, and whether it should read "Privacy notice (GDPR)" like the Romanian one is
-          the owner's call (§NNN). On a phone it is a question mark (§NNN, replacing §372's
+          Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" and
+          "Privacy notice (GDPR)" (review finding: a screen reader once said "GDPR, link"). From
+          `sm` it shows the word "GDPR" (§NNN, the owner: "Use GDPR for desktop as well"), which
+          both names contain (WCAG 2.5.3, label in name; BR-REQ-041-01 criterion 21). On a phone
+          it is a question mark (§NNN, replacing §372's
           lock): the name, and a tooltip saying the same, are the notice's; no word is rendered.
 
           `HelpOutlineOutlined` — the circled question mark (`help_outline`), the glyph `Hint`
