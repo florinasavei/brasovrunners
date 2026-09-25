@@ -154,11 +154,12 @@ export async function ensureRegistrationIsOpen(page: Page) {
 
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
 
-    // The action redirects back with either `saved` or an error code, so the outcome is in the
-    // URL rather than in a race with a rendered alert. A CONFLICT here means the other
-    // Playwright project saved the same event first, which makes the next pass find it already
-    // configured rather than having to save at all.
-    await page.waitForURL(/[?&](saved|error)=/);
+    // A save that went through redirects back with `saved` in the URL. A refusal comes back as
+    // the form's own state since §315 — a CONFLICT means the other Playwright project saved the
+    // same event first, and its summary is rendered in place with no navigation at all — so both
+    // outcomes are waited for, and the next pass finds the event already configured.
+    const refusal = page.getByTestId("event-save-form").getByTestId("form-refusal");
+    await Promise.race([page.waitForURL(/[?&]saved=/), refusal.waitFor({ state: "visible" })]);
     if (page.url().includes("saved=")) return;
   }
 

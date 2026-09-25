@@ -1,12 +1,6 @@
 "use client";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -33,9 +27,12 @@ export type RowMenuItem =
       kind: "submit";
       label: string;
       icon?: RowMenuIcon;
-      /** The id of a form already in the page whose Server Action this item submits. */
+      /**
+       * The id of a form already in the page whose Server Action this item submits — an
+       * `ActionForm` carrying its own `confirm` where the verb asks first (§NNN): the menu only
+       * submits, and the form is what asks.
+       */
       formId: string;
-      confirm: { title: string; body: string; confirmLabel: string };
       color?: "primary" | "error" | "warning";
     }
   | { kind: "note"; label: string };
@@ -51,22 +48,14 @@ export type RowMenuItem =
  * on the phone does with "⋮".
  *
  * The verbs stay Server Actions. Each `submit` item names a hidden form the page already
- * rendered — the action, the event id, the UI locale — and the confirmation ends in
- * `requestSubmit()` on it, exactly as `ConfirmSubmitButton` does, so nothing behind the menu
- * changed: the role check, the version guard and the refusal to delete an event with
- * registrations against it are the server's, and this only decides which form to post.
+ * rendered — the action, the event id, the UI locale — and ends in `requestSubmit()` on it, so
+ * nothing behind the menu changed: the role check, the version guard and the refusal to delete
+ * an event with registrations against it are the server's, and this only decides which form to
+ * post. The question — "delete this event?" — is the form's own (`ActionForm confirm`, §NNN),
+ * asked by the one `ConfirmDialog` the backoffice has, so this menu draws none.
  */
-export default function RowMenu({
-  items,
-  ariaLabel,
-  cancelLabel,
-}: {
-  items: RowMenuItem[];
-  ariaLabel: string;
-  cancelLabel: string;
-}) {
+export default function RowMenu({ items, ariaLabel }: { items: RowMenuItem[]; ariaLabel: string }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const [pending, setPending] = useState<Extract<RowMenuItem, { kind: "submit" }> | null>(null);
   const glyph = (name: RowMenuIcon | undefined) => {
     if (!name) return null;
     const Icon = ACTION_ICONS[name];
@@ -119,7 +108,10 @@ export default function RowMenu({
               key={index}
               onClick={() => {
                 setAnchor(null);
-                setPending(item);
+                // `requestSubmit`, never `submit()`: it fires the submit event the form's own
+                // question and React's Server Action handler both listen for.
+                const form = document.getElementById(item.formId);
+                if (form instanceof HTMLFormElement) form.requestSubmit();
               }}
               sx={item.color === "error" ? { color: "error.main" } : undefined}
             >
@@ -129,34 +121,6 @@ export default function RowMenu({
           );
         })}
       </Menu>
-
-      <Dialog open={pending !== null} onClose={() => setPending(null)} aria-labelledby="row-menu-confirm-title">
-        {pending && (
-          <>
-            <DialogTitle id="row-menu-confirm-title">{pending.confirm.title}</DialogTitle>
-            <DialogContent>
-              <DialogContentText>{pending.confirm.body}</DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setPending(null)} sx={{ minHeight: 44 }}>
-                {cancelLabel}
-              </Button>
-              <Button
-                variant="contained"
-                color={pending.color ?? "primary"}
-                sx={{ minHeight: 44 }}
-                onClick={() => {
-                  const form = document.getElementById(pending.formId);
-                  setPending(null);
-                  if (form instanceof HTMLFormElement) form.requestSubmit();
-                }}
-              >
-                {pending.confirm.confirmLabel}
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
     </>
   );
 }

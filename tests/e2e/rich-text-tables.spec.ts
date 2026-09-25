@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 import { expectBarGlyphsVisible, floatingBar } from "./support/floating-bar";
 
@@ -110,6 +111,7 @@ test.describe("§263 a table's borders", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
     await page.goto(`/ro/pagini/${slug}`);

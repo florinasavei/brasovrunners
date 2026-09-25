@@ -36,6 +36,8 @@ import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
 import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
@@ -135,6 +137,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const { error, saved, archived, failed, created, published, deleted, erased } = current;
 
   const t = await getTranslations("Admin");
+  // The cancel button and the email sentences every question shares (§NNN).
+  const words = await confirmWords();
   const tEvent = await getTranslations("Event");
 
   const db = getDb();
@@ -578,10 +582,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             publish: t("events.bulkPublishAction"),
             archive: t("events.bulkArchiveAction"),
             remove: t("events.bulkDeleteAction"),
-            confirmTitle: t("confirm.bulkDeleteTitle"),
-            confirmBody: t("confirm.bulkDeleteBody"),
-            confirm: t("events.bulkDeleteAction"),
-            cancel: t("confirm.cancel"),
+            publishTitle: t("confirm.bulkPublishTitle"),
+            publishBody: t("confirm.bulkPublishBody"),
+            archiveTitle: t("confirm.bulkArchiveTitle"),
+            archiveBody: t("confirm.bulkArchiveBody"),
+            deleteTitle: t("confirm.bulkDeleteTitle"),
+            deleteBody: t("confirm.bulkDeleteBody"),
+            cancel: words.cancel,
           }}
         />
       )}
@@ -670,19 +677,29 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             */}
             {canCreateEvent(staffUser.role) && (
               <>
-                <form id={`duplicate-${event.id}`} action={duplicateEventAction} hidden>
+                {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+                <ActionForm
+                  id={`duplicate-${event.id}`}
+                  action={duplicateEventAction}
+                  hidden
+                  confirm={{ title: t("confirm.duplicateTitle"), body: t("confirm.duplicateBody"), confirmLabel: t("editor.duplicate"), cancelLabel: words.cancel }}
+                >
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={event.id} />
-                </form>
+                </ActionForm>
                 {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
-                  <form id={`delete-${event.id}`} action={deleteEventAction} hidden>
+                  <ActionForm
+                    id={`delete-${event.id}`}
+                    action={deleteEventAction}
+                    hidden
+                    confirm={{ title: t("confirm.deleteTitle"), body: t("confirm.deleteBody"), confirmLabel: t("editor.delete"), cancelLabel: words.cancel, destructive: true }}
+                  >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
-                  </form>
+                  </ActionForm>
                 )}
                 <RowMenu
                   ariaLabel={t("events.moreActions")}
-                  cancelLabel={t("confirm.cancel")}
                   items={[
                     {
                       kind: "link",
@@ -717,11 +734,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                       icon: "duplicate",
                       label: t("editor.duplicate"),
                       formId: `duplicate-${event.id}`,
-                      confirm: {
-                        title: t("confirm.duplicateTitle"),
-                        body: t("confirm.duplicateBody"),
-                        confirmLabel: t("editor.duplicate"),
-                      },
                     },
                     // Administrator only, and the service refuses an event with registrations
                     // against it: the reason replaces the verb, because a count is something an
@@ -739,11 +751,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                               label: t("editor.delete"),
                               formId: `delete-${event.id}`,
                               color: "error" as const,
-                              confirm: {
-                                title: t("confirm.deleteTitle"),
-                                body: t("confirm.deleteBody"),
-                                confirmLabel: t("editor.delete"),
-                              },
                             },
                           ]
                       : []),

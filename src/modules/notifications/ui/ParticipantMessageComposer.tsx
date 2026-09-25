@@ -3,11 +3,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -66,9 +61,6 @@ export type ComposerLabels = {
   previewUnknown: string;
   previewSubject: string;
   send: string;
-  confirmBody: string;
-  confirmSend: string;
-  cancel: string;
 };
 
 export type PreviewInput = { eventId: string; language: string; subjectRo: string; subjectEn: string; bodyRo: string; bodyEn: string };
@@ -107,7 +99,9 @@ const PREVIEW_PAUSE_MS = 500;
  * cancels the pause still running from typing (`preview-pause.ts`), so the copy under a tab is
  * always that tab's. Without JavaScript there is no preview, and the form still sends.
  *
- * **Send asks first**, and only once the browser's own checks pass: an empty box is pointed at
+ * **Send asks first** — through the form's own question (`ActionForm confirm`, §NNN): the page
+ * words one dialog per group, with the count the send queues from, and the form opens the one
+ * the chosen radio names. The browser's own checks run before it: an empty box is pointed at
  * before any question, so the question is only ever about sending.
  */
 export default function ParticipantMessageComposer({ eventId, audiences, defaultAudience, maxSubject, maxBody, labels, preview }: Props) {
@@ -164,8 +158,6 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
     pause.typed(refresh);
   };
 
-  const [confirming, setConfirming] = useState(false);
-  const sendButton = useRef<HTMLButtonElement>(null);
   const SendIcon = ACTION_ICONS.send;
   const unknown = shown.result?.unknown ?? [];
 
@@ -320,48 +312,12 @@ export default function ParticipantMessageComposer({ eventId, audiences, default
 
       <Box>
         {/*
-          A plain submit button without JavaScript — the server's checks are the ones that matter.
-          With it, the browser's own checks run first and then the question; the dialog's Send is
-          what submits, through this button so React's action receives the same fields.
+          A plain submit button: the browser's own checks run on the press, and the form's question
+          (`ActionForm confirm`) opens from the submit — the server's checks are the ones that matter.
         */}
-        <Button
-          ref={sendButton}
-          type="submit"
-          variant="contained"
-          disabled={nobody}
-          startIcon={<SendIcon fontSize="small" />}
-          sx={TAP_TARGET}
-          onClick={(event) => {
-            event.preventDefault();
-            if (!event.currentTarget.form?.reportValidity()) return;
-            setConfirming(true);
-          }}
-        >
+        <Button type="submit" variant="contained" disabled={nobody} startIcon={<SendIcon fontSize="small" />} sx={TAP_TARGET}>
           {labels.send}
         </Button>
-        <Dialog open={confirming} onClose={() => setConfirming(false)} aria-labelledby="participant-message-confirm">
-          <DialogTitle id="participant-message-confirm">{chosen?.confirmTitle}</DialogTitle>
-          <DialogContent>
-            <DialogContentText>{labels.confirmBody}</DialogContentText>
-            {chosen?.testLine && <DialogContentText sx={{ mt: 1 }}>{chosen.testLine}</DialogContentText>}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirming(false)} sx={TAP_TARGET}>
-              {labels.cancel}
-            </Button>
-            <Button
-              variant="contained"
-              sx={TAP_TARGET}
-              onClick={() => {
-                setConfirming(false);
-                const form = sendButton.current?.form;
-                if (form && sendButton.current) form.requestSubmit(sendButton.current);
-              }}
-            >
-              {labels.confirmSend}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </Stack>
   );

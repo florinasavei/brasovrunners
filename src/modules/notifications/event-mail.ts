@@ -232,16 +232,47 @@ async function queueDeclarationReminders<T extends Record<string, unknown>>(
 }
 
 /**
+ * Who the thank-you reaches: everyone checked in at the event. One condition for the send below
+ * and for the count the confirmation dialog states before the press (§NNN), so the number the
+ * organizer reads is the number of rows the send writes.
+ */
+function thanksRecipientsOf(eventId: string) {
+  return and(eq(registrations.eventId, eventId), isNotNull(registrations.checkedInAt));
+}
+
+/**
+ * How many the thank-you would reach right now — the dialog's number, from the send's own
+ * condition. Real and test apart: a test registration is written to like a real one and counted
+ * in nothing the club is given (`AGENTS.md` §12.6), so the dialog states `real` and names the
+ * test rows on a line of their own, as the notice and message dialogs do.
+ */
+export async function countEventThanksRecipients<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ real: number; test: number }> {
+  const rows = await db
+    .select({ kind: registrations.kind, count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(thanksRecipientsOf(eventId))
+    .groupBy(registrations.kind);
+  return {
+    real: rows.find((row) => row.kind === "REAL")?.count ?? 0,
+    test: rows.find((row) => row.kind === "TEST")?.count ?? 0,
+  };
+}
+
+/**
  * The thank-you, sent once per event by an organizer to everyone who was checked in
  * (`DECISIONS.md` §82). Manual and never automatic; audited with the event and the count,
  * never the recipients; `events.thanks_sent_at` is what makes it once.
+ *
+ * Returns every row written (`recipients`, the audit's number) and the same split the dialog
+ * states: `real` is what the toast and the banner say, `test` is written to and counted nowhere
+ * the club is given (§30).
  */
 export async function sendEventThanks<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   input: { eventId: string; url?: string | null },
   now: Date,
-): Promise<{ recipients: number }> {
+): Promise<{ recipients: number; real: number; test: number }> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send the thank-you`);
   }
@@ -269,11 +300,12 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
         registrationId: registrations.id,
         participantId: registrations.participantId,
         locale: registrations.locale,
+        kind: registrations.kind,
         recipientEmail: participants.deliveryEmail,
       })
       .from(registrations)
       .innerJoin(participants, eq(participants.id, registrations.participantId))
-      .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.checkedInAt)));
+      .where(thanksRecipientsOf(input.eventId));
 
     for (const row of rows) {
       await enqueueEmail(tx, {
@@ -298,6 +330,7 @@ export async function sendEventThanks<T extends Record<string, unknown>>(
       now,
     });
 
-    return { recipients: rows.length };
+    const test = rows.filter((row) => row.kind === "TEST").length;
+    return { recipients: rows.length, real: rows.length - test, test };
   });
 }

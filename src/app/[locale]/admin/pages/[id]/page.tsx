@@ -30,8 +30,8 @@ import {
   EDITORIAL_TRANSITION_LABEL,
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import { isUuid } from "@/shared/ids";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { deletePageAction, savePageAction, transitionPageAction } from "../actions";
 
@@ -78,6 +78,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
 
   const { saved, error } = await searchParams;
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
 
   const isOwnDraft = translations.some((row) => row.authorStaffUserId === actor.id);
   const transitions = allowedTransitions(actor.role, page.editorialStatus, isOwnDraft);
@@ -93,6 +94,8 @@ export default async function EditPagePage({ params, searchParams }: Props) {
   */
   const maySave = canEditTexts(actor.role);
   const mayDelete = canEditEventFields(actor.role);
+  // The page as the questions name it (§NNN): its title in the backoffice's language.
+  const pageTitle = translations.find((row) => row.locale === locale)?.title ?? t("pages.untitled");
 
   return (
     <Stack spacing={3}>
@@ -131,7 +134,21 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       {transitions.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
           {transitions.map((to) => (
-            <form action={transitionPageAction} key={to}>
+            // Publishing, taking off the site and archiving ask first (§NNN); review asks nothing.
+            <ActionForm
+              action={transitionPageAction}
+              key={to}
+              confirm={
+                to === "PUBLISHED"
+                  ? { title: t("confirm.publishTitle", { title: pageTitle }), body: t("confirm.publishBody"), confirmLabel: EDITORIAL_TRANSITION_LABEL[to], cancelLabel: words.cancel }
+                  : to === "DRAFT" && page.editorialStatus === "PUBLISHED"
+                    ? { title: t("confirm.unpublishTitle", { title: pageTitle }), body: t("confirm.unpublishBody"), confirmLabel: EDITORIAL_TRANSITION_LABEL[to], cancelLabel: words.cancel, destructive: true }
+                    : to === "ARCHIVED"
+                      ? { title: t("confirm.archiveContentTitle", { title: pageTitle }), body: t("confirm.archiveContentBody"), confirmLabel: EDITORIAL_TRANSITION_LABEL[to], cancelLabel: words.cancel, destructive: true }
+                      : undefined
+              }
+              data-testid={`transition-${to}`}
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="pageId" value={page.id} />
               <input type="hidden" name="expectedVersion" value={page.version} />
@@ -139,7 +156,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
               <GlyphButton icon={EDITORIAL_TRANSITION_ICON[to]} type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
                 {EDITORIAL_TRANSITION_LABEL[to]}
               </GlyphButton>
-            </form>
+            </ActionForm>
           ))}
         </Stack>
       )}
@@ -183,18 +200,17 @@ export default async function EditPagePage({ params, searchParams }: Props) {
       */}
       {mayDelete && (
         <Box>
-          <form action={deletePageAction}>
+          <ActionForm
+            action={deletePageAction}
+            confirm={{ title: t("pages.deleteTitle", { title: pageTitle }), body: t("pages.deleteBody"), confirmLabel: t("pages.delete"), cancelLabel: words.cancel, destructive: true }}
+            data-testid="delete-page-form"
+          >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="pageId" value={page.id} />
-            <ConfirmSubmitButton
-              label={t("pages.delete")}
-              icon="delete"
-              title={t("pages.deleteTitle")}
-              body={t("pages.deleteBody")}
-              confirmLabel={t("pages.delete")}
-              cancelLabel={t("confirm.cancel")}
-            />
-          </form>
+            <GlyphButton icon="delete" type="submit" size="small" variant="outlined" color="error" sx={{ minHeight: 44 }}>
+              {t("pages.delete")}
+            </GlyphButton>
+          </ActionForm>
         </Box>
       )}
 

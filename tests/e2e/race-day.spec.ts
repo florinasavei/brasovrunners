@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { FEATURED, ensureRegistrationIsOpen, hydrated, signIn } from "./support/featured-event";
 
 /**
@@ -51,6 +52,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.locator('[name="email"]').fill(`walkin-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+    await confirmDialog(page);
 
     // Back at the desk, confirmed on the spot, with a code.
     await expect(page).toHaveURL(/\/ro\/admin\/checkin\?.*eventId=/);
@@ -79,6 +81,8 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const rowAgain = page.getByTestId("desk-row").filter({ hasText: suffix });
     await expect(rowAgain).toContainText(bib);
     await rowAgain.getByRole("button", { name: "Marchează prezent", exact: true }).click();
+    // Check-in asks nothing (§NNN): one tap per runner at the desk.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toContainText("Prezent la");
 
@@ -147,6 +151,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.locator('[name="email"]').fill(`minor-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+    await confirmDialog(page);
 
     await expect(page).toHaveURL(/\/ro\/admin\/checkin\?.*eventId=/, { timeout: 30_000 });
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
@@ -183,6 +188,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.locator('[name="email"]').fill(`void-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+    await confirmDialog(page);
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
     await hydrated(page);
     await page.getByRole("textbox", { name: "Nume, număr sau cod" }).fill(suffix);
@@ -201,6 +207,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const detailUrl = page.url();
     await page.locator("summary", { hasText: "Schimbă numărul" }).click();
     await page.getByRole("button", { name: "Salvează nr." }).click();
+    await confirmDialog(page, "Salvezi numărul?");
     await page.waitForURL(/saved=bibSet/);
     const settled = (await page.getByText(/Numărul de concurs este \d+/).textContent()) as string;
     const bib = (settled.match(/Numărul de concurs este (\d+)/) as RegExpMatchArray)[1];
@@ -227,7 +234,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.getByRole("button", { name: "Anulează înscrierea" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText(`Numărul ${bib} e deja tipărit`);
-    await dialog.getByRole("button", { name: "Anulează înscrierea" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=registrationCancelled/);
     await expect(page.getByTestId("void-bib")).toContainText(`BID ${bib} tipărit`);
     await expect(page.getByText(/Anulată:/)).toContainText(`BID ${bib} tipărit`);

@@ -62,6 +62,26 @@ export async function countEventNoticeRecipients<T extends Record<string, unknow
   };
 }
 
+/**
+ * The real recipients of each of several dates, for a series save's dialog (§331, §NNN): a save
+ * with the notice ticked tells every date it reaches, so "an email will be sent to N" is the sum
+ * over the dates ticked, and each date's number is this — the same condition as the one above.
+ * A date with nobody is absent. The caller leaves out a date already run: `announceSave` tells it
+ * nothing.
+ */
+export async function countRealNoticeRecipientsByEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventIds: readonly string[],
+): Promise<Record<string, number>> {
+  if (eventIds.length === 0) return {};
+  const rows = await db
+    .select({ eventId: registrations.eventId, count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(and(inArray(registrations.eventId, [...eventIds]), eq(registrations.kind, "REAL"), inArray(registrations.status, [...EVENT_NOTICE_STATUSES])))
+    .groupBy(registrations.eventId);
+  return Object.fromEntries(rows.map((row) => [row.eventId, row.count]));
+}
+
 type NoticeInput = {
   eventId: string;
   /** The save this notice belongs to: `<saved event id>:v<its new version>`. */

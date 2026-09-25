@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languageTab, openEditorBox } from "./support/fold";
 
@@ -70,6 +71,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await field("email").fill(`notice-${suffix}@test.invalid`);
     await page.getByRole("checkbox", { name: /a cerut/ }).check();
     await page.getByRole("button", { name: "Adaugă înscrierea" }).click();
+    await confirmDialog(page);
     await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 30_000 });
 
     // Back in the editor: one participant, said before the press, with the allowance.
@@ -112,12 +114,16 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await field("notice.noteEn").fill("");
     await expect(page.getByTestId("notice-note-identical")).toHaveCount(0);
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    // The question is asked before the server can refuse; the refusal follows the yes.
+    await confirmDialog(page);
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toContainText("Ce s-a schimbat (English)", { timeout: 30_000 });
     await expect(field("event.locationName")).toHaveValue(`Poiana Brașov ${suffix}`);
     await expect(field("notice.noteRo")).toHaveValue("Ne mutăm la Poiana: drumul spre Tractorul e închis.");
     await field("notice.noteEn").fill("We move to Poiana: the road to Tractorul is closed.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Salvezi și anunți participanții?" }).getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    await confirmDialog(page);
     await expect(page.getByTestId("notice-outcome")).toContainText("Emailuri „Detalii actualizate” puse la coadă: 1", { timeout: 30_000 });
     await hydrated(page);
     // And the box is unticked again: the next save emails nobody unless asked.
@@ -137,6 +143,10 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await field("cancel.reasonRo").fill("Avertizare meteo de cod portocaliu: traseul nu este sigur.");
     await field("cancel.reasonEn").fill("An orange weather warning: the route is not safe.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    // The question names the event and says who is emailed, from the same count (§NNN).
+    const cancelDialog = page.getByRole("dialog", { name: `Anulezi „Cursa anunțată ${suffix}”?` });
+    await expect(cancelDialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 1 participant.");
+    await confirmDialog(page);
     await expect(page.getByTestId("notice-outcome")).toContainText("Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: 1.", {
       timeout: 30_000,
     });

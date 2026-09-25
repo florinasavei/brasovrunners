@@ -24,6 +24,7 @@ import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu from "@/shared/ui/RowMenu";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   changeStaffRoleAction,
@@ -77,6 +78,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const invitesSend = env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
 
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
   /**
    * Which of these rows has no sign-in account (§288). For two days every "Add" wrote the row
@@ -204,6 +206,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             role: t("staff.role"),
             preferredLocale: t("staff.preferredLocale"),
           })}
+          confirm={{ title: t("confirm.inviteStaffTitle"), body: t("confirm.inviteStaffBody"), confirmLabel: t("staff.invite"), cancelLabel: words.cancel }}
           data-testid="staff-invite-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
@@ -316,7 +319,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
               spacing={1}
               sx={{ justifyContent: "flex-end", alignItems: { sm: "center" }, gap: 1 }}
             >
-              <Box component="form" action={changeStaffRoleAction}>
+              <ActionForm
+                action={changeStaffRoleAction}
+                confirm={{ title: t("confirm.changeRoleTitle"), body: t("confirm.changeRoleBody", { name: member.displayName }), confirmLabel: t("staff.changeRole"), cancelLabel: words.cancel }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="staffUserId" value={member.id} />
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -341,7 +347,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     variant="outlined"
                   />
                 </Stack>
-              </Box>
+              </ActionForm>
 
               {/*
                 The four verbs, in the same ⋮ every other list uses (§256), each asking before
@@ -360,26 +366,46 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 somebody in, while switching the account off happens at the provider and
                 outlives the row.
               */}
-              <form id={`invite-${member.id}`} action={resendStaffInviteAction} hidden>
+              {/* Each verb's form asks its own question (§NNN); the menu only submits it. */}
+              <ActionForm
+                id={`invite-${member.id}`}
+                action={resendStaffInviteAction}
+                hidden
+                confirm={{ title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="email" value={member.email} />
-              </form>
-              <form id={`password-${member.id}`} action={sendStaffPasswordResetAction} hidden>
+              </ActionForm>
+              <ActionForm
+                id={`password-${member.id}`}
+                action={sendStaffPasswordResetAction}
+                hidden
+                confirm={{ title: t("staff.passwordResetTitle"), body: t("staff.passwordResetBody", { email: member.email }), confirmLabel: t("staff.passwordReset"), cancelLabel: words.cancel }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="email" value={member.email} />
-              </form>
-              <form id={`deactivate-${member.id}`} action={setStaffAccountActiveAction} hidden>
+              </ActionForm>
+              <ActionForm
+                id={`deactivate-${member.id}`}
+                action={setStaffAccountActiveAction}
+                hidden
+                confirm={{ title: t("staff.deactivateAccountTitle"), body: t("staff.deactivateAccountBody", { name: member.displayName }), confirmLabel: t("staff.deactivateAccount"), cancelLabel: words.cancel, destructive: true }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="email" value={member.email} />
                 <input type="hidden" name="active" value="0" />
-              </form>
-              <form id={`revoke-${member.id}`} action={revokeStaffAction} hidden>
+              </ActionForm>
+              <ActionForm
+                id={`revoke-${member.id}`}
+                action={revokeStaffAction}
+                hidden
+                confirm={{ title: t("staff.revokeTitle"), body: t("staff.revokeBody", { name: member.displayName }), confirmLabel: t("staff.revoke"), cancelLabel: words.cancel, destructive: true }}
+              >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="staffUserId" value={member.id} />
-              </form>
+              </ActionForm>
               <RowMenu
                 ariaLabel={t("staff.rowActions", { name: member.displayName })}
-                cancelLabel={t("confirm.cancel")}
                 items={[
                   member.firstSignedInAt
                     ? {
@@ -387,22 +413,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
                         label: t("staff.passwordReset"),
                         icon: "resend" as const,
                         formId: `password-${member.id}`,
-                        confirm: {
-                          title: t("staff.passwordResetTitle"),
-                          body: t("staff.passwordResetBody", { email: member.email }),
-                          confirmLabel: t("staff.passwordReset"),
-                        },
                       }
                     : {
                         kind: "submit" as const,
                         label: t("staff.resendInvite"),
                         icon: "resend" as const,
                         formId: `invite-${member.id}`,
-                        confirm: {
-                          title: t("staff.resendInviteTitle"),
-                          body: t("staff.resendInviteBody", { email: member.email }),
-                          confirmLabel: t("staff.resendInvite"),
-                        },
                       },
                   {
                     kind: "submit" as const,
@@ -410,11 +426,6 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     icon: "revoke" as const,
                     formId: `deactivate-${member.id}`,
                     color: "warning" as const,
-                    confirm: {
-                      title: t("staff.deactivateAccountTitle"),
-                      body: t("staff.deactivateAccountBody", { name: member.displayName }),
-                      confirmLabel: t("staff.deactivateAccount"),
-                    },
                   },
                   {
                     kind: "submit" as const,
@@ -422,11 +433,6 @@ export default async function StaffPage({ params, searchParams }: Props) {
                     icon: "delete" as const,
                     formId: `revoke-${member.id}`,
                     color: "error" as const,
-                    confirm: {
-                      title: t("staff.revokeTitle"),
-                      body: t("staff.revokeBody", { name: member.displayName }),
-                      confirmLabel: t("staff.revoke"),
-                    },
                   },
                 ]}
               />

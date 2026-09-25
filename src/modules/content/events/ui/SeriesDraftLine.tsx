@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Hint from "@/shared/ui/Hint";
@@ -54,7 +55,7 @@ export type SeriesDraftLineProps = {
   /** Every draft the line counts, as `id:version` — not only the linked ones. */
   publish: (Confirmed & { action: Action; refs: readonly string[] }) | null;
   /** The series' own rule, switched on from its source. */
-  autoPublish: (Confirmed & { action: Action; sourceId: string }) | null;
+  autoPublish: (Confirmed & { action: ActionFormAction; sourceId: string }) | null;
   openSource: { href: string; label: string } | null;
   cancelLabel: string;
 };
@@ -111,20 +112,18 @@ export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, pub
             </form>
           )}
           {autoPublish && (
-            <form action={autoPublish.action}>
+            <ActionForm
+              action={autoPublish.action}
+              confirm={{ title: autoPublish.confirmTitle, body: autoPublish.confirmBody, confirmLabel: autoPublish.confirmLabel, cancelLabel }}
+            >
               <input type="hidden" name="uiLocale" value={uiLocale} />
               <input type="hidden" name="eventId" value={autoPublish.sourceId} />
               <input type="hidden" name="publish" value="on" />
               <input type="hidden" name="returnTo" value="list" />
-              <ConfirmSubmitButton
-                label={autoPublish.label}
-                title={autoPublish.confirmTitle}
-                body={autoPublish.confirmBody}
-                confirmLabel={autoPublish.confirmLabel}
-                cancelLabel={cancelLabel}
-                icon="turnOn"
-              />
-            </form>
+              <GlyphButton icon="turnOn" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                {autoPublish.label}
+              </GlyphButton>
+            </ActionForm>
           )}
           {openSource && (
             <GlyphButton icon="edit" href={openSource.href} variant="outlined" size="small" sx={{ minHeight: 44 }}>

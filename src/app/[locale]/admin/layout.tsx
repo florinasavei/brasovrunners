@@ -9,6 +9,8 @@ import { routing } from "@/i18n/routing";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import BackofficeShell from "@/modules/staff-identity/ui/BackofficeShell";
 import { env } from "@/shared/config/env";
+import { readFlash } from "@/shared/feedback/flash";
+import ToastProvider from "@/shared/feedback/ToastProvider";
 import PickerProvider from "@/shared/forms/pickers/PickerProvider";
 import { signOutAction } from "./actions";
 
@@ -49,6 +51,9 @@ export default async function AdminLayout({ children, params }: Props) {
   }
 
   const messages = await getMessages({ locale });
+  // The toast the last redirect left, if any (`shared/feedback/flash.ts`, §NNN): shown once by
+  // the provider below, which also clears the cookie, so a refresh shows nothing.
+  const flash = await readFlash();
 
   return (
     /*
@@ -59,8 +64,11 @@ export default async function AdminLayout({ children, params }: Props) {
     <NextIntlClientProvider messages={pickMessages(messages, BACKOFFICE_CLIENT_MESSAGES)} formats={null}>
       <BackofficeShell locale={locale} staffUser={staffUser} signOut={signOutAction}>
         {/* Mounted once, for every date and time box in the backoffice (`shared/forms/pickers`,
-            `DECISIONS.md` §345) — never on a public route, which never imports this shell. */}
-        <PickerProvider>{children}</PickerProvider>
+            `DECISIONS.md` §345) — never on a public route, which never imports this shell. The
+            toasts the same: one provider, every backoffice form's "it worked" (§NNN). */}
+        <ToastProvider flash={flash}>
+          <PickerProvider>{children}</PickerProvider>
+        </ToastProvider>
       </BackofficeShell>
     </NextIntlClientProvider>
   );

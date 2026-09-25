@@ -39,7 +39,8 @@ const { setRepeatPublishAction } = await import("@/app/[locale]/admin/actions");
 async function post(fields: Record<string, string>): Promise<string> {
   const form = new FormData();
   for (const [name, value] of Object.entries(fields)) form.set(name, value);
-  await expect(setRepeatPublishAction(form)).rejects.toThrow("NEXT_REDIRECT");
+  // `useActionState`'s two arguments since §NNN: the previous state, then the form.
+  await expect(setRepeatPublishAction(null, form)).rejects.toThrow("NEXT_REDIRECT");
   return redirected.at(-1) as string;
 }
 

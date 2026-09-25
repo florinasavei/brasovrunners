@@ -7,6 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { NEON_PLAN_IDS, NEON_PLANS, NEON_PLANS_CHECKED_ON, type NeonBlockModel } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonPlanState } from "@/modules/diagnostics/neon-plan";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -51,6 +52,7 @@ type Props = {
  */
 export default async function NeonPlanPanel({ locale, plan, source, block, mayEdit }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const format = await getFormatter();
   const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const rate = (value: number) => format.number(value, { maximumFractionDigits: 3 });
@@ -101,6 +103,7 @@ export default async function NeonPlanPanel({ locale, plan, source, block, mayEd
         <Box sx={{ mt: 1.5 }}>
         <ActionForm
           action={updateNeonPlanAction}
+          confirm={{ title: t("confirm.neonPlanTitle"), body: t("confirm.neonPlanBody"), confirmLabel: t("tasks.neonPlan.save"), cancelLabel: words.cancel }}
           messages={await refusalMessages({ plan: t("tasks.neonPlan.field"), note: t("tasks.neonPlan.note") })}
           scope="neon"
           data-testid="neon-plan-form"

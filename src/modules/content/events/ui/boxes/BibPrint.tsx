@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
@@ -60,15 +60,10 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
           {mayAssign && (
             <Box>
-              <ConfirmSubmitButton
-                form={BIB_ASSIGN_FORM}
-                label={t("bibs.assign")}
-                icon="number"
-                title={t("confirm.bibsTitle")}
-                body={t("confirm.bibsBody")}
-                confirmLabel={t("bibs.assign")}
-                cancelLabel={t("confirm.cancel")}
-              />
+              {/* The question is the assign form's own (`BibPrintForms`, §NNN); this button only submits it. */}
+              <GlyphButton icon="number" type="submit" form={BIB_ASSIGN_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                {t("bibs.assign")}
+              </GlyphButton>
             </Box>
           )}
           {total > 0 && (
@@ -123,25 +118,34 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
  * the POST that gives the numbers, with its confirmation on the button, and the GET that reads the
  * sheet and writes nothing.
  */
-export function BibPrintForms({
+export async function BibPrintForms({
   eventId,
   locale,
   mayAssign,
   assignAction,
+  cancelLabel,
 }: {
   eventId: string;
   locale: string;
   mayAssign: boolean;
   /** `assignBibNumbersAction`, handed down by the page that owns the actions. */
-  assignAction: (form: FormData) => Promise<void>;
+  assignAction: ActionFormAction;
+  cancelLabel: string;
 }) {
+  const t = await getTranslations("Admin");
   return (
     <>
       {mayAssign && (
-        <form id={BIB_ASSIGN_FORM} action={assignAction} hidden>
+        // The form asks (§NNN): the card's button submits it, and the question opens from here.
+        <ActionForm
+          id={BIB_ASSIGN_FORM}
+          action={assignAction}
+          hidden
+          confirm={{ title: t("confirm.bibsTitle"), body: t("confirm.bibsBody"), confirmLabel: t("bibs.assign"), cancelLabel }}
+        >
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={eventId} />
-        </form>
+        </ActionForm>
       )}
       <form id={BIB_DOWNLOAD_FORM} action={`/api/admin/events/${eventId}/bibs`} method="get" hidden>
         <input type="hidden" name="locale" value={locale} />

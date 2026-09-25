@@ -18,6 +18,7 @@ import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { emailBodyToParagraphs, readEmailBody } from "@/modules/notifications/domain/email-rich-text";
 
@@ -64,6 +65,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   // it already has for this path: without this the page comes back saying what it said before
   // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
   revalidatePath(path);
+  await flashOutcome({ saved: "emailPlan" });
   redirect(`${path}?saved=emailPlan#admin-alert`);
 }
 
@@ -88,6 +90,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
   // it already has for this path: without this the page comes back saying what it said before
   // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
   revalidatePath(path);
+  await flashOutcome({ saved: "contactRecipients" });
   redirect(`${path}?saved=contactRecipients#admin-alert`);
 }
 
@@ -97,7 +100,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
  * the throttle, the day's allowance and the audit row live. This is the thin half — where to
  * land, and in which language — exactly like the two actions above it.
  */
-export async function sendOutboxNowFromEmailsAction(form: FormData): Promise<void> {
+export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/emails" });
 
@@ -106,6 +109,7 @@ export async function sendOutboxNowFromEmailsAction(form: FormData): Promise<voi
     const actor = await requireStaffRole("ADMIN");
     const result = await sendOutboxNow(getDb(), actor, new Date());
     outcome = `saved=outboxSent&sent=${result.sent}`;
+    await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     outcome = `error=${error.code}`;
@@ -147,6 +151,7 @@ export async function updateClubNoticesAction(_previous: FormOutcome | null, for
     return refused(error, form);
   }
   revalidatePath(path);
+  await flashOutcome({ saved: "clubNotices" });
   redirect(`${path}?saved=clubNotices#admin-alert`);
 }
 
@@ -175,6 +180,7 @@ export async function updateDeadlinesAction(_previous: FormOutcome | null, form:
   // The when-lines and the previews under the panel say these numbers; without this the page
   // comes back saying the old ones (the trap §164 and §100 documented above).
   revalidatePath(path);
+  await flashOutcome({ saved: "deadlines" });
   redirect(`${path}?saved=deadlines#admin-alert`);
 }
 
@@ -267,6 +273,7 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
       new Date(),
     );
     outcome = reset ? "saved=emailCopyReset" : replace ? "saved=emailCopySamples" : "saved=emailCopy";
+    await flashOutcome({ saved: outcome.slice("saved=".length) });
   } catch (error) {
     // The subject and the words come back as typed (§315); the `reset` and `replace` presses are not values.
     const kept = refused(error, form, { never: ["reset", "replace"] });

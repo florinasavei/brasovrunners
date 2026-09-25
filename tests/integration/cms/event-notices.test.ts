@@ -11,7 +11,8 @@ import { repeatEvent, saveEventAndTranslations, type SeriesEditScope } from "@/m
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { queueEventUpdateNotices } from "@/modules/notifications/event-notices";
+import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent, queueEventUpdateNotices } from "@/modules/notifications/event-notices";
+import { resolveEmailCount } from "@/shared/feedback/notice";
 import { formatDay } from "@/i18n/dates";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -613,5 +614,52 @@ describe("§331 the participants hear about a change when the organizer asks", (
     const message = await renderOutboxMessage(dan, db, NOW);
     expect(message.text).toContain("The meeting point is now: Poiana Brașov.");
     expect(message.text).toContain(formatDay(third.startsAt, { locale: "en", timeZone: ZONE, style: "long" }));
+  });
+
+  it("§NNN a series save's dialog states what the save queues: this date, plus each later date ticked", async () => {
+    const source = await seedEvent({ type: "GROUP_RUN", registrationMode: "INTERNAL", capacity: null });
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));
+    expect(dates.length).toBeGreaterThanOrEqual(3);
+    const [ran, second, third] = dates;
+    // One date already run: told nothing, so counted nowhere.
+    await db
+      .update(events)
+      .set({ startsAt: new Date("2026-09-12T08:00:00+03:00"), endsAt: new Date("2026-09-12T09:30:00+03:00") })
+      .where(eq(events.id, ran.id));
+    await seedRegistrations(source.id, [{ name: "ana", status: "CONFIRMED" }, { name: "test", status: "CONFIRMED", kind: "TEST" }]);
+    await seedRegistrations(ran.id, [{ name: "bogdan", status: "CONFIRMED" }]);
+    await seedRegistrations(second.id, [{ name: "carmen", status: "CONFIRMED" }, { name: "dan", status: "WAITLISTED" }, { name: "elena", status: "CANCELLED" }]);
+    await seedRegistrations(third.id, [{ name: "florin", status: "PENDING_DECLARATION", locale: "en" }]);
+
+    // What the editor page reads: this date's real count, and each later date's (never one already run).
+    const later = (await db.select().from(events).where(eq(events.repeatOf, source.id)))
+      .filter((date) => date.startsAt.getTime() > NOW.getTime())
+      .map((date) => date.id);
+    expect(later).not.toContain(ran.id);
+    const spec = resolveEmailCount(
+      {
+        title: "",
+        body: "",
+        confirmLabel: "",
+        cancelLabel: "",
+        emailCount: {
+          field: "dates",
+          base: (await countEventNoticeRecipients(db, source.id)).real,
+          counts: await countRealNoticeRecipientsByEvent(db, later),
+          forms: { one: "{count} participant", few: "{count} participanți", other: "{count} de participanți" },
+          locale: "ro",
+        },
+      },
+      // Every date ticked, as "Toate datele" posts them — the one already run and this one included.
+      () => [source.id, ...dates.map((date) => date.id)],
+    );
+
+    const result = await save(source.id, { fields: { locationName: "Poiana Brașov" }, notice: { notify: true }, scope: "all" });
+    expect(result.notice).toMatchObject({ kind: "update" });
+    const sent = result.notice?.kind === "update" ? result.notice.queued : -1;
+    // Ana, Carmen, Dan and Florin: not the test row, not Bogdan's morning that is over, not Elena.
+    expect(sent).toBe(4);
+    expect(spec.email).toBe(`${sent} participanți`);
   });
 });

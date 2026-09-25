@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { confirmDialog } from "./support/confirm";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
 import { EMAIL_SAMPLE } from "../../src/modules/notifications/domain/email-sample";
@@ -165,7 +166,7 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await field("bodyEn").fill("   ");
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     await expect(page.getByRole("dialog")).toContainText("Trimiți mesajul la 2 participanți?");
-    await page.getByRole("dialog").getByRole("button", { name: "Trimite", exact: true }).click();
+    await confirmDialog(page);
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toContainText("Mesajul (English)", { timeout: 30_000 });
     await expect(field("bodyRo")).toHaveValue("Salut, {participantName}!\n\nStartul se mută la 10:00 din cauza furtunii.");
@@ -189,7 +190,9 @@ test.describe("§364 the organizer writes to an event's participants", () => {
     await page.getByRole("button", { name: "Trimite mesajul" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Trimiți mesajul la 2 participanți?");
-    await dialog.getByRole("button", { name: "Trimite", exact: true }).click();
+    // Who is emailed, from the same count the send queues from (§NNN).
+    await expect(dialog.getByTestId("confirm-email")).toHaveText("Se va trimite un email către 2 participanți.");
+    await confirmDialog(page);
     await expect(page.getByTestId("participant-message-sent")).toContainText("Mesaj pus la coadă pentru 2 participanți.", { timeout: 30_000 });
     await expect(page).toHaveURL(/sent=2/);
 

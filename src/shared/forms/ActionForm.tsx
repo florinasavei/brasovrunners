@@ -4,7 +4,10 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
-import { type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
+import { type ConfirmSpec, pickConfirm, resolveEmailCount } from "@/shared/feedback/notice";
+import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
 import { RecallProvider } from "./recall";
@@ -74,16 +77,40 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
  *
  * The summary is §47's: focusable, first in the form, naming each field as a link to its box.
  * A label for an indexed box (`event.schedule[2].date`) falls back to its unindexed name.
+ *
+ * ## Asking first, and saying it worked (§NNN)
+ *
+ * `confirm` puts the one `ConfirmDialog` in front of the submit: the `submit` event is caught,
+ * the form as it stands is read (with the submitter, so a two-verb form asks the right question),
+ * the first spec whose `when` conditions hold is shown, and nothing is sent until its button is
+ * pressed — which calls `requestSubmit()` with the same submitter, so React's action receives
+ * exactly the fields the first press would have. `preventDefault()` on the submit is what stops
+ * React from running the action (`react-dom`'s form-action listener checks `defaultPrevented`).
+ * A spec that matches nothing lets the submit through: the event save asks only when the notice
+ * box is ticked or the status was set to cancelled. Without JavaScript there is no dialog and
+ * the form posts, because every rule that matters is the server's (BR-REQ-060-01).
+ *
+ * A state the action *returns* with a `notice` reaches the toast provider from an effect, after
+ * the answer painted (§371); an action that redirects flashes its notice instead (`flash.ts`).
+ * A refusal is never a toast — it is the summary below.
  */
 export default function ActionForm({
   action,
   messages,
+  confirm,
   children,
   scope,
   ...formProps
 }: {
   action: ActionFormAction;
-  messages: RefusalMessages;
+  /**
+   * The refusal summary's words. Absent on a form whose action never returns a refusal — a
+   * button and hidden fields, which redirect with `?error=` as they always did — so a list of
+   * fifty rows does not ship the error catalogue fifty times.
+   */
+  messages?: RefusalMessages;
+  /** Ask before sending: one dialog, or the first of several whose `when` the form meets. */
+  confirm?: ConfirmSpec | readonly ConfirmSpec[];
   children: ReactNode;
   /**
    * A prefix for the ids of this form's boxes and of its summary, for a form that shares its
@@ -92,9 +119,62 @@ export default function ActionForm({
   scope?: string;
   id?: string;
   className?: string;
+  /** A form a "⋮" menu submits by id: rendered, never seen. */
+  hidden?: boolean;
+  style?: CSSProperties;
   "data-testid"?: string;
 }) {
   const [state, formAction] = useActionState(action, null);
+  const toast = useToast();
+  const form = useRef<HTMLFormElement>(null);
+
+  // The question on screen, with the button that asked it — the submitter, replayed on "yes".
+  const [asking, setAsking] = useState<{ spec: ConfirmSpec; submitter: HTMLElement | null } | null>(null);
+  // The one submit that follows a "yes": let it through, then ask again next time.
+  const confirmed = useRef(false);
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (!confirm) return;
+    if (confirmed.current) {
+      confirmed.current = false;
+      return;
+    }
+    const element = event.currentTarget;
+    const submitter = ((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null;
+    let data: FormData;
+    try {
+      data = submitter ? new FormData(element, submitter) : new FormData(element);
+    } catch {
+      data = new FormData(element);
+    }
+    const spec = pickConfirm(confirm, (field) => {
+      const value = data.get(field);
+      return typeof value === "string" ? value : null;
+    });
+    if (!spec) return;
+    event.preventDefault();
+    // A series save's email line, summed over the dates ticked at this press (§NNN).
+    const resolved = resolveEmailCount(spec, (field) => data.getAll(field).filter((value): value is string => typeof value === "string"));
+    setAsking({ spec: resolved, submitter });
+  };
+
+  const answerYes = () => {
+    const pending = asking;
+    setAsking(null);
+    const element = form.current;
+    if (!pending || !element) return;
+    confirmed.current = true;
+    // The same submitter, so a button's own `formAction` and `name=value` still travel (§287).
+    const button = pending.submitter;
+    const ownButton = (button instanceof HTMLButtonElement || button instanceof HTMLInputElement) && button.form === element;
+    if (ownButton) element.requestSubmit(button);
+    else element.requestSubmit();
+  };
+
+  // "It worked" without a redirect: the notice, after the answer painted — never in the press.
+  useEffect(() => {
+    if (state?.notice) toast.show(state.notice);
+  }, [state, toast]);
 
   // A number that changes with every answer, derived during render so the server and the
   // client agree on it: islands with state of their own key on it and re-mount from the
@@ -114,7 +194,7 @@ export default function ActionForm({
     the press re-renders the buttons that show "Se salvează…" and nothing else; an answer from the
     server still changes it, and every box still re-mounts from the recalled values (§315).
   */
-  const fieldError = messages.fieldError;
+  const fieldError = messages?.fieldError ?? "";
   const recall = useMemo(
     () => ({ values: state?.values ?? null, fields: state?.fields ?? [], generation: tracked.generation, fieldError, scope }),
     [state, tracked.generation, fieldError, scope],
@@ -148,18 +228,19 @@ export default function ActionForm({
   // the name belongs to (`event.bibDesign` for `event.bibDesign.numberScale`), then the name.
   const labelOf = (name: string): string => {
     const unindexed = name.replace(/\[\d+\]/g, "[]");
-    for (const candidate of [name, unindexed]) if (messages.fields[candidate]) return messages.fields[candidate];
+    const labels = messages?.fields ?? {};
+    for (const candidate of [name, unindexed]) if (labels[candidate]) return labels[candidate];
     const parts = unindexed.split(".");
     while (parts.length > 1) {
       parts.pop();
-      const shorter = messages.fields[parts.join(".")];
+      const shorter = labels[parts.join(".")];
       if (shorter) return shorter;
     }
     return name;
   };
 
   return (
-    <form action={formAction} {...formProps} onInvalidCapture={onInvalidCapture}>
+    <form ref={form} action={formAction} {...formProps} onInvalidCapture={onInvalidCapture} onSubmit={onSubmit}>
       <RecallProvider value={recall}>
         {state?.error && (
           <Alert
@@ -170,10 +251,10 @@ export default function ActionForm({
             sx={{ mb: 3, scrollMarginTop: 16 }}
             data-testid="form-refusal"
           >
-            <AlertTitle>{sentenceFor(messages.errors[state.error] ?? state.error, state.errorValues)}</AlertTitle>
+            <AlertTitle>{sentenceFor(messages?.errors[state.error] ?? state.error, state.errorValues)}</AlertTitle>
             {state.fields.length > 0 && (
               <Box component="p" sx={{ m: 0 }}>
-                {messages.fieldsIntro}
+                {messages?.fieldsIntro}
               </Box>
             )}
             {state.fields.length > 0 && (
@@ -194,12 +275,14 @@ export default function ActionForm({
               </Box>
             )}
             <Box component="p" sx={{ m: 0, mt: state.fields.length > 0 ? 1 : 0 }}>
-              {state.error === "CONFLICT" ? messages.keptConflict : messages.kept}
+              {state.error === "CONFLICT" ? messages?.keptConflict : messages?.kept}
             </Box>
           </Alert>
         )}
         {children}
       </RecallProvider>
+      {/* The question, drawn only while it is asked: fifty hidden row forms cost no dialog DOM. */}
+      {asking && <ConfirmDialog spec={asking.spec} open onCancel={() => setAsking(null)} onConfirm={answerYes} />}
     </form>
   );
 }
