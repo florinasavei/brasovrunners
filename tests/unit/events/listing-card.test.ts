@@ -153,7 +153,8 @@ const anchors = (html: string) =>
     attributes,
     text: text(inner),
   }));
-/** The words of every chip, in order. */
+/** The words of every chip, in order — each label's own first text, before the difficulty pill's
+ * visually-hidden `srSuffix` span. */
 const chipLabels = (html: string) => [...withoutStyles(html).matchAll(/class="MuiChip-label[^"]*"[^>]*>([^<]*)</g)].map((match) => match[1]);
 /** Where the facts end: the series card's fold, or the door to the page. */
 const AFTER_FACTS = /<details\b|<a\b[^>]*>(?:<svg\b[\s\S]*?<\/svg>)?(?:Descrierea completă|Full event description)/;

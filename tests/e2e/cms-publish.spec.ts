@@ -567,25 +567,31 @@ test.describe("BR-REQ-050-02 the programme follows the start date after a full p
 });
 
 /*
-  §345, review finding 2. Every existing assertion on a picker's format reads the hidden posted
-  input (`YYYY-MM-DD` / `HH:mm`), which says nothing about what the picker *shows* — and every
-  one of them is a morning time, where 12-hour and 24-hour read the same digits. This asserts
-  what the picker box itself renders instead, on an afternoon hour, before and after a save and
-  a full reload.
+  §345, review finding 2, and its 2026-09-25 amendment (the time half is now the platform's own
+  `<input type="time">`). The date half is unchanged: every assertion on its picker's format
+  reads the hidden posted input (`YYYY-MM-DD`), which says nothing about what the picker
+  *shows* — this asserts what the picker box itself renders, before and after a save and a full
+  reload.
 
-  Not the box's text (re-review, finding 2): the element MUI names with the label is the whole
-  outlined input, and its notch repeats the label inside it, so its `textContent` is
-  "19:00Ora" — never "19:00". What a person reads is the sections, one `spinbutton` each, in the
-  order the format puts them, and the separators between them, which MUI's own unnamed input
-  carries as its value ("30.09.2027") beside the hidden one the form posts ("2027-09-30").
+  Not the date box's text: the element MUI names with the label is the whole outlined input, and
+  its notch repeats the label inside it, so its `textContent` is "30.09.2027Începutul
+  evenimentului" — never "30.09.2027". What a person reads is the sections, one `spinbutton`
+  each, in the order the format puts them, and the separators between them, which MUI's own
+  unnamed input carries as its value ("30.09.2027") beside the hidden one the form posts
+  ("2027-09-30").
+
+  The time box no longer has a format of its own to assert display-wise: a native
+  `<input type="time">` shows whatever the browser's own locale draws (§400 amending §345,
+  documented trade-off), so what this proves for the time is only what it has ever guaranteed —
+  the *posted* value stays `HH:mm` on the 24-hour clock, never AM/PM, whatever the box shows.
 */
 async function expectPickerShows(group: Locator, sections: string[], shown: string) {
   await expect(group.getByRole("spinbutton")).toHaveText(sections);
   await expect(group.locator("input")).toHaveValue(shown);
 }
 
-test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-year, not only post that way (§303, §345)", () => {
-  test("shows 19:00 with no AM/PM and 30.09.2027 in day, month, year order — before and after saving", async ({ page }) => {
+test.describe("BR-REQ-050-02 the date reads as day-month-year, and the time always posts 24-hour (§303, §345)", () => {
+  test("shows 30.09.2027 in day, month, year order, and posts 19:00 with no AM/PM — before and after saving", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     const slug = `ceas-24h-${suffix}`;
 
@@ -605,17 +611,13 @@ test.describe("BR-REQ-050-02 the pickers read as a 24-hour clock and day-month-y
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`24-hour-clock-${suffix}`);
 
-    // The event's own boxes: the first "Ora" on the page is the event's time of day, above any
+    // The event's own box: the first "Ora" on the page is the event's time of day, above any
     // programme row's.
     const dateGroup = pickerGroup(page, "Începutul evenimentului");
-    const timeGroup = pickerGroup(page, "Ora");
     const readsTheClubsWay = async () => {
       // Day, month, year — three sections in that order, never month first.
       await expectPickerShows(dateGroup, ["30", "09", "2027"], "30.09.2027");
-      // Two sections and no third: a 12-hour clock would add the AM/PM one and show "07".
-      await expectPickerShows(timeGroup, ["19", "00"], "19:00");
-      await expect(timeGroup).not.toContainText(/AM|PM/i);
-      // What the form posts is still the service's shape, untouched by what the box shows.
+      // What the form posts is still the service's shape, untouched by what either box shows.
       await expect(field("event.startsAtDate")).toHaveValue("2027-09-30");
       await expect(field("event.startsAtTime")).toHaveValue("19:00");
     };

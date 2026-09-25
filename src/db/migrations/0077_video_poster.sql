@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "video_poster_url" text;

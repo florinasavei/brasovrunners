@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickerClock, pickerDate, postedClock, postedDate } from "@/shared/forms/pickers/picker-values";
+import { pickerDate, postedDate } from "@/shared/forms/pickers/picker-values";
 import { DATE_PATTERN, DATE_VALUE, isDateValue, isTimeValue, TIME_PATTERN, TIME_VALUE } from "@/shared/forms/pickers/wall-values";
 
 /**
@@ -49,37 +49,6 @@ describe("picker-values — a posted date and the date picker's value, both ways
   it("posts nothing for an absent, invalid or out-of-range picker value", () => {
     expect(postedDate(null)).toBe("");
     expect(postedDate(undefined)).toBe("");
-  });
-});
-
-describe("picker-values — a posted time and the time picker's value, both ways", () => {
-  it("round-trips the 24-hour clock, including midnight and the last minute of the day", () => {
-    for (const value of ["00:00", "09:05", "19:00", "23:59"]) {
-      expect(postedClock(pickerClock(value)), value).toBe(value);
-    }
-  });
-
-  it("reads a missing or empty time as no value", () => {
-    expect(pickerClock(undefined)).toBeNull();
-    expect(pickerClock(null)).toBeNull();
-    expect(pickerClock("")).toBeNull();
-  });
-
-  it("refuses an hour or minute the 24-hour clock does not have", () => {
-    expect(pickerClock("24:00")).toBeNull();
-    expect(pickerClock("19:60")).toBeNull();
-    expect(pickerClock("7:30")).toBeNull(); // the posted shape is always two digits
-  });
-
-  it("posts nothing for an absent or invalid picker value", () => {
-    expect(postedClock(null)).toBe("");
-    expect(postedClock(undefined)).toBe("");
-  });
-
-  it("never posts a 12-hour reading — the whole reason the picker was pinned to ampm={false}", () => {
-    const evening = postedClock(pickerClock("19:00"));
-    expect(evening).toBe("19:00");
-    expect(evening).not.toMatch(/PM|AM/i);
   });
 });
 

@@ -540,6 +540,13 @@
       "when": 1790334154317,
       "tag": "0076_night_override",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1790341531850,
+      "tag": "0077_video_poster",
+      "breakpoints": true
     }
   ]
 }

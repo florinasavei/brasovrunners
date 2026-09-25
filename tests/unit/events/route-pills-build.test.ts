@@ -122,6 +122,33 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     expect(externalPaid.at(-1)?.label).toBe("Cu taxă");
     expect(externalPaid.at(-1)?.srSuffix).toBe("plătit la organizator, nu la club");
   });
+
+  // Through `buildRoutePills` and `RoutePills` for every level in both locales, asserting what a
+  // screen reader is given — the chip's visible word, then the visually-hidden span — so a wrong
+  // key or a missing locale in `routePillParts`'s `srSuffix` line fails here.
+  it.each([
+    ["ro", "EASY", "Ușor", "Dificultate"],
+    ["ro", "MODERATE", "Mediu", "Dificultate"],
+    ["ro", "HARD", "Avansat", "Dificultate"],
+    ["en", "EASY", "Easy", "Difficulty"],
+    ["en", "MODERATE", "Moderate", "Difficulty"],
+    ["en", "HARD", "Hard", "Difficulty"],
+  ] as const)("in %s, the %s pill reads «%s» and, hidden, «— %s»", async (locale, difficulty, word, field) => {
+    currentLocale = locale;
+    const t = await getTranslations("Event");
+    const format = await getFormatter();
+    const pills = buildRoutePills({ ...FULL_ROUTE, difficulty }, t, format).filter((pill) => pill.glyph === `difficulty:${difficulty}`);
+    expect(pills).toHaveLength(1);
+    const html = renderToStaticMarkup(RoutePills({ pills }));
+    const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
+    // The word is the label's own text, shown; the field's name follows it in a span clipped to
+    // one pixel (`GlyphChip`'s `srOnlySx`) — the only other text in the label.
+    expect(/^([^<]*)</.exec(label)?.[1]).toBe(word);
+    const hidden = /<span class="MuiBox-root [^"]*">([^<]*)$/.exec(label)?.[1];
+    expect(hidden).toBe(` — ${field}`);
+    expect(html).not.toMatch(/aria-label=/);
+    expect(html).not.toMatch(/aria-hidden="true">[^<]*(Ușor|Mediu|Avansat|Easy|Moderate|Hard)/);
+  });
 });
 
 describe("§388 RoutePills — one small outlined chip per pill, its glyph, nothing when there is nothing", () => {
