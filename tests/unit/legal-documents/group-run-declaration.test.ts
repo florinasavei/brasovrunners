@@ -90,10 +90,15 @@ describe("§393 which declaration a run offers: the surface decides", () => {
 });
 
 describe("§393 the two templates", () => {
-  it("carry the race declaration's tokens for an adult signer, and ask for the identity document", () => {
+  /*
+    §418 — the counsel review of 2026-09-25: a group run hands out no kit and the address is not
+    verified, so a typed identity number proves nothing and is data the club need not hold (GDPR
+    art. 5(1)(c)). Neither text names a document, so the signing page asks for none.
+  */
+  it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
-      expect([...mergeFieldsIn(body)].sort()).toEqual(["event", "eventDate", "eventLocation", "idDocument", "participant", "signedAt"]);
-      expect(asksForIdDocument(body)).toBe(true);
+      expect([...mergeFieldsIn(body)].sort()).toEqual(["event", "eventDate", "eventLocation", "participant", "signedAt"]);
+      expect(asksForIdDocument(body)).toBe(false);
       // Adults only for now: no minor's second signature is asked (§330 is the race's flow).
       expect(asksForMinorSignature(body)).toBe(false);
     }
@@ -110,11 +115,11 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("names asphalt's risks: traffic, the group's pace, the dark", () => {
+  it("names asphalt's risks: traffic, dogs (§418), the group's pace, the dark", () => {
     const ro = bullets(TEXTS.asphalt.ro).join(" ");
     const en = bullets(TEXTS.asphalt.en).join(" ");
-    for (const pattern of [/drumuri publice/, /regulile de circulație/, /ritm pe care nu îl aleg eu/, /întunericului/, /reflectorizante/]) expect(ro).toMatch(pattern);
-    for (const pattern of [/public roads/, /traffic rules/, /pace I do not choose/, /after dark/, /reflective/]) expect(en).toMatch(pattern);
+    for (const pattern of [/drumuri publice/, /regulile de circulație/, /câini, inclusiv fără stăpân/, /ritm pe care nu îl aleg eu/, /întunericului/, /reflectorizante/]) expect(ro).toMatch(pattern);
+    for (const pattern of [/public roads/, /traffic rules/, /dogs, stray ones included/, /pace I do not choose/, /after dark/, /reflective/]) expect(en).toMatch(pattern);
     // Not the mountain's: no bears on the ring road.
     expect(ro).not.toMatch(/urși|câini de stână/);
     expect(en).not.toMatch(/bears|sheepdogs/);
@@ -148,12 +153,34 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("says it is optional, that it registers nobody, and how long the platform keeps it", () => {
+  it("says it is optional, that it registers nobody, and how long the platform and the archive keep it", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       expect(TEXTS[surface].ro.join(" ")).toMatch(/este opțională și nu este o condiție/);
-      expect(TEXTS[surface].ro.join(" ")).toMatch(/o șterge la șapte zile după alergare/);
+      expect(TEXTS[surface].ro.join(" ")).toMatch(/Platforma clubului șterge declarația la șapte zile după alergare/);
+      expect(TEXTS[surface].ro.join(" ")).toMatch(/copia din arhiva clubului se păstrează trei ani de la alergare/);
       expect(TEXTS[surface].en.join(" ")).toMatch(/optional and is not a condition/);
-      expect(TEXTS[surface].en.join(" ")).toMatch(/deletes it seven days after the run/);
+      expect(TEXTS[surface].en.join(" ")).toMatch(/deletes the declaration seven days after the run/);
+      expect(TEXTS[surface].en.join(" ")).toMatch(/kept for three years from the run/);
+    }
+  });
+
+  /*
+    §418 — evidence the signer could withdraw at will would be no evidence: the basis is the club's
+    legitimate interest (art. 6(1)(f)), art. 9(2)(f) for the health statement, and the rights list
+    names restriction and objection — as the privacy notice's §3 does.
+  */
+  it("rests on legitimate interest, names art. 9(2)(f) for health, and lists restriction and objection (§418)", () => {
+    for (const surface of ["asphalt", "trail"] as const) {
+      const roText = TEXTS[surface].ro.join(" ");
+      const enText = TEXTS[surface].en.join(" ");
+      expect(roText).toMatch(/interesului legitim al organizatorului \(art\. 6 alin\. \(1\) lit\. f\) GDPR\)/);
+      expect(roText).toMatch(/art\. 9 alin\. \(2\) lit\. f\) GDPR/);
+      expect(roText).toMatch(/de restricționare și de opoziție/);
+      expect(enText).toMatch(/legitimate interest \(art\. 6\(1\)\(f\) GDPR\)/);
+      expect(enText).toMatch(/art\. 9\(2\)\(f\) GDPR/);
+      expect(enText).toMatch(/restriction and objection/);
+      expect(roText).not.toMatch(/consimțământ/);
+      expect(enText).not.toMatch(/\bconsent\b/);
     }
   });
 
@@ -192,7 +219,7 @@ describe("§393 the sample seed (§29)", () => {
       for (const translation of sample!.translations) {
         expect(translation.body.sections[0].heading).toMatch(/NEAPROBAT|NOT APPROVED/);
         expect(translation.title).toMatch(/NEAPROBAT|NOT APPROVED/);
-        expect(mergeFieldsIn(translation.body).has("idDocument")).toBe(true);
+        expect(mergeFieldsIn(translation.body).has("idDocument")).toBe(false);
         expect(remainingPlaceholders(translation.body).length).toBeGreaterThanOrEqual(4);
       }
     }

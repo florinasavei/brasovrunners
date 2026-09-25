@@ -133,15 +133,45 @@ const submissionFields = z.object({
   healthConsent: z.boolean().default(false),
 
   /**
-   * "I declare I am medically fit to take part" (§171).
+   * "I declare I am medically fit to take part" (§171, amended by §421).
    *
-   * Required on the public form and nowhere else. It is a statement about oneself, not health
-   * data — which is why it can be insisted on where `healthNotes` cannot — and it is the thing
-   * the medical block was always trying to ask before the free-text box buried it. A
-   * registration an organizer takes over the telephone, or a walk-in at the desk, makes it on
-   * paper instead, so the staff schema relaxes it below.
+   * Required on the public form and nowhere else. A statement of fitness, treated as data
+   * concerning health and kept under art. 9(2)(f) GDPR as evidence (§418, amending §171; the
+   * privacy notice's §2 says so) — required because it rests on no consent, which is why it can be
+   * insisted on where `healthNotes` cannot. Only the moment is stored (`fitness_declared_at`),
+   * never anything medical. A registration an organizer takes over the telephone, or a walk-in at
+   * the desk, makes it on paper instead, so the staff schema relaxes it below; so does the form for
+   * another adult on the same address (§389, §421), where `fitnessAcknowledged` stands in its place.
    */
   fitnessDeclared: z.literal(true),
+  /**
+   * The family form's tick for an adult (§421): "I know the person I am registering declares
+   * themselves, when they sign their declaration, that their health allows the effort". An
+   * acknowledgement by the address holder, not a statement about anybody's health, so nothing is
+   * stored for it; `anotherPersonFitnessRule` requires it for an adult and ignores it otherwise.
+   */
+  fitnessAcknowledged: z.boolean().default(false),
+
+  /**
+   * The club's terms, accepted expressly (§421). One tick, always shown and never folded, that
+   * names the unusual clauses — cancellation or change of the event, being stopped or excluded
+   * on the course, the limits of the club's liability, the governing law and the court — because
+   * a standard clause of that kind binds only once it is accepted expressly (Codul civil
+   * art. 1202–1203). Separate from the event's own rules (`rulesAcknowledged`). The service
+   * records the version in force and the moment; the page names the version, never typed.
+   * A staff or desk entry makes it on paper, so the staff schema relaxes it.
+   */
+  termsAccepted: z.literal(true),
+
+  /**
+   * The version the form showed the tick as naming (§421, finding (7) of the fix round): a
+   * hidden field, posted alongside the tick, never typed. The service records the version *in
+   * force at submit* (`service.ts` ~1030/1143), which can differ from the one the page rendered
+   * if a new one is approved in between — this is what lets it tell the two apart and refuse
+   * rather than silently record a version the reader's tick never named. Optional because a
+   * staff or desk entry, which relaxes `termsAccepted` itself, posts nothing here either.
+   */
+  termsVersionShown: z.coerce.number().int().positive().optional(),
 
   /**
    * "I have read the race's conditions" (§195). Required on the public form, like the statement
@@ -398,6 +428,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
     // The same, for the race's conditions (§195): the paper the participant signs says they
     // read them, and a staff member does not say it for them.
     rulesAcknowledged: true,
+    // And the club's terms (§421): accepted on the paper, never ticked by staff on a person's behalf.
+    termsAccepted: true,
   })
   .superRefine(healthConsentRule)
   .superRefine(guardianRule)
@@ -412,9 +444,77 @@ export const staffRegistrationSubmissionSchema = submissionFields
  */
 export const anotherPersonSubmissionSchema = submissionFields
   .partial({ phone: true })
+  // Asked of a minor's parent only (§421): `anotherPersonFitnessRule(now)` decides which tick is
+  // owed. Applied by the caller (`service.ts`, alongside `minimumAgeRule`), not baked in here, so
+  // one `now` decides it and `withoutAnotherAdultsConsents` alike (finding (9)).
+  .extend({ fitnessDeclared: z.boolean().default(false) })
   .superRefine(healthConsentRule)
   .superRefine(guardianRule)
   .superRefine(emergencyContactRule);
+
+/**
+ * Whether the runner on the family form is an adult (§421): eighteen or over today, by the same
+ * calendar rule as the guardian check. False for a date that cannot be read — the schema refuses
+ * that on its own, and nothing is taken away from a form it is about to refuse.
+ */
+function adultOnTheFamilyForm(birthDate: unknown, now: Date): boolean {
+  if (typeof birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return false;
+  if (Number.isNaN(Date.parse(`${birthDate}T00:00:00Z`))) return false;
+  return !isMinorOn(birthDate, now);
+}
+
+/**
+ * The fitness statement on the family form (§421). A parent registering a minor makes it, as
+ * today (the parent acts for the child: art. 8 GDPR, Codul civil art. 41–43). For another adult
+ * the address holder cannot make a first-person statement on their behalf, so the form asks them
+ * to acknowledge that the person makes it themselves, in the declaration they sign.
+ *
+ * A factory over `now` (§421, finding (9) of the fix round), like `minimumAgeRule` beside it: the
+ * service's own `superRefine` used to reach for `new Date()` here while `withoutAnotherAdultsConsents`
+ * decided adult-or-minor from the service's `now` a few lines above it — two different instants
+ * that could disagree around an eighteenth birthday at midnight, or in a test with a fixed clock.
+ * One instant now decides both.
+ */
+export function anotherPersonFitnessRule(now: Date) {
+  return (value: { birthDate?: string; fitnessDeclared?: boolean; fitnessAcknowledged?: boolean }, ctx: z.RefinementCtx): void => {
+    if (!value.birthDate) return;
+    if (adultOnTheFamilyForm(value.birthDate, now)) {
+      if (value.fitnessAcknowledged !== true) {
+        ctx.addIssue({ code: "custom", path: ["fitnessAcknowledged"], message: "acknowledge that the person declares their own fitness when they sign" });
+      }
+    } else if (value.fitnessDeclared !== true) {
+      ctx.addIssue({ code: "custom", path: ["fitnessDeclared"], message: "the parent declares the minor fit to take part" });
+    }
+  };
+}
+
+/**
+ * What the family form may **not** carry for another adult (§421; §389's flow, amended).
+ *
+ * The address holder fills it in; a consent given by a third party for an adult is not that
+ * adult's consent (GDPR art. 4(11), 7(1)), and the health note is art. 9 data. So for a runner
+ * eighteen or over today — the guardian rule's day and calendar — the health note and its
+ * consent, the Strava link and the Instagram username, the public-list tick and the first-person
+ * fitness statement are dropped **whatever was posted**, before the schema reads anything: the
+ * form hides them, and this is the rule for a form posted without JavaScript or by anything else.
+ * A minor is left alone: the parent consents for the child, as on the ordinary form.
+ *
+ * Applied by `submitRegistration` to the family form only; the ordinary form is the person's own.
+ */
+export function withoutAnotherAdultsConsents(raw: unknown, now: Date): unknown {
+  if (raw === null || typeof raw !== "object") return raw;
+  const input = raw as Record<string, unknown>;
+  if (!adultOnTheFamilyForm(input.birthDate, now)) return raw;
+  return {
+    ...input,
+    healthNotes: undefined,
+    healthConsent: false,
+    stravaUrl: undefined,
+    instagramHandle: undefined,
+    listOptOut: true,
+    fitnessDeclared: undefined,
+  };
+}
 
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
 

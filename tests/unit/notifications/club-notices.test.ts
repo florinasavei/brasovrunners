@@ -192,7 +192,8 @@ describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and att
     expect(declarationPdfAudience("DECLARATION_SIGNED", false)).toBe("participant");
     expect(declarationPdfAudience("DECLARATION_ARCHIVE", false)).toBe("club");
     // A group run's self-declaration (§393): whole to the signer, masked to the archive.
-    expect(declarationPdfAudience("GROUP_RUN_DECLARATION_SIGNED", false)).toBe("participant");
+    // The group run's signer's copy is masked too (§419): its address was never confirmed.
+    expect(declarationPdfAudience("GROUP_RUN_DECLARATION_SIGNED", false)).toBe("club");
     expect(declarationPdfAudience("GROUP_RUN_DECLARATION_ARCHIVE", false)).toBe("club");
     for (const type of emailMessageType.enumValues) {
       // A club copy of any message attaches no PDF at all.

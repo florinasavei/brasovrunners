@@ -174,12 +174,14 @@ export function readOrganizerMessagePayload(payload: unknown): OrganizerMessage 
 }
 
 /**
- * What one send costs against the Mailgun allowance (§100), in messages: every real recipient's
- * own plus one club copy per address on the club's list (§320), and every test recipient's own —
- * a test row gets no club copy, and its `@test.invalid` address still spends a message.
+ * What one send costs against the Mailgun allowance (§100), in messages: every recipient's own —
+ * a test row's `@test.invalid` address still spends a message — plus **one** club copy per address
+ * on the club's list for the whole send (§419; one per registration under §320), and none when the
+ * send reaches no real participant.
  */
-export function organizerMessageCost(recipients: { real: number; test: number }, clubCopiesPerMessage: number): number {
-  return recipients.real * (1 + Math.max(0, Math.floor(clubCopiesPerMessage))) + recipients.test;
+export function organizerMessageCost(recipients: { real: number; test: number }, clubCopyAddresses: number): number {
+  const copies = recipients.real > 0 ? Math.max(0, Math.floor(clubCopyAddresses)) : 0;
+  return recipients.real + recipients.test + copies;
 }
 
 /**

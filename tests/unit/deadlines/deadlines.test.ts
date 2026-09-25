@@ -33,7 +33,7 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 describe("§377 the club's deadlines, unset", () => {
-  it("are the constants they replaced: 48 h link, 30 min hold, 24 h offer, 48 h reminder, 24 h check-in, 7-day race week, 56-day horizon", () => {
+  it("are the constants they replaced: 48 h link, 30 min hold, 24 h offer, 48 h reminder, 24 h check-in, 7-day race week, 56-day horizon — and the public list's 30 days (§421)", () => {
     expect(DEFAULT_DEADLINES).toEqual({
       confirmationHours: 48,
       holdMinutes: 30,
@@ -42,6 +42,7 @@ describe("§377 the club's deadlines, unset", () => {
       selfCheckinHours: 24,
       raceWeekDays: 7,
       seriesHorizonDays: 56,
+      publicListDays: 30,
     });
   });
 

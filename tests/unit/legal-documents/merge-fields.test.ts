@@ -136,8 +136,13 @@ describe("the declaration's merge fields", () => {
         // runner took ownership of the risks (§357; the owner: "wild animals, proper equipment
         // (shoes, headlamp for night running), falling, etc"): seven bullets and a sentence, about
         // two thousand characters, raised on purpose and no further. The notice's ceiling moved once
-        // more, by a paragraph, when a group run's optional self-declaration had to be described (§393).
-        const ceiling = key === "EVENT_DECLARATION" ? 6500 : key === "PRIVACY_NOTICE" ? 18000 : 11000;
+        // more, by a paragraph, when a group run's optional self-declaration had to be described (§393),
+        // and once more for the counsel review (§418): where another person's data comes from (art.
+        // 14), the fitness statement as health data, the processors' real locations, the incident
+        // hold, restriction and the art. 12(3) extension. The declaration's moved with it: the
+        // liability paragraph now says what it does not exclude, and the signature paragraph covers
+        // both the link and the paper.
+        const ceiling = key === "EVENT_DECLARATION" ? 9000 : key === "PRIVACY_NOTICE" ? 24000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

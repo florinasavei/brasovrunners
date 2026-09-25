@@ -138,10 +138,13 @@ describe("§364 the words out of the outbox row", () => {
 });
 
 describe("§364 §100 §40 what a send costs, and what waits", () => {
-  it("counts every real recipient with the club's copies, and every test one alone", () => {
+  it("counts every recipient once and one club copy per address for the whole send (§419)", () => {
     expect(organizerMessageCost({ real: 10, test: 2 }, 0)).toBe(12);
-    expect(organizerMessageCost({ real: 10, test: 2 }, 2)).toBe(32);
+    // Ten runners, two club addresses: two copies for the send, not twenty.
+    expect(organizerMessageCost({ real: 10, test: 2 }, 2)).toBe(14);
     expect(organizerMessageCost({ real: 0, test: 0 }, 5)).toBe(0);
+    // A send that reaches test rows alone is copied to nobody.
+    expect(organizerMessageCost({ real: 0, test: 3 }, 2)).toBe(3);
   });
 
   it("sends what the allowance allows and defers the rest — never refuses", () => {
@@ -189,8 +192,8 @@ describe("§364 §96 §354 the message as it arrives", () => {
     expect(email.html).toContain(`href="${DATA.eventUrl}"`);
     expect(email.text).toContain("Înscrierile mele (îți trimitem linkul pe email): https://example.test/ro/inscrieri/ale-mele");
     // A participant message: the privacy line, in both halves.
-    expect(email.text).toContain("Cum folosim datele tale:");
-    expect(email.text).toContain("How we use your data:");
+    expect(email.text).toContain("Cum folosim datele:");
+    expect(email.text).toContain("How we use the data:");
     expect(email.attachments).toBeUndefined();
   });
 

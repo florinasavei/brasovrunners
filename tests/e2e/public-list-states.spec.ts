@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import pg from "pg";
 import { computeContentHash } from "../../src/modules/legal-documents/domain/content-hash";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-039-01, `DECISIONS.md` §396 (amending §32 and §143) — the public participant list says
@@ -96,8 +96,11 @@ async function insertDraft(client: pg.Client, translations: Translation[]): Prom
 /** Approve a draft the way the club does, which also expires the public pages' copy (§333). */
 async function approve(page: Page, id: string): Promise<void> {
   await page.goto(`/ro/admin/legal/${id}`);
+  // A tick that lands mid-hydration is lost (§420, the audit's flake): wait, as every other backoffice click does.
+  await hydrated(page);
   const form = page.getByTestId("approve-version-form");
   await form.getByRole("checkbox").check();
+  await expect(form.getByRole("checkbox")).toBeChecked();
   await form.getByRole("button", { name: "Aprobă și publică" }).click();
   await confirmDialog(page);
   await expect(page).toHaveURL(/\/admin\/legal/);
@@ -150,7 +153,11 @@ async function seedEvent(tag: string): Promise<Seeded> {
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
            email_confirmed_at, confirmed_at, waitlisted_at)
-         VALUES ($1, $2, $3::registration_status, 'ro', $4, $4, 1, now(), false, 1, $5,
+         VALUES ($1, $2, $3::registration_status, 'ro', $4, $4,
+           -- The newest approved notice, as a registration made now records (§421: the pending and
+           -- waiting rows list only ticks given under a notice that described the states).
+           (SELECT coalesce(max(version), 1) FROM legal_documents WHERE key = 'PRIVACY_NOTICE' AND is_approved AND withdrawn_at IS NULL),
+           now(), false, 1, $5,
            CASE WHEN $3::text <> 'PENDING_EMAIL_CONFIRMATION' THEN ${moment} END,
            CASE WHEN $3::text = 'CONFIRMED' THEN ${moment} END,
            CASE WHEN $3::text = 'WAITLISTED' THEN ${moment} END)`,

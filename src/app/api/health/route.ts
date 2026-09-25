@@ -5,6 +5,7 @@ import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { checkNeonQuotaHealth } from "@/modules/diagnostics/neon";
+import { probeTurnstileSecret } from "@/modules/registrations/turnstile";
 import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 
@@ -99,12 +100,18 @@ export async function GET(): Promise<Response> {
   // The quota reading is independent of this connection — Neon's console API, never a query —
   // so it runs beside the probe rather than after it, and answers the same whether the probe
   // below succeeds or not.
-  const [reachable, neonQuota] = await Promise.all([
+  // Same reasoning as the Neon quota reading: a call to a third party (Cloudflare), cached for
+  // fifteen minutes, independent of this connection, answered whether the probe below succeeds
+  // or not — and never failing this endpoint on its own account (§420, finding (10)'s health
+  // half). `not_configured` and `unreachable` are silently `ok`-shaped; only `misconfigured` is
+  // something a human needs to act on.
+  const [reachable, neonQuota, turnstile] = await Promise.all([
     db.execute(sql`select 1`).then(
       () => true,
       () => false,
     ),
     checkNeonQuotaHealth(env),
+    probeTurnstileSecret(),
   ]);
 
   // Nothing else is asked once the probe has failed: every check below needs the connection the
@@ -134,7 +141,11 @@ export async function GET(): Promise<Response> {
   const status =
     database === "down" || schemaDown
       ? "down"
-      : anyJobStale || schemaDegraded || email?.status === "stalled" || neonQuota.status === "near-limit"
+      : anyJobStale ||
+          schemaDegraded ||
+          email?.status === "stalled" ||
+          neonQuota.status === "near-limit" ||
+          turnstile === "misconfigured"
         ? "degraded"
         : "ok";
 
@@ -159,6 +170,11 @@ export async function GET(): Promise<Response> {
       // the 503 and a monitor need (the status and the share of the quota spent) is published
       // here. `/admin/tasks` and `/devs` are where the full figures belong.
       neon: { status: neonQuota.status, percent: neonQuota.percent },
+      // The bot check's secret, probed rather than merely read as set (§420, finding (10)): a
+      // wrong `TURNSTILE_SECRET_KEY` fails registration open (§205) and used to announce itself
+      // nowhere but a server log. `not_configured` and `unreachable` are not problems this
+      // endpoint reports; only `misconfigured` is.
+      turnstile: { status: turnstile },
       checkedAt: now.toISOString(),
     },
     { status: status === "ok" ? 200 : 503 },

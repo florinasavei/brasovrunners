@@ -170,6 +170,8 @@ export type DeclarationLabels = DeclarationPdfInput["labels"] & {
   signedByLink: (when: string) => string;
   signedOnPaper: (who: string, when: string) => string;
   attesterRemoved: string;
+  /** The bundle's footer while it carries identity documents (§418): delete it within seven days. */
+  idDocumentsNotice?: string;
 };
 
 
@@ -302,7 +304,8 @@ export async function renderEventDeclarationsPdf<T extends Record<string, unknow
     if (entry) entries.push(entry);
   }
   onCount?.(entries.length);
-  return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });
+  // The whole identity documents are in this file (§320), so every page says when to delete it (§418).
+  return renderDeclarationPdf({ entries, locale, generatedAt: now, labels, idDocumentsNotice: labels.idDocumentsNotice });
 }
 
 /**

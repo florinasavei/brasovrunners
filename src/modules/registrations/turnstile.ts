@@ -16,6 +16,21 @@ export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export const TURNSTILE_FIELD = "cf-turnstile-response";
 
+/**
+ * Siteverify's error codes that say the *server's* side is wrong — a missing or invalid secret, or
+ * Cloudflare's own internal error — and nothing about the visitor's token (§420). Every other
+ * code (`invalid-input-response`, `timeout-or-duplicate`, …) is about the token, and stays a refusal.
+ */
+const SERVER_SIDE_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret", "internal-error"]);
+
+/**
+ * Of those, the codes that say the *secret* is wrong (§420). `internal-error` is Cloudflare's own
+ * fault — transient, like a 5xx — and says nothing about the secret, so the health probe reads it
+ * as `unreachable`, never `misconfigured`: a passing fault must not show a wrong secret for the
+ * probe's cache window.
+ */
+const SECRET_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret"]);
+
 export function turnstileSiteKey(): string | undefined {
   return env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? env.TURNSTILE_SITE_KEY : undefined;
 }
@@ -70,10 +85,80 @@ export async function verifyTurnstile(
     });
     // Cloudflare answering 5xx is Cloudflare having a bad day, not this visitor failing one.
     if (!response.ok) return "unavailable";
-    const result = (await response.json()) as { success?: boolean };
-    return result.success === true ? "passed" : "failed";
+    const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
+    if (result.success === true) return "passed";
+    /*
+      A refusal about *our* configuration is not a refusal of this visitor (§420). Cloudflare
+      answers a mistyped, rotated or another widget's secret — and its own internal error — with
+      HTTP 200 and `success: false`, the same shape as a token it rejected. Scored as `failed`,
+      that refused every person whose widget loaded while only the people whose browser blocked it
+      got through: §216's refusal of a real person, for a key nobody noticed was wrong. It is the
+      check not running, so it is `unavailable`, and it is said loudly — the codes only, never the
+      token or an address — because nothing else on the platform would notice.
+    */
+    const codes = Array.isArray(result["error-codes"]) ? result["error-codes"].map(String) : [];
+    const ours = codes.filter((code) => SERVER_SIDE_ERROR_CODES.has(code));
+    if (ours.length > 0) {
+      console.error(`[turnstile] the check could not run on the server's side: ${ours.join(", ")}`);
+      return "unavailable";
+    }
+    return "failed";
   } catch {
     // Timed out or could not be reached. The same reasoning as above.
     return "unavailable";
+  }
+}
+
+/** How long `/api/health` and `/admin/tasks` trust one secret probe before asking Cloudflare again. */
+const TURNSTILE_HEALTH_CACHE_SECONDS = 900;
+
+/**
+ * What the secret-health probe answered (§420, closing finding (10)'s health half).
+ *
+ * `verifyTurnstile` fails a misconfigured secret *open* on purpose (§205) — a wrong
+ * `TURNSTILE_SECRET_KEY` must never refuse a real registration — but that meant nothing on the
+ * platform ever noticed the secret was wrong; only `console.error` did, which nobody reads on a
+ * deployed server. This probe is how something that *is* read — `/api/health`, `/admin/tasks` —
+ * finds out.
+ *
+ * `misconfigured` and `unreachable` are kept apart the same way `verifyTurnstile` keeps `failed`
+ * and `unavailable` apart: a timeout or a 5xx from Cloudflare is not evidence the secret is
+ * wrong, so it must never turn the health check red on its own.
+ */
+export type TurnstileSecretHealth = "ok" | "misconfigured" | "unreachable" | "not_configured";
+
+/**
+ * Asks Cloudflare whether the configured secret is even the right shape of wrong.
+ *
+ * There is no way to prove a secret is *right* without a real widget token, so this proves the
+ * cheaper half: it sends a token that is certainly not real. Cloudflare always rejects it — the
+ * question is which reason it gives. A secret that matches the site key answers
+ * `invalid-input-response` (the token, not the secret, is bad) or `timeout-or-duplicate`, and
+ * that is `ok`. A secret that is missing, mistyped or belongs to another widget answers
+ * `missing-input-secret` or `invalid-input-secret` regardless of the token (`SECRET_ERROR_CODES`),
+ * and that alone is `misconfigured`. Cloudflare's `internal-error` is its own passing fault, read
+ * like a 5xx or a timeout: `unreachable`.
+ */
+export async function probeTurnstileSecret(fetchImpl: typeof fetch = fetch): Promise<TurnstileSecretHealth> {
+  if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return "not_configured";
+  const body = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET_KEY,
+    response: "XXXX.DUMMY.TOKEN.health-probe-never-a-real-widget-response.XXXX",
+  });
+  try {
+    const response = await fetchImpl(SITEVERIFY_URL, {
+      method: "POST",
+      body,
+      signal: AbortSignal.timeout(5_000),
+      next: { revalidate: TURNSTILE_HEALTH_CACHE_SECONDS },
+    });
+    if (!response.ok) return "unreachable";
+    const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
+    if (result.success === true) return "ok";
+    const codes = Array.isArray(result["error-codes"]) ? result["error-codes"].map(String) : [];
+    if (codes.some((code) => SECRET_ERROR_CODES.has(code))) return "misconfigured";
+    return codes.includes("internal-error") ? "unreachable" : "ok";
+  } catch {
+    return "unreachable";
   }
 }

@@ -6,6 +6,9 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
+import { formatDay } from "@/i18n/dates";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -484,5 +487,191 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     // Not the lapsed hold deadline (NOW + 30 minutes, already in the past) — the default
     // lifetime instead, so the token itself is still issuable.
     expect(token.expiresAt.getTime()).toBeGreaterThan(renderedAt.getTime());
+  });
+
+  /** One outbox row of this type for the registration above, as the worker hands it over. */
+  const rowOf = (messageType: "VERIFY_REGISTRATION_EMAIL" | "WAITLIST_SPOT_OFFER" | "COMPLETE_DECLARATION", key: string) => ({
+    id: `row-${key}`,
+    participantId,
+    registrationId,
+    messageType,
+    locale: "ro" as const,
+    recipientEmail: "ana@example.ro",
+    payloadJson: {},
+    idempotencyKey: `test:${key}`,
+    requestedByStaffUserId: null,
+    isManualResend: false,
+    status: "PROCESSING" as const,
+    attemptCount: 1,
+    nextAttemptAt: null,
+    lockedAt: NOW,
+    providerMessageId: null,
+    lastError: null,
+    createdAt: NOW,
+    sentAt: null,
+  });
+
+  it("§419 the address confirmation names whose registration it is, how long the link lives, and where the data came from", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const message = await renderOutboxMessage(rowOf("VERIFY_REGISTRATION_EMAIL", "verify"), db, NOW);
+    const hours = { ro: hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours), en: hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours) };
+    expect(message.text).toContain("Am primit o înscriere la Crosul pe numele Ana Pop, trimisă cu această adresă de email. Pentru a continua, confirmă adresa.");
+    expect(message.text).toContain(`Linkul este valabil ${hours.ro}; dacă nu confirmi adresa până atunci, înscrierea expiră.`);
+    expect(message.text).toContain("Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu Ana Pop l-a completat");
+    expect(message.text).toContain("Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.");
+    expect(message.text).toContain(`The link is valid for ${hours.en}; if you do not confirm your address by then, the registration expires.`);
+    expect(message.text).toContain("If you did not request this registration, you can ignore this message.");
+  });
+
+  it("§419 the freed place's offer names its deadline and its length, and a lapsed one only its length", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const offerDeadline = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", holdExpiresAt: offerDeadline }).where(eq(registrations.id, registrationId));
+    const offerHours = hoursPhrase("ro", DEFAULT_DEADLINES.offerHours);
+
+    const live = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer"), db, NOW);
+    const when = formatDay(offerDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(live.text).toContain(
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${offerHours}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+    );
+    expect(live.text).toContain("It is yours if you sign the self-declaration by ");
+    expect(live.text).not.toContain("timp limitat");
+
+    const lapsed = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-late"), db, new Date(offerDeadline.getTime() + 60_000));
+    expect(lapsed.text).toContain(`S-a eliberat un loc la Crosul. Ai la dispoziție ${offerHours} de la ofertă să semnezi declarația pe propria răspundere`);
+    expect(lapsed.text).not.toContain("până la");
+  });
+
+  it("§419 a capped offer states the length it was actually given, not the club's current setting (review finding)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    /*
+      `computeWaitlistOfferExpiry` (`hold-deadlines.ts`) caps a naive 24-hour offer at
+      registration close or the event start. Here the offer was made three hours before the
+      deadline it was actually given — capped well short of the club's 24-hour setting — and the
+      stated length must say three hours, or the moment and the length disagree (Codul civil
+      art. 1191, 1193, as counsel's own sentence cites).
+    */
+    const offerCreatedAt = NOW;
+    const cappedDeadline = new Date(NOW.getTime() + 3 * 60 * 60_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-capped"), db, NOW);
+    const when = formatDay(cappedDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(message.text).toContain(
+      `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până la ${when} (ai la dispoziție ${hoursPhrase("ro", 3)}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
+    );
+    expect(message.text).not.toContain(hoursPhrase("ro", DEFAULT_DEADLINES.offerHours));
+  });
+
+  it("§419 an offer capped under an hour says its minutes, never «o oră» (review finding)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const cappedDeadline = new Date(NOW.getTime() + 20 * 60_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt: NOW })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-minutes"), db, NOW);
+    expect(message.text).toContain("(ai la dispoziție 20 de minute)");
+    expect(message.text).toContain("(you have 20 minutes)");
+    expect(message.text).not.toContain("o oră");
+    expect(message.text).not.toContain("one hour");
+  });
+
+  it("§419 a capped offer never states more than its real span (review finding)", async () => {
+    /*
+      §355's `Math.round(offerMinutes / 60)` said "2 ore" for a 91-minute offer — a runner reading
+      "you have 2 hours" beside a deadline 90 or 91 minutes away is told more time than the
+      deadline actually gives. The stated length now says whole hours only when the span is
+      exactly that many, minutes otherwise, for 90, 91 and 120 minutes.
+    */
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+
+    const cases: Array<{ key: string; minutes: number; ro: string; en: string }> = [
+      { key: "90", minutes: 90, ro: "90 de minute", en: "90 minutes" },
+      { key: "91", minutes: 91, ro: "91 de minute", en: "91 minutes" },
+      { key: "120", minutes: 120, ro: "2 ore", en: "2 hours" },
+      { key: "180", minutes: 180, ro: "3 ore", en: "3 hours" },
+    ];
+
+    for (const { key, minutes, ro, en } of cases) {
+      const cappedDeadline = new Date(NOW.getTime() + minutes * 60_000);
+      await db
+        .update(registrations)
+        .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt: NOW })
+        .where(eq(registrations.id, registrationId));
+
+      const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", `offer-${key}`), db, NOW);
+      expect(message.text).toContain(`(ai la dispoziție ${ro})`);
+      expect(message.text).toContain(`(you have ${en})`);
+      expect(message.text).not.toContain("o oră"); // never rounds 90 or 91 minutes up to a full hour
+      expect(message.text).not.toContain("one hour");
+    }
+  });
+
+  it("§419 a span with extra seconds is floored, never rounded up — 90 minutes 40 seconds still reads 90", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    const cappedDeadline = new Date(NOW.getTime() + 90 * 60_000 + 40_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: cappedDeadline, offerCreatedAt: NOW })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-90-40"), db, NOW);
+    expect(message.text).toContain("(ai la dispoziție 90 de minute)");
+    expect(message.text).toContain("(you have 90 minutes)");
+  });
+
+  it("§419 an offer capped at the event's own start reads «până la start» / \"by the start\" (§407)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    // `capHoldExpiry` never lets a hold outlive the start; an offer made two hours before it and
+    // capped there has holdExpiresAt === event.startsAt, so `confirmationDueMoment` reads the
+    // "until the start" form beside the date rather than a redundant "until <the start's own
+    // moment>".
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: event.startsAt, offerCreatedAt: new Date(event.startsAt.getTime() - 2 * 60 * 60_000) })
+      .where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-at-start"), db, NOW);
+    const when = formatDay(event.startsAt, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    const whenEn = formatDay(event.startsAt, { locale: "en", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    expect(message.text).toContain(`până la start, ${when}`);
+    expect(message.text).toContain(`by the start, ${whenEn}`);
+    expect(message.text).toContain("(ai la dispoziție 2 ore)");
+    expect(message.text).toContain("(you have 2 hours)");
+  });
+
+  it("§419 a minor's messages greet the parent, say whose registration it is and who signs", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    await db.update(registrations).set({ guardianName: "Maria Pop" }).where(eq(registrations.id, registrationId));
+
+    const message = await renderOutboxMessage(rowOf("COMPLETE_DECLARATION", "minor"), db, NOW);
+    expect(message.text.startsWith("Salut, Maria Pop,\n")).toBe(true);
+    expect(message.text).not.toContain("Salut, Ana Pop,");
+    expect(message.text).toContain("Mesajul privește înscrierea pe care ai făcut-o, ca părinte sau tutore, pentru Ana Pop.");
+    expect(message.text).toContain("This message is about the registration you made, as parent or guardian, for Ana Pop.");
+    // No declaration in force names the minor's own document: the parent signs alone (§330).
+    expect(message.text).toContain("Declarația o semnezi tu, ca părinte sau tutore, pentru Ana Pop.");
+    expect(message.text).toContain("You sign the declaration as parent or guardian for Ana Pop.");
+    // One neutral privacy line for everybody.
+    expect(message.text).toMatch(/pentru o înscriere făcută cu această adresă de e-mail\. Cum folosim datele:/);
+
+    // An adult's message is unchanged.
+    await db.update(registrations).set({ guardianName: null }).where(eq(registrations.id, registrationId));
+    const adult = await renderOutboxMessage(rowOf("COMPLETE_DECLARATION", "adult"), db, NOW);
+    expect(adult.text.startsWith("Salut, Ana Pop,\n")).toBe(true);
+    expect(adult.text).not.toContain("ca părinte sau tutore");
   });
 });

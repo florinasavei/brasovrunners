@@ -65,6 +65,16 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       translations,
       now: NOW,
     }).catch(() => undefined);
+    // The club's terms (§421): a public submission is refused while none is approved.
+    await insertLegalDocumentVersion(db, {
+      key: "TERMS",
+      version: 1,
+      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    }).catch(() => undefined);
   });
 
   afterAll(async () => {
@@ -264,6 +274,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
               locale: "ro",
               privacyAcknowledged: true,
               fitnessDeclared: true,
+              termsAccepted: true,
               rulesAcknowledged: true,
               resultsNameConsent: false,
               listOptOut: true,

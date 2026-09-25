@@ -107,13 +107,14 @@ test.describe("BR-REQ-080-01 the email words start from the fields", () => {
     // …and the words under it are the platform's, with the field.
     const editor = main.getByTestId("email-copy-VERIFY_REGISTRATION_EMAIL");
     const words = editor.locator(".ProseMirror");
-    await expect(words).toContainText("Ai început înscrierea la {eventTitle}. Pentru a continua, confirmă adresa ta de email.");
+    await expect(words).toContainText("Am primit o înscriere la {eventTitle} pe numele {participantName}, trimisă cu această adresă de email.");
+    await expect(words).toContainText("Linkul este valabil {confirmationHours}");
     await expect(words).not.toContainText("Crosul de toamnă");
-    // The fields are a legend under the box now (§373, email follow-up), the one this text uses first.
+    // The fields are a legend under the box now (§373, email follow-up), the ones this text uses first (§419).
     const legend = editor.getByTestId("email-fields-VERIFY_REGISTRATION_EMAIL");
-    await expect(legend).toContainText("16 câmpuri · 1 câmp folosit aici");
+    await expect(legend).toContainText("16 câmpuri · 3 câmpuri folosite aici");
     await openFold(legend);
-    await expect(legend.locator("dt").first()).toContainText("{eventTitle}");
+    await expect(legend.locator("dt").first()).toContainText("{participantName}");
     await expect(legend.locator("dt").first()).toContainText("folosit în textul platformei");
 
     const subject = editor.getByLabel("Subiect");

@@ -13,8 +13,8 @@ import type { SignedGroupRunDeclaration } from "./repository";
  * same record beneath it: typed name, tick, instant, the text's fingerprint (§86).
  */
 const SIGNED_ON_PAGE: Record<Locale, string> = {
-  ro: "Semnat electronic pe {when}, pe pagina alergării de pe site-ul clubului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
-  en: "Signed electronically on {when}, on the run's page on the club's website: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
+  ro: "Semnat electronic pe {when}, pe pagina alergării de pe site-ul clubului: nume tastat, bifă explicită de acceptare, momentul și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea.",
+  en: "Signed electronically on {when}, on the run's page on the club's website: typed name, explicit acceptance tick, the instant and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them.",
 };
 
 export function signedOnPageWords(locale: Locale, when: string): string {

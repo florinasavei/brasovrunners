@@ -154,6 +154,15 @@ describe("BR-REQ-090-03 criterion 11 a write path that makes work sooner wakes t
       translations,
       now: NOW,
     });
+    await insertLegalDocumentVersion(db, {
+      key: "TERMS",
+      version: 1,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
   }
 
   it("forgets the cached quiet when a thirty-minute hold is created, and plans by the hold", async () => {
@@ -195,6 +204,7 @@ describe("BR-REQ-090-03 criterion 11 a write path that makes work sooner wakes t
         locale: "ro",
         privacyAcknowledged: true,
         fitnessDeclared: true,
+        termsAccepted: true,
         rulesAcknowledged: true,
         resultsNameConsent: true,
         listOptOut: false,

@@ -65,4 +65,78 @@ describe("Cloudflare Turnstile", () => {
     // An over-long token *was* submitted, and nothing legitimate produces one.
     expect(await verifyTurnstile("x".repeat(2049), null, ok)).toBe("failed");
   });
+
+  /*
+    §420 (the registration audit, F5): a wrong secret is the server's misconfiguration, not the
+    visitor's failure. Cloudflare answers it with HTTP 200 and `success: false`, which used to be
+    scored "failed" and refused every person whose widget loaded. It is "unavailable" now, logged
+    with the codes; a rejection of the token itself still refuses.
+  */
+  it("treats a wrong secret or Cloudflare's internal error as the check not running, never as the visitor failing", async () => {
+    process.env.TURNSTILE_SITE_KEY = "1x000";
+    // Cloudflare's own dummy shape; which secret it is does not matter, only what siteverify answers.
+    process.env.TURNSTILE_SECRET_KEY = "2x000";
+    const { verifyTurnstile } = await import("@/modules/registrations/turnstile");
+    const answer = (codes: string[]) =>
+      (async () => new Response(JSON.stringify({ success: false, "error-codes": codes }), { status: 200 })) as typeof fetch;
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(await verifyTurnstile("token-123", null, answer(["invalid-input-secret"]))).toBe("unavailable");
+      expect(await verifyTurnstile("token-123", null, answer(["missing-input-secret"]))).toBe("unavailable");
+      expect(await verifyTurnstile("token-123", null, answer(["internal-error"]))).toBe("unavailable");
+      // Said out loud, with the codes and never the token.
+      expect(logged).toHaveBeenCalledTimes(3);
+      expect(String(logged.mock.calls[0]?.[0])).toContain("invalid-input-secret");
+      expect(String(logged.mock.calls[0]?.[0])).not.toContain("token-123");
+
+      // A token Cloudflare rejected is still evidence, and still refuses.
+      expect(await verifyTurnstile("token-123", null, answer(["invalid-input-response"]))).toBe("failed");
+      expect(await verifyTurnstile("token-123", null, answer(["timeout-or-duplicate"]))).toBe("failed");
+      expect(await verifyTurnstile("token-123", null, answer([]))).toBe("failed");
+    } finally {
+      logged.mockRestore();
+    }
+  });
+
+  /*
+    §420, finding (10)'s health half: `verifyTurnstile` fails a wrong secret open on purpose, so
+    something else has to notice it — `probeTurnstileSecret` is what `/api/health` and
+    `/admin/tasks` ask. It must tell a wrong secret apart from Cloudflare merely disliking a
+    fake token, and from Cloudflare not answering at all.
+  */
+  it("probes the secret without a real widget token, and tells a wrong secret from a timeout", async () => {
+    process.env.TURNSTILE_SITE_KEY = "1x000";
+    process.env.TURNSTILE_SECRET_KEY = "2x000";
+    const { probeTurnstileSecret } = await import("@/modules/registrations/turnstile");
+    const answer = (codes: string[]) =>
+      (async () => new Response(JSON.stringify({ success: false, "error-codes": codes }), { status: 200 })) as typeof fetch;
+
+    // The secret is fine; Cloudflare rejects only the dummy token, as it always will.
+    expect(await probeTurnstileSecret(answer(["invalid-input-response"]))).toBe("ok");
+    expect(await probeTurnstileSecret(answer(["timeout-or-duplicate"]))).toBe("ok");
+
+    // The secret itself is what Cloudflare is unhappy about — this is the fault the health
+    // endpoint and the admin task row must both surface.
+    expect(await probeTurnstileSecret(answer(["invalid-input-secret"]))).toBe("misconfigured");
+    expect(await probeTurnstileSecret(answer(["missing-input-secret"]))).toBe("misconfigured");
+    expect(await probeTurnstileSecret(answer(["invalid-input-secret", "internal-error"]))).toBe("misconfigured");
+
+    // Cloudflare's own internal error is its passing fault, not the secret's (§420): read like a
+    // 5xx, so fifteen minutes of cache never show a right secret as wrong.
+    expect(await probeTurnstileSecret(answer(["internal-error"]))).toBe("unreachable");
+
+    // Cloudflare not answering says nothing about the secret, and must never read as broken.
+    const down = (async () => {
+      throw new Error("network");
+    }) as typeof fetch;
+    expect(await probeTurnstileSecret(down)).toBe("unreachable");
+    const bad = (async () => new Response("", { status: 503 })) as typeof fetch;
+    expect(await probeTurnstileSecret(bad)).toBe("unreachable");
+  });
+
+  it("probes as not_configured without both keys, and refuses no registration by doing so", async () => {
+    process.env.TURNSTILE_SITE_KEY = "site-only";
+    const { probeTurnstileSecret } = await import("@/modules/registrations/turnstile");
+    expect(await probeTurnstileSecret()).toBe("not_configured");
+  });
 });

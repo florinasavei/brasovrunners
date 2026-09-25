@@ -860,10 +860,10 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
 
       A provisional number only on a live row. It is printed nowhere and may already be
       somebody else's once the place is gone, so a row that is over never answers to it — and
-      that is said here rather than left to the transitions, because one of them does not clear
-      the column: the lapsed-declaration sweep (`repository.ts`, `DECLARATION_HOLD_LAPSED`)
-      leaves it set, and `coalesce` over any status would have found that row by a number it
-      never wore on paper.
+      that is said here rather than left to the transitions. Every sweep clears the column now
+      (the lapsed-declaration one since §420, with a migration for the rows it had left set), and
+      the status filter stays as the belt to those braces: `coalesce` over any status would find
+      a row by a number it never wore on paper the day any sweep forgot again.
     */
     const number = Number(q);
     conditions.push(
@@ -898,7 +898,9 @@ export async function countDesk<T extends Record<string, unknown>>(
       pending: sql<number>`count(*) FILTER (WHERE ${registrations.status} NOT IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`.mapWith(Number),
     })
     .from(registrations)
-    .where(eq(registrations.eventId, eventId));
+    // Real rows only (§30, AGENTS.md §12.6; §420): a test registration is omitted from every count
+    // the club is given. The desk list still shows it, labelled; its counters do not add it.
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL")));
   return row ?? { confirmed: 0, checkedIn: 0, withoutBib: 0, pending: 0 };
 }
 

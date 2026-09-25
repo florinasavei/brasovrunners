@@ -23,7 +23,8 @@ import { CLUB_NAME, WORDMARK } from "@/theme/brand";
  * the club written in as words: an event's name, place, date, time or distance comes from a merge
  * field (`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`), and a club fact from its
  * `<PLACEHOLDER>` (§132). A general statement is phrased generically — "the trails the event
- * uses", "the courts of the club's registered seat" — never "Tâmpa" or "Brașov".
+ * uses", "the Romanian courts competent under the Code of Civil Procedure" — never "Tâmpa" or
+ * "Brașov".
  *
  * The seeded samples are held to the same rule, banner and review note included: they are what
  * QA and a developer's machine show as the club's texts.
@@ -109,11 +110,20 @@ describe("§357 no hardcoded value in a legal template", () => {
     }
   });
 
-  it("names the courts by the club's seat, never a town", () => {
+  /*
+    §418 — the counsel review: a forum at the club's seat is void before a dispute against a
+    consumer (Code of Civil Procedure art. 126(2)) and, without the art. 1203 acceptance, against
+    anybody. The terms name the courts by the Code, and a consumer's own domicile as a choice.
+  */
+  it("names the courts by the Code of Civil Procedure and the consumer's domicile, never a town or the club's seat", () => {
     const ro = texts(LEGAL_TEMPLATES.TERMS.ro.body).join(" ");
     const en = texts(LEGAL_TEMPLATES.TERMS.en.body).join(" ");
-    expect(ro).toContain("instanțele de la sediul clubului");
-    expect(en).toContain("the courts of the club's registered seat");
+    expect(ro).toContain("instanțele române competente potrivit Codului de procedură civilă");
+    expect(ro).toContain("instanța de la domiciliul tău");
+    expect(ro).not.toContain("instanțele de la sediul clubului");
+    expect(en).toContain("the Romanian courts competent under the Code of Civil Procedure");
+    expect(en).toContain("the court of your domicile");
+    expect(en).not.toContain("the courts of the club's registered seat");
   });
 });
 

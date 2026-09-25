@@ -15,6 +15,7 @@ import {
   isDeclarationLastCallDue,
   isEventReminderDue,
   nextInLineOffers,
+  nextInLineReleases,
   participationConfirmationDueAt,
   registrationOpenedDueAt,
 } from "./domain/automatic-sends";
@@ -36,7 +37,8 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * **What is listed:** the reminder before the start (the event's own lead or the club's, §377 —
  * nothing for an event that sends none), the participation confirmation when the window opens
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
- * a waiting-list offer or a declaration hold lapses with somebody waiting (§160, AGENTS.md §10.5),
+ * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
+ * closes (§160, AGENTS.md §10.5, §420),
  * "here is your race number" when registration closes (§214), and "registration is open" to the
  * addresses left on the event's page (§146).
  *
@@ -124,6 +126,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     .select({
       eventId: events.id,
       startsAt: events.startsAt,
+      registrationClosesAt: events.registrationClosesAt,
       holdExpiresAt: registrations.holdExpiresAt,
       registrationId: registrations.id,
       kind: registrations.kind,
@@ -159,13 +162,17 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         .filter((row) => row.eventId === eventId)
         .sort((a, b) => (a.holdExpiresAt?.getTime() ?? 0) - (b.holdExpiresAt?.getTime() ?? 0));
       const waiting = line.filter((row) => row.eventId === eventId);
-      const offers = nextInLineOffers({
+      const lapsing = {
         lapses: rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : [])),
         waiting: waiting.length,
         startsAt: rows[0].startsAt,
+        registrationClosesAt: rows[0].registrationClosesAt,
         now,
-      });
-      const consumed = offers.reduce((sum, offer) => sum + offer.count, 0);
+      };
+      // Every release spends a hold, offer or not: after the close (§420) the job still releases a
+      // lapsed hold to the queue — the desk gives that place — but emails nobody an offer for it.
+      const consumed = nextInLineReleases(lapsing).reduce((sum, release) => sum + release.count, 0);
+      const offers = nextInLineOffers(lapsing);
       for (const row of rows.slice(0, consumed)) {
         if (row.holdExpiresAt) consumedByNextInLine.set(row.registrationId, notBeforeNow(row.holdExpiresAt));
       }

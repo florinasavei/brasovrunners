@@ -39,7 +39,7 @@ const STARTS_AT = new Date("2026-09-26T07:00:00.000Z");
 const CLOSES_AT = new Date("2026-09-25T07:00:00.000Z");
 const AFTER_CLOSE = new Date("2026-09-25T08:00:00.000Z");
 
-async function approve(db: TestDatabase, key: "PRIVACY_NOTICE" | "EVENT_DECLARATION") {
+async function approve(db: TestDatabase, key: "TERMS" | "PRIVACY_NOTICE" | "EVENT_DECLARATION") {
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
     { locale: "en", title: key, body: { sections: [{ paragraphs: ["p"] }] } },
@@ -70,6 +70,7 @@ function submissionInput(email: string, at: Date) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,
@@ -90,6 +91,7 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
 
   beforeEach(async () => {
     await resetTables(db);
+    await approve(db, "TERMS");
     await approve(db, "PRIVACY_NOTICE");
     await approve(db, "EVENT_DECLARATION");
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();

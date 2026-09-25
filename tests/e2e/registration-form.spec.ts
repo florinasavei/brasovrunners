@@ -56,6 +56,7 @@ async function fillRequired(page: Page, omit?: string) {
     rules to the seed and wonders why this stops working.
   */
   await page.locator('[name="rulesAcknowledged"]').check();
+  await page.locator('[name="termsAccepted"]').check();
   // "Declar că sunt apt medical să particip" (§171): required on the public form, like the
   // privacy acknowledgment beside it.
   await page.locator('[name="fitnessDeclared"]').check();
@@ -83,9 +84,22 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "fitnessDeclared",
       "privacyAcknowledged",
       "rulesAcknowledged",
+      "termsAccepted",
     ]) {
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
     }
+
+    /*
+      The club's terms, accepted expressly (§421): their own tick, required, naming the version in
+      force and the unusual clauses — and the event-rules tick beside it no longer points at them.
+    */
+    const termsLabel = page.locator("label").filter({ has: page.locator('[name="termsAccepted"]') });
+    await expect(page.locator('[name="termsAccepted"]')).toHaveAttribute("required", /.*/);
+    await expect(termsLabel).toContainText(/\(versiunea \d+\)/);
+    await expect(termsLabel).toContainText("în mod expres");
+    await expect(termsLabel.getByRole("link", { name: /Termenii și condițiile/ })).toBeVisible();
+    const rulesLabel = page.locator("label").filter({ has: page.locator('[name="rulesAcknowledged"]') });
+    await expect(rulesLabel.getByRole("link", { name: /Termeni/ })).toHaveCount(0);
 
     // The public-results consent is not asked (§322): there are no results to consent to.
     await expect(page.locator('[name="resultsNameConsent"]')).toHaveCount(0);
@@ -172,6 +186,41 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
     // The check-your-email screen greets by the first name `fillRequired` typed (§224).
+    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+  });
+
+  test("a tick given under terms that changed comes back unticked, says so, and the next tick is taken", async ({ page }) => {
+    /*
+      §421. The service refuses a tick whose rendered version (`termsVersionShown`) is no longer the
+      one in force; the draft cookie brings every other box back as posted, but this one must come
+      back unticked, or the runner accepts a version they never saw. A newer version approved in
+      another tab is what happens in life; here the posted version is moved one ahead instead.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    const shown = page.locator('input[type="hidden"][name="termsVersionShown"]');
+    const inForce = Number(await shown.inputValue());
+    expect(inForce).toBeGreaterThan(0);
+    await shown.evaluate((node, version) => ((node as HTMLInputElement).value = String(version)), inForce + 1);
+
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+
+    await expect(page).toHaveURL(/fields=termsAccepted/);
+    await expect(page.getByTestId("registration-terms-changed")).toBeVisible();
+    await expect(page.locator('[name="termsAccepted"]')).not.toBeChecked();
+    // Every other tick is the draft's, as posted (§142).
+    await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
+    await expect(page.locator('[name="fitnessDeclared"]')).toBeChecked();
+    await expect(shown).toHaveValue(String(inForce));
+
+    await page.locator('[name="termsAccepted"]').check();
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
   });
 
@@ -783,7 +832,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // bound — the last birth date that is sixteen on 3 May 2027.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
-        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
@@ -791,7 +840,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // The event's page says the same sentence among its facts, and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
       await expect(page.locator("#main")).toContainText(
-        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       expect(await typicalAgeRange()).toBe("16-");
 
@@ -812,7 +861,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // the picker's bound is today, the one the page always had.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
-        "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+        "Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
       await expect(page.locator("#main")).toContainText("Categoriile de vârstă se calculează la data cursei.");
       await expect(page.locator("#main")).not.toContainText("Vârsta minimă este");

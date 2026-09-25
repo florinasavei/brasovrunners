@@ -149,8 +149,12 @@ export function registrationOpenedDueAt(event: InterestEvent, from: Date): Date 
  * "last call to sign" row is built for them (`DECISIONS.md` §160). The two agree whenever free is
  * 0, which holds wherever a lapse is released to a queue at all: nobody is offered a place that
  * was already free.
+ *
+ * These are the *releases*: a lapse the job gives to the queue, which is what spends a person
+ * waiting and what keeps a released hold from being owed a last call. Whether the release is also
+ * an *offer* — an email — is `nextInLineOffers` below.
  */
-export function nextInLineOffers(input: { lapses: Date[]; waiting: number; startsAt: Date; now: Date }): { at: Date; count: number }[] {
+export function nextInLineReleases(input: { lapses: Date[]; waiting: number; startsAt: Date; now: Date }): { at: Date; count: number }[] {
   const instants = input.lapses
     .map((lapse) => Math.max(lapse.getTime(), input.now.getTime()))
     .filter((at) => at < input.startsAt.getTime())
@@ -165,6 +169,24 @@ export function nextInLineOffers(input: { lapses: Date[]; waiting: number; start
     else offers.push({ at: new Date(at), count: 1 });
   }
   return offers;
+}
+
+/**
+ * The offers the releases above turn into: only those made while an offer can still live (§420).
+ * `fillAvailableSpots` makes no offer once its own deadline — the club's offer window capped by
+ * the close and the start (BR-REQ-035-02 criterion 3) — would be born at or behind the run's
+ * instant, so a lapse at or after `min(registrationClosesAt, startsAt)` frees the place and emails
+ * nobody: the person stays on the waiting list for the desk. The forecast lists what the job sends.
+ */
+export function nextInLineOffers(input: {
+  lapses: Date[];
+  waiting: number;
+  startsAt: Date;
+  registrationClosesAt: Date | null;
+  now: Date;
+}): { at: Date; count: number }[] {
+  const lastOfferBefore = Math.min(input.registrationClosesAt?.getTime() ?? Number.POSITIVE_INFINITY, input.startsAt.getTime());
+  return nextInLineReleases(input).filter((release) => release.at.getTime() < lastOfferBefore);
 }
 
 // --- Race numbers settle (§214) -----------------------------------------------------------------

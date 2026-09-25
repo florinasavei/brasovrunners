@@ -68,6 +68,15 @@ async function approvePrivacyNotice(db: TestDatabase, now: Date) {
     translations,
     now,
   });
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now,
+  });
 }
 
 function submissionInput(email: string, at: Date) {
@@ -85,6 +94,7 @@ function submissionInput(email: string, at: Date) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    termsAccepted: true,
     rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,
@@ -230,6 +240,10 @@ describe("DECISIONS.md §214 provisional race numbers", () => {
     // The middle one goes, leaving 1 and 3 — which is the sheet with a hole in it.
     await confirmEmail(db, event, b.id, new Date(NOW.getTime() + 180_000));
     await unregister(db, event, b.id, "PARTICIPANT", new Date(NOW.getTime() + 240_000));
+    // The other two confirm their address: the settle numbers the places the capacity formula
+    // counts, and an unproved address is not one of them (§420).
+    await confirmEmail(db, event, a.id, new Date(NOW.getTime() + 300_000));
+    await confirmEmail(db, event, c.id, new Date(NOW.getTime() + 360_000));
 
     const [locked] = await db.select().from(events).where(eq(events.id, event.id));
     const settled = await settleBibNumbers(db, {
@@ -252,7 +266,9 @@ describe("DECISIONS.md §214 provisional race numbers", () => {
 
   it("settles once, however often the job runs", async () => {
     const event = await createEvent();
-    await submit(event, "a@example.test");
+    const row = await submit(event, "a@example.test");
+    // A place the capacity formula counts: the address confirmed (§420).
+    await confirmEmail(db, event, row.id, new Date(NOW.getTime() + 60_000));
 
     const first = await runRegistrationMaintenance(db, AFTER_CLOSE);
     expect(first.bibsSettled).toBe(1);
@@ -275,7 +291,9 @@ describe("DECISIONS.md §214 provisional race numbers", () => {
       move afterwards, so nothing is sent until it cannot.
     */
     const event = await createEvent();
-    await submit(event, "a@example.test");
+    const row = await submit(event, "a@example.test");
+    // A place the capacity formula counts: the address confirmed (§420).
+    await confirmEmail(db, event, row.id, new Date(NOW.getTime() + 60_000));
 
     const beforeClose = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "BIB_ASSIGNED"));
     expect(beforeClose).toHaveLength(0);
