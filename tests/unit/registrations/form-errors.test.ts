@@ -125,6 +125,14 @@ describe("§NNN the terms tick after a refusal", () => {
     expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: null, versionInForce: 4 })).toEqual({ ticked: false, changed: false });
   });
 
+  it("reads an empty posted version as none, not as version 0 that moved", () => {
+    // `Number("")` is 0: without the guard an unticked box under a form that carried no version
+    // would say the terms changed although nothing moved.
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "" }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "  " }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+    expect(acceptanceAfterRefusal({ invalid: new Set(["termsAccepted"]), draft: draft({ termsVersionShown: "x" }), versionInForce: 4 })).toEqual({ ticked: false, changed: false });
+  });
+
   it("has the line in both languages", () => {
     expect(ro.Registration.terms.changed).toBeTruthy();
     expect(en.Registration.terms.changed).toBeTruthy();

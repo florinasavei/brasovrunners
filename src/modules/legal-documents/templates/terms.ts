@@ -20,20 +20,7 @@
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
  *
- * TODO(legal-code): the box of §1's last paragraph and the version recorded with the registration
- * that §9 promises are the code chain's — the required terms tick on the public and the family-link
- * form, and `registrations.terms_version` / `terms_accepted_at` written by `submitRegistration`.
- * The tick's own words, verbatim, from the amendment that specifies it (not a messages key — the
- * box has no viewer until the code chain ships it):
- *   RO: "Am citit și accept [Termenii și condițiile] (versiunea {version}), inclusiv, în mod
- *   expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau
- *   excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța
- *   competentă."
- *   EN: "I have read and accept the [Terms and conditions] (version {version}), including,
- *   expressly, the clauses on the club cancelling or changing an event, being stopped or
- *   excluded on the course, the limits of the club's liability, the governing law and the
- *   competent court."
- * The club approves this text only once that has shipped.
+ * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§NNN).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
 

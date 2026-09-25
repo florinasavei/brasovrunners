@@ -98,7 +98,10 @@ export function acceptanceAfterRefusal(input: {
 }): { ticked: boolean; changed: boolean } {
   const { invalid, draft, versionInForce } = input;
   if (!invalid.has("termsAccepted")) return { ticked: draft?.termsAccepted === "on", changed: false };
-  const postedVersion = draft?.termsVersionShown === undefined ? null : Number(draft.termsVersionShown);
+  // An empty (or unreadable) posted version is no version at all — `Number("")` is 0, which would
+  // read as a version that moved although the form never carried one.
+  const posted = draft?.termsVersionShown?.trim() ?? "";
+  const postedVersion = posted !== "" && Number.isFinite(Number(posted)) ? Number(posted) : null;
   const versionMoved = postedVersion !== null && versionInForce !== null && postedVersion !== versionInForce;
   return { ticked: false, changed: draft?.termsAccepted === "on" || versionMoved };
 }

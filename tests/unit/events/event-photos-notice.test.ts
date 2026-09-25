@@ -3,8 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * The photographs amendment's item 6 (`fix/legal-texts-prod-ready`,
- * `src/modules/legal-documents/templates/privacy-notice.ts` TODO(legal-code)): every event page —
+ * The counsel review's photographs amendment, item 6 (§NNN): every event page —
  * a race and a group run alike — carries a line about photographs, with a way to ask for one to
  * be taken down and a link to the privacy notice that describes the processing (§323).
  */
