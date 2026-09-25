@@ -118,7 +118,7 @@ async function firstBox(event: EditableEvent | null, { locale = "ro", mayEditSet
   const box = { event, mayEditSettings } as const;
   const cards: ReactNode[] = [
     event ? await StatusBox({ event, mayEditSettings, risk, notice: NOTICE }) : await StatusBox({ event: null, mayEditSettings }),
-    await CourseBox(box),
+    await CourseBox({ ...box, languages: [] }),
     await LinksBox({ ...box, locale }),
   ];
   const element = (await KindBox({ ...box, risk, locale, children: cards })) as ReactElement;

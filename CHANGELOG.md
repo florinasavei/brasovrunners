@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.92-2026-09-25
+
+- **«Traseul»: a route / training description per language** — free text with pit stops and a map picture, under `#route` on the event page. When a language has one, the GPX, the map and the Strava route link move into it and the facts row points to it as «Despre traseu». Migration `0071`. §387.
+- **Backoffice event cards** show the public listing card's type chip and route pills (surface, difficulty, distance, elevation, headlamp, cost) under the title, built through the one shared `routePillParts`/`buildRoutePills`/`RoutePills` path the listing card and the event page also use, so no surface can read a route differently from another. §388.
 ## BR-V1.91-2026-09-25
 
 - **Every backoffice action says it worked, and the ones that are hard to undo or face the site ask first** — one toast after each save, publish, send and setting (above the phone's footer, gone by itself, never twice on a refresh), one confirmation dialog on every irreversible or outward-facing verb (cancel focused, Escape leaves things as they were, Enter agrees only where nothing is destroyed), and each dialog for an action that emails participants says so with the exact count — "Se va trimite un email către 12 participanți" — read from the same query the send uses. §384.

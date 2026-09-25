@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.91-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.91-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15743,3 +15743,66 @@ Review round (2026-09-25): fixed the partner handshake's gray ink: the dark-sche
 §379 addendum, 2026-09-25 (review round on the "gray handshake, shorter Romanian label" change): the grayscale filter that reads correctly against a card's `action.selected` background and the overline's `text.secondary` all but disappeared on a **filled** calendar entry — a RACE date, drawn in `primary.main` with `primary.contrastText` — because `primary.contrastText` swaps ends between colour schemes rather than staying a fixed "light" or "dark" tone: light draws it near-white on the club's dark blue, dark draws it near-black on the lighter dark-scheme blue (`theme/theme.ts`). `CalendarEventChip` now carries a `filled`-only filter override, passed to `PartnerMark` (which gained an `sx` prop) and to the grid's bare `PartnerGlyph`: `grayscale(1) brightness(1.6)` in light (near `COLOR.paper`'s own mean brightness, ~249) and `grayscale(1) brightness(0.1)` under `[data-dark] &` in dark (near `COLOR_DARK.paper`'s, ~20) — the emoji's own default filter, tuned to `text.secondary`, is untouched everywhere the chip is not filled. Separately: `PartnerEmoji`'s JSDoc now records, rather than closes, a smaller known gap — the glyph reads a shade lighter than intended inside `GlyphChip`'s "Alergare de grup" chip on the dark scheme, because MUI's own `.MuiChip-icon` rule (`Chip.defaultIconColor`, grey-300 dark ≈ 224) sits slightly above the `text.secondary` target (≈ 178) this glyph is tuned to; closing it exactly would need a second, chip-only dark-scheme filter value that no other glyph in the registry carries, judged not worth it for a one-shade difference.
 
 Baseline `BR-V1.91-2026-09-25`.
+
+## 387. A route / training description per language, in the "Traseul" card and under #route, with the route's own links
+
+The owner, 2026-09-25: "I should be able to put 'descriere traseu/antrenament' with pit stops and all, basically a free text, might also attach a map there; you can move the GPX and Strava link there."
+
+**Decision.** `event_translations.route_description`, a nullable jsonb holding a rich-text document (migration `0071_route_description`, expand only). It is written in the "Traseul" card and shown on the event page and the staff preview as a section "Traseul" / "The route" under `#route`.
+
+**Why a rich text per language, in the course card.**
+- It is prose a runner reads: the pit stops, the climbs, where the water is, what to expect. That makes it a translation, like the description, the rules and the programme notes (§71, §96), not a fact of the event row.
+- It uses the same contract as those texts: `richTextField` in `fields.ts`, the same `LazyRichTextEditor`, mounted only when its fold opens (§96).
+- It follows both languages or neither (§352): one side alone is refused on the empty box, `translations.<locale>.routeDescription`, on save and on create. Identical words in both languages get the §354 warning: in the box, on the English tab, on the closed line and in Publicare.
+- It lives in the "Traseul" card (§350, §358), beside the surface, difficulty, distance, climb, headlamp (§382) and route link, because that is the question it answers. It has its own Română | English tabs (`idPrefix="course"`).
+- The words belong to the texts role. A Redactor, who may not change the settings, now gets the card as a fold holding only the description tabs. A role that may write neither the settings nor the texts sees the heading alone, as §358 set.
+- On every type, since a group run has a route too.
+- A series edit carries it by the scope radio (`SERIES_TRANSLATION_COLUMNS`). A duplicate and every date a series makes keep it (`copiedTranslationValues`).
+
+**What the map is.** A picture in the text (§72–§73), not a field. The editor's picture control stores it in the club's own store. The schema admits no other address, and the orphan sweep counts the route description as a place a picture is used.
+- Writing that predicate found that pictures in the rules and the programme notes were never counted. Such a picture would have been deleted seven days after upload while still on the page.
+- The one predicate (`inEventTranslation` in `media/references.ts`) now covers the summary, the description, the rules, the programme notes and the route description, for the sweep, the pictures list and the delete alike.
+
+**Why the route's links move.** The owner asked for it, and a GPX next to the words that explain the course is read together with them.
+- The links that move are the route link (`route_url`, "Vezi traseul", with Strava's mark when it is a Strava route or activity: this is the "Strava link" the owner means) and the "Linkuri și fișiere" rows of kind `GPX` and `MAP`.
+- One pure function decides the split for the page, the preview and the facts, so they cannot disagree: `events/domain/route-section.ts#partitionEventLinks`, over a `Record<EventLinkKind, boolean>`, so a new kind does not compile until someone says which side it is on.
+- The links are drawn exactly as "Linkuri și fișiere" draws them (a shared `LinkList`): glyph, label or the kind's own word, host beneath, new tab, `noopener noreferrer`, 44 px.
+- The facts' route row then shows a 44 px "Despre traseu" / "About the route" link to `#route` instead of the route link.
+- The move happens only when this language's description has words or a picture. An event without one keeps every link where it was.
+
+**What stays.**
+- "Linkuri și fișiere" keeps `DOCUMENT`, `PHOTOS`, `RESULTS` and `OTHER`, and hides itself when the route section took every row.
+- The Strava *event* (where members RSVP, §71) and the Facebook event stay in the facts' route row: they are where people say "going", not the route.
+- The calendar file, the JSON-LD, every email and the listing card are unchanged.
+- A locale without a translation is still a 404 (§28). The public row cache carries the column and expires on every save (§333).
+
+**Placement.** The section follows the facts, the registration button, the five steps and the share links, before "Linkuri și fișiere" and the programme. It is not literally under the route pills inside the facts: a long text with a map there would push "Înscrie-te" a screen down on a phone. The jump link in the route row is what sits under the pills.
+
+**Rejected.**
+- A map upload field: the picture in the text already stores and sizes it.
+- A plain-text box: the owner said "with pit stops and all" and "attach a map".
+- A second column per language, or a description on the event row: it is words, and words are per language.
+- Moving the Strava event link: it is not the route.
+
+**Tests.**
+- Unit: `events/route-section.test.ts`. Every link kind's side; the partition and the no-section case; the section's markup, links first, in both languages; "Linkuri și fișiere" beside it; the facts' route row and its jump; the closed line, the one-language mark, the identical-text warning and the Publicare item; placement on the page and the preview; ics, JSON-LD and emails untouched.
+- Updated: `content/editor-order.test.ts`, `content/editor-first-card.test.ts`, `theme/density.test.ts`.
+- Integration: `cms/route-description.test.ts`. The editor's and the create page's actions store both languages with the map picture; the public query reads each language's own; an empty editor stores null; one language alone is refused through the action and writes nothing; the map is listed under its event and never swept; the rules/programme picture fix; "this and following", "all" and "this only"; a series' dates and a duplicate keep it.
+- Also integration: `cms/both-languages.test.ts` (one more refusal row) and `cms/boundary.test.ts` (the translation fields).
+- E2e: `route-description.spec.ts`, both projects, on a production build.
+
+Review round on BR-REQ-011-01: the deep link an email offers for "Linkuri și fișiere" must agree with the page's own split between the route section and "Linkuri și fișiere" (partitionEventLinks) — an email cannot count the event's raw link list, because a route section can take every one of them out from under #links. render.ts now reads the rendered language's route description alongside the event's links to decide, the same rule EventLinks draws the page by, so a weekly run with a route description and a GPX link sends no #links line and never claims the GPX is under "Linkuri și fișiere" when the page has it under #route.
+
+Baseline `BR-V1.92-2026-09-25`.
+
+## 388. Backoffice event cards wear the public card's type chip and route pills
+
+The owner, 2026-09-25, on `/admin` on his phone, of a series card (the bare runner glyph, the title, the "9 date" chip, the recurrence line, the fold, Stare, Data, Înscrieri, the actions): "I want the same small icons for the event types, trail, distance, etc. on the back-office cards as well, people will get used to them."
+
+Every backoffice event card (single event and series alike) now shows the public type chip (glyph + word through `GlyphChip`) in place of the bare type glyph, the route's pills (surface, difficulty, distance, elevation, headlamp, cost) under the title, and the partner marker when the event has partners.
+
+One function builds the route's five pills from the event's own columns — `routePillParts` (`route-pills.ts`) — and one function orders and filters them into a set — `orderRoutePills`. `buildRoutePills` composes the two for the callers that want the whole ordered set plus the cost word (the listing card's compact facts and the backoffice's own list); `EventFacts`'s own stacked row (the event page, §356) calls `routePillParts` directly, because it leaves the surface out unless another route pill or a route link already earns the "Traseu" row (the overline beside the event's type already says the surface, BR-REQ-010-01). A plain, synchronous component, `RoutePills`, renders whichever `Pill[]` a caller hands it — the listing card's compact facts, the event page's stacked "Traseu" and "Cost" rows, and the backoffice's own list all draw the same pill through the same component now, rather than three surfaces each keeping a copy that could read the route differently from the others. `RoutePills` takes an already-built `Pill[]` rather than the event itself, because nesting an async Server Component inside another one breaks `react-dom/server`'s static renderer used by the unit tests (`renderToStaticMarkup`).
+
+Cite as DECISIONS.md §388 (numbered at landing).
+
+Baseline `BR-V1.92-2026-09-25`.

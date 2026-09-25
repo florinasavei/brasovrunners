@@ -768,7 +768,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
  * insert leaves at the column's default.
  */
 function translationColumnsFrom(fields: TranslationFields, eventType: EditableEvent["type"]) {
-  const { body, rules, schedule, excerptBody, ...columns } = fields;
+  const { body, rules, schedule, routeDescription, excerptBody, ...columns } = fields;
   const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return {
     ...columns,
@@ -779,6 +779,8 @@ function translationColumnsFrom(fields: TranslationFields, eventType: EditableEv
     // A group run has no programme (§111): the editor hides the field, and this is what
     // holds when the type changed in the same save or the hidden field still posted text.
     scheduleJson: hasProgramme(eventType) && hasRichTextContent(schedule) ? schedule : null,
+    // The route / training description (§387): on every type — a group run has a route too.
+    routeDescriptionJson: hasRichTextContent(routeDescription) ? routeDescription : null,
   };
 }
 
@@ -787,6 +789,7 @@ type OptionalTextColumns = {
   bodyJson?: unknown;
   rulesJson?: unknown;
   scheduleJson?: unknown;
+  routeDescriptionJson?: unknown;
   checklist?: string | null;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -803,6 +806,7 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
     body: writtenDoc(row.bodyJson),
     rules: writtenDoc(row.rulesJson),
     schedule: writtenDoc(row.scheduleJson),
+    routeDescription: writtenDoc(row.routeDescriptionJson),
     checklist: isWrittenText(row.checklist),
     seoTitle: isWrittenText(row.seoTitle),
     seoDescription: isWrittenText(row.seoDescription),
@@ -1443,6 +1447,8 @@ const SERIES_TRANSLATION_COLUMNS = [
   "bodyJson",
   "rulesJson",
   "scheduleJson",
+  // The route / training description (§387): the same course on every date of a weekly run.
+  "routeDescriptionJson",
   "checklist",
   "coverAltText",
   // Not `locationName`: the place's name in each language is the event's since §362 and travels
@@ -2228,6 +2234,7 @@ function copiedTranslationValues(
     bodyJson: translation.bodyJson,
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
+    routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     coverAltText: translation.coverAltText,
     // The place's name in this language goes with the copy: the same place, the same word.

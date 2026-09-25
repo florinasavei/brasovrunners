@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.91-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.92-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.91-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.92-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -321,6 +321,7 @@ coffee is run on nothing.
 32. (Amends criterion 16.) The listing card no longer says "Împreună cu A, B și C" among its facts. The page and the featured hero keep it, and the card's partner mark is its chips' (2026-09-24, `DECISIONS.md` §366). The clause "inside a card that is itself one link they are words" is withdrawn: no listing card is one link.
 33. (Amends criterion 18.) "the card's last piece" reads "the card's last fact line, after the pills" (2026-09-24, `DECISIONS.md` §366).
 34. Each partner's card on the event page is its own outlined box with a wash behind it (`partnerCardSurface`: the theme's `divider` border and `action.selected` background, never a literal colour), so it reads correctly in both colour schemes, and a card with a description in both languages and a link stays inside its row at 320 pixels (2026-09-25, `DECISIONS.md` §381).
+35. The route / training description ('Traseul', under #route) is the one place the page, the staff preview, the facts' route row and every email's deep link agree about which links sit in the route section versus 'Linkuri și fișiere' — an email offers #links only when partitionEventLinks(links, hasRouteDescription(...)).other is non-empty for the rendered language, never from a raw count of the event's links. (2026-09-25, `DECISIONS.md` §387.)
 
 **Verification:** integration `events/configuration.test.ts`, `registrations/interest.test.ts`, `cms/series-edit.test.ts`; unit `events/zoned-time.test.ts`, `events/ical.test.ts`, `events/co-hosts.test.ts`, `content/event-co-hosts-field.test.ts`; e2e `event-pages.spec.ts`; unit `events/registration-window.test.ts` (13, 18)
 
@@ -1372,6 +1373,7 @@ way through every step, and none of them is a way around the allocator.
 62. Given the event editor or the create page, when a fold inside a language tab (the summary, the description, the programme's notes, the rules) is opened or closed in one language, then the same fold in the other language is open or closed when its tab comes forward. This holds for as long as the page is open, and across a refused save. The server's HTML is unchanged: every such fold arrives closed. The other language's editor mounts when its tab is shown. Closing a fold never discards what was typed in it, and the form posts the typed document (§363). Verification: unit shared/twin-folds.test.ts; e2e editor-language-folds.spec.ts.
 63. An event may set its own reminder lead in the editor (as usual, 24, 48 or 72 hours, or none): null is the club's number and zero is no reminder. The database refuses anything outside 0–168, and a series edit and a copy carry the choice (2026-09-25, `DECISIONS.md` §377).
 64. The event editor offers "Necesită frontală" / "Headlamp required" in the "Traseul" card; it is stored per event, false by default, carried by the series scope and kept by a duplicate and every date a series makes.
+65. Given the event editor or the create page, when the "Traseul" card renders for a reader who may write a language's texts, then it holds, under its own Română | English tabs, the rich-text field "Descriere traseu / antrenament" / "Route / training description", posted as `translations.<locale>.routeDescription`. It is the description's editor, folded until opened and taking pictures, with the help line "Punctele de oprire, pantele, ce să aștepți — și o hartă, dacă ai una". A description in one language only is refused at save and on create, naming the empty language's box. The same words in both languages (over 40 characters) are warned about and never refused. The card's closed line adds "cu descriere" / "with a description", or "descriere într-o singură limbă". A Redactor, who may not change the settings, gets the card as a fold with only these tabs. A series edit carries the text to the dates the scope radio names; a duplicate and every date a series makes keep it. A picture in it (or in the rules or the programme's notes) counts as used, so the orphan sweep never deletes it. Verification: unit `events/route-section.test.ts`, `content/editor-order.test.ts`; integration `cms/route-description.test.ts`, `cms/both-languages.test.ts`; e2e `route-description.spec.ts` (2026-09-25, `DECISIONS.md` §387).
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
