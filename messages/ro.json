@@ -1204,7 +1204,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea o face un părinte. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -3410,9 +3410,9 @@
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
     "ageRule": {
-      "minimumAndGuardian": "Participanți de la {age}; sub 18 ani, înscrierea o face un părinte.",
-      "minimumOnly": "Participanți de la {age}.",
-      "guardianOnly": "Sub 18 ani, înscrierea o face un părinte."
+      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "minimumOnly": "Vârsta minimă: {age}.",
+      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia."
     },
     "sex": "Sex",
     "sexOptions": {

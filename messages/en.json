@@ -1204,7 +1204,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers them. 0 means no minimum age.",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -3410,9 +3410,9 @@
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
     "ageRule": {
-      "minimumAndGuardian": "Open to anyone {age} or older on the day of the event; under 18, a parent registers them.",
-      "minimumOnly": "Open to anyone {age} or older on the day of the event.",
-      "guardianOnly": "Under 18, a parent registers them."
+      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent registers the runner, with their consent.",
+      "minimumOnly": "Minimum age: {age}.",
+      "guardianOnly": "Under 18, a parent registers the runner, with their consent."
     },
     "sex": "Sex",
     "sexOptions": {
