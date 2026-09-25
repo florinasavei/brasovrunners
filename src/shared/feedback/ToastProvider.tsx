@@ -89,6 +89,9 @@ export default function ToastProvider({ flash, children }: { flash: FormNotice |
           key={current.id}
           open
           autoHideDuration={TOAST_AUTO_HIDE_MS}
+          // The clock runs whether or not this window has the focus: a volunteer who glanced at
+          // another app must not come back to a stale "it worked" from five minutes ago.
+          disableWindowBlurListener
           onClose={(_event, reason) => {
             if (reason === "clickaway") return;
             dispatch({ type: "dismiss" });

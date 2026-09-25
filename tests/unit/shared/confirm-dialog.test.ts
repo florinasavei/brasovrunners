@@ -69,6 +69,8 @@ describe("§NNN ToastProvider", () => {
     expect(source).toMatch(/<IconButton aria-label=\{t\("close"\)\}[\s\S]*?sx=\{\{ minWidth: 44, minHeight: 44 \}\}>/);
     expect(source).toMatch(/if \(reason === "clickaway"\) return;/);
     expect(source).toContain("autoHideDuration={TOAST_AUTO_HIDE_MS}");
+    // And the clock runs even while another window has the focus.
+    expect(source).toContain("disableWindowBlurListener");
     expect(source).toMatch(/\{current && \(\s*<Snackbar/);
   });
 

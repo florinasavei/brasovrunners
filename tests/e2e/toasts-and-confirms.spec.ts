@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { cancelDialog, confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
-import { languageTab, openEditorBox } from "./support/fold";
+import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
  * `DECISIONS.md` §NNN — feedback and safety across the backoffice: a toast after every action
@@ -34,10 +34,19 @@ test.describe("§NNN toasts and confirmations", () => {
     await fillTimeField(page, "Ora", "18:30");
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
     await field("event.locationNameEn").fill(`Tractorul Park ${suffix}`);
+    // Publication wants both languages complete: a title and a summary each.
+    const summary = async (locale: "ro" | "en", words: string) => {
+      const panel = languagePanel(page, "title", locale);
+      await openFold(panel.locator(`[data-rich-text-fold="translations.${locale}.excerptBody"]`));
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(words);
+    };
     await field("translations.ro.title").fill(`Alergare cu toast ${suffix}`);
+    await summary("ro", "O alergare de probă pentru toasturi.");
     await field("translations.ro.slug").fill(`alergare-cu-toast-${suffix}`);
     await languageTab(page, "title", "en").click();
     await field("translations.en.title").fill(`Toast run ${suffix}`);
+    await summary("en", "A trial run for the toasts.");
     await languageTab(page, "address", "en").click();
     await field("translations.en.slug").fill(`toast-run-${suffix}`);
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
@@ -49,16 +58,24 @@ test.describe("§NNN toasts and confirmations", () => {
     // gone by itself within the six seconds the brief allows.
     await expect(toast()).toContainText("Evenimentul a fost creat, ca ciornă.");
     await expect(toast().locator('[role="status"]')).toBeVisible();
+    // After the Snackbar's grow-in (about a quarter of a second): a box measured mid-transition is scaled.
+    await page.waitForTimeout(600);
     expect((await toast().getByRole("button").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // A pointer resting on the toast holds it (MUI pauses the clock under the mouse, which is
+    // where the create button left it on a phone); moved away, it goes by itself.
+    await page.mouse.move(0, 0);
     await expect(toast()).toBeHidden({ timeout: 7_000 });
 
     // A draft save: no question, a toast — and it never sits over the button that produced it.
+    // The editor's boxes start closed (§336): the place is behind "Locul".
+    await openEditorBox(page, "Locul");
     await field("event.locationName").fill(`Poiana Brașov ${suffix}`);
     await field("event.locationNameEn").fill(`Poiana Brașov ${suffix}`);
     await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(toast()).toContainText("Evenimentul a fost salvat.", { timeout: 30_000 });
     await hydrated(page);
+    await page.waitForTimeout(600);
     const toastBox = await toast().locator('[role="status"]').boundingBox();
     const saveBox = await page.getByTestId("event-save-form").getByRole("button", { name: "Salvează", exact: true }).boundingBox();
     expect(toastBox).not.toBeNull();
@@ -152,7 +169,8 @@ test.describe("§NNN toasts and confirmations", () => {
     // Tidy, through the question that deleting asks: the event goes, the list says so.
     await deleteFromEditor(page);
     await expect(page).toHaveURL(/\/ro\/admin\?saved=deleted/, { timeout: 30_000 });
-    await expect(toast()).toContainText("A fost șters definitiv.");
+    // Behind the unpublish toast still showing: one at a time, so this one waits its turn.
+    await expect(toast()).toContainText("A fost șters definitiv.", { timeout: 15_000 });
   });
 });
 
