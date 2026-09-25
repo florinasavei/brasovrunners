@@ -1,3 +1,4 @@
+import { readCoHosts, type CoHostSource } from "./co-hosts";
 import { EVENT_TYPES, type EventType } from "./event-type";
 
 /**
@@ -12,8 +13,12 @@ import { EVENT_TYPES, type EventType } from "./event-type";
  * it can drift.
  */
 
-/** The little the listing needs of an event to divide it up. */
-export type ListedEvent = { id: string; featured: boolean; type: string };
+/**
+ * The little the listing needs of an event to divide it up — plus whatever `readCoHosts`
+ * needs to say whether it carries a partner (§344, amended §NNN — the owner, 22:15,
+ * 2026-09-25: "I want to see that «colaboration» event in the filters as well").
+ */
+export type ListedEvent = { id: string; featured: boolean; type: string } & CoHostSource;
 
 /**
  * The lead event, and everything that is not it.
@@ -33,15 +38,21 @@ export type ListedEvent = { id: string; featured: boolean; type: string };
  * already been run is not an answer to that, so a past row is never the lead — it is an
  * ordinary card under the "no upcoming events" notice, which is what the page did before the
  * split and what the caller must keep asking for by passing the flag.
+ *
+ * `partner` is AND-combined with `type`, the same way it narrows the calendar (§NNN): both
+ * conditions must hold, never either. It never touches the hero either, for the same reason
+ * `type` does not — the club's next race stays the club's answer to "what is next" whether or
+ * not it happens to carry a partner.
  */
 export function listingSections<T extends ListedEvent>(
   events: readonly T[],
   type?: EventType,
   hasUpcoming = true,
+  partner = false,
 ) {
   const featured = hasUpcoming && events.length > 0 && events[0].featured ? events[0] : undefined;
   const listed = (featured ? events.filter((event) => event.id !== featured.id) : [...events]).filter(
-    (event) => !type || event.type === type,
+    (event) => (!type || event.type === type) && (!partner || readCoHosts(event).length > 0),
   );
   return { featured, listed };
 }
@@ -65,6 +76,16 @@ export function presentEventTypes(events: readonly ListedEvent[], type?: EventTy
 }
 
 /**
+ * Whether the "Colaborare" / "Partnership" chip is worth offering (§133's rule, extended
+ * §NNN): the club has a partnered event among what the page shows, or the address already
+ * narrows by it — so a filtered page can still say what it is filtered by even where it now
+ * matches nothing, exactly as a kind chip does (`presentEventTypes`, above).
+ */
+export function partnerFilterOffered(events: readonly CoHostSource[], partner: boolean): boolean {
+  return partner || events.some((event) => readCoHosts(event).length > 0);
+}
+
+/**
  * The identity of the calendar's query, as one string.
  *
  * It is the `key` on the calendar's `<Suspense>` boundary, and it is what decides whether a
@@ -81,15 +102,19 @@ export function presentEventTypes(events: readonly ListedEvent[], type?: EventTy
  * the opposite and was wrong about its own page (§167): pressing a kind chip changed the
  * grid's contents while the key stood still, so the previous kind's grid stayed on screen for
  * the whole round-trip. The layout is dropped in the year view, where it has no meaning.
+ *
+ * `partner` joined the key for the same reason `type` is in it (§NNN): the calendar page reads
+ * it off the address like `type` and narrows its rows the same way (`calendar/page.tsx`).
  */
 export function calendarBoundaryKey(
   view: { kind: "month"; month: { year: number; month: number } } | { kind: "year"; year: number },
   layout: "grid" | "list",
   type?: EventType,
+  partner = false,
 ): string {
   const period =
     view.kind === "year"
       ? String(view.year)
       : `${view.month.year}-${String(view.month.month).padStart(2, "0")}`;
-  return `${view.kind}:${period}:${view.kind === "month" ? layout : "grid"}:${type ?? "all"}`;
+  return `${view.kind}:${period}:${view.kind === "month" ? layout : "grid"}:${type ?? "all"}:${partner ? "partner" : "all"}`;
 }

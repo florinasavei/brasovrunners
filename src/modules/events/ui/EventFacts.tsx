@@ -12,6 +12,7 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { formatDay, formatTime } from "@/i18n/dates";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { partnerCardSurface } from "@/theme/surfaces";
 import { coHostDescription, coHostLinkHost, coHostLinkLabel, coHostLinksForPage, primaryCoHostLink, readCoHosts } from "../domain/co-hosts";
@@ -896,39 +897,65 @@ export default async function EventFacts({
   }
 
   /*
-    Held with other organizations (§121, §168), each its own card of links (§344, §352) — last,
-    after the short facts a runner scans first, because a partner's card is the tallest thing in
-    the block; spaced one under another, never bulleted.
-
-    Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the shared
-    race with the Brașov Running Festival: "The partner card should have a border and a gray
-    background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) — the card sits on
-    the page's own background otherwise, and a border with no fill read as one more row among the
-    page's plain facts. The box is a `<div>`, never a MUI `Paper`, because `partnerFacts` returns
-    inline content built to sit inside a `<dd>`; the surface shares its border and radius with
-    every outlined box on the site already (`CalendarSection`, which does not share its wash),
-    and its wash — `action.selected`, stronger than a mere hover tint — with `CalendarEventChip`
-    and `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name, the
-    description and the links clear of its edge.
+    Held with other organizations (§121, §168, §344, §352) — no longer a row of the facts list.
+    A partner's card is the tallest thing in the block, and stacked among the short lines a
+    reader scans first it read as one more fact; the owner, 2026-09-25: "this should be block,
+    and collapsible" (§NNN). It is now `partnersSection`, below, a `<section id="partners">` of
+    its own after the `<dl>` closes, never a `dt`/`dd` pair.
   */
-  if (coHosts.length > 0) {
-    rows.push({
-      key: "coHost",
-      label: t("coHost"),
-      icon: GLYPHS.partner,
-      value: (
-        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start" }}>
+  const partnersSection = coHosts.length > 0 ? (
+    <Box component="section" id="partners" sx={{ mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
+      {/*
+        A native `<details>`, no script needed (§NNN): closed by default on a phone, where a
+        partner's card is the tallest thing on the page and a runner came for the race, not the
+        partnership. From `sm` up there is room for it beside the rest of the facts, so — the
+        same device the listing's "other events" fold already uses (`DECISIONS.md` §89, §167,
+        `app/[locale]/events/page.tsx`) — the details-content is forced visible, the marker
+        hides and the summary stops acting as a control (`pointerEvents: "none"`). The summary
+        itself carries the 44-pixel tap target (`DISCLOSURE_SUMMARY_SX`) for the phone it does
+        act as a control on.
+      */}
+      <Box component="details" data-testid="partners-fold" sx={{ "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } } }}>
+        <Typography
+          component="summary"
+          variant="body1"
+          sx={{
+            ...DISCLOSURE_SUMMARY_SX,
+            fontWeight: 600,
+            cursor: { xs: "pointer", sm: "default" },
+            "&::before": { display: { xs: "block", sm: "none" } },
+            pointerEvents: { xs: "auto", sm: "none" },
+          }}
+        >
+          <GLYPHS.partner aria-hidden="true" sx={ROW_ICON_SX} />
+          {t("coHost")} {format.list(coHosts.map((host) => host.name))}
+        </Typography>
+        {/*
+          Each partner's own outlined, tinted box (§344 amended — the owner, 2026-09-25, of the
+          shared race with the Brașov Running Festival: "The partner card should have a border
+          and a gray background so it stands out"), `partnerCardSurface` (`theme/surfaces.ts`) —
+          the card sits on the page's own background otherwise, and a border with no fill read as
+          one more row among the page's plain facts. The box is a `<div>`, never a MUI `Paper`,
+          because `partnerFacts` returns inline content built to sit inside a `<dd>` everywhere
+          else it is used; the surface shares its border and radius with every outlined box on
+          the site already (`CalendarSection`, which does not share its wash), and its wash —
+          `action.selected`, stronger than a mere hover tint — with `CalendarEventChip` and
+          `RegistrationSteps`, only bordering a block wide enough to keep the marker, the name,
+          the description and the links clear of its edge. Unchanged from §344/§352.
+        */}
+        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start", pt: 1.5 }}>
           {coHosts.map((host, index) => (
             <Box key={index} data-testid="partner-card" sx={{ ...partnerCardSurface, p: 2, maxWidth: "100%" }}>
               {links ? partnerFacts(host) : host.name}
             </Box>
           ))}
         </Box>
-      ),
-    });
-  }
+      </Box>
+    </Box>
+  ) : null;
 
   return (
+    <>
     <Box
       component="dl"
       data-testid="event-facts"
@@ -966,5 +993,7 @@ export default async function EventFacts({
         </Fragment>
       ))}
     </Box>
+    {partnersSection}
+    </>
   );
 }

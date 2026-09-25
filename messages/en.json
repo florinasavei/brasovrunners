@@ -50,7 +50,8 @@
     "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
       "label": "Event type",
-      "all": "All"
+      "all": "All",
+      "partner": "Partnership"
     },
     "calendar": {
       "previous": "Previous month",
