@@ -140,6 +140,12 @@ export function registrationOpenedDueAt(event: InterestEvent, from: Date): Date 
  * long as anybody waits (`expireStaleHolds` then `fillAvailableSpots`, both comparing the stored
  * `hold_expires_at` with the run's instant). A lapse already behind is the job's next run, `now`.
  * The lapse of an offer made *then* is not foreseen: whether that person signs is not known.
+ *
+ * How *many* of a full event's lapsed declaration holds are actually wanted by the queue is the
+ * `wantedLapsedHoldReleases` formula in `registrations/domain/capacity.ts` — `repository.ts`
+ * releases exactly that many, oldest deadline first, and `forecast.ts` uses this function on the
+ * same lapses to know which ones are spoken for before a "last call to sign" row is built for
+ * them (`DECISIONS.md` §160).
  */
 export function nextInLineOffers(input: { lapses: Date[]; waiting: number; startsAt: Date; now: Date }): { at: Date; count: number }[] {
   const instants = input.lapses

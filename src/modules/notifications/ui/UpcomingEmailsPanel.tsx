@@ -59,6 +59,10 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
       ) : (
         <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
           {rows.map((row) => {
+            // A backoffice identifier, not the participant-facing content the "never a
+            // cross-language fallback" rule protects (§354): this only points a staff reader at
+            // the right event to edit, and a locale-less row would otherwise be unfindable in
+            // the list. Deliberate, and pinned by a unit test — flagged for the owner to confirm.
             const title = row.eventTitle[locale] ?? row.eventTitle[other] ?? t("emails.forecast.untitled");
             const moment = formatDay(row.at, { locale, timeZone: row.zone, style: "short", withTime: true });
             const editor = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: row.eventId } } });
@@ -80,8 +84,14 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                   <Link href={editor} sx={TAP} data-testid="upcoming-email-event">
                     {title}
                   </Link>
+                  {/*
+                    Labelled by what actually triggers it (`sends.*`), not by the message type: a
+                    type such as BIB_ASSIGNED covers more than this one automatic send (it also
+                    reads "given by hand", which is an Administrator's own action, never this
+                    row's). The link still opens that type's own preview card further down.
+                  */}
                   <Link href={`#email-${row.type}`} sx={TAP} data-testid="upcoming-email-type">
-                    {t(`emails.types.${row.type}`)}
+                    {t(`emails.forecast.sends.${row.send}`)}
                   </Link>
                   <Typography component="span" variant="body2" sx={{ fontWeight: 600 }} data-testid="upcoming-email-recipients">
                     {t(`emails.forecast.recipients.${countForm(row.recipients, locale)}`, { count: row.recipients })}
@@ -90,9 +100,6 @@ export default async function UpcomingEmailsPanel({ locale, rows, horizonDays, c
                       ` ${t(`emails.forecast.tests.${countForm(row.testRecipients, locale)}`, { count: row.testRecipients })}`}
                   </Typography>
                 </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                  {t(`emails.forecast.sends.${row.send}`)}
-                </Typography>
               </Box>
             );
           })}

@@ -115,12 +115,71 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     }
   }
 
+  // The offer to the next in line (§160, AGENTS.md §10.5): a hold lapses while somebody waits.
+  // Computed *before* the declaration emails below, because a declaration hold the maintenance
+  // job's `expireStaleHolds` would release to the queue is never owed a last call — it is
+  // `EXPIRED` before `queueEventReminders` looks at it (`maintenance.ts`). Without this, a
+  // capped event with a waiting list forecasts a sign-reminder the job can never send.
+  const holds = await db
+    .select({
+      eventId: events.id,
+      startsAt: events.startsAt,
+      holdExpiresAt: registrations.holdExpiresAt,
+      registrationId: registrations.id,
+      kind: registrations.kind,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(
+      and(
+        eq(events.eventStatus, "SCHEDULED"),
+        isNotNull(events.capacity),
+        inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
+        lte(registrations.holdExpiresAt, until),
+      ),
+    );
+  const nextInLinePending: Due[] = [];
+  // A declaration hold whose lapse is consumed by an offer to the next in line: it is released
+  // (`EXPIRED`) before it is ever owed a last call, so it must not also produce a "lastCall" row.
+  const consumedByNextInLine = new Set<string>();
+  if (holds.length > 0) {
+    const eventIds = [...new Set(holds.map((row) => row.eventId))];
+    // The line in the allocator's own order (`lockOldestWaitlisted`): who is offered first.
+    const line = await db
+      .select({ id: registrations.id, eventId: registrations.eventId, kind: registrations.kind })
+      .from(registrations)
+      .where(and(inArray(registrations.eventId, eventIds), eq(registrations.status, "WAITLISTED")))
+      .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
+    for (const eventId of eventIds) {
+      const rows = holds
+        .filter((row) => row.eventId === eventId)
+        .sort((a, b) => (a.holdExpiresAt?.getTime() ?? 0) - (b.holdExpiresAt?.getTime() ?? 0));
+      const waiting = line.filter((row) => row.eventId === eventId);
+      const offers = nextInLineOffers({
+        lapses: rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : [])),
+        waiting: waiting.length,
+        startsAt: rows[0].startsAt,
+        now,
+      });
+      const consumed = offers.reduce((sum, offer) => sum + offer.count, 0);
+      for (const row of rows.slice(0, consumed)) consumedByNextInLine.add(row.registrationId);
+      let next = 0;
+      for (const offer of offers) {
+        for (const person of waiting.slice(next, next + offer.count)) {
+          nextInLinePending.push({ at: offer.at, eventId, send: "nextInLine", registrationId: person.id, kind: person.kind });
+        }
+        next += offer.count;
+      }
+    }
+  }
+
   // The two declaration emails: the participation confirmation (§104) and the last call (§160).
   for (const row of await selectDeclarationCandidates(db, { from: now })) {
     const confirmAt = participationConfirmationDueAt(row, now);
     if (inHorizon(confirmAt)) {
       keyed.push({ at: confirmAt, eventId: row.eventId, send: "participation", registrationId: row.registrationId, kind: row.kind });
     }
+    if (consumedByNextInLine.has(row.registrationId)) continue;
     const natural = declarationLastCallDueAt(row, deadlines);
     if (natural) {
       const at = notBeforeNow(natural);
@@ -145,6 +204,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     for (const row of rows) queued.add(row.key);
   }
   const pending: Due[] = keyed.filter((item) => !queued.has(keyOf(item)));
+  pending.push(...nextInLinePending);
 
   // "Here is your race number" (§214): at the close, to everybody a close numbers — real only.
   const settling = await db
@@ -166,46 +226,6 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     );
   for (const row of settling) {
     pending.push({ at: notBeforeNow(bibsSettleAt(row)), eventId: row.eventId, send: "bibs", registrationId: row.registrationId, kind: "REAL" });
-  }
-
-  // The offer to the next in line (§160, AGENTS.md §10.5): a hold lapses while somebody waits.
-  const holds = await db
-    .select({ eventId: events.id, startsAt: events.startsAt, holdExpiresAt: registrations.holdExpiresAt })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .where(
-      and(
-        eq(events.eventStatus, "SCHEDULED"),
-        isNotNull(events.capacity),
-        inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
-        lte(registrations.holdExpiresAt, until),
-      ),
-    );
-  if (holds.length > 0) {
-    const eventIds = [...new Set(holds.map((row) => row.eventId))];
-    // The line in the allocator's own order (`lockOldestWaitlisted`): who is offered first.
-    const line = await db
-      .select({ id: registrations.id, eventId: registrations.eventId, kind: registrations.kind })
-      .from(registrations)
-      .where(and(inArray(registrations.eventId, eventIds), eq(registrations.status, "WAITLISTED")))
-      .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
-    for (const eventId of eventIds) {
-      const rows = holds.filter((row) => row.eventId === eventId);
-      const waiting = line.filter((row) => row.eventId === eventId);
-      const offers = nextInLineOffers({
-        lapses: rows.flatMap((row) => (row.holdExpiresAt ? [row.holdExpiresAt] : [])),
-        waiting: waiting.length,
-        startsAt: rows[0].startsAt,
-        now,
-      });
-      let next = 0;
-      for (const offer of offers) {
-        for (const person of waiting.slice(next, next + offer.count)) {
-          pending.push({ at: offer.at, eventId, send: "nextInLine", registrationId: person.id, kind: person.kind });
-        }
-        next += offer.count;
-      }
-    }
   }
 
   // "Registration is open" (§146), to the addresses left on the event's page — no registration yet.

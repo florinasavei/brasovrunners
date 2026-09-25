@@ -198,6 +198,30 @@ describe("§NNN the forecast of automatic emails", () => {
     expect(rows.some((row) => row.send === "reminder" || row.send === "lastCall")).toBe(false);
   });
 
+  /**
+   * §160 — the default window's deadline (`start - 2 days`) and the club's 48-hour reminder lead
+   * land on the same instant, so a full event with a waiting list is the case where a declaration
+   * hold's last call and its release to the queue would otherwise both claim that lapse. The
+   * forecast must side with the job: one waitlist offer, no sign-reminder it can never send.
+   */
+  it("never promises a last call for a window hold the job releases to the waiting list instead (§160)", async () => {
+    const g = await event("Crosul G", at(9 * DAY), { capacity: 1 });
+    await registration(g, "g1", "PENDING_DECLARATION", { holdExpiresAt: at(7 * DAY) });
+    const g2 = await registration(g, "g2", "WAITLISTED");
+
+    const rows = (await forecast()).filter((row) => row.eventId === g);
+    expect(rows.map((row) => row.send)).toEqual(["participation", "nextInLine", "bibs"]);
+    expect(rows.find((row) => row.send === "nextInLine")?.registrationIds).toEqual([g2]);
+    expect(rows.some((row) => row.send === "lastCall")).toBe(false);
+
+    // The full job, run at that same instant on the same data, agrees: `g2` is offered the
+    // place, and `g1` — released before `queueEventReminders` ever looked at it — gets no
+    // sign-reminder (`c1`, the fixture's other window race, still gets its own, unaffected).
+    await runRegistrationMaintenance(db, at(7 * DAY));
+    expect(await queued("WAITLIST_SPOT_OFFER")).toContain("g2");
+    expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("g1");
+  });
+
   /** The labels (registered names) of the registrations the outbox rows of one type are for, whose key ends as given. */
   async function queued(type: EmailMessageType, keySuffix = "") {
     const rows = await db

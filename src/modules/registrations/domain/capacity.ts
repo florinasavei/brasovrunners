@@ -46,3 +46,16 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
   if (input.capacity === null) return true;
   return input.capacity - input.occupied - input.eligibleWaitlisted > 0;
 }
+
+/**
+ * `DECISIONS.md` §160: how many lapsed declaration holds a queue actually wants released, given
+ * how many have lapsed, how many places the waiting list still wants and how many are free
+ * without touching any hold. Never more than have lapsed, never more than the waiting list
+ * needs — `repository.ts#lapsedDeclarationHoldsToRelease` releases exactly this many, oldest
+ * deadline first, and `notifications/domain/automatic-sends.ts` reads the same number to know
+ * which lapsed holds the maintenance job will release before it ever reaches them for a last
+ * call. One formula; a change here reaches both.
+ */
+export function wantedLapsedHoldReleases(input: { lapsed: number; waiting: number; free: number }): number {
+  return Math.min(input.lapsed, Math.max(input.waiting - input.free, 0));
+}

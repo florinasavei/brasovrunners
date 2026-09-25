@@ -2810,7 +2810,7 @@
         "clubCopy": {
           "none": "Club copy: none. The club receives no copy of the emails to participants.",
           "some": "Club copy: every email above also goes, separately and with “[Club copy]” in the subject, to {addresses}. Not for test registrations, and not for “Registration is open”, which belongs to no registration.",
-          "link": "Change it in “Club copies”"
+          "link": "Change it in “The club's copies”"
         }
       },
       "perSend": "This email's text is written for each send, from the event's page (“Send a message to participants”), so it has no words to edit here."

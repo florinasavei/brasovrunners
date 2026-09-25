@@ -76,7 +76,7 @@ describe("§NNN the upcoming automatic emails card", () => {
     const rows = html.match(/data-testid="upcoming-email"/g) ?? [];
     expect(rows).toHaveLength(2);
     expect(html).toMatch(/href="\/ro\/admin\/events\/event-a"[^>]*>Crosul de toamnă</);
-    expect(html).toMatch(/href="#email-EVENT_REMINDER"[^>]*>Reminderul dinaintea startului</);
+    expect(html).toMatch(/href="#email-EVENT_REMINDER"[^>]*>reminderul dinaintea startului, către cei confirmați</);
     expect(html).toContain("Sâm., 10 oct. 2026, 12:00");
     expect(html).toContain("23 de destinatari acum");
     // Test registrations are sent to and labelled apart, never counted with the real ones (§30).
