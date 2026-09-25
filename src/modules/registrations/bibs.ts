@@ -10,7 +10,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { holdsAPlace, PLACE_HOLDING_STATUSES, TERMINAL_STATUSES } from "./domain/state-machine";
+import { holdsAPlace, TERMINAL_STATUSES } from "./domain/state-machine";
 
 type Actor = Pick<StaffUser, "id" | "role">;
 
@@ -252,15 +252,26 @@ export type SettledBib = {
 };
 
 /**
+ * The statuses a close numbers (§NNN): the ones the capacity formula counts as a place
+ * (`domain/capacity.ts#computeOccupied` — confirmed, a declaration hold, an offer). Not
+ * `PLACE_HOLDING_STATUSES`, which adds `PENDING_EMAIL_CONFIRMATION` so a provisional number can be
+ * drawn at submission (§214): an address nobody has proved takes no place (AGENTS.md §10.5
+ * invariant 3, §10.6 rule 6), so on a full race it can confirm onto the waiting list — and a final
+ * number, which is never taken back (§173), would then be worn by somebody with no place, and
+ * emailed to an unproved address as "you are in".
+ */
+const NUMBERED_AT_SETTLE = ["PENDING_DECLARATION", "WAITLIST_OFFERED", "CONFIRMED"] as const;
+
+/**
  * Who a close numbers — and so who is sent "here is your race number" — at one event: a real
- * registration still holding a place with no final number. The settle and the forecast on
+ * registration occupying a place with no final number. The settle and the forecast on
  * `/admin/emails` (§383) read the same condition.
  */
 export function awaitingSettledNumber() {
   return and(
     eq(registrations.kind, "REAL"),
     isNull(registrations.bibNumber),
-    inArray(registrations.status, [...PLACE_HOLDING_STATUSES]),
+    inArray(registrations.status, [...NUMBERED_AT_SETTLE]),
   );
 }
 
@@ -302,6 +313,25 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
   input: { eventId: string; bibStartNumber: number; bibsSettledAt: Date | null; now: Date },
 ): Promise<SettledBib[]> {
   if (input.bibsSettledAt !== null) return [];
+
+  /*
+    An address still unconfirmed at the close is not numbered (§NNN), and gives back the
+    provisional number it drew at submission, in the same transaction. The recompaction below
+    reads only final numbers as taken, so it may hand that number to somebody else as theirs — and
+    a later confirmation of this row would adopt its own provisional number (§220) and collide on
+    the unique index. Released, a late confirmation that does get a place draws a fresh number the
+    way any post-close confirmation does (`ensureProvisionalBibNumber`, `pickBibNumber`).
+  */
+  await tx
+    .update(registrations)
+    .set({ provisionalBibNumber: null, updatedAt: input.now })
+    .where(
+      and(
+        eq(registrations.eventId, input.eventId),
+        eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+        isNotNull(registrations.provisionalBibNumber),
+      ),
+    );
 
   const waiting = await tx
     .select({

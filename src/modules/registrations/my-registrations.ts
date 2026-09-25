@@ -162,7 +162,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
  */
 export type ClosedRegistrationWithConsentData = Pick<
   MyRegistration,
-  "id" | "status" | "eventId" | "eventTitle" | "eventStartsAt" | "eventTimezone" | "holdsHealthNote" | "holdsSocials"
+  "id" | "status" | "registeredName" | "eventId" | "eventTitle" | "eventStartsAt" | "eventTimezone" | "holdsHealthNote" | "holdsSocials"
 >;
 
 export async function listClosedRegistrationsHoldingConsentData<T extends Record<string, unknown>>(
@@ -176,6 +176,9 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
     .select({
       id: registrations.id,
       status: registrations.status,
+      // Whose data each button withdraws (§389, §NNN): a family's two closed registrations at one
+      // event would otherwise be two identical cards.
+      registeredName: registrations.registeredName,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       eventStartsAt: events.startsAt,

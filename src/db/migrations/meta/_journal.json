@@ -547,6 +547,13 @@
       "when": 1790341531850,
       "tag": "0077_video_poster",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1790359354651,
+      "tag": "0078_registration_audit",
+      "breakpoints": true
     }
   ]
 }

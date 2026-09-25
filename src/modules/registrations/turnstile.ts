@@ -16,6 +16,13 @@ export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export const TURNSTILE_FIELD = "cf-turnstile-response";
 
+/**
+ * Siteverify's error codes that say the *server's* side is wrong — a missing or invalid secret, or
+ * Cloudflare's own internal error — and nothing about the visitor's token (§NNN). Every other
+ * code (`invalid-input-response`, `timeout-or-duplicate`, …) is about the token, and stays a refusal.
+ */
+const SERVER_SIDE_ERROR_CODES: ReadonlySet<string> = new Set(["missing-input-secret", "invalid-input-secret", "internal-error"]);
+
 export function turnstileSiteKey(): string | undefined {
   return env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? env.TURNSTILE_SITE_KEY : undefined;
 }
@@ -70,8 +77,24 @@ export async function verifyTurnstile(
     });
     // Cloudflare answering 5xx is Cloudflare having a bad day, not this visitor failing one.
     if (!response.ok) return "unavailable";
-    const result = (await response.json()) as { success?: boolean };
-    return result.success === true ? "passed" : "failed";
+    const result = (await response.json()) as { success?: boolean; "error-codes"?: unknown };
+    if (result.success === true) return "passed";
+    /*
+      A refusal about *our* configuration is not a refusal of this visitor (§NNN). Cloudflare
+      answers a mistyped, rotated or another widget's secret — and its own internal error — with
+      HTTP 200 and `success: false`, the same shape as a token it rejected. Scored as `failed`,
+      that refused every person whose widget loaded while only the people whose browser blocked it
+      got through: §216's refusal of a real person, for a key nobody noticed was wrong. It is the
+      check not running, so it is `unavailable`, and it is said loudly — the codes only, never the
+      token or an address — because nothing else on the platform would notice.
+    */
+    const codes = Array.isArray(result["error-codes"]) ? result["error-codes"].map(String) : [];
+    const ours = codes.filter((code) => SERVER_SIDE_ERROR_CODES.has(code));
+    if (ours.length > 0) {
+      console.error(`[turnstile] the check could not run on the server's side: ${ours.join(", ")}`);
+      return "unavailable";
+    }
+    return "failed";
   } catch {
     // Timed out or could not be reached. The same reasoning as above.
     return "unavailable";

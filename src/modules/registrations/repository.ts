@@ -765,7 +765,14 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   if (releasing.length > 0) {
     await db
       .update(registrations)
-      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
+      /*
+        The number goes with the place here too (§220, §NNN). This sweep was the one that forgot:
+        a lapsed hold kept its provisional number, the settle — which reads only final numbers as
+        taken — gave that number to somebody else as their final one, and re-allocating the lapsed
+        row at the desk (`confirmByStaff`, §160) then adopted it as *its* final number and hit the
+        unique index, so the runner standing there with a signed paper could never be confirmed.
+      */
+      .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", provisionalBibNumber: null, updatedAt: now })
       .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
   }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public

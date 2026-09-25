@@ -128,6 +128,14 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     if (isDomainError(error) && error.code === "CONFLICT" && error.message.startsWith("DECLARATION_CHANGED")) {
       redirect(`${path}?changed=1`);
     }
+    /*
+      Any other conflict is the registration's state (§NNN): it lapsed, was cancelled, went back to
+      the waiting list or was confirmed at the desk while the link stayed live, or it changed under
+      a concurrent press. The transaction rolled back and nothing was spent, so the page is simply
+      shown again — and it now reads the state and says where the registration stands, in place of
+      a form nobody can sign — rather than the error page (AGENTS.md §14.3: translated at the boundary).
+    */
+    if (isDomainError(error) && error.code === "CONFLICT") redirect(path);
     throw error;
   }
 }

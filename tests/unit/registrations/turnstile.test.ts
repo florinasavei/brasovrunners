@@ -65,4 +65,36 @@ describe("Cloudflare Turnstile", () => {
     // An over-long token *was* submitted, and nothing legitimate produces one.
     expect(await verifyTurnstile("x".repeat(2049), null, ok)).toBe("failed");
   });
+
+  /*
+    §NNN (the registration audit, F5): a wrong secret is the server's misconfiguration, not the
+    visitor's failure. Cloudflare answers it with HTTP 200 and `success: false`, which used to be
+    scored "failed" and refused every person whose widget loaded. It is "unavailable" now, logged
+    with the codes; a rejection of the token itself still refuses.
+  */
+  it("treats a wrong secret or Cloudflare's internal error as the check not running, never as the visitor failing", async () => {
+    process.env.TURNSTILE_SITE_KEY = "1x000";
+    // Cloudflare's own dummy shape; which secret it is does not matter, only what siteverify answers.
+    process.env.TURNSTILE_SECRET_KEY = "2x000";
+    const { verifyTurnstile } = await import("@/modules/registrations/turnstile");
+    const answer = (codes: string[]) =>
+      (async () => new Response(JSON.stringify({ success: false, "error-codes": codes }), { status: 200 })) as typeof fetch;
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(await verifyTurnstile("token-123", null, answer(["invalid-input-secret"]))).toBe("unavailable");
+      expect(await verifyTurnstile("token-123", null, answer(["missing-input-secret"]))).toBe("unavailable");
+      expect(await verifyTurnstile("token-123", null, answer(["internal-error"]))).toBe("unavailable");
+      // Said out loud, with the codes and never the token.
+      expect(logged).toHaveBeenCalledTimes(3);
+      expect(String(logged.mock.calls[0]?.[0])).toContain("invalid-input-secret");
+      expect(String(logged.mock.calls[0]?.[0])).not.toContain("token-123");
+
+      // A token Cloudflare rejected is still evidence, and still refuses.
+      expect(await verifyTurnstile("token-123", null, answer(["invalid-input-response"]))).toBe("failed");
+      expect(await verifyTurnstile("token-123", null, answer(["timeout-or-duplicate"]))).toBe("failed");
+      expect(await verifyTurnstile("token-123", null, answer([]))).toBe("failed");
+    } finally {
+      logged.mockRestore();
+    }
+  });
 });
