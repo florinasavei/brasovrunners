@@ -2,6 +2,7 @@ import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import FlashlightOnIcon from "@mui/icons-material/FlashlightOn";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
@@ -90,6 +91,11 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): the 🤝
  * emoji everywhere (§379, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
  * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
+ *
+ * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
+ * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
+ * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
+ * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -101,6 +107,7 @@ export const GLYPHS = {
   series: EventRepeatIcon,
   distance: StraightenIcon,
   elevation: TrendingUpIcon,
+  headlamp: FlashlightOnIcon,
   partner: PartnerEmoji as Glyph,
 };
 

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.89-2026-09-25
+
+- **"Necesită frontală" on an event**: an editor checkbox in "Traseul" puts a headlamp pill on the card, the event page, the hero and the calendar, both languages; unmarked events show nothing. §382.
 ## BR-V1.88-2026-09-25
 
 - **Less whitespace on a phone** — one density scale, `src/theme/density.ts`, with eight named steps used only below `sm`. Every public page starts 12 pixels from the header instead of 16. The listing's cards sit closer together and start closer to their top edge, the featured event has less padding, and the gaps between sections, facts and partner cards on an event page are smaller. From `sm` up nothing moves, and a test holds every changed site to the value it had before. At 360 pixels the listing is 118 pixels shorter and an event page about 50 §380.

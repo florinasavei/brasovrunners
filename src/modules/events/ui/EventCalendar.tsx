@@ -116,6 +116,8 @@ export default async function EventCalendar({
         filled={event.type === "RACE"}
         cancelled={event.eventStatus === "CANCELLED"}
         note={notes.get(event.id) ?? null}
+        // "Frontală necesară" (§382) in the tooltip and the entry's name, after the place's note.
+        headlamp={event.headlampRequired ? tEvent("headlampRequired") : null}
         // Held with a partner (§367, amended §375): the handshake beside the entry, the generic
         // "Eveniment în parteneriat" in its tooltip — it never names a partner (there may be several).
         partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}

@@ -417,6 +417,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
+    headlampRequired: fields.headlampRequired,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
@@ -1404,6 +1405,9 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
+  // A fact of the route like the two above (§382): "from this date" carries it from the first
+  // dark Wednesday of October, and "from this date" again takes it off in spring.
+  "headlampRequired",
   "registrationMode",
   "capacity",
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
@@ -2173,6 +2177,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
+    // The headlamp travels with the route (§382): a copy of an evening run, and every date a
+    // series makes from it, is as dark at its start as the source.
+    headlampRequired: source.headlampRequired,
     featured: false,
     // Nor the special mark (§168): it says something about one edition — the anniversary, the
     // Wednesday another club's race passes through — and the copy is a different one.
