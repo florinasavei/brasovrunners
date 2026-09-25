@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { events } from "@/db/schema/events";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { eq } from "drizzle-orm";
+import { createEvent } from "@/modules/content/events/service";
 import { initialCostTypeOf } from "@/modules/content/events/ui/box-summaries";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
  * §NNN — the owner, 2026-09-25: "by default toate evenimentele sunt gratuite". A new event's
@@ -39,5 +44,75 @@ describe("§NNN initialCostTypeOf agrees with RegistrationBox's use of it", () =
     expect(initialCostTypeOf(null)).toBe("FREE");
     expect(initialCostTypeOf({ costType: null })).toBe("");
     expect(initialCostTypeOf({ costType: "PAID" })).toBe("PAID");
+  });
+});
+
+/**
+ * §NNN — the "saved value" half, proven through the create service rather than by reading
+ * `RegistrationBox`'s source: a create posted with the cost box never opened writes exactly what
+ * the closed `<details>` submits — `costType: "FREE"`, no amount, no link — and the row reads
+ * back `FREE`, not null and not the DB column's own default.
+ */
+describe("§NNN a create that never opens the cost box saves FREE, and reads back FREE", () => {
+  let db: TestDatabase;
+  let close: () => Promise<void>;
+  let admin: StaffUser;
+
+  beforeAll(async () => {
+    ({ db, close } = await createTestDatabase());
+  });
+  afterAll(async () => close());
+
+  beforeEach(async () => {
+    await resetTables(db);
+    [admin] = await db
+      .insert(staffUsers)
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .returning();
+  });
+
+  it("stores FREE off a create that posts the closed box's own default, no amount, no link", async () => {
+    const created = await createEvent(db, {
+      actor: admin,
+      fields: {
+        type: "GROUP_RUN",
+        eventStatus: "SCHEDULED",
+        timezone: "Europe/Bucharest",
+        startsAtWallTime: "2026-10-18T18:00",
+        endsAtWallTime: "",
+        raceStartsAtWallTime: "",
+        locationName: "Parcul Tractorul",
+        locationAddress: "",
+        surface: null,
+        difficulty: null,
+        mapUrl: "",
+        routeUrl: "",
+        distanceMeters: "",
+        elevationGainMeters: "",
+        featured: false,
+        registrationMode: "NONE",
+        participantListVisibility: "HIDDEN",
+        capacity: "",
+        registrationOpensAtWallTime: "",
+        registrationClosesAtWallTime: "",
+        declarationDocumentId: "",
+        externalProvider: "",
+        externalRegistrationUrl: "",
+        // Exactly what a closed CostFields box still submits (§343): the select's own
+        // `defaultValue` from `initialCostTypeOf(null)`, and the two amount/link fields empty.
+        costType: "FREE",
+        costAmount: "",
+        costUrl: "",
+        translations: {
+          ro: { slug: "alergare-libera", title: "Alergare liberă", excerpt: "Kilometri împreună." },
+          en: { slug: "free-run", title: "Free run", excerpt: "Kilometres together." },
+        },
+      },
+    });
+
+    const [row] = await db.select().from(events).where(eq(events.id, created.id));
+    expect(row.costType).toBe("FREE");
+    expect(row.costAmount).toBeNull();
+    expect(row.costUrl).toBeNull();
   });
 });

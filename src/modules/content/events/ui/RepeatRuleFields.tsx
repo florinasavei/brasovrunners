@@ -10,6 +10,7 @@ import { type CalendarDayWords, composeCalendarDay } from "@/i18n/dates";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { useRecall } from "@/shared/forms/recall";
 import { fillIn } from "@/shared/forms/fill-in";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -202,12 +203,18 @@ export function RepeatPublishField({
 }) {
   const recall = useRecall();
   const [on, setOn] = useState(recall.has ? recall.value(name) === "on" : true);
+  // The robot (§NNN): the same glyph as the source event's Recurență card, leading this
+  // switch's own line too, decorative and aria-hidden.
+  const RenewIcon = ACTION_ICONS.renew;
   return (
     <Box data-testid="repeat-publish-field">
-      <FormControlLabel
-        control={<Checkbox key={recall.generation} name={name} checked={on} onChange={(event) => setOn(event.target.checked)} sx={CHECKBOX_TAP_TARGET} />}
-        label={labels.label}
-      />
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "flex-start" }}>
+        <RenewIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", mt: "9px", flexShrink: 0 }} />
+        <FormControlLabel
+          control={<Checkbox key={recall.generation} name={name} checked={on} onChange={(event) => setOn(event.target.checked)} sx={CHECKBOX_TAP_TARGET} />}
+          label={labels.label}
+        />
+      </Stack>
       <Typography variant="body2" color="text.secondary">
         {on ? (draftSource ? labels.draft : "") : labels.off}
       </Typography>
