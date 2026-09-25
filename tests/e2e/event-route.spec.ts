@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -127,6 +128,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await page.waitForURL(/saved=IN_REVIEW/);
     await page.getByRole("button", { name: "Publică" }).click();
+    await confirmDialog(page);
     await page.waitForURL(/saved=PUBLISHED/);
 
     await page.goto(`/ro/evenimente/${slug}`);

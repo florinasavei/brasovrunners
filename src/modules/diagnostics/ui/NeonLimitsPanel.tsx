@@ -20,6 +20,7 @@ import {
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import type { NeonFailure } from "@/modules/diagnostics/neon";
 import type { AppEnvironment } from "@/shared/config/env-enums";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -59,6 +60,7 @@ type Props = {
  */
 export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const format = await getFormatter();
   const cu = (value: number) => format.number(value, { maximumFractionDigits: 2 });
   const hours = (value: number) => format.number(value, { maximumFractionDigits: 1 });
@@ -145,6 +147,7 @@ export default async function NeonLimitsPanel({ locale, reading, appEnv, mayEdit
               },
               { confirmation: production },
             )}
+            confirm={{ title: t("confirm.neonLimitsTitle"), body: t("confirm.neonLimitsBody"), confirmLabel: t("tasks.neonLimits.save"), cancelLabel: words.cancel, destructive: true }}
             scope="neonLimits"
             data-testid="neon-limits-form"
           >

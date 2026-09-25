@@ -9,6 +9,7 @@ import type { JobCadenceState } from "@/modules/jobs/cadence";
 import type { JobOverview } from "@/modules/jobs/overview";
 import type { DeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { JOB_CADENCE_CHOICES, NEXT_DUE_CAP_MINUTES } from "@/modules/jobs/schedule";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -43,6 +44,7 @@ type Props = {
  */
 export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, emailTiming }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   // A platform timestamp, in the club's zone, with its weekday, inside the line after a colon
   // ("ultima rulare reală: joi, 24 sept. 2026, 10:15") — so the weekday keeps its lower case
   // (§350 weekday on every date).
@@ -112,6 +114,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
           <ActionForm
             action={updateJobCadenceAction}
             messages={await refusalMessages({ minutes: t("tasks.jobCadence.field") })}
+            confirm={{ title: t("confirm.jobCadenceTitle"), body: t("confirm.jobCadenceBody"), confirmLabel: t("tasks.jobCadence.save"), cancelLabel: words.cancel }}
             scope="cadence"
             data-testid="job-cadence-form"
           >

@@ -7,7 +7,7 @@ import Flag from "./Flag";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { FOOTER_GAP_PHONE, footerTargetSx, SM_UP } from "./footer-target";
+import { footerGapSx, footerTargetSx, SM_UP } from "./footer-target";
 
 /**
  * Romanian or English, from anywhere on the site.
@@ -90,8 +90,9 @@ export default function LocaleSwitcher() {
         flexDirection: "row",
         alignItems: "center",
         // Below `sm` this copy is only on the footer's bar, whose items are spaced by one gap
-        // (§378, `footer-target.ts`); the two flags take the same. From `sm`, the header's.
-        gap: { xs: `${FOOTER_GAP_PHONE}px`, sm: 0.25 },
+        // (§378, §385, `footer-target.ts`: 4px below 360, 6px from 360); the two flags take the
+        // same. From `sm`, the header's.
+        ...footerGapSx(["gap"], 0.25),
         flexShrink: 0,
       }}
     >

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { flashOutcome } from "@/shared/feedback/flash";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
@@ -39,7 +40,8 @@ function outcomeOf(error: unknown): { error: string } {
   return { error: isDomainError(error) ? error.code : "UNKNOWN" };
 }
 
-function backTo(path: string, outcome: { error?: string; saved?: string }): never {
+async function backTo(path: string, outcome: { error?: string; saved?: string }): Promise<never> {
+  await flashOutcome(outcome);
   const query = outcome.error ? `?error=${outcome.error}` : `?saved=${outcome.saved ?? "1"}`;
   redirect(`${path}${query}#admin-alert`);
 }
@@ -78,6 +80,7 @@ export async function createPageAction(_previous: FormOutcome | null, form: Form
 
   // Straight to the new page's own editor, the way creating an event does: the next thing an
   // organizer wants is to keep writing, not to look at a list.
+  await flashOutcome({ saved: "pageCreated" });
   redirect(
     `${getPathname({ locale, href: { pathname: "/admin/pages/[id]", params: { id: pageId } } })}?saved=created#admin-alert`,
   );
@@ -100,10 +103,10 @@ export async function savePageAction(_previous: FormOutcome | null, form: FormDa
     return refused(error, form);
   }
 
-  backTo(path, { saved: "page" });
+  return backTo(path, { saved: "page" });
 }
 
-export async function transitionPageAction(form: FormData): Promise<void> {
+export async function transitionPageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const pageId = text(form, "pageId");
   const path = getPathname({ locale, href: { pathname: "/admin/pages/[id]", params: { id: pageId } } });
@@ -122,7 +125,7 @@ export async function transitionPageAction(form: FormData): Promise<void> {
     outcome = outcomeOf(error);
   }
 
-  backTo(path, outcome);
+  return backTo(path, outcome);
 }
 
 /**
@@ -144,13 +147,13 @@ export async function movePageAction(form: FormData): Promise<void> {
       direction: text(form, "direction") === "up" ? "up" : "down",
     });
   } catch (error) {
-    backTo(listPath, outcomeOf(error));
+    return backTo(listPath, outcomeOf(error));
   }
 
-  backTo(listPath, { saved: "moved" });
+  return backTo(listPath, { saved: "moved" });
 }
 
-export async function deletePageAction(form: FormData): Promise<void> {
+export async function deletePageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const pageId = text(form, "pageId");
 
@@ -158,12 +161,13 @@ export async function deletePageAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     await deletePage(getDb(), { actor, pageId });
   } catch (error) {
-    backTo(
+    return backTo(
       getPathname({ locale, href: { pathname: "/admin/pages/[id]", params: { id: pageId } } }),
       outcomeOf(error),
     );
   }
 
   // The page it was editing no longer exists, so the list is the only place left to land.
+  await flashOutcome({ saved: "pageDeleted" });
   redirect(`${getPathname({ locale, href: "/admin/pages" })}?saved=deleted#admin-alert`);
 }

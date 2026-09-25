@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languageTab } from "./support/fold";
 
@@ -54,9 +55,7 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
     await expect(main.getByText("Bifate: 1")).toBeVisible();
 
     await main.getByRole("button", { name: "Șterge cele bifate" }).click();
-    const dialog = page.getByRole("dialog", { name: "Ștergi evenimentele bifate?" });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Șterge cele bifate" }).click();
+    await confirmDialog(page, "Ștergi evenimentele bifate?");
 
     await expect(page.locator("#admin-alert")).toContainText("2 evenimente șterse");
     await expect(main.getByRole("link", { name: title })).toHaveCount(0);

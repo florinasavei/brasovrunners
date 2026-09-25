@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -21,7 +22,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  *
  * The visible text is deliberately short: which deployment this is, and when the code behind it
  * last changed. The exact build — the baseline and the commit — is in the `title` and the
- * accessible name too.
+ * accessible name too. Since §385 it is drawn as a small outlined chip, in both places.
  *
  * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a
  * phone, or `Enter` when it has focus, opens it (`BuildBadgeLink`, §34). That replaced a "Staff"
@@ -55,11 +56,11 @@ export default async function BuildBadge() {
   const text = parts.join(" · ");
 
   /**
-   * A quiet line, not a pill over the page: small, muted, as wide as its words (`alignSelf`, so
-   * a press beside it — on the panel, or on the bar's corner from `md` — is not a press on it)
-   * and wrapping rather than cut when a phone is narrower than the stamp. 44 pixels tall, like
-   * everything else in the panel below `md`, because a long press is aimed at it (BR-REQ-041-01
-   * criterion 6).
+   * The box the chip stands in: as wide as the chip (`alignSelf`, so a press beside it — on the
+   * panel, or on the bar's corner from `md` — is not a press on it), never wider than its line,
+   * and 44 pixels tall, like everything else in the panel below `md`, because a long press is
+   * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
+   * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
    */
   const sx = {
     alignSelf: "flex-start",
@@ -68,18 +69,40 @@ export default async function BuildBadge() {
     minHeight: 44,
     maxWidth: "100%",
     m: 0,
-    color: "text.disabled",
-    fontSize: "0.6875rem",
-    lineHeight: 1.4,
-    fontVariantNumeric: "tabular-nums",
-    overflowWrap: "anywhere",
     pointerEvents: "none",
   };
+
+  /**
+   * The stamp as a small outlined chip (§385, the owner, 2026-09-25: "Version must be within a
+   * chip"), in `text.secondary` ink, the same words as before. A chip's label is one line cut
+   * with an ellipsis by default; this one wraps instead (`height: auto`, `white-space: normal`),
+   * because the exact build is the whole point of it and a 320-pixel panel is narrower than a
+   * QA stamp. `component="span"`, since it stands inside a `<p>`. Rendered here, on the server,
+   * with a text label and no element props, and handed to the client island as its child.
+   */
+  const chip = (
+    <Chip
+      component="span"
+      size="small"
+      variant="outlined"
+      label={text}
+      data-testid="build-badge-chip"
+      sx={{
+        height: "auto",
+        minHeight: 24,
+        maxWidth: "100%",
+        color: "text.secondary",
+        fontSize: "0.6875rem",
+        fontVariantNumeric: "tabular-nums",
+        "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.4, py: "3px" },
+      }}
+    />
+  );
 
   if (env.STAFF_AUTH_MODE === "disabled") {
     return (
       <Box component="p" aria-label={t("buildBadgeLabel")} title={version} sx={sx}>
-        {text}
+        {chip}
       </Box>
     );
   }
@@ -91,7 +114,7 @@ export default async function BuildBadge() {
       title={version}
       sx={sx}
     >
-      {text}
+      {chip}
     </BuildBadgeLink>
   );
 }

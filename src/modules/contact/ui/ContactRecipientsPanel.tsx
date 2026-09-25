@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { getTranslations } from "next-intl/server";
@@ -40,6 +41,7 @@ type Props = {
  */
 export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, openWhen }: Props) {
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
 
   /*
     Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
@@ -86,6 +88,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
         action={updateContactRecipientsAction}
         messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}
         // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
+        confirm={{ title: t("confirm.contactRecipientsTitle"), body: t("confirm.contactRecipientsBody"), confirmLabel: t("emails.contacts.save"), cancelLabel: words.cancel }}
         scope="contacts"
         data-testid="contact-recipients-form"
       >

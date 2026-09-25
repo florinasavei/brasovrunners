@@ -19,6 +19,8 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import { deleteAlbumAction, transitionAlbumAction } from "../actions";
 
@@ -45,6 +47,7 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
   const { saved, error } = current;
   const rows = await listAlbumsForAdmin(getDb(), locale);
   const t = await getTranslations("Admin");
+  const words = await confirmWords();
   const query = parseListQuery(current, { sortable: [], defaultSort: "takenOn", defaultPerPage: 100 });
 
   const columns: readonly AdminColumn<AlbumListRow>[] = [
@@ -131,19 +134,33 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
           // The verbs in the same menu every other list uses (§256); the two forms beside it
           // are the Server Actions it submits, and the server checks the role and the version.
           <>
-            <form id={`album-publish-${row.id}`} action={transitionAlbumAction} hidden>
+            {/* Each verb's form asks its own question (§384); the menu only submits it. */}
+            <ActionForm
+              id={`album-publish-${row.id}`}
+              action={transitionAlbumAction}
+              hidden
+              confirm={
+                row.editorialStatus === "PUBLISHED"
+                  ? { title: t("gallery.unpublishTitle"), body: t("gallery.unpublishBody"), confirmLabel: t("gallery.unpublish"), cancelLabel: words.cancel, destructive: true }
+                  : { title: t("gallery.publishTitle"), body: t("gallery.publishBody"), confirmLabel: t("gallery.publish"), cancelLabel: words.cancel }
+              }
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="albumId" value={row.id} />
               <input type="hidden" name="expectedVersion" value={row.version} />
               <input type="hidden" name="to" value={row.editorialStatus === "PUBLISHED" ? "DRAFT" : "PUBLISHED"} />
-            </form>
-            <form id={`album-delete-${row.id}`} action={deleteAlbumAction} hidden>
+            </ActionForm>
+            <ActionForm
+              id={`album-delete-${row.id}`}
+              action={deleteAlbumAction}
+              hidden
+              confirm={{ title: t("gallery.deleteAlbumTitle"), body: t("gallery.deleteAlbumBody", { title: row.title }), confirmLabel: t("gallery.deleteAlbum"), cancelLabel: words.cancel, destructive: true }}
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="albumId" value={row.id} />
-            </form>
+            </ActionForm>
             <RowMenu
               ariaLabel={t("gallery.rowActions", { title: row.title })}
-              cancelLabel={t("confirm.cancel")}
               items={[
                 {
                   kind: "link",
@@ -157,11 +174,6 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
                   icon: row.editorialStatus === "PUBLISHED" ? "unpublish" : "publish",
                   formId: `album-publish-${row.id}`,
                   color: row.editorialStatus === "PUBLISHED" ? "warning" : "primary",
-                  confirm: {
-                    title: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublishTitle") : t("gallery.publishTitle"),
-                    body: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublishBody") : t("gallery.publishBody"),
-                    confirmLabel: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublish") : t("gallery.publish"),
-                  },
                 },
                 {
                   kind: "submit",
@@ -169,11 +181,6 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
                   icon: "delete",
                   formId: `album-delete-${row.id}`,
                   color: "error",
-                  confirm: {
-                    title: t("gallery.deleteAlbumTitle"),
-                    body: t("gallery.deleteAlbumBody", { title: row.title }),
-                    confirmLabel: t("gallery.deleteAlbum"),
-                  },
                 },
               ] satisfies RowMenuItem[]}
             />

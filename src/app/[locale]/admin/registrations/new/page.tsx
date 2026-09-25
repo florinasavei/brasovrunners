@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
@@ -66,6 +67,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const fromDesk = back === "desk";
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Registration");
+  const words = await confirmWords();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
   // The event the form opens on: the one the desk or the list came from, when it takes entries.
   const selectedEventId = events.find((event) => event.id === eventId)?.id ?? events[0]?.id ?? "";
@@ -127,6 +129,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             participantLocale: t("registrations.participantLocale"),
             relayedByParticipantRequest: t("registrations.relayConfirmation"),
           })}
+          // The entry emails the person — the link, or the confirmation on the fast track — and says so (§384).
+          confirm={{ title: t("confirm.createRegistrationTitle"), body: t("confirm.createRegistrationBody"), email: words.email(1), confirmLabel: t("registrations.create"), cancelLabel: words.cancel }}
           data-testid="registration-new-form"
         >
           <input type="hidden" name="uiLocale" value={locale} />
