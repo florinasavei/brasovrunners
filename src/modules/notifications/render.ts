@@ -20,6 +20,7 @@ import {
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { calendarLabels, placeToBeAnnouncedWords } from "@/modules/events/calendar-labels";
 import { buildCalendar } from "@/modules/events/ical";
+import { nightShape } from "@/modules/events/domain/night";
 import { clubNightEvent } from "@/modules/events/night-event";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { LIST_CONSENT_TOKEN_HOURS } from "@/modules/registrations/list-consent";
@@ -371,6 +372,22 @@ async function renderRow(
     if (night.night) {
       data.nightEventSunset = night.sunset ?? "";
       data.nightEventIsGroupRun = eventDetails.type === "GROUP_RUN";
+      // The start named before the sunset, and the end when it is the reason (§NNN) — the shape
+      // decided by `nightShape`, the same rule as the pill, the calendar and the `.ics`.
+      if (night.start) data.nightEventStart = night.start;
+      const shape = nightShape(night);
+      if ((shape?.suffix === "End" || shape?.suffix === "EndProgramme") && night.end) {
+        data.nightEventEnd = night.end;
+        data.nightEventEndSource = shape.suffix === "EndProgramme" ? "programme" : "event";
+      } else if (shape?.suffix === "After") {
+        // No end was ever named: the sun alone made the call and the start was already past
+        // sunset (§NNN) — say so, instead of leaving the sunset looking like the reason alone.
+        data.nightEventAfter = true;
+      } else if (shape?.suffix === "Dawn" && night.sunrise) {
+        // An early-morning start before that day's sunrise (§NNN): the line names the sunrise,
+        // never «după apusul» of the evening before it.
+        data.nightEventSunrise = night.sunrise;
+      }
     }
   }
   // The programme's rows in the update notice when the programme is what changed (§331), each half

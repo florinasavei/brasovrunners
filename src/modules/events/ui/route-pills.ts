@@ -1,7 +1,7 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
 import { distanceInKm } from "../domain/event-type";
-import { clubNightEvent } from "../night-event";
+import { clubNightEvent, nightTooltip } from "../night-event";
 import type { GlyphName } from "./glyphs";
 
 /**
@@ -110,7 +110,7 @@ export function routePillParts(
 
 /**
  * "Eveniment de noapte" / "Night event" (§394): the headlamp's glyph, the words, and the tooltip
- * "Apusul la 16:36 — ia o frontală" — or null on a date that is not one. The answer is this row's
+ * "Începe la 19:00, apusul la 16:36 — ia o frontală" (§NNN: the start named first) — or null on a date that is not one. The answer is this row's
  * own date's (`clubNightEvent`): a series' dates are rows of their own, so the listing's one line
  * for a series, which draws its next date, says the next date's answer.
  */
@@ -126,13 +126,8 @@ export function nightPill(
   // The end is only named when the start alone would not have been dark (§394): a run that
   // starts in daylight and finishes after dusk — with its time, and in the words of where it
   // came from (the event's own end, or the day's last programme row).
-  const tooltip = !facts.sunset
-    ? null
-    : facts.end && facts.endSource === "programme"
-      ? t("night.tooltipEndProgramme", { time: facts.sunset, end: facts.end })
-      : facts.end
-        ? t("night.tooltipEnd", { time: facts.sunset, end: facts.end })
-        : t("night.tooltip", { time: facts.sunset });
+  // Every time named (§NNN): the start first, then the sunset, then the end when it is the reason.
+  const tooltip = nightTooltip(facts, t);
   return {
     glyph: "headlamp",
     label,

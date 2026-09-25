@@ -247,8 +247,18 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     // halves. The fixture's type is GROUP_RUN (§394), so the run's own words: «Alergare de noapte».
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
     const night = await render();
-    expect(night.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
-    expect(night.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+    expect(night.text).toContain("Alergare de noapte: începe la 19:00, după apusul de la 16:44. Ia o frontală.");
+    expect(night.text).toContain("Night run: starts at 19:00, after the 16:44 sunset. Bring a headlamp.");
+
+    // A 05:30 group run on Wednesday 13 January 2027 (§NNN): night before that day's sunrise, and
+    // the line names the sunrise (07:55) — never «după apusul de la 16:57», an evening eleven hours on.
+    await db.update(events).set({ startsAt: new Date("2027-01-13T03:30:00.000Z") }).where(eq(events.id, event.id));
+    const dawn = await render();
+    expect(dawn.text).toContain("Alergare de noapte: începe la 05:30, înainte de răsăritul de la 07:55. Ia o frontală.");
+    expect(dawn.text).toContain("Night run: starts at 05:30, before sunrise at 07:55. Bring a headlamp.");
+    expect(dawn.text).not.toContain("după apusul");
+    expect(dawn.text).not.toContain("after the 16:57 sunset");
+    await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z") }).where(eq(events.id, event.id));
 
     // §394 (review round 3): a daylight start whose own end («Durata», no programme rows) is after
     // dusk — 16:00 to 17:30 on 18 November — carries the line too; ending at 16:45, it does not.
@@ -257,8 +267,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       .set({ startsAt: new Date("2026-11-18T14:00:00.000Z"), endsAt: new Date("2026-11-18T15:30:00.000Z"), scheduleItems: null })
       .where(eq(events.id, event.id));
     const late = await render();
-    expect(late.text).toContain("Alergare de noapte: apusul e la 16:44. Ia o frontală.");
-    expect(late.text).toContain("Night run: sunset is at 16:44. Bring a headlamp.");
+    expect(late.text).toContain("Alergare de noapte: începe la 16:00, apusul la 16:44, se termină la 17:30. Ia o frontală.");
+    expect(late.text).toContain("Night run: starts at 16:00, sunset at 16:44, ends at 17:30. Bring a headlamp.");
     await db.update(events).set({ endsAt: new Date("2026-11-18T14:45:00.000Z") }).where(eq(events.id, event.id));
     expect((await render()).text).not.toContain("Alergare de noapte");
     await db.update(events).set({ startsAt: new Date("2026-11-18T17:00:00.000Z"), endsAt: null }).where(eq(events.id, event.id));
@@ -267,13 +277,13 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     await db.update(events).set({ nightOverride: false }).where(eq(events.id, event.id));
     expect((await render()).text).not.toContain("Alergare de noapte");
     await db.update(events).set({ nightOverride: true, startsAt: new Date("2026-10-01T09:00:00.000Z") }).where(eq(events.id, event.id));
-    expect((await render()).text).toMatch(/Alergare de noapte: apusul e la \d\d:\d\d\. Ia o frontală\./);
+    expect((await render()).text).toMatch(/Alergare de noapte: începe la 12:00, apusul la \d\d:\d\d\. Ia o frontală\./);
 
     // Never on another message about the same night event: the sunset and the light are the
     // reminder's line alone. The confirmation's facts block draws the page's route pills, so it
     // names the night pill — the same `nightPill`, never the reminder's sentence.
     const confirmed = await renderOutboxMessage({ ...row, id: "row-nc", idempotencyKey: "test:nc", messageType: "REGISTRATION_CONFIRMED" }, db, NOW);
-    expect(confirmed.text).not.toMatch(/Alergare de noapte: apusul/);
+    expect(confirmed.text).not.toMatch(/Alergare de noapte: (începe|apusul)/);
     expect(confirmed.text).not.toContain("Ia o frontală");
     expect(confirmed.text).not.toContain("Bring a headlamp");
     expect(confirmed.text).toContain("Traseu: Alergare de noapte");
