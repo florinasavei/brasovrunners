@@ -15,7 +15,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * target: 24px below 360 (WCAG 2.2 SC 2.5.8, AA), 28px from 360, 44px from `sm` — a
  * footer-bar-only exception to criterion 6.
  *
- * §NNN, the owner, 2026-09-25: the glyph is a question mark, not a lock; the notice comes right
+ * §378, the owner, 2026-09-25: the glyph is a question mark, not a lock; the notice comes right
  * after the fold, ahead of the marks, at every width; its word from `sm` is "GDPR"; and a phone's
  * items are `FOOTER_GAP_PHONE` (6px) apart — the largest gap at which the English row still fits
  * at 320px with its summary uncut, measured and recorded in `SiteFooter.tsx`.
@@ -60,7 +60,7 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     summary: footer.locator("summary"),
     toggle: footer.getByRole("button", { name: /temă|theme/i }),
     // On the bar since §323, named for the notice at every width; a question mark on a phone
-    // and the word "GDPR" from `sm` (§NNN).
+    // and the word "GDPR" from `sm` (§378).
     privacy: footer.getByRole("link", { name: where.privacyName, exact: true }),
     mark: page.getByTestId("footer-privacy-mark"),
     marks: footer.getByRole("navigation", { name: /rețelele sociale|social media/i }).getByRole("link"),
@@ -104,7 +104,7 @@ function expectDisjoint(boxes: Array<[string, Box]>, width: number) {
 const panelContent = (fold: Locator) => fold.getByTestId("footer-about-panel").locator(":scope > *").first();
 
 /**
- * Every item on the row, by name, measured, in the order the owner asked for (§NNN): the switch,
+ * Every item on the row, by name, measured, in the order the owner asked for (§378): the switch,
  * the summary, the privacy notice, the three marks, then — on a phone — RO and EN.
  */
 async function rowItems(page: Page, where: (typeof PAGES)[number], phone: boolean): Promise<Array<[string, Box]>> {
@@ -128,7 +128,7 @@ async function rowItems(page: Page, where: (typeof PAGES)[number], phone: boolea
   return items;
 }
 
-/** A phone's gap between neighbouring items on the bar (`FOOTER_GAP_PHONE`, §NNN). */
+/** A phone's gap between neighbouring items on the bar (`FOOTER_GAP_PHONE`, §378). */
 const PHONE_GAP = 6;
 
 /**
@@ -188,7 +188,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       if (phone) await other.click({ trial: true });
 
       // §323: the notice is reachable from every page without opening anything. On a phone a
-      // question mark whose name and tooltip are the notice's (§NNN); from `sm` the word "GDPR".
+      // question mark whose name and tooltip are the notice's (§378); from `sm` the word "GDPR".
       await expect(privacy).toHaveAttribute("title", "Nota de confidențialitate (GDPR)");
       await expect(privacy).toHaveAttribute("href", /\/ro\/confidentialitate$/);
       // Right after the fold, ahead of the marks, and on a phone every item 6px from the next.
@@ -242,11 +242,11 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
  * row twice before: the fold's panel is inside the `<details>` again (review finding 4), and
  * every row item keeps the switch's top however tall the open fold grows.
  *
- * §NNN: at the four widths the gap was measured at — 320, 360, 390 and 412 — in the owner's order
+ * §378: at the four widths the gap was measured at — 320, 360, 390 and 412 — in the owner's order
  * (the privacy question mark right after the fold), every item `PHONE_GAP` from the next, the
  * English summary uncut at 320 with the 6px gap, and the last flag inside the viewport.
  */
-test.describe("§372 §NNN one row on a phone, in both languages, fold closed and open", () => {
+test.describe("§372 §378 one row on a phone, in both languages, fold closed and open", () => {
   for (const where of PAGES) {
     for (const width of [320, 360, 390, 412] as const) {
       for (const state of ["closed", "open"] as const) {

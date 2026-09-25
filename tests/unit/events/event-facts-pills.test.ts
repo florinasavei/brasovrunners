@@ -280,7 +280,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("one glyph per row, all of one size, one colour and one alignment", async () => {
-    // Five Material rows draw an <svg>; the partner's is PartnerEmoji's <span> (§NNN) — a
+    // Five Material rows draw an <svg>; the partner's is PartnerEmoji's <span> (§379) — a
     // different element and Emotion class, so each row's own rule is checked rather than one
     // shared class name, but every rule carries the same twenty pixels, colour and alignment.
     const html = await page({ coHosts: [{ name: "Salvamont", links: [] }] });

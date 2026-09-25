@@ -4,7 +4,7 @@
  *
  * The owner, 2026-09-24: the bar keeps every item but not every word. Eight items with their
  * words need about 370 pixels and a phone has 288 to 328, so on a phone the privacy notice is a
- * question mark (§NNN; a lock until 2026-09-25) and the languages are flags, and every item on
+ * question mark (§378; a lock until 2026-09-25) and the languages are flags, and every item on
  * the bar is a smaller square: 24 pixels
  * below 360 (WCAG 2.2 SC 2.5.8, AA, is 24), 28 from 360, and the ordinary 44 from `sm` up.
  *
@@ -18,7 +18,7 @@
 export const FOOTER_TARGET = { xs: 24, phoneWide: 28, sm: 44 } as const;
 
 /**
- * The space between two neighbouring items on a phone's bar, in pixels (§NNN, the owner,
+ * The space between two neighbouring items on a phone's bar, in pixels (§378, the owner,
  * 2026-09-25: "the mobile footer icons can be a bit more spaced out"). §372 set none, to fit the
  * words; this is the largest gap at which the bar is still one row with every item at 320 pixels,
  * in both languages, fold closed and open — measured in headless Chromium on the built listing,

@@ -421,7 +421,7 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
       expect(Math.abs(centre(logoBox) - centre(languageBox))).toBeLessThan(8);
     } else {
       // On the footer's bar, centred in it. A phone's footer is one row since §372 — the switch,
-      // the summary, the privacy question mark, the marks and the two flags (§NNN, footer.spec.ts) — so the
+      // the summary, the privacy question mark, the marks and the two flags (§378, footer.spec.ts) — so the
       // language's centre is the bar's.
       const barBox = await page.locator("footer").boundingBox();
       expect(Math.abs(centre(languageBox) - centre(barBox))).toBeLessThan(4);

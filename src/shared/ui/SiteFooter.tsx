@@ -36,11 +36,11 @@ const BAR_HEIGHT = 44;
  * - the theme switch, in the bar's own corner (criterion 11);
  * - the "Despre club" fold's summary, with its words — the one label on the row;
  * - the privacy notice as a question mark, whose tooltip and accessible name are the notice's
- *   name, the same page it always linked to; "GDPR" from `sm` (§NNN);
+ *   name, the same page it always linked to; "GDPR" from `sm` (§378);
  * - Facebook, Instagram, Strava;
  * - RO and EN as flags only, the current one ringed and `aria-current` (`LocaleSwitcher`).
  *
- * §NNN (the owner, 2026-09-25): "it should be a question mark, not a lock, and it should be after
+ * §378 (the owner, 2026-09-25): "it should be a question mark, not a lock, and it should be after
  * the about accordion; the mobile footer icons can be a bit more spaced out" and "Use GDPR for
  * desktop as well." So the notice moved ahead of the marks, the lock became `HelpOutlineOutlined`,
  * the word from `sm` is "GDPR", and a phone's items are `FOOTER_GAP_PHONE` apart.
@@ -49,7 +49,7 @@ const BAR_HEIGHT = 44;
  * which is WCAG 2.2 SC 2.5.8's AA floor, 28 from 360, and 44 from `sm`, where nothing changed.
  * It is a footer-bar-only exception to criterion 6: the fold's panel is 44 pixels throughout.
  *
- * ## The gap, measured (§NNN)
+ * ## The gap, measured (§378)
  *
  * Measured on the built listing in headless Chromium (Pixel 5 emulation and desktop Chrome, the
  * same numbers in both), fold closed and open (the same numbers: the panel's box is zero wide).
@@ -144,7 +144,7 @@ export default async function SiteFooter() {
         sx={{
           display: "flex",
           alignItems: "flex-start",
-          // The phone's gap between neighbouring items (§NNN, `footer-target.ts`); from `sm` the
+          // The phone's gap between neighbouring items (§378, `footer-target.ts`); from `sm` the
           // items' own padding spaces them, as before.
           columnGap: { xs: `${FOOTER_GAP_PHONE}px`, sm: 0 },
         }}
@@ -271,15 +271,15 @@ export default async function SiteFooter() {
           The privacy notice, on the bar itself rather than in the fold (§323): a person should
           find how their data is used from any page without opening anything — GDPR art. 12 asks
           for the information to be easy to reach, and a closed `<details>` hides it from sight
-          and from the accessibility tree alike. Right after the fold at every width (§NNN, the
+          and from the accessibility tree alike. Right after the fold at every width (§378, the
           owner: "it should be after the about accordion"), ahead of the social marks. Its own
           width, never shrunk.
 
           Its name is the notice's own at every width, "Nota de confidențialitate (GDPR)" and
           "Privacy notice (GDPR)" (review finding: a screen reader once said "GDPR, link"). From
-          `sm` it shows the word "GDPR" (§NNN, the owner: "Use GDPR for desktop as well"), which
+          `sm` it shows the word "GDPR" (§378, the owner: "Use GDPR for desktop as well"), which
           both names contain (WCAG 2.5.3, label in name; BR-REQ-041-01 criterion 21). On a phone
-          it is a question mark (§NNN, replacing §372's
+          it is a question mark (§378, replacing §372's
           lock): the name, and a tooltip saying the same, are the notice's; no word is rendered.
 
           `HelpOutlineOutlined` — the circled question mark (`help_outline`), the glyph `Hint`

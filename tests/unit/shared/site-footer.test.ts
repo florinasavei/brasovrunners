@@ -11,7 +11,7 @@ import { describe, expect, it, vi } from "vitest";
  *
  * The owner, 2026-09-24: one row on a phone, every item kept but not every word — the privacy
  * notice a glyph, the languages flags, every item a square of 24px below 360, 28px from 360 and
- * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The owner, 2026-09-25 (§NNN):
+ * 44px from `sm` (`footer-target.ts`), where §365 had two lines. The owner, 2026-09-25 (§378):
  * the glyph a question mark rather than a lock, the notice right after the fold, "GDPR" as its
  * word from `sm`, and a phone's items 6px apart. The e2e suite measures the bar in a browser
  * (`footer.spec.ts`, `build-badge.spec.ts`); pull requests run it on the desktop project only
@@ -197,7 +197,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("puts the bar's items in one DOM order: switch, summary, privacy notice, the three marks, the languages", async () => {
-    // §NNN, the owner, 2026-09-25: the privacy notice "should be after the about accordion" —
+    // §378, the owner, 2026-09-25: the privacy notice "should be after the about accordion" —
     // ahead of the marks now, where §372 had it after them. One order at every width, desktop
     // included, and no `order` in the CSS (asserted above) to rearrange it on screen.
     const markup = markupOnly(await renderFooter());
@@ -251,7 +251,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
 
   it("names the privacy link with a name that contains its visible word, in both languages (WCAG 2.5.3)", () => {
     // BR-REQ-041-01 criterion 21: the render above is Romanian only, so the English catalogue is
-    // checked here — "Privacy notice" alone did not contain "GDPR" (review finding, §NNN).
+    // checked here — "Privacy notice" alone did not contain "GDPR" (review finding, §378).
     for (const locale of ["ro", "en"] as const) {
       const legal = (JSON.parse(read(`messages/${locale}.json`)) as { Legal: Record<string, string> }).Legal;
       expect(legal.privacyLinkShort, locale).toBe("GDPR");
@@ -260,7 +260,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
   });
 
   it("spaces a phone's bar items 6px apart — the row, the marks and the flags — and leaves `sm` as it was", async () => {
-    // §NNN: the largest whole gap at which the bar is still one row with every item at 320px in
+    // §378: the largest whole gap at which the bar is still one row with every item at 320px in
     // both languages (`footer-target.ts`, measured in `SiteFooter.tsx`).
     expect(FOOTER_GAP_PHONE).toBe(6);
     const html = await renderFooter();

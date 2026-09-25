@@ -90,7 +90,7 @@ export default function LocaleSwitcher() {
         flexDirection: "row",
         alignItems: "center",
         // Below `sm` this copy is only on the footer's bar, whose items are spaced by one gap
-        // (§NNN, `footer-target.ts`); the two flags take the same. From `sm`, the header's.
+        // (§378, `footer-target.ts`); the two flags take the same. From `sm`, the header's.
         gap: { xs: `${FOOTER_GAP_PHONE}px`, sm: 0.25 },
         flexShrink: 0,
       }}

@@ -88,7 +88,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  *
  * `partner` marks an event held with another organization, on the listing card's chip, the
  * calendar entry, the event page's overline and the facts' "Împreună cu" row (§168): the 🤝
- * emoji everywhere (§NNN, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
+ * emoji everywhere (§379, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
  * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
  */
 export const GLYPHS = {

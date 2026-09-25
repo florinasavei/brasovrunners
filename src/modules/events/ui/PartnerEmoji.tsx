@@ -13,7 +13,7 @@ const FONT_SIZE: Record<"small" | "medium" | "large" | "inherit", string> = {
 };
 
 /**
- * The partner marker's glyph, 🤝 rendered as text rather than an SVG (§NNN; the owner,
+ * The partner marker's glyph, 🤝 rendered as text rather than an SVG (§379; the owner,
  * 2026-09-25: "I hate the partnership handshake icon, use the emoji 🤝" — a change to §367's
  * "handshake icon" and §375, kept to the same generic label and the same box). Shaped like
  * `Glyph` (`ComponentType<SvgIconProps>`, `glyphs.ts`), so it drops straight into

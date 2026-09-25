@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.86-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.87-2026-09-25 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.86-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.87-2026-09-25`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -262,6 +262,8 @@ sections and in `CHANGELOG.md`.
   (the email link, the declaration hold, the waiting-list offer, the reminder with a per-event override, self check-in, race
   week, a series' horizon), Administrator-only and audited, applied to new holds and offers only; every email, page and legal
   template takes its words from it through placeholders, the reminder clause hedged for the event's own choice; migration `0069` (§377).
+- **Batch 11 (2026-09-25, `BR-V1.87`):** the footer's privacy notice is a question mark right after "Despre club" on a phone and
+  the word "GDPR" from `sm`, the phone bar's items 6 px apart (§378) · the partner marker is the 🤝 emoji everywhere (§379).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
   monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
   form — with the steps under each row; the cost table with the Mailgun plan's price (§41,

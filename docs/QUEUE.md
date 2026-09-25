@@ -15,6 +15,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
+| The partner card on the event page has a border and a gray background; the card's time is bold | `fix/partner-card-surface` | |
+| A "headlamp required" checkbox in the editor and a headlamp pill on the card, the page and the calendar entry (migration `0070`) | `feat/headlamp-required` | its own release |
 | Toasts after every backoffice action and a confirmation dialog before every irreversible or outward-facing one — an action that emails participants says so, with the count | `feat/toasts-and-confirms` | |
 | Tighter spacing on phones for the public pages | `fix/mobile-density` | after `BR-V1.83` |
 | "Următoarele emailuri automate": the next 14 days of automatic sends per event, with recipient counts, on `/admin/emails` | `feat/email-forecast` | after `BR-V1.86` |
@@ -23,7 +25,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V1.86` |
+| — | nothing waiting: the last ready items shipped in `BR-V1.87` |
 
 ## Next, queued
 
@@ -55,6 +57,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V1.87` | the footer's privacy notice is a question mark after "Despre club" on a phone and the word "GDPR" from `sm`, the phone bar's items 6 px apart · the partner marker is the 🤝 emoji |
 | `BR-V1.86` | "Termene": every participant-facing deadline is one club setting on `/admin/emails` — the email link, the declaration hold, the waiting-list offer, the reminder (per event or the club's), self check-in, race week, a series' horizon — Administrator-only, audited, applied to new holds and offers only; emails, pages and legal templates take their words from it; migration `0069` |
 | `BR-V1.85` | the listing card: one handshake glyph and never a partner's name, the next date and its time on one line on a phone, the pills in the order surface, difficulty, distance, elevation, cost · the `/admin/legal` notice folds closed on the legal page and says what the code enforces; a malformed admin id answers 404 everywhere in the backoffice |
 | `BR-V1.84` | the phone footer in one row from 320 px — every item on it, a lock for the privacy notice, the languages as flags, 24-px targets below 360 and 28 up to `sm` · the email editor's placeholder legend and preview sample, the save guard, a bilingual email's second half entirely in its own language with the status in words · the dispatcher guards its own context, `yarn ship` continues past a merged batch PR, a worktree-sweep card, a resumed branch still gets its review |
