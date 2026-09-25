@@ -229,7 +229,7 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
-    // "Necesită frontală" (§NNN): a checkbox in "Traseul", so an absent value is "none needed".
+    // "Necesită frontală" (§382): a checkbox in "Traseul", so an absent value is "none needed".
     headlampRequired: form.get("event.headlampRequired") === "on",
     featured: form.get("event.featured") === "on",
     // A checkbox like the one above it, and unlike it in every other way: any number of

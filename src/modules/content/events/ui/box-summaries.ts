@@ -420,7 +420,7 @@ function distanceWords(words: SummaryWords, distanceMeters: number | null | unde
   return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
 }
 
-/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu`, or `Nimic completat` (the headlamp, §NNN). */
+/** Sub-card 1.2: `Trail · Mediu · 12 km · +450 m · frontală · traseu`, or `Nimic completat` (the headlamp, §382). */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,

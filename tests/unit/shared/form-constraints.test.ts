@@ -30,7 +30,7 @@ const asksFor = (field: string) => EVENT_FORM.includes(`box("${field}"`) || EVEN
 
 /** Fields of the event row that are not a box: ticks and islands with rules of their own. */
 // `links` is an island of rows (§332) whose boxes read their constraints off `eventLinkRowSchema`.
-// `headlampRequired` is a tick in "Traseul" (§NNN), like `isSpecial`.
+// `headlampRequired` is a tick in "Traseul" (§382), like `isSpecial`.
 const NOT_A_BOX = new Set(["featured", "isSpecial", "headlampRequired", "participantListVisibility", "bibDesign", "scheduleRows", "coHosts", "links", "locationAddress", "locationToBeAnnounced"]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

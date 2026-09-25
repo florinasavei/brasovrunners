@@ -92,7 +92,7 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
-  /** Bring a headlamp (§NNN): a line of its own under the facts line, "Frontală necesară" in the calendar's language. */
+  /** Bring a headlamp (§382): a line of its own under the facts line, "Frontală necesară" in the calendar's language. */
   headlampRequired?: boolean;
   surface?: EventSurface | null;
   difficulty?: "EASY" | "MODERATE" | "HARD" | null;
@@ -427,7 +427,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     place.lines,
     excerpt ? [{ text: excerpt }] : [],
     body ? [{ text: body }] : [],
-    // The headlamp (§NNN) on its own line under the facts: a thing to pack, read on the morning of
+    // The headlamp (§382) on its own line under the facts: a thing to pack, read on the morning of
     // a dark evening's run, not one more word lost among the route's.
     [times, facts, event.headlampRequired ? t("headlampRequired") : ""].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],

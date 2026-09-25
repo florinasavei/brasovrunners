@@ -6,7 +6,7 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (`DECISIONS.md` §NNN) — "Necesită frontală", the editor's checkbox, end to end.
+ * BR-REQ-050-02 (`DECISIONS.md` §382) — "Necesită frontală", the editor's checkbox, end to end.
  *
  * The owner, 2026-09-25: "I need an extra checkmark on the event editor and a headlamp icon for
  * the events that require a headlamp (e.g. the Wednesday 'Running up that hill' event during

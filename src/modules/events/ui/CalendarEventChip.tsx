@@ -10,7 +10,7 @@ import PartnerMark from "./PartnerMark";
 /**
  * What the calendar says about one entry, line by line (§367): the time and the whole title, then
  * the date's note when it has one (§122 — "Nu în locul obișnuit: …"), then "Frontală necesară" when
- * the organizer marked the date (§NNN) — after the place, since both say how the evening will be —
+ * the organizer marked the date (§382) — after the place, since both say how the evening will be —
  * then the generic "Eveniment în parteneriat" marker when it is held with one. The grid's tooltip shows them as
  * lines; the link's accessible name reads them as sentences, each ended so a screen reader pauses
  * between them.
@@ -81,7 +81,7 @@ export default function CalendarEventChip({
   filled: boolean;
   cancelled: boolean;
   note: EditionNote | null;
-  /** "Frontală necesară" / "Headlamp required" (§NNN), made on the server — or null for a date that needs no light. */
+  /** "Frontală necesară" / "Headlamp required" (§382), made on the server — or null for a date that needs no light. */
   headlamp?: string | null;
   /** The generic "Eveniment în parteneriat" marker (§367), made on the server — or null for an event with no partner. */
   partner: string | null;

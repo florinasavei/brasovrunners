@@ -302,7 +302,7 @@ export const events = pgTable(
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
-     * Bring a headlamp (§NNN; the owner, 2026-09-25: "a headlamp icon for the events that require
+     * Bring a headlamp (§382; the owner, 2026-09-25: "a headlamp icon for the events that require
      * a headlamp (e.g. the Wednesday 'Running up that hill' event during autumn, winter and spring,
      * as it is already dark at 19:00 when it starts)"). A fact of the route on this date, set by
      * the organizer in "Traseul": a pill on the card and the page, a line in the calendar entry.

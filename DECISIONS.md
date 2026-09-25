@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.88-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.88-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.89-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -15563,3 +15563,14 @@ Round 2 of fix/partner-card-surface answered three review findings without chang
 The bold time on a race card cost it width. On the card, a race's «when» row wraps by design: the date on the first line, the two named times on the second. With the times' digits bold, that second line measured 226.83 pixels at 320 in Romanian on the widest weekday ("Duminică, 11 oct." alone on the first line), against the 226 the card leaves the row. It wrapped once more, to three lines, and the start time sat on a line of its own. The card's race row now takes a four-pixel gap between its pieces and before each separator, where every other row keeps six (`RACE_ROW_GAP` in `EventFacts.tsx`). Two pixels fewer on each side of the separator win back four. Re-measured on 2026-09-25 in headless Chromium on the built listing, the line is now 222.83 pixels at 320 in Romanian and 215.14 in English: two lines in both languages. At 360, 390 and 412 the date and the gathering time share the first line and the start time takes the second. The series row and the lead's breakpoint (`WHEN_LEAD_HIDDEN_BELOW_376`) are untouched: they never wrap, and the breakpoint was measured with the six-pixel gap. The spec's race fixture is pinned to the widest weekday (a Sunday with a two-digit day), so the case runs on every run rather than one week in seven.
 
 Baseline `BR-V1.88-2026-09-25`.
+
+## 382. A per-event "headlamp required" mark
+
+The owner, 2026-09-25: an extra checkmark in the event editor and a headlamp icon on the events that need one. The Wednesday "Running up that hill" run starts at 19:00, in the dark from autumn to spring.
+
+- `events.headlamp_required`, boolean NOT NULL DEFAULT false (migration 0070, expand only, AGENTS.md §7.6).
+- Editor: "Necesită frontală" / "Headlamp required" checkbox in the "Traseul" card, with a help line saying it shows on the event's card, page and calendar. It works the same on create and edit and is saved by the existing action. The series scope carries it, and a duplicate and every date a series makes keep it. The card's closed-state line ends in «frontală».
+- Public: a pill (the FlashlightOn glyph, passed by name, plus the word) after the elevation and before the cost on the listing card and the event page. The featured hero gets a glyph piece. The calendar entry gets a line in its tooltip, and the .ics description gets a line too. An unmarked event shows nothing.
+- JSON-LD and every email are unchanged. Whether the reminder's checklist should say it is a question for the owner.
+
+Baseline `BR-V1.89-2026-09-25`.

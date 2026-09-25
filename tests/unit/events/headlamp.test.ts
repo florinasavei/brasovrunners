@@ -10,7 +10,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
 
 /**
- * BR-REQ-020-01 and BR-REQ-050-02 (`DECISIONS.md` §NNN) — "Necesită frontală", a per-event mark.
+ * BR-REQ-020-01 and BR-REQ-050-02 (`DECISIONS.md` §382) — "Necesită frontală", a per-event mark.
  *
  * The owner, 2026-09-25: "I need an extra checkmark on the event editor and a headlamp icon for
  * the events that require a headlamp (e.g. the Wednesday 'Running up that hill' event during
@@ -112,7 +112,7 @@ function rows(html: string) {
   return [...withoutStyles(html).matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt><dd\b[^>]*>([\s\S]*?)<\/dd>/g)].map(([, dt, dd]) => ({ label: text(dt), dd }));
 }
 
-describe("§NNN orderRoutePills — the headlamp after the route's numbers", () => {
+describe("§382 orderRoutePills — the headlamp after the route's numbers", () => {
   const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
   const difficulty: Pill = { glyph: "difficulty:MODERATE", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
@@ -129,13 +129,13 @@ describe("§NNN orderRoutePills — the headlamp after the route's numbers", () 
   });
 });
 
-describe("§NNN the glyph crosses the boundary by name", () => {
+describe("§382 the glyph crosses the boundary by name", () => {
   it("names the lit torch `headlamp`, one file from @mui/icons-material", () => {
     expect(GLYPHS.headlamp).toBe(FlashlightOnIcon);
   });
 });
 
-describe("§NNN the event page's facts", () => {
+describe("§382 the event page's facts", () => {
   it("puts «Frontală» last in the route's pills, with its glyph, and the cost stays in its own row", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
@@ -165,7 +165,7 @@ describe("§NNN the event page's facts", () => {
   });
 });
 
-describe("§NNN the listing card and the hero", () => {
+describe("§382 the listing card and the hero", () => {
   it("the card's pills: the route, the headlamp, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
     expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Frontală", "Gratuit"]);
@@ -191,7 +191,7 @@ describe("§NNN the listing card and the hero", () => {
   });
 });
 
-describe("§NNN the calendar entry names it after the place", () => {
+describe("§382 the calendar entry names it after the place", () => {
   function chip(values: Partial<Parameters<typeof CalendarEventChip>[0]> = {}) {
     return renderToStaticMarkup(
       createElement(CalendarEventChip, {
@@ -241,7 +241,7 @@ describe("§NNN the calendar entry names it after the place", () => {
   });
 });
 
-describe("§NNN the calendar file's description", () => {
+describe("§382 the calendar file's description", () => {
   function translator(catalogue: { Event: Record<string, unknown> }): CalendarLabels["t"] {
     return (key, values) => {
       const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], catalogue.Event);
@@ -276,7 +276,7 @@ describe("§NNN the calendar file's description", () => {
   });
 });
 
-describe("§NNN the migration", () => {
+describe("§382 the migration", () => {
   it("adds one column with a default, and nothing else (AGENTS.md §7.6: expand only)", () => {
     const sql = readFileSync("src/db/migrations/0070_headlamp_required.sql", "utf8").trim();
     expect(sql).toBe('ALTER TABLE "events" ADD COLUMN "headlamp_required" boolean DEFAULT false NOT NULL;');
@@ -289,7 +289,7 @@ describe("§NNN the migration", () => {
   });
 });
 
-describe("§NNN the editor's «Traseul» box says it while shut", () => {
+describe("§382 the editor's «Traseul» box says it while shut", () => {
   it("«frontală» after the climb in the box's line, in both languages", () => {
     const course = { distanceMeters: 8000, elevationGainMeters: 250, routeUrl: null, headlampRequired: true };
     expect(courseSummary(ro.Admin.editor.boxes.summary as SummaryWords, course, { surface: "Trail", difficulty: "Mediu" })).toBe(

@@ -92,7 +92,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * emoji everywhere (§379, replacing the `Handshake` glyph §367 chose and §375 kept to one icon,
  * and the facts row's own copy of it — the owner hates the icon on every surface, not some).
  *
- * `headlamp` is a torch that is lit (§NNN; the owner, 2026-09-25: "a headlamp icon for the events
+ * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
  * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.

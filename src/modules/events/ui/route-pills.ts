@@ -7,7 +7,7 @@ export type Pill = { glyph: GlyphName; label: string };
  * The route's pills, in one fixed order (§366, amended §375 — the owner, 2026-09-24, of the
  * card's pills reading "8 km · 250 m D+ · Mediu · Trail": "The order of this should be: terrain
  * type, difficulty, distance, elevation"): **surface, difficulty, distance, elevation**, then the
- * **headlamp** (§NNN) — what to bring for that route, after what the route is — then the cost
+ * **headlamp** (§382) — what to bring for that route, after what the route is — then the cost
  * pill after them wherever a caller adds one.
  *
  * One function decides the order for both surfaces that draw route pills — the listing card

@@ -499,7 +499,7 @@ export default async function EventFacts({
     ? { glyph: `difficulty:${event.difficulty}`, label: t(`difficultyValues.${event.difficulty}`) }
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
-  // Bring a headlamp (§NNN): a lit torch and the word, after the route's numbers and before the
+  // Bring a headlamp (§382): a lit torch and the word, after the route's numbers and before the
   // cost — only on an event the organizer marked; an unmarked one says nothing about light.
   const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
   let routePills = orderRoutePills({ difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill });
@@ -658,7 +658,7 @@ export default async function EventFacts({
       route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
     }
     if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-    // The headlamp (§NNN), with its glyph like the pill it is on the card and the page, before the cost.
+    // The headlamp (§382), with its glyph like the pill it is on the card and the page, before the cost.
     if (event.headlampRequired) route.push(withGlyph(GLYPHS.headlamp, t("headlamp")));
     // The coin for the cost, below, is the closed set's other glyph (§112).
     /*

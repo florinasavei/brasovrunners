@@ -94,7 +94,7 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
-  // Bring a headlamp (§NNN): a pill on the card and the page, a line in the calendar entry.
+  // Bring a headlamp (§382): a pill on the card and the page, a line in the calendar entry.
   headlampRequired: events.headlampRequired,
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,

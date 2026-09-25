@@ -1405,7 +1405,7 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // A fact of the route like the two above (§NNN): "from this date" carries it from the first
+  // A fact of the route like the two above (§382): "from this date" carries it from the first
   // dark Wednesday of October, and "from this date" again takes it off in spring.
   "headlampRequired",
   "registrationMode",
@@ -2177,7 +2177,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // The headlamp travels with the route (§NNN): a copy of an evening run, and every date a
+    // The headlamp travels with the route (§382): a copy of an evening run, and every date a
     // series makes from it, is as dark at its start as the source.
     headlampRequired: source.headlampRequired,
     featured: false,

@@ -3,7 +3,7 @@ import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featur
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
 /**
- * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §NNN) — "Necesită frontală", ticked in the
+ * BR-REQ-050-02 and BR-REQ-020-01 (`DECISIONS.md` §382) — "Necesită frontală", ticked in the
  * editor, is a pill on the listing card and the event page in both languages, a line in the
  * calendar entry; unticked, it is gone from all of them.
  *

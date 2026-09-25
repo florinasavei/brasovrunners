@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.88-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.89-2026-09-25 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.88-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.89-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -350,6 +350,7 @@ coffee is run on nothing.
 20. (Amended.) "At another place than most of them" compares the place the reader's page names, in the reader's language, without the street address. Two dates are at the same place when their map links are the same link (scheme, "www.", host case, a trailing slash, the fragment and `g_st`/`utm_*` ignored), or when their names are equal once folded: diacritics, case, and every run of punctuation or spacing dropped, then trailing comma-separated address parts removed from the end, never the first part. Those parts are exactly: the club's city; its county; the country; a six-digit postcode; a Romanian street by its first word (strada, str, bulevardul, bd, b-dul, calea, aleea, șoseaua, șos, splaiul); an English street by its last word (street, st, road, rd, avenue, ave, boulevard, blvd); a house number. So "Parcul Sportiv Tractorul – intrarea dinspre Patinoarul Olimpic, Brasov" and the same name without ", Brasov" carry no mark. A different entrance, a square, another park, another city or another kilometre still does (2026-09-24, `DECISIONS.md` §367). Verification: unit `events/same-place.test.ts`, `events/series.test.ts`, `events/partner-marker.test.ts`.
 21. Given an event held with one or more partners, when its listing card, series card, featured hero, calendar entry (grid, agenda, tooltip) or event page overline renders, then it carries one handshake glyph and the generic label "Eveniment în parteneriat" / "Partnered event" in the reader's language — never a partner's name and never a count — and the partners themselves, each named with its links, appear only in the event page's partner cards (2026-09-25, `DECISIONS.md` §375).
 22. The partner marker's emoji glyph is aria-hidden by default wherever no caller-supplied aria-label or role names it, matching every other glyph on the site, while a caller that does name it (PartnerMark) is still read aloud. (2026-09-25, `DECISIONS.md` §379).
+23. A marked event shows a headlamp pill (glyph and word, in the reader's language) after the route's numbers and before the cost on the listing card, the event page and the featured hero, and a line in the calendar entry and the .ics description; an unmarked event shows none of it.
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -1361,6 +1362,7 @@ way through every step, and none of them is a way around the allocator.
 61. Amends criterion 48. Given an event with at least one real registration, when the editor renders, then "Ce fel de eveniment" is also amber and shows the count while closed, because the status card inside it is one of the boxes a change reaches. The sentence about what a change does stays in the status card, and the course and links cards are not marked. Verification: unit `content/editor-first-card.test.ts`, `content/editor-order.test.ts` (2026-09-24, `DECISIONS.md` §358).
 62. Given the event editor or the create page, when a fold inside a language tab (the summary, the description, the programme's notes, the rules) is opened or closed in one language, then the same fold in the other language is open or closed when its tab comes forward. This holds for as long as the page is open, and across a refused save. The server's HTML is unchanged: every such fold arrives closed. The other language's editor mounts when its tab is shown. Closing a fold never discards what was typed in it, and the form posts the typed document (§363). Verification: unit shared/twin-folds.test.ts; e2e editor-language-folds.spec.ts.
 63. An event may set its own reminder lead in the editor (as usual, 24, 48 or 72 hours, or none): null is the club's number and zero is no reminder. The database refuses anything outside 0–168, and a series edit and a copy carry the choice (2026-09-25, `DECISIONS.md` §377).
+64. The event editor offers "Necesită frontală" / "Headlamp required" in the "Traseul" card; it is stored per event, false by default, carried by the series scope and kept by a duplicate and every date a series makes.
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
