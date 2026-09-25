@@ -15,12 +15,12 @@ export type RouteFactsSource = Pick<
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
  * optional value map, which is how `next-intl`'s own translator is called everywhere else here.
- * A method, not an arrow-typed property, so a caller's richer, overloaded translator (§NNN,
- * `getTranslations`'s return) stays assignable without a cast — TypeScript checks a method's
- * parameters bivariantly, an arrow-typed property's contravariantly. */
+ * A narrow structural type, not the translator's own richer, overloaded signature — the untyped
+ * `next-intl` translator this repository gets from `getTranslations` (no `AppConfig` declared,
+ * so its keys are plain strings) satisfies it structurally, with no cast at the call site. */
 type Translate = { (key: string, values?: Record<string, string | number>): string };
 /** A formatter narrow enough for `buildRoutePills`: only the one method it calls, and only the
- * one option (`maximumFractionDigits`) it ever passes — a method, for the same reason. */
+ * one option (`maximumFractionDigits`) it ever passes — the same narrowing as `Translate`. */
 type FormatNumber = { number(value: number, options?: { maximumFractionDigits?: number }): string };
 
 /**
@@ -47,20 +47,20 @@ export function orderRoutePills(pills: {
 }
 
 /**
- * The route's pills, built and ordered in one call — surface, difficulty, distance, elevation,
- * headlamp, then the cost's own closed-set word (§343: no amount, no link — those are the event
- * page's own cost row) — a pill only for what the club stated, nothing at all when it stated
- * none.
- *
- * A pure function, not a component: it takes the translator and the formatter its caller already
- * has (`getTranslations("Event")`, `getFormatter()`), so it can be called from a synchronous
- * render — a table column, a card — without nesting an async Server Component inside another
- * one, which `react-dom/server`'s static renderer cannot resolve. `RoutePills` (below) renders
- * the array this returns; it is the one function both surfaces (the listing card's compact facts
- * and the backoffice's own event list, `DECISIONS.md` §NNN) call, so neither reads the route in
- * a different order or a different set from the other.
+ * The route's five pills, built but not yet ordered or filtered to a set — a pill only for what
+ * the club stated, `null` for what it did not. The one place that builds a pill from the event's
+ * own columns (surface, difficulty, distance, elevation, headlamp), so `buildRoutePills` (the
+ * compact card and the backoffice's own list) and `EventFacts`'s own stacked variant (the event
+ * page, §356) read the same five pills rather than five each of their own that could drift apart.
+ * `orderRoutePills` still decides which of the five a caller shows and in what order — the event
+ * page leaves the surface out unless another route pill or link already earns the row (the
+ * overline beside the event's type already says it, BR-REQ-010-01); the card always includes it.
  */
-export function buildRoutePills(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill[] {
+export function routePillParts(
+  event: RouteFactsSource,
+  t: Translate,
+  format: FormatNumber,
+): { surface: Pill | null; difficulty: Pill | null; distance: Pill | null; elevation: Pill | null; headlamp: Pill | null } {
   const distance = distanceInKm(event.distanceMeters);
   const distancePill: Pill | null =
     distance !== null ? { glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) } : null;
@@ -72,14 +72,26 @@ export function buildRoutePills(event: RouteFactsSource, t: Translate, format: F
     : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   const headlampPill: Pill | null = event.headlampRequired ? { glyph: "headlamp", label: t("headlamp") } : null;
+  return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: headlampPill };
+}
 
-  const pills = orderRoutePills({
-    surface: surfacePill,
-    difficulty: difficultyPill,
-    distance: distancePill,
-    elevation: elevationPill,
-    headlamp: headlampPill,
-  });
+/**
+ * The route's pills, built and ordered in one call — surface, difficulty, distance, elevation,
+ * headlamp, then the cost's own closed-set word (§343: no amount, no link — those are the event
+ * page's own cost row) — a pill only for what the club stated, nothing at all when it stated
+ * none.
+ *
+ * A pure function, not a component: it takes the translator and the formatter its caller already
+ * has (`getTranslations("Event")`, `getFormatter()`), so it can be called from a synchronous
+ * render — a table column, a card — without nesting an async Server Component inside another
+ * one, which `react-dom/server`'s static renderer cannot resolve. `RoutePills` (below) renders
+ * the array this returns; it is the one function both surfaces (the listing card's compact facts
+ * and the backoffice's own event list) call, so neither reads the route in a different order or
+ * a different set from the other.
+ */
+export function buildRoutePills(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill[] {
+  const parts = routePillParts(event, t, format);
+  const pills = orderRoutePills(parts);
   if (event.costType) pills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
   return pills;
 }
