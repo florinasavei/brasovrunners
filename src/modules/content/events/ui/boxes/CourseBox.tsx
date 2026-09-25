@@ -135,7 +135,7 @@ export default async function CourseBox({
             zone={zone}
             start={{ date: wall.slice(0, 10), time: wall.slice(11, 16) }}
             inSeries={inSeries}
-            seriesToggleName={event ? undefined : "repeat.on"}
+            seriesToggleName={event ? "repeatOn" : "repeat.on"}
             words={{
               label: t("editor.night.label"),
               choices: { auto: t("editor.night.auto"), yes: t("editor.night.yes"), no: t("editor.night.no") },

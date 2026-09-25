@@ -95,7 +95,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  * `headlamp` is a torch that is lit (§382; the owner, 2026-09-25: "a headlamp icon for the events
  * that require a headlamp"): Material has no headlamp, and a lit torch is the nearest single-file
  * glyph that says "bring a light" rather than "it is night" (a moon would read as the time, not
- * the kit). Always beside its word, "Frontală" / "Headlamp", like every other pill.
+ * the kit). Always beside its word, "Eveniment de noapte" / "Night event", like every other pill.
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),

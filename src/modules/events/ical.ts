@@ -382,7 +382,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const nightLine = night.night ? (night.sunset ? t("night.ics", { time: night.sunset }) : t("night.pill")) : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
-  const km =distanceInKm(event.distanceMeters ?? null);
+  const km = distanceInKm(event.distanceMeters ?? null);
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",

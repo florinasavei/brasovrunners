@@ -112,7 +112,7 @@ export default async function EventCalendar({
   };
 
   // The chip is a client island (the tooltip); everything crosses as strings and names (§112).
-  const eventLink =(event: PublicEvent, dense: boolean) => {
+  const eventLink = (event: PublicEvent, dense: boolean) => {
     const glyphs: GlyphName[] = [`type:${event.type}`, ...(event.surface ? [`surface:${event.surface}` as const] : [])];
     return (
       <CalendarEventChip
