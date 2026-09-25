@@ -110,7 +110,7 @@ export function routePillParts(
 
 /**
  * "Eveniment de noapte" / "Night event" (§394): the headlamp's glyph, the words, and the tooltip
- * "Soarele apune la 16:36" — the sunset alone (§NNN) — or null on a date that is not one. The
+ * "Soarele apune la 16:36" — the sunset alone (§415) — or null on a date that is not one. The
  * answer is this row's own date's (`clubNightEvent`): a series' dates are rows of their own, so
  * the listing's one line for a series, which draws its next date, says the next date's answer.
  */
@@ -123,7 +123,7 @@ export function nightPill(
   // «Alergare de noapte» on a group run — the owner calls a run a run, not an "event" — and
   // «Eveniment de noapte» on every other type (§394).
   const label = event.type === "GROUP_RUN" ? t("night.runPill") : t("night.pill");
-  // The tooltip names the sunset alone (§NNN).
+  // The tooltip names the sunset alone (§415).
   const tooltip = nightTooltip(facts, t);
   return {
     glyph: "headlamp",

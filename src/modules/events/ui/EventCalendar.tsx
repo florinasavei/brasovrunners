@@ -38,7 +38,7 @@ export type CalendarLayout = "grid" | "list";
  *
  * The controls that change the period are `CalendarHeader`. `events` arrives **already read**
  * — the period's rows, from the public cache (§333) with their last good copy behind them
- * (§281), awaited once by the page and narrowed by its filters (§NNN, amending §166 here): no
+ * (§281), awaited once by the page and narrowed by its filters (§413, amending §166 here): no
  * streamed boundary and no skeleton stands in for this region any more, because a streamed
  * region is revealed by a script and the filter panel above it is a GET form that must work
  * without one. With a script, a month change is a soft navigation that keeps this grid on
@@ -66,10 +66,10 @@ export default async function EventCalendar({
   view: CalendarView;
   /** The page the calendar is on (§251): a day links back to it, never to the listing. */
   pathname?: "/calendar" | "/events";
-  /** The period's rows, already read and filtered by the page (§NNN). */
+  /** The period's rows, already read and filtered by the page (§413). */
   events: PublicEvent[];
   now: Date;
-  /** Other query parameters the month links keep — the filters (§89, §NNN; a group ticked twice is an array), the layout (§137). */
+  /** Other query parameters the month links keep — the filters (§89, §413; a group ticked twice is an array), the layout (§137). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {

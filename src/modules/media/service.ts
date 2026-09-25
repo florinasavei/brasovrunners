@@ -7,7 +7,7 @@ import { type ImageQuality, ladderKeyPrefixOf } from "./ladder";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey, type Storage } from "./storage";
 
 /**
- * What the person who uploaded a picture is told about it afterwards (§NNN): the size it was
+ * What the person who uploaded a picture is told about it afterwards (§414): the size it was
  * stored at, the choice they made and what "high" turned into, what a wide screen loads, and how
  * many files it became. Facts, not advice — the sentence around them is the page's.
  */

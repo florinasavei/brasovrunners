@@ -23,7 +23,7 @@ import { BROWSER_SEND_BYTES, HIGH_WEB_MAX, MAX_DIMENSION, MAX_UPLOAD_BYTES } fro
 /**
  * The longest side worth sending, per choice. At «Normală» the server keeps `WEB_MAX` (2400)
  * and throws the rest away, and a little headroom means a picture the club later wants larger is
- * not already destroyed. At «Înaltă» the server keeps `HIGH_WEB_MAX` (4000; §NNN), so the
+ * not already destroyed. At «Înaltă» the server keeps `HIGH_WEB_MAX` (4000; §414), so the
  * browser sends that much: capping it at 3000 here was the half of "high is no sharper" the
  * server could not undo.
  */
@@ -34,7 +34,7 @@ const INTERMEDIATE_QUALITY = 0.95;
 
 /**
  * The most one upload sends: the server's own limit, or the platform's request body, whichever
- * is smaller (`limits.ts`, §NNN). Every "fits" below is measured against this.
+ * is smaller (`limits.ts`, §414). Every "fits" below is measured against this.
  */
 const SEND_LIMIT = Math.min(MAX_UPLOAD_BYTES, BROWSER_SEND_BYTES);
 

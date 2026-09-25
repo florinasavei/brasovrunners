@@ -105,7 +105,7 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 const RACE_ROW_GAP = 0.5;
 
 /**
- * The event page's hours from the start (§NNN): a row of small outlined cells, each as wide as a
+ * The event page's hours from the start (§416): a row of small outlined cells, each as wide as a
  * third of the answer's column and never narrower than 72 pixels — three of them and their two gaps
  * are 232 pixels, inside the 260 a 320-pixel phone leaves the answer under its label — and never
  * wider than 112, so on a desktop they read as a strip and not as three stretched boxes. Wrapping
@@ -179,9 +179,9 @@ export default async function EventFacts({
   variant?: "full" | "compact";
   /**
    * The forecast for the start (§402), read by the caller (`forecastForEvent`) at the event's own
-   * place (§NNN) — null beyond seven days, for an event not going ahead, and whenever Open-Meteo
+   * place (§416) — null beyond seven days, for an event not going ahead, and whenever Open-Meteo
    * did not answer. The event page and its preview (`stacked`) draw the start hour with its details
-   * and the hours after it; the listing's featured hero (the default form) one line of it (§NNN —
+   * and the hours after it; the listing's featured hero (the default form) one line of it (§416 —
    * the owner: "aș vrea să văd vremea și pe cardul principal"). The compact card never reads it:
    * its glyph and degrees are the card's own chip (`CardWeather`).
    */
@@ -660,7 +660,7 @@ export default async function EventFacts({
        D+ · Mediu · Trail": "The order of this should be: terrain type, difficulty, distance,
        elevation"), minus the surface: the hero has no surface pill of its own, the overline chip
        beside the event's type already says it, so difficulty leads here, before distance and
-       elevation. Difficulty carries its own glyph (§NNN: a gauge, its needle at one of five
+       elevation. Difficulty carries its own glyph (§412: a gauge, its needle at one of five
        positions, replacing §399's scale of weights); distance and elevation do not, on the hero as
        before. */
     const route: ReactNode[] = [];
@@ -752,7 +752,7 @@ export default async function EventFacts({
     if (coHosts.length > 0) lines.push({ label: t("coHost"), icon: GLYPHS.partner, value: [coHostSentence()] });
     if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
     /*
-      The weather at the start, on the hero too (§NNN; the owner, 2026-09-25: "aș vrea să văd vremea
+      The weather at the start, on the hero too (§416; the owner, 2026-09-25: "aș vrea să văd vremea
       și pe cardul principal"): «Vremea» with the forecast's own glyph, then the pieces the page's
       first line says — the word, the degrees, the chance of rain, the wind — and the credit
       Open-Meteo's licence asks for as the last piece, a link like the others here. The start
@@ -983,7 +983,7 @@ export default async function EventFacts({
     answered; otherwise the row is not there at all, never a sentence saying it is missing. After
     the short facts and before the partners, whose cards stay last (§356).
 
-    Since §NNN (the owner, 2026-09-25: "la vreme aș vrea să văd exact pe locația selectată, să văd
+    Since §416 (the owner, 2026-09-25: "la vreme aș vrea să văd exact pe locația selectată, să văd
     mai multe date"), three things more, in reading order under that first line:
     - the start hour's details in the smaller grey type of a second line — how warm it feels, how
       much falls, the gusts, the humidity, the UV index — each only when the hour has it;

@@ -64,7 +64,7 @@ const isNight = (event: PublicEvent) => clubNightEvent(event).night;
  *
  * Everything the section does is unchanged (`CalendarSection`): the month or the year the
  * address names, the grid or the list, and the three doors into a reader's own calendar. The
- * period's rows are one cached read (§333) the page awaits before it renders (§NNN, amending §166
+ * period's rows are one cached read (§333) the page awaits before it renders (§413, amending §166
  * here): the filter panel and the month itself are in the first HTML the server sends, so a
  * browser with scripts off can tick, press «Aplică» and read the narrowed month.
  */
@@ -97,7 +97,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const t = await getTranslations("Events");
   const now = new Date();
 
-  // The same readings of the address the listing makes (§89, §116, §137, §NNN), so a link that
+  // The same readings of the address the listing makes (§89, §116, §137, §413), so a link that
   // was in somebody's history still means what it meant: the filters — `?type=RACE` and
   // `?partner=1` among them — and the layout, all kept through the month's own links.
   const filter = parseListingFilter(searched);
@@ -114,11 +114,11 @@ export default async function CalendarPage({ params, searchParams }: Props) {
     Keyed by what is actually being shown (§281): a month, a year, and the language. Two months
     are two answers, and a copy of March must never be served as a copy of April.
 
-    The rows are kept and cached whole, and filtered after the read (§NNN). The filter used to
+    The rows are kept and cached whole, and filtered after the read (§413). The filter used to
     run inside the loader, so the last good copy of a month was whichever filter had last read
     it — a copy of "races only" could answer an unfiltered visit while the database was away.
 
-    Awaited here, once (§NNN): the panel, the stale notice and the month all read this one value,
+    Awaited here, once (§413): the panel, the stale notice and the month all read this one value,
     and none of them sits behind a streamed boundary — a streamed region is revealed by a script,
     and the panel is a GET form that must work without one. With a script, a month or a filter is
     a soft navigation that keeps this page on screen until the next one is ready.
@@ -126,11 +126,11 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
   // From the public cache (§333): the range is the key, and an event save expires it.
   const period = await readWithLastGood(key, () => cachedPublishedEventsBetween(locale, range.from, range.to), now);
-  // «Înscrieri deschise» is the page's own door (§NNN): one cached availability read per open
+  // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event in the period, nothing for any other row.
   const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors(period.value, now) };
   const events = period.value.filter((event) => matchesListingFilter(event, filter, facts));
-  // The calendar's own panel (§NNN): what it offers is read off the period on view, whole — the
+  // The calendar's own panel (§413): what it offers is read off the period on view, whole — the
   // same rule the listing applies to its own rows — and it keeps the month or year and the layout.
   const offer = offeredFilters(period.value, filter, facts);
   const monthOrYear: Record<string, string> =
@@ -155,7 +155,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
       {/* The "last copy" line (§281). */}
       <LastGoodNotice read={period} />
 
-      {/* The listing's filter panel on the calendar (§NNN): the same button, the same boxes, the
+      {/* The listing's filter panel on the calendar (§413): the same button, the same boxes, the
           same address — so "races on a trail" is a month of races on a trail, not only a list of
           cards. Nothing to narrow and nothing ticked, it does not render. */}
       {(offersAnything(offer) || activeFilterCount(filter) > 0) && (

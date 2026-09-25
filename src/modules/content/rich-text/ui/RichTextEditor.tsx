@@ -229,7 +229,7 @@ function RichTextEditorIsland({
     image: string;
     imageUploading: string;
     imageFailed: string;
-    /** The choice beside the upload and what the picture became (§NNN). */
+    /** The choice beside the upload and what the picture became (§414). */
     imageQuality: ImageQualityLabels;
     imageChoose: string;
     imageStored: StoredFactsLabels;
@@ -294,7 +294,7 @@ function RichTextEditorIsland({
   const [posterState, setPosterState] = useState<"idle" | "uploading" | "failed">("idle");
   const posterFileInputRef = useRef<HTMLInputElement>(null);
   /**
-   * The picture bar (§NNN): the toolbar's picture control opens it rather than the file dialog,
+   * The picture bar (§414): the toolbar's picture control opens it rather than the file dialog,
    * so the quality is chosen beside the upload; the file input itself stays mounted, and a paste
    * or a drop uses the same remembered choice. `stored` is what the last upload became.
    */
@@ -302,7 +302,7 @@ function RichTextEditorIsland({
   const [imageQuality, setImageQuality] = useImageQuality();
   const [stored, setStored] = useState<StoredFacts | null>(null);
   /**
-   * What the last poster became (§NNN), with its address: shown in a film's panel only while that
+   * What the last poster became (§414), with its address: shown in a film's panel only while that
    * film's poster is this one, so another film selected afterwards never shows these facts.
    */
   const [posterStored, setPosterStored] = useState<{ src: string; facts: StoredFacts } | null>(null);
@@ -556,7 +556,7 @@ function RichTextEditorIsland({
    * rather than inserted as a picture of its own. `posterSource: "club"` is what keeps
    * `attachYoutubePosters` from ever replacing it with YouTube's own thumbnail on a later save.
    *
-   * At the chosen quality, like every other upload, with the same facts under it (§NNN, found by
+   * At the chosen quality, like every other upload, with the same facts under it (§414, found by
    * re-review: the poster went up at «Normală» whatever was chosen, and said nothing). Its size
    * goes on the node beside its address, `posterWidth` / `posterHeight`, because the page draws
    * the poster from its ladder (`RichTextVideo`) and a `srcset` needs the master's width.
@@ -923,7 +923,7 @@ function RichTextEditorIsland({
           </Stack>
         )}
 
-        {/* The picture bar (§NNN): the quality beside the upload, then the file. */}
+        {/* The picture bar (§414): the quality beside the upload, then the file. */}
         {imageBarOpen && (
           <Stack
             direction="row"
@@ -1540,7 +1540,7 @@ function RichTextEditorIsland({
               "Use YouTube's" only shows once a club poster is picked — it clears `posterSource`
               so `attachYoutubePosters` fetches YouTube's thumbnail again on the next save.
             */}
-            {/* The same choice as every upload (§NNN), remembered with it: a poster with lettering wants «Înaltă». */}
+            {/* The same choice as every upload (§414), remembered with it: a poster with lettering wants «Înaltă». */}
             <ImageQualityChoice
               value={imageQuality}
               onChange={setImageQuality}
@@ -1776,7 +1776,7 @@ const YoutubeNode = Node.create({
       // (`getJSON`/`setContent`) instead of being dropped as an attribute Tiptap never heard of.
       poster: { default: null },
       posterSource: { default: null },
-      // A club poster's size (§NNN), for the page's `srcset`; null for YouTube's own thumbnail.
+      // A club poster's size (§414), for the page's `srcset`; null for YouTube's own thumbnail.
       posterWidth: { default: null },
       posterHeight: { default: null },
     };
@@ -1815,7 +1815,7 @@ const YoutubeNode = Node.create({
 type StoredPicture = { id: string; src: string; thumb: string; width: number; height: number; name: string };
 
 /**
- * One picture up to `/api/admin/media` at the remembered quality (§NNN): shrunk in the browser
+ * One picture up to `/api/admin/media` at the remembered quality (§414): shrunk in the browser
  * only as far as that choice keeps, then the server's answer. Shared by a picture in the text and
  * a film's poster, so the two cannot drift apart again.
  *

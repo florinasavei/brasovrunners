@@ -9,7 +9,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
-/** Up to nine WebP encodes per photo (§NNN); the same ceiling as `/api/admin/media`. */
+/** Up to nine WebP encodes per photo (§414); the same ceiling as `/api/admin/media`. */
 export const maxDuration = 60;
 
 /**
@@ -46,7 +46,7 @@ export async function POST(
     return NextResponse.json({ error: "VALIDATION_ERROR", detail: "too large" }, { status: 413 });
   }
   const originalFilename = String(form.get("originalFilename") || file.name || "photo");
-  // The choice beside the upload (§NNN): absent is "normal", anything else must be one of the two.
+  // The choice beside the upload (§414): absent is "normal", anything else must be one of the two.
   const quality = parseImageQuality(form.get("quality"));
   if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });
 

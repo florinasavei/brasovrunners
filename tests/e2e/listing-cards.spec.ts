@@ -264,7 +264,7 @@ async function publishOpenRace(page: Page, created: Created): Promise<{ ro: stri
 
 /**
  * A one-off run, not featured, whose Romanian summary is four long sentences with a picture written
- * under them — the owner's case (§NNN) — published through the backoffice and signed out of. The
+ * under them — the owner's case (§417) — published through the backoffice and signed out of. The
  * picture goes in through the editor's own file input, as `route-description.spec.ts` puts its map.
  */
 async function publishWithPicture(page: Page, created: Created): Promise<{ ro: string; en: string }> {
@@ -638,7 +638,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
 
   test("clamp the summary to three lines and print no web address", async ({ page }) => {
     const list = await cards(page);
-    // The clamp is the words' own box (§NNN): no picture is ever inside it, so its height is lines.
+    // The clamp is the words' own box (§417): no picture is ever inside it, so its height is lines.
     const summaries = list.locator('[data-testid="card-excerpt-words"]');
     const count = await summaries.count();
     expect(count).toBeGreaterThan(0);
@@ -655,12 +655,12 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
   });
 
   /**
-   * §NNN — the owner, 2026-09-25: "am pus o poza pe cardul de rezumat dar nu apare si pe site". A
+   * §417 — the owner, 2026-09-25: "am pus o poza pe cardul de rezumat dar nu apare si pe site". A
    * summary of four long sentences with a picture written under them: the words stop at three lines
    * and the picture is on the card, whole — not merely in the document, where a clamped box's hidden
    * overflow would still give it a box: the point at its centre is the picture itself.
    */
-  test("show a picture written under a long summary, outside the three clamped lines (§NNN)", async ({ page }) => {
+  test("show a picture written under a long summary, outside the three clamped lines (§417)", async ({ page }) => {
     test.setTimeout(test.info().timeout + 60_000);
     const created: Created = [];
     let passed = false;

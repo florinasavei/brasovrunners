@@ -58,7 +58,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     }
   });
 
-  it("stores a rung at every ladder width below the master, each exactly that wide, never enlarged (§NNN)", async () => {
+  it("stores a rung at every ladder width below the master, each exactly that wide, never enlarged (§414)", async () => {
     const result = await processUploadedImage(await phonePhoto(3000, 2000));
     // Orientation 6: the stored master is 1600 × 2400, so the rungs are 480…1280.
     expect(result.width).toBe(1600);
@@ -79,7 +79,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect((await processUploadedImage(await phonePhoto(640, 480))).rungs).toEqual([]);
   });
 
-  it("keeps up to 4000 pixels at «Înaltă», with a 2400 rung, and 2400 at «Normală» (§NNN)", async () => {
+  it("keeps up to 4000 pixels at «Înaltă», with a 2400 rung, and 2400 at «Normală» (§414)", async () => {
     // Found by re-review: «Înaltă» kept the same 2400-pixel master, so it was no sharper.
     expect([masterMaxEdge("normal"), masterMaxEdge("high")]).toEqual([WEB_MAX, HIGH_WEB_MAX]);
     const wide = await sharp({ create: { width: 4200, height: 2800, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
@@ -98,7 +98,7 @@ describe("BR-REQ-054-01 the image pipeline", () => {
     expect((await processUploadedImage(small, { quality: "high" })).width).toBe(1800);
   });
 
-  it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§NNN)", async () => {
+  it("keeps a poster's lettering near-lossless at «Înaltă», and a photograph lossy (§414)", async () => {
     // Flat colour and hard edges: what near-lossless WebP stores for almost nothing.
     const poster = await sharp({ create: { width: 1080, height: 1350, channels: 3, background: "#0b3d91" } })
       .composite([{ input: Buffer.from("<svg xmlns='http://www.w3.org/2000/svg' width='1080' height='300'><text x='40' y='200' font-size='120' fill='#fff'>CROSUL 2026</text></svg>"), top: 200, left: 0 }])

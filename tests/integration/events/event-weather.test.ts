@@ -80,12 +80,12 @@ function event(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-/** The addresses the stub was asked, in order — where each forecast was read for (§NNN). */
+/** The addresses the stub was asked, in order — where each forecast was read for (§416). */
 let asked: URL[] = [];
 
 /**
  * Open-Meteo's answer: eight days of hours from NOW, a thunderstorm at 16 °C with a 70% chance of
- * rain and 23 km/h of wind — and the page's details (§NNN): feels like 13.8 °C, 2.4 mm, gusts of
+ * rain and 23 km/h of wind — and the page's details (§416): feels like 13.8 °C, 2.4 mm, gusts of
  * 41 km/h, 88% humidity, UV 1.2. The start's third hour is 18 °C, so the block's cells differ.
  */
 function openMeteo(): typeof fetch {
@@ -176,7 +176,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
     expect(text(html)).not.toContain("Open-Meteo");
   });
 
-  it("is on the hero as one line with the credit, and never inside the compact card's facts (§NNN)", async () => {
+  it("is on the hero as one line with the credit, and never inside the compact card's facts (§416)", async () => {
     const weather = await forecastForEvent(event(), NOW, { fetch: openMeteo(), source: "open-meteo" });
     const hero = withoutStyles(renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "full", weather })));
     expect(text(hero)).toContain("Furtună");
@@ -190,7 +190,7 @@ describe("BR-REQ-011-01 the event page's «Vremea» row (§402)", () => {
   });
 });
 
-describe("BR-REQ-011-01 the event page's weather block: three hours and the start's details (§NNN)", () => {
+describe("BR-REQ-011-01 the event page's weather block: three hours and the start's details (§416)", () => {
   const weatherDd = async (overrides: Partial<PublicEvent> = {}) => {
     const html = withoutStyles(await page(overrides));
     return rows(html).find((row) => row.label === "Vremea" || row.label === "Weather")?.dd ?? "";
@@ -262,7 +262,7 @@ describe("BR-REQ-011-01 the event page's weather block: three hours and the star
   });
 });
 
-describe("BR-REQ-041-01 the listing reads every card's forecast at once (§NNN)", () => {
+describe("BR-REQ-041-01 the listing reads every card's forecast at once (§416)", () => {
   const at = (id: string, overrides: Partial<PublicEvent> = {}) => event({ id, ...overrides });
 
   it("shares one request among the events at one rounded place, and asks again for another place", async () => {

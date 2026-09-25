@@ -27,7 +27,7 @@ import { albumFieldsSchema, type AlbumFieldsInput } from "./fields";
  * Albums and their photos (BR-REQ-054-01, `DECISIONS.md` §66).
  *
  * The same shape as standing pages — create, save with a version, transition, delete — plus
- * the two things a gallery adds: a photo comes in as bytes and goes out as its ladder of objects (§NNN) and two
+ * the two things a gallery adds: a photo comes in as bytes and goes out as its ladder of objects (§414) and two
  * rows; and deleting anything that owns objects deletes the objects too, because a bucket
  * nobody sweeps fills with photos nobody can find (§17 "reference check before delete; orphan
  * cleanup"). Objects are removed *after* the rows commit: a row without objects is a broken
@@ -205,7 +205,7 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
 }
 
 /**
- * A photo, from the bytes the uploader posted to its ladder of objects (§NNN) and two rows, at
+ * A photo, from the bytes the uploader posted to its ladder of objects (§414) and two rows, at
  * the quality chosen beside the upload.
  *
  * Rows first, inside a transaction, then the objects — and if an object fails to store, the
@@ -350,7 +350,7 @@ async function removeObjects(prefixes: readonly string[]): Promise<void> {
   for (const prefix of prefixes) {
     // Best effort, one by one: the rows are already gone, and a failed delete is a stray
     // object to sweep, not a reason to report the removal as failed. Every file of the ladder
-    // too (§NNN).
+    // too (§414).
     await deleteAssetObjects(storage, prefix);
   }
 }

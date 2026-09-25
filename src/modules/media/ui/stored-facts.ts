@@ -1,7 +1,7 @@
 import type { ImageQuality } from "../ladder";
 
 /**
- * The sentence shown after an upload (§NNN): what the picture became, in the words of the
+ * The sentence shown after an upload (§414): what the picture became, in the words of the
  * catalogue. Pure — the two upload islands call it with the answer the route gave — so a test
  * can read it without a browser.
  *

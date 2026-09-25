@@ -139,7 +139,7 @@ async function AlbumGrid({ albums: pending }: { albums: Promise<PublicAlbumSumma
 }
 
 /**
- * The cover's `srcset` and `sizes` (§NNN), or neither. The cover is a card's width — a whole
+ * The cover's `srcset` and `sizes` (§414), or neither. The cover is a card's width — a whole
  * phone below `sm` — so a cover stored with a ladder lets the browser choose among its widths
  * rather than enlarge the thumbnail. A cover from before has no ladder and keeps its thumbnail
  * alone: offered the 2400-pixel master beside it, a 390-pixel phone at 3× took the master for a

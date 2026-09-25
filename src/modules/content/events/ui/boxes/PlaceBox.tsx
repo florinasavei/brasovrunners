@@ -42,7 +42,7 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
   const own = (locale: "ro" | "en") => translations.find((translation) => translation.locale === locale)?.locationName;
   const inBox = (locale: "ro" | "en") => (event ? placeInBox(event, own(locale)) : "");
   const place = inBox("ro");
-  // «Coordonate» (§NNN): the stored pair as the box shows it, and — for a saved event — which place
+  // «Coordonate» (§416): the stored pair as the box shows it, and — for a saved event — which place
   // the weather reads now, by the one rule the page reads it by (`forecastPlace`): the map link's
   // pin, else this pair, else the club's place. Said as it was saved; a change shows after a save.
   const typed = event ? typedCoordinates(event) : null;
@@ -96,7 +96,7 @@ export default async function PlaceBox({ event, mayEditSettings, risk, languages
             defaultValue={event?.mapUrl ?? ""}
             {...textFieldConstraints(eventInputConstraints("mapUrl"), { inputMode: "url" })}
           />
-          {/* Where the weather is read when the link carries no pin (§NNN, amending §402): a short
+          {/* Where the weather is read when the link carries no pin (§416, amending §402): a short
               share link or a venue's page names no place a server can read without asking the map. */}
           <RecallField
             name="event.coordinates"

@@ -25,9 +25,9 @@ const UploadGlyph = ACTION_ICONS.upload;
  * large for the server or wider than anything the site shows, draws it smaller on a canvas
  * (`browser-shrink.ts`, §176) — one request per photo, so a failed upload is one photo to retry
  * and not a batch. The server re-checks everything and makes its own ladder of widths
- * (`modules/media/images.ts`, §NNN); this is the part that has to happen where the original is.
+ * (`modules/media/images.ts`, §414); this is the part that has to happen where the original is.
  *
- * Beside the button, the quality (§NNN): "normal" unless the person says otherwise, remembered
+ * Beside the button, the quality (§414): "normal" unless the person says otherwise, remembered
  * for the session, sent with each photo and checked by the route. After the upload, what the
  * last photo became — its size, the quality, the bytes — so the choice is not a guess the second
  * time.
@@ -67,7 +67,7 @@ export default function PhotoUploader({
       try {
         const body = new FormData();
         // The shrunk photo, named after the original so the server records the name it had.
-        // Shrunk to what the choice keeps (§NNN): 4000 pixels for «Înaltă», 3000 otherwise.
+        // Shrunk to what the choice keeps (§414): 4000 pixels for «Înaltă», 3000 otherwise.
         body.append("file", await shrink(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
         body.append("originalFilename", file.name);
         body.append("quality", quality);

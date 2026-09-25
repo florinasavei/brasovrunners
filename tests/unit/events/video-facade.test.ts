@@ -142,12 +142,12 @@ describe("§403 VideoVolumeBar — its aria markup at rest (found by re-review: 
 });
 
 /**
- * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN, found by re-review) — a club poster is an
+ * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414, found by re-review) — a club poster is an
  * upload like any picture, stored with its ladder, and the facade draws it from that ladder: a
  * phone takes a rung rather than the master. YouTube's own thumbnail (`yt-<id>`) and a poster
  * stored before the ladder keep their one `src`.
  */
-describe("§NNN the poster's widths", () => {
+describe("§414 the poster's widths", () => {
   const LADDER_POSTER = "/api/media/local/3f2a1b4c-0000-8abc-8def-000000000001/web.webp";
   const render = async (props: Parameters<typeof RichTextVideo>[0]) =>
     renderToStaticMarkup((await RichTextVideo(props)) as Parameters<typeof renderToStaticMarkup>[0]);

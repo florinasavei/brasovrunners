@@ -16,7 +16,7 @@ import {
 import { registrationCta, type RegistrationCtaInput } from "@/modules/events/domain/registration-cta";
 
 /**
- * BR-REQ-041-01 — the listing's filters (`DECISIONS.md` §NNN, amending §133 and §401; the owner,
+ * BR-REQ-041-01 — the listing's filters (`DECISIONS.md` §413, amending §133 and §401; the owner,
  * 2026-09-25: "un buton de filtre, collapsed by default, checkboxuri pe pill-uri și mai multe
  * filtre"). The state lives in the address, OR within a group and AND across groups; the panel
  * offers a box only where ticking it would change what the page shows, or the address ticks it.
@@ -88,7 +88,7 @@ describe("parseListingFilter reads the address", () => {
     });
   });
 
-  it("reads the short forms a hand-written link may use: kilometre bands, lowercase and hyphenated names (§NNN)", () => {
+  it("reads the short forms a hand-written link may use: kilometre bands, lowercase and hyphenated names (§413)", () => {
     expect(parseListingFilter({ distance: "10-21" })).toEqual({ ...NO_FILTER, distance: ["FROM_10_TO_21"] });
     expect(parseListingFilter({ distance: "0-5,5-10" })).toEqual({ ...NO_FILTER, distance: ["UP_TO_5", "FROM_5_TO_10"] });
     // `?distance=21+` reaches the page as "21 " — a query string reads `+` as a space.
@@ -212,7 +212,7 @@ describe("matchesListingFilter: OR within a group, AND across groups", () => {
   });
 });
 
-describe("«Înscrieri deschise» is the page's own registration door (§NNN), never the window alone", () => {
+describe("«Înscrieri deschise» is the page's own registration door (§413), never the window alone", () => {
   /**
    * The answer `readRegistrationDoor` gives for this row and this availability (§409): the same
    * `registrationCta` over the same cached free places — the one reader both the page's button and
@@ -292,7 +292,7 @@ describe("offeredFilters offers a box only where ticking it would change the pag
     expect(offer.groups.find((entry) => entry.group === "surface")).toEqual({ group: "surface", values: ["ASPHALT", "TRAIL"] });
   });
 
-  it("does not offer a group where only one value would narrow — one box with nothing to choose between (§NNN, restoring §133's own rule)", () => {
+  it("does not offer a group where only one value would narrow — one box with nothing to choose between (§413, restoring §133's own rule)", () => {
     // Only ASPHALT ever narrows here: the other two rows leave `surface` unanswered, which
     // narrows nothing on its own (there is no "unanswered" box to tick).
     const rows = [row("a", { surface: "ASPHALT" }), row("b"), row("c")];

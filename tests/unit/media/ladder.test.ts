@@ -15,7 +15,7 @@ import {
 import { describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
 
 /**
- * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — a picture is
+ * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — a picture is
  * stored at the widths the site draws it at, and every public `<img>` lets the browser choose.
  *
  * The owner, 2026-09-25: "I wanna choose the quality of the image when uploading it — cuz it's
@@ -27,7 +27,7 @@ const LADDER_PREFIX = ladderKeyPrefixOf("3f2a1b4c-0000-4abc-8def-000000000001");
 const OLD_PREFIX = "3f2a1b4c-0000-4abc-8def-000000000002";
 const r2 = (prefix: string) => `https://pub-example.r2.dev/production/${prefix}/web.webp`;
 
-describe("§NNN the quality a request may ask for", () => {
+describe("§414 the quality a request may ask for", () => {
   it("is normal when nothing is asked, one of the two words otherwise, and refused for anything else", () => {
     expect(parseImageQuality(null)).toBe("normal");
     expect(parseImageQuality(undefined)).toBe("normal");
@@ -38,7 +38,7 @@ describe("§NNN the quality a request may ask for", () => {
   });
 });
 
-describe("§NNN the ladder", () => {
+describe("§414 the ladder", () => {
   it("stores every rung narrower than 0.9 of the master, and never one wider", () => {
     // A «Normală» master is at most 2400, so it never gets the 2400 rung; a 4000 «Înaltă» one does.
     expect(ladderWidths(2400)).toEqual([480, 640, 960, 1280, 1600, 1920]);
@@ -68,7 +68,7 @@ describe("§NNN the ladder", () => {
   });
 });
 
-describe("§NNN srcset", () => {
+describe("§414 srcset", () => {
   it("names every rung and then the master for a picture with a ladder", () => {
     const srcSet = pictureSrcSet(r2(LADDER_PREFIX), 1725);
     expect(srcSet).toBe(
@@ -83,7 +83,7 @@ describe("§NNN srcset", () => {
 
   it("offers an older picture nothing: its one file, as a page always drew it", () => {
     /*
-      The re-review's measurement (§NNN): an old album's cover across a 390-pixel phone at 3× is
+      The re-review's measurement (§414): an old album's cover across a 390-pixel phone at 3× is
       1074 physical pixels, so "thumbnail 640w, master 2400w" sent the browser to the 2400-pixel
       master — 381 KB where the thumbnail is 37 KB, for the same photograph. No `srcset` at all
       keeps the thumbnail on the albums page and the master in a body, as before.
@@ -99,7 +99,7 @@ describe("§NNN srcset", () => {
   });
 });
 
-describe("§NNN sizes", () => {
+describe("§414 sizes", () => {
   it("says the event column's width, the share from sm up, and the full phone below it", () => {
     expect(pictureSizes("page")).toBe("(min-width: 1536px) 1488px, (min-width: 600px) calc(100vw - 48px), calc(100vw - 32px)");
     expect(pictureSizes("page", 50)).toBe("(min-width: 1536px) 744px, (min-width: 600px) calc(50vw - 24px), calc(100vw - 32px)");
@@ -124,7 +124,7 @@ describe("§NNN sizes", () => {
   });
 });
 
-describe("§NNN the body renderer", () => {
+describe("§414 the body renderer", () => {
   const doc = (src: string, attrs: Record<string, unknown> = {}) => ({
     type: "doc",
     content: [{ type: "image", attrs: { src, alt: "Startul", width: 2400, height: 1600, ...attrs } }],
@@ -157,7 +157,7 @@ describe("§NNN the body renderer", () => {
   });
 });
 
-describe("§NNN what the person is told after an upload", () => {
+describe("§414 what the person is told after an upload", () => {
   const labels = {
     template: "{width} × {height}, {quality}: {size}; {files} files, {total}",
     normal: "normal",

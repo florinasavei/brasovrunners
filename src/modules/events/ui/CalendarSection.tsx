@@ -22,7 +22,7 @@ import { DENSITY } from "@/theme/density";
  * written, because the owner asked for it to be a section of its own: "the calendar should be a
  * tab, after events, and not show on the homepage".
  *
- * The month is drawn from rows the page already holds (§NNN, amending §166 here): no streamed
+ * The month is drawn from rows the page already holds (§413, amending §166 here): no streamed
  * boundary between the controls and the grid, because a streamed region is revealed by a script and
  * the calendar has to read with scripts off — the filter panel above it is a GET form. With a
  * script, a month change is a soft navigation that keeps this month on screen until the next one is
@@ -49,7 +49,7 @@ export default async function CalendarSection({
   /** What the month's own links keep — the filters (a group ticked twice is an array) and the layout. */
   query: Record<string, string | string[]>;
   now: Date;
-  /** The period's rows, already read and narrowed by the page (§NNN). */
+  /** The period's rows, already read and narrowed by the page (§413). */
   events: PublicEvent[];
 }) {
   const t = await getTranslations("Events");

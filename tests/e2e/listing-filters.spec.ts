@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { hydrated } from "./support/featured-event";
 
 /**
- * BR-REQ-041-01 — the listing's filters (`DECISIONS.md` §NNN, amending §133 and §401; the owner,
+ * BR-REQ-041-01 — the listing's filters (`DECISIONS.md` §413, amending §133 and §401; the owner,
  * 2026-09-25: "un buton de filtre, collapsed by default, checkboxuri pe pill-uri și mai multe
  * filtre").
  *
@@ -147,7 +147,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
 
 test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
   /*
-    The panel needs no script: a native `<details>`, a GET form, plain links. Since §NNN nothing on
+    The panel needs no script: a native `<details>`, a GET form, plain links. Since §413 nothing on
     the listing or the calendar sits behind a streamed `<Suspense>` boundary — React reveals a
     streamed region with an inline script, so a browser with scripts off used to be left with the
     loading shapes, the panel among them. These are that browser: scripts off, a real press on the
@@ -169,7 +169,7 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Aplică</);
       // An active chip is an ordinary link to the address without its tick.
       expect(html).toMatch(/<a[^>]*aria-label="Scoate filtrul: Concurs"[^>]*href="\/ro\/evenimente"/);
-      // Nothing is left waiting for a script to reveal it (§NNN): no loading shape anywhere.
+      // Nothing is left waiting for a script to reveal it (§413): no loading shape anywhere.
       await expect(page.locator("#main [role='status']")).toHaveCount(0);
     });
 
@@ -183,7 +183,7 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       await expect(fold.locator("summary")).toBeVisible();
       await fold.locator("summary").click();
       await expect(fold).toHaveAttribute("open", "");
-      // Two groups, one box each: a group run AND on a trail (AND across groups, §NNN).
+      // Two groups, one box each: a group run AND on a trail (AND across groups, §413).
       await fold.getByRole("checkbox", { name: "Alergare de grup", exact: true }).check();
       await fold.getByRole("checkbox", { name: "Trail", exact: true }).check();
       await fold.getByRole("button", { name: "Aplică", exact: true }).click();

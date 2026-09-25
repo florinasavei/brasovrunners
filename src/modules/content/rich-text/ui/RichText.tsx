@@ -43,7 +43,7 @@ export default function RichText({
   body: unknown;
   links?: boolean;
   /**
-   * The column the body is drawn in (§NNN, `media/ladder.ts`): the event page's wide one by
+   * The column the body is drawn in (§414, `media/ladder.ts`): the event page's wide one by
    * default, a standing page's measure, or a listing card. It becomes each picture's `sizes`,
    * which is how the browser picks the smallest stored width that is still sharp there.
    */
@@ -105,7 +105,7 @@ function renderBlock(block: RichTextBlock, floats = false, links = true, picture
       // written before today renders the markup it rendered yesterday, byte for byte.
       const crop = cropGeometry(block.attrs.crop, block.attrs);
       /*
-        The ladder (§NNN): a picture stored since then names its smaller siblings, and `sizes`
+        The ladder (§414): a picture stored since then names its smaller siblings, and `sizes`
         says how wide it is drawn here — the column's share of the screen, magnified by the crop
         when there is one, because a cropped photograph is drawn `1 / crop.w` times its window.
         A picture from before has no siblings, gets no `srcset`, and renders the markup it

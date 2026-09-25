@@ -1,7 +1,7 @@
 import type { Coordinates } from "@/modules/events/domain/sun";
 
 /**
- * Where an event's forecast is asked for (§NNN, amending §402; the owner, 2026-09-25: "la vreme
+ * Where an event's forecast is asked for (§416, amending §402; the owner, 2026-09-25: "la vreme
  * aș vrea să văd exact pe locația selectată, să văd mai multe date").
  *
  * **In this order, the first that says a place:**

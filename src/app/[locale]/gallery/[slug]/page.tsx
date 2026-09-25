@@ -108,7 +108,7 @@ export default async function AlbumPage({ params }: Props) {
               <img
                 src={photo.thumbUrl}
                 // The tile's width, magnified by the 4:3 cut of a wider photograph: the browser
-                // takes the smallest stored width that fills it at the screen's density (§NNN).
+                // takes the smallest stored width that fills it at the screen's density (§414).
                 // A photo from before has no ladder, no `srcset` and no `sizes`: its thumbnail,
                 // as it always was, rather than a 2400-pixel master on a wide tile.
                 srcSet={pictureSrcSet(photo.webUrl, photo.width)}

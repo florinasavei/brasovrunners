@@ -636,7 +636,7 @@ export const eventFieldsSchema = z
     costUrl: httpsUrl("a cost link must start with https://").optional(),
     mapUrl: httpsUrl("a map link must start with https://"),
     /**
-     * «Coordonate» (§NNN, amending §402): the meeting point as "latitude, longitude", read for the
+     * «Coordonate» (§416, amending §402): the meeting point as "latitude, longitude", read for the
      * weather only when the map link carries no pin of its own (`weather/domain/place.ts`). Absent
      * means this caller is not editing it — a fixture, a script, an older form — and leaves the
      * stored pair alone, the discipline `costAmount` and `links` follow; `""` clears it; anything

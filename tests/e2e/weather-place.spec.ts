@@ -5,7 +5,7 @@ import { FEATURED, fillDateField, hydrated, signIn, withFeaturedEventLock } from
 import { openEditorBox } from "./support/fold";
 
 /**
- * BR-REQ-011-01 and BR-REQ-041-01 (§NNN, amending §402) — the weather at the event's own place, with
+ * BR-REQ-011-01 and BR-REQ-041-01 (§416, amending §402) — the weather at the event's own place, with
  * more of it. The owner, 2026-09-25: "aș vrea să văd vremea și pe cardul principal" and "la vreme aș
  * vrea să văd exact pe locația selectată, să văd mai multe date".
  *
@@ -78,7 +78,7 @@ async function noSidewaysScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-test.describe("BR-REQ-011-01 the weather block at the event's own place (§NNN)", () => {
+test.describe("BR-REQ-011-01 the weather block at the event's own place (§416)", () => {
   test("a map link with a pin: the start and the two hours after it, the start's details, «Pentru locul evenimentului»", async ({ page }) => {
     const id = await insertDraft({ mapUrl: "https://www.google.com/maps?q=45.6384,25.5921" }, "pin");
     try {
@@ -160,7 +160,7 @@ test.describe("BR-REQ-011-01 the weather block at the event's own place (§NNN)"
   });
 });
 
-test.describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
+test.describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   // The third test below mutates the shared singleton `FEATURED` event for its own duration; kept
   // from ever overlapping the second, which reads it too (`mode: "serial"` only orders tests
   // inside one project's own run of this file — `mobile` and `desktop` each run it in a separate
@@ -203,7 +203,7 @@ test.describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
   });
 
   /**
-   * The positive case of the hero's «Vremea» row (a review finding, §NNN): the test above only
+   * The positive case of the hero's «Vremea» row (a review finding, §416): the test above only
    * proves it is absent three weeks out. The featured event is the shared `FEATURED` singleton
    * (`DECISIONS.md` §28: the database refuses a second), so both its gathering and its gun time —
    * `weatherInstant` reads `raceStartsAt` over `startsAt` when the event has one (`forecast.ts`),

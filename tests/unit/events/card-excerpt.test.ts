@@ -92,7 +92,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
       The owner, 2026-09-24, of the listing: "There is too much whitespace on these cards". A
       summary as long as its author made it set one card's height against its neighbour's; the
       card now clamps it — the -webkit-box form every engine implements, counted across the
-      summary's paragraphs — and the event page carries the rest. Since §NNN the clamp is the
+      summary's paragraphs — and the event page carries the rest. Since §417 the clamp is the
       words' own box, and the pictures stand outside it (`card-excerpt-pictures.test.ts`).
     */
     expect(CARD_EXCERPT_WORDS_SX.display).toBe("-webkit-box");
@@ -102,7 +102,7 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_WORDS_SX.overflowWrap).toBe("anywhere");
   });
 
-  it("wraps a long unbroken word on the outer box too, not only the words' clamp (§NNN)", () => {
+  it("wraps a long unbroken word on the outer box too, not only the words' clamp (§417)", () => {
     // The words' box carries its own `overflowWrap` for the clamp; a figure's caption sits
     // outside that box, so the net is the outer box's own rule — a long address typed into a
     // caption still wraps inside a 320-pixel card instead of overflowing it.

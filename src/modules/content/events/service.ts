@@ -397,7 +397,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     raceStartsAt: times.raceStartsAt,
     scheduleItems: times.scheduleItems.length > 0 ? times.scheduleItems : null,
     mapUrl: fields.mapUrl,
-    // «Coordonate» (§NNN): only a caller that posts the box writes the pair; "" clears both halves.
+    // «Coordonate» (§416): only a caller that posts the box writes the pair; "" clears both halves.
     ...(fields.coordinates === undefined
       ? {}
       : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
@@ -582,7 +582,7 @@ export function ignoreHiddenFields(raw: unknown): unknown {
   if (posted.locationToBeAnnounced === true && "mapUrl" in replaced && !eventFieldsSchema.shape.mapUrl.safeParse(replaced.mapUrl).success) {
     replaced.mapUrl = "";
   }
-  // «Coordonate» (§NNN) hide with the map link, and are written as none by the same rule.
+  // «Coordonate» (§416) hide with the map link, and are written as none by the same rule.
   if (
     posted.locationToBeAnnounced === true &&
     "coordinates" in replaced &&
@@ -1544,7 +1544,7 @@ const SERIES_COLUMNS = [
   "eventStatus",
   "timezone",
   "mapUrl",
-  // «Coordonate» travel with the map link they stand in for (§NNN).
+  // «Coordonate» travel with the map link they stand in for (§416).
   "latitude",
   "longitude",
   "routeUrl",

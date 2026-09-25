@@ -46,9 +46,9 @@ export default function ChipLink({
   /** Struck through: a cancelled date. */
   strike?: boolean;
   title?: string;
-  /** The link's own name when the chip's word alone would not say what a press does — "Scoate filtrul: Cursă" (§NNN). */
+  /** The link's own name when the chip's word alone would not say what a press does — "Scoate filtrul: Cursă" (§413). */
   ariaLabel?: string;
-  /** A drawn ✕ after the word: pressing this chip takes something away (the listing's active filters, §NNN). */
+  /** A drawn ✕ after the word: pressing this chip takes something away (the listing's active filters, §413). */
   closeMark?: boolean;
   /** Stay where the reader is on the page rather than scroll to the top — a filter changed under their thumb. */
   keepScroll?: boolean;

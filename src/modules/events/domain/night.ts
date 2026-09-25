@@ -145,7 +145,7 @@ export function nightEvent(event: NightEventSource, occurrenceStartsAt: Date | n
  * start before civil dawn a night event too), in which case naming the sunset as "after" would be
  * backwards for an early-morning run; `Dawn` names the sunrise instead. One rule for every
  * sentence: the calendar entry, the `.ics` and the reminder all ask it — the pill's tooltip names
- * only the sunset (§NNN) and does not.
+ * only the sunset (§415) and does not.
  */
 export function nightShape(
   facts: NightEventFacts,

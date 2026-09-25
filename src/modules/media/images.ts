@@ -5,7 +5,7 @@ import { DEFAULT_IMAGE_QUALITY, type ImageQuality, ladderWidths, masterMaxEdge }
 /**
  * What an uploaded image becomes before it is stored (AGENTS.md §17).
  *
- * One input, and since §NNN a ladder of WebP files: `web`, at most 2400px on its long side (4000
+ * One input, and since §414 a ladder of WebP files: `web`, at most 2400px on its long side (4000
  * at «Înaltă») — the master, what a wide screen draws and what every body's address names —
  * `thumb`, at most 640px,
  * for the backoffice's own lists, and a rung at each of `LADDER_WIDTHS` narrower than the master
@@ -42,13 +42,13 @@ export { MAX_UPLOAD_BYTES, MIN_DIMENSION, MAX_DIMENSION, WEB_MAX, THUMB_MAX };
 /**
  * The master's quality, unchanged since §176: 88 with `effort: 6` removed the blocking the owner
  * saw around flags, shirts and grass. It is what a laptop draws, which is the screen the owner
- * judged the pictures on, so §NNN leaves it exactly where it was.
+ * judged the pictures on, so §414 leaves it exactly where it was.
  */
 const WEB_QUALITY = 88;
 const THUMB_QUALITY = 78;
 
 /**
- * The rungs' quality (§NNN). Measured on two race photographs (9 and 6.5 megapixels): at 1200px,
+ * The rungs' quality (§414). Measured on two race photographs (9 and 6.5 megapixels): at 1200px,
  * 82 is 38.0–38.7 dB against the unencoded pixels and 105–174 KB, where 88 is 39.5–40.6 dB for
  * 37–42% more bytes. A rung is drawn at (or just under) its own width — the browser picks it for that — so
  * its artefacts are never magnified, which is the whole difference from the old single file; and
@@ -57,7 +57,7 @@ const THUMB_QUALITY = 78;
 const RUNG_QUALITY = 82;
 
 /**
- * "Înaltă" (§NNN) is two things, and the re-review found the first version had only one of them.
+ * "Înaltă" (§414) is two things, and the re-review found the first version had only one of them.
  *
  * **More pixels.** The master keeps up to `HIGH_WEB_MAX` (4000) on its long side rather than
  * 2400, and the browser sends up to 4000 for this choice rather than 3000

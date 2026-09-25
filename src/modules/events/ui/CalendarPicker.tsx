@@ -30,7 +30,7 @@ export default function CalendarPicker({
 }: {
   /** The listing's own localized path, such as `/ro/evenimente`. */
   basePath: string;
-  /** The other query parameters the address keeps — the filters (a group ticked twice is an array, §NNN). */
+  /** The other query parameters the address keeps — the filters (a group ticked twice is an array, §413). */
   query: Record<string, string | string[]>;
   view: "month" | "year";
   year: number;

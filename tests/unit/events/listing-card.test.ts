@@ -530,7 +530,7 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
   });
 });
 
-describe("BR-REQ-041-01 the weather on a listing card (§NNN)", () => {
+describe("BR-REQ-041-01 the weather on a listing card (§416)", () => {
   const reading = {
     hourAt: 0,
     code: 3,

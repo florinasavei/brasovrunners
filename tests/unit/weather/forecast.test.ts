@@ -114,7 +114,7 @@ describe("§402 the hour a start reads", () => {
       temperatureC: 13.6,
       precipitationProbability: 35,
       windKmh: 9.4,
-      // An answer without the page's detail columns (§NNN) is still a forecast, the details none.
+      // An answer without the page's detail columns (§416) is still a forecast, the details none.
       feelsLikeC: null,
       precipitationMm: null,
       gustKmh: null,
@@ -174,7 +174,7 @@ describe("§402 the request, and every failure read as no forecast", () => {
     await fetchOpenMeteo(fetchImpl, () => NOW.getTime());
     const url = new URL(String((fetchImpl as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0]));
     expect(`${url.origin}${url.pathname}`).toBe(`${OPEN_METEO_API}/v1/forecast`);
-    // §402's four, then the event page's details (§NNN) — one request.
+    // §402's four, then the event page's details (§416) — one request.
     expect(url.searchParams.get("hourly")).toBe(
       "temperature_2m,precipitation_probability,weather_code,wind_speed_10m,apparent_temperature,precipitation,wind_gusts_10m,relative_humidity_2m,uv_index",
     );

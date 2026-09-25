@@ -4,7 +4,7 @@ import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — «Înaltă» in the text editor: a picture and a
+ * BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — «Înaltă» in the text editor: a picture and a
  * film's poster go up at the chosen quality, larger than «Normală» keeps, the person is told what
  * each became, and the public page offers every stored width with the browser taking the one it
  * needs. Found by re-review: the first version tested «Înaltă» only in an album, never in the
@@ -39,7 +39,7 @@ function candidates(srcset: string): { url: string; width: number }[] {
   });
 }
 
-test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§NNN)", () => {
+test.describe.serial("BR-REQ-050-03 «Înaltă» in the text editor (§414)", () => {
   test("a picture and a film's poster go up at «Înaltă», say what they became, and the page offers their widths", async ({ page, browser }) => {
     test.setTimeout(180_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;

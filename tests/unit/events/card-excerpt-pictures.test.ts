@@ -5,7 +5,7 @@ import type { RichTextBlock, RichTextDoc } from "@/modules/content/rich-text/dom
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 (§NNN) — a picture in the short description is on the listing card whatever the
+ * BR-REQ-041-01 (§417) — a picture in the short description is on the listing card whatever the
  * length of the words.
  *
  * The owner, 2026-09-25: "am pus o poza pe cardul de rezumat dar nu apare si pe site". §366 clamped
@@ -143,7 +143,7 @@ function row(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-describe("BR-REQ-041-01 the card splits the summary: the words clamped, the pictures never (§NNN)", () => {
+describe("BR-REQ-041-01 the card splits the summary: the words clamped, the pictures never (§417)", () => {
   it("keeps every picture and film, in the order written: those before the first words above, the rest under", () => {
     const [a, b] = [picture("aaaaaaaa"), picture("bbbbbbbb")];
     const [one, two, three] = LONG;

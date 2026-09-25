@@ -40,7 +40,7 @@ export default async function RichTextVideo({
   caption: string;
   /** This site's own stored copy of the film's thumbnail, or null while none has been fetched. */
   poster?: string | null;
-  /** A club poster's stored size (§NNN): with it, the poster is drawn from its ladder. */
+  /** A club poster's stored size (§414): with it, the poster is drawn from its ladder. */
   posterWidth?: number | null;
   posterHeight?: number | null;
   /** The column the body is drawn in, as `RichText` says it (`media/ladder.ts`). */
@@ -54,7 +54,7 @@ export default async function RichTextVideo({
   const t = await getTranslations("Event");
   const origin = new URL(env.APP_BASE_URL).origin;
   /*
-    A club poster uploaded since §NNN names its smaller siblings, like a picture in the text: the
+    A club poster uploaded since §414 names its smaller siblings, like a picture in the text: the
     facade is the film's figure — the column's share, the whole card in a card — and the poster
     covers a 16∶9 box, so a poster wider than that is drawn wider than the box. YouTube's own
     thumbnail (`yt-<id>`, at most 480 pixels) and a poster from before have no ladder and keep

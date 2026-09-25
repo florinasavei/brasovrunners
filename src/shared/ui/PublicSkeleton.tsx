@@ -20,7 +20,7 @@ import { shimmerOffForReducedMotion } from "@/theme/motion";
  * The runner appears once per boundary rather than once per shape — forty bobbing figures in
  * a grid would be a novelty act.
  *
- * The listing's and the calendar's shapes are gone (§NNN): those pages await one cached read
+ * The listing's and the calendar's shapes are gone (§413): those pages await one cached read
  * before they render, so the filter panel — a GET form that has to work with scripts off — and
  * what it narrows are in the first HTML rather than behind a boundary a script reveals.
  *

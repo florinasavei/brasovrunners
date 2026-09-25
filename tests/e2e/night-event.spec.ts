@@ -123,7 +123,7 @@ test.describe.serial("BR-REQ-020-01 the night event, from the sunset", () => {
     await expect(pill).toHaveCount(1);
     await expect(pill.locator(TORCH)).toHaveCount(1);
     await pill.hover();
-    // The tooltip says only the sunset (§NNN): the owner, 2026-09-25, "pe tooltip trebuie doar să
+    // The tooltip says only the sunset (§415): the owner, 2026-09-25, "pe tooltip trebuie doar să
     // zic când apune soarele" — §404's start/end shapes stay on the calendar entry and the .ics.
     await expect(page.getByRole("tooltip")).toHaveText(/^Soarele apune la 16:\d\d$/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

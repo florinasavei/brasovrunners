@@ -57,7 +57,7 @@ export default function GlyphChip({
   label: string;
   /**
    * Why the pill is there, on hover and on a tap (§394: the night pill's "Soarele apune la
-   * 16:36", §NNN). It describes the chip rather than naming it (`describeChild`), so the chip's words
+   * 16:36", §415). It describes the chip rather than naming it (`describeChild`), so the chip's words
    * stay what a screen reader announces first.
    */
   tooltip?: string;
@@ -80,7 +80,7 @@ export default function GlyphChip({
   srSuffix?: string;
   /**
    * A small ✕ after the word, drawn only (`aria-hidden`): the listing's active-filter chip, whose
-   * whole link removes that filter (§NNN) and says so in its own accessible name. Not MUI's
+   * whole link removes that filter (§413) and says so in its own accessible name. Not MUI's
    * `onDelete`, whose icon stops the click from reaching the link around the chip.
    */
   closeMark?: boolean;

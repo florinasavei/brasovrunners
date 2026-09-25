@@ -71,7 +71,7 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     image: rt("image"),
     imageUploading: rt("imageUploading"),
     imageFailed: rt("imageFailed"),
-    // The quality beside the upload and what the picture became (§NNN).
+    // The quality beside the upload and what the picture became (§414).
     imageQuality: {
       legend: rt("imageQualityLegend"),
       normal: rt("imageQualityNormal"),

@@ -6,11 +6,11 @@ import { matchesListingFilter, parseListingFilter } from "@/modules/events/domai
  * BR-REQ-041-01 criterion 12 — the listing's loading states (`DECISIONS.md` §166).
  *
  * The listing used to compute all of this inline, between three awaits on one page. It is
- * rendered by several components off the one read the page awaits (§NNN), so the rules that
+ * rendered by several components off the one read the page awaits (§413), so the rules that
  * decide *what goes where* had to become functions — worth a test, because getting them wrong is
  * a bug nobody sees in a diff and everybody sees on a phone.
  *
- * What the filters are and what the panel offers is `listing-filter.test.ts` (§NNN).
+ * What the filters are and what the panel offers is `listing-filter.test.ts` (§413).
  */
 
 const event = (id: string, type: string, featured = false, hasPartner = false) => ({
@@ -24,7 +24,7 @@ const event = (id: string, type: string, featured = false, hasPartner = false) =
   coHosts: hasPartner ? [{ name: "Brașov Running Festival" }] : null,
   coHostName: null,
   coHostUrl: null,
-  // The registration window (§NNN): open throughout, since none of these tests are about it —
+  // The registration window (§413): open throughout, since none of these tests are about it —
   // `listing-filter.test.ts` covers the "Înscrieri deschise" flag itself.
   registrationMode: "INTERNAL" as const,
   eventStatus: "SCHEDULED" as const,
@@ -87,7 +87,7 @@ describe("listingSections divides the listing the way it always did", () => {
   });
 });
 
-// §NNN, reversing what §133 and §401 said of the kind and partner chips: the lead follows the
+// §413, reversing what §133 and §401 said of the kind and partner chips: the lead follows the
 // filters. The owner, 2026-09-25: "un buton de filtre … și mai multe filtre" — with five groups
 // of boxes, an asphalt 5 km at the top of a page filtered to trail reads as a broken filter.
 describe("listingSections: the lead event follows the filters", () => {

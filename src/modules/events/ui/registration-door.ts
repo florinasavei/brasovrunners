@@ -75,7 +75,7 @@ export async function readRegistrationDoor(event: PublicEvent, now: Date): Promi
 
 /**
  * Which of these events' pages has a registration door right now — the «Înscrieri deschise» box on
- * the listing and the calendar (§NNN) — asked of `readRegistrationDoor` itself, event by event, so
+ * the listing and the calendar (§413) — asked of `readRegistrationDoor` itself, event by event, so
  * the filter, the card's button and the page's own door are one answer (§409), never two readings
  * of the same rule that could drift. `registrationDoorOpen` says which answers are a door: `OPEN`,
  * `FULL` with a waiting list that takes people, or `EXTERNAL`; `UNKNOWN` (a count that could not

@@ -59,7 +59,7 @@ export const PAGE_EXCERPT_SX = {
  * event page, one press away. The words carry no link (`RichText links={false}`): an address is its
  * host, and `overflowWrap` is the net under anything else too long for a 320-pixel line.
  *
- * **The clamp is the words' box, never the pictures' (§NNN;** the owner, 2026-09-25: "am pus o poza
+ * **The clamp is the words' box, never the pictures' (§417;** the owner, 2026-09-25: "am pus o poza
  * pe cardul de rezumat dar nu apare si pe site"). §366 clamped the whole summary, pictures inside,
  * on the argument that a picture is not a line — but a clamped box cuts whatever comes after its
  * third line, and a picture written under three lines of words was cut with the rest: on the event
@@ -81,7 +81,7 @@ export const CARD_EXCERPT_SX = {
   flexDirection: "column",
   // The words' box carries its own `overflowWrap` (below), but a figure's caption sits outside
   // that box — this is the net under it too, so a long unbroken address in a caption still wraps
-  // inside a 320-pixel card (§NNN).
+  // inside a 320-pixel card (§417).
   overflowWrap: "anywhere",
   "& p": { fontSize: "0.875rem", lineHeight: 1.43, mb: 1 },
   "& p:last-of-type": { mb: 0 },
@@ -105,7 +105,7 @@ export const CARD_EXCERPT_SX = {
 
 /**
  * The card's words, and only its words: three lines at most across every paragraph, the third
- * ending in an ellipsis (§366). No picture is ever inside this box (§NNN), so nothing it clamps
+ * ending in an ellipsis (§366). No picture is ever inside this box (§417), so nothing it clamps
  * away is anything but words — which the event page, one press away, carries whole.
  */
 export const CARD_EXCERPT_WORDS_SX = {
@@ -116,13 +116,13 @@ export const CARD_EXCERPT_WORDS_SX = {
   overflowWrap: "anywhere",
 } as const;
 
-/** A block that is a picture or a film: never a line of words, never clamped (§NNN). */
+/** A block that is a picture or a film: never a line of words, never clamped (§417). */
 function isMedia(block: RichTextBlock): boolean {
   return block.type === "image" || block.type === "youtube";
 }
 
 /**
- * The summary as a card lays it out (§NNN): the pictures and films written before the first words,
+ * The summary as a card lays it out (§417): the pictures and films written before the first words,
  * the words themselves — every block that is not a picture, in order, `null` when none of them says
  * anything — and every picture and film written after the first words, in the order they were
  * written. Nothing is dropped: the three parts together are the document's blocks.

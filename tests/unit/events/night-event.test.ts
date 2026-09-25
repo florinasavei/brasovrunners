@@ -671,7 +671,7 @@ describe("§394 the editor: the closed card's word and the automatic line", () =
     expect(island.endLine).toBe("The start is before dusk, but the run lasts until 08:00 and reaches the dark — still a night event.");
   });
 
-  it("the pill's tooltip says only the sunset, whatever named the end, in both languages (§NNN)", async () => {
+  it("the pill's tooltip says only the sunset, whatever named the end, in both languages (§415)", async () => {
     // 16:00 on 18 November, ninety minutes: dusk falls inside the run. §404's «End» shape still
     // decides the calendar and reminder lines, but the tooltip says only «Soarele apune la 16:44» — the
     // owner, 2026-09-25: "pe tooltip trebuie doar să zic când apune soarele".
@@ -838,11 +838,11 @@ describe("§404 the night sentences name the start, the sunset and the end", () 
     });
   });
 
-  // §NNN: the tooltip says only the sunset — the owner, 2026-09-25, "pe tooltip trebuie doar să
+  // §415: the tooltip says only the sunset — the owner, 2026-09-25, "pe tooltip trebuie doar să
   // zic când apune soarele" — whatever shape §404 picks for the calendar, the `.ics` and the
   // reminder. Every shape here shares the same day's sunset, "19:00", except "january" (16:57).
   // "dawn" and "january" are both pre-dawn starts (§404's `Dawn` shape): the sunset is hours
-  // after the run ends, so the tooltip names the sunrise instead (§NNN).
+  // after the run ends, so the tooltip names the sunrise instead (§415).
   it.each([
     ["ro", "start", "Soarele apune la 19:00"],
     ["ro", "end", "Soarele apune la 19:00"],

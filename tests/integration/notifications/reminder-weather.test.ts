@@ -34,7 +34,7 @@ vi.mock("@/modules/weather/source", async (importOriginal) => {
           precipitation_probability: time.map(() => 80),
           weather_code: time.map(() => 63),
           wind_speed_10m: time.map(() => 17),
-          // The event page's details (§NNN) are in the same answer; the reminder never says them.
+          // The event page's details (§416) are in the same answer; the reminder never says them.
           apparent_temperature: time.map(() => 2.1),
           precipitation: time.map(() => 1.2),
           wind_gusts_10m: time.map(() => 38),
@@ -149,14 +149,14 @@ describe("BR-REQ-080-01 the reminder's forecast line (§402)", () => {
     expect(block).toContain("<strong>Vremea</strong><br>Ploaie, 6 °C, 80% șanse de ploaie, vânt 17 km/h<br>Prognoză: Open-Meteo");
   });
 
-  it("stays one line — the start hour's facts, never the page's details (§NNN)", async () => {
+  it("stays one line — the start hour's facts, never the page's details (§416)", async () => {
     const message = await renderOutboxMessage(row("EVENT_REMINDER", "r3"), db, NOW);
     expect(message.text).not.toContain("se simte ca");
     expect(message.text).not.toContain("rafale");
     expect(message.text).not.toContain("feels like");
   });
 
-  it("is read at the event's own place: the typed «Coordonate», else the club's (§NNN)", async () => {
+  it("is read at the event's own place: the typed «Coordonate», else the club's (§416)", async () => {
     await renderOutboxMessage(row("EVENT_REMINDER", "r4"), db, NOW);
     const club = new URL(answer.asked.at(-1) ?? "");
     const { env } = await import("@/shared/config/env");

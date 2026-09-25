@@ -87,7 +87,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
    * before the next one arrived. And the whole page was one server render, so nothing could
    * appear until the month's query had answered.
    *
-   * §166 answered the second half with a streamed region and a skeleton; since §NNN the
+   * §166 answered the second half with a streamed region and a skeleton; since §413 the
    * calendar page streams nothing — its month is read from the public cache (§333), awaited
    * once, and sent in the first HTML, because a streamed region is revealed by a script and
    * the filter panel above it must work without one. What still stands is the first half: a
@@ -107,7 +107,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await page.goto("/ro/calendar");
     const main = page.locator("#main");
     await expect(main.getByRole("table")).toBeVisible();
-    // No loading state on screen (§NNN streams none): one would be measured as the page's
+    // No loading state on screen (§413 streams none): one would be measured as the page's
     // layout and the swap after the click read as a reflow that is not there.
     await expect(main.locator('[role="status"]')).toHaveCount(0);
 

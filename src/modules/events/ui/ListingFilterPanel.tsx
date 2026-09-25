@@ -24,7 +24,7 @@ import FilterAutoApply from "./FilterAutoApply";
 import { GLYPHS, type GlyphName } from "./glyphs";
 
 /**
- * The listing's filters: one "Filtre" button, closed by default, and checkbox pills under it (§NNN,
+ * The listing's filters: one "Filtre" button, closed by default, and checkbox pills under it (§413,
  * amending §133 and §401 — the owner, 2026-09-25: "un buton de filtre, collapsed by default,
  * checkboxuri pe pill-uri și mai multe filtre").
  *

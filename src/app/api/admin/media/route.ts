@@ -9,7 +9,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
- * A picture is up to nine WebP encodes now (§NNN): 3–10 seconds for a phone photograph on a
+ * A picture is up to nine WebP encodes now (§414): 3–10 seconds for a phone photograph on a
  * shared machine, measured, and a serverless function's default ceiling is not something to find
  * out about from the owner. Sixty seconds is within every Vercel plan's limit.
  */
@@ -21,7 +21,7 @@ export const maxDuration = 60;
  * a Contributor writes drafts and a draft may have pictures — what they may *publish* is the
  * page's rule, not this route's. The bytes are checked by `processUploadedImage` whatever the
  * client claimed, and nothing is written anywhere until they pass. The answer carries `stored`,
- * the facts the editor shows under its toolbar (§NNN).
+ * the facts the editor shows under its toolbar (§414).
  */
 export async function POST(request: Request): Promise<Response> {
   let actor;
@@ -44,7 +44,7 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "VALIDATION_ERROR", detail: "too large" }, { status: 413 });
   }
   const originalFilename = String(form.get("originalFilename") || file.name || "picture");
-  // The choice beside the upload (§NNN), checked here: absent is "normal", anything but the two
+  // The choice beside the upload (§414), checked here: absent is "normal", anything but the two
   // words is refused rather than guessed at.
   const quality = parseImageQuality(form.get("quality"));
   if (!quality) return NextResponse.json({ error: "VALIDATION_ERROR", detail: "quality" }, { status: 400 });

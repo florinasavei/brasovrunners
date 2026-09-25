@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — the quality
+ * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — the quality
  * beside the upload is remembered for the session, and a browser that refuses the store still
  * remembers it for the page.
  *
@@ -32,7 +32,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("§NNN the remembered quality", () => {
+describe("§414 the remembered quality", () => {
   it("starts on the recommendation and keeps a choice in the session's store", async () => {
     const store = memoryStore();
     const { readRemembered, rememberQuality } = await withStore(store);

@@ -389,7 +389,7 @@ describe("BR-REQ-052-02 the race start and the gathering", () => {
  *
  * The link is whatever the organizer pasted. No guessed `geo`: the coordinates it was built from
  * left with migration `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be
- * wrong, which is worse than no pin — `geo` is published only from the event's own point (§NNN).
+ * wrong, which is worse than no pin — `geo` is published only from the event's own point (§416).
  */
 describe("BR-REQ-052-02 the meeting point as a map link", () => {
   it("publishes neither a map nor a guessed pin when the club has pasted no link", () => {
@@ -406,7 +406,7 @@ describe("BR-REQ-052-02 the meeting point as a map link", () => {
     expect(block.location.geo).toBeUndefined();
   });
 
-  // §NNN: `geo` from the event's own point — the pin its map link carries, else the typed «Coordonate».
+  // §416: `geo` from the event's own point — the pin its map link carries, else the typed «Coordonate».
   it("publishes `geo` from the map link's pin, or the typed pair, and never the club's fallback", () => {
     const pinned = parsed(sportsEventJsonLd(baseEvent({ mapUrl: "https://maps.example.test/?q=45.6384,25.5921" }), URL, "Brașov Runners"));
     expect(pinned.location.geo).toEqual({ "@type": "GeoCoordinates", latitude: 45.6384, longitude: 25.5921 });

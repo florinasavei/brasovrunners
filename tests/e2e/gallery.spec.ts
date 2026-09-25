@@ -41,7 +41,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     // Not publishable yet: no photo.
     await expect(page.getByText("Albumul nu are nicio fotografie")).toBeVisible();
 
-    // The quality beside the button (§NNN): the recommendation until somebody chooses, then the
+    // The quality beside the button (§414): the recommendation until somebody chooses, then the
     // choice — a thumb's target, like every control here.
     const quality = page.getByTestId("image-quality");
     const normal = quality.getByRole("radio", { name: "Normală (recomandat)" });
@@ -83,7 +83,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toBe("image/webp");
 
-    // The tile offers every stored width, and says how wide it is drawn (§NNN): a phone at 3×
+    // The tile offers every stored width, and says how wide it is drawn (§414): a phone at 3×
     // takes a rung, not an enlarged thumbnail. Every width it names is really there.
     const tile = link.locator("img");
     const srcset = (await tile.getAttribute("srcset")) as string;
@@ -95,7 +95,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
       expect(rung.headers()["content-type"]).toBe("image/webp");
     }
     // And the browser really took the smallest stored width that fills the tile at its density —
-    // a rung, never the thumbnail enlarged nor the 1600-pixel master (§NNN).
+    // a rung, never the thumbnail enlarged nor the 1600-pixel master (§414).
     const drawn = await tile.evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width * window.devicePixelRatio);
     const candidates = srcset.split(", ").map((entry) => ({ url: entry.split(" ")[0], width: Number(entry.split(" ")[1].slice(0, -1)) }));
     const expected = candidates.find((candidate) => candidate.width >= drawn) ?? candidates[candidates.length - 1];
@@ -129,7 +129,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     const thumbSrc = (await page.locator("main img[src*='/api/media/']").first().getAttribute("src")) as string;
-    // One of the ladder's rungs, beside the thumbnail (§NNN): it must go with the album too.
+    // One of the ladder's rungs, beside the thumbnail (§414): it must go with the album too.
     const rungSrc = thumbSrc.replace(/thumb\.webp$/, "960w.webp");
     expect((await page.request.get(rungSrc)).status()).toBe(200);
 

@@ -9,7 +9,7 @@ import { DIFFICULTY_LEVELS, type DifficultyLevel } from "@/modules/events/domain
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-041-01 (`DECISIONS.md` §NNN) — five difficulty levels (the owner, 2026-09-25: "vreau să
+ * BR-REQ-041-01 (`DECISIONS.md` §412) — five difficulty levels (the owner, 2026-09-25: "vreau să
  * fie foarte ușor, ușor, mediu, greu și foarte greu"), end to end through the migrations and the
  * editor's own services on PGlite.
  *
@@ -77,7 +77,7 @@ async function created(difficulty: DifficultyLevel | null, slug: string) {
 
 const difficultyOf = async (id: string) => (await db.select({ difficulty: events.difficulty }).from(events).where(eq(events.id, id)))[0]?.difficulty;
 
-describe("BR-REQ-041-01 §NNN five difficulty levels, migration 0078", () => {
+describe("BR-REQ-041-01 §412 five difficulty levels, migration 0078", () => {
   it("the migrated enum is the scale, in the scale's order — the domain list's own", async () => {
     const result = await db.execute<{ level: string }>(sql`select unnest(enum_range(null::event_difficulty))::text as level`);
     expect(result.rows.map((row) => row.level)).toEqual([...DIFFICULTY_LEVELS]);
@@ -113,7 +113,7 @@ describe("BR-REQ-041-01 §NNN five difficulty levels, migration 0078", () => {
     expect(ranked.map((row) => row.difficulty)).toEqual([...DIFFICULTY_LEVELS]);
   });
 
-  it("the sample seed shows both ends of the scale (§NNN), so local and QA draw the gauge at one and at five", () => {
+  it("the sample seed shows both ends of the scale (§412), so local and QA draw the gauge at one and at five", () => {
     const seed = readFileSync(path.join(process.cwd(), "src", "db", "seeds", "pilot.ts"), "utf8");
     expect(seed).toContain('difficulty: "VERY_EASY" as const');
     expect(seed).toContain('difficulty: "VERY_HARD" as const');

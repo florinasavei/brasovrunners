@@ -108,7 +108,7 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      // The two ends of the five-level scale (§NNN), so a seeded listing shows the gauge at both.
+      // The two ends of the five-level scale (§412), so a seeded listing shows the gauge at both.
       difficulty: "VERY_EASY" as const,
       costType: "FREE" as const,
       ro: {
@@ -129,7 +129,7 @@ async function seed() {
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
-      // «Coordonate» typed (§NNN): the cable car's lower station, so a seeded trail run reads the
+      // «Coordonate» typed (§416): the cable car's lower station, so a seeded trail run reads the
       // weather at its own trailhead and says «Pentru locul evenimentului». No map link carries a
       // pin here: a map link is a hostname, which no file under `src/` may hold (AGENTS.md §8).
       latitude: 45.6384,

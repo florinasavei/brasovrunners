@@ -42,7 +42,7 @@ export type Glyph = ComponentType<SvgIconProps>;
  * being tried); "other event" is a group of people; an external event opens elsewhere;
  * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
  * mixed the fork in the path; difficulty is a gauge, its needle at one of five positions
- * (§NNN; the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon
+ * (§412; the owner, 2026-09-25: "foarte ușor, ușor, mediu, greu și foarte greu — sau un gauge icon
  * custom mai degrabă", replacing §399's scale of weights — drawn in `DifficultyGaugeIcon.tsx`);
  * cost is a coin, crossed out when there is none, or a hand holding a heart for a donation — the
  * platform takes none of the three itself.
@@ -105,7 +105,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
  *
  * There is no bare `difficulty` entry: every caller reads one value's own level, so only the
  * `difficulty:*` entries exist — one per level of `DIFFICULTY_LEVELS` (`DifficultyGaugeIcon.tsx`),
- * a half-dial with the needle at the level's own position (§NNN), one `<svg>` each so
+ * a half-dial with the needle at the level's own position (§412), one `<svg>` each so
  * `GlyphChip`'s clone and its `.MuiChip-icon` sizing see exactly what every other glyph here
  * hands them.
  */
@@ -123,8 +123,8 @@ export const GLYPHS = {
   // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
-  // The filter button's own glyph (§NNN) — a tuning icon, not the funnel `FilterListIcon`, and
-  // "registration open" among the filter's boxes (§NNN): a calendar with a tick, the same
+  // The filter button's own glyph (§413) — a tuning icon, not the funnel `FilterListIcon`, and
+  // "registration open" among the filter's boxes (§413): a calendar with a tick, the same
   // metaphor a confirmed place gets elsewhere.
   filters: TuneIcon,
   registration: EventAvailableIcon,

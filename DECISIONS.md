@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.98-2026-09-25 -->
+<!-- PROJECT_BASELINE: BR-V1.99-2026-09-25 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.98-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.99-2026-09-25`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -16540,3 +16540,262 @@ This round finished the work-in-progress `cardOnListing` helper (`tests/e2e/supp
 This fix round finished the listing-fold consolidation the branch's prior commit started: `public-small-2026-09-25.spec.ts`'s "Colaborare"-chip spec still opened the public listing's "other events" fold with its own `page.evaluate`, the fifth stray copy after the four the earlier commit had already moved to `cardOnListing`. Its one single-card lookup now goes through that helper too. The `page.evaluate` calls that remain — in `listing-cards.spec.ts`'s `cards()`, `event-pages.spec.ts` (twice) and `listing-card-button.spec.ts` — each read or measure every card on the listing at once rather than looking up one by heading, so `cardOnListing`'s single-card contract does not fit them; each now carries a one-line comment saying so, so a later reader does not mistake it for a sixth stray copy. Separately, `cardOnListing`'s own doc comment had cited `§401` (the partners-fold decision) for this consolidation fix itself; it now cites the unnumbered `§411` the same way the branch's other new comments do, leaving `§375` and `§166` in place since those two do name the listing's own fold and its streaming.
 
 Baseline `BR-V1.98-2026-09-25`.
+
+## 412. The difficulty has five levels, drawn as one gauge glyph (replaces §399's weights)
+
+How migration `0078_difficulty_five` applies, as verified: it is two `ALTER TYPE "event_difficulty" ADD VALUE` statements and nothing else. `VERY_EASY` is added `BEFORE 'EASY'` and `VERY_HARD` after `HARD`, so the enum's own order is the scale's order. Every environment runs it with Drizzle's migrator: `yarn db:migrate`, `scripts/db-migrate.mjs` and PGlite in the tests. The migrator applies all pending migrations in one transaction. Since PostgreSQL 12 (PGlite 0.5.8 is PostgreSQL 18.3; Neon is newer than 12) `ADD VALUE` is allowed inside a transaction, as long as that same transaction does not use the new value. No migration uses it; the first use is the seed or the editor, each in a later transaction. We checked this three ways: `createTestDatabase` on PGlite migrates, `yarn db:reset:local` migrates and seeds VERY_EASY and VERY_HARD on a real PostgreSQL, and `drizzle-kit generate` reports no drift against the 0078 snapshot. None of the three old values is rewritten. An event saved as EASY, MODERATE or HARD reads back unchanged. `ORDER BY difficulty` ranks by the scale, because PostgreSQL orders an enum by its declaration order.
+
+What the gauge measured, on a production build at 320 and 360 px, on both Playwright projects:
+- The «Mediu» pill on the listing card is 67.9 px wide. §399's pill with three weights was 103.9 px.
+- The gauge itself is 18 px, the chip's own icon size, like every other glyph.
+- The widest word, «Foarte greu», makes a 98.3 px pill. That is still narrower than §399's «Mediu» pill.
+
+The CSV export has no difficulty column, and the JSON-LD names no difficulty, so neither changed. The §392 email facts block and the calendar entry print the level's word only. They take the five words from the catalogues, and HARD now reads «Greu» instead of «Avansat».
+
+DifficultyGaugeIcon keeps `"use client"` for one reason: each faint segment reads `theme.palette.action.disabledOpacity` through an `sx` callback, and a function cannot cross from a Server Component to MUI's client `Box`. Server Components reach the gauge through `difficulty-glyphs.ts`, which has no directive, by name (§112).
+
+Baseline `BR-V1.99-2026-09-25`.
+
+## 413. The listing's filters are one collapsed «Filtre» button with checkbox groups; the hero follows them (amending §133 and §401)
+
+The owner, 2026-09-25: "un buton de filtre, collapsed by default, checkboxuri pe pill-uri și mai multe filtre". This amends §133 (the row of kind chips) and §401 (the «Colaborare» chip beside it, and the row's margin).
+
+**The button.** The chip row is replaced by one «Filtre» / «Filters» button (`events/ui/ListingFilterPanel.tsx`, a Server Component):
+- It is a native `<details>` holding a `<form method="get">` whose `action` is the page's own path, labelled «Filtrele evenimentelor».
+- It is closed on arrival at every width. The summary is an outlined 44px control with the FilterList glyph and a caret. With filters on it counts them: «Filtre (2)».
+- Each option is a `<label>` 44px tall (BR-REQ-041-01 criterion 6) around a 32px pill. The pill holds a real checkbox, the value's glyph (§112, rendered on the server, nothing crossing into a client component) and its word. It fills in the brand colour through `:has(input:checked)`, so it changes the instant the box does, with or without a script.
+- The groups are `<fieldset>`s with a `<legend>`, one column on a phone and two from `md`.
+- While the fold is closed, a row of the ticked values follows it. Each is a `ChipLink` to the address without that tick, with a drawn ✕ and the accessible name «Scoate filtrul: Concurs», and the row ends with «Șterge filtrele». The row hides while the fold is open, because the boxes say the same thing.
+- The gap around the button is `DENSITY.sectionGap` above and below (16px on a phone, 24px from `sm`), the step §401 set.
+
+**The groups and the offer rule.** The groups are drawn from the values the calendar and the route pills already use:
+- Tipul (the event types)
+- Terenul (surface)
+- Dificultatea
+- Distanța, in three bands: up to 10 km, 10–21 km (21.1 km counts as a half marathon, however it was rounded), over 21 km
+- Costul (Gratuit, Cu taxă, Donație)
+- «Altele»: «Colaborare» (§401) and «Eveniment de noapte» (§394, the per-date civil-dusk answer through `clubNightEvent`)
+
+A group with ticks requires the event's own value to be one of them (OR within a group). Every group with ticks must hold (AND across groups). An unanswered question (no surface, no difficulty stated) matches no tick.
+
+§133's rule, generalised (`offeredFilters` in `events/domain/listing-filter.ts`):
+- A box is offered only when ticking it would change what the page shows: a value some events carry and not all.
+- A box is also offered when the address already ticks it, so a filtered page can always say what it is filtered by, even where it now matches nothing.
+- A value every event carries (one kind; every event free) is not offered. That keeps "fewer than two kinds is nothing to choose between".
+- The offer is read off every row the page shows, never off the filtered rows, so ticking one box never takes another away.
+- With nothing to offer and nothing ticked, the button does not render.
+
+**The hero follows the filters.** This reverses §133's and §401's "the filter never touches the hero". With one row of kind chips, keeping Sunday's race at the top was a fair exception. With five groups, a reader who ticks "Trail" and "Avansat" and sees an asphalt 10 km at the top reads the filter as broken. `listingSections(events, matches, hasUpcoming)` now takes a predicate:
+- A lead event that matches stays the lead.
+- One that does not is shown nowhere. It is not demoted to a card, because it does not match.
+
+That is why the button sits above the hero, not under it: a control under the thing it hides would jump up under the thumb that pressed it.
+
+**The URL shape.** The address is the only memory: one parameter per tick, repeated within a group, in the closed set's own order. For example: `?type=RACE&type=HIKE&surface=TRAIL&difficulty=HARD&distance=LONG&cost=FREE&partner=1&night=1`.
+- This is exactly what the form submits, and `listingFilterQuery` writes the same shape for every link the server builds, so there is one address per state.
+- Old addresses keep their meaning: `?type=RACE` (the chip row's links) and `?partner=1` (§401).
+- An unknown value is ignored, as `?type=NOPE` always was.
+- `?view=list`, and on the calendar `month`/`year`, travel as hidden inputs and in every link.
+- The canonical stays the plain listing (§342).
+- The calendar components' `query` now accepts arrays (`Record<string, string | string[]>`), since two ticks in one group are two values.
+
+**With and without a script.** The panel needs no script: the fold opens natively, «Arată evenimentele» submits the GET form, and the chips are plain links. One island, `FilterAutoApply` (strings only, an empty span inside the form), enhances it:
+- On each `change` it reads `FormData` from the form itself, so the two paths can never build different addresses.
+- It `router.push`es that address with the scroll kept, and the fold stays open.
+- It marks the form `data-enhanced`, which hides the now-redundant button.
+- When the address changes some other way (a chip's ✕, «Șterge filtrele», back), it sets each box to what the address says.
+
+A known limit that belongs to the listing, not this panel, measured 2026-09-25: the listing streams its regions behind `<Suspense>` (§166), and React reveals a streamed region with an inline script. A browser with scripts off gets the loading shapes, the cards as much as the panel. Under Next 16 a crawler's user agent (bingbot was tried) is streamed the same way. The e2e proof of the no-script path is therefore in two halves: the server's HTML carries the complete form (method, action, named boxes, submit button, plain chip links), and the form submitted natively with the island bypassed lands on the address a link would.
+
+**Why filtering stays in memory after the cached read.** §333 caches rows, keyed by what the query depends on. The listing's upcoming rows are one cached read, a few dozen rows at most. Filtering them in the page means:
+- no new query shape per combination of boxes;
+- no new cache key per combination (5 groups and 2 flags would be hundreds);
+- no new expiry wiring;
+- no database wake for a visitor who ticks a box.
+
+Night could not be a SQL predicate anyway: it is computed per date from the sun (§394). The calendar does the same:
+- Its rows are now read and kept whole by `readWithLastGood` and filtered after it. Before, the filter ran inside the loader, so the last good copy of a month was whichever filter had last read it. A "races only" copy could answer an unfiltered visit while the database was away.
+- The calendar's `<Suspense>` key is `calendarBoundaryKey(view, layout, listingFilterKey(filter))`: one string for the whole panel, in place of §401's fourth argument.
+
+The past section keeps one ticked kind at the source, as `?type=` always did (§272). Every other filter narrows in memory over a 60-row window of the same cached read (about a year of weekly runs), and the heading says «Din trecut, după filtre (N)». The row the lead already shows between seasons (§167) is now dropped by id rather than as "the first row": with a kind narrowed at the source, the first row is the latest of that kind, not the club's latest.
+
+**The calendar carries the same panel.** It uses the same button, boxes and address, so "races on a trail" is also a month of races on a trail. It offers what would narrow the period on view, the rows it filters. It keeps the month or year and the layout. Its month and year links, the "Lună"/"An" chips, the arrows and the pickers all keep the filters.
+
+**Words.** When a filter matches nothing, the page says «Niciun eveniment nu se potrivește filtrelor alese.» / "No event matches the filters you chose." instead of "nothing is published". The other-events heading reads «Evenimentele alese (N)» / "Matching events (N)" while filters are on. Everything is in both catalogues, `Events.filter.*`; `filter.all` is gone.
+
+*Rejected:*
+- A remembered filter per visitor (localStorage or a cookie): the address is the memory, so a shared link shows what the sender saw.
+- A client-side filter over rows shipped to the browser: it breaks the no-script path and ships every row.
+- A query per combination: cache keys and database wakes for a list of a few dozen rows.
+- MUI `Checkbox`/`FormControlLabel`: a `control={<Checkbox/>}` element prop from a Server Component, which §370 forbids, and a client component per box.
+- MUI's `onDelete` for the chip's ✕: its icon stops the click from reaching the link around the chip.
+- Keeping the hero out of the filter, for the reason above.
+
+**Consequences.**
+- New: `events/domain/listing-filter.ts` (`parseListingFilter`, `listingFilterQuery`, `listingFilterKey`, `matchesListingFilter`, `offeredFilters`, `withoutValue`, `distanceBand`), `events/ui/ListingFilterPanel.tsx`, `events/ui/FilterAutoApply.tsx`.
+- Changed: `listing.ts` (`listingSections` takes a predicate; `presentEventTypes` and `partnerFilterOffered` are replaced by `offeredFilters`; `calendarBoundaryKey` takes the filter key), `events/page.tsx`, `calendar/page.tsx`, `CalendarSection`/`CalendarHeader`/`EventCalendar`/`CalendarPicker` (array queries), `ChipLink` (`ariaLabel`, `closeMark`, `keepScroll`), `GlyphChip` (`closeMark`).
+- Tests: unit `events/listing-filter.test.ts` and `events/listing.test.ts`; e2e `listing-filters.spec.ts` and `public-small-2026-09-25.spec.ts`, both Playwright projects on a production build.
+
+**Fix round (2026-09-25): the panel works with scripts off.** The listing and the calendar no longer stream. Each page now waits for its one cached read (§333, with the last good copy behind it, §281) before it renders anything. The filter panel, the hero, the list, the past section, the stale notice and the calendar's month are all in the first HTML the server sends. React reveals a streamed `<Suspense>` region with an inline script. A browser with scripts off was therefore left with the loading shapes, and the panel, which is a GET form built to work without a script, sat inside one of them. This amends §166 for these two pages. BR-REQ-041-01 criterion 12's loading shapes no longer apply to the listing or the calendar; the gallery keeps its own. With a script, a tick or a month change is a soft navigation: the page stays on screen until the next one is ready, instead of a skeleton standing in for it. The price: on a cache miss, the first byte of these two pages waits for the database instead of the header leaving first.
+
+Some code existed only to serve those boundaries, so it went with them: the listing's and the calendar's skeletons, `calendarBoundaryKey`, `listingFilterKey` and the `Events.loading` message. The past section's read (§267) starts beside the listing's. The page waits for the longer of the two, not the sum. If the past read fails, the fold is left out and the page still renders.
+
+**«Înscrieri deschise» is the page's own door.** An event matches only if its page offers a button to register right now. The test is the `registrationCta` decision `RegistrationCta` draws from, over the same cached availability (`cachedPublicAvailability`):
+- a free place, or an uncapped event (`OPEN`);
+- no place, but a waiting list that still takes people (`FULL`);
+- the organizer's own form, when the external event has a link (`EXTERNAL`).
+
+A full event with no waiting list, a full waiting list (§348), a window not yet open or already closed, a cancelled or finished event, or one that takes no registration does not match. The window alone is no longer enough.
+
+`readRegistrationDoors` reads the free places only for an internal event whose window is open, which is the one case the page's door reads them in. That costs one cached entry per open race on the listing or the month, and nothing for any other row. If the count cannot be read, the event is not counted as open. The filter module stays pure: whether a date is a night event and whether its page has a door are the caller's answers (`FilterFacts`).
+
+**The past section's bound.** The past section reads one window: the club's latest 60 past events. That is one data-cache entry per language and clock window, whatever is ticked, filtered in memory. A filter finds its twelve cards among those sixty, or shows fewer. Older events are in the calendar's months.
+
+**Short addresses.** Besides the enum names the form submits, the address accepts:
+- the distance in kilometres: `0-5`, `5-10`, `10-21`, `21+` (a query string reads `+` as a space, and the value is trimmed) or `21-`;
+- any enum name in lowercase or with hyphens: `?type=race,group-run`.
+
+A value outside a group's closed set is still ignored.
+
+**One door, one reader (review round 3).** «Înscrieri deschise» no longer has a reader of its own. The listing and the calendar ask §409's `readRegistrationDoor` (`ui/registration-door.ts`) — the same function the event page's `RegistrationCta` and the listing card's `CardRegistration` call — once per event on the page, side by side, through `readRegistrationDoors` beside it; the filter module keeps only the pure predicate `registrationDoorOpen(door)`: a door when the answer is KNOWN and the state is `OPEN`, `FULL` (a waiting list that takes people) or `EXTERNAL`, never when it is `UNKNOWN` (a count that could not be read, §281, which the page itself shows without a button). So the filter, the card's button and the page's button are one answer and cannot drift; the cost is unchanged — one cached availability entry (§333) per open internal event, the very entry its card and its page read, nothing for any other row. `FilterableEvent` no longer carries the registration columns; the door is the caller's `FilterFacts.door`.
+
+**The past window has one key.** `cachedPastEvents` takes no kind any more: the listing reads the latest sixty past events once per language and clock window, whatever the address ticks, and narrows them in memory; no filter combination can mint a data-cache entry of its own.
+
+**Merged over `BR-V1.98`.** The branch now sits on §404–§411: the listing card's registration door (§409) reads the same answer the «Înscrieri deschise» box does, and the partner spec finds the seeded run through §411's shared `cardOnListing`. The calendar body (`EventCalendar`) takes its rows already read — the promise and the skeleton of §166 are gone from both pages, as recorded above.
+
+Baseline `BR-V1.99-2026-09-25`.
+
+## 414. Pictures are stored as a ladder of sizes and served per screen; the club chooses «Calitate» at upload
+
+**«Înaltă» keeps more pixels, not only a better encode (re-review).** The first version kept the same 2400-px master for both choices, and the browser capped every upload at 3000. So «Înaltă» was a different encoder on the same pixels. A poster photographed at 4000 px lost 40% of its lettering whichever choice was made. «Înaltă» now keeps up to `HIGH_WEB_MAX` = 4000 px on the long side (`masterMaxEdge`), lossy at quality 90 rather than 92: on a 4000-px master, 92 measured 9–25% more bytes. The per-picture near-lossless choice for lettering stays. The ladder gains a 2400 rung. Only a master wider than 2667 px gets it, so a «Normală» picture never does, and a laptop at 2× still loads a 2400 file under a 4000 master.
+
+The browser sends up to 4000 px for this choice. At «Înaltă» it sends a file that fits as it is, whatever its pixels: the server resizes before its one encode. A phone's 4032-px JPEG re-encoded in a canvas at 0.95 measured larger than the JPEG itself (4.85 MB from 2.37 MB). Every browser upload now also stays under `BROWSER_SEND_BYTES` (4 MB), below the platform's 4.5 MB request body (§66). Before, it was held only under the server's 6 MB, a mismatch that «Înaltă» would have turned from rare into ordinary.
+
+Measured bytes, on four phone photographs of 6.5–12 MP and a 3200 × 4000 poster:
+- A photograph's master is 279–418 KB at «Normală» and 650–742 KB at «Înaltă». The worst case, a leaf-covered hillside, is 1.5 MB and 3.8 MB.
+- All the files of one photograph together are 0.7–1.1 MB at «Normală» and 1.8–2.4 MB at «Înaltă» (3.8 and 8.6 MB for the hillside).
+- An upload takes 2–3.5 s at «Normală» and 5–11 s at «Înaltă», within the routes' 60 s ceiling.
+- The poster comes out near-lossless: 218 KB for the master, 1.3 MB in all.
+- A phone's rung at «Înaltă» is 1.3–1.7 times the same rung at «Normală». A laptop at 2× loads the 2400 rung, 305–453 KB (1.7 MB for the hillside).
+
+**The poster is an upload like any picture.** A film's own poster goes up at the same remembered quality and is told what it became, like a picture in the text. Its size goes on the node as optional `posterWidth` / `posterHeight`; when absent they stay absent, so a film stored before keeps its exact JSON. The facade draws a club poster from its ladder with `srcset` and `sizes`, over a 16∶9 cover box. YouTube's own thumbnail (`yt-<id>`, at most 480 px) keeps its one `src`.
+
+**A picture from before gets no srcset.** Offering an old picture "thumbnail 640w, master 2400w" sent a 390-px phone at 3× to the 2400-px master: 381 KB where its thumbnail is 37 KB, for every old album cover on the albums page. An old picture now loads exactly the file it always did until it is uploaded again.
+
+**The remembered choice survives a store that refuses it.** The choice lives in `sessionStorage` on purpose: one sitting's pictures, forgotten with the tab, so a shared backoffice laptop starts the next person on the recommendation. When the browser refuses the store (throws, reads nothing, or refused the last write), the page's own memory holds the choice. Each control's radio group has its own generated name, so two controls on one page are two groups.
+
+**«Înaltă» keeps more pixels, not only a better encode (re-review).** The first version kept the same 2400-px master for both choices, and the browser capped every upload at 3000. So «Înaltă» was a different encoder on the same pixels. A poster photographed at 4000 px lost 40% of its lettering whichever choice was made. «Înaltă» now keeps up to `HIGH_WEB_MAX` = 4000 px on the long side (`masterMaxEdge`), lossy at quality 90 rather than 92: on a 4000-px master, 92 measured 9–25% more bytes. The per-picture near-lossless choice for lettering stays. The ladder gains a 2400 rung. Only a master wider than 2667 px gets it, so a «Normală» picture never does, and a laptop at 2× still loads a 2400 file under a 4000 master.
+
+The browser sends up to 4000 px for this choice. At «Înaltă» it sends a file that fits as it is, whatever its pixels: the server resizes before its one encode. A phone's 4032-px JPEG re-encoded in a canvas at 0.95 measured larger than the JPEG itself (4.85 MB from 2.37 MB). Every browser upload now also stays under `BROWSER_SEND_BYTES` (4 MB), below the platform's 4.5 MB request body (§66). Before, it was held only under the server's 6 MB, a mismatch that «Înaltă» would have turned from rare into ordinary.
+
+Measured bytes, on four phone photographs of 6.5–12 MP and a 3200 × 4000 poster:
+- A photograph's master is 279–418 KB at «Normală» and 650–742 KB at «Înaltă». The worst case, a leaf-covered hillside, is 1.5 MB and 3.8 MB.
+- All the files of one photograph together are 0.7–1.1 MB at «Normală» and 1.8–2.4 MB at «Înaltă» (3.8 and 8.6 MB for the hillside).
+- An upload takes 2–3.5 s at «Normală» and 5–11 s at «Înaltă», within the routes' 60 s ceiling.
+- The poster comes out near-lossless: 218 KB for the master, 1.3 MB in all.
+- A phone's rung at «Înaltă» is 1.3–1.7 times the same rung at «Normală». A laptop at 2× loads the 2400 rung, 305–453 KB (1.7 MB for the hillside).
+
+**The poster is an upload like any picture.** A film's own poster goes up at the same remembered quality and is told what it became, like a picture in the text. Its size goes on the node as optional `posterWidth` / `posterHeight`; when absent they stay absent, so a film stored before keeps its exact JSON. The facade draws a club poster from its ladder with `srcset` and `sizes`, over a 16∶9 cover box. YouTube's own thumbnail (`yt-<id>`, at most 480 px) keeps its one `src`.
+
+**A picture from before gets no srcset.** Offering an old picture "thumbnail 640w, master 2400w" sent a 390-px phone at 3× to the 2400-px master: 381 KB where its thumbnail is 37 KB, for every old album cover on the albums page. An old picture now loads exactly the file it always did until it is uploaded again.
+
+**The remembered choice survives a store that refuses it.** The choice lives in `sessionStorage` on purpose: one sitting's pictures, forgotten with the tab, so a shared backoffice laptop starts the next person on the recommendation. When the browser refuses the store (throws, reads nothing, or refused the last write), the page's own memory holds the choice. Each control's radio group has its own generated name, so two controls on one page are two groups.
+
+Baseline `BR-V1.99-2026-09-25`.
+
+## 415. The night pill's tooltip says only the sunset
+
+**Context.** The owner, 2026-09-25: "la alergarea de noapte, pe tooltip trebuie doar sa zic cand apune soarele" — on the night event's tooltip, he wants it to say only when the sun sets. §404 had given the tooltip the same five sentence shapes as the calendar entry, the `.ics` line and the reminder — naming the start, then the sunset, then (for some shapes) the end or the sunrise. That was the right amount of information for the calendar and the reminder, which a reader consults once and wants the full picture from, but too much for a tooltip a reader glances at while hovering a pill already labelled "Eveniment de noapte" / "Alergare de noapte" with a headlamp glyph — the pill itself already says it is a night event; the tooltip's one remaining job is the sunset time.
+
+**Decision.** `nightTooltip` in `src/modules/events/night-event.ts` no longer asks `nightShape` for a shape. It reads `facts.sunset` alone and returns `t("night.tooltip", { sunset })` — "Apusul la {sunset}" / "Sunset at {sunset}" — or `null` when the day has no sunset to name (a polar day or night, unchanged). `nightLine`, which drives the calendar entry, the `.ics` description and the reminder email, is untouched: it still asks `nightShape` and keeps every one of §404's five shapes (plain, End, EndProgramme, After, Dawn), because those surfaces were not named in this round and a reader consulting them still benefits from the fuller sentence.
+
+**Consequences.** The five `Event.night.tooltip`/`tooltipEnd`/`tooltipEndProgramme`/`tooltipAfter`/`tooltipDawn` message keys in `messages/ro.json` and `messages/en.json` collapsed to one `tooltip` key each. `nightShape`'s export and its five-shape logic are unchanged and still used by `nightLine`. Tests: `tests/unit/events/night-event.test.ts` (the route pill's rendered tooltip across the default fixture, the June override, the end-named cases, and a `%s`-parameterized table over all five `nightShape` outcomes, now all collapsing to the day's sunset alone) and `tests/e2e/night-event.spec.ts` (the two Playwright specs asserting the rendered tooltip text on the event page).
+
+Baseline `BR-V1.98-2026-09-25` (or whatever the orchestrator lands this on top of).
+
+§415 (this round): the pill's tooltip is not purely "the sunset alone" on every date — when the automatic verdict is nightShape's Dawn case (a start before that day's civil dawn, e.g. a 06:30 group run), the evening's sunset is hours after the run finishes and is not the useful fact; the tooltip there names that day's sunrise instead, through a second i18n key pair (night.tooltipDawn), reusing nightShape's own Dawn condition rather than recomputing it.
+
+Baseline `BR-V1.99-2026-09-25`.
+
+## 416. The weather at the event's own place, on the cards, with more of it
+
+Amending §402. The owner, 2026-09-25: "aș vrea să văd vremea și pe cardul principal" and "la vreme aș vrea să văd exact pe locația selectată, să văd mai multe date".
+
+**The place.** The forecast is asked for the event's own place, by one pure rule, `forecastPlace` in `weather/domain/place.ts`, taking the first that gives a point:
+1. the map link's own coordinates: Google's `!3d…!4d…` pin, `?q=` / `?query=` / `?ll=` / `?destination=`, a pair as a path segment, `@lat,lng,z`, or OpenStreetMap's `mlat`/`mlon` and `#map=`;
+2. the organizer's typed «Coordonate (lat, lng)»;
+3. `CLUB_COORDINATES`.
+
+The map link comes first because it is the pin the page sends the runner to, so the forecast and the map cannot disagree. A short link (`maps.app.goo.gl`, `goo.gl/maps`) is never followed. Resolving it would mean a request to the map provider on every render, for a redirect it may change or refuse. The typed pair is the organizer's one-move answer instead, and the editor's line under the box says which place is being read. A place still to be announced (§328) reads the club's place, and the query withholds the pair along with the link.
+
+**The columns.** They are `latitude` and `longitude`, `double precision`, rather than the brief's `place_lat` / `place_lng` `decimal(8,5)`. node-postgres hands a float8 back as a number and a numeric back as a string, and the names match the pair §61 dropped. One CHECK holds both or neither, each in its range. It needs explicit `IS NOT NULL` terms: half a pair makes the BETWEEN branch NULL, and a CHECK lets NULL through. The integration test found this. The box takes "45.6427, 25.5887", and also the Romanian decimal comma ("45,6427; 25,5887"). It refuses anything else and names the box. An empty box clears the pair, and a caller that does not post the box leaves the pair alone. A series and a duplicate carry the pair with the map link. The migration is `0079_event_coordinates`, expand-only, on top of the gauge's `0078_difficulty_five`.
+
+**The cache.** There is one entry per place per hour. The place is rounded to three decimals (about 110 m by 80 m in Brașov), and the rounded pair is both the cache key and the request. Ten events at the club's centre are still one request, and two pins in one car park share it. The listing reads every card at once and shares one read per rounded place. /devs «Stare» says how many places this instance read in the last hour. The count is in memory and per instance, like the last failure.
+
+**More data.** The same hourly request also asks for `apparent_temperature`, `precipitation`, `wind_gusts_10m`, `relative_humidity_2m` and `uv_index`. An answer without them is still a forecast; a detail column is only refused when its length disagrees with the others. The cache key moved to `v2`. The event page's row becomes a block:
+- the first line as in §402;
+- one grey line of the start hour's details: feels like, mm (only from 0.1), gusts, humidity, UV (only when it rounds above 0);
+- the start hour and the two after it, as an ordered list of three outlined cells (the hour, the glyph with its word for a screen reader, °C, the chance of rain), one row at 320 px;
+- «Pentru locul evenimentului» or «Pentru Brașov», then the credit.
+
+The reminder stays one line, now read at the event's own place.
+
+**The cards.** The featured hero shows «Vremea» as one line (glyph, word, degrees, rain, wind, credit), never the hours or the details. The small card and the series card (for its next date) show a 24 px outlined pill with the glyph and «14 °C», whose accessible name is «Vremea la start: Parțial noros, 14 °C». This deviates from the brief's "in the date row or beside the pills". The pill sits in the card's marks row, beside the type and partner chips. §375's date row is already the tightest line on a phone, while the marks row is on every card, so no card grows. The listing credits Open-Meteo once, under the cards, with a 44 px link. The calendar's month view is untouched.
+
+**JSON-LD.** `Place.geo` is back only from the event's own point (the map link's pin or the typed pair), never from the club's fallback, which would be the guess §61 refused.
+
+**Seed.** The Tâmpa run carries a typed pair. No seed event carries a map link, because a map link is a hostname and AGENTS.md §8 allows none under `src/`.
+
+On feat/weather-place-and-details (built on BR-V1.98), a fix round answered a review of the place-and-details weather work:
+
+The hero's «Vremea» row now has both e2e cases: absent three weeks out (already existed) and present with its full word/degrees/rain/wind within seven days (added), the second driven through the backoffice editor against the shared FEATURED singleton — a direct database write was tried first and found to leave the listing showing its old, cached date, the same caching behaviour event-cost-external-discount.spec.ts's own FEATURED case had already worked around for its cost row.
+
+/devs' "places read this hour" figure no longer counts the system panel's own check of the club's place as a visitor's read: readForecast gained a `record` flag (default on), and readWeatherStatus's own call to readClubForecast passes record: false.
+
+Two review nits were accepted without code change: the weather pill stays in EventCard's marks row rather than moving beside the date or the route pills — the existing placement groups it with the card's other read-only state chips (cancelled, special, partner), which is where a glance already looks for "what else is true about this event today"; and the seed keeps only the typed-coordinate trailhead (Tâmpa) rather than adding a second seeded event with a map-link pin, since a map link is a hostname literal and AGENTS.md §8 forbids one under src/ — a seed file is source, not configuration, so the existing pattern (typed coordinates for the trail run, no pin, §416's own comment in pilot.ts) was kept as the only way to exercise "read at a map link's pin" without breaking that rule; that case is already covered by weather-place.spec.ts's own insertDraft-based e2e, which is free to carry a placeholder host precisely because it lives under tests/, not src/.
+
+Baseline `BR-V1.99-2026-09-25`.
+
+## 417. A picture in the short description is on the listing card whatever the length of the words: the card clamps the words, never the pictures
+
+**Reported by the owner, 2026-09-25:** "am pus o poza pe cardul de rezumat dar nu apare si pe site".
+
+**Cause.** §366 clamped the listing card's summary to three lines by making the whole summary box a `-webkit-box` with `-webkit-line-clamp: 3` and `overflow: hidden`, pictures included. The argument was that "a picture is not a line": a picture written before the words kept its place above them, and "one written after three lines of words is on the page, not the card". A clamped box hides everything after its third line, so a picture written under a few sentences was on the event page and nowhere on the card. That goes against §73 and §251, which put the summary's picture on the card, and it depended on how long the words happened to be, which nobody writing the summary could see.
+
+**Decided: the card clamps the words' box, never the pictures'.**
+- `EventExcerpt` on a card splits the document (`splitCardExcerpt`) into three parts:
+  - the pictures and films written before the first block that has words, above;
+  - every other block (paragraphs, headings, lists, quotes, tables, and the empty paragraphs among them), in order, in one box clamped to three lines counted across its paragraphs, as before (`CARD_EXCERPT_WORDS_SX`, `data-testid="card-excerpt-words"`);
+  - every picture and film written after the first words, under that box, in the order they were written.
+- Nothing is dropped: the three parts together are the document's blocks.
+- "The first words" means the first block with any text. So the empty paragraph an editor leaves above a picture does not push that picture under the words.
+- A summary that is only a picture draws no words box at all.
+- The outer box (`CARD_EXCERPT_SX`, `data-testid="card-excerpt"`) is a flex column, like the `-webkit-box` it replaces. Neither collapses a child's margin, so a picture at the top of a summary sits exactly where it sat: a line's gap under the title and its own 8 px.
+- Everything else stays as it was:
+  - on the card, the figure rules (the whole card width, no float, the 420 px ceiling of §275, no crop), the words at `body2`, and the links printed as words with an address as its host;
+  - the event page and the hero read the document whole, in its own order, with the same markup.
+
+**Refused:**
+- **Clamping each run of words separately, with a picture between two runs keeping its place.** A summary written as paragraph, picture, paragraph would read up to six lines, and §366's three lines is what keeps a row of cards even.
+- **Dropping pictures after the third line**, which is what the clamp did in practice. Losing the picture is the complaint.
+- **Clamping by height in pixels (`max-height`) instead of by lines.** A picture has no line height, and a pixel ceiling cuts words mid-line.
+
+**Tests:**
+- `tests/unit/events/card-excerpt-pictures.test.ts`:
+  - the split, in document order;
+  - an empty paragraph above a picture;
+  - a summary that is only a picture;
+  - the clamp on the words' box alone;
+  - the picture under four long sentences outside the clamp, on the single-date card and on the series card;
+  - a leading picture above the words and a trailing film below them;
+  - the page's rendering unchanged.
+- `tests/unit/events/card-excerpt.test.ts` now asserts the clamp on `CARD_EXCERPT_WORDS_SX`.
+- `tests/e2e/listing-cards.spec.ts`:
+  - measures the three lines on the words' box and asserts no picture is inside it;
+  - publishes a run whose summary is four sentences with a picture uploaded under them, then checks at 320 px and on desktop that the picture is on the card, under the words, and that no box between it and the card cuts any of it.
+
+**Amends:** §366's "A picture is not a line: … one written after three lines of words is on the page, not the card."
+
+a long unbroken word in a picture's caption on a listing card. `overflowWrap: anywhere` had moved (§417, this branch's first commit) onto the words' own clamp box alone; a figure's caption sits outside that box and so was no longer covered, letting an address typed into a caption overflow a 320-pixel card. The rule now lives on the excerpt's outer box (`CARD_EXCERPT_SX`) as well, so every part of the card's summary — words and captions alike — wraps inside the card.
+
+Baseline `BR-V1.99-2026-09-25`.

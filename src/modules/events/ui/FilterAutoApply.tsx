@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
 
 /**
- * The listing's filter panel, applied on each tick (§NNN) — an enhancement, never the mechanism.
+ * The listing's filter panel, applied on each tick (§413) — an enhancement, never the mechanism.
  *
  * The panel is a plain GET form a Server Component renders: with no script, ticking boxes and
  * pressing «Aplică» loads the same address this island would push. With a script this

@@ -80,7 +80,7 @@ export const dynamic = "force-dynamic";
 /**
  * The listing is one page per language, whatever the address adds (§342).
  *
- * `?type=` — and every other filter since §NNN — shows a subset of the same cards, each of which is an indexed page of its own, and
+ * `?type=` — and every other filter since §413 — shows a subset of the same cards, each of which is an indexed page of its own, and
  * `?view=` changes nothing here at all since the calendar moved to its own page (§251) — the
  * filter links only carry it back there. Neither view has content of its own, so every one of
  * them names the plain listing as canonical and only the plain listing is in the sitemap.
@@ -104,7 +104,7 @@ type EventLocale = Parameters<typeof listUpcomingEvents>[1];
  * empty page reads as a broken site — the last one that happened, dated.
  *
  * One function and therefore one read, because the filter panel, the lead and the list all need
- * the same rows and must not ask twice: the page awaits it once and hands each the value (§NNN).
+ * the same rows and must not ask twice: the page awaits it once and hands each the value (§413).
  */
 async function loadListing(locale: EventLocale, now: Date) {
   const upcoming = await cachedUpcomingEvents(locale, now);
@@ -118,7 +118,7 @@ type Listing = Awaited<ReturnType<typeof loadListing>>;
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const query = await searchParams;
-  // The filters (§NNN, amending §133/§401): every group the panel offers, OR within a group and AND
+  // The filters (§413, amending §133/§401): every group the panel offers, OR within a group and AND
   // across groups, read off the address — `?type=RACE` and `?partner=1` mean what they always meant.
   const filter = parseListingFilter(query);
   // The layout the month links keep (§137); the panel's form and links carry it along.
@@ -132,7 +132,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
   const now = new Date();
 
   /*
-    **One cached read, awaited here, before anything is rendered** (§NNN, amending §166 for this
+    **One cached read, awaited here, before anything is rendered** (§413, amending §166 for this
     page). The rows come from the data cache (§333) with their last good copy behind them (§281),
     so a visit that finds them costs no database and answers in the time a cache lookup takes.
 
@@ -152,7 +152,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
     readPastEvents(locale, now),
   ]);
   const { events, hasUpcoming } = read.value;
-  // «Înscrieri deschise» is the page's own door (§NNN): one cached availability read per open
+  // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).
   const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
@@ -204,12 +204,12 @@ export default async function EventsPage({ params, searchParams }: Props) {
 /**
  * The filter panel and the lead event.
  *
- * In the page's first HTML, never behind a streamed boundary (§NNN): the panel is a GET form that
+ * In the page's first HTML, never behind a streamed boundary (§413): the panel is a GET form that
  * has to work with scripts off, and a streamed region is only revealed by a script. A filter
  * pressed with a script is a soft navigation that keeps the panel — open, as the reader left it —
  * on screen while the new rows arrive.
  *
- * The panel sits **above** the hero since §NNN, because the hero follows the filters now: a
+ * The panel sits **above** the hero since §413, because the hero follows the filters now: a
  * control under the thing it hides would jump up under the thumb that pressed it.
  */
 async function ListingLead({
@@ -221,9 +221,9 @@ async function ListingLead({
   locale,
   now,
 }: Listing & {
-  /** The filters the address names (§NNN): OR within a group, AND across groups. */
+  /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
-  /** The night and door answers, per row, the page read once (§394, §NNN). */
+  /** The night and door answers, per row, the page read once (§394, §413). */
   facts: FilterFacts<PublicEvent>;
   layout: CalendarLayout;
   locale: "ro" | "en";
@@ -233,21 +233,21 @@ async function ListingLead({
   // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
   // page is handed the club's last event so it is not blank, and that row still carries the
   // featured flag it had when it was next. It belongs under the notice as an ordinary card.
-  // The filter decides the hero too (§NNN): a lead event that does not match is not shown.
+  // The filter decides the hero too (§413): a lead event that does not match is not shown.
   const { featured } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
   // The countdown's days are the club's (§377), from the data cache like the rows: no wake for a visitor.
   const raceWeekDays = featured ? (await cachedDeadlines()).raceWeekDays : null;
-  // What the panel offers (§NNN, §133's rule generalised): a box only where ticking it would change
+  // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the hero's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
   const offer = offeredFilters(events, filter, facts);
-  // The hero's «Vremea» (§NNN — the owner: "aș vrea să văd vremea și pe cardul principal"): at its own
+  // The hero's «Vremea» (§416 — the owner: "aș vrea să văd vremea și pe cardul principal"): at its own
   // place, within seven days of its start, null otherwise and on any failure — never a wake (§402).
   const featuredWeather = featured ? await forecastForEvent(featured, now) : null;
 
   return (
     <>
-      {/* One "Filtre" button, closed by default (§NNN — the owner, 2026-09-25: "un buton de filtre,
+      {/* One "Filtre" button, closed by default (§413 — the owner, 2026-09-25: "un buton de filtre,
           collapsed by default, checkboxuri pe pill-uri și mai multe filtre"), replacing §133's row
           of kind chips and §401's «Colaborare» chip beside them. Nothing to narrow and nothing
           ticked, it does not render, and nothing on the listing moves for that.
@@ -287,7 +287,7 @@ async function ListingLead({
 const PAST_EVENTS_SHOWN = 12;
 
 /**
- * How far back the past section looks (§NNN): the club's latest sixty past events — about a year
+ * How far back the past section looks (§413): the club's latest sixty past events — about a year
  * of weekly runs — read in **one** cached window per language whatever the address ticks, and
  * narrowed in memory. Every visit, filtered or not, reads the same data-cache entry
  * (`events.past`, the language, the listing's clock window, 60), so no combination of boxes can
@@ -336,7 +336,7 @@ async function PastEvents({
   /** `PAST_EVENTS_WINDOW` rows, newest first, read by the page beside the listing's own. */
   rows: PublicEvent[];
   now: Date;
-  /** The filters above (§272, §NNN) — the past narrows by them too, in memory. */
+  /** The filters above (§272, §413) — the past narrows by them too, in memory. */
   filter: ListingFilter;
   facts: FilterFacts<PublicEvent>;
   /** The past event the lead already shows between seasons (§167), if any. */
@@ -418,7 +418,7 @@ async function ListingBody({
   facts,
   now,
 }: Listing & {
-  /** The filters the address names (§NNN), the same the lead was given. */
+  /** The filters the address names (§413), the same the lead was given. */
   filter: ListingFilter;
   facts: FilterFacts<PublicEvent>;
   now: Date;
@@ -427,13 +427,13 @@ async function ListingBody({
   const filtered = activeFilterCount(filter) > 0;
   // The same division the lead made, and it has to be given the same arguments or the two
   // disagree: a past event the lead refused to hero must appear in the list (§167), and a lead
-  // event the filter hides must not reappear here as a card (§NNN).
+  // event the filter hides must not reappear here as a card (§413).
   const { featured, listed } = listingSections(events, (event) => matchesListingFilter(event, filter, facts), hasUpcoming);
   // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
   // the order the first occurrence had; a single event is a card as before.
   const cards = groupSeries(listed);
   /*
-    The weather at each card's start (§NNN; the owner: "aș vrea să văd vremea și pe cardul
+    The weather at each card's start (§416; the owner: "aș vrea să văd vremea și pe cardul
     principal"): read once for every card — a series by its next date, the one whose facts it shows —
     each at its own place, one request per rounded place and none outside the seven days
     (`forecastsForEvents`). Open-Meteo is credited once, under the cards, when any card carries one.
@@ -502,7 +502,7 @@ async function ListingBody({
     );
   }
 
-  // Nothing matches the filters: say so in those words, not "nothing is published" (§NNN) — the
+  // Nothing matches the filters: say so in those words, not "nothing is published" (§413) — the
   // panel above still names every tick and "Șterge filtrele" is one press away.
   if (listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
 

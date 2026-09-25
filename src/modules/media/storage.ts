@@ -24,10 +24,10 @@ import { isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
  * Keys are opaque and prefixed with the environment (`qa/…`, `production/…`), so two
  * environments can share one bucket without either seeing the other's photos; the objects
  * are the WebP variants of an asset, `<prefix>/web.webp` and `<prefix>/thumb.webp`, and since
- * §NNN the ladder's rungs beside them, `<prefix>/<width>w.webp` (`ladder.ts`).
+ * §414 the ladder's rungs beside them, `<prefix>/<width>w.webp` (`ladder.ts`).
  */
 
-/** `web` (the master), `thumb`, or a rung of the ladder by its width (§NNN, `ladder.ts`). */
+/** `web` (the master), `thumb`, or a rung of the ladder by its width (§414, `ladder.ts`). */
 export type StoredVariant = "web" | "thumb" | number;
 
 export type Storage = {
@@ -61,7 +61,7 @@ export function objectKey(keyPrefix: string, variant: StoredVariant): string {
 
 /**
  * Every object an asset may own: the master and the thumbnail, and — for one stored with a
- * ladder (§NNN) — a key for every rung the ladder has, whether or not this picture was wide
+ * ladder (§414) — a key for every rung the ladder has, whether or not this picture was wide
  * enough to get it. Deleting a key that was never written is a no-op on R2, on the disk and in
  * memory, and it spares every caller of a delete from having to know the picture's width.
  */

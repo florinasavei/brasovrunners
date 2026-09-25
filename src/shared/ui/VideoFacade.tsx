@@ -54,7 +54,7 @@ export default function VideoFacade({
   /** This site's own stored copy of the thumbnail, or `null` for the plain dark facade. */
   posterUrl: string | null;
   /**
-   * A club poster's stored widths and how wide the facade is drawn (§NNN, `media/ladder.ts`),
+   * A club poster's stored widths and how wide the facade is drawn (§414, `media/ladder.ts`),
    * so a phone takes a rung rather than the master; absent for YouTube's own thumbnail, which is
    * one small file. Plain strings, computed by the caller.
    */

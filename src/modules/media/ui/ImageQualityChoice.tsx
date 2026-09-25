@@ -10,7 +10,7 @@ import { useId, useSyncExternalStore } from "react";
 import { DEFAULT_IMAGE_QUALITY, IMAGE_QUALITIES, type ImageQuality, parseImageQuality } from "../ladder";
 
 /**
- * «Calitate: Normală (recomandat) / Înaltă (fișier mai mare)», beside every upload (§NNN; the
+ * «Calitate: Normală (recomandat) / Înaltă (fișier mai mare)», beside every upload (§414; the
  * owner: "I wanna choose the quality of the image when uploading it").
  *
  * **Per upload, remembered for the session.** The choice is about the picture — a poster with a
@@ -50,7 +50,7 @@ const listeners = new Set<() => void>();
  * The store when it works; this page's memory when it throws, when a write to it has thrown,
  * when it holds nothing and when it holds something that is not a choice. (The first version
  * read `parseImageQuality(stored) ?? inMemory`, and `parseImageQuality(null)` is the default,
- * so the memory was never reached — found by re-review, §NNN.)
+ * so the memory was never reached — found by re-review, §414.)
  */
 export function readRemembered(): ImageQuality {
   if (!storeHoldsChoice) return inMemory;

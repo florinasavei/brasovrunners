@@ -37,7 +37,7 @@ export type PublicAlbumSummary = {
   photoCount: number;
   coverThumbUrl: string | null;
   /**
-   * The cover's master and size, for its `srcset` (§NNN): the listing draws a cover across a
+   * The cover's master and size, for its `srcset` (§414): the listing draws a cover across a
    * phone, which is wider than the thumbnail it used to be given.
    */
   coverWebUrl: string | null;

@@ -5,7 +5,7 @@ import type { CoHostSource } from "./co-hosts";
  * same one it always was (`DECISIONS.md` §166).
  *
  * The lead event, the filter panel and the list of other events are rendered by different
- * components off the one read the page awaits (§NNN; §166 had them streamed behind `<Suspense>`),
+ * components off the one read the page awaits (§413; §166 had them streamed behind `<Suspense>`),
  * so the rule for "which event is the hero" has to live somewhere all of them can read it and
  * nowhere it can drift. What the filters are and which of them the page offers is `listing-filter.ts`.
  */
@@ -24,7 +24,7 @@ export type ListedEvent = { id: string; featured: boolean; type: string } & CoHo
  * as both the hero and the first card reads as a duplicate, not as emphasis
  * (`tests/e2e/event-pages.spec.ts` asserts exactly that).
  *
- * **The lead follows the filters** (§NNN, reversing what §133 and §401 said of the kind and the
+ * **The lead follows the filters** (§413, reversing what §133 and §401 said of the kind and the
  * partner chip). While a filter was one row of kind chips under the hero, "the hero is the club's
  * answer to what is next" was worth an exception. With a panel of five groups, a reader who ticks
  * "Trail" and "Avansat" and is shown an asphalt 5 km at the top of the page reads it as the

@@ -5,7 +5,7 @@ import { EVENT_SURFACES, EVENT_TYPES, type EventSurface, type EventType } from "
 import type { RegistrationCta } from "./registration-cta";
 
 /**
- * The listing's filters (§NNN, amending §133 and §401 — the owner, 2026-09-25: "un buton de
+ * The listing's filters (§413, amending §133 and §401 — the owner, 2026-09-25: "un buton de
  * filtre, collapsed by default, checkboxuri pe pill-uri și mai multe filtre").
  *
  * One state, read from the address and written back to it, and nowhere else: the listing and the
@@ -48,7 +48,7 @@ export type FilterGroup = (typeof FILTER_GROUPS)[number];
 /**
  * The three yes-or-no filters, under "Altele" / "More": held with a partner (§401), a night
  * event (§394), and «Înscrieri deschise» — the event's page has a registration door right now
- * (§NNN): exactly the events whose page shows a button to register, the one `RegistrationCta`
+ * (§413): exactly the events whose page shows a button to register, the one `RegistrationCta`
  * draws — a place, the waiting list, or the organizer's own form — and never one whose page says
  * a sentence instead (full with no waiting list, the waiting list full, not open yet, closed).
  */
@@ -115,7 +115,7 @@ export type DoorAnswer = { kind: "KNOWN"; cta: { kind: RegistrationCta["kind"] }
 const DOOR_KINDS: ReadonlySet<RegistrationCta["kind"]> = new Set(["OPEN", "FULL", "EXTERNAL"]);
 
 /**
- * «Înscrieri deschise» (§NNN): the event's page offers a way to register right now — decided on
+ * «Înscrieri deschise» (§413): the event's page offers a way to register right now — decided on
  * the very answer the page renders its door from and the listing card draws its button from
  * (`readRegistrationDoor`, §409), never on a second reading of the same rule. A free place or an
  * uncapped event (`OPEN`), no place but a waiting list that takes people (`FULL`), or the
@@ -140,7 +140,7 @@ const all = (value: string | string[] | undefined): string[] =>
   (value === undefined ? [] : Array.isArray(value) ? value : [value]).flatMap((entry) => entry.split(",").map((part) => part.trim()));
 
 /**
- * The short forms a hand-written address may use for a distance band (§NNN): the band's own
+ * The short forms a hand-written address may use for a distance band (§413): the band's own
  * kilometres, `?distance=10-21`, rather than the enum's name. `21+` arrives as `21 ` — a query
  * string reads `+` as a space — and `all` trims it, so `21`, `21+` and `21-` all mean "over 21".
  */
@@ -167,7 +167,7 @@ function canonical(group: FilterGroup, asked: string): string {
  * the way `?type=NOPE` always was — and the values come back in the closed set's own order, once
  * each, so two addresses that tick the same boxes in another order are the same state. Besides the
  * enum names the form itself submits, the short forms a link might be written in are read the same
- * way: `?type=race,group-run`, `?distance=10-21` (§NNN).
+ * way: `?type=race,group-run`, `?distance=10-21` (§413).
  */
 export function parseListingFilter(params: SearchParams): ListingFilter {
   const pick = <G extends FilterGroup>(group: G): GroupValues[G][] => {
@@ -273,13 +273,13 @@ export type FilterOffer = {
  * to choose between"; a value no event carries would empty the page. A box the address ticks stays,
  * so a filtered page can always say what it is filtered by, even where it now matches nothing.
  *
- * **A group needs at least two values to choose between** (§NNN, restoring §133's own rule): a
+ * **A group needs at least two values to choose between** (§413, restoring §133's own rule): a
  * group where only one value would narrow is not offered — one box asking a question every other
  * row already answers the same way is nothing to choose between — unless the address already
  * ticks something in it, which always stays so a filtered page can say what it is filtered by.
  *
  * Read off every event the page shows, the lead event included — the lead follows the filter now
- * (§NNN) — and never off the filtered rows, so ticking one box never takes another away.
+ * (§413) — and never off the filtered rows, so ticking one box never takes another away.
  */
 export function offeredFilters<T extends FilterableEvent>(events: readonly T[], filter: ListingFilter, facts: FilterFacts<T>): FilterOffer {
   const narrows = (count: number) => count > 0 && count < events.length;

@@ -6,7 +6,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — the quality
+ * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — the quality
  * beside every upload, through the two routes a browser posts to, and the ladder of files it
  * leaves in the store.
  *
@@ -64,7 +64,7 @@ async function objectsOf(keyPrefix: string): Promise<string[]> {
   return present;
 }
 
-describe("§NNN the quality beside the upload, and the ladder it leaves", () => {
+describe("§414 the quality beside the upload, and the ladder it leaves", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let editor: StaffUser;

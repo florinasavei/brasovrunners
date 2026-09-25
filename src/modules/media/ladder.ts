@@ -1,7 +1,7 @@
 import { HIGH_WEB_MAX, WEB_MAX } from "./limits";
 
 /**
- * The widths a picture is stored at, and how a page asks for the right one (§NNN).
+ * The widths a picture is stored at, and how a page asks for the right one (§414).
  *
  * **Nothing but `limits.ts` imported, on purpose** — the same rule as `limits.ts` itself
  * (§178): the browser half of the upload reads `parseImageQuality`, the server's pipeline reads
@@ -32,7 +32,7 @@ export const DEFAULT_IMAGE_QUALITY: ImageQuality = "normal";
 /**
  * The quality a request asked for, or `null` when it asked for something that is not one.
  *
- * Absent (a client from before §NNN, a test that posts only a file) is the default; anything
+ * Absent (a client from before §414, a test that posts only a file) is the default; anything
  * else must be one of the two words — the server never guesses what `"hd"` or `"max"` meant.
  */
 export function parseImageQuality(value: unknown): ImageQuality | null {
@@ -49,7 +49,7 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  * widest screen's. Each rung is at most 1.5× the one below, so the browser never downloads more
  * than half again what it draws.
  *
- * 2400 is a rung only under a master at «Înaltă» (up to `HIGH_WEB_MAX`, 4000; §NNN): a
+ * 2400 is a rung only under a master at «Înaltă» (up to `HIGH_WEB_MAX`, 4000; §414): a
  * «Normală» master is at most 2400 and so never gets it (`ladderWidths` keeps rungs under 0.9 of
  * the master), and a 4000-pixel poster is not what a laptop at 2× has to download — it takes
  * the same 2400 file a «Normală» picture's master is, and only a screen wider than that takes
@@ -57,7 +57,7 @@ export function parseImageQuality(value: unknown): ImageQuality | null {
  */
 export const LADDER_WIDTHS = [480, 640, 960, 1280, 1600, 1920, 2400] as const;
 
-/** The master's long side for a choice (§NNN): what `images.ts` resizes to. */
+/** The master's long side for a choice (§414): what `images.ts` resizes to. */
 export function masterMaxEdge(quality: ImageQuality): number {
   return quality === "high" ? HIGH_WEB_MAX : WEB_MAX;
 }
@@ -73,7 +73,7 @@ export function ladderWidths(masterWidth: number): number[] {
 /**
  * Whether an asset was stored with a ladder, read from its key prefix alone.
  *
- * The prefix is a UUID, and one minted since §NNN is **version 8** — RFC 9562's version for
+ * The prefix is a UUID, and one minted since §414 is **version 8** — RFC 9562's version for
  * "vendor-specific" layouts — where every older one is a version 4 from `randomUUID()`. The body
  * renderer has nothing but the picture's address (a body is JSON; the page does not ask the
  * database about each picture in it), so the fact "this picture has smaller siblings" has to be
@@ -107,7 +107,7 @@ export function rungSrc(masterSrc: string, width: number): string {
  * - **A picture from before** (a version-4 prefix): no `srcset` — it is drawn exactly as it was,
  *   the thumbnail where a page drew the thumbnail and the master where it drew the master. The
  *   first version of this offered it "thumbnail, then master", and the re-review measured what
- *   that did (§NNN): an old album's cover across a 390-pixel phone at 3× is 1074 physical
+ *   that did (§414): an old album's cover across a 390-pixel phone at 3× is 1074 physical
  *   pixels, wider than the 640-pixel thumbnail, so the browser took the 2400-pixel master —
  *   381 KB where its thumbnail is 37 KB (a 3455 × 2673 photograph, measured), on the albums
  *   page, for every old album on it. Two candidates four times apart are not a ladder; a phone is

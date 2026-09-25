@@ -3,7 +3,7 @@ import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { BROWSER_SEND_BYTES } from "@/modules/media/limits";
 
 /**
- * BR-REQ-054-01, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §NNN) — what the browser sends for
+ * BR-REQ-054-01, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — what the browser sends for
  * each choice. Found by re-review: «Înaltă» was capped at 3000 pixels here whatever the server
  * kept, so it could not be sharper than «Normală».
  *
@@ -35,7 +35,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("§NNN the browser half of the choice", () => {
+describe("§414 the browser half of the choice", () => {
   it("sends a phone's 4032-pixel photograph as it is at «Înaltă», and shrinks it to 3000 at «Normală»", async () => {
     const photo = fileOf(2.4 * MB);
     const drawnHigh = stubBrowser({ width: 4032, height: 3024 }, () => 1 * MB);

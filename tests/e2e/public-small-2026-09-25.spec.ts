@@ -135,11 +135,11 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     }
   });
 
-  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §NNN)", async ({
+  test("the filter button sits one density-token step above what follows it at 320/360/390/412px and on desktop (§376 fix round finding 6, §413)", async ({
     page,
   }) => {
     const isMobile = test.info().project.name === "mobile";
-    // Since §NNN the filters are one «Filtre» button above the hero (the hero follows them), so the
+    // Since §413 the filters are one «Filtre» button above the hero (the hero follows them), so the
     // step is measured from the button's block to the first visible thing under it — the hero,
     // the notice or the grid, whichever the page has — rather than to the grid alone.
     const measure = async (expectMin: number, expectMax: number) => {
@@ -173,7 +173,7 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
   }) => {
     await page.goto("/ro/evenimente");
     await hydrated(page);
-    // Since §NNN «Colaborare» is a box under the «Filtre» button's "Altele" group, not a chip in a row.
+    // Since §413 «Colaborare» is a box under the «Filtre» button's "Altele" group, not a chip in a row.
     const panel = page.locator("#main").getByTestId("listing-filters");
     await panel.locator("summary").click();
     const box = panel.getByRole("checkbox", { name: "Colaborare", exact: true });
@@ -190,7 +190,7 @@ test.describe.serial("BR-REQ-020-01 the partners' block, the filter row's gap an
     await expect(seededRun).toBeVisible();
 
     // Ticking it narrows the address and the list to partnered events only — at once, the fold
-    // left open (the island applies each tick, §NNN).
+    // left open (the island applies each tick, §413).
     await box.check();
     await expect(page).toHaveURL(/[?&]partner=1/);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();

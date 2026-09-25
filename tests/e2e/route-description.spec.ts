@@ -37,7 +37,7 @@ async function writeRouteDescription(page: Page, locale: "ro" | "en", text: stri
   // The map is a picture in the text (§72–§73): the toolbar's own file input, shrunk and stored.
   await editor.locator('input[type="file"]').setInputFiles({ name: `harta-${locale}.jpg`, mimeType: "image/jpeg", buffer: map });
   await expect(editor.locator("img[src*='/api/media/']")).toHaveCount(1, { timeout: 20_000 });
-  // What it became, under the toolbar (§NNN): nobody chose, so the recommended quality.
+  // What it became, under the toolbar (§414): nobody chose, so the recommended quality.
   await expect(editor.getByTestId("rich-text-image-stored")).toContainText("calitate normală");
   // The picture's own panel opens on it (§73): say what it shows, then close it.
   const pictureWords = page.getByRole("tooltip").filter({ has: page.getByRole("button", { name: "Gata" }) });
@@ -127,7 +127,7 @@ test.describe.serial("BR-REQ-050-02 the route / training description (§387)", (
     const section = page.locator("section#route");
     await expect(section.getByRole("heading", { name: "Traseul", exact: true })).toBeVisible();
     await expect(section).toContainText("Oprire cu apă la km 4");
-    // The map, served from the club's own store — with its smaller widths offered (§NNN).
+    // The map, served from the club's own store — with its smaller widths offered (§414).
     const map = section.locator("img[src*='/api/media/']");
     await expect(map).toBeVisible();
     await expect(map).toHaveAttribute("srcset", /\/960w\.webp 960w/);

@@ -482,7 +482,7 @@ const youtubeNode = z.object({
       .optional()
       .transform((value) => value ?? null),
     /**
-     * A club poster's stored size (§NNN), written by the panel's upload beside its address, so
+     * A club poster's stored size (§414), written by the panel's upload beside its address, so
      * the page can offer the poster's ladder as a `srcset` — the width is what says which rungs
      * exist. Absent stays absent (no transform), so a film stored before keeps its exact JSON and
      * renders its one `src` as it did; YouTube's own thumbnail never has one.

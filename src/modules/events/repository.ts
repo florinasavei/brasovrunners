@@ -74,7 +74,7 @@ const PUBLIC_COLUMNS = {
   // AGENTS.md §8 forbids a provider hostname under src/. Null while the place is to be
   // announced (§328), like the name and the address below.
   mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
-  // «Coordonate» (§NNN): where the forecast is read when the map link carries no pin — withheld
+  // «Coordonate» (§416): where the forecast is read when the map link carries no pin — withheld
   // with the place (§328), so a place not announced yet is never given away by its weather.
   latitude: unlessToBeAnnounced<number | null>(events.latitude),
   longitude: unlessToBeAnnounced<number | null>(events.longitude),
@@ -510,7 +510,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       checklist: eventTranslations.checklist,
       locationName: publicLocationName,
       mapUrl: unlessToBeAnnounced<string | null>(events.mapUrl),
-      // Where the reminder's forecast is read when the map link carries no pin (§NNN), as on the page.
+      // Where the reminder's forecast is read when the map link carries no pin (§416), as on the page.
       latitude: unlessToBeAnnounced<number | null>(events.latitude),
       longitude: unlessToBeAnnounced<number | null>(events.longitude),
       // The street under the place's name, in the emails' facts block (§392) — withheld with the

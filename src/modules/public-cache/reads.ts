@@ -118,7 +118,7 @@ export async function cachedLatestPastEvent(locale: Locale, now: Date) {
 
 /**
  * `listPastEvents`: the folded section at the foot of the listing (§267). Never narrowed by kind
- * here: the listing reads one window whatever the address ticks and filters it in memory (§NNN),
+ * here: the listing reads one window whatever the address ticks and filters it in memory (§413),
  * so there is one entry per language and clock window — the page's one `limit` — and no filter
  * combination can mint entries of its own.
  */

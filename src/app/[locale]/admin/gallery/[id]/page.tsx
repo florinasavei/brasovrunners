@@ -137,7 +137,7 @@ export default async function EditAlbumPage({ params, searchParams }: Props) {
                   uploading: t.raw("gallery.uploading") as string,
                   done: t.raw("gallery.uploaded") as string,
                   failed: t.raw("gallery.uploadFailed") as string,
-                  // The quality beside the button and what the photo became (§NNN).
+                  // The quality beside the button and what the photo became (§414).
                   quality: {
                     legend: t("gallery.qualityLegend"),
                     normal: t("gallery.qualityNormal"),

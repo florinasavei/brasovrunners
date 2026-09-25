@@ -37,7 +37,7 @@ const parse = (difficulty: unknown, costType: unknown, cost: { costAmount?: unkn
 
 describe("event difficulty and cost type", () => {
   it("accepts each value of the closed sets", () => {
-    // Five since §NNN: the three of migration `0018` and the two ends migration `0078` added.
+    // Five since §412: the three of migration `0018` and the two ends migration `0078` added.
     for (const difficulty of ["VERY_EASY", "EASY", "MODERATE", "HARD", "VERY_HARD"]) {
       expect(parse(difficulty, "FREE").success).toBe(true);
     }
