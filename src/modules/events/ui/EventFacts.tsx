@@ -23,7 +23,8 @@ import { GROUP_GAP, LINE_GAP } from "./card-layout";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
 import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
-import { orderRoutePills, type Pill } from "./route-pills";
+import { buildRoutePills, orderRoutePills, type Pill } from "./route-pills";
+import RoutePills from "./RoutePills";
 import { DENSITY } from "@/theme/density";
 
 /**
@@ -532,14 +533,10 @@ export default async function EventFacts({
       pay are the page's). No pill for what the club has not stated: a null cost is unstated, not
       free (AGENTS.md §1.2).
     */
-    const cardPills: Pill[] = orderRoutePills({
-      surface: surfacePill,
-      difficulty: difficultyPill,
-      distance: distancePill,
-      elevation: elevationPill,
-      headlamp: headlampPill,
-    });
-    if (event.costType) cardPills.push({ glyph: `cost:${event.costType}`, label: t(`costValues.${event.costType}`) });
+    // `buildRoutePills` (`route-pills.ts`) is the one function that orders and builds them — the
+    // event page's compact card and the backoffice's own list both call it (§NNN), so neither
+    // reads the route in a different order or a different set from the other.
+    const cardPills = buildRoutePills(event, t, format);
 
     /*
       Where: the place — the map link when the club pasted one, tight like the page's (§356) so
@@ -607,7 +604,7 @@ export default async function EventFacts({
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {cardPills.length > 0 && (
           <Box data-fact="pills" sx={{ mt: GROUP_GAP - LINE_GAP }}>
-            {pillRow(cardPills)}
+            <RoutePills pills={cardPills} />
           </Box>
         )}
         {registration && cardLine("registration", HowToRegIcon, registration, true)}
