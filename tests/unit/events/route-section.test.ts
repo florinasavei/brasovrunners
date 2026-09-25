@@ -60,6 +60,9 @@ const EVERY_KIND = [
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 const DESCRIPTION_RO = doc("Oprire cu apă la km 4, apoi urcarea pe serpentine.");
+/** A map and nothing else: no words, no alt text, no caption — the editor and the save count it as content. */
+const MAP_PICTURE_SRC = "/api/media/0123abcd-0123-4abc-8def-0123456789ab/web.webp";
+const MAP_ONLY = { type: "doc", content: [{ type: "image", attrs: { src: MAP_PICTURE_SRC, alt: "" } }] };
 const DESCRIPTION_EN = doc("Water stop at km 4, then the climb up the switchbacks.");
 
 const words = (locale: "ro" | "en") => (locale === "ro" ? ro : en).Event;
@@ -111,6 +114,14 @@ describe("BR-REQ-011-01 which links belong to the route (§NNN)", () => {
     expect(hasRouteDescription({ type: "doc", content: [] })).toBe(false);
     expect(hasRouteDescription({ type: "doc", content: [{ type: "paragraph" }] })).toBe(false);
     expect(hasRouteDescription(DESCRIPTION_RO)).toBe(true);
+    expect(hasRouteDescription(MAP_ONLY)).toBe(true);
+  });
+
+  it("renders the section for a description that is only a map picture with no alt text", () => {
+    const html = routeSection(MAP_ONLY, { routeUrl: STRAVA_ROUTE });
+    expect(html).toContain('id="route"');
+    expect(html).toContain(MAP_PICTURE_SRC);
+    expect(hrefs(html)).toEqual([STRAVA_ROUTE, GPX, MAP]);
   });
 });
 

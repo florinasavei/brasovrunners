@@ -1,4 +1,4 @@
-import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import { hasRichTextContent, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { type EventLink, type EventLinkKind, readEventLinks } from "./links";
 
 /**
@@ -34,9 +34,14 @@ const IS_ROUTE_KIND: Record<EventLinkKind, boolean> = {
 /** Whether a link of this kind is drawn in the route section when there is one. */
 export const isRouteLinkKind = (kind: EventLinkKind): boolean => IS_ROUTE_KIND[kind];
 
-/** Whether a stored route description (a rich-text document, or null) has anything to show. */
+/**
+ * Whether a stored route description (a rich-text document, or null) has anything to show — words,
+ * or a picture alone (a map with no alt text or caption). The same rule the save stores the column
+ * by and the editor's closed line reads (`hasRichTextContent`), so a description the editor accepts
+ * is never one the page leaves out.
+ */
 export function hasRouteDescription(json: unknown): boolean {
-  return json !== null && json !== undefined && !isRichTextEmpty(readRichText(json));
+  return json !== null && json !== undefined && hasRichTextContent(readRichText(json));
 }
 
 /**

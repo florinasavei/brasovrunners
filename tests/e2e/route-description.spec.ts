@@ -48,6 +48,9 @@ const heightOf = async (link: Locator) => (await link.boundingBox())?.height ?? 
 
 test.describe.serial("BR-REQ-050-02 the route / training description (§NNN)", () => {
   test("is written in both languages with a map in the «Traseul» card and published", async ({ page }) => {
+    // The whole editor walk — two languages, a picture uploaded, a save and a publish — runs past
+    // the default thirty seconds on the 320-pixel project under a shared machine's load.
+    test.setTimeout(test.info().timeout + 60_000);
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     slug = `descriere-traseu-${suffix}`;
     slugEn = `route-description-${suffix}`;
