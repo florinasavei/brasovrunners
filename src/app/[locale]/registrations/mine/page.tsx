@@ -12,6 +12,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestMyRegistrationsLinkAction } from "./actions";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -38,7 +39,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
   const legal = await getTranslations("Legal");
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("mine.title")}
       </Typography>

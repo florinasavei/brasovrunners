@@ -23,6 +23,7 @@ import CoHostLinkGlyph from "./co-host-glyphs";
 import GlyphChip from "./GlyphChip";
 import { COST_GLYPH, DIFFICULTY_GLYPH, GLYPHS, type Glyph } from "./glyphs";
 import { orderRoutePills, type Pill } from "./route-pills";
+import { DENSITY } from "@/theme/density";
 
 /**
  * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
@@ -691,7 +692,7 @@ export default async function EventFacts({
           // still shares one line, which is what saves the height.
           gridTemplateColumns: "auto 1fr",
           columnGap: 2,
-          rowGap: 1,
+          rowGap: { xs: DENSITY.gapXs, sm: 1 },
           alignItems: "baseline",
         }}
       >
@@ -859,7 +860,7 @@ export default async function EventFacts({
       label: t("coHost"),
       icon: GLYPHS.partner,
       value: (
-        <Box sx={{ display: "grid", rowGap: 1.5, justifyItems: "start" }}>
+        <Box sx={{ display: "grid", rowGap: { xs: DENSITY.gapSm, sm: 1.5 }, justifyItems: "start" }}>
           {coHosts.map((host, index) => (
             <div key={index}>{links ? partnerFacts(host) : host.name}</div>
           ))}
@@ -881,6 +882,12 @@ export default async function EventFacts({
           quarter of the width — "Împreună cu" alone is a hundred pixels — and the answers are
           what needs it now, a row of pills and a date that fits on one line. From `sm` up the
           label column is back, as wide as its longest label, the answer baseline-aligned with it.
+
+          The phone's spacing (§NNN): four pixels between a question and its answer (`rowGap` 0.5,
+          already the tight end — less and the answer reads as the label's second line), six under
+          an answer before the next question (`DENSITY.gapXs` on the `dd`, was eight), and the
+          answer indented twenty-eight (`pl` 3.5: the twenty-pixel glyph and its eight-pixel gap),
+          which is alignment with the label's first letter, not whitespace.
         */
         gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "max-content minmax(0, 1fr)" },
         columnGap: 3,
@@ -894,7 +901,7 @@ export default async function EventFacts({
             <row.icon aria-hidden="true" sx={ROW_ICON_SX} />
             {row.label}
           </Typography>
-          <Typography component="dd" variant="body1" sx={{ m: 0, minWidth: 0, pl: { xs: 3.5, sm: 0 }, mb: { xs: 1, sm: 0 } }}>
+          <Typography component="dd" variant="body1" sx={{ m: 0, minWidth: 0, pl: { xs: 3.5, sm: 0 }, mb: { xs: DENSITY.gapXs, sm: 0 } }}>
             {row.value}
           </Typography>
         </Fragment>

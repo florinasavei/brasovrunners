@@ -22,6 +22,7 @@ import { GalleryGridSkeleton } from "@/shared/ui/PublicSkeleton";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { headingRule } from "@/theme/surfaces";
 import { fadeInSoft, liftOnHover, riseIn } from "@/theme/motion";
+import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -55,7 +56,7 @@ export default async function GalleryPage({ params }: Props) {
   const albums = readWithLastGood(`gallery:${locale}`, () => cachedPublishedAlbums(locale));
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("title")}
       </Typography>

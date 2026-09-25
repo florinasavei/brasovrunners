@@ -31,6 +31,7 @@
  * components, and a function cannot cross that boundary (`theme/surfaces.ts` has the story).
  */
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
+import { DENSITY } from "@/theme/density";
 
 /** Between two lines of one group: the date and the place, the pills among themselves. */
 export const LINE_GAP = 1;
@@ -51,16 +52,20 @@ export const GROUP_GAP = 1.5;
  * height and moves the same room outside the border, where the row's ragged bottom edge is what
  * the eye reads first — the very thing §275 was decided against.
  *
- * The padding is `CardContent`'s sixteen pixels on three sides. At the foot it is four, because
- * the last thing in every card is the door — a 44-pixel box (BR-REQ-041-01 criterion 6) around an
- * 18-pixel line — whose own invisible margin makes the rest of a visible sixteen.
+ * The padding is `CardContent`'s sixteen pixels on three sides — twelve on a phone at the top
+ * (`DENSITY.cardPadTop`, §NNN), the owner's "too much whitespace" on the listing. Only the top
+ * shrinks: the sides stay the sixteen pixels `EventFacts.tsx`'s width budget was measured
+ * against (§366, §375), and the density scale says so explicitly rather than leaving it a
+ * silent exception. At the foot it is four, because the last thing in every card is the door —
+ * a 44-pixel box (BR-REQ-041-01 criterion 6) around an 18-pixel line — whose own invisible
+ * margin makes the rest of a visible sixteen.
  */
 export const CARD_BODY_SX = {
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
   px: 2,
-  pt: 2,
+  pt: { xs: DENSITY.cardPadTop, sm: 2 },
   pb: 0.5,
   minWidth: 0,
 } as const;

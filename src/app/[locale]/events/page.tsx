@@ -31,6 +31,7 @@ import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type"
 import { getPathname } from "@/i18n/navigation";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
+import { DENSITY } from "@/theme/density";
 import { headingRule } from "@/theme/surfaces";
 
 type Props = {
@@ -125,7 +126,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
   const listing = readWithLastGood(`events:${locale}`, () => loadListing(locale, now), now);
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/*
         BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
         this page is now the homepage — the site root redirects here. Incomplete by design:
@@ -148,7 +149,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2.5 } }}>
         {t("intro")}
       </Typography>
 
@@ -211,7 +212,7 @@ async function ListingLead({
   return (
     <>
       {!hasUpcoming && events.length > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {t("noUpcoming")}
         </Alert>
       )}
@@ -221,7 +222,7 @@ async function ListingLead({
       {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133).
           Fewer than two kinds is nothing to filter. */}
       {presentTypes.length > 1 && (
-        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: 3 }}>
+        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: { xs: DENSITY.sectionGap, sm: 3 } }}>
           {[undefined, ...presentTypes].map((candidate) => {
             const active = candidate === type;
             // A string href: a component reference cannot cross into MUI's client component —
@@ -291,7 +292,7 @@ async function PastEvents({
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
 
   return (
-    <Box component="details" data-testid="past-events" sx={{ mt: 4 }}>
+    <Box component="details" data-testid="past-events" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
       <Typography
         component="summary"
         variant="h2"
@@ -309,7 +310,7 @@ async function PastEvents({
           p: 0,
           m: 0,
           display: "grid",
-          gap: 1.5,
+          gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
           gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
           // Every card in a row is as tall as the tallest (§275): `start` left a short card
           // beside a tall one and a hole under it, which is what made the listing look broken.
@@ -388,7 +389,7 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<
             p: 0,
             m: 0,
             display: "grid",
-            gap: 1.5,
+            gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
             // As above (§275): one row, one height.
             alignItems: "stretch",
@@ -413,7 +414,7 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<
             p: 0,
             m: 0,
             display: "grid",
-            gap: 1.5,
+            gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
             // As above (§275): one row, one height.
             alignItems: "stretch",

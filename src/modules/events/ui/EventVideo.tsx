@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { youtubeEmbedUrl, youtubeVideoId } from "@/modules/events/domain/video";
+import { DENSITY } from "@/theme/density";
 
 /**
  * Last year's film on the event page (BR-REQ-011-01 criterion 9), behind one press.
@@ -22,7 +23,7 @@ export default async function EventVideo({ videoUrl }: { videoUrl: string | null
     <Box
       component="details"
       sx={{
-        mt: 3,
+        mt: { xs: DENSITY.sectionGap, sm: 3 },
         border: 1,
         borderColor: "divider",
         borderRadius: 1,

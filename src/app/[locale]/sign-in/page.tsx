@@ -15,6 +15,7 @@ import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { signInAsDevIdentityAction } from "../admin/actions";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -52,7 +53,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" }, mb: 2 }}>
         {t("signIn.title")}
       </Typography>
