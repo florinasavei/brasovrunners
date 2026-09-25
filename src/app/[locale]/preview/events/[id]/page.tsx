@@ -27,7 +27,7 @@ import EventDescription from "@/modules/events/ui/EventDescription";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
-import { weatherForEvent } from "@/modules/weather/source";
+import { forecastForEvent } from "@/modules/weather/source";
 import { isUuid } from "@/shared/ids";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -105,6 +105,9 @@ export default async function PreviewEventPage({ params }: Props) {
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
     mapUrl: placeLater ? null : event.mapUrl,
+    // «Coordonate» (§NNN): withheld with the place, as the public query withholds them.
+    latitude: placeLater ? null : event.latitude,
+    longitude: placeLater ? null : event.longitude,
     routeUrl: event.routeUrl,
     videoUrl: event.videoUrl,
     videoPosterUrl: event.videoPosterUrl,
@@ -158,7 +161,7 @@ export default async function PreviewEventPage({ params }: Props) {
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   // The forecast the public page will show (§402): a draft within seven days of its start reads it too.
-  const weather = await weatherForEvent(preview, now);
+  const weather = await forecastForEvent(preview, now);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

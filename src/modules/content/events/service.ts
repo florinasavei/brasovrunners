@@ -395,6 +395,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     raceStartsAt: times.raceStartsAt,
     scheduleItems: times.scheduleItems.length > 0 ? times.scheduleItems : null,
     mapUrl: fields.mapUrl,
+    // «Coordonate» (§NNN): only a caller that posts the box writes the pair; "" clears both halves.
+    ...(fields.coordinates === undefined
+      ? {}
+      : { latitude: fields.coordinates?.latitude ?? null, longitude: fields.coordinates?.longitude ?? null }),
     routeUrl: fields.routeUrl,
     // No form posts a film any more (a film is a figure in the description, §266), and a
     // column nobody mentioned is a column nobody may erase: the stored link of an older event
@@ -575,6 +579,15 @@ export function ignoreHiddenFields(raw: unknown): unknown {
   */
   if (posted.locationToBeAnnounced === true && "mapUrl" in replaced && !eventFieldsSchema.shape.mapUrl.safeParse(replaced.mapUrl).success) {
     replaced.mapUrl = "";
+  }
+  // «Coordonate» (§NNN) hide with the map link, and are written as none by the same rule.
+  if (
+    posted.locationToBeAnnounced === true &&
+    "coordinates" in replaced &&
+    replaced.coordinates !== undefined &&
+    !eventFieldsSchema.shape.coordinates.safeParse(replaced.coordinates).success
+  ) {
+    replaced.coordinates = "";
   }
   return replaced;
 }
@@ -1529,6 +1542,9 @@ const SERIES_COLUMNS = [
   "eventStatus",
   "timezone",
   "mapUrl",
+  // «Coordonate» travel with the map link they stand in for (§NNN).
+  "latitude",
+  "longitude",
   "routeUrl",
   // The links are the route's kin (§332): the GPX and the rules do not change from one
   // Wednesday to the next, so a series edit carries them like the route.
@@ -2443,6 +2459,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     scheduleItems: source.scheduleItems,
     timezone: source.timezone,
     mapUrl: source.mapUrl,
+    latitude: source.latitude,
+    longitude: source.longitude,
     routeUrl: source.routeUrl,
     // The links travel with the route (§332), to a duplicate and to every date of a repeat:
     // last year's GPX and rules are this year's starting point, and a weekly run's are the same.

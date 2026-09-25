@@ -1,5 +1,7 @@
 import Box from "@mui/material/Box";
 import { specialCard } from "@/theme/surfaces";
+import type { WeatherReading } from "@/modules/weather/domain/forecast";
+import CardWeather from "@/modules/weather/ui/CardWeather";
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
@@ -33,11 +35,14 @@ export default async function SeriesCard({
   members,
   index,
   now,
+  weather = null,
 }: {
   /** Soonest first; at least two. */
   members: readonly PublicEvent[];
   index: number;
   now: Date;
+  /** The forecast at the next date's start (§NNN) — the date whose facts the card shows; null outside the seven days. */
+  weather?: WeatherReading | null;
 }) {
   const t = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -89,6 +94,8 @@ export default async function SeriesCard({
           {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
           {/* The next date's partners (§367) — the date whose facts the card shows below. */}
           <PartnerChip event={next} />
+          {/* The next date's weather at its start, a glyph and the degrees (§NNN). */}
+          {weather && <CardWeather reading={weather} locale={locale} />}
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Box>
 
