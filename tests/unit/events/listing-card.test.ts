@@ -400,7 +400,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("draws the route and the cost as the page's pills, in order — surface, difficulty, distance, climb, cost — and says the surface once, not also a chip at the top", async () => {
     const html = await single();
     // The partner's handshake chip sits among the marks at the top (§367); the facts are the pills.
-    expect(chipLabels(html)).toEqual(["Alergare de grup", "Eveniment în parteneriat", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
+    expect(chipLabels(html)).toEqual(["Alergare de grup", "Colaborare", "Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
     expect(html).toContain('data-testid="PartnerEmoji"');
     expect(chipLabels(fact(html, "pills"))).toEqual(["Mixt", "Mediu", "8 km", "250 m D+", "Gratuit"]);
     // No middle dot between them and none of the old line's long words.
@@ -418,7 +418,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
 
   it("carries its marks at the top: special, cancelled, the partner marker never a name (§367, amended §375)", async () => {
     const html = await single({ isSpecial: true, eventStatus: "CANCELLED" });
-    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "Eveniment în parteneriat", "Anulat"]);
+    expect(chipLabels(html).slice(0, 4)).toEqual(["Alergare de grup", "Ediție specială", "Colaborare", "Anulat"]);
   });
 
   it("prints the summary with no link and the address as its host", async () => {
@@ -440,7 +440,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
   it("in English too", async () => {
     currentLocale = "en";
     const html = await single();
-    expect(chipLabels(html)).toEqual(["Group run", "Partnered event", "Mixed", "Moderate", "8 km", "250 m climb", "Free"]);
+    expect(chipLabels(html)).toEqual(["Group run", "Partnership", "Mixed", "Moderate", "8 km", "250 m climb", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
     expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sunday, 27 Sept?·10:00$/);

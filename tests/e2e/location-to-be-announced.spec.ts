@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -68,6 +69,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(page.getByText(/Nu se poate publica încă/)).toHaveCount(0);
 
     await page.getByRole("button", { name: "Creează și publică" }).click();
+    await confirmDialog(page, "Creezi și publici evenimentul?");
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/);
     const editorUrl = page.url();
 
@@ -164,6 +166,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await page.goto(editorUrl);
     await hydrated(page);
     await page.getByRole("button", { name: "Mută în ciornă" }).click();
+    await confirmDialog(page);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
   });
 });

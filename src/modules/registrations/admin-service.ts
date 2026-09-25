@@ -725,23 +725,26 @@ export async function bulkCancelRegistrationsByStaff<T extends Record<string, un
   registrationIds: readonly string[],
   reason: string,
   now: Date,
-): Promise<{ cancelled: number; failed: number; voided: number[] }> {
+): Promise<{ cancelled: number; test: number; failed: number; voided: number[] }> {
   assertAdministrator(actor);
 
   let cancelled = 0;
+  // The test rows among `cancelled`: emailed like any other, counted nowhere the club is told (§30).
+  let test = 0;
   let failed = 0;
   const voided: number[] = [];
   for (const registrationId of registrationIds) {
     try {
       const row = await cancelRegistrationByStaff(db, actor, registrationId, reason, now);
       cancelled += 1;
+      if (row.kind === "TEST") test += 1;
       if (row.bibNumber !== null && row.bibPrintedAt !== null) voided.push(row.bibNumber);
     } catch (error) {
       if (!isDomainError(error)) throw error;
       failed += 1;
     }
   }
-  return { cancelled, failed, voided: voided.sort((a, b) => a - b) };
+  return { cancelled, test, failed, voided: voided.sort((a, b) => a - b) };
 }
 
 /**

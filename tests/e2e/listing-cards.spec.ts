@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
 
@@ -113,6 +114,7 @@ async function publishSeries(page: Page, created: Created, first?: Date): Promis
   await field("translations.en.slug").fill(`trial-run-${suffix}`);
   await summary("en", "A trial run, for the series card.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
   const record = { title, dates: 1 };
   created.push(record);
@@ -124,7 +126,7 @@ async function publishSeries(page: Page, created: Created, first?: Date): Promis
   await fillDateField(page, "Până la (opțional)", ymd(new Date(start.getTime() + 14 * DAY)));
   await expect(recurrence.getByRole("checkbox", { name: "Publică datele noi automat" })).toBeChecked();
   await recurrence.getByRole("button", { name: "Creează datele" }).click();
-  await page.getByRole("dialog", { name: "Creezi datele?" }).getByRole("button", { name: "Creează datele" }).click();
+  await confirmDialog(page, "Creezi datele?");
   await expect(page.locator("#admin-alert")).toContainText("2 date create acum", { timeout: 15_000 });
   record.dates = 3;
 
@@ -193,6 +195,7 @@ async function publishOneOff(page: Page, created: Created, kind: "race" | "yearO
   await field("translations.en.slug").fill(`${words.slugEn}-${suffix}`);
   await summary("en", "A trial event, for the card's date row.");
   await page.getByRole("button", { name: "Creează și publică" }).click();
+  await confirmDialog(page, "Creezi și publici evenimentul?");
   await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}.*saved=createdPublished/, { timeout: 30_000 });
   created.push({ title, dates: 1 });
   await hydrated(page);
@@ -214,7 +217,7 @@ async function removeEvents(page: Page, title: string, dates: number): Promise<v
   const row = main.locator("tr, li").filter({ visible: true }).filter({ has: page.getByRole("link", { name: title, exact: true }) });
   await row.getByRole("checkbox", { name: `Selectează „${title}”` }).check();
   await main.getByRole("button", { name: "Șterge cele bifate" }).click();
-  await page.getByRole("dialog", { name: "Ștergi evenimentele bifate?" }).getByRole("button", { name: "Șterge cele bifate" }).click();
+  await confirmDialog(page, "Ștergi evenimentele bifate?");
   await expect(page.locator("#admin-alert")).toContainText(dates === 1 ? "1 eveniment șters" : `${dates} evenimente șterse`, { timeout: 15_000 });
   await page.context().clearCookies();
 }

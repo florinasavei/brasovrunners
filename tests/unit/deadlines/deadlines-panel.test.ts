@@ -15,6 +15,8 @@ vi.mock("next-intl/server", async () => {
   const messages = (await import("../../../messages/ro.json")).default;
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "ro", messages, namespace: namespace as "Admin" }),
+    // The save's confirmation (`confirmWords`, §384) counts in the page's language.
+    getLocale: async () => "ro",
   };
 });
 vi.mock("@/app/[locale]/admin/emails/actions", () => ({ updateDeadlinesAction: async () => null }));

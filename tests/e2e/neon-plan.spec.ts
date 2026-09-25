@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -38,6 +39,7 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await panel.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("LAUNCH");
     await panel.getByLabel("Notă (de ce, până când)").fill("Launch din 22 septembrie; revizuire în decembrie");
     await panel.getByRole("button", { name: "Salvează planul Neon" }).click();
+    await confirmDialog(page, "Schimbi planul Neon?");
 
     await expect(page).toHaveURL(/panel=costs/);
     await expect(main.getByText("Planul Neon a fost salvat", { exact: false })).toBeVisible();
@@ -78,6 +80,7 @@ test.describe("BR-REQ-090-07 the Neon plan on /admin/tasks and /devs", () => {
     await again.getByLabel("Planul de rezervă, când Neon nu răspunde").selectOption("FREE");
     await again.getByLabel("Notă (de ce, până când)").fill("");
     await again.getByRole("button", { name: "Salvează planul Neon" }).click();
+    await confirmDialog(page, "Schimbi planul Neon?");
     await expect(again.getByTestId("neon-plan-in-force")).toContainText(/^Planul: Free/);
 
     await page.goto("/ro/devs");
