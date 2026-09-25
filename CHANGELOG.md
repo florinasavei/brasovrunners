@@ -8,6 +8,26 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.98-2026-09-25
+
+- **A night event's words name the start, the sunset and the end.** The tooltip on a 19:00 run now reads «Începe la 19:00, apusul la 19:00, se termină la 20:40 — ia o frontală» instead of «Apusul la 19:00, sfârșitul la 20:40», which read as if the sunset were the start. The calendar entry, the .ics line, the reminder and the editor's automatic line name the times the same way, in both languages. The sunset value was checked against a published Brașov table. §404.
+- **The programme card reads like the rest of the editor**: each row is one grid (when and where on one line, what in Romanian and English side by side under it, stacked on a phone), its help is the compact «i» fold, and every row starts on the event's start date and follows it when it moves. §405.
+- **The event editor is the page, top to bottom:** one card per section of the public page, in the page's order on both create and edit. Each card is numbered and says whether the page shows it («4 · Data și ora — apare pe pagină», «3 · Descrierea evenimentului — gol, nu apare pe pagină»). A map of chips under Publicare and Recurență opens each card. The status, course and links cards leave the first box, the public list gets its own card, and a film card names the page's video. Closed cards say what publication still needs per language («lipsesc: Titlu (EN) · Rezumat (EN)»), with the language tabs counting it. «Creează și publică» and «Publică» are never dimmed; pressed while something is missing, they list what is missing instead of posting. §406.
+- **The confirmation window's deadline may be 0, "until the start"**: the place does not lapse before the race begins. The editor's card says "termen la start" (or "Fără fereastră" when there is none) and explains in four sentences when a runner can confirm. The steps on the form, the declaration email, the signing page and «Înscrierile mele» say "până la start" next to the date. §407.
+- **The registrants' count is said once in the event editor**: one line under the page map ("3 înscriși · o schimbare în cardurile cu margine portocalie ajunge la ei"), with a "?" naming the marked cards and a button to the event's registrations. The five cards a change reaches keep their amber outline and lose the repeated "N înscriși" chip. §408.
+- **A race's listing card has its registration door:** the card of an event whose page takes registration now shows the state in bold with the free places — «Înscrieri deschise până pe … · 7 locuri libere din 10», «· Lista de așteptare» once they are gone — and under it the page's own button («Înscrie-te la eveniment», «Intră pe lista de așteptare», the organizer's page), from the same availability count the page reads; a closed, cancelled or registration-free event keeps its quiet line and no button, and a group run shows neither. §409.
+- **The age-rule sentence reads as two short clauses, not one long one** — "Vârsta minimă: {age}." on its own, and, only where a minor may enter, "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia." beside it (English: "Minimum age: {age}." / "Under 18, a parent registers the runner, with their consent.") — on the registration form's intro line and the event page's age fact §410.
+- Test-only: every listing-reading e2e spec (`difficulty-scale`, `event-cost-external-discount`, `night-event`, `partner-marker`) now opens the public listing's "other events" fold through one shared `cardOnListing` helper instead of its own copy, hardened against a transient duplicate of the fold's testid while the list streams in; the tasks-app-queue spec's tab-switch assertion checks the pathname after `waitForURL` instead of a `# Changelog
+
+Every change to the documentation baseline, newest first. The heading of the top entry is
+the current baseline and must equal the `PROJECT_BASELINE` marker on line 1 of every root
+document; `docs:check` enforces that. Application releases will be added here under their
+own tags once code exists (`README.md` § Versioning).
+
+Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
+the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
+
+-anchored regex that could race a transient query string §411.
 ## BR-V1.97-2026-09-25
 
 - **The difficulty is now a scale of dumbbells** — one through three lit, the rest faint, replacing the phone-signal bars, on the event page's route row, the listing card and the backoffice list alike, §399.

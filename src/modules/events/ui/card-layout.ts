@@ -70,6 +70,15 @@ export const CARD_BODY_SX = {
   minWidth: 0,
 } as const;
 
+/**
+ * The leading glyph of every row on the event page's facts (§356): one size, one colour, one
+ * alignment, whichever question the row answers. The owner, 2026-09-24: "address with address
+ * icons not consistent". One object, so a row cannot drift from the others; the unit test reads
+ * the class Emotion gives it and finds the same one on every row. Here rather than in
+ * `EventFacts` since the card's registration line (`CardRegistration`, §409) draws it too.
+ */
+export const ROW_ICON_SX = { fontSize: 20, color: "text.secondary", verticalAlign: "middle", mr: 1, flexShrink: 0 } as const;
+
 /** The chips at the top of a card: one wrapping row, six pixels apart. */
 export const CARD_CHIPS_SX = { display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" } as const;
 

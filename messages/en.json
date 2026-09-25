@@ -144,13 +144,18 @@
     "night": {
       "pill": "Night event",
       "runPill": "Night run",
-      "tooltip": "Sunset at {time} — bring a headlamp",
-      "tooltipEnd": "Sunset at {time}, the finish at {end} — bring a headlamp",
-      "tooltipEndProgramme": "Sunset at {time}, the programme's last row at {end} — bring a headlamp",
-      "calendar": "Night event — sunset at {time}",
-      "ics": "Night event — sunset at {time}, bring a headlamp",
-      "calendarRun": "Night run — sunset at {time}",
-      "icsRun": "Night run — sunset at {time}, bring a headlamp"
+      "tooltip": "Starts at {start}, sunset at {sunset} — bring a headlamp",
+      "tooltipEnd": "Starts at {start}, sunset at {sunset}, ends at {end} — bring a headlamp",
+      "tooltipEndProgramme": "Starts at {start}, sunset at {sunset}, the programme's last row at {end} — bring a headlamp",
+      "tooltipAfter": "Starts at {start}, after the {sunset} sunset — bring a headlamp",
+      "tooltipDawn": "Starts at {start}, before sunrise at {sunrise} — bring a headlamp",
+      "times": "starts at {start}, sunset at {sunset}",
+      "timesEnd": "starts at {start}, sunset at {sunset}, ends at {end}",
+      "timesEndProgramme": "starts at {start}, sunset at {sunset}, the programme's last row at {end}",
+      "timesAfter": "starts at {start}, after the {sunset} sunset",
+      "timesDawn": "starts at {start}, before sunrise at {sunrise}",
+      "calendar": "{label}: {times}",
+      "ics": "{label}: {times} — bring a headlamp"
     },
     "difficulty": "Difficulty",
     "cost": "Cost",
@@ -244,6 +249,12 @@
       "opensOn": "Registration opens on {date}.",
       "opensOnShort": "Registration opens on {date}",
       "openUntilShort": "Registration open until {date}",
+      "freeOf": {
+        "one": "{count} place left out of {places}",
+        "few": "{count} places left out of {places}",
+        "other": "{count} places left out of {places}"
+      },
+      "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -977,8 +988,10 @@
       "routeDescriptionEmpty": "(nothing yet — press to write it)",
       "excerptEmpty": "(required before publication — press to write it)",
       "bodyEmpty": "(nothing yet — press to write it)",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
+      "programmeHelpSummary": "How the programme works",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. Every row starts on the event's day; a row with no time and no text is ignored. If you change the event's start date, the rows' dates move with it. Leave “Where” empty when it is the event's own place.",
       "programmeRows": {
+        "row": "Row",
         "date": "Date",
         "time": "Time",
         "endTime": "Until",
@@ -1006,8 +1019,9 @@
         "auto": "Automatic (after sunset)",
         "yes": "Yes",
         "no": "No",
-        "autoLine": "Automatic: on {day}, sunset is at {time} — {verdict}",
-        "autoLineNoTime": "Automatic: on {day}, sunset is at {time} — pick the start time",
+        "autoLine": "Automatic: on {day}, starts at {start}, sunset at {sunset} — {verdict}",
+        "autoLineDawn": "Automatic: on {day}, starts at {start}, before sunrise at {sunrise} — {verdict}",
+        "autoLineNoTime": "Automatic: on {day}, sunset at {sunset} — pick the start time",
         "autoLineNoDate": "Automatic: pick the start's date and time under “Date and time”, and the answer shows here.",
         "verdictNight": "a night event",
         "verdictDay": "not a night event",
@@ -1176,8 +1190,8 @@
       "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. A Facebook event with several dates keeps one address, so the series inherits it from the source event; any one date can change its own.",
       "bodyHelp": "Optional, in both languages or neither. The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
-      "confirmationDeadlineDaysBefore": "…and due how many days before",
-      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once ({hold}), as for the weekly runs — which are within a week anyway.",
+      "confirmationDeadlineDaysBefore": "…and due how many days before (0 = at the start)",
+      "confirmationWindowHelp": "A runner confirms by signing the declaration, any time after confirming their email: online, from the registration email, or on paper at the registration desk. At the first number of days before the start we email them to ask for the confirmation. Until the deadline the place is theirs; after the deadline the place goes to the next in line only if someone is waiting. With 0 as the deadline, the place does not lapse before the start. Whoever registers after the window has opened, or when the first number is 0 (as on the weekly runs), has {hold} to sign.",
       "typeHelpSummary": "What each type means",
       "typeNotes": {
         "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
@@ -1190,7 +1204,6 @@
       },
       "repeatOn": "Repeat this event",
       "repeatHelpSummary": "How a series works",
-      "tabMissing": "the whole text",
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
@@ -1204,7 +1217,7 @@
         "clubNone": "no reminder by default",
         "help": "The email with the time, the place, what to bring, the QR code and the number, sent to everyone confirmed, once — and with it the last call to sign for anybody who has not yet. “As usual” is the club's setting ({lead}), under “Deadlines” on the Emails page."
       },
-      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers them. 0 means no minimum age.",
+      "minAgeHelp": "Reached by the day of the event. Under 18, a parent registers the runner, with their consent. 0 means no minimum age.",
       "bibDesign": {
         "title": "What the race number looks like",
         "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
@@ -1258,7 +1271,6 @@
       },
       "createAndPublish": "Create and publish",
       "publishing": "Publishing…",
-      "notReadyToPublish": "Cannot publish yet — missing: {field}",
       "createdPublished": "The event was created and published. It is on the site, in both languages.",
       "createdPublishedWithSeries": "The event and {dates} were created and published.",
       "createdNotPublished": "The event was created as a draft but could not be published. Missing: {detail}. Nothing you typed was lost — fill it in and press “Publish”.",
@@ -1311,9 +1323,8 @@
       "repeatRuleLiveUntil": " — until {until}.",
       "repeatRuleLiveHorizon": "The dates of the next {horizon} are created now.",
       "groups": {
-        "event": "The event",
-        "day": "The day and who takes part",
-        "details": "Partners and presentation"
+        "page": "The event page, top to bottom",
+        "offPage": "Not sections of the page"
       },
       "publication": {
         "missingTitle": "Missing before publishing",
@@ -1325,16 +1336,21 @@
         "preview": "Preview:"
       },
       "risk": {
-        "chip": {
+        "when": "Those registered for this date ({date}) stay registered if you change it; the reminder before the start, the confirmation window and the calendar entry follow the new date. To tell them, tick “Tell the participants” under Save.",
+        "place": "Those registered know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
+        "programme": "The reminder before the start repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
+        "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
+        "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered with the reason written here."
+      },
+      "registered": {
+        "count": {
           "one": "{count} registered",
           "few": "{count} registered",
           "other": "{count} registered"
         },
-        "when": "Registrations for this date: {count}, for {date}. A new date does not cancel them; the reminder before the start, the confirmation window and the calendar entry follow it. To tell them, tick “Tell the participants” under Save.",
-        "place": "Registrations: {count}, who know the place “{place}”. If you change it, tick “Tell the participants” under Save.",
-        "programme": "The reminder before the start repeats the programme and every row is a calendar entry; a change is one of those “Tell the participants” sends.",
-        "registration": "Registrations already made stay. Places added are offered to the waiting list on save, in order.",
-        "status": "Cancelling stops registration and, if you leave the box ticked, tells those registered ({count}) with the reason written here."
+        "reach": "a change in the cards with an orange edge reaches them",
+        "cards": "The cards with an orange edge, where a change reaches those registered:",
+        "view": "See the registrations"
       },
       "boxes": {
         "summaryLabel": "Summary",
@@ -1366,6 +1382,9 @@
         "rules": {
           "title": "Rules"
         },
+        "cost": {
+          "title": "Cost"
+        },
         "registration": {
           "title": "Taking part and registration"
         },
@@ -1382,7 +1401,9 @@
         },
         "confirmation": {
           "title": "Confirmation window",
-          "dates": "For {date}: asked from {opens}, due {due}."
+          "dates": "For {date}: asked from {opens}, due {due}.",
+          "datesAtStart": "For {date}: asked from {opens}, due at the start — the place does not lapse before the start.",
+          "datesOff": "No window: the signature is asked at registration ({hold}), as on the weekly runs."
         },
         "bibs": {
           "title": "Race numbers (bibs)",
@@ -1393,7 +1414,9 @@
           "unprinted": "Not printed yet: {count}."
         },
         "startList": {
-          "title": "Public participant list"
+          "title": "Public participant list",
+          "onlyHere": "A public list exists only for registration on the site: choose “On the site” under Taking part and registration.",
+          "onlyRegisteringTypes": "A group run has no registration, so no public list either: change the type under “What kind of event”."
         },
         "status": {
           "title": "Event status",
@@ -1454,8 +1477,6 @@
           "oneLanguage": "to write in {language} too (both languages or neither)",
           "identical": "{language} same as {source}",
           "titleSummary": {
-            "missingTitle": "title missing ({language})",
-            "missingSummary": "summary missing ({language})",
             "untitled": "untitled"
           },
           "when": {
@@ -1511,7 +1532,9 @@
             "noDeclaration": "Declaration missing — required for registration on the site"
           },
           "confirmation": {
-            "sentence": "Asked {opens} days before, due {due} days before"
+            "sentence": "Asked {opens} days before, due {due} days before",
+            "atStart": "Asked {opens} days before, due at the start",
+            "off": "No window — the signature is asked at registration"
           },
           "bibs": {
             "from": "From {number}",
@@ -1565,6 +1588,14 @@
             "none": "no address",
             "seoOneLanguage": "SEO in one language only"
           }
+        },
+        "video": {
+          "title": "The film",
+          "stored": "a film, from an older link",
+          "none": "no separate film",
+          "storedHelp": "The page shows this film under the rules, behind one press. It is a link saved before the editor had its YouTube button, and it is kept on every save. A new film goes in the description.",
+          "noneHelp": "A film goes in the description, with the text editor's YouTube button, like a picture. The page has no other section for a film.",
+          "toDescription": "Go to the description"
         }
       },
       "identical": {
@@ -1578,6 +1609,47 @@
         "help": "The run's page shows a “Sign the self-declaration” button; whoever wishes signs it and gets it by email, and the club gets a copy. It is not a registration and not required. Ticked by itself for a trail run. The button shows only while an approved privacy notice is in force: without one, the declaration cannot be signed.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface above.",
         "missing": "The club has no approved version of “{document}” yet: approve one in Legal documents (New version → start from the platform's text), together with a new version of the privacy notice, which describes it; then tick it here."
+      },
+      "pageFlow": {
+        "title": "The page, top to bottom",
+        "drawnHeading": "{number} · {name} — on the page",
+        "emptyHeading": "{number} · {name} — empty, not on the page",
+        "drawn": "on the page",
+        "empty": "empty, not on the page",
+        "automatic": "automatic, no card",
+        "missing": "required fields missing",
+        "shareLine": "Here the page puts the share buttons and the calendar — automatically, from the page's address; they have no card.",
+        "short": {
+          "kind": "Type",
+          "title": "Title",
+          "description": "Description",
+          "when": "When",
+          "place": "Where",
+          "course": "The course",
+          "cost": "Cost",
+          "registration": "Registration",
+          "coHosts": "Together with",
+          "share": "Share",
+          "links": "Links and files",
+          "programme": "Programme",
+          "rules": "Rules",
+          "video": "The film",
+          "startList": "Participant list"
+        }
+      },
+      "required": {
+        "missing": "missing: {list}",
+        "complete": "complete",
+        "tab": {
+          "one": "{count} required missing",
+          "few": "{count} required missing",
+          "other": "{count} required missing"
+        }
+      },
+      "publishGaps": {
+        "title": "Cannot publish yet",
+        "intro": "Publication needs these fields, in every language:",
+        "introSaved": "Publication needs these fields, in every language, filled in and saved:"
       }
     },
     "preview": {
@@ -3411,9 +3483,9 @@
     "birthDateHelp": "The minimum age is {age} on the day of the race. Age categories are worked out against that day too.",
     "birthDateHelpNoMinimum": "Age categories are worked out against the day of the race.",
     "ageRule": {
-      "minimumAndGuardian": "Open to anyone {age} or older on the day of the event; under 18, a parent registers them.",
-      "minimumOnly": "Open to anyone {age} or older on the day of the event.",
-      "guardianOnly": "Under 18, a parent registers them."
+      "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent registers the runner, with their consent.",
+      "minimumOnly": "Minimum age: {age}.",
+      "guardianOnly": "Under 18, a parent registers the runner, with their consent."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3501,7 +3573,8 @@
       "declaration": {
         "title": "Sign the declaration",
         "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {hold}; if a waiting list forms, after that it goes to the next in line.",
-        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {deadline} before the start; after that it goes to the next in line."
+        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opens} before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {due}; after that it goes to the next in line.",
+        "bodyLaterAtStart": "The place is yours, but the race is free, so we ask for a confirmation: you can sign the declaration of own responsibility from now, from the registration email, any time until the start — online, or on paper at the registration desk on race day. {opens} before the start we send you a reminder email. The place does not lapse before the start."
       },
       "confirmed": {
         "title": "You are in",
@@ -3633,6 +3706,7 @@
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
+      "deadlineAtStart": "Your place is held until the start, {deadline}: it does not lapse before. The registration is complete only with the signed declaration.",
       "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it. The series and number are deleted from our database seven days after the event and are masked in the club's copy (at most the first two and last two characters remain); we never keep a copy of the document.",
@@ -3742,7 +3816,8 @@
       "closedHelp": "These registrations are no longer active, but they still hold details you gave us only because you agreed to. You can delete them here; the rest of the registration is kept for as long as the privacy notice says.",
       "eventCancelledChip": "Event cancelled",
       "eventCancelled": "The event has been cancelled. Your registration stays with us as a record, with the status above, and there is nothing you need to do.",
-      "runner": "Registered: {name}"
+      "runner": "Registered: {name}",
+      "confirmBy": "Confirm by signing the declaration, from the registration email, by {due}. Or on paper, at the registration desk, on race day."
     },
     "manage": {
       "title": "Manage your registration",

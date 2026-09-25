@@ -144,13 +144,18 @@
     "night": {
       "pill": "Eveniment de noapte",
       "runPill": "Alergare de noapte",
-      "tooltip": "Apusul la {time} — ia o frontală",
-      "tooltipEnd": "Apusul la {time}, sfârșitul la {end} — ia o frontală",
-      "tooltipEndProgramme": "Apusul la {time}, ultimul punct din program la {end} — ia o frontală",
-      "calendar": "Eveniment de noapte — apusul la {time}",
-      "ics": "Eveniment de noapte — apusul la {time}, ia o frontală",
-      "calendarRun": "Alergare de noapte — apusul la {time}",
-      "icsRun": "Alergare de noapte — apusul la {time}, ia o frontală"
+      "tooltip": "Începe la {start}, apusul la {sunset} — ia o frontală",
+      "tooltipEnd": "Începe la {start}, apusul la {sunset}, se termină la {end} — ia o frontală",
+      "tooltipEndProgramme": "Începe la {start}, apusul la {sunset}, ultimul punct din program la {end} — ia o frontală",
+      "tooltipAfter": "Începe la {start}, după apusul de la {sunset} — ia o frontală",
+      "tooltipDawn": "Începe la {start}, înainte de răsăritul de la {sunrise} — ia o frontală",
+      "times": "începe la {start}, apusul la {sunset}",
+      "timesEnd": "începe la {start}, apusul la {sunset}, se termină la {end}",
+      "timesEndProgramme": "începe la {start}, apusul la {sunset}, ultimul punct din program la {end}",
+      "timesAfter": "începe la {start}, după apusul de la {sunset}",
+      "timesDawn": "începe la {start}, înainte de răsăritul de la {sunrise}",
+      "calendar": "{label}: {times}",
+      "ics": "{label}: {times} — ia o frontală"
     },
     "difficulty": "Dificultate",
     "cost": "Cost",
@@ -244,6 +249,12 @@
       "opensOn": "Înscrierile se deschid pe {date}.",
       "opensOnShort": "Înscrierile se deschid pe {date}",
       "openUntilShort": "Înscrieri deschise până pe {date}",
+      "freeOf": {
+        "one": "{count} loc liber din {places}",
+        "few": "{count} locuri libere din {places}",
+        "other": "{count} de locuri libere din {places}"
+      },
+      "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
@@ -977,8 +988,10 @@
       "routeDescriptionEmpty": "(nimic încă — apasă ca să scrii)",
       "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
+      "programmeHelpSummary": "Cum funcționează programul",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Fiecare rând pornește din ziua evenimentului; un rând fără oră și fără text este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea. Lasă „Unde” gol când e chiar locul evenimentului.",
       "programmeRows": {
+        "row": "Rândul",
         "date": "Data",
         "time": "Ora",
         "endTime": "Până la",
@@ -1006,8 +1019,9 @@
         "auto": "Automat (după apus)",
         "yes": "Da",
         "no": "Nu",
-        "autoLine": "Automat: pe {day}, apusul e la {time} — {verdict}",
-        "autoLineNoTime": "Automat: pe {day}, apusul e la {time} — alege ora startului",
+        "autoLine": "Automat: pe {day}, începe la {start}, apusul la {sunset} — {verdict}",
+        "autoLineDawn": "Automat: pe {day}, începe la {start}, înainte de răsăritul de la {sunrise} — {verdict}",
+        "autoLineNoTime": "Automat: pe {day}, apusul la {sunset} — alege ora startului",
         "autoLineNoDate": "Automat: alege data și ora startului din „Data și ora”, iar răspunsul apare aici.",
         "verdictNight": "eveniment de noapte",
         "verdictDay": "nu e eveniment de noapte",
@@ -1176,8 +1190,8 @@
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Un eveniment Facebook cu mai multe date are o singură adresă, așa că seria o moștenește de la evenimentul de bază; o dată anume o poate schimba pe a ei.",
       "bodyHelp": "Opțional, în ambele limbi sau în niciuna. Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
-      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc ({hold}), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră (0 = la start)",
+      "confirmationWindowHelp": "Alergătorul confirmă semnând declarația, oricând după ce și-a confirmat emailul: online, din emailul de înscriere, sau pe hârtie la masa de înscrieri. Cu prima cifră de zile înainte de start îi trimitem emailul care îi cere confirmarea. Până la termen locul e al lui; după termen, locul trece la următorul doar dacă așteaptă cineva. Cu 0 la termen, locul nu expiră înainte de start. Cine se înscrie după ce fereastra s-a deschis, sau când prima cifră e 0 (ca la antrenamentele săptămânale), are {hold} să semneze.",
       "typeHelpSummary": "Ce înseamnă fiecare tip?",
       "typeNotes": {
         "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
@@ -1190,7 +1204,6 @@
       },
       "repeatOn": "Repetă evenimentul",
       "repeatHelpSummary": "Cum funcționează o serie",
-      "tabMissing": "textul întreg",
       "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
@@ -1204,7 +1217,7 @@
         "clubNone": "fără reminder, implicit",
         "help": "Emailul cu ora, locul, ce să aduci, codul QR și numărul, trimis tuturor celor confirmați, o singură dată — și, odată cu el, ultima chemare la semnare pentru cine nu a semnat încă. „Ca de obicei” e setarea clubului ({lead}), din „Termene”, pe pagina Emailuri."
       },
-      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea o face un părinte. 0 înseamnă fără vârstă minimă.",
+      "minAgeHelp": "Împlinită în ziua evenimentului. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia. 0 înseamnă fără vârstă minimă.",
       "bibDesign": {
         "title": "Cum arată numărul de concurs",
         "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
@@ -1258,7 +1271,6 @@
       },
       "createAndPublish": "Creează și publică",
       "publishing": "Se publică…",
-      "notReadyToPublish": "Nu se poate publica încă — lipsește: {field}",
       "createdPublished": "Evenimentul a fost creat și publicat. Este pe site, în ambele limbi.",
       "createdPublishedWithSeries": "Evenimentul și {dates} au fost create și publicate.",
       "createdNotPublished": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat. Lipsesc: {detail}. Nimic din ce ai scris nu s-a pierdut — completează și apasă „Publică”.",
@@ -1311,9 +1323,8 @@
       "repeatRuleLiveUntil": " — până la {until}.",
       "repeatRuleLiveHorizon": "Se creează acum datele din următoarele {horizon}.",
       "groups": {
-        "event": "Evenimentul",
-        "day": "Ziua evenimentului și participanții",
-        "details": "Parteneri și prezentare"
+        "page": "Pagina evenimentului, de sus în jos",
+        "offPage": "Nu sunt secțiuni ale paginii"
       },
       "publication": {
         "missingTitle": "Ce lipsește pentru publicare",
@@ -1325,16 +1336,21 @@
         "preview": "Previzualizare:"
       },
       "risk": {
-        "chip": {
+        "when": "Cei înscriși la această dată ({date}) rămân înscriși dacă o schimbi; reamintirea dinaintea startului, fereastra de confirmare și intrarea din calendar urmează data nouă. Ca să afle, bifează „Anunță participanții” la Salvare.",
+        "place": "Cei înscriși știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
+        "programme": "Reamintirea dinaintea startului repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
+        "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
+        "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși cu motivul scris aici."
+      },
+      "registered": {
+        "count": {
           "one": "{count} înscris",
           "few": "{count} înscriși",
           "other": "{count} de înscriși"
         },
-        "when": "Înscrieri la această dată: {count}, pentru {date}. O dată nouă nu le anulează înscrierea; reamintirea dinaintea startului, fereastra de confirmare și intrarea din calendar o urmează. Ca să afle, bifează „Anunță participanții” la Salvare.",
-        "place": "Înscrieri: {count}, care știu locul „{place}”. Dacă îl schimbi, bifează „Anunță participanții” la Salvare.",
-        "programme": "Reamintirea dinaintea startului repetă programul și fiecare rând e o intrare în calendar; o schimbare e una dintre cele pe care „Anunță participanții” le trimite.",
-        "registration": "Înscrierile făcute rămân. Locurile adăugate se oferă listei de așteptare la salvare, în ordine.",
-        "status": "Anularea oprește înscrierile și, dacă lași bifa, îi anunță pe cei înscriși ({count}) cu motivul scris aici."
+        "reach": "o schimbare în cardurile cu margine portocalie ajunge la ei",
+        "cards": "Cardurile cu margine portocalie, unde o schimbare ajunge la cei înscriși:",
+        "view": "Vezi înscrierile"
       },
       "boxes": {
         "summaryLabel": "Rezumat",
@@ -1366,6 +1382,9 @@
         "rules": {
           "title": "Regulamentul"
         },
+        "cost": {
+          "title": "Cost"
+        },
         "registration": {
           "title": "Participare și înscrieri"
         },
@@ -1382,7 +1401,9 @@
         },
         "confirmation": {
           "title": "Fereastra de confirmare",
-          "dates": "Pentru {date}: cerută din {opens}, termen {due}."
+          "dates": "Pentru {date}: cerută din {opens}, termen {due}.",
+          "datesAtStart": "Pentru {date}: cerută din {opens}, termen la start — locul nu expiră înainte de start.",
+          "datesOff": "Fără fereastră: semnătura se cere la înscriere ({hold}), ca la antrenamentele săptămânale."
         },
         "bibs": {
           "title": "Numere de concurs (BIB)",
@@ -1393,7 +1414,9 @@
           "unprinted": "Netipărite încă: {count}."
         },
         "startList": {
-          "title": "Lista publică a participanților"
+          "title": "Lista publică a participanților",
+          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” la Participare și înscrieri.",
+          "onlyRegisteringTypes": "O alergare de grup nu are înscrieri, deci nici listă publică: schimbă tipul la „Ce fel de eveniment”."
         },
         "status": {
           "title": "Starea evenimentului",
@@ -1454,8 +1477,6 @@
           "oneLanguage": "de scris și în {language} (ambele limbi sau niciuna)",
           "identical": "{language} identic cu {source}",
           "titleSummary": {
-            "missingTitle": "lipsește titlul ({language})",
-            "missingSummary": "lipsește rezumatul ({language})",
             "untitled": "fără titlu"
           },
           "when": {
@@ -1511,7 +1532,9 @@
             "noDeclaration": "Lipsește declarația — obligatorie pentru înscrierea pe site"
           },
           "confirmation": {
-            "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte"
+            "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte",
+            "atStart": "Cerută cu {opens} zile înainte, termen la start",
+            "off": "Fără fereastră — semnătura se cere la înscriere"
           },
           "bibs": {
             "from": "De la {number}",
@@ -1565,6 +1588,14 @@
             "none": "fără adresă",
             "seoOneLanguage": "SEO într-o singură limbă"
           }
+        },
+        "video": {
+          "title": "Filmul",
+          "stored": "un film, dintr-un link vechi",
+          "none": "niciun film separat",
+          "storedHelp": "Pagina arată filmul acesta sub regulament, la o apăsare. E un link salvat înainte ca editorul să aibă butonul YouTube; se păstrează la fiecare salvare. Un film nou se pune în descriere.",
+          "noneHelp": "Un film se pune în descriere, cu butonul YouTube al editorului de text, ca o poză. Pagina nu mai are altă secțiune pentru film.",
+          "toDescription": "Mergi la descriere"
         }
       },
       "identical": {
@@ -1578,6 +1609,47 @@
         "help": "Pe pagina alergării apare butonul „Semnează declarația pe propria răspundere”; cine vrea o semnează și o primește pe email, iar clubul primește o copie. Nu e o înscriere și nu e obligatorie. Bifată de la sine pentru trail. Butonul apare doar cât timp e în vigoare o notă de confidențialitate aprobată: fără ea, declarația nu se poate semna.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața mai sus.",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”: aprob-o în Documente legale (Versiune nouă → pornește de la textul platformei), împreună cu o versiune nouă a notei de confidențialitate, care o descrie; apoi bifează aici."
+      },
+      "pageFlow": {
+        "title": "Pagina, de sus în jos",
+        "drawnHeading": "{number} · {name} — apare pe pagină",
+        "emptyHeading": "{number} · {name} — gol, nu apare pe pagină",
+        "drawn": "apare pe pagină",
+        "empty": "gol, nu apare pe pagină",
+        "automatic": "automat, fără card",
+        "missing": "lipsesc câmpuri obligatorii",
+        "shareLine": "Aici pagina pune butoanele de distribuire și calendarul — automat, din adresa paginii; nu au card.",
+        "short": {
+          "kind": "Tipul",
+          "title": "Titlul",
+          "description": "Descrierea",
+          "when": "Când",
+          "place": "Unde",
+          "course": "Traseul",
+          "cost": "Costul",
+          "registration": "Înscrierea",
+          "coHosts": "Împreună cu",
+          "share": "Distribuie",
+          "links": "Linkuri și fișiere",
+          "programme": "Programul",
+          "rules": "Regulamentul",
+          "video": "Filmul",
+          "startList": "Lista participanților"
+        }
+      },
+      "required": {
+        "missing": "lipsesc: {list}",
+        "complete": "complet",
+        "tab": {
+          "one": "{count} obligatoriu lipsă",
+          "few": "{count} obligatorii lipsă",
+          "other": "{count} de obligatorii lipsă"
+        }
+      },
+      "publishGaps": {
+        "title": "Nu se poate publica încă",
+        "intro": "Publicarea cere aceste câmpuri, în fiecare limbă:",
+        "introSaved": "Publicarea cere aceste câmpuri, în fiecare limbă, completate și salvate:"
       }
     },
     "preview": {
@@ -3411,9 +3483,9 @@
     "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateHelpNoMinimum": "Categoriile de vârstă se calculează la data cursei.",
     "ageRule": {
-      "minimumAndGuardian": "Participanți de la {age}; sub 18 ani, înscrierea o face un părinte.",
-      "minimumOnly": "Participanți de la {age}.",
-      "guardianOnly": "Sub 18 ani, înscrierea o face un părinte."
+      "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia.",
+      "minimumOnly": "Vârsta minimă: {age}.",
+      "guardianOnly": "Sub 18 ani, înscrierea se face de un părinte, cu acordul acestuia."
     },
     "sex": "Sex",
     "sexOptions": {
@@ -3501,7 +3573,8 @@
       "declaration": {
         "title": "Semnezi declarația",
         "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {hold}; dacă se formează listă de așteptare, după acest termen trece la următorul.",
-        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până cu {deadline} înainte de start; după, trece la următorul."
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până {due}; după, trece la următorul.",
+        "bodyLaterAtStart": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: poți semna declarația pe proprie răspundere de acum, din emailul de înscriere, oricând până la start — online, sau pe hârtie la masa de înscrieri în ziua cursei. Cu {opens} înainte de start îți amintim printr-un email. Locul nu expiră înainte de start."
       },
       "confirmed": {
         "title": "Ești înscris",
@@ -3633,6 +3706,7 @@
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
+      "deadlineAtStart": "Locul tău este rezervat până la start, {deadline}: nu expiră înainte. Înscrierea e completă doar cu declarația semnată.",
       "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
@@ -3742,7 +3816,8 @@
       "closedHelp": "Aceste înscrieri nu mai sunt active, dar încă păstrează date pe care ni le-ai dat doar cu acordul tău. Le poți șterge de aici; restul înscrierii îl păstrăm cât scrie în nota de confidențialitate.",
       "eventCancelledChip": "Eveniment anulat",
       "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
-      "runner": "Înscris: {name}"
+      "runner": "Înscris: {name}",
+      "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până la {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei."
     },
     "manage": {
       "title": "Gestionează înscrierea",

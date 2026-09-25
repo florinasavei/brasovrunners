@@ -35,7 +35,7 @@ function timezoneOptions(current: string): readonly string[] {
  * Open on the create page, where the date is required; folded on the editor. With people
  * registered, the box is amber and its first line says what a new date does to them.
  */
-export default async function WhenBox({ event, mayEditSettings, risk, inSeries = false }: BoxProps & { inSeries?: boolean }) {
+export default async function WhenBox({ event, mayEditSettings, risk, heading, inSeries = false }: BoxProps & { inSeries?: boolean }) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   // The reader's language for the dates (`src/i18n/dates.ts`), on the event's own clock.
@@ -47,14 +47,13 @@ export default async function WhenBox({ event, mayEditSettings, risk, inSeries =
     <Panel
       collapsible
       id="box-when"
-      title={t("editor.boxes.when.title")}
+      title={heading ?? t("editor.boxes.when.title")}
       aside={whenSummary(words, event, locale)}
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
-      badge={risk?.chip}
     >
       {risk && event && (
-        <RiskLine>{t("editor.risk.when", { count: risk.count, date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
+        <RiskLine>{t("editor.risk.when", { date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
       {mayEditSettings ? (
         <Stack spacing={2}>

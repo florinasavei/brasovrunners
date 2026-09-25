@@ -49,35 +49,39 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("puts Recurență first, then the boxes in the editor's own order, then Salvare", () => {
+  it("puts Recurență first, then the boxes in the page's own order, then the ones not on the page, then Salvare", () => {
+    // The page's order itself is `events/page-sections.test.ts`'s to hold (§406); this is the frame.
     const order = [
       'id="box-recurrence"',
+      'id="box-map"',
+      't("editor.groups.page")',
       "<KindBox",
-      "<StatusBox",
-      "<CourseBox",
-      "<LinksBox",
-      "</KindBox>",
       "<TitleSummaryBox",
       "<DescriptionBox",
       "<WhenBox",
       "<PlaceBox",
-      "<ProgrammeBox",
-      "<RulesBox",
+      "<CourseBox",
+      "<CostBox",
       "<RegistrationBox",
       "<CoHostsBox",
+      "<LinksBox",
+      "<ProgrammeBox",
+      "<RulesBox",
+      "<VideoBox",
+      "<StartListBox",
+      't("editor.groups.offPage")',
+      "<StatusBox",
       "<PromotionBox",
       "<AddressBox",
       'id="box-save"',
     ];
-    const positions = order.map((needle) => at(CREATE, needle));
-    for (let index = 1; index < positions.length; index += 1) {
-      expect(positions[index], `${order[index]} after ${order[index - 1]}`).toBeGreaterThan(positions[index - 1]);
-    }
-    // The editor has the same order: the three cards inside the first box on both pages (§358).
     for (const page of [CREATE, EDIT]) {
-      expect(at(page, "<KindBox")).toBeLessThan(at(page, "<StatusBox"));
-      expect(at(page, "<LinksBox")).toBeLessThan(at(page, "</KindBox>"));
-      expect(at(page, "</KindBox>")).toBeLessThan(at(page, "<TitleSummaryBox"));
+      const positions = order.map((needle) => at(page, needle));
+      for (let index = 1; index < positions.length; index += 1) {
+        expect(positions[index], `${order[index]} after ${order[index - 1]}`).toBeGreaterThan(positions[index - 1]);
+      }
+      // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
+      expect(page).not.toContain("</KindBox>");
     }
   });
 

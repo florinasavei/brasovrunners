@@ -24,7 +24,7 @@ import { type BoxProps, SettingsReadOnly, summaryWords } from "./box-kit";
  * save writes it as a card. The description (§352) opens as stored, both languages or one: a half
  * written somewhere else is shown so it can be completed, and the save refuses it until it is.
  */
-export default async function CoHostsBox({ event, mayEditSettings, locale }: BoxProps & { locale: string }) {
+export default async function CoHostsBox({ event, mayEditSettings, locale, heading }: BoxProps & { locale: string }) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const tSite = await getTranslations("Site");
@@ -36,7 +36,7 @@ export default async function CoHostsBox({ event, mayEditSettings, locale }: Box
     links: host.links.map((link) => ({ kind: link.kind, url: link.url, labelRo: link.labelRo ?? "", labelEn: link.labelEn ?? "" })),
   }));
   return (
-    <Panel collapsible id="box-cohosts" title={t("editor.boxes.coHosts.title")} aside={coHostsSummary(words, event, locale)}>
+    <Panel collapsible id="box-cohosts" title={heading ?? t("editor.boxes.coHosts.title")} aside={coHostsSummary(words, event, locale)}>
       {mayEditSettings ? (
         <Stack spacing={1.5}>
           <Typography variant="body2" color="text.secondary">

@@ -49,11 +49,15 @@ export function yearsPhrase(years: number, locale: string): string {
 }
 
 /**
- * Which sentence says who may enter an event with this minimum age (§329) — the intro line of the
- * form and the event page's age fact:
- * - `minimumAndGuardian` — a minimum under eighteen: "from 14; under 18, a parent registers them";
- * - `minimumOnly` — eighteen or more: nobody who may enter needs a parent, so no guardian sentence;
- * - `guardianOnly` — no minimum (zero): only the guardian sentence, and never "from 0 years".
+ * Which sentence says who may enter an event with this minimum age (§329) — the intro line of
+ * the form and the event page's age fact. Two plain sentences, each its own clause: the minimum
+ * age on its own ("Vârsta minimă: {age}." / "Minimum age: {age}."), and — where a minor may
+ * enter — a second sentence naming the parent and the parent's consent ("Sub 18 ani, înscrierea
+ * se face de un părinte, cu acordul acestuia." / "Under 18, a parent registers the runner, with
+ * their consent."):
+ * - `minimumAndGuardian` — a minimum under eighteen: both sentences, minimum age then parent;
+ * - `minimumOnly` — eighteen or more: nobody who may enter needs a parent, so no parent sentence;
+ * - `guardianOnly` — no minimum (zero): only the parent sentence, never "from 0 years".
  */
 export type AgeRuleVariant = "minimumAndGuardian" | "minimumOnly" | "guardianOnly";
 
